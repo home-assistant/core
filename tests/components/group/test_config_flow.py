@@ -1,25 +1,30 @@
-"""Test the Group config flow."""
+"""Test the Switch config flow."""
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.group.config_flow import SUPPORTED_DOMAINS
-from homeassistant.components.group.const import DOMAIN
-from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, STATE_ON
+from homeassistant.components.group import DOMAIN, async_setup_entry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
-from homeassistant.loader import async_get_integration
-
-from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("domain", SUPPORTED_DOMAINS)
-async def test_form(hass: HomeAssistant, domain: str) -> None:
-    """Test we can create a new group from the UI."""
-
-    hass.states.async_set(f"{domain}.dummy", STATE_ON)
-    hass.states.async_set(f"{domain}.dummy2", STATE_ON)
+@pytest.mark.parametrize(
+    "group_type,group_state,member_state,member_attributes",
+    (
+        ("cover", "open", "open", {}),
+        ("fan", "on", "on", {}),
+        ("light", "on", "on", {}),
+        ("media_player", "on", "on", {}),
+    ),
+)
+async def test_config_flow(
+    hass: HomeAssistant, group_type, group_state, member_state, member_attributes
+) -> None:
+    """Test the config flow."""
+    members = [f"{group_type}.one", f"{group_type}.two"]
+    for member in members:
+        hass.states.async_set(member, member_state, member_attributes)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -27,74 +32,160 @@ async def test_form(hass: HomeAssistant, domain: str) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"group_type": group_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == group_type
+
+    with patch(
+        "homeassistant.components.group.async_setup_entry", wraps=async_setup_entry
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "Living Room",
+                "entities": members,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Living Room"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "group_type": group_type,
+        "entities": members,
+        "name": "Living Room",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "group_type": group_type,
+        "name": "Living Room",
+        "entities": members,
+    }
+
+    state = hass.states.get(f"{group_type}.living_room")
+    assert state.state == group_state
+    assert state.attributes["entity_id"] == members
+
+
+def get_suggested(schema, key):
+    """Get suggested value for key in voluptuous schema."""
+    for k in schema.keys():
+        if k == key:
+            if k.description is None or "suggested_value" not in k.description:
+                return None
+            return k.description["suggested_value"]
+    # Wanted key absent from schema
+    raise Exception
+
+
+@pytest.mark.parametrize(
+    "group_type,member_state",
+    (("cover", "open"), ("fan", "on"), ("light", "on"), ("media_player", "on")),
+)
+async def test_options(hass: HomeAssistant, group_type, member_state) -> None:
+    """Test reconfiguring."""
+    members1 = [f"{group_type}.one", f"{group_type}.two"]
+    members2 = [f"{group_type}.four", f"{group_type}.five"]
+
+    for member in members1:
+        hass.states.async_set(member, member_state, {})
+    for member in members2:
+        hass.states.async_set(member, member_state, {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    assert get_suggested(result["data_schema"].schema, "group_type") is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"group_type": group_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == group_type
+
+    assert get_suggested(result["data_schema"].schema, "entities") is None
+    assert get_suggested(result["data_schema"].schema, "name") is None
+
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_DOMAIN: domain,
+            "name": "Bed Room",
+            "entities": members1,
         },
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.group.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                CONF_ENTITIES: [f"{domain}.dummy", f"{domain}.dummy2"],
-            },
-        )
-        await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    state = hass.states.get(f"{group_type}.bed_room")
+    assert state.attributes["entity_id"] == members1
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
-    integration = await async_get_integration(hass, domain)
-    assert result3["title"] == f"{integration.name} Group"
-    assert result3["data"] == {CONF_DOMAIN: domain}
-    assert result3["options"] == {
-        CONF_ENTITIES: [f"{domain}.dummy", f"{domain}.dummy2"],
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "group_type": group_type,
+        "entities": members1,
+        "name": "Bed Room",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == f"{group_type}_options"
+    assert get_suggested(result["data_schema"].schema, "entities") == members1
+    assert "name" not in result["data_schema"].schema
 
-@pytest.mark.parametrize("domain", SUPPORTED_DOMAINS)
-async def test_options(hass: HomeAssistant, domain: str) -> None:
-    """Test we can edit an existing group from the UI."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_DOMAIN: domain},
-        options={CONF_ENTITIES: [f"{domain}.dummy", f"{domain}.dummy2"]},
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "entities": members2,
+        },
     )
-    entry.add_to_hass(hass)
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        "group_type": group_type,
+        "entities": members2,
+        "name": "Bed Room",
+    }
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "group_type": group_type,
+        "entities": members2,
+        "name": "Bed Room",
+    }
+    assert config_entry.title == "Bed Room"
 
-    hass.states.async_set(f"{domain}.dummy", STATE_ON)
-    hass.states.async_set(f"{domain}.dummy2", STATE_ON)
-    hass.states.async_set(f"{domain}.dummy3", STATE_ON)
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    # Check config entry is reloaded with new options
     await hass.async_block_till_done()
+    state = hass.states.get(f"{group_type}.bed_room")
+    assert state.attributes["entity_id"] == members2
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    # Check we don't get suggestions from another entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
+    assert get_suggested(result["data_schema"].schema, "group_type") is None
 
-    with patch(
-        "homeassistant.components.group.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {
-                CONF_ENTITIES: [
-                    f"{domain}.dummy",
-                    f"{domain}.dummy2",
-                    f"{domain}.dummy3",
-                ],
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"group_type": group_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == group_type
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert entry.options == {
-        CONF_ENTITIES: [f"{domain}.dummy", f"{domain}.dummy2", f"{domain}.dummy3"]
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert get_suggested(result["data_schema"].schema, "entities") is None
+    assert get_suggested(result["data_schema"].schema, "name") is None
