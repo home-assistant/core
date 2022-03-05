@@ -36,7 +36,7 @@ repos:
           - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.0
+    rev: 1.7.4
     hooks:
       - id: bandit
         args:

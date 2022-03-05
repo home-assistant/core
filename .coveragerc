@@ -1015,6 +1015,7 @@ omit =
     homeassistant/components/sensibo/climate.py
     homeassistant/components/sensibo/coordinator.py
     homeassistant/components/sensibo/diagnostics.py
+    homeassistant/components/sensibo/entity.py
     homeassistant/components/sensibo/number.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py

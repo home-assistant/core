@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the Sensibo integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -15,6 +16,21 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
+
+
+@dataclass
+class MotionSensor:
+    """Dataclass for motionsensors."""
+
+    id: str
+    alive: bool | None = None
+    fw_ver: str | None = None
+    fw_type: str | None = None
+    is_main_sensor: bool | None = None
+    battery_voltage: int | None = None
+    humidity: int | None = None
+    temperature: float | None = None
+    model: str | None = None
 
 
 class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
@@ -52,8 +68,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             unique_id = dev["id"]
             mac = dev["macAddress"]
             name = dev["room"]["name"]
-            temperature = dev["measurements"].get("temperature", 0.0)
-            humidity = dev["measurements"].get("humidity", 0)
+            temperature = dev["measurements"].get("temperature")
+            humidity = dev["measurements"].get("humidity")
             ac_states = dev["acState"]
             target_temperature = ac_states.get("targetTemperature")
             hvac_mode = ac_states.get("mode")
@@ -95,8 +111,30 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             fw_type = dev["firmwareType"]
             model = dev["productModel"]
 
-            calibration_temp = dev["sensorsCalibration"].get("temperature", 0.0)
-            calibration_hum = dev["sensorsCalibration"].get("humidity", 0.0)
+            calibration_temp = dev["sensorsCalibration"].get("temperature")
+            calibration_hum = dev["sensorsCalibration"].get("humidity")
+
+            # Sky plus supports functionality to use motion sensor as sensor for temp and humidity
+            if main_sensor := dev["mainMeasurementsSensor"]:
+                measurements = main_sensor["measurements"]
+                temperature = measurements.get("temperature")
+                humidity = measurements.get("humidity")
+
+            motion_sensors = [
+                MotionSensor(
+                    id=motionsensor["id"],
+                    alive=motionsensor["connectionStatus"].get("isAlive"),
+                    fw_ver=motionsensor.get("firmwareVersion"),
+                    fw_type=motionsensor.get("firmwareType"),
+                    is_main_sensor=motionsensor.get("isMainSensor"),
+                    battery_voltage=motionsensor["measurements"].get("batteryVoltage"),
+                    humidity=motionsensor["measurements"].get("humidity"),
+                    temperature=motionsensor["measurements"].get("temperature"),
+                    model=motionsensor.get("productModel"),
+                )
+                for motionsensor in dev["motionSensors"]
+                if dev["motionSensors"]
+            ]
 
             device_data[unique_id] = {
                 "id": unique_id,
@@ -126,5 +164,6 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "calibration_temp": calibration_temp,
                 "calibration_hum": calibration_hum,
                 "full_capabilities": capabilities,
+                "motion_sensors": motion_sensors,
             }
         return device_data
