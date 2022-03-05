@@ -513,6 +513,8 @@ tests/components/jewish_calendar/* @tsvi
 homeassistant/components/juicenet/* @jesserockz
 tests/components/juicenet/* @jesserockz
 homeassistant/components/kaiterra/* @Michsior14
+homeassistant/components/kaleidescape/* @SteveEasley
+tests/components/kaleidescape/* @SteveEasley
 homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel
 tests/components/keenetic_ndms2/* @foxel
