@@ -90,7 +90,7 @@ class SensiboNumber(SensiboBaseEntity, NumberEntity):
         )
 
     @property
-    def value(self) -> float:
+    def value(self) -> float | None:
         """Return the value from coordinator data."""
         return self.coordinator.data[self._device_id][self.entity_description.key]
 
