@@ -289,7 +289,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     dr.format_mac(device.mac_address), raise_on_progress=False
                 )
                 self._abort_if_unique_id_configured()
-                user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
+                # Ignore the port from discovery since its always going to be
+                # 2601 if secure is turned on even though they may want insecure
+                user_input[CONF_ADDRESS] = device.ip_address
             errors, result = await self._async_create_or_error(user_input, False)
             if not errors:
                 return result
