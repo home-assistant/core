@@ -285,7 +285,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if device := await async_discover_device(
                 self.hass, user_input[CONF_ADDRESS]
             ):
-                await self.async_set_unique_id(dr.format_mac(device.mac_address))
+                await self.async_set_unique_id(
+                    dr.format_mac(device.mac_address), raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
             errors, result = await self._async_create_or_error(user_input, False)
@@ -322,7 +324,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if is_ip_address(host) and (
             device := await async_discover_device(self.hass, host)
         ):
-            await self.async_set_unique_id(dr.format_mac(device.mac_address))
+            await self.async_set_unique_id(
+                dr.format_mac(device.mac_address), raise_on_progress=False
+            )
             self._abort_if_unique_id_configured()
 
         return (await self._async_create_or_error(user_input, True))[1]
