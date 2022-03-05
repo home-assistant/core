@@ -225,7 +225,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(user_input, self.unique_id)
         except asyncio.TimeoutError:
-            return {CONF_HOST: "cannot_connect"}, None
+            return {"base": "cannot_connect"}, None
         except InvalidAuth:
             return {CONF_PASSWORD: "invalid_auth"}, None
         except Exception:  # pylint: disable=broad-except
