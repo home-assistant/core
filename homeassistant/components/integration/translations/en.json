@@ -3,7 +3,11 @@
         "step": {
             "init": {
                 "data": {
-                    "source": "Sensor entity"
+                    "method": "Riemann sum method to be used",
+                    "round": "Round the calculated integration value to at most N decimal places.",
+                    "source": "Sensor entity",
+                    "unit_prefix": "Metric unit to prefix the integration result.",
+                    "unit_time": "SI unit of time to integrate over"
                 },
                 "description": "Select the sensor to integrate."
             }

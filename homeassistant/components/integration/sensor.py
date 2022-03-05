@@ -111,9 +111,9 @@ async def async_setup_entry(
         config[CONF_ROUND_DIGITS],
         config[CONF_UNIT_PREFIX],
         config[CONF_UNIT_TIME],
-        config.get(CONF_UNIT_OF_MEASUREMENT),
+        None,
         config[CONF_METHOD],
-        config_entry.unique_id,
+        config_entry.entry_id,
     )
 
     async_add_entities([integral])

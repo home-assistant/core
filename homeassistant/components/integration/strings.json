@@ -5,7 +5,11 @@
       "init": {
         "description": "Select the sensor to integrate.",
         "data": {
-          "source": "Sensor entity"
+          "source": "Sensor entity",
+          "round": "Round the calculated integration value to at most N decimal places.",
+          "unit_prefix": "Metric unit to prefix the integration result.",
+          "unit_time": "SI unit of time to integrate over",
+          "method": "Riemann sum method to be used"
         }
       }
     }

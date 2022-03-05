@@ -12,12 +12,10 @@ from homeassistant.helpers import (
     helper_config_entry_flow,
     selector,
 )
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
     DEFAULT_ROUND,
@@ -34,15 +32,10 @@ STEPS = {
             vol.Required(CONF_SOURCE_SENSOR): selector.selector(
                 {"entity": {"domain": "sensor"}}
             ),
-            vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
-            vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(
-                list(UNIT_PREFIXES.keys())
-            ),
-            vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(
-                list(UNIT_TIME.keys())
-            ),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD): vol.In(
+            vol.Required(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
+            vol.Required(CONF_UNIT_PREFIX): vol.In(list(UNIT_PREFIXES)),
+            vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(list(UNIT_TIME)),
+            vol.Required(CONF_METHOD, default=TRAPEZOIDAL_METHOD): vol.In(
                 INTEGRATION_METHOD
             ),
         }
@@ -57,14 +50,18 @@ class ConfigFlowHandler(
 
     steps = STEPS
 
-    def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
-        """Return config entry title."""
+    def _async_config_entry_title_base(self, user_input: dict[str, Any]) -> str:
+        """Return config entry title base."""
         registry = er.async_get(self.hass)
-        object_id = split_entity_id(user_input["entity_id"])[1]
-        entry = registry.async_get(user_input["entity_id"])
+        object_id = split_entity_id(user_input[CONF_SOURCE_SENSOR])[1]
+        entry = registry.async_get(user_input[CONF_SOURCE_SENSOR])
         if entry:
             return entry.name or entry.original_name or object_id
-        state = self.hass.states.get(user_input["entity_id"])
+        state = self.hass.states.get(user_input[CONF_SOURCE_SENSOR])
         if state:
             return state.name or object_id
         return object_id
+
+    def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
+        """Return config entry title."""
+        return self._async_config_entry_title_base(user_input) + " integral"
