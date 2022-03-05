@@ -258,7 +258,7 @@ def get_season(
         if time_zone is not None:
             next_date = as_local(next_date.replace(tzinfo=get_time_zone("UTC")))
     else:
-        season = STATE_NONE
+        season = str(STATE_NONE)
         days_left = STATE_NONE
         days_in = STATE_NONE
         next_date = STATE_NONE
