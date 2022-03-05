@@ -51,3 +51,5 @@ class SleepNumberFirmnessEntity(SleepIQSleeperEntity, NumberEntity):
     async def async_set_value(self, value: float) -> None:
         """Set the firmness value."""
         await self.sleeper.set_sleepnumber(int(value))
+        self._attr_value = value
+        self.async_write_ha_state()
