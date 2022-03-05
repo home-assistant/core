@@ -85,10 +85,9 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_devices: AddEntitiesCallback,
-) -> bool:
+) -> None:
     """Set up a climate for maxcube."""
     setup_platform(hass, config_entry.data, async_add_devices)
-    return True
 
 
 class MaxCubeClimate(ClimateEntity):
