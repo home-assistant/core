@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for the Sensibo integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
-
-from dataclasses import dataclass
 
 from pysensibo import SensiboClient
 from pysensibo.exceptions import AuthenticationError, SensiboError
@@ -121,23 +120,21 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 temperature = measurements.get("temperature")
                 humidity = measurements.get("humidity")
 
-            motion_sensors = []
-            if dev["motionSensors"]:
-                for motionsensor in dev["motionSensors"]:
-                    sensor = MotionSensor(
-                        id=motionsensor["id"],
-                        alive=motionsensor["connectionStatus"].get("isAlive"),
-                        fw_ver=motionsensor.get("firmwareVersion"),
-                        fw_type=motionsensor.get("firmwareType"),
-                        is_main_sensor=motionsensor.get("isMainSensor"),
-                        battery_voltage=motionsensor["measurements"].get(
-                            "batteryVoltage"
-                        ),
-                        humidity=motionsensor["measurements"].get("humidity"),
-                        temperature=motionsensor["measurements"].get("temperature"),
-                        model=motionsensor.get("productModel"),
-                    )
-                    motion_sensors.append(sensor)
+            motion_sensors = [
+                MotionSensor(
+                    id=motionsensor["id"],
+                    alive=motionsensor["connectionStatus"].get("isAlive"),
+                    fw_ver=motionsensor.get("firmwareVersion"),
+                    fw_type=motionsensor.get("firmwareType"),
+                    is_main_sensor=motionsensor.get("isMainSensor"),
+                    battery_voltage=motionsensor["measurements"].get("batteryVoltage"),
+                    humidity=motionsensor["measurements"].get("humidity"),
+                    temperature=motionsensor["measurements"].get("temperature"),
+                    model=motionsensor.get("productModel"),
+                )
+                for motionsensor in dev["motionSensors"]
+                if dev["motionSensors"]
+            ]
 
             device_data[unique_id] = {
                 "id": unique_id,
