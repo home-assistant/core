@@ -11,11 +11,10 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_FILE_PATH): cv.isfile})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_FILE_PATH): str})
 
 _LOGGER = logging.getLogger(__name__)
 
