@@ -1,0 +1,17 @@
+{
+  "domain": "kdeconnect",
+  "name": "KDE Connect",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/kdeconnect",
+  "requirements": [
+    "pykdeconnect==0.1.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@freundTech"
+  ],
+  "iot_class": "local_push"
+}
