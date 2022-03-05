@@ -81,8 +81,11 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     )
     elk.connect()
 
-    if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT):
-        raise InvalidAuth
+    try:
+        if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT):
+            raise InvalidAuth
+    finally:
+        elk.disconnect()
 
     short_mac = _short_mac(mac) if mac else None
     if prefix and prefix != short_mac:
