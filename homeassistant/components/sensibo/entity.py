@@ -45,7 +45,6 @@ class SensiboBaseEntity(CoordinatorEntity):
         self, command: str, params: dict[str, Any]
     ) -> dict[str, Any]:
         """Send command to Sensibo api."""
-        result: dict[str, Any] = {"status": None}
         try:
             async with async_timeout.timeout(TIMEOUT):
                 result = await self.async_send_api_call(command, params)
@@ -61,16 +60,18 @@ class SensiboBaseEntity(CoordinatorEntity):
         self, command: str, params: dict[str, Any]
     ) -> dict[str, Any]:
         """Send api call."""
+        result: dict[str, Any] = {"status": None}
         if command == "set_calibration":
-            return await self._client.async_set_calibration(
+            result = await self._client.async_set_calibration(
                 self._device_id,
                 params["data"],
             )
         if command == "set_ac_state":
-            return await self._client.async_set_ac_state_property(
+            result = await self._client.async_set_ac_state_property(
                 self._device_id,
                 params["name"],
                 params["value"],
                 params["ac_states"],
                 params["assumed_state"],
             )
+        return result
