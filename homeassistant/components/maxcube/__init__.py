@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
@@ -52,7 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Establish connection to MAX! Cube."""
-
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
@@ -128,7 +127,6 @@ class MaxCubeHandle:
 
 async def _setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up using flow."""
-
     config = entry.data
 
     if DATA_KEY not in hass.data:
@@ -177,7 +175,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, [Platform.CLIMATE, Platform.BINARY_SENSOR]
     )
@@ -196,6 +193,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry."""
-
     await async_unload_entry(hass, entry)
     await async_setup_entry(hass, entry)

@@ -27,6 +27,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -70,12 +71,12 @@ def setup_platform(
         add_entities(devices)
 
 
-async def async_setup_platform(hass, config, add_devices, discovery_info=None) -> None:
+async def async_setup_platform(hass: HomeAssistant, config: ConfigType, add_devices: AddEntitiesCallback, discovery_info: DiscoveryInfoType | None = None) -> None:
     """Set up a climate for maxcube."""
     setup_platform(hass, config, add_devices)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_devices: AddEntitiesCallback) -> bool:
     """Set up a climate for maxcube."""
     setup_platform(hass, config_entry.data, async_add_devices)
     return True

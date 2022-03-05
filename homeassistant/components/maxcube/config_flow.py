@@ -19,7 +19,6 @@ class MaxCubeFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-
         if user_input is not None:
             return self.async_create_entry(title="eQ3 MAX!", data=user_input)
 
