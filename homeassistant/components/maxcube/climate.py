@@ -70,6 +70,17 @@ def setup_platform(
         add_entities(devices)
 
 
+async def async_setup_platform(hass, config, add_devices, discovery_info=None) -> None:
+    setup_platform(hass, config, add_devices)
+    return True
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Setup sensor platform for the ui"""
+    setup_platform(hass, config_entry.data, async_add_devices)
+    return True
+
+
 class MaxCubeClimate(ClimateEntity):
     """MAX! Cube ClimateEntity."""
 

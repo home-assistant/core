@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "eQ-3 MAX!",
+                "description": "Setup eQ-3 Max! Cube",
+                "data": {
+                    "host": "Gateway host",
+                    "port": "Port",
+                    "scan_interval": "Scan interval (seconds)"
+                }
+            }
+        }
+    }
+}
