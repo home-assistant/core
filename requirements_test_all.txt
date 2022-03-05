@@ -578,7 +578,7 @@ huawei-lte-api==1.4.18
 huisbaasje-client==0.1.0
 
 # homeassistant.components.hyperion
-hyperion-py==0.7.4
+hyperion-py==0.7.5
 
 # homeassistant.components.iaqualink
 iaqualink==0.4.1
