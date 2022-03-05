@@ -267,7 +267,7 @@ def get_season(
 
     # If user is located in the southern hemisphere swap the season
     if hemisphere == SOUTHERN:
-        season = HEMISPHERE_SEASON_SWAP.get(season)
+        season = str(HEMISPHERE_SEASON_SWAP.get(season))
 
     if hemisphere == EQUATOR:
         self.data = {
