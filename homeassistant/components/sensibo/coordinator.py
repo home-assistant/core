@@ -168,8 +168,9 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                     )
 
             # Add information for pure devices
-            pure_sensitivity = dev["pureBoostConfig"].get("sensitivity")
-            pure_boost_enabled = dev["pureBoostConfig"].get("enabled")
+            pure_conf = dev["pureBoostConfig"]
+            pure_sensitivity = pure_conf.get("sensitivity") if pure_conf else None
+            pure_boost_enabled = pure_conf.get("enabled") if pure_conf else None
 
             device_data[unique_id] = {
                 "id": unique_id,
