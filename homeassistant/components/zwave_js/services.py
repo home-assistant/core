@@ -25,6 +25,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const
+from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
 from .helpers import async_get_nodes_from_targets
 
 _LOGGER = logging.getLogger(__name__)
@@ -162,10 +163,10 @@ class ZWaveServices:
                             vol.Coerce(int), cv.string
                         ),
                         vol.Optional(const.ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(
-                            vol.Coerce(int), const.BITMASK_SCHEMA
+                            vol.Coerce(int), BITMASK_SCHEMA
                         ),
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                            vol.Coerce(int), const.BITMASK_SCHEMA, cv.string
+                            vol.Coerce(int), BITMASK_SCHEMA, cv.string
                         ),
                     },
                     cv.has_at_least_one_key(
@@ -197,10 +198,8 @@ class ZWaveServices:
                             vol.Coerce(int),
                             {
                                 vol.Any(
-                                    vol.Coerce(int), const.BITMASK_SCHEMA, cv.string
-                                ): vol.Any(
-                                    vol.Coerce(int), const.BITMASK_SCHEMA, cv.string
-                                )
+                                    vol.Coerce(int), BITMASK_SCHEMA, cv.string
+                                ): vol.Any(vol.Coerce(int), BITMASK_SCHEMA, cv.string)
                             },
                         ),
                     },
@@ -252,11 +251,9 @@ class ZWaveServices:
                             vol.Coerce(int), str
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_VALUE): const.VALUE_SCHEMA,
+                        vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
                         vol.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
-                        vol.Optional(const.ATTR_OPTIONS): {
-                            cv.string: const.VALUE_SCHEMA
-                        },
+                        vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
                     },
                     cv.has_at_least_one_key(
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
@@ -290,10 +287,8 @@ class ZWaveServices:
                             vol.Coerce(int), str
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_VALUE): const.VALUE_SCHEMA,
-                        vol.Optional(const.ATTR_OPTIONS): {
-                            cv.string: const.VALUE_SCHEMA
-                        },
+                        vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
+                        vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
                     },
                     vol.Any(
                         cv.has_at_least_one_key(

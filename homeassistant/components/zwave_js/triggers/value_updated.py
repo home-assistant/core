@@ -38,19 +38,13 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
+from ..config_validation import VALUE_SCHEMA
+
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
 
 ATTR_FROM = "from"
 ATTR_TO = "to"
-
-VALUE_SCHEMA = vol.Any(
-    bool,
-    vol.Coerce(int),
-    vol.Coerce(float),
-    cv.boolean,
-    cv.string,
-)
 
 TRIGGER_SCHEMA = vol.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
