@@ -12,6 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platfo
 from homeassistant.core import HomeAssistant, Config
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
 from homeassistant.config_entries import ConfigEntry
 
