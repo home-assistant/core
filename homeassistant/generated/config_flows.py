@@ -191,6 +191,7 @@ FLOWS = [
     "lutron_caseta",
     "lyric",
     "mailgun",
+    "maxcube",
     "mazda",
     "melcloud",
     "met",
