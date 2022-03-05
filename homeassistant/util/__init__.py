@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable, KeysView
+from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
-import enum
 from functools import wraps
 import random
 import re
 import string
 import threading
-from types import MappingProxyType
 from typing import Any, TypeVar
 
 import slugify as unicode_slug
@@ -19,7 +17,6 @@ from .dt import as_local, utcnow
 
 T = TypeVar("T")
 U = TypeVar("U")  # pylint: disable=invalid-name
-ENUM_T = TypeVar("ENUM_T", bound=enum.Enum)  # pylint: disable=invalid-name
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
@@ -55,7 +52,7 @@ def slugify(text: str | None, *, separator: str = "_") -> str:
 
 def repr_helper(inp: Any) -> str:
     """Help creating a more readable string representation of objects."""
-    if isinstance(inp, (dict, MappingProxyType)):
+    if isinstance(inp, Mapping):
         return ", ".join(
             f"{repr_helper(key)}={repr_helper(item)}" for key, item in inp.items()
         )
@@ -140,7 +137,7 @@ class Throttle:
 
         else:
 
-            def throttled_value() -> None:  # type: ignore
+            def throttled_value() -> None:  # type: ignore[misc]
                 """Stand-in function for when real func is being throttled."""
                 return None
 
@@ -194,7 +191,7 @@ class Throttle:
                 if force or utcnow() - throttle[1] > self.min_time:
                     result = method(*args, **kwargs)
                     throttle[1] = utcnow()
-                    return result  # type: ignore
+                    return result  # type: ignore[no-any-return]
 
                 return throttled_value()
             finally:

@@ -12,9 +12,9 @@
             "cloud_credentials_incomplete": "Credenziali cloud incomplete, inserisci nome utente, password e paese",
             "cloud_login_error": "Impossibile accedere a Xioami Miio Cloud, controlla le credenziali.",
             "cloud_no_devices": "Nessun dispositivo trovato in questo account cloud Xiaomi Miio.",
-            "no_device_selected": "Nessun dispositivo selezionato, selezionare un dispositivo.",
+            "no_device_selected": "Nessun dispositivo selezionato, seleziona un dispositivo.",
             "unknown_device": "Il modello del dispositivo non \u00e8 noto, non \u00e8 possibile configurare il dispositivo utilizzando il flusso di configurazione.",
-            "wrong_token": "Errore di checksum, token errato"
+            "wrong_token": "Errore del codice di controllo, token errato"
         },
         "flow_title": "{name}",
         "step": {
@@ -42,7 +42,7 @@
                     "name": "Nome del dispositivo",
                     "token": "Token API"
                 },
-                "description": "Avrai bisogno dei 32 caratteri della Token API, vedi https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per istruzioni. Tieni presente che questa Token API \u00e8 diversa dalla chiave utilizzata dall'integrazione Xiaomi Aqara.",
+                "description": "Avrai bisogno dei 32 caratteri del Token API, vedi https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per istruzioni. Tieni presente che questo Token API \u00e8 diverso dalla chiave utilizzata dall'integrazione Xiaomi Aqara.",
                 "title": "Connettiti a un dispositivo Xiaomi Miio o Xiaomi Gateway"
             },
             "gateway": {
@@ -51,8 +51,8 @@
                     "name": "Nome del Gateway",
                     "token": "Token API"
                 },
-                "description": "E' necessaria la Token API di 32 caratteri, vedere https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per le istruzioni. Notare che questa Token API \u00e8 differente dalla chiave usata dall'integrazione di Xiaomi Aqara.",
-                "title": "Connessione a un Xiaomi Gateway "
+                "description": "\u00c8 necessario il Token API di 32 caratteri, vedi https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per le istruzioni. Nota che questo Token API \u00e8 diverso dalla chiave usata dall'integrazione di Xiaomi Aqara.",
+                "title": "Connettiti a un Xiaomi Gateway "
             },
             "manual": {
                 "data": {
@@ -63,8 +63,8 @@
                 "title": "Connettiti a un dispositivo Xiaomi Miio o Xiaomi Gateway"
             },
             "reauth_confirm": {
-                "description": "L'integrazione di Xiaomi Miio deve riautenticare il tuo account per aggiornare i token o aggiungere credenziali cloud mancanti.",
-                "title": "Autenticare nuovamente l'integrazione"
+                "description": "L'integrazione di Xiaomi Miio deve autenticare nuovamente il tuo account per aggiornare i token o aggiungere credenziali cloud mancanti.",
+                "title": "Autentica nuovamente l'integrazione"
             },
             "select": {
                 "data": {
@@ -77,7 +77,7 @@
                 "data": {
                     "gateway": "Connettiti a un Xiaomi Gateway"
                 },
-                "description": "Selezionare a quale dispositivo si desidera collegare.",
+                "description": "Seleziona a quale dispositivo desideri collegarti.",
                 "title": "Xiaomi Miio"
             }
         }
@@ -91,7 +91,7 @@
                 "data": {
                     "cloud_subdevices": "Usa il cloud per connettere i sottodispositivi"
                 },
-                "description": "Specificare le impostazioni opzionali",
+                "description": "Specifica le impostazioni opzionali",
                 "title": "Xiaomi Miio"
             }
         }

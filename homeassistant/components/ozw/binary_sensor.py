@@ -2,22 +2,14 @@
 from openzwavemqtt.const import CommandClass, ValueIndex, ValueType
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_LOCK,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_SOUND,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
@@ -38,79 +30,79 @@ NOTIFICATION_SENSORS = [
         # Assuming here that Value 1 and 2 are not present at the same time
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_SMOKE_ALARM,
         NOTIFICATION_VALUES: [1, 2],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_SMOKE,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.SMOKE,
     },
     {
         # Index 1: Smoke Alarm - All other Value Id's
         # Create as disabled sensors
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_SMOKE_ALARM,
         NOTIFICATION_VALUES: [3, 4, 5, 6, 7, 8],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_SMOKE,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.SMOKE,
         NOTIFICATION_SENSOR_ENABLED: False,
     },
     {
         # Index 2: Carbon Monoxide - Value Id's 1 and 2
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_CARBON_MONOOXIDE,
         NOTIFICATION_VALUES: [1, 2],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_GAS,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.GAS,
     },
     {
         # Index 2: Carbon Monoxide - All other Value Id's
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_CARBON_MONOOXIDE,
         NOTIFICATION_VALUES: [4, 5, 7],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_GAS,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.GAS,
         NOTIFICATION_SENSOR_ENABLED: False,
     },
     {
         # Index 3: Carbon Dioxide - Value Id's 1 and 2
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_CARBON_DIOXIDE,
         NOTIFICATION_VALUES: [1, 2],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_GAS,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.GAS,
     },
     {
         # Index 3: Carbon Dioxide - All other Value Id's
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_CARBON_DIOXIDE,
         NOTIFICATION_VALUES: [4, 5, 7],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_GAS,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.GAS,
         NOTIFICATION_SENSOR_ENABLED: False,
     },
     {
         # Index 4: Heat - Value Id's 1, 2, 5, 6 (heat/underheat)
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_HEAT,
         NOTIFICATION_VALUES: [1, 2, 5, 6],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_HEAT,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.HEAT,
     },
     {
         # Index 4: Heat - All other Value Id's
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_HEAT,
         NOTIFICATION_VALUES: [3, 4, 8, 10, 11],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_HEAT,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.HEAT,
         NOTIFICATION_SENSOR_ENABLED: False,
     },
     {
         # Index 5: Water - Value Id's 1, 2, 3, 4
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_WATER,
         NOTIFICATION_VALUES: [1, 2, 3, 4],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_MOISTURE,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.MOISTURE,
     },
     {
         # Index 5: Water - All other Value Id's
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_WATER,
         NOTIFICATION_VALUES: [5],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_MOISTURE,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.MOISTURE,
         NOTIFICATION_SENSOR_ENABLED: False,
     },
     {
         # Index 6: Access Control - Value Id's 1, 2, 3, 4 (Lock)
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_ACCESS_CONTROL,
         NOTIFICATION_VALUES: [1, 2, 3, 4],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_LOCK,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.LOCK,
     },
     {
         # Index 6: Access Control - Value Id 22 (door/window open)
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_ACCESS_CONTROL,
         NOTIFICATION_VALUES: [22],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_DOOR,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
         NOTIFICATION_OFF_VALUE: 23,
     },
     {
@@ -118,32 +110,32 @@ NOTIFICATION_SENSORS = [
         # Assuming that value 1 and 2 are not present at the same time
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_HOME_SECURITY,
         NOTIFICATION_VALUES: [1, 2],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_SAFETY,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.SAFETY,
     },
     {
         # Index 7: Home Security - Value Id's 3, 4, 9 (tampering)
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_HOME_SECURITY,
         NOTIFICATION_VALUES: [3, 4, 9],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_SAFETY,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.SAFETY,
     },
     {
         # Index 7: Home Security - Value Id's 5, 6 (glass breakage)
         # Assuming that value 5 and 6 are not present at the same time
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_HOME_SECURITY,
         NOTIFICATION_VALUES: [5, 6],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_SAFETY,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.SAFETY,
     },
     {
         # Index 7: Home Security - Value Id's 7, 8 (motion)
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_HOME_SECURITY,
         NOTIFICATION_VALUES: [7, 8],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_MOTION,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.MOTION,
     },
     {
         # Index 8: Power management - Values 1...9
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_POWER_MANAGEMENT,
         NOTIFICATION_VALUES: [1, 2, 3, 4, 5, 6, 7, 8, 9],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.POWER,
         NOTIFICATION_SENSOR_ENABLED: False,
     },
     {
@@ -151,7 +143,7 @@ NOTIFICATION_SENSORS = [
         # Battery values (mutually exclusive)
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_POWER_MANAGEMENT,
         NOTIFICATION_VALUES: [10, 11, 12, 13, 14, 15],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.POWER,
         NOTIFICATION_SENSOR_ENABLED: False,
         NOTIFICATION_OFF_VALUE: None,
     },
@@ -159,14 +151,14 @@ NOTIFICATION_SENSORS = [
         # Index 9: System - Value Id's 1, 2, 6, 7
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_SYSTEM,
         NOTIFICATION_VALUES: [1, 2, 6, 7],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
         NOTIFICATION_SENSOR_ENABLED: False,
     },
     {
         # Index 10: Emergency - Value Id's 1, 2, 3
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_EMERGENCY,
         NOTIFICATION_VALUES: [1, 2, 3],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
     },
     {
         # Index 11: Clock - Value Id's 1, 2
@@ -213,20 +205,20 @@ NOTIFICATION_SENSORS = [
         # Index 14: Siren
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_SIREN,
         NOTIFICATION_VALUES: [1],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_SOUND,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.SOUND,
     },
     {
         # Index 15: Water valve
         # ignore non-boolean values
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_WATER_VALVE,
         NOTIFICATION_VALUES: [3, 4],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
     },
     {
         # Index 16: Weather
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_WEATHER,
         NOTIFICATION_VALUES: [1, 2],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
     },
     {
         # Index 17: Irrigation
@@ -239,18 +231,22 @@ NOTIFICATION_SENSORS = [
         # Index 18: Gas
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_GAS,
         NOTIFICATION_VALUES: [1, 2, 3, 4],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_GAS,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.GAS,
     },
     {
         # Index 18: Gas
         NOTIFICATION_TYPE: ValueIndex.NOTIFICATION_GAS,
         NOTIFICATION_VALUES: [6],
-        NOTIFICATION_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
+        NOTIFICATION_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
     },
 ]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave binary_sensor from config entry."""
 
     @callback

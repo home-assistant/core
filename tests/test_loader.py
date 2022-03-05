@@ -157,6 +157,21 @@ async def test_get_integration(hass):
     assert hue_light == integration.get_platform("light")
 
 
+async def test_get_integration_exceptions(hass):
+    """Test resolving integration."""
+    integration = await loader.async_get_integration(hass, "hue")
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ValueError("Boom")
+    ):
+        assert hue == integration.get_component()
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ValueError("Boom")
+    ):
+        assert hue_light == integration.get_platform("light")
+
+
 async def test_get_integration_legacy(hass, enable_custom_integrations):
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_embedded")
@@ -188,6 +203,7 @@ def test_integration_properties(hass):
                 {"hostname": "tesla_*", "macaddress": "4CFCAA*"},
                 {"hostname": "tesla_*", "macaddress": "044EAF*"},
                 {"hostname": "tesla_*", "macaddress": "98ED5C*"},
+                {"registered_devices": True},
             ],
             "usb": [
                 {"vid": "10C4", "pid": "EA60"},
@@ -218,6 +234,7 @@ def test_integration_properties(hass):
         {"hostname": "tesla_*", "macaddress": "4CFCAA*"},
         {"hostname": "tesla_*", "macaddress": "044EAF*"},
         {"hostname": "tesla_*", "macaddress": "98ED5C*"},
+        {"registered_devices": True},
     ]
     assert integration.usb == [
         {"vid": "10C4", "pid": "EA60"},
@@ -329,6 +346,33 @@ def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
     )
 
 
+def _get_test_integration_with_legacy_zeroconf_matcher(hass, name, config_flow):
+    """Return a generated test integration with a legacy zeroconf matcher."""
+    return loader.Integration(
+        hass,
+        f"homeassistant.components.{name}",
+        None,
+        {
+            "name": name,
+            "domain": name,
+            "config_flow": config_flow,
+            "dependencies": [],
+            "requirements": [],
+            "zeroconf": [
+                {
+                    "type": f"_{name}._tcp.local.",
+                    "macaddress": "AABBCC*",
+                    "manufacturer": "legacy*",
+                    "model": "legacy*",
+                    "name": f"{name}*",
+                }
+            ],
+            "homekit": {"models": [name]},
+            "ssdp": [{"manufacturer": name, "modelName": name}],
+        },
+    )
+
+
 def _get_test_integration_with_dhcp_matcher(hass, name, config_flow):
     """Return a generated test integration with a dhcp matcher."""
     return loader.Integration(
@@ -432,6 +476,33 @@ async def test_get_zeroconf(hass):
         assert zeroconf["_test_1._tcp.local."] == [{"domain": "test_1"}]
         assert zeroconf["_test_2._tcp.local."] == [
             {"domain": "test_2", "name": "test_2*"}
+        ]
+
+
+async def test_get_zeroconf_back_compat(hass):
+    """Verify that custom components with zeroconf are found and legacy matchers are converted."""
+    test_1_integration = _get_test_integration(hass, "test_1", True)
+    test_2_integration = _get_test_integration_with_legacy_zeroconf_matcher(
+        hass, "test_2", True
+    )
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test_1": test_1_integration,
+            "test_2": test_2_integration,
+        }
+        zeroconf = await loader.async_get_zeroconf(hass)
+        assert zeroconf["_test_1._tcp.local."] == [{"domain": "test_1"}]
+        assert zeroconf["_test_2._tcp.local."] == [
+            {
+                "domain": "test_2",
+                "name": "test_2*",
+                "properties": {
+                    "macaddress": "aabbcc*",
+                    "model": "legacy*",
+                    "manufacturer": "legacy*",
+                },
+            }
         ]
 
 
@@ -546,3 +617,22 @@ async def test_validation(hass):
     """Test we raise if invalid domain passed in."""
     with pytest.raises(ValueError):
         await loader.async_get_integration(hass, "some.thing")
+
+
+async def test_loggers(hass):
+    """Test we can fetch the loggers from the integration."""
+    name = "dummy"
+    integration = loader.Integration(
+        hass,
+        f"homeassistant.components.{name}",
+        None,
+        {
+            "name": name,
+            "domain": name,
+            "config_flow": True,
+            "dependencies": [],
+            "requirements": [],
+            "loggers": ["name1", "name2"],
+        },
+    )
+    assert integration.loggers == ["name1", "name2"]

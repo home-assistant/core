@@ -20,9 +20,17 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar"
+                    "host": "Sunucu"
                 }
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "A\u015fa\u011f\u0131 Kayd\u0131r",
+            "swipe_left": "Sola Kayd\u0131r",
+            "swipe_right": "Sa\u011fa Kayd\u0131r",
+            "swipe_up": "Yukar\u0131 Kayd\u0131r"
         }
     }
 }

@@ -8,7 +8,7 @@ from datetime import date
 from vehicle import Vehicle
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_DATE,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -43,13 +43,13 @@ SENSORS: tuple[RDWSensorEntityDescription, ...] = (
     RDWSensorEntityDescription(
         key="apk_expiration",
         name="APK Expiration",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
         value_fn=lambda vehicle: vehicle.apk_expiration,
     ),
     RDWSensorEntityDescription(
         key="ascription_date",
         name="Ascription Date",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
         value_fn=lambda vehicle: vehicle.ascription_date,
     ),
 )

@@ -10,16 +10,19 @@
         "step": {
             "manual_tunnel": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "individual_address": "Ba\u011flant\u0131 i\u00e7in bireysel adres",
+                    "local_ip": "Home Assistant Yerel IP'si (otomatik alg\u0131lama i\u00e7in bo\u015f b\u0131rak\u0131n)",
                     "port": "Port",
-                    "route_back": "Geri Y\u00f6nlendirme / NAT Modu"
+                    "route_back": "Geri Y\u00f6nlendirme / NAT Modu",
+                    "tunneling_type": "KNX T\u00fcnel Tipi"
                 },
                 "description": "L\u00fctfen t\u00fcnel cihaz\u0131n\u0131z\u0131n ba\u011flant\u0131 bilgilerini girin."
             },
             "routing": {
                 "data": {
                     "individual_address": "Y\u00f6nlendirme ba\u011flant\u0131s\u0131 i\u00e7in bireysel adres",
+                    "local_ip": "Home Assistant Yerel IP'si (otomatik alg\u0131lama i\u00e7in bo\u015f b\u0131rak\u0131n)",
                     "multicast_group": "Y\u00f6nlendirme i\u00e7in kullan\u0131lan \u00e7ok noktaya yay\u0131n grubu",
                     "multicast_port": "Y\u00f6nlendirme i\u00e7in kullan\u0131lan \u00e7ok noktaya yay\u0131n ba\u011flant\u0131 noktas\u0131"
                 },
@@ -45,6 +48,7 @@
                 "data": {
                     "connection_type": "KNX Ba\u011flant\u0131 T\u00fcr\u00fc",
                     "individual_address": "Varsay\u0131lan bireysel adres",
+                    "local_ip": "Home Assistant Yerel IP'si (otomatik alg\u0131lama i\u00e7in 0.0.0.0 kullan\u0131n)",
                     "multicast_group": "Y\u00f6nlendirme ve ke\u015fif i\u00e7in kullan\u0131lan \u00e7ok noktaya yay\u0131n grubu",
                     "multicast_port": "Y\u00f6nlendirme ve ke\u015fif i\u00e7in kullan\u0131lan \u00e7ok noktaya yay\u0131n ba\u011flant\u0131 noktas\u0131",
                     "rate_limit": "Saniyede maksimum giden telegram say\u0131s\u0131",
@@ -53,9 +57,11 @@
             },
             "tunnel": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
+                    "local_ip": "Yerel IP (emin de\u011filseniz bo\u015f b\u0131rak\u0131n)",
                     "port": "Port",
-                    "route_back": "Geri Y\u00f6nlendirme / NAT Modu"
+                    "route_back": "Geri Y\u00f6nlendirme / NAT Modu",
+                    "tunneling_type": "KNX T\u00fcnel Tipi"
                 }
             }
         }

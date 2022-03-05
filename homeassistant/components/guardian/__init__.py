@@ -11,13 +11,16 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
     CONF_FILENAME,
     CONF_IP_ADDRESS,
     CONF_PORT,
     CONF_URL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
@@ -63,16 +66,22 @@ SERVICES = (
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
 
+SERVICE_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+    }
+)
+
 SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(CONF_UID): cv.string,
     }
 )
 
 SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Optional(CONF_URL): cv.url,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_FILENAME): cv.string,
@@ -80,7 +89,7 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
 )
 
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 
 @callback
@@ -167,7 +176,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 async with client:
                     await func(call, client)
             except GuardianError as err:
-                LOGGER.error("Error while executing %s: %s", func.__name__, err)
+                raise HomeAssistantError(
+                    f"Error while executing {func.__name__}: {err}"
+                ) from err
 
         return wrapper
 
@@ -221,15 +232,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     for service_name, schema, method in (
-        (SERVICE_NAME_DISABLE_AP, None, async_disable_ap),
-        (SERVICE_NAME_ENABLE_AP, None, async_enable_ap),
+        (SERVICE_NAME_DISABLE_AP, SERVICE_BASE_SCHEMA, async_disable_ap),
+        (SERVICE_NAME_ENABLE_AP, SERVICE_BASE_SCHEMA, async_enable_ap),
         (
             SERVICE_NAME_PAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_pair_sensor,
         ),
-        (SERVICE_NAME_REBOOT, None, async_reboot),
-        (SERVICE_NAME_RESET_VALVE_DIAGNOSTICS, None, async_reset_valve_diagnostics),
+        (SERVICE_NAME_REBOOT, SERVICE_BASE_SCHEMA, async_reboot),
+        (
+            SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
+            SERVICE_BASE_SCHEMA,
+            async_reset_valve_diagnostics,
+        ),
         (
             SERVICE_NAME_UNPAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,

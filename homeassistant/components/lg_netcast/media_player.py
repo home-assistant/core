@@ -1,4 +1,6 @@
 """Support for LG TV running on NetCast 3 or 4."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 from pylgnetcast import LgNetCastClient, LgNetCastError
@@ -18,6 +20,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
@@ -28,8 +31,11 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -43,6 +49,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 SUPPORT_LGTV = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
@@ -62,12 +69,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the LG TV platform."""
 
     host = config.get(CONF_HOST)
     access_token = config.get(CONF_ACCESS_TOKEN)
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     on_action = config.get(CONF_ON_ACTION)
 
     client = LgNetCastClient(host, access_token)
@@ -111,11 +123,8 @@ class LgTVDevice(MediaPlayerEntity):
         try:
             with self._client as client:
                 self._state = STATE_PLAYING
-                volume_info = client.query_data("volume_info")
-                if volume_info:
-                    volume_info = volume_info[0]
-                    self._volume = float(volume_info.find("level").text)
-                    self._muted = volume_info.find("mute").text == "true"
+
+                self.__update_volume()
 
                 channel_info = client.query_data("cur_channel")
                 if channel_info:
@@ -149,6 +158,13 @@ class LgTVDevice(MediaPlayerEntity):
                     self._source_names = [n for n, k in sorted_sources]
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
+
+    def __update_volume(self):
+        volume_info = self._client.get_volume()
+        if volume_info:
+            (volume, muted) = volume_info
+            self._volume = volume
+            self._muted = muted
 
     @property
     def name(self):
@@ -230,6 +246,10 @@ class LgTVDevice(MediaPlayerEntity):
     def volume_down(self):
         """Volume down media player."""
         self.send_command(25)
+
+    def set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        self._client.set_volume(float(volume * 100))
 
     def mute_volume(self, mute):
         """Send mute command."""

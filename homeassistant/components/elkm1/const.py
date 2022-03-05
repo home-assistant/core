@@ -1,11 +1,15 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 
+from datetime import timedelta
+
 from elkm1_lib.const import Max
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CODE, CONF_ZONE
 
 DOMAIN = "elkm1"
+
+LOGIN_TIMEOUT = 20
 
 CONF_AUTO_CONFIGURE = "auto_configure"
 CONF_AREA = "area"
@@ -18,9 +22,8 @@ CONF_SETTING = "setting"
 CONF_TASK = "task"
 CONF_THERMOSTAT = "thermostat"
 
-
-BARE_TEMP_FAHRENHEIT = "F"
-BARE_TEMP_CELSIUS = "C"
+DISCOVER_SCAN_TIMEOUT = 10
+DISCOVERY_INTERVAL = timedelta(minutes=15)
 
 ELK_ELEMENTS = {
     CONF_AREA: Max.AREAS.value,

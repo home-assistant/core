@@ -26,8 +26,10 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_utc
 
 from . import VacuumCoordinatorData
@@ -92,12 +94,17 @@ STATE_CODE_TO_STATE = {
     16: STATE_CLEANING,  # "Going to target"
     17: STATE_CLEANING,  # "Zoned cleaning"
     18: STATE_CLEANING,  # "Segment cleaning"
+    22: STATE_DOCKED,  # "Emptying the bin" on s7+
     100: STATE_DOCKED,  # "Charging complete"
     101: STATE_ERROR,  # "Device offline"
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Xiaomi vacuum cleaner robot from a config entry."""
     entities = []
 

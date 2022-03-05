@@ -20,7 +20,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BondHub
 from .const import (
     ATTR_POWER_STATE,
     BPUP_SUBS,
@@ -30,7 +29,7 @@ from .const import (
     SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
 )
 from .entity import BondEntity
-from .utils import BondDevice
+from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,6 +199,9 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 
     async def async_start_increasing_brightness(self) -> None:
         """Start increasing the light brightness."""
+        _LOGGER.warning(
+            "The bond.start_increasing_brightness service is deprecated and has been replaced with a button; Call the button.press service instead"
+        )
         self._async_has_action_or_raise(Action.START_INCREASING_BRIGHTNESS)
         await self._hub.bond.action(
             self._device.device_id, Action(Action.START_INCREASING_BRIGHTNESS)
@@ -207,6 +209,9 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 
     async def async_start_decreasing_brightness(self) -> None:
         """Start decreasing the light brightness."""
+        _LOGGER.warning(
+            "The bond.start_decreasing_brightness service is deprecated and has been replaced with a button; Call the button.press service instead"
+        )
         self._async_has_action_or_raise(Action.START_DECREASING_BRIGHTNESS)
         await self._hub.bond.action(
             self._device.device_id, Action(Action.START_DECREASING_BRIGHTNESS)
@@ -214,6 +219,9 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 
     async def async_stop(self) -> None:
         """Stop all actions and clear the queue."""
+        _LOGGER.warning(
+            "The bond.stop service is deprecated and has been replaced with a button; Call the button.press service instead"
+        )
         self._async_has_action_or_raise(Action.STOP)
         await self._hub.bond.action(self._device.device_id, Action(Action.STOP))
 

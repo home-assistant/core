@@ -7,7 +7,7 @@ from ipaddress import IPv4Address, IPv6Address
 import logging
 from urllib.parse import urlparse
 
-from async_upnp_client.search import SsdpSearchListener
+from async_upnp_client.search import SsdpHeaders, SsdpSearchListener
 
 from homeassistant import config_entries
 from homeassistant.components import network, ssdp
@@ -67,12 +67,13 @@ class YeelightScanner:
 
                 return _async_connected
 
+            source = (str(source_ip), 0)
             self._listeners.append(
                 SsdpSearchListener(
                     async_callback=self._async_process_entry,
                     service_type=SSDP_ST,
                     target=SSDP_TARGET,
-                    source_ip=source_ip,
+                    source=source,
                     async_connect_callback=_wrap_async_connected_idx(idx),
                 )
             )
@@ -87,7 +88,7 @@ class YeelightScanner:
                 continue
             _LOGGER.warning(
                 "Failed to setup listener for %s: %s",
-                self._listeners[idx].source_ip,
+                self._listeners[idx].source,
                 result,
             )
             failed_listeners.append(self._listeners[idx])
@@ -174,10 +175,9 @@ class YeelightScanner:
         # of another discovery
         async_call_later(self._hass, 1, _async_start_flow)
 
-    async def _async_process_entry(self, response: ssdp.SsdpServiceInfo):
+    async def _async_process_entry(self, headers: SsdpHeaders):
         """Process a discovery."""
-        _LOGGER.debug("Discovered via SSDP: %s", response)
-        headers = response.ssdp_headers
+        _LOGGER.debug("Discovered via SSDP: %s", headers)
         unique_id = headers["id"]
         host = urlparse(headers["location"]).hostname
         current_entry = self._unique_id_capabilities.get(unique_id)

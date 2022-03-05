@@ -1,25 +1,22 @@
 """Config flow for SONOS."""
+from collections.abc import Awaitable
 import dataclasses
 
-import soco
-
-from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
-from .const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
+from .const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN, UPNP_ST
 from .helpers import hostname_to_uid
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
-    result = await hass.async_add_executor_job(soco.discover)
-    return bool(result)
+    """Return if Sonos devices have been seen recently with SSDP."""
+    return bool(await ssdp.async_get_discovery_info_by_st(hass, UPNP_ST))
 
 
-class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
+class SonosDiscoveryFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):
     """Sonos discovery flow that callsback zeroconf updates."""
 
     def __init__(self) -> None:
@@ -45,6 +42,3 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
                 "Zeroconf", properties, host, uid, boot_seqnum, model, mdns_name
             )
         return await self.async_step_discovery(dataclasses.asdict(discovery_info))
-
-
-config_entries.HANDLERS.register(DOMAIN)(SonosDiscoveryFlowHandler)

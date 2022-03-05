@@ -7,9 +7,9 @@ from typing import NamedTuple
 import numpy as np
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_STATE
@@ -99,7 +99,7 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ALLERGY_TODAY,
         name="Allergy Index: Today",
         icon="mdi:flower",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ALLERGY_TOMORROW,
@@ -110,7 +110,7 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ASTHMA_TODAY,
         name="Asthma Index: Today",
         icon="mdi:flower",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TOMORROW,
@@ -121,7 +121,7 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_DISEASE_TODAY,
         name="Cold & Flu Index: Today",
         icon="mdi:pill",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -161,7 +161,7 @@ def calculate_trend(indices: list[float]) -> str:
     """Calculate the "moving average" of a set of indices."""
     index_range = np.arange(0, len(indices))
     index_array = np.array(indices)
-    linear_fit = np.polyfit(index_range, index_array, 1)  # type: ignore
+    linear_fit = np.polyfit(index_range, index_array, 1)  # type: ignore[no-untyped-call]
     slope = round(linear_fit[0], 2)
 
     if slope > 0:

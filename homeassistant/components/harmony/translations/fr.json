@@ -7,7 +7,7 @@
             "cannot_connect": "\u00c9chec de connexion",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Logitech Harmony Hub {name}",
+        "flow_title": "{name}",
         "step": {
             "link": {
                 "description": "Voulez-vous configurer {name} ( {host} ) ?",

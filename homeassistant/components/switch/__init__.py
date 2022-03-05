@@ -11,12 +11,15 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_ENTITY_ID,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -26,7 +29,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-DOMAIN = "switch"
+from .const import DOMAIN
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -59,6 +63,8 @@ DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
 DEVICE_CLASS_OUTLET = SwitchDeviceClass.OUTLET.value
 DEVICE_CLASS_SWITCH = SwitchDeviceClass.SWITCH.value
 
+PLATFORMS: list[Platform] = [Platform.LIGHT]
+
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -85,6 +91,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    if entry.domain == DOMAIN:
+        registry = er.async_get(hass)
+        try:
+            er.async_validate_entity_id(registry, entry.options[CONF_ENTITY_ID])
+        except vol.Invalid:
+            # The entity is identified by an unknown entity registry ID
+            _LOGGER.error(
+                "Failed to setup light switch for unknown entity %s",
+                entry.options[CONF_ENTITY_ID],
+            )
+            return False
+
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+        return True
+
     component: EntityComponent = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
@@ -140,15 +161,3 @@ class SwitchEntity(ToggleEntity):
                 data[attr] = value
 
         return data
-
-
-class SwitchDevice(SwitchEntity):
-    """Representation of a switch (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "SwitchDevice is deprecated, modify %s to extend SwitchEntity",
-            cls.__name__,
-        )

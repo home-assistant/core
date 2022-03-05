@@ -1,9 +1,9 @@
 """The tests for the Demo lock platform."""
-import asyncio
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.demo import DOMAIN
+from homeassistant.components.demo import DOMAIN, lock as demo_lock
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
@@ -15,10 +15,10 @@ from homeassistant.components.lock import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from tests.common import async_capture_events, async_mock_service
 
 FRONT = "lock.front_door"
 KITCHEN = "lock.kitchen_door"
@@ -35,54 +35,64 @@ async def setup_comp(hass):
     await hass.async_block_till_done()
 
 
+@patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
 async def test_locking(hass):
     """Test the locking of a lock."""
     state = hass.states.get(KITCHEN)
     assert state.state == STATE_UNLOCKED
+    await hass.async_block_till_done()
 
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
         LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: KITCHEN}, blocking=False
     )
+    await hass.async_block_till_done()
 
-    await asyncio.sleep(1)
-    state = hass.states.get(KITCHEN)
-    assert state.state == STATE_LOCKING
-    await asyncio.sleep(2)
-    state = hass.states.get(KITCHEN)
-    assert state.state == STATE_LOCKED
+    assert state_changes[0].data["entity_id"] == KITCHEN
+    assert state_changes[0].data["new_state"].state == STATE_LOCKING
+
+    assert state_changes[1].data["entity_id"] == KITCHEN
+    assert state_changes[1].data["new_state"].state == STATE_LOCKED
 
 
+@patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
 async def test_unlocking(hass):
     """Test the unlocking of a lock."""
     state = hass.states.get(FRONT)
     assert state.state == STATE_LOCKED
+    await hass.async_block_till_done()
 
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
         LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: FRONT}, blocking=False
     )
-    await asyncio.sleep(1)
-    state = hass.states.get(FRONT)
-    assert state.state == STATE_UNLOCKING
-    await asyncio.sleep(2)
-    state = hass.states.get(FRONT)
-    assert state.state == STATE_UNLOCKED
+    await hass.async_block_till_done()
+
+    assert state_changes[0].data["entity_id"] == FRONT
+    assert state_changes[0].data["new_state"].state == STATE_UNLOCKING
+
+    assert state_changes[1].data["entity_id"] == FRONT
+    assert state_changes[1].data["new_state"].state == STATE_UNLOCKED
 
 
+@patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
 async def test_jammed_when_locking(hass):
     """Test the locking of a lock jams."""
     state = hass.states.get(POORLY_INSTALLED)
     assert state.state == STATE_UNLOCKED
+    await hass.async_block_till_done()
 
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
         LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: POORLY_INSTALLED}, blocking=False
     )
+    await hass.async_block_till_done()
 
-    await asyncio.sleep(1)
-    state = hass.states.get(POORLY_INSTALLED)
-    assert state.state == STATE_LOCKING
-    await asyncio.sleep(2)
-    state = hass.states.get(POORLY_INSTALLED)
-    assert state.state == STATE_JAMMED
+    assert state_changes[0].data["entity_id"] == POORLY_INSTALLED
+    assert state_changes[0].data["new_state"].state == STATE_LOCKING
+
+    assert state_changes[1].data["entity_id"] == POORLY_INSTALLED
+    assert state_changes[1].data["new_state"].state == STATE_JAMMED
 
 
 async def test_opening_mocked(hass):

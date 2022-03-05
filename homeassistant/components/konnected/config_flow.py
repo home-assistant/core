@@ -11,8 +11,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
     DEVICE_CLASSES_SCHEMA,
+    BinarySensorDeviceClass,
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -101,7 +101,9 @@ IO_SCHEMA = vol.Schema(
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ZONE): vol.In(ZONES),
-        vol.Required(CONF_TYPE, default=DEVICE_CLASS_DOOR): DEVICE_CLASSES_SCHEMA,
+        vol.Required(
+            CONF_TYPE, default=BinarySensorDeviceClass.DOOR
+        ): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_INVERSE, default=False): cv.boolean,
     }
@@ -571,7 +573,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     {
                         vol.Required(
                             CONF_TYPE,
-                            default=current_cfg.get(CONF_TYPE, DEVICE_CLASS_DOOR),
+                            default=current_cfg.get(
+                                CONF_TYPE, BinarySensorDeviceClass.DOOR
+                            ),
                         ): DEVICE_CLASSES_SCHEMA,
                         vol.Optional(
                             CONF_NAME, default=current_cfg.get(CONF_NAME, vol.UNDEFINED)
@@ -600,7 +604,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         {
                             vol.Required(
                                 CONF_TYPE,
-                                default=current_cfg.get(CONF_TYPE, DEVICE_CLASS_DOOR),
+                                default=current_cfg.get(
+                                    CONF_TYPE, BinarySensorDeviceClass.DOOR
+                                ),
                             ): DEVICE_CLASSES_SCHEMA,
                             vol.Optional(
                                 CONF_NAME,

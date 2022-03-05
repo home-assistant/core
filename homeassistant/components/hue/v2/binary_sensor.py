@@ -4,18 +4,17 @@ from __future__ import annotations
 from typing import Any, Union
 
 from aiohue.v2 import HueBridgeV2
-from aiohue.v2.controllers.config import EntertainmentConfigurationController
+from aiohue.v2.controllers.config import (
+    EntertainmentConfiguration,
+    EntertainmentConfigurationController,
+)
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.sensors import MotionController
-from aiohue.v2.models.entertainment import (
-    EntertainmentConfiguration,
-    EntertainmentStatus,
-)
+from aiohue.v2.models.entertainment_configuration import EntertainmentStatus
 from aiohue.v2.models.motion import Motion
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_RUNNING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -80,11 +79,14 @@ class HueBinarySensorBase(HueBaseEntity, BinarySensorEntity):
 class HueMotionSensor(HueBinarySensorBase):
     """Representation of a Hue Motion sensor."""
 
-    _attr_device_class = DEVICE_CLASS_MOTION
+    _attr_device_class = BinarySensorDeviceClass.MOTION
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
+        if not self.resource.enabled:
+            # Force None (unknown) if the sensor is set to disabled in Hue
+            return None
         return self.resource.motion.motion
 
     @property
@@ -96,7 +98,7 @@ class HueMotionSensor(HueBinarySensorBase):
 class HueEntertainmentActiveSensor(HueBinarySensorBase):
     """Representation of a Hue Entertainment Configuration as binary sensor."""
 
-    _attr_device_class = DEVICE_CLASS_RUNNING
+    _attr_device_class = BinarySensorDeviceClass.RUNNING
 
     @property
     def is_on(self) -> bool | None:
@@ -107,4 +109,4 @@ class HueEntertainmentActiveSensor(HueBinarySensorBase):
     def name(self) -> str:
         """Return sensor name."""
         type_title = self.resource.type.value.replace("_", " ").title()
-        return f"{self.resource.name}: {type_title}"
+        return f"{self.resource.metadata.name}: {type_title}"

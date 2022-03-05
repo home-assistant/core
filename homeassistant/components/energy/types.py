@@ -1,7 +1,8 @@
 """Types for the energy platform."""
 from __future__ import annotations
 
-from typing import Awaitable, Callable, TypedDict
+from collections.abc import Awaitable, Callable
+from typing import TypedDict
 
 from homeassistant.core import HomeAssistant
 

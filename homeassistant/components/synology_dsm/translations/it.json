@@ -8,8 +8,8 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
-            "missing_data": "Dati mancanti: si prega di riprovare pi\u00f9 tardi o un'altra configurazione",
-            "otp_failed": "Autenticazione in due fasi fallita, riprovare con un nuovo codice di accesso",
+            "missing_data": "Dati mancanti: riprova pi\u00f9 tardi o un'altra configurazione",
+            "otp_failed": "Autenticazione in due fasi non riuscita, riprova con un nuovo codice di accesso",
             "unknown": "Errore imprevisto"
         },
         "flow_title": "{name} ({host})",
@@ -26,7 +26,7 @@
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 },
                 "description": "Vuoi impostare {name} ({host})?",
                 "title": "Synology DSM"
@@ -37,14 +37,14 @@
                     "username": "Nome utente"
                 },
                 "description": "Motivo: {details}",
-                "title": "Synology DSM Autenticare nuovamente l'integrazione"
+                "title": "Synology DSM Autentica nuovamente l'integrazione"
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "title": "Autenticare nuovamente l'integrazione Synology DSM "
+                "title": "Autentica nuovamente l'integrazione Synology DSM "
             },
             "user": {
                 "data": {
@@ -53,7 +53,7 @@
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 },
                 "title": "Synology DSM"
             }
@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minuti tra una scansione e l'altra",
+                    "snap_profile_type": "Livello di qualit\u00e0 delle istantanee della fotocamera (0:alto 1:medio 2:basso)",
                     "timeout": "Timeout (in secondi)"
                 }
             }

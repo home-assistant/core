@@ -6,7 +6,6 @@ from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
-from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -14,6 +13,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import URL
+from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
@@ -22,6 +22,63 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
 from tests.common import MockEntity, MockEntityPlatform, async_mock_service
+
+
+async def test_fire_event(hass, websocket_client):
+    """Test fire event command."""
+    runs = []
+
+    async def event_handler(event):
+        runs.append(event)
+
+    hass.bus.async_listen_once("event_type_test", event_handler)
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "fire_event",
+            "event_type": "event_type_test",
+            "event_data": {"hello": "world"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert len(runs) == 1
+
+    assert runs[0].event_type == "event_type_test"
+    assert runs[0].data == {"hello": "world"}
+
+
+async def test_fire_event_without_data(hass, websocket_client):
+    """Test fire event command."""
+    runs = []
+
+    async def event_handler(event):
+        runs.append(event)
+
+    hass.bus.async_listen_once("event_type_test", event_handler)
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "fire_event",
+            "event_type": "event_type_test",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert len(runs) == 1
+
+    assert runs[0].event_type == "event_type_test"
+    assert runs[0].data == {}
 
 
 async def test_call_service(hass, websocket_client):
@@ -530,13 +587,20 @@ async def test_states_filters_visible(hass, hass_admin_user, websocket_client):
 
 async def test_get_states_not_allows_nan(hass, websocket_client):
     """Test get_states command not allows NaN floats."""
-    hass.states.async_set("greeting.hello", "world", {"hello": float("NaN")})
+    hass.states.async_set("greeting.hello", "world")
+    hass.states.async_set("greeting.bad", "data", {"hello": float("NaN")})
+    hass.states.async_set("greeting.bye", "universe")
 
     await websocket_client.send_json({"id": 5, "type": "get_states"})
 
     msg = await websocket_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_UNKNOWN_ERROR
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == [
+        hass.states.get("greeting.hello").as_dict(),
+        hass.states.get("greeting.bye").as_dict(),
+    ]
 
 
 async def test_subscribe_unsubscribe_events_whitelist(
@@ -644,6 +708,38 @@ async def test_render_template_renders_template(hass, websocket_client):
             "all": False,
             "domains": [],
             "entities": ["light.test"],
+            "time": False,
+        },
+    }
+
+
+async def test_render_template_with_timeout_and_variables(hass, websocket_client):
+    """Test a template with a timeout and variables renders without error."""
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "timeout": 10,
+            "variables": {"test": {"value": "hello"}},
+            "template": "{{ test.value }}",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {
+        "result": "hello",
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": [],
             "time": False,
         },
     }
@@ -1197,3 +1293,60 @@ async def test_integration_setup_info(hass, websocket_client, hass_admin_user):
         {"domain": "august", "seconds": 12.5},
         {"domain": "isy994", "seconds": 12.8},
     ]
+
+
+@pytest.mark.parametrize(
+    "key,config",
+    (
+        ("trigger", {"platform": "event", "event_type": "hello"}),
+        (
+            "condition",
+            {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
+        ),
+        ("action", {"service": "domain_test.test_service"}),
+    ),
+)
+async def test_validate_config_works(websocket_client, key, config):
+    """Test config validation."""
+    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {key: {"valid": True, "error": None}}
+
+
+@pytest.mark.parametrize(
+    "key,config,error",
+    (
+        (
+            "trigger",
+            {"platform": "non_existing", "event_type": "hello"},
+            "Invalid platform 'non_existing' specified",
+        ),
+        (
+            "condition",
+            {
+                "condition": "non_existing",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+            "Unexpected value for condition: 'non_existing'. Expected and, device, not, numeric_state, or, state, sun, template, time, trigger, zone",
+        ),
+        (
+            "action",
+            {"non_existing": "domain_test.test_service"},
+            "Unable to determine action @ data[0]",
+        ),
+    ),
+)
+async def test_validate_config_invalid(websocket_client, key, config, error):
+    """Test config validation."""
+    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {key: {"valid": False, "error": error}}

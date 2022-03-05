@@ -7,8 +7,8 @@
         },
         "error": {
             "invalid_sgtin_or_pin": "SGTIN o Codice PIN non valido, si prega di riprovare.",
-            "press_the_button": "Si prega di premere il pulsante blu.",
-            "register_failed": "Registrazione fallita, si prega di riprovare.",
+            "press_the_button": "Premi il pulsante blu.",
+            "register_failed": "Registrazione non riuscita, riprova.",
             "timeout_button": "Timeout della pressione del pulsante blu, riprovare."
         },
         "step": {

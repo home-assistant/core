@@ -12,12 +12,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_GATEWAY_ID,
-    CONF_HOST,
     CONF_IDENTITY,
     CONF_IMPORT_GROUPS,
     CONF_KEY,

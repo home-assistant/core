@@ -1,6 +1,7 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
 from __future__ import annotations
 
+from datetime import date, datetime
 from typing import Any
 
 import voluptuous as vol
@@ -12,8 +13,10 @@ from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -32,6 +35,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
@@ -153,7 +158,12 @@ def _async_create_template_tracking_entities(
     async_add_entities(sensors)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the template sensors."""
     if discovery_info is None:
         _async_create_template_tracking_entities(
@@ -189,45 +199,42 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
-        self._friendly_name_template = config.get(CONF_NAME)
-
-        self._attr_name = None
-        # Try to render the name as it can influence the entity ID
-        if self._friendly_name_template:
-            self._friendly_name_template.hass = hass
-            try:
-                self._attr_name = self._friendly_name_template.async_render(
-                    parse_result=False
-                )
-            except template.TemplateError:
-                pass
-
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._template = config.get(CONF_STATE)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
-        self._attr_unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.add_template_attribute(
             "_attr_native_value", self._template, None, self._update_state
         )
-        if self._friendly_name_template and not self._friendly_name_template.is_static:
-            self.add_template_attribute("_attr_name", self._friendly_name_template)
 
         await super().async_added_to_hass()
 
     @callback
     def _update_state(self, result):
         super()._update_state(result)
-        self._attr_native_value = None if isinstance(result, TemplateError) else result
+        if isinstance(result, TemplateError):
+            self._attr_native_value = None
+            return
+
+        if result is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            self._attr_native_value = result
+            return
+
+        self._attr_native_value = async_parse_date_datetime(
+            result, self.entity_id, self.device_class
+        )
 
 
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
@@ -237,7 +244,7 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     extra_template_keys = (CONF_STATE,)
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | date | None:
         """Return state of the sensor."""
         return self._rendered.get(CONF_STATE)
 
@@ -245,3 +252,20 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     def state_class(self) -> str | None:
         """Sensor state class."""
         return self._config.get(CONF_STATE_CLASS)
+
+    @callback
+    def _process_data(self) -> None:
+        """Process new data."""
+        super()._process_data()
+
+        if (
+            state := self._rendered.get(CONF_STATE)
+        ) is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            return
+
+        self._rendered[CONF_STATE] = async_parse_date_datetime(
+            state, self.entity_id, self.device_class
+        )

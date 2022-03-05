@@ -286,7 +286,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         temperature_feeling = None
         town_id = None
         town_name = None
-        town_timestamp = dt_util.as_utc(elaborated).isoformat()
+        town_timestamp = dt_util.as_utc(elaborated)
         wind_bearing = None
         wind_max_speed = None
         wind_speed = None
@@ -312,7 +312,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         # Overwrite weather values with closest station data (if present)
         if station_data:
-            station_timestamp = dt_util.as_utc(station_dt).isoformat()
+            station_timestamp = dt_util.as_utc(station_dt)
             if (now_utc - station_dt) <= STATION_MAX_DELTA:
                 if AEMET_ATTR_STATION_HUMIDITY in station_data:
                     humidity = format_float(station_data[AEMET_ATTR_STATION_HUMIDITY])

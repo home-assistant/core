@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "no_devices": "Nie wykryto urz\u0105dze\u0144",
+            "no_username": "Nie uda\u0142o si\u0119 uzyska\u0107 nazwy u\u017cytkownika"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "name": "Nazwa"
+                }
+            }
+        }
+    }
+}

@@ -6,22 +6,63 @@
   "requirements": [
     "bellows==0.29.0",
     "pyserial==3.5",
-    "pyserial-asyncio==0.5",
-    "zha-quirks==0.0.64",
+    "pyserial-asyncio==0.6",
+    "zha-quirks==0.0.67",
     "zigpy-deconz==0.14.0",
-    "zigpy==0.42.0",
+    "zigpy==0.43.0",
     "zigpy-xbee==0.14.0",
-    "zigpy-zigate==0.7.3",
-    "zigpy-znp==0.6.3"
+    "zigpy-zigate==0.8.0",
+    "zigpy-znp==0.7.0"
   ],
   "usb": [
-   {"vid":"10C4","pid":"EA60","description":"*2652*","known_devices":["slae.sh cc2652rb stick"]},
-   {"vid":"10C4","pid":"EA60","description":"*tubeszb*","known_devices":["TubesZB Coordinator"]},
-   {"vid":"1A86","pid":"7523","description":"*tubeszb*","known_devices":["TubesZB Coordinator"]},
-   {"vid":"1A86","pid":"7523","description":"*zigstar*","known_devices":["ZigStar Coordinators"]},
-   {"vid":"1CF1","pid":"0030","description":"*conbee*","known_devices":["Conbee II"]},
-   {"vid":"10C4","pid":"8A2A","description":"*zigbee*","known_devices":["Nortek HUSBZB-1"]},
-   {"vid":"10C4","pid":"8B34","description":"*bv 2010/10*","known_devices":["Bitron Video AV2010/10"]}
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*2652*",
+      "known_devices": ["slae.sh cc2652rb stick"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*sonoff*plus*",
+      "known_devices": ["sonoff zigbee dongle plus"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*tubeszb*",
+      "known_devices": ["TubesZB Coordinator"]
+    },
+    {
+      "vid": "1A86",
+      "pid": "7523",
+      "description": "*tubeszb*",
+      "known_devices": ["TubesZB Coordinator"]
+    },
+    {
+      "vid": "1A86",
+      "pid": "7523",
+      "description": "*zigstar*",
+      "known_devices": ["ZigStar Coordinators"]
+    },
+    {
+      "vid": "1CF1",
+      "pid": "0030",
+      "description": "*conbee*",
+      "known_devices": ["Conbee II"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "8A2A",
+      "description": "*zigbee*",
+      "known_devices": ["Nortek HUSBZB-1"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "8B34",
+      "description": "*bv 2010/10*",
+      "known_devices": ["Bitron Video AV2010/10"]
+    }
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"],
   "zeroconf": [
@@ -31,5 +72,17 @@
     }
   ],
   "after_dependencies": ["usb", "zeroconf"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": [
+    "aiosqlite",
+    "bellows",
+    "crccheck",
+    "pure_pcapy3",
+    "zhaquirks",
+    "zigpy",
+    "zigpy_deconz",
+    "zigpy_xbee",
+    "zigpy_zigate",
+    "zigpy_znp"
+  ]
 }

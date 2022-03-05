@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
             "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
@@ -10,8 +11,19 @@
             "unknown": "Ootamatu t\u00f5rge",
             "wrong_version": "Powerwall kasutab tarkvaraversiooni, mida ei toetata. Kaaluge tarkvara uuendamist v\u00f5i probleemist teavitamist, et see saaks lahendatud."
         },
-        "flow_title": "{ip_address}",
+        "flow_title": "{name} ({ip_address})",
         "step": {
+            "confirm_discovery": {
+                "description": "Kas soovid seadistada {name} ({ip_address})?",
+                "title": "\u00dchendu Powerwalliga"
+            },
+            "reauth_confim": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Salas\u00f5naks on tavaliselt Backup Gateway seerianumbri 5 viimast t\u00e4rki mille leiab Tesla rakendusest v\u00f5i 5 viimast t\u00e4rki Backup Gateway 2 ukse sisek\u00fcljel.",
+                "title": "Taasautendi Powerwall"
+            },
             "user": {
                 "data": {
                     "ip_address": "IP aadress",

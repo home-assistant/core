@@ -17,7 +17,7 @@ async def test_switch(hass, mock_bridge_v2, v2_resources_test_data):
     # test config switch to enable/disable motion sensor
     test_entity = hass.states.get("switch.hue_motion_sensor_motion")
     assert test_entity is not None
-    assert test_entity.name == "Hue motion sensor: Motion"
+    assert test_entity.name == "Hue motion sensor Motion"
     assert test_entity.state == "on"
     assert test_entity.attributes["device_class"] == "switch"
 
@@ -69,7 +69,12 @@ async def test_switch_turn_off_service(hass, mock_bridge_v2, v2_resources_test_d
     assert mock_bridge_v2.mock_requests[0]["json"]["enabled"] is False
 
     # Now generate update event by emitting the json we've sent as incoming event
-    mock_bridge_v2.api.emit_event("update", mock_bridge_v2.mock_requests[0]["json"])
+    event = {
+        "id": "b6896534-016d-4052-8cb4-ef04454df62c",
+        "type": "motion",
+        **mock_bridge_v2.mock_requests[0]["json"],
+    }
+    mock_bridge_v2.api.emit_event("update", event)
     await hass.async_block_till_done()
 
     # the switch should now be off

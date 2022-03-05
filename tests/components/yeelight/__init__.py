@@ -1,7 +1,6 @@
 """Tests for the Yeelight integration."""
 import asyncio
 from datetime import timedelta
-from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SsdpSearchListener
@@ -42,6 +41,7 @@ ID_DECIMAL = f"{int(ID, 16):08d}"
 
 ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host=IP_ADDRESS,
+    addresses=[IP_ADDRESS],
     port=54321,
     hostname=f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
     type="_miio._udp.local.",
@@ -153,15 +153,15 @@ def _mocked_bulb(cannot_connect=False):
     bulb.async_set_power_mode = AsyncMock()
     bulb.async_set_scene = AsyncMock()
     bulb.async_set_default = AsyncMock()
-    bulb.start_music = MagicMock()
+    bulb.async_start_music = AsyncMock()
     return bulb
 
 
-def _patched_ssdp_listener(info, *args, **kwargs):
+def _patched_ssdp_listener(info: ssdp.SsdpHeaders, *args, **kwargs):
     listener = SsdpSearchListener(*args, **kwargs)
 
     async def _async_callback(*_):
-        if kwargs["source_ip"] == IPv4Address(FAIL_TO_BIND_IP):
+        if kwargs["source"][0] == FAIL_TO_BIND_IP:
             raise OSError
         await listener.async_connect_callback()
 
@@ -181,12 +181,7 @@ def _patch_discovery(no_device=False, capabilities=None):
     def _generate_fake_ssdp_listener(*args, **kwargs):
         info = None
         if not no_device:
-            info = ssdp.SsdpServiceInfo(
-                ssdp_usn="",
-                ssdp_st=scanner.SSDP_ST,
-                upnp={},
-                ssdp_headers=capabilities or CAPABILITIES,
-            )
+            info = capabilities or CAPABILITIES
         return _patched_ssdp_listener(info, *args, **kwargs)
 
     return patch(

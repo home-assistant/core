@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -28,8 +28,6 @@ async def async_setup_entry(
     """Set up the UPnP/IGD sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    LOGGER.debug("Adding binary sensor")
-
     entities = [
         UpnpStatusBinarySensor(
             coordinator=coordinator,
@@ -38,14 +36,14 @@ async def async_setup_entry(
         for entity_description in BINARYSENSOR_ENTITY_DESCRIPTIONS
         if coordinator.data.get(entity_description.key) is not None
     ]
-    LOGGER.debug("Adding entities: %s", entities)
+    LOGGER.debug("Adding binary_sensor entities: %s", entities)
     async_add_entities(entities)
 
 
 class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     """Class for UPnP/IGD binary sensors."""
 
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(
         self,

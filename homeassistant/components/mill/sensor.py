@@ -9,17 +9,21 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_IP_ADDRESS,
     CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -75,7 +79,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         name="Battery",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ECO2,
@@ -91,10 +95,45 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+LOCAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="control_signal",
+        native_unit_of_measurement=PERCENTAGE,
+        name="Control signal",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="current_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_WATT,
+        name="Current power",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="raw_ambient_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="Uncalibrated temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+)
 
-async def async_setup_entry(hass, entry, async_add_entities):
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Mill sensor."""
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
+        mill_data_coordinator = hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]]
+
+        async_add_entities(
+            LocalMillSensor(
+                mill_data_coordinator,
+                entity_description,
+            )
+            for entity_description in LOCAL_SENSOR_TYPES
+        )
         return
 
     mill_data_coordinator = hass.data[DOMAIN][CLOUD][entry.data[CONF_USERNAME]]
@@ -155,3 +194,31 @@ class MillSensor(CoordinatorEntity, SensorEntity):
     def _update_attr(self, device):
         self._available = device.available
         self._attr_native_value = getattr(device, self.entity_description.key)
+
+
+class LocalMillSensor(CoordinatorEntity, SensorEntity):
+    """Representation of a Mill Sensor device."""
+
+    def __init__(self, coordinator, entity_description):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self.entity_description = entity_description
+        self._attr_name = (
+            f"{coordinator.mill_data_connection.name} {entity_description.name}"
+        )
+        if mac := coordinator.mill_data_connection.mac_address:
+            self._attr_unique_id = f"{mac}_{entity_description.key}"
+            self._attr_device_info = DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, mac)},
+                configuration_url=self.coordinator.mill_data_connection.url,
+                manufacturer=MANUFACTURER,
+                model="Generation 3",
+                name=coordinator.mill_data_connection.name,
+                sw_version=coordinator.mill_data_connection.version,
+            )
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.coordinator.data[self.entity_description.key]

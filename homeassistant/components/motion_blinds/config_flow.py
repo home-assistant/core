@@ -166,7 +166,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_get_interfaces(self):
         """Get list of interface to use."""
-        interfaces = [DEFAULT_INTERFACE]
+        interfaces = [DEFAULT_INTERFACE, "0.0.0.0"]
         enabled_interfaces = []
         default_interface = DEFAULT_INTERFACE
 

@@ -7,7 +7,7 @@ import logging
 import opengarage
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -16,7 +16,7 @@ from .const import CONF_DEVICE_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "cover", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.COVER, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -66,7 +66,7 @@ class OpenGarageDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=5),
         )
 
     async def _async_update_data(self) -> None:

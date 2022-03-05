@@ -5,6 +5,7 @@
             "cannot_connect": "No se pudo conectar"
         },
         "error": {
+            "api_password": "Autenticaci\u00f3n no v\u00e1lida, utilice la clave de la API o la contrase\u00f1a.",
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"

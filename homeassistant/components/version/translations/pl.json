@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "version_source": "\u0179r\u00f3d\u0142o wersji"
+                },
+                "description": "Wybierz \u017ar\u00f3d\u0142o, z kt\u00f3rego chcesz \u015bledzi\u0107 wersj\u0119",
+                "title": "Wybierz typ instalacji"
+            },
+            "version_source": {
+                "data": {
+                    "beta": "Uwzgl\u0119dnij wersje beta",
+                    "board": "Kt\u00f3ry uk\u0142ad powinien by\u0107 \u015bledzony",
+                    "channel": "Kt\u00f3ry kana\u0142 powinien by\u0107 \u015bledzony",
+                    "image": "Kt\u00f3ry obraz powinien by\u0107 \u015bledzony"
+                },
+                "description": "Skonfiguruj \u015bledzenie wersji {version_source}",
+                "title": "Konfiguracja"
+            }
+        }
+    }
+}

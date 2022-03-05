@@ -1,12 +1,12 @@
 """Tests for the USB Discovery integration."""
 import os
 import sys
-from unittest.mock import MagicMock, patch, sentinel
+from unittest.mock import MagicMock, call, patch, sentinel
 
 import pytest
 
 from homeassistant.components import usb
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
 
 from . import conbee_device, slae_sh_device
@@ -56,6 +56,60 @@ def mock_venv():
     not sys.platform.startswith("linux"),
     reason="Only works on linux",
 )
+async def test_observer_discovery(hass, hass_ws_client, venv):
+    """Test that observer can discover a device without raising an exception."""
+    new_usb = [{"domain": "test1", "vid": "3039"}]
+
+    mock_comports = [
+        MagicMock(
+            device=slae_sh_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=slae_sh_device.serial_number,
+            manufacturer=slae_sh_device.manufacturer,
+            description=slae_sh_device.description,
+        )
+    ]
+    mock_observer = None
+
+    async def _mock_monitor_observer_callback(callback):
+        await hass.async_add_executor_job(
+            callback, MagicMock(action="create", device_path="/dev/new")
+        )
+
+    def _create_mock_monitor_observer(monitor, callback, name):
+        nonlocal mock_observer
+        hass.async_create_task(_mock_monitor_observer_callback(callback))
+        mock_observer = MagicMock()
+        return mock_observer
+
+    with patch("pyudev.Context"), patch(
+        "pyudev.MonitorObserver", new=_create_mock_monitor_observer
+    ), patch("pyudev.Monitor.filter_by"), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "test1"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert mock_observer.mock_calls == [call.start(), call.stop()]
+
+
+@pytest.mark.skipif(
+    not sys.platform.startswith("linux"),
+    reason="Only works on linux",
+)
 async def test_removal_by_observer_before_started(hass, operating_system):
     """Test a device is removed by the observer before started."""
 
@@ -66,7 +120,6 @@ async def test_removal_by_observer_before_started(hass, operating_system):
 
     def _create_mock_monitor_observer(monitor, callback, name):
         hass.async_create_task(_mock_monitor_observer_callback(callback))
-        return MagicMock()
 
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
@@ -98,6 +151,9 @@ async def test_removal_by_observer_before_started(hass, operating_system):
         await hass.async_block_till_done()
 
     assert len(mock_config_flow.mock_calls) == 0
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
 
 
 async def test_discovered_by_websocket_scan(hass, hass_ws_client):
@@ -779,6 +835,7 @@ def test_human_readable_device_name():
     assert "8A2A" in name
 
 
+@pytest.mark.usefixtures("mock_integration_frame")
 async def test_service_info_compatibility(hass, caplog):
     """Test compatibility with old-style dict.
 
@@ -794,10 +851,6 @@ async def test_service_info_compatibility(hass, caplog):
     )
 
     # Ensure first call get logged
-    assert discovery_info["vid"] == 12345
-    assert "Detected code that accessed discovery_info['vid']" in caplog.text
-
-    # Ensure second call doesn't get logged
-    caplog.clear()
-    assert discovery_info["vid"] == 12345
-    assert "Detected code that accessed discovery_info['vid']" not in caplog.text
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info["vid"] == 12345
+    assert "Detected integration that accessed discovery_info['vid']" in caplog.text

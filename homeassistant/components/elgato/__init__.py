@@ -1,19 +1,25 @@
 """Support for Elgato Lights."""
-import logging
+from typing import NamedTuple
 
-from elgato import Elgato, ElgatoConnectionError
+from elgato import Elgato, Info, State
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
-PLATFORMS = [BUTTON_DOMAIN, LIGHT_DOMAIN]
+PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
+
+
+class HomeAssistantElgatoData(NamedTuple):
+    """Elgato data stored in the Home Assistant data object."""
+
+    coordinator: DataUpdateCoordinator[State]
+    client: Elgato
+    info: Info
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -25,14 +31,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    # Ensure we can connect to it
-    try:
-        await elgato.info()
-    except ElgatoConnectionError as exception:
-        logging.getLogger(__name__).debug("Unable to connect: %s", exception)
-        raise ConfigEntryNotReady from exception
+    coordinator: DataUpdateCoordinator[State] = DataUpdateCoordinator(
+        hass,
+        LOGGER,
+        name=f"{DOMAIN}_{entry.data[CONF_HOST]}",
+        update_interval=SCAN_INTERVAL,
+        update_method=elgato.state,
+    )
+    await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = elgato
+    info = await elgato.info()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantElgatoData(
+        client=elgato,
+        coordinator=coordinator,
+        info=info,
+    )
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -40,9 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Elgato Light config entry."""
-    # Unload entities for this entry/device.
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         # Cleanup
         del hass.data[DOMAIN][entry.entry_id]
         if not hass.data[DOMAIN]:

@@ -6,7 +6,7 @@ core: &core
   - homeassistant/helpers/*
   - homeassistant/package_constraints.txt
   - homeassistant/util/*
-  - pyproject.yaml
+  - pyproject.toml
   - requirements.txt
   - setup.cfg
 
@@ -21,6 +21,7 @@ base_platforms: &base_platforms
   - homeassistant/components/climate/*
   - homeassistant/components/cover/*
   - homeassistant/components/device_tracker/*
+  - homeassistant/components/diagnostics/*
   - homeassistant/components/fan/*
   - homeassistant/components/geo_location/*
   - homeassistant/components/humidifier/*
@@ -63,8 +64,10 @@ components: &components
   - homeassistant/components/group/*
   - homeassistant/components/hassio/*
   - homeassistant/components/homeassistant/**
+  - homeassistant/components/http/**
   - homeassistant/components/image/*
   - homeassistant/components/input_boolean/*
+  - homeassistant/components/input_button/*
   - homeassistant/components/input_datetime/*
   - homeassistant/components/input_number/*
   - homeassistant/components/input_select/*
@@ -73,6 +76,7 @@ components: &components
   - homeassistant/components/logger/*
   - homeassistant/components/lovelace/*
   - homeassistant/components/media_source/*
+  - homeassistant/components/mjpeg/*
   - homeassistant/components/mqtt/*
   - homeassistant/components/network/*
   - homeassistant/components/onboarding/*
@@ -90,6 +94,7 @@ components: &components
   - homeassistant/components/tag/*
   - homeassistant/components/template/*
   - homeassistant/components/timer/*
+  - homeassistant/components/update/*
   - homeassistant/components/usb/*
   - homeassistant/components/webhook/*
   - homeassistant/components/websocket_api/*
@@ -99,22 +104,37 @@ components: &components
 # Testing related files that affect the whole test/linting suite
 tests: &tests
   - codecov.yaml
+  - pylint/**
   - requirements_test_pre_commit.txt
   - requirements_test.txt
+  - tests/auth/**
+  - tests/backports/*
   - tests/common.py
   - tests/conftest.py
+  - tests/hassfest/*
+  - tests/helpers/*
   - tests/ignore_uncaught_exceptions.py
   - tests/mock/*
+  - tests/pylint/*
+  - tests/scripts/*
   - tests/test_util/*
   - tests/testing_config/**
+  - tests/util/**
 
 other: &other
   - .github/workflows/*
   - homeassistant/scripts/**
+
+requirements: &requirements
+  - .github/workflows/*
+  - homeassistant/package_constraints.txt
+  - requirements*.txt
+  - setup.cfg
 
 any:
   - *base_platforms
   - *components
   - *core
   - *other
+  - *requirements
   - *tests

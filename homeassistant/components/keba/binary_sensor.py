@@ -1,16 +1,23 @@
 """Support for KEBA charging station binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PLUG,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_SAFETY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the KEBA charging station platform."""
     if discovery_info is None:
         return
@@ -19,14 +26,32 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     sensors = [
         KebaBinarySensor(
-            keba, "Online", "Status", "device_state", DEVICE_CLASS_CONNECTIVITY
+            keba,
+            "Online",
+            "Status",
+            "device_state",
+            BinarySensorDeviceClass.CONNECTIVITY,
         ),
-        KebaBinarySensor(keba, "Plug", "Plug", "plug_state", DEVICE_CLASS_PLUG),
         KebaBinarySensor(
-            keba, "State", "Charging State", "charging_state", DEVICE_CLASS_POWER
+            keba,
+            "Plug",
+            "Plug",
+            "plug_state",
+            BinarySensorDeviceClass.PLUG,
         ),
         KebaBinarySensor(
-            keba, "Tmo FS", "Failsafe Mode", "failsafe_mode_state", DEVICE_CLASS_SAFETY
+            keba,
+            "State",
+            "Charging State",
+            "charging_state",
+            BinarySensorDeviceClass.POWER,
+        ),
+        KebaBinarySensor(
+            keba,
+            "Tmo FS",
+            "Failsafe Mode",
+            "failsafe_mode_state",
+            BinarySensorDeviceClass.SAFETY,
         ),
     ]
     async_add_entities(sensors)

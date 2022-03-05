@@ -3,11 +3,15 @@
   "name": "Insteon",
   "documentation": "https://www.home-assistant.io/integrations/insteon",
   "requirements": [
-    "pyinsteon==1.0.13"
+    "pyinsteon==1.0.16"
   ],
   "codeowners": [
     "@teharris1"
   ],
   "config_flow": true,
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": [
+    "pyinsteon",
+    "pypubsub"
+  ]
 }

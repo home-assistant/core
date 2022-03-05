@@ -2,19 +2,11 @@
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_TAMPER,
-)
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from .common import (
     DISABLED_LEGACY_BINARY_SENSOR,
@@ -34,13 +26,13 @@ async def test_low_battery_sensor(hass, multisensor_6, integration):
 
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes["device_class"] == DEVICE_CLASS_BATTERY
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.BATTERY
 
     registry = er.async_get(hass)
     entity_entry = registry.async_get(LOW_BATTERY_BINARY_SENSOR)
 
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_enabled_legacy_sensor(hass, ecolink_door_sensor, integration):
@@ -52,7 +44,7 @@ async def test_enabled_legacy_sensor(hass, ecolink_door_sensor, integration):
     state = hass.states.get(ENABLED_LEGACY_BINARY_SENSOR)
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes.get("device_class") is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
 
     # Test state updates from value updated event
     event = Event(
@@ -89,7 +81,7 @@ async def test_disabled_legacy_sensor(hass, multisensor_6, integration):
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling legacy entity
     updated_entry = registry.async_update_entity(
@@ -105,19 +97,19 @@ async def test_notification_sensor(hass, multisensor_6, integration):
 
     assert state
     assert state.state == STATE_ON
-    assert state.attributes["device_class"] == DEVICE_CLASS_MOTION
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.MOTION
 
     state = hass.states.get(TAMPER_SENSOR)
 
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes["device_class"] == DEVICE_CLASS_TAMPER
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.TAMPER
 
     registry = er.async_get(hass)
     entity_entry = registry.async_get(TAMPER_SENSOR)
 
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_notification_off_state(
@@ -141,7 +133,7 @@ async def test_notification_off_state(
     door_states = [
         state
         for state in hass.states.async_all("binary_sensor")
-        if state.attributes.get("device_class") == DEVICE_CLASS_DOOR
+        if state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.DOOR
     ]
 
     # Only one entity should be created for the Door state notification states.
@@ -159,7 +151,7 @@ async def test_property_sensor_door_status(hass, lock_august_pro, integration):
     state = hass.states.get(PROPERTY_DOOR_STATUS_BINARY_SENSOR)
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes["device_class"] == DEVICE_CLASS_DOOR
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR
 
     # open door
     event = Event(

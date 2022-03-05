@@ -5,13 +5,17 @@ from typing import Any, Union
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.sensors import LightLevelController, MotionController
-from aiohue.v2.models.resource import SensingService
+from aiohue.v2.controllers.sensors import (
+    LightLevel,
+    LightLevelController,
+    Motion,
+    MotionController,
+)
 
-from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .bridge import HueBridge
@@ -19,6 +23,8 @@ from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 
 ControllerType = Union[LightLevelController, MotionController]
+
+SensingService = Union[LightLevel, Motion]
 
 
 async def async_setup_entry(
@@ -62,8 +68,8 @@ async def async_setup_entry(
 class HueSensingServiceEnabledEntity(HueBaseEntity, SwitchEntity):
     """Representation of a Switch entity from Hue SensingService."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
-    _attr_device_class = DEVICE_CLASS_SWITCH
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(
         self,

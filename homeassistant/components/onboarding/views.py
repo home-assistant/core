@@ -1,4 +1,6 @@
 """Onboarding views."""
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 
@@ -6,6 +8,7 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.components import person
 from homeassistant.components.auth import indieauth
 from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -77,7 +80,7 @@ class InstallationTypeOnboardingView(HomeAssistantView):
 class _BaseOnboardingView(HomeAssistantView):
     """Base class for onboarding."""
 
-    step = None
+    step: str | None = None
 
     def __init__(self, data, store):
         """Initialize the onboarding view."""
@@ -141,9 +144,7 @@ class UserOnboardingView(_BaseOnboardingView):
             await provider.data.async_save()
             await hass.auth.async_link_user(user, credentials)
             if "person" in hass.config.components:
-                await hass.components.person.async_create_person(
-                    data["name"], user_id=user.id
-                )
+                await person.async_create_person(hass, data["name"], user_id=user.id)
 
             # Create default areas using the users supplied language.
             translations = await hass.helpers.translation.async_get_translations(
@@ -161,9 +162,10 @@ class UserOnboardingView(_BaseOnboardingView):
 
             # Return authorization code for fetching tokens and connect
             # during onboarding.
-            auth_code = hass.components.auth.create_auth_code(
-                data["client_id"], credentials
-            )
+            # pylint: disable=import-outside-toplevel
+            from homeassistant.components.auth import create_auth_code
+
+            auth_code = create_auth_code(hass, data["client_id"], credentials)
             return self.json({"auth_code": auth_code})
 
 
@@ -186,17 +188,27 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
 
             await self._async_mark_done(hass)
 
-            await hass.config_entries.flow.async_init(
-                "met", context={"source": "onboarding"}
-            )
+            # Integrations to set up when finishing onboarding
+            onboard_integrations = ["met", "radio_browser"]
+
+            # pylint: disable=import-outside-toplevel
+            from homeassistant.components import hassio
 
             if (
-                hass.components.hassio.is_hassio()
-                and "raspberrypi" in hass.components.hassio.get_core_info()["machine"]
+                hassio.is_hassio(hass)
+                and "raspberrypi" in hassio.get_core_info(hass)["machine"]
             ):
-                await hass.config_entries.flow.async_init(
-                    "rpi_power", context={"source": "onboarding"}
+                onboard_integrations.append("rpi_power")
+
+            # Set up integrations after onboarding
+            await asyncio.gather(
+                *(
+                    hass.config_entries.flow.async_init(
+                        domain, context={"source": "onboarding"}
+                    )
+                    for domain in onboard_integrations
                 )
+            )
 
             return self.json({})
 
@@ -239,8 +251,11 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                 )
 
             # Return authorization code so we can redirect user and log them in
-            auth_code = hass.components.auth.create_auth_code(
-                data["client_id"], refresh_token.credential
+            # pylint: disable=import-outside-toplevel
+            from homeassistant.components.auth import create_auth_code
+
+            auth_code = create_auth_code(
+                hass, data["client_id"], refresh_token.credential
             )
             return self.json({"auth_code": auth_code})
 

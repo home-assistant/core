@@ -7,6 +7,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_DISCRETE,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
+    CONF_SLAVE_COUNT,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -18,12 +19,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import State
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
-ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
+ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 
 
 @pytest.mark.parametrize(
@@ -141,7 +143,7 @@ async def test_all_binary_sensor(hass, expected, mock_do_cycle):
         (
             [0x00],
             True,
-            STATE_OFF,
+            STATE_UNKNOWN,
             STATE_UNAVAILABLE,
         ),
     ],
@@ -187,9 +189,17 @@ async def test_service_binary_sensor_update(hass, mock_modbus, mock_ha):
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
+ENTITY_ID2 = f"{ENTITY_ID}_1"
+
+
 @pytest.mark.parametrize(
     "mock_test_state",
-    [(State(ENTITY_ID, STATE_ON),)],
+    [
+        (
+            State(ENTITY_ID, STATE_ON),
+            State(ENTITY_ID2, STATE_OFF),
+        )
+    ],
     indirect=True,
 )
 @pytest.mark.parametrize(
@@ -201,6 +211,7 @@ async def test_service_binary_sensor_update(hass, mock_modbus, mock_ha):
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 0,
+                    CONF_SLAVE_COUNT: 1,
                 }
             ]
         },
@@ -209,3 +220,160 @@ async def test_service_binary_sensor_update(hass, mock_modbus, mock_ha):
 async def test_restore_state_binary_sensor(hass, mock_test_state, mock_modbus):
     """Run test for binary sensor restore state."""
     assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state
+    assert hass.states.get(ENTITY_ID2).state == mock_test_state[1].state
+
+
+TEST_NAME = "test_sensor"
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SLAVE_COUNT: 3,
+                }
+            ]
+        },
+    ],
+)
+async def test_config_slave_binary_sensor(hass, mock_modbus):
+    """Run config test for binary sensor."""
+    assert SENSOR_DOMAIN in hass.config.components
+
+    for addon in ["", " 1", " 2", " 3"]:
+        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}{addon}".replace(" ", "_")
+        assert hass.states.get(entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                }
+            ]
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words,expected, slaves",
+    [
+        (
+            {CONF_SLAVE_COUNT: 1},
+            [0x01],
+            STATE_ON,
+            [
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 1},
+            [0x02],
+            STATE_OFF,
+            [
+                STATE_ON,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 1},
+            [0x04],
+            STATE_OFF,
+            [
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 7},
+            [0x01],
+            STATE_ON,
+            [
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 7},
+            [0x82],
+            STATE_OFF,
+            [
+                STATE_ON,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_ON,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 10},
+            [0x01, 0x00],
+            STATE_ON,
+            [
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 10},
+            [0x01, 0x01],
+            STATE_ON,
+            [
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_ON,
+                STATE_OFF,
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 10},
+            [0x81, 0x01],
+            STATE_ON,
+            [
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_ON,
+                STATE_ON,
+                STATE_OFF,
+                STATE_OFF,
+            ],
+        ),
+    ],
+)
+async def test_slave_binary_sensor(hass, expected, slaves, mock_do_cycle):
+    """Run test for given config."""
+    assert hass.states.get(ENTITY_ID).state == expected
+
+    for i in range(len(slaves)):
+        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}".replace(" ", "_")
+        assert hass.states.get(entity_id).state == slaves[i]

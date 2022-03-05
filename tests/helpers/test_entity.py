@@ -6,6 +6,7 @@ import threading
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -580,7 +581,7 @@ async def test_warn_disabled(hass, caplog):
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
-        disabled_by=entity_registry.DISABLED_USER,
+        disabled_by=entity_registry.RegistryEntryDisabler.USER,
     )
     mock_registry(hass, {"hello.world": entry})
 
@@ -622,7 +623,7 @@ async def test_disabled_in_entity_registry(hass):
     assert hass.states.get("hello.world") is not None
 
     entry2 = registry.async_update_entity(
-        "hello.world", disabled_by=entity_registry.DISABLED_USER
+        "hello.world", disabled_by=entity_registry.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()
     assert entry2 != entry
@@ -829,3 +830,27 @@ async def test_entity_category_property(hass):
     )
     mock_entity2.entity_id = "hello.world"
     assert mock_entity2.entity_category == "config"
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    (
+        ("config", entity.EntityCategory.CONFIG),
+        ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
+        ("system", entity.EntityCategory.SYSTEM),
+    ),
+)
+def test_entity_category_schema(value, expected):
+    """Test entity category schema."""
+    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    result = schema(value)
+    assert result == expected
+    assert isinstance(result, entity.EntityCategory)
+
+
+@pytest.mark.parametrize("value", (None, "non_existing"))
+def test_entity_category_schema_error(value):
+    """Test entity category schema."""
+    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    with pytest.raises(vol.Invalid):
+        schema(value)

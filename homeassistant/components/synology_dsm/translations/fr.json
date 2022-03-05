@@ -12,7 +12,7 @@
             "otp_failed": "\u00c9chec de l'authentification en deux \u00e9tapes, r\u00e9essayez avec un nouveau code d'acc\u00e8s",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Synology DSM {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "2sa": {
                 "data": {
@@ -43,7 +43,8 @@
                 "data": {
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "title": "Synology DSM R\u00e9-authentifier l'int\u00e9gration"
             },
             "user": {
                 "data": {
@@ -63,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutes entre les scans",
+                    "snap_profile_type": "Niveau de qualit\u00e9 des instantan\u00e9s de la cam\u00e9ra (0 : \u00e9lev\u00e9 1 : moyen 2 : faible)",
                     "timeout": "D\u00e9lai d'expiration (secondes)"
                 }
             }

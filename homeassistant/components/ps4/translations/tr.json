@@ -21,7 +21,7 @@
             "link": {
                 "data": {
                     "code": "PIN Kodu",
-                    "ip_address": "\u0130p Adresi",
+                    "ip_address": "IP Adresi",
                     "name": "Ad",
                     "region": "B\u00f6lge"
                 },
@@ -30,7 +30,7 @@
             },
             "mode": {
                 "data": {
-                    "ip_address": "\u0130p Adresi (Otomatik Bulma kullan\u0131l\u0131yorsa bo\u015f b\u0131rak\u0131n).",
+                    "ip_address": "IP Adresi (Otomatik Ke\u015fif kullan\u0131l\u0131yorsa bo\u015f b\u0131rak\u0131n).",
                     "mode": "Yap\u0131land\u0131rma Modu"
                 },
                 "description": "Yap\u0131land\u0131rma i\u00e7in modu se\u00e7in. IP Adresi alan\u0131, Otomatik Ke\u015fif se\u00e7ildi\u011finde cihazlar otomatik olarak ke\u015ffedilece\u011finden bo\u015f b\u0131rak\u0131labilir.",

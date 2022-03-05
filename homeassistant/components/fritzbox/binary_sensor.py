@@ -8,12 +8,13 @@ from typing import Final
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
@@ -40,9 +41,25 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
     FritzBinarySensorEntityDescription(
         key="alarm",
         name="Alarm",
-        device_class=DEVICE_CLASS_WINDOW,
+        device_class=BinarySensorDeviceClass.WINDOW,
         suitable=lambda device: device.has_alarm,  # type: ignore[no-any-return]
         is_on=lambda device: device.alert_state,  # type: ignore[no-any-return]
+    ),
+    FritzBinarySensorEntityDescription(
+        key="lock",
+        name="Button Lock on Device",
+        device_class=BinarySensorDeviceClass.LOCK,
+        entity_category=EntityCategory.CONFIG,
+        suitable=lambda device: device.lock is not None,
+        is_on=lambda device: not device.lock,
+    ),
+    FritzBinarySensorEntityDescription(
+        key="device_lock",
+        name="Button Lock via UI",
+        device_class=BinarySensorDeviceClass.LOCK,
+        entity_category=EntityCategory.CONFIG,
+        suitable=lambda device: device.device_lock is not None,
+        is_on=lambda device: not device.device_lock,
     ),
 )
 
@@ -76,8 +93,8 @@ class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the FritzBox entity."""
         super().__init__(coordinator, ain, entity_description)
-        self._attr_name = self.device.name
-        self._attr_unique_id = ain
+        self._attr_name = f"{self.device.name} {entity_description.name}"
+        self._attr_unique_id = f"{ain}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:

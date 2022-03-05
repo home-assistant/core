@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Awaitable
 import logging
 from typing import Any, Generic, TypeVar
 
@@ -20,6 +21,7 @@ from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_LIGHTS,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -124,7 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Exclude devices unwanted by user.
     devices = [device for device in all_devices if device.device_id not in exclude_ids]
 
-    vera_devices = defaultdict(list)
+    vera_devices: defaultdict[Platform, list[veraApi.VeraDevice]] = defaultdict(list)
     for device in devices:
         device_type = map_vera_device(device, light_ids)
         if device_type is not None:
@@ -144,10 +146,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     set_controller_data(hass, entry, controller_data)
 
     # Forward the config data to the necessary platforms.
-    for platform in get_configured_platforms(controller_data):
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(
+        entry, platforms=get_configured_platforms(controller_data)
+    )
 
     def stop_subscription(event):
         """Stop SubscriptionRegistry updates."""
@@ -166,7 +167,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload Withings config entry."""
     controller_data: ControllerData = get_controller_data(hass, config_entry)
 
-    tasks = [
+    tasks: list[Awaitable] = [
         hass.config_entries.async_forward_entry_unload(config_entry, platform)
         for platform in get_configured_platforms(controller_data)
     ]
@@ -176,29 +177,31 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def map_vera_device(vera_device: veraApi.VeraDevice, remap: list[int]) -> str:
+def map_vera_device(
+    vera_device: veraApi.VeraDevice, remap: list[int]
+) -> Platform | None:
     """Map vera classes to Home Assistant types."""
 
     type_map = {
-        veraApi.VeraDimmer: "light",
-        veraApi.VeraBinarySensor: "binary_sensor",
-        veraApi.VeraSensor: "sensor",
-        veraApi.VeraArmableDevice: "switch",
-        veraApi.VeraLock: "lock",
-        veraApi.VeraThermostat: "climate",
-        veraApi.VeraCurtain: "cover",
-        veraApi.VeraSceneController: "sensor",
-        veraApi.VeraSwitch: "switch",
+        veraApi.VeraDimmer: Platform.LIGHT,
+        veraApi.VeraBinarySensor: Platform.BINARY_SENSOR,
+        veraApi.VeraSensor: Platform.SENSOR,
+        veraApi.VeraArmableDevice: Platform.SWITCH,
+        veraApi.VeraLock: Platform.LOCK,
+        veraApi.VeraThermostat: Platform.CLIMATE,
+        veraApi.VeraCurtain: Platform.COVER,
+        veraApi.VeraSceneController: Platform.SENSOR,
+        veraApi.VeraSwitch: Platform.SWITCH,
     }
 
-    def map_special_case(instance_class: type, entity_type: str) -> str:
+    def map_special_case(instance_class: type, entity_type: Platform) -> Platform:
         if instance_class is veraApi.VeraSwitch and vera_device.device_id in remap:
-            return "light"
+            return Platform.LIGHT
         return entity_type
 
     return next(

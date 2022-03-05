@@ -16,7 +16,7 @@
                     "address": "Indirizzo dell'inverter",
                     "port": "Porta adattatore RS485 o USB-RS485"
                 },
-                "description": "L'inverter deve essere collegato tramite un adattatore RS485, selezionare la porta seriale e l'indirizzo dell'inverter come configurato sul pannello LCD"
+                "description": "L'inverter deve essere collegato tramite un adattatore RS485, seleziona la porta seriale e l'indirizzo dell'inverter come configurato sul pannello LCD"
             }
         }
     }

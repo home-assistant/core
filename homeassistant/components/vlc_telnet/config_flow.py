@@ -104,10 +104,6 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=user_form_schema(user_input), errors=errors
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle the import step."""
-        return await self.async_step_user(user_input)
-
     async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
         """Handle reauth flow."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -169,7 +165,6 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="hassio_confirm",
-                data_schema=vol.Schema({}),
                 description_placeholders={"addon": self.hassio_discovery["addon"]},
             )
 

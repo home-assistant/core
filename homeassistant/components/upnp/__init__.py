@@ -16,6 +16,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -43,7 +44,7 @@ from .device import Device
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -176,8 +177,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    # Create sensors.
-    LOGGER.debug("Enabling sensors")
+    # Setup platforms, creating sensors/binary_sensors.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -187,7 +187,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload a UPnP/IGD device from a config entry."""
     LOGGER.debug("Unloading config entry: %s", config_entry.unique_id)
 
-    LOGGER.debug("Deleting sensors")
+    # Unload platforms.
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 

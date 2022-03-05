@@ -49,7 +49,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
@@ -87,7 +87,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config,
+    config: ConfigType,
     async_add_devices: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
@@ -162,7 +162,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         await super().async_added_to_hass()
         self.coordinator.entities.append(self)
         # Sensors should also register callbacks to HA when their state changes
-        self.coordinator.musiccast.register_callback(self.async_write_ha_state)
         self.coordinator.musiccast.register_group_update_callback(
             self.update_all_mc_entities
         )
@@ -173,7 +172,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         await super().async_will_remove_from_hass()
         self.coordinator.entities.remove(self)
         # The opposite of async_added_to_hass. Remove any registered call backs here.
-        self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
         self.coordinator.musiccast.remove_group_update_callback(
             self.update_all_mc_entities
         )

@@ -5,8 +5,8 @@ CONF_AUTOMATIC_ADD = "automatic_add"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_OFF_DELAY = "off_delay"
 CONF_VENETIAN_BLIND_MODE = "venetian_blind_mode"
+CONF_PROTOCOLS = "protocols"
 
-CONF_REMOVE_DEVICE = "remove_device"
 CONF_REPLACE_DEVICE = "replace_device"
 
 CONST_VENETIAN_BLIND_MODE_DEFAULT = "Unknown"
@@ -45,5 +45,3 @@ DEVICE_PACKET_TYPE_LIGHTING4 = 0x13
 EVENT_RFXTRX_EVENT = "rfxtrx_event"
 
 DATA_RFXOBJECT = "rfxobject"
-DATA_LISTENER = "ha_stop"
-DATA_CLEANUP_CALLBACKS = "cleanup_callbacks"

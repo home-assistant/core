@@ -12,7 +12,7 @@
             "connection_error": "\u00c9chec de connexion",
             "invalid_auth": "Authentification invalide"
         },
-        "flow_title": "FRITZ!Box Tools : {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

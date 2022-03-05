@@ -11,7 +11,7 @@ from bimmer_connected.vehicle import ConnectedDriveVehicle
 import voluptuous as vol
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_NAME,
@@ -33,9 +33,7 @@ import homeassistant.util.dt as dt_util
 from .const import (
     ATTRIBUTION,
     CONF_ACCOUNT,
-    CONF_ALLOWED_REGIONS,
     CONF_READ_ONLY,
-    CONF_USE_LOCATION,
     DATA_ENTRIES,
     DATA_HASS_CONFIG,
 )
@@ -45,16 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "bmw_connected_drive"
 ATTR_VIN = "vin"
 
-ACCOUNT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_REGION): vol.In(CONF_ALLOWED_REGIONS),
-        vol.Optional(CONF_READ_ONLY): cv.boolean,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: ACCOUNT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 SERVICE_SCHEMA = vol.Schema(
     vol.Any(
@@ -65,11 +54,11 @@ SERVICE_SCHEMA = vol.Schema(
 
 DEFAULT_OPTIONS = {
     CONF_READ_ONLY: False,
-    CONF_USE_LOCATION: False,
 }
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.NOTIFY,
@@ -92,16 +81,9 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the BMW Connected Drive component from configuration.yaml."""
+    # Store full yaml config in data for platform.NOTIFY
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][DATA_HASS_CONFIG] = config
-
-    if DOMAIN in config:
-        for entry_config in config[DOMAIN].values():
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
-                )
-            )
 
     return True
 
@@ -165,7 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
-            NOTIFY_DOMAIN,
+            Platform.NOTIFY,
             DOMAIN,
             {CONF_NAME: DOMAIN},
             hass.data[DOMAIN][DATA_HASS_CONFIG],
@@ -215,19 +197,21 @@ def setup_account(
     password: str = entry.data[CONF_PASSWORD]
     region: str = entry.data[CONF_REGION]
     read_only: bool = entry.options[CONF_READ_ONLY]
-    use_location: bool = entry.options[CONF_USE_LOCATION]
 
     _LOGGER.debug("Adding new account %s", name)
 
-    pos = (
-        (hass.config.latitude, hass.config.longitude) if use_location else (None, None)
-    )
+    pos = (hass.config.latitude, hass.config.longitude)
     cd_account = BMWConnectedDriveAccount(
         username, password, region, name, read_only, *pos
     )
 
     def execute_service(call: ServiceCall) -> None:
         """Execute a service for a vehicle."""
+        _LOGGER.warning(
+            "BMW Connected Drive services are deprecated. Please migrate to the dedicated button entities. "
+            "See https://www.home-assistant.io/integrations/bmw_connected_drive/#buttons for details"
+        )
+
         vin: str | None = call.data.get(ATTR_VIN)
         device_id: str | None = call.data.get(CONF_DEVICE_ID)
 
@@ -257,6 +241,13 @@ def setup_account(
         function_name = _SERVICE_MAP[call.service]
         function_call = getattr(vehicle.remote_services, function_name)
         function_call()
+
+        if call.service in [
+            "find_vehicle",
+            "activate_air_conditioning",
+            "deactivate_air_conditioning",
+        ]:
+            cd_account.update()
 
     if not read_only:
         # register the remote services

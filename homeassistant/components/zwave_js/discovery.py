@@ -16,6 +16,10 @@ from zwave_js_server.const import (
 from zwave_js_server.const.command_class.barrier_operator import (
     SIGNALING_STATE_PROPERTY,
 )
+from zwave_js_server.const.command_class.color_switch import CURRENT_COLOR_PROPERTY
+from zwave_js_server.const.command_class.humidity_control import (
+    HUMIDITY_CONTROL_MODE_PROPERTY,
+)
 from zwave_js_server.const.command_class.lock import (
     CURRENT_MODE_PROPERTY,
     DOOR_STATUS_PROPERTY,
@@ -122,9 +126,9 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     # [optional] the value's property name must match ANY of these values
     property_name: set[str] | None = None
     # [optional] the value's property key must match ANY of these values
-    property_key: set[str | int] | None = None
+    property_key: set[str | int | None] | None = None
     # [optional] the value's property key name must match ANY of these values
-    property_key_name: set[str] | None = None
+    property_key_name: set[str | None] | None = None
     # [optional] the value's metadata_type must match ANY of these values
     type: set[str] | None = None
 
@@ -177,8 +181,8 @@ class ZWaveDiscoverySchema:
 def get_config_parameter_discovery_schema(
     property_: set[str | int] | None = None,
     property_name: set[str] | None = None,
-    property_key: set[str | int] | None = None,
-    property_key_name: set[str] | None = None,
+    property_key: set[str | int | None] | None = None,
+    property_key_name: set[str | None] | None = None,
     **kwargs: Any,
 ) -> ZWaveDiscoverySchema:
     """
@@ -442,13 +446,13 @@ DISCOVERY_SCHEMAS = [
             dependent_value=ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
         ),
     ),
-    # FortrezZ SSA1/SSA2
+    # FortrezZ SSA1/SSA2/SSA3
     ZWaveDiscoverySchema(
         platform="select",
         hint="multilevel_switch",
         manufacturer_id={0x0084},
         product_id={0x0107, 0x0108, 0x010B, 0x0205},
-        product_type={0x0311, 0x0313, 0x0341, 0x0343},
+        product_type={0x0311, 0x0313, 0x0331, 0x0341, 0x0343},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=BaseDiscoverySchemaDataTemplate(
             {
@@ -458,6 +462,20 @@ DISCOVERY_SCHEMAS = [
                 99: "Siren & Strobe FULL Alarm",
             },
         ),
+    ),
+    # HomeSeer HSM-200 v1
+    ZWaveDiscoverySchema(
+        platform="light",
+        hint="black_is_off",
+        manufacturer_id={0x001E},
+        product_id={0x0001},
+        product_type={0x0004},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_COLOR},
+            property={CURRENT_COLOR_PROPERTY},
+            property_key={None},
+        ),
+        absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
     ),
     # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======
     # Door lock mode config parameter. Functionality equivalent to Notification CC
@@ -490,6 +508,16 @@ DISCOVERY_SCHEMAS = [
             },
             property={DOOR_STATUS_PROPERTY},
             type={"any"},
+        ),
+    ),
+    # humidifier
+    # hygrostats supporting mode (and optional setpoint)
+    ZWaveDiscoverySchema(
+        platform="humidifier",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.HUMIDITY_CONTROL_MODE},
+            property={HUMIDITY_CONTROL_MODE_PROPERTY},
+            type={"number"},
         ),
     ),
     # climate

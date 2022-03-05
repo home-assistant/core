@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi",
             "not_konn_panel": "Non \u00e8 un dispositivo Konnected.io riconosciuto",
             "unknown": "Errore imprevisto"
         },
@@ -11,7 +12,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Modello: {model}\nID: {id}\nHost: {host}\nPorta: {port}\n\n\u00c8 possibile configurare il comportamento di I/O e del pannello nelle impostazioni del Pannello Allarmi di Konnected.",
+                "description": "Modello: {model}\nID: {id}\nHost: {host}\nPorta: {port}\n\nPuoi configurare il comportamento di I/O e del pannello nelle impostazioni del pannello Allarmi di Konnected.",
                 "title": "Dispositivo Konnected pronto"
             },
             "import_confirm": {
@@ -23,7 +24,7 @@
                     "host": "Indirizzo IP",
                     "port": "Porta"
                 },
-                "description": "Si prega di inserire le informazioni dell'host per il tuo Pannello Konnected."
+                "description": "Inserisci le informazioni dell'host per il tuo pannello Konnected."
             }
         }
     },
@@ -66,7 +67,7 @@
                     "7": "Zona 7",
                     "out": "OUT"
                 },
-                "description": "Rilevato un {model} su {host}. Selezionare la configurazione di base di ciascun I/O di seguito: a seconda dell'I/O, essa pu\u00f2 consentire sensori binari (contatti aperti/chiusi), sensori digitali (DHT e DS18B20) o uscite commutabili. Sarai in grado di configurare le opzioni dettagliate nei prossimi passi.",
+                "description": "Rilevato un {model} su {host}. Seleziona la configurazione di base di ciascun I/O di seguito: a seconda dell'I/O, essa pu\u00f2 consentire sensori binari (contatti aperti/chiusi), sensori digitali (DHT e DS18B20) o uscite commutabili. Sarai in grado di configurare le opzioni dettagliate nei prossimi passi.",
                 "title": "Configura I/O"
             },
             "options_io_ext": {
@@ -80,8 +81,8 @@
                     "alarm2_out2": "OUT2 / ALARM2",
                     "out1": "OUT1"
                 },
-                "description": "Selezionare di seguito la configurazione degli I/O rimanenti.  Potrete configurare opzioni dettagliate nei prossimi passi.",
-                "title": "Configurazione I/O Esteso"
+                "description": "Selezionare di seguito la configurazione degli I/O rimanenti. Potrai configurare opzioni dettagliate nei prossimi passi.",
+                "title": "Configurazione I/O esteso"
             },
             "options_misc": {
                 "data": {
@@ -97,7 +98,7 @@
                 "data": {
                     "activation": "Uscita quando acceso",
                     "momentary": "Durata impulso (ms) (opzionale)",
-                    "more_states": "Configurare stati aggiuntivi per questa zona",
+                    "more_states": "Configura stati aggiuntivi per questa zona",
                     "name": "Nome (opzionale)",
                     "pause": "Pausa tra gli impulsi (ms) (opzionale)",
                     "repeat": "Numero di volte da ripetere (-1 = infinito) (opzionale)"

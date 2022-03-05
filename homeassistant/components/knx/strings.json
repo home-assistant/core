@@ -16,10 +16,11 @@
       "manual_tunnel": {
         "description": "Please enter the connection information of your tunneling device.",
         "data": {
+          "tunneling_type": "KNX Tunneling Type",
           "port": "[%key:common::config_flow::data::port%]",
           "host": "[%key:common::config_flow::data::host%]",
           "individual_address": "Individual address for the connection",
-          "route_back": "Route Back / NAT Mode"
+          "local_ip": "Local IP of Home Assistant (leave empty for automatic detection)"
         }
       },
       "routing": {
@@ -27,7 +28,8 @@
         "data": {
           "individual_address": "Individual address for the routing connection",
           "multicast_group": "The multicast group used for routing",
-          "multicast_port": "The multicast port used for routing"
+          "multicast_port": "The multicast port used for routing",
+          "local_ip": "Local IP of Home Assistant (leave empty for automatic detection)"
         }
       }
     },
@@ -47,15 +49,16 @@
           "individual_address": "Default individual address",
           "multicast_group": "Multicast group used for routing and discovery",
           "multicast_port": "Multicast port used for routing and discovery",
+          "local_ip": "Local IP of Home Assistant (use 0.0.0.0 for automatic detection)",
           "state_updater": "Globally enable reading states from the KNX Bus",
           "rate_limit": "Maximum outgoing telegrams per second"
         }
       },
       "tunnel": {
         "data": {
+          "tunneling_type": "KNX Tunneling Type",
           "port": "[%key:common::config_flow::data::port%]",
-          "host": "[%key:common::config_flow::data::host%]",
-          "route_back": "Route Back / NAT Mode"
+          "host": "[%key:common::config_flow::data::host%]"
         }
       }
     }
