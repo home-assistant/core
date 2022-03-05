@@ -329,7 +329,7 @@ async-upnp-client==0.25.0
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.1.0
+asyncsleepiq==1.1.2
 
 # homeassistant.components.aten_pe
 atenpdu==0.3.2
@@ -834,7 +834,7 @@ huisbaasje-client==0.1.0
 hydrawiser==0.2
 
 # homeassistant.components.hyperion
-hyperion-py==0.7.4
+hyperion-py==0.7.5
 
 # homeassistant.components.iammeter
 iammeter==0.1.7
@@ -1431,7 +1431,7 @@ pydispatcher==2.0.5
 pydoods==1.0.2
 
 # homeassistant.components.android_ip_webcam
-pydroid-ipcam==0.8
+pydroid-ipcam==1.3.1
 
 # homeassistant.components.ebox
 pyebox==1.1.4

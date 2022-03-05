@@ -68,11 +68,12 @@ PLATFORMS_CONFIG_ENTRY = [
 ]
 
 PLATFORMS = [
-    Platform.LIGHT,
-    Platform.COVER,
-    Platform.NOTIFY,
-    Platform.FAN,
     Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
 ]
 
 REG_KEY = f"{DOMAIN}_registry"
