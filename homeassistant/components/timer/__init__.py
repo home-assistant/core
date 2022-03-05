@@ -258,9 +258,6 @@ class Timer(RestoreEntity):
         if self._listener:
             self._listener()
             self._listener = None
-        newduration = None
-        if duration:
-            newduration = duration
 
         event = EVENT_TIMER_STARTED
         if self._state in (STATUS_ACTIVE, STATUS_PAUSED):
@@ -270,8 +267,8 @@ class Timer(RestoreEntity):
         start = dt_util.utcnow().replace(microsecond=0)
 
         # Set remaining to new value if needed
-        if newduration:
-            self._remaining = self._duration = newduration
+        if duration:
+            self._remaining = self._duration = duration
         elif not self._remaining:
             self._remaining = self._duration
 
