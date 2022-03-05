@@ -46,31 +46,31 @@ class SensiboBaseEntity(CoordinatorEntity):
     ) -> dict[str, Any]:
         """Send command to Sensibo api."""
         result: dict[str, Any] = {"status": None}
-        if command == "set_calibration":
-            try:
-                async with async_timeout.timeout(TIMEOUT):
-                    result = await self._client.async_set_calibration(
-                        self._device_id,
-                        params["value"],
-                    )
-            except SENSIBO_ERRORS as err:
-                raise HomeAssistantError(
-                    f"Failed to send command {command} for device {self.name} to Sensibo servers: {err}"
-                ) from err
-        if command == "set_ac_state":
-            try:
-                async with async_timeout.timeout(TIMEOUT):
-                    result = await self._client.async_set_ac_state_property(
-                        self._device_id,
-                        params["name"],
-                        params["value"],
-                        params["ac_states"],
-                        params["assumed_state"],
-                    )
-            except SENSIBO_ERRORS as err:
-                raise HomeAssistantError(
-                    f"Failed to send command {command} for device {self.name} to Sensibo servers: {err}"
-                ) from err
+        try:
+            async with async_timeout.timeout(TIMEOUT):
+                result = await self.async_send_api_call(command, params)
+        except SENSIBO_ERRORS as err:
+            raise HomeAssistantError(
+                f"Failed to send command {command} for device {self.name} to Sensibo servers: {err}"
+            ) from err
 
         LOGGER.debug("Result: %s", result)
         return result
+
+    async def async_send_api_call(
+        self, command: str, params: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Send api call."""
+        if command == "set_calibration":
+            return await self._client.async_set_calibration(
+                self._device_id,
+                params["data"],
+            )
+        if command == "set_ac_state":
+            return await self._client.async_set_ac_state_property(
+                self._device_id,
+                params["name"],
+                params["value"],
+                params["ac_states"],
+                params["assumed_state"],
+            )
