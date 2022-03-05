@@ -61,6 +61,7 @@
                     "debug": "Foutopsporing inschakelen",
                     "device": "Selecteer het apparaat om te configureren",
                     "event_code": "Voer de gebeurteniscode in om toe te voegen",
+                    "protocols": "Protocollen",
                     "remove_device": "Apparaat selecteren dat u wilt verwijderen"
                 },
                 "title": "Rfxtrx-opties"

@@ -22,5 +22,31 @@
                 "title": "Seadista 1-wire sidumine"
             }
         }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "Vali seadistatav seade"
+        },
+        "step": {
+            "ack_no_options": {
+                "description": "SysBusi rakendamiseks pole v\u00f5imalusi",
+                "title": "OneWire SysBusi valikud"
+            },
+            "configure_device": {
+                "data": {
+                    "precision": "Anduri t\u00e4psus"
+                },
+                "description": "Vali {sensor_id} anduri t\u00e4psus.",
+                "title": "OneWire anduri t\u00e4psus"
+            },
+            "device_selection": {
+                "data": {
+                    "clear_device_options": "Eemalda k\u00f5ik seadmete s\u00e4tted",
+                    "device_selection": "Vali seadistatav seade"
+                },
+                "description": "Vali milliseid konfiguratsioonietappe t\u00f6\u00f6delda",
+                "title": "OneWire'i seadme valikud"
+            }
+        }
     }
 }

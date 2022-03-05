@@ -498,6 +498,20 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
 
     client.async_send_command.reset_mock()
 
+    # Test setting config parameter with no valid nodes raises Exception
+    with pytest.raises(vol.MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_CONFIG_PARAMETER: 102,
+                ATTR_CONFIG_PARAMETER_BITMASK: 1,
+                ATTR_CONFIG_VALUE: 1,
+            },
+            blocking=True,
+        )
+
 
 async def test_bulk_set_config_parameters(hass, client, multisensor_6, integration):
     """Test the bulk_set_partial_config_parameters service."""
@@ -1345,8 +1359,8 @@ async def test_multicast_set_value(
     diff_network_node.client.driver.controller.home_id.return_value = "diff_home_id"
 
     with pytest.raises(vol.MultipleInvalid), patch(
-        "homeassistant.components.zwave_js.services.async_get_node_from_device_id",
-        return_value=diff_network_node,
+        "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
+        side_effect=(climate_danfoss_lc_13, diff_network_node),
     ):
         await hass.services.async_call(
             DOMAIN,

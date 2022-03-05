@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, setup
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
@@ -619,6 +620,22 @@ async def test_integration_disabled(hass, caplog):
     result = await setup.async_setup_component(hass, "test_component1", {})
     assert not result
     assert disabled_reason in caplog.text
+
+
+async def test_integration_logs_is_custom(hass, caplog):
+    """Test we highlight it's a custom component when errors happen."""
+    mock_integration(
+        hass,
+        MockModule("test_component1"),
+        built_in=False,
+    )
+    with patch(
+        "homeassistant.setup.async_process_deps_reqs",
+        side_effect=HomeAssistantError("Boom"),
+    ):
+        result = await setup.async_setup_component(hass, "test_component1", {})
+    assert not result
+    assert "Setup failed for custom integration test_component1: Boom" in caplog.text
 
 
 async def test_async_get_loaded_integrations(hass):

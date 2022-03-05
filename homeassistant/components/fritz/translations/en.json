@@ -10,7 +10,8 @@
             "already_in_progress": "Configuration flow is already in progress",
             "cannot_connect": "Failed to connect",
             "connection_error": "Failed to connect",
-            "invalid_auth": "Invalid authentication"
+            "invalid_auth": "Invalid authentication",
+            "upnp_not_configured": "Missing UPnP settings on device."
         },
         "flow_title": "{name}",
         "step": {

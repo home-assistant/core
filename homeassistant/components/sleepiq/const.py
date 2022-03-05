@@ -8,9 +8,11 @@ FIRMNESS = "firmness"
 ICON_EMPTY = "mdi:bed-empty"
 ICON_OCCUPIED = "mdi:bed"
 IS_IN_BED = "is_in_bed"
+PRESSURE = "pressure"
 SLEEP_NUMBER = "sleep_number"
 SENSOR_TYPES = {
     FIRMNESS: "Firmness",
+    PRESSURE: "Pressure",
     IS_IN_BED: "Is In Bed",
     SLEEP_NUMBER: "SleepNumber",
 }

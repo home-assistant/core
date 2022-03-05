@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Switch entity"
+                },
+                "description": "Select the switch for the light switch."
+            }
+        }
+    },
     "device_automation": {
         "action_type": {
             "toggle": "Toggle {entity_name}",

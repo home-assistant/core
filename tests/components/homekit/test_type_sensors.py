@@ -399,4 +399,4 @@ async def test_empty_name(hass, hk_driver):
     assert acc.category == 10  # Sensor
 
     assert acc.char_humidity.value == 20
-    assert acc.display_name is None
+    assert acc.display_name == "None"

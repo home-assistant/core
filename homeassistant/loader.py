@@ -60,6 +60,24 @@ MAX_LOAD_CONCURRENTLY = 4
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
 
+class DHCPMatcherRequired(TypedDict, total=True):
+    """Matcher for the dhcp integration for required fields."""
+
+    domain: str
+
+
+class DHCPMatcherOptional(TypedDict, total=False):
+    """Matcher for the dhcp integration for optional fields."""
+
+    macaddress: str
+    hostname: str
+    registered_devices: bool
+
+
+class DHCPMatcher(DHCPMatcherRequired, DHCPMatcherOptional):
+    """Matcher for the dhcp integration."""
+
+
 class Manifest(TypedDict, total=False):
     """
     Integration manifest.
@@ -228,16 +246,16 @@ async def async_get_zeroconf(
     return zeroconf
 
 
-async def async_get_dhcp(hass: HomeAssistant) -> list[dict[str, str | bool]]:
+async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     """Return cached list of dhcp types."""
-    dhcp: list[dict[str, str | bool]] = DHCP.copy()
+    dhcp = cast(list[DHCPMatcher], DHCP.copy())
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.dhcp:
             continue
         for entry in integration.dhcp:
-            dhcp.append({"domain": integration.domain, **entry})
+            dhcp.append(cast(DHCPMatcher, {"domain": integration.domain, **entry}))
 
     return dhcp
 

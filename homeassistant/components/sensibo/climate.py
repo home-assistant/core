@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_API_KEY,
     CONF_ID,
+    PRECISION_TENTHS,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -144,6 +145,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             else TEMP_FAHRENHEIT
         )
         self._attr_supported_features = self.get_features()
+        self._attr_precision = PRECISION_TENTHS
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data[device_id]["id"])},
             name=coordinator.data[device_id]["name"],

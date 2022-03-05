@@ -241,7 +241,7 @@ async def test_setup_discovery_with_manually_configured_network_adapter_one_fail
     assert hass.states.get(ENTITY_BINARY_SENSOR) is None
     assert hass.states.get(ENTITY_LIGHT) is None
 
-    assert f"Failed to setup listener for {FAIL_TO_BIND_IP}" in caplog.text
+    assert f"Failed to setup listener for ('{FAIL_TO_BIND_IP}', 0)" in caplog.text
 
 
 async def test_setup_import(hass: HomeAssistant):

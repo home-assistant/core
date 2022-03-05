@@ -10,6 +10,7 @@ from pysensibo.exceptions import AuthenticationError, SensiboError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -41,7 +42,9 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             data = await self.client.async_get_devices()
             for dev in data["result"]:
                 devices.append(dev)
-        except (AuthenticationError, SensiboError) as error:
+        except AuthenticationError as error:
+            raise ConfigEntryAuthFailed from error
+        except SensiboError as error:
             raise UpdateFailed from error
 
         device_data: dict[str, dict[str, Any]] = {}
