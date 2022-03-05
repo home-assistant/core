@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
@@ -30,7 +28,7 @@ class MoonConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={},
             )
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema({}))
+        return self.async_show_form(step_id="user")
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle import from configuration.yaml."""
