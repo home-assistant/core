@@ -297,6 +297,21 @@ class SlackNotificationService(BaseNotificationService):
             kwargs.get(ATTR_TARGET, [self._default_channel])
         )
 
+        if message in ("command_status", "command_dnd"):
+            if message == "command_status":
+                title = title if title == "away" else "auto"
+                task = self._client.users_setPresence(presence=title)
+            else:
+                task = self._client.dnd_setSnooze(num_minutes=title or 0)
+
+            result = await asyncio.gather(task, return_exceptions=True)
+            if isinstance(result, SlackApiError):
+                _LOGGER.error(
+                    "There was a Slack API error while setting status: %r",
+                    result,
+                )
+            return
+
         # Message Type 1: A text-only message
         if ATTR_FILE not in data:
             if ATTR_BLOCKS_TEMPLATE in data:
