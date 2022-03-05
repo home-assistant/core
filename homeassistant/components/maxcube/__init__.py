@@ -121,7 +121,7 @@ class MaxCubeHandle:
                 _LOGGER.debug("Skipping update")
 
     def disconnect(self):
-        """Disconnect from cube"""
+        """Disconnect from cube."""
         with self.mutex:
             self.cube.disconnect()
 

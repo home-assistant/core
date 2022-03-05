@@ -71,12 +71,13 @@ def setup_platform(
 
 
 async def async_setup_platform(hass, config, add_devices, discovery_info=None) -> None:
+    """Set up a climate for maxcube."""
     setup_platform(hass, config, add_devices)
     return True
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Setup sensor platform for the ui"""
+    """Set up a climate for maxcube."""
     setup_platform(hass, config_entry.data, async_add_devices)
     return True
 
