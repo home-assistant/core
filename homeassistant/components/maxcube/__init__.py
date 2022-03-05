@@ -140,8 +140,8 @@ async def _setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     scan_interval = config[CONF_SCAN_INTERVAL]
 
     if host in hass.data[DATA_KEY]:
-        # Already configred, do nothing
-        _LOGGER.debug("Already configred, do nothing")
+        # Already configured, do nothing
+        _LOGGER.debug("Already configured, do nothing")
         return True
 
     try:
