@@ -289,7 +289,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             await self._async_set_ac_state_property("on", True)
 
         await self._async_set_ac_state_property("mode", HA_TO_SENSIBO[hvac_mode])
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
