@@ -9,7 +9,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, FIRMNESS
 from .coordinator import SleepIQData
-from .entity import SleepIQSensor
+from .entity import SleepIQSleeperEntity
 
 
 async def async_setup_entry(
@@ -26,7 +26,7 @@ async def async_setup_entry(
     )
 
 
-class SleepNumberFirmnessEntity(SleepIQSensor, NumberEntity):
+class SleepNumberFirmnessEntity(SleepIQSleeperEntity, NumberEntity):
     """Representation of an SleepIQ Entity with CoordinatorEntity."""
 
     _attr_icon = "mdi:bed"
@@ -50,4 +50,4 @@ class SleepNumberFirmnessEntity(SleepIQSensor, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Set the firmness value."""
-        await self.sleeper.set_sleepnumber(value)
+        await self.sleeper.set_sleepnumber(int(value))
