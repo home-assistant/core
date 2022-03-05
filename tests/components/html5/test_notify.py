@@ -550,7 +550,7 @@ async def test_send_fcm_expired(hass, hass_client):
 
 
 async def test_send_fcm_expired_save_fails(hass, hass_client):
-    """Test that the FCM target is removed when expired."""
+    """Test that the FCM target remains after expiry if save_json fails."""
     registrations = {"device": SUBSCRIPTION_5}
     await mock_client(hass, hass_client, registrations)
 
