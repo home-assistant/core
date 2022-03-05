@@ -23,6 +23,7 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -99,6 +100,10 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
             manufacturer=MANUFACTURER,
             model=MODEL,
             name=self._attr_name,
+            connections={
+                (CONNECTION_NETWORK_MAC, coordinator.data["panel_info"]["mac"])
+            },
+            sw_version=coordinator.data["panel_info"]["version"],
         )
 
     async def async_alarm_disarm(self, code=None) -> None:
