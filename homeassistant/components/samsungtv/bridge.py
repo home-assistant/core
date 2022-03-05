@@ -11,6 +11,7 @@ from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
+from samsungtvws.command import SamsungTVCommand
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import WebSocketException
@@ -128,7 +129,7 @@ class SamsungTVBridge(ABC):
         """Tells if the TV is on."""
 
     @abstractmethod
-    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
+    async def async_send_key(self, key: str) -> None:
         """Send a key to the tv and handles exceptions."""
 
     @abstractmethod
@@ -237,7 +238,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 pass
         return self._remote
 
-    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
+    async def async_send_key(self, key: str) -> None:
         """Send the key using legacy protocol."""
         await self.hass.async_add_executor_job(self._send_key, key)
 
@@ -388,22 +389,25 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
         return None
 
-    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
+    async def async_launch_app(self, app_id: str) -> None:
+        """Send the launch_app command using websocket protocol."""
+        await self._async_send_command(ChannelEmitCommand.launch_app(app_id))
+
+    async def async_send_key(self, key: str) -> None:
         """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
+        await self._async_send_command(SendRemoteKey.click(key))
+
+    async def _async_send_command(self, command: SamsungTVCommand) -> None:
+        """Send the commands using websocket protocol."""
         try:
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        if key_type == "run_app":
-                            await remote.send_command(
-                                ChannelEmitCommand.launch_app(key)
-                            )
-                        else:
-                            await remote.send_command(SendRemoteKey.click(key))
+                        await remote.send_command(command)
                     break
                 except (
                     BrokenPipeError,
