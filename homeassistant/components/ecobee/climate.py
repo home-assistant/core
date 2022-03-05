@@ -521,7 +521,7 @@ class Thermostat(ClimateEntity):
         """Return current HVAC action.
 
         Ecobee returns a CSV string with different equipment that is active.
-        We are prioritizing any heating/cooling equipment, otherwase look at
+        We are prioritizing any heating/cooling equipment, otherwise look at
         drying/fanning. Idle if nothing going on.
 
         We are unable to map all actions to HA equivalents.

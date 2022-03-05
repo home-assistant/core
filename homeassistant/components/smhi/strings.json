@@ -7,14 +7,12 @@
       "user": {
         "title": "Location in Sweden",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
         }
       }
     },
     "error": {
-      "name_exists": "Name already exists",
       "wrong_location": "Location Sweden only"
     }
   }

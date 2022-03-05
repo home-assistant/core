@@ -562,6 +562,15 @@ async def test_form_ssdp(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {}
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    assert (
+        flows[0].get("context", {}).get("configuration_url")
+        == "https://192.168.208.1:443"
+    )
+
     context = next(
         flow["context"]
         for flow in hass.config_entries.flow.async_progress()

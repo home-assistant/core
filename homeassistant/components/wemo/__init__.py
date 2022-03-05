@@ -125,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
     )
 
-    # Need to do this at least once in case statics are defined and discovery is disabled
+    # Need to do this at least once in case statistics are defined and discovery is disabled
     await wemo_discovery.discover_statics()
 
     if config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):

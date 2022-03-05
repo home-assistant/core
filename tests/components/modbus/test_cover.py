@@ -32,8 +32,8 @@ from homeassistant.core import State
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
-ENTITY_ID = f"{COVER_DOMAIN}.{TEST_ENTITY_NAME}"
-ENTITY_ID2 = f"{ENTITY_ID}2"
+ENTITY_ID = f"{COVER_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+ENTITY_ID2 = f"{ENTITY_ID}_2"
 
 
 @pytest.mark.parametrize(
@@ -270,7 +270,7 @@ async def test_restore_state_cover(hass, mock_test_state, mock_modbus):
                     CONF_SCAN_INTERVAL: 0,
                 },
                 {
-                    CONF_NAME: f"{TEST_ENTITY_NAME}2",
+                    CONF_NAME: f"{TEST_ENTITY_NAME} 2",
                     CONF_INPUT_TYPE: CALL_TYPE_COIL,
                     CONF_ADDRESS: 1235,
                     CONF_SCAN_INTERVAL: 0,

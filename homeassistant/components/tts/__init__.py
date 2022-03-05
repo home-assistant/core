@@ -9,6 +9,7 @@ import io
 import logging
 import mimetypes
 import os
+from pathlib import Path
 import re
 from typing import TYPE_CHECKING, Optional, cast
 
@@ -39,9 +40,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.yaml import load_yaml
+
+from .const import DOMAIN
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -69,7 +71,6 @@ CONF_FIELDS = "fields"
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
 DEFAULT_TIME_MEMORY = 300
-DOMAIN = "tts"
 
 MEM_CACHE_FILENAME = "filename"
 MEM_CACHE_VOICE = "voice"
@@ -135,12 +136,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.exception("Error on cache init")
         return False
 
+    hass.data[DOMAIN] = tts
     hass.http.register_view(TextToSpeechView(tts))
     hass.http.register_view(TextToSpeechUrlView(tts))
 
     # Load service descriptions from tts/services.yaml
-    integration = await async_get_integration(hass, DOMAIN)
-    services_yaml = integration.file_path / "services.yaml"
+    services_yaml = Path(__file__).parent / "services.yaml"
     services_dict = cast(
         dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
     )
@@ -343,7 +344,9 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        provider = self.providers[engine]
+        if (provider := self.providers.get(engine)) is None:
+            raise HomeAssistantError(f"Provider {engine} not found")
+
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
         use_cache = cache if cache is not None else self.use_cache
 
@@ -678,6 +681,6 @@ class TextToSpeechView(HomeAssistantView):
         return web.Response(body=data, content_type=content)
 
 
-def get_base_url(hass):
+def get_base_url(hass: HomeAssistant) -> str:
     """Get base URL."""
     return hass.data[BASE_URL_KEY] or get_url(hass)

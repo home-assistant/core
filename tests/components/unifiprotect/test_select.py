@@ -512,6 +512,10 @@ async def test_select_set_option_camera_doorbell_custom(
         blocking=True,
     )
 
+    camera.set_lcd_text.assert_called_once_with(
+        DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
+    )
+
 
 async def test_select_set_option_camera_doorbell_unifi(
     hass: HomeAssistant,

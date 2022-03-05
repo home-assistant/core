@@ -1,7 +1,7 @@
 """Config flow for Verisure integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from verisure import (
     Error as VerisureError,
@@ -110,7 +110,10 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
         """Handle initiation of re-authentication with Verisure."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = cast(
+            ConfigEntry,
+            self.hass.config_entries.async_get_entry(self.context["entry_id"]),
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

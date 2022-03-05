@@ -6,5 +6,6 @@
   "codeowners": ["@RenierM26", "@baqs"],
   "requirements": ["pyezviz==0.2.0.6"],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["paho_mqtt", "pyezviz"]
 }

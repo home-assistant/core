@@ -12,7 +12,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
-from .exception import SpeakerUnavailable
 from .helpers import soco_error
 from .speaker import SonosSpeaker
 
@@ -75,16 +74,13 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         self.level_type = level_type
         self._attr_min_value, self._attr_max_value = valid_range
 
-    async def _async_poll(self) -> None:
+    async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
-        await self.hass.async_add_executor_job(self.update)
+        await self.hass.async_add_executor_job(self.poll_state)
 
-    @soco_error(raise_on_err=False)
-    def update(self) -> None:
-        """Fetch number state if necessary."""
-        if not self.available:
-            raise SpeakerUnavailable
-
+    @soco_error()
+    def poll_state(self) -> None:
+        """Poll the device for the current state."""
         state = getattr(self.soco, self.level_type)
         setattr(self.speaker, self.level_type, state)
 

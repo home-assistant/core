@@ -205,7 +205,7 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
-                (DOMAIN, self.adguard.host, self.adguard.port, self.adguard.base_path)  # type: ignore
+                (DOMAIN, self.adguard.host, self.adguard.port, self.adguard.base_path)  # type: ignore[arg-type]
             },
             manufacturer="AdGuard Team",
             name="AdGuard Home",

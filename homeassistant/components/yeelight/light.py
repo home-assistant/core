@@ -7,7 +7,8 @@ import math
 
 import voluptuous as vol
 import yeelight
-from yeelight import Bulb, Flow, RGBTransition, SleepTransition, flows
+from yeelight import Flow, RGBTransition, SleepTransition, flows
+from yeelight.aio import AsyncBulb
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
 from yeelight.main import BulbException
 
@@ -549,7 +550,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         return self._effect if self.device.is_color_flow_enabled else None
 
     @property
-    def _bulb(self) -> Bulb:
+    def _bulb(self) -> AsyncBulb:
         return self.device.bulb
 
     @property
@@ -608,8 +609,10 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def _async_set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off wrapped with _async_cmd."""
         bulb = self._bulb
-        method = bulb.stop_music if not music_mode else bulb.start_music
-        await self.hass.async_add_executor_job(method)
+        if music_mode:
+            await bulb.async_start_music()
+        else:
+            await bulb.async_stop_music()
 
     @_async_cmd
     async def async_set_brightness(self, brightness, duration) -> None:

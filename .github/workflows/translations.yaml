@@ -17,13 +17,14 @@ env:
 jobs:
   upload:
     name: Upload
+    if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.1
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -35,14 +36,14 @@ jobs:
   download:
     name: Download
     needs: upload
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.repository_owner == 'home-assistant' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.1
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 

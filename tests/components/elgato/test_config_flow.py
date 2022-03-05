@@ -6,7 +6,7 @@ from elgato import ElgatoConnectionError
 from homeassistant.components import zeroconf
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -40,6 +40,7 @@ async def test_full_user_flow_implementation(
     assert result2.get("title") == "CN11A1A00001"
     assert result2.get("data") == {
         CONF_HOST: "127.0.0.1",
+        CONF_MAC: None,
         CONF_PORT: 9123,
     }
     assert "result" in result2
@@ -60,10 +61,11 @@ async def test_full_zeroconf_flow_implementation(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="example.local.",
             name="mock_name",
             port=9123,
-            properties={},
+            properties={"id": "AA:BB:CC:DD:EE:FF"},
             type="mock_type",
         ),
     )
@@ -87,6 +89,7 @@ async def test_full_zeroconf_flow_implementation(
     assert result2.get("title") == "CN11A1A00001"
     assert result2.get("data") == {
         CONF_HOST: "127.0.0.1",
+        CONF_MAC: "AA:BB:CC:DD:EE:FF",
         CONF_PORT: 9123,
     }
     assert "result" in result2
@@ -124,6 +127,7 @@ async def test_zeroconf_connection_error(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,
@@ -165,6 +169,7 @@ async def test_zeroconf_device_exists_abort(
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,
@@ -185,6 +190,7 @@ async def test_zeroconf_device_exists_abort(
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.2",
+            addresses=["127.0.0.2"],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,

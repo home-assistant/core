@@ -6,11 +6,12 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Light
+from pyunifiprotect.data import Camera, Doorlock, Light
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.number import (
     CAMERA_NUMBERS,
+    DOORLOCK_NUMBERS,
     LIGHT_NUMBERS,
     ProtectNumberEntityDescription,
 )
@@ -91,6 +92,35 @@ async def camera_fixture(
     yield camera_obj
 
     Camera.__config__.validate_assignment = True
+
+
+@pytest.fixture(name="doorlock")
+async def doorlock_fixture(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_doorlock: Doorlock
+):
+    """Fixture for a single doorlock for testing the number platform."""
+
+    # disable pydantic validation so mocking can happen
+    Doorlock.__config__.validate_assignment = False
+
+    lock_obj = mock_doorlock.copy(deep=True)
+    lock_obj._api = mock_entry.api
+    lock_obj.name = "Test Lock"
+    lock_obj.auto_close_time = timedelta(seconds=45)
+
+    mock_entry.api.bootstrap.reset_objects()
+    mock_entry.api.bootstrap.doorlocks = {
+        lock_obj.id: lock_obj,
+    }
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
+
+    yield lock_obj
+
+    Doorlock.__config__.validate_assignment = True
 
 
 async def test_number_setup_light(
@@ -249,3 +279,20 @@ async def test_number_camera_simple(
     )
 
     set_method.assert_called_once_with(1.0)
+
+
+async def test_number_lock_auto_close(hass: HomeAssistant, doorlock: Doorlock):
+    """Test auto-lock timeout for locks."""
+
+    description = DOORLOCK_NUMBERS[0]
+
+    doorlock.__fields__["set_auto_close_time"] = Mock()
+    doorlock.set_auto_close_time = AsyncMock()
+
+    _, entity_id = ids_from_device_description(Platform.NUMBER, doorlock, description)
+
+    await hass.services.async_call(
+        "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
+    )
+
+    doorlock.set_auto_close_time.assert_called_once_with(timedelta(seconds=15.0))

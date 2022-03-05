@@ -10,9 +10,8 @@ from pyvizio.api.apps import find_app_name
 from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_SPEAKER,
-    DEVICE_CLASS_TV,
     SUPPORT_SELECT_SOUND_MODE,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -145,7 +144,7 @@ class VizioDevice(MediaPlayerEntity):
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
         self._current_input = None
         self._current_app_config = None
-        self._app_name = None
+        self._attr_app_name = None
         self._available_inputs = []
         self._available_apps = []
         self._all_apps = apps_coordinator.data if apps_coordinator else None
@@ -209,7 +208,7 @@ class VizioDevice(MediaPlayerEntity):
             self._attr_volume_level = None
             self._attr_is_volume_muted = None
             self._current_input = None
-            self._app_name = None
+            self._attr_app_name = None
             self._current_app_config = None
             self._attr_sound_mode = None
             return
@@ -252,7 +251,7 @@ class VizioDevice(MediaPlayerEntity):
         self._available_inputs = [input_.name for input_ in inputs]
 
         # Return before setting app variables if INPUT_APPS isn't in available inputs
-        if self._attr_device_class == DEVICE_CLASS_SPEAKER or not any(
+        if self._attr_device_class == MediaPlayerDeviceClass.SPEAKER or not any(
             app for app in INPUT_APPS if app in self._available_inputs
         ):
             return
@@ -265,13 +264,13 @@ class VizioDevice(MediaPlayerEntity):
             log_api_exception=False
         )
 
-        self._app_name = find_app_name(
+        self._attr_app_name = find_app_name(
             self._current_app_config,
             [APP_HOME, *self._all_apps, *self._additional_app_configs],
         )
 
-        if self._app_name == NO_APP_RUNNING:
-            self._app_name = None
+        if self._attr_app_name == NO_APP_RUNNING:
+            self._attr_app_name = None
 
     def _get_additional_app_names(self) -> list[dict[str, Any]]:
         """Return list of additional apps that were included in configuration.yaml."""
@@ -329,7 +328,7 @@ class VizioDevice(MediaPlayerEntity):
             self._all_apps = self._apps_coordinator.data
             self.async_write_ha_state()
 
-        if self._attr_device_class == DEVICE_CLASS_TV:
+        if self._attr_device_class == MediaPlayerDeviceClass.TV:
             self.async_on_remove(
                 self._apps_coordinator.async_add_listener(apps_list_update)
             )
@@ -337,8 +336,8 @@ class VizioDevice(MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return current input of the device."""
-        if self._app_name is not None and self._current_input in INPUT_APPS:
-            return self._app_name
+        if self._attr_app_name is not None and self._current_input in INPUT_APPS:
+            return self._attr_app_name
 
         return self._current_input
 
@@ -363,14 +362,6 @@ class VizioDevice(MediaPlayerEntity):
             ]
 
         return self._available_inputs
-
-    @property
-    def app_name(self) -> str | None:
-        """Return the name of the current app."""
-        if self.source == self._app_name:
-            return self._app_name
-
-        return None
 
     @property
     def app_id(self) -> str | None:

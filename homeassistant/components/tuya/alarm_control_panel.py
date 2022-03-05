@@ -23,8 +23,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
-from .base import EnumTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .base import TuyaEntity
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 
 class Mode(StrEnum):
@@ -105,36 +105,39 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
         # Determine supported  modes
-        supported_mode = EnumTypeData.from_json(
-            device.function[DPCode.MASTER_MODE].values
-        ).range
+        if supported_modes := self.find_dpcode(
+            description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
+            if Mode.HOME in supported_modes.range:
+                self._attr_supported_features |= SUPPORT_ALARM_ARM_HOME
 
-        if Mode.HOME in supported_mode:
-            self._attr_supported_features |= SUPPORT_ALARM_ARM_HOME
+            if Mode.ARM in supported_modes.range:
+                self._attr_supported_features |= SUPPORT_ALARM_ARM_AWAY
 
-        if Mode.ARM in supported_mode:
-            self._attr_supported_features |= SUPPORT_ALARM_ARM_AWAY
-
-        if Mode.SOS in supported_mode:
-            self._attr_supported_features |= SUPPORT_ALARM_TRIGGER
+            if Mode.SOS in supported_modes.range:
+                self._attr_supported_features |= SUPPORT_ALARM_TRIGGER
 
     @property
     def state(self):
         """Return the state of the device."""
-        return STATE_MAPPING.get(self.device.status.get(DPCode.MASTER_MODE))
+        if not (status := self.device.status.get(self.entity_description.key)):
+            return None
+        return STATE_MAPPING.get(status)
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send Disarm command."""
-        self._send_command([{"code": DPCode.MASTER_MODE, "value": Mode.DISARMED}])
+        self._send_command(
+            [{"code": self.entity_description.key, "value": Mode.DISARMED}]
+        )
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send Home command."""
-        self._send_command([{"code": DPCode.MASTER_MODE, "value": Mode.HOME}])
+        self._send_command([{"code": self.entity_description.key, "value": Mode.HOME}])
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send Arm command."""
-        self._send_command([{"code": DPCode.MASTER_MODE, "value": Mode.ARM}])
+        self._send_command([{"code": self.entity_description.key, "value": Mode.ARM}])
 
     def alarm_trigger(self, code: str | None = None) -> None:
         """Send SOS command."""
-        self._send_command([{"code": DPCode.MASTER_MODE, "value": Mode.SOS}])
+        self._send_command([{"code": self.entity_description.key, "value": Mode.SOS}])

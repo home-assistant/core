@@ -77,6 +77,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._attr_name = zone_name
+        self._attr_is_on = False
         self._rfid = zone_rfid
         self._loop = zone_loop
         self._relay_addr = relay_addr

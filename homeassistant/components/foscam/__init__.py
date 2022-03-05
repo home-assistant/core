@@ -71,7 +71,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if ret != 0:
             rtsp_port = response.get("rtspPort") or response.get("mediaPort")
 
-        entry.data = {**entry.data, CONF_RTSP_PORT: rtsp_port}
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_RTSP_PORT: rtsp_port}
+        )
 
         # Change entry version
         entry.version = 2

@@ -8,9 +8,10 @@ from typing import Any
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
@@ -96,7 +97,7 @@ class ZHAIdentifyButton(ZHAButton):
         return cls(unique_id, zha_device, channels, **kwargs)
 
     _attr_device_class: ButtonDeviceClass = ButtonDeviceClass.UPDATE
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _command_name = "identify"
 
     def get_args(self) -> list[Any]:

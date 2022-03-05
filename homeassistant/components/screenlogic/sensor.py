@@ -6,7 +6,11 @@ from screenlogicpy.const import (
     EQUIPMENT,
 )
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -121,6 +125,13 @@ class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
         """Device class of the sensor."""
         device_type = self.sensor.get("device_type")
         return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_type)
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        if self._data_key == "scg_super_chlor_timer":
+            return None
+        return SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):

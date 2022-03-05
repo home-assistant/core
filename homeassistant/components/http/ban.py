@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
 from typing import Any, Final
@@ -135,11 +135,12 @@ async def process_wrong_login(request: Request) -> None:
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
 
     # Supervisor IP should never be banned
-    if (
-        "hassio" in hass.config.components
-        and hass.components.hassio.get_supervisor_ip() == str(remote_addr)
-    ):
-        return
+    if "hassio" in hass.config.components:
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components import hassio
+
+        if hassio.get_supervisor_ip() == str(remote_addr):
+            return
 
     if (
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
@@ -188,7 +189,11 @@ async def process_success_login(request: Request) -> None:
 class IpBan:
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime | None = None) -> None:
+    def __init__(
+        self,
+        ip_ban: str | IPv4Address | IPv6Address,
+        banned_at: datetime | None = None,
+    ) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or dt_util.utcnow()

@@ -12,7 +12,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Vert (eller IP-adresse) for din twinkly-enhet"
+                    "host": "Vert"
                 },
                 "description": "Sett opp Twinkly-led-strengen",
                 "title": "Twinkly"

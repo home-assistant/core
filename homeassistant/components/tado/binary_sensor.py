@@ -60,7 +60,7 @@ async def async_setup_entry(
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
     devices = tado.devices
     zones = tado.zones
-    entities = []
+    entities: list[BinarySensorEntity] = []
 
     # Create device sensors
     for device in devices:

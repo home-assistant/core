@@ -70,6 +70,8 @@ async def async_setup_entry(
 class DoorBirdButton(DoorBirdEntity, ButtonEntity):
     """A relay in a DoorBird device."""
 
+    entity_description: DoorbirdButtonEntityDescription
+
     def __init__(
         self,
         doorstation: DoorBird,
@@ -79,7 +81,6 @@ class DoorBirdButton(DoorBirdEntity, ButtonEntity):
     ) -> None:
         """Initialize a relay in a DoorBird device."""
         super().__init__(doorstation, doorstation_info)
-        self._doorstation = doorstation
         self._relay = relay
         self.entity_description = entity_description
 

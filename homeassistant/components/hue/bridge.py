@@ -49,11 +49,12 @@ class HueBridge:
         self.logger = logging.getLogger(__name__)
         # store actual api connection to bridge as api
         app_key: str = self.config_entry.data[CONF_API_KEY]
-        websession = aiohttp_client.async_get_clientsession(hass)
         if self.api_version == 1:
-            self.api = HueBridgeV1(self.host, app_key, websession)
+            self.api = HueBridgeV1(
+                self.host, app_key, aiohttp_client.async_get_clientsession(hass)
+            )
         else:
-            self.api = HueBridgeV2(self.host, app_key, websession)
+            self.api = HueBridgeV2(self.host, app_key)
         # store (this) bridge object in hass data
         hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
 

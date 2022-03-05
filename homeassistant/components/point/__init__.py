@@ -172,10 +172,12 @@ async def handle_webhook(hass, webhook_id, request):
 class MinutPointClient:
     """Get the latest data and update the states."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry, session):
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, session: PointSession
+    ) -> None:
         """Initialize the Minut data object."""
-        self._known_devices = set()
-        self._known_homes = set()
+        self._known_devices: set[str] = set()
+        self._known_homes: set[str] = set()
         self._hass = hass
         self._config_entry = config_entry
         self._is_available = True

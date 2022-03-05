@@ -22,5 +22,31 @@
                 "title": "\u8a2d\u5b9a 1-Wire"
             }
         }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "\u9078\u64c7\u6240\u8981\u8a2d\u5b9a\u7684\u88dd\u7f6e"
+        },
+        "step": {
+            "ack_no_options": {
+                "description": "SysBus implementation \u6c92\u6709\u8a2d\u5b9a\u9078\u9805",
+                "title": "OneWire SysBus \u9078\u9805"
+            },
+            "configure_device": {
+                "data": {
+                    "precision": "\u611f\u6e2c\u5668\u7cbe\u6e96\u5ea6"
+                },
+                "description": "\u8a2d\u5b9a {sensor_id} \u50b3\u611f\u5668\u7cbe\u6e96\u5ea6",
+                "title": "OneWire \u611f\u6e2c\u5668\u7cbe\u6e96\u5ea6"
+            },
+            "device_selection": {
+                "data": {
+                    "clear_device_options": "\u6e05\u9664\u6240\u6709\u88dd\u7f6e\u8a2d\u5b9a",
+                    "device_selection": "\u9078\u64c7\u6240\u8981\u8a2d\u5b9a\u7684\u88dd\u7f6e"
+                },
+                "description": "\u9078\u64c7\u8a2d\u5b9a\u6b65\u9a5f\u9032\u884c",
+                "title": "OneWire \u88dd\u7f6e\u9078\u9805"
+            }
+        }
     }
 }

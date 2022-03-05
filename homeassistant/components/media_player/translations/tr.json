@@ -8,6 +8,7 @@
             "is_playing": "{entity_name} oynat\u0131l\u0131yor"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} durumlar\u0131 de\u011fi\u015ftirdi",
             "idle": "{entity_name} bo\u015fta",
             "paused": "{entity_name} duraklat\u0131ld\u0131",
             "playing": "{entity_name} oynamaya ba\u015flar",

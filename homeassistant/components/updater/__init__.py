@@ -7,6 +7,7 @@ import async_timeout
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
+from homeassistant.components import hassio
 from homeassistant.const import Platform, __version__ as current_version
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery, update_coordinator
@@ -57,16 +58,10 @@ class Updater:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the updater component."""
-    conf = config.get(DOMAIN, {})
-
-    for option in (CONF_COMPONENT_REPORTING, CONF_REPORTING):
-        if option in conf:
-            _LOGGER.warning(
-                "Analytics reporting with the option '%s' "
-                "is deprecated and you should remove that from your configuration. "
-                "The analytics part of this integration has moved to the new 'analytics' integration",
-                option,
-            )
+    _LOGGER.warning(
+        "The updater integration has been deprecated and will be removed in 2022.5, "
+        "please remove it from your configuration"
+    )
 
     async def check_new_version() -> Updater:
         """Check if a new version is available and report if one is."""
@@ -79,8 +74,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Fetched version %s: %s", newest, release_notes)
 
         # Load data from Supervisor
-        if hass.components.hassio.is_hassio():
-            core_info = hass.components.hassio.get_core_info()
+        if hassio.is_hassio(hass):
+            core_info = hassio.get_core_info(hass)
             newest = core_info["version_latest"]
 
         # Validate version

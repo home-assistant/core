@@ -142,27 +142,6 @@ def _setup(config):
     return patch_key, entity_id, config_entry
 
 
-async def test_setup_with_properties(hass):
-    """Test that setup succeeds with device properties.
-
-    the response must be a string with the following info separated with line break:
-    "manufacturer, model, serialno, version, mac_wlan0_output, mac_eth0_output"
-
-    """
-
-    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
-    config_entry.add_to_hass(hass)
-    response = "fake\nfake\n0123456\nfake\nether a1:b1:c1:d1:e1:f1 brd\nnone"
-
-    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
-        patch_key
-    ], patchers.patch_shell(response)[patch_key]:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert state is not None
-
-
 @pytest.mark.parametrize(
     "config",
     [
@@ -258,6 +237,7 @@ async def test_adb_shell_returns_none(hass, config):
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -286,6 +266,7 @@ async def test_setup_with_adbkey(hass):
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER, PATCH_ISFILE, PATCH_ACCESS:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -319,6 +300,7 @@ async def test_sources(hass, config0):
     ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -397,6 +379,7 @@ async def _test_exclude_sources(hass, config0, expected_sources):
     ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -477,6 +460,7 @@ async def _test_select_source(hass, config0, source, expected_arg, method_patch)
     ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -703,6 +687,7 @@ async def test_setup_fail(hass, config):
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is None
@@ -1114,13 +1099,6 @@ async def test_services_androidtv(hass):
             await _test_service(
                 hass,
                 entity_id,
-                SERVICE_VOLUME_MUTE,
-                "mute_volume",
-                {ATTR_MEDIA_VOLUME_MUTED: False},
-            )
-            await _test_service(
-                hass,
-                entity_id,
                 SERVICE_VOLUME_SET,
                 "set_volume_level",
                 {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
@@ -1150,6 +1128,49 @@ async def test_services_firetv(hass):
             await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "back")
             await _test_service(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
             await _test_service(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
+
+
+async def test_volume_mute(hass):
+    """Test the volume mute service."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
+    config_entry.add_to_hass(hass)
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+            service_data = {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_MUTED: True}
+            with patch(
+                "androidtv.androidtv.androidtv_async.AndroidTVAsync.mute_volume",
+                return_value=None,
+            ) as mute_volume:
+                # Don't send the mute key if the volume is already muted
+                with patch(
+                    "androidtv.androidtv.androidtv_async.AndroidTVAsync.is_volume_muted",
+                    return_value=True,
+                ):
+                    await hass.services.async_call(
+                        MP_DOMAIN,
+                        SERVICE_VOLUME_MUTE,
+                        service_data=service_data,
+                        blocking=True,
+                    )
+                    assert not mute_volume.called
+
+                # Send the mute key because the volume is not already muted
+                with patch(
+                    "androidtv.androidtv.androidtv_async.AndroidTVAsync.is_volume_muted",
+                    return_value=False,
+                ):
+                    await hass.services.async_call(
+                        MP_DOMAIN,
+                        SERVICE_VOLUME_MUTE,
+                        service_data=service_data,
+                        blocking=True,
+                    )
+                    assert mute_volume.called
 
 
 async def test_connection_closed_on_ha_stop(hass):
@@ -1192,7 +1213,7 @@ async def test_exception(hass):
         assert state is not None
         assert state.state == STATE_OFF
 
-        # When an unforessen exception occurs, we close the ADB connection and raise the exception
+        # When an unforeseen exception occurs, we close the ADB connection and raise the exception
         with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION, pytest.raises(Exception):
             await hass.helpers.entity_component.async_update_entity(entity_id)
             state = hass.states.get(entity_id)

@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """
         try:
             async with async_timeout.timeout(TIMEOUT):
-                return await client.offer_stream_id(offer_sdp, stream_source, stream_id)
+                return await client.offer_stream_id(stream_id, offer_sdp, stream_source)
         except TimeoutError as err:
             raise HomeAssistantError("Timeout talking to RTSPtoWebRTC server") from err
         except ClientError as err:

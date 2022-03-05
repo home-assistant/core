@@ -8,6 +8,7 @@ import logging
 from pysabnzbd import SabnzbdApi, SabnzbdApiException
 import voluptuous as vol
 
+from homeassistant.components import configurator
 from homeassistant.components.discovery import SERVICE_SABNZBD
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
@@ -267,11 +268,10 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
 def async_request_configuration(hass, config, host, web_root):
     """Request configuration steps from the user."""
 
-    configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.async_notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again."
+            hass, _CONFIGURING[host], "Failed to register, please try again."
         )
 
         return
@@ -291,12 +291,13 @@ def async_request_configuration(hass, config, host, web_root):
             conf[host] = {CONF_API_KEY: api_key}
             save_json(hass.config.path(CONFIG_FILE), conf)
             req_config = _CONFIGURING.pop(host)
-            configurator.request_done(req_config)
+            configurator.request_done(hass, req_config)
 
         hass.async_add_job(success)
         async_setup_sabnzbd(hass, sab_api, config, config.get(CONF_NAME, DEFAULT_NAME))
 
     _CONFIGURING[host] = configurator.async_request_config(
+        hass,
         DEFAULT_NAME,
         async_configuration_callback,
         description="Enter the API Key",

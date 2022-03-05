@@ -154,7 +154,11 @@ class HassIOIngress(HomeAssistantView):
                 async for data in result.content.iter_chunked(4096):
                     await response.write(data)
 
-            except (aiohttp.ClientError, aiohttp.ClientPayloadError) as err:
+            except (
+                aiohttp.ClientError,
+                aiohttp.ClientPayloadError,
+                ConnectionResetError,
+            ) as err:
                 _LOGGER.debug("Stream error %s / %s: %s", token, path, err)
 
             return response

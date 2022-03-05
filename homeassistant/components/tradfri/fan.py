@@ -16,15 +16,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import TradfriBaseDevice
+from .base_class import TradfriBaseEntity
 from .const import (
     ATTR_AUTO,
     ATTR_MAX_FAN_STEPS,
     CONF_GATEWAY_ID,
-    DEVICES,
+    COORDINATOR,
+    COORDINATOR_LIST,
     DOMAIN,
     KEY_API,
 )
+from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
 def _from_fan_percentage(percentage: int) -> int:
@@ -44,30 +46,42 @@ async def async_setup_entry(
 ) -> None:
     """Load Tradfri switches based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
-    api = tradfri_data[KEY_API]
-    devices = tradfri_data[DEVICES]
+    coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    api = coordinator_data[KEY_API]
 
     async_add_entities(
-        TradfriAirPurifierFan(dev, api, gateway_id)
-        for dev in devices
-        if dev.has_air_purifier_control
+        TradfriAirPurifierFan(
+            device_coordinator,
+            api,
+            gateway_id,
+        )
+        for device_coordinator in coordinator_data[COORDINATOR_LIST]
+        if device_coordinator.device.has_air_purifier_control
     )
 
 
-class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
+class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(
         self,
-        device: Command,
+        device_coordinator: TradfriDeviceDataUpdateCoordinator,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a switch."""
-        super().__init__(device, api, gateway_id)
-        self._attr_unique_id = f"{gateway_id}-{device.id}"
-        self._refresh(device, write_ha=False)
+        super().__init__(
+            device_coordinator=device_coordinator,
+            api=api,
+            gateway_id=gateway_id,
+        )
+
+        self._device_control = self._device.air_purifier_control
+        self._device_data = self._device_control.air_purifiers[0]
+
+    def _refresh(self) -> None:
+        """Refresh the device."""
+        self._device_data = self.coordinator.data.air_purifier_control.air_purifiers[0]
 
     @property
     def supported_features(self) -> int:
@@ -168,10 +182,3 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         if not self._device_control:
             return
         await self._api(self._device_control.turn_off())
-
-    def _refresh(self, device: Command, write_ha: bool = True) -> None:
-        """Refresh the purifier data."""
-        # Caching of air purifier control and purifier object
-        self._device_control = device.air_purifier_control
-        self._device_data = device.air_purifier_control.air_purifiers[0]
-        super()._refresh(device, write_ha=write_ha)

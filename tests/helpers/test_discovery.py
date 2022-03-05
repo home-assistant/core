@@ -1,215 +1,189 @@
 """Test discovery helpers."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import setup
 from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import (
     MockModule,
     MockPlatform,
-    get_test_home_assistant,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
 
 
-class TestHelpersDiscovery:
-    """Tests for discovery helper methods."""
+@pytest.fixture
+def mock_setup_component():
+    """Mock setup component."""
+    with patch("homeassistant.setup.async_setup_component", return_value=True) as mock:
+        yield mock
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
+async def test_listen(hass, mock_setup_component):
+    """Test discovery listen/discover combo."""
+    calls_single = []
 
-    @patch("homeassistant.setup.async_setup_component", return_value=mock_coro())
-    def test_listen(self, mock_setup_component):
-        """Test discovery listen/discover combo."""
-        helpers = self.hass.helpers
-        calls_single = []
+    @callback
+    def callback_single(service, info):
+        """Service discovered callback."""
+        calls_single.append((service, info))
 
-        @callback
-        def callback_single(service, info):
-            """Service discovered callback."""
-            calls_single.append((service, info))
+    discovery.async_listen(hass, "test service", callback_single)
 
-        self.hass.add_job(
-            helpers.discovery.async_listen, "test service", callback_single
-        )
+    await discovery.async_discover(
+        hass,
+        "test service",
+        "discovery info",
+        "test_component",
+        {},
+    )
+    await hass.async_block_till_done()
 
-        self.hass.add_job(
-            helpers.discovery.async_discover,
-            "test service",
-            "discovery info",
-            "test_component",
-            {},
-        )
-        self.hass.block_till_done()
+    assert mock_setup_component.called
+    assert mock_setup_component.call_args[0] == (hass, "test_component", {})
+    assert len(calls_single) == 1
+    assert calls_single[0] == ("test service", "discovery info")
 
-        assert mock_setup_component.called
-        assert mock_setup_component.call_args[0] == (self.hass, "test_component", {})
-        assert len(calls_single) == 1
-        assert calls_single[0] == ("test service", "discovery info")
 
-    @patch("homeassistant.setup.async_setup_component", return_value=mock_coro(True))
-    def test_platform(self, mock_setup_component):
-        """Test discover platform method."""
-        calls = []
+async def test_platform(hass, mock_setup_component):
+    """Test discover platform method."""
+    calls = []
 
-        @callback
-        def platform_callback(platform, info):
-            """Platform callback method."""
-            calls.append((platform, info))
+    @callback
+    def platform_callback(platform, info):
+        """Platform callback method."""
+        calls.append((platform, info))
 
-        run_callback_threadsafe(
-            self.hass.loop,
-            discovery.async_listen_platform,
-            self.hass,
-            "test_component",
-            platform_callback,
-        ).result()
+    discovery.async_listen_platform(
+        hass,
+        "test_component",
+        platform_callback,
+    )
 
+    await discovery.async_load_platform(
+        hass,
+        "test_component",
+        "test_platform",
+        "discovery info",
+        {"test_component": {}},
+    )
+    await hass.async_block_till_done()
+    assert mock_setup_component.called
+    assert mock_setup_component.call_args[0] == (
+        hass,
+        "test_component",
+        {"test_component": {}},
+    )
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(
+        discovery.load_platform,
+        hass,
+        "test_component_2",
+        "test_platform",
+        "discovery info",
+        {"test_component": {}},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0] == ("test_platform", "discovery info")
+
+    async_dispatcher_send(
+        hass,
+        discovery.SIGNAL_PLATFORM_DISCOVERED,
+        {"service": discovery.EVENT_LOAD_PLATFORM.format("test_component")},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+
+async def test_circular_import(hass):
+    """Test we don't break doing circular import.
+
+    This test will have test_component discover the switch.test_circular
+    component while setting up.
+
+    The supplied config will load test_component and will load
+    switch.test_circular.
+
+    That means that after startup, we will have test_component and switch
+    setup. The test_circular platform has been loaded twice.
+    """
+    component_calls = []
+    platform_calls = []
+
+    def component_setup(hass, config):
+        """Set up mock component."""
         discovery.load_platform(
-            self.hass,
-            "test_component",
-            "test_platform",
-            "discovery info",
-            {"test_component": {}},
+            hass, Platform.SWITCH, "test_circular", {"key": "value"}, config
         )
-        self.hass.block_till_done()
-        assert mock_setup_component.called
-        assert mock_setup_component.call_args[0] == (
-            self.hass,
-            "test_component",
-            {"test_component": {}},
+        component_calls.append(1)
+        return True
+
+    def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+        """Set up mock platform."""
+        platform_calls.append("disc" if discovery_info else "component")
+
+    mock_integration(hass, MockModule("test_component", setup=component_setup))
+
+    # dependencies are only set in component level
+    # since we are using manifest to hold them
+    mock_integration(hass, MockModule("test_circular", dependencies=["test_component"]))
+    mock_entity_platform(hass, "switch.test_circular", MockPlatform(setup_platform))
+
+    await setup.async_setup_component(
+        hass,
+        "test_component",
+        {"test_component": None, "switch": [{"platform": "test_circular"}]},
+    )
+
+    await hass.async_block_till_done()
+
+    # test_component will only be setup once
+    assert len(component_calls) == 1
+    # The platform will be setup once via the config in `setup_component`
+    # and once via the discovery inside test_component.
+    assert len(platform_calls) == 2
+    assert "test_component" in hass.config.components
+    assert "switch" in hass.config.components
+
+
+async def test_1st_discovers_2nd_component(hass):
+    """Test that we don't break if one component discovers the other.
+
+    If the first component fires a discovery event to set up the
+    second component while the second component is about to be set up,
+    it should not set up the second component twice.
+    """
+    component_calls = []
+
+    async def component1_setup(hass, config):
+        """Set up mock component."""
+        print("component1 setup")
+        await discovery.async_discover(
+            hass, "test_component2", {}, "test_component2", {}
         )
-        self.hass.block_till_done()
+        return True
 
-        discovery.load_platform(
-            self.hass,
-            "test_component_2",
-            "test_platform",
-            "discovery info",
-            {"test_component": {}},
-        )
-        self.hass.block_till_done()
+    def component2_setup(hass, config):
+        """Set up mock component."""
+        component_calls.append(1)
+        return True
 
-        assert len(calls) == 1
-        assert calls[0] == ("test_platform", "discovery info")
+    mock_integration(hass, MockModule("test_component1", async_setup=component1_setup))
 
-        dispatcher_send(
-            self.hass,
-            discovery.SIGNAL_PLATFORM_DISCOVERED,
-            {"service": discovery.EVENT_LOAD_PLATFORM.format("test_component")},
-        )
-        self.hass.block_till_done()
+    mock_integration(hass, MockModule("test_component2", setup=component2_setup))
 
-        assert len(calls) == 1
+    hass.async_create_task(setup.async_setup_component(hass, "test_component1", {}))
+    hass.async_create_task(setup.async_setup_component(hass, "test_component2", {}))
+    await hass.async_block_till_done()
 
-    def test_circular_import(self):
-        """Test we don't break doing circular import.
-
-        This test will have test_component discover the switch.test_circular
-        component while setting up.
-
-        The supplied config will load test_component and will load
-        switch.test_circular.
-
-        That means that after startup, we will have test_component and switch
-        setup. The test_circular platform has been loaded twice.
-        """
-        component_calls = []
-        platform_calls = []
-
-        def component_setup(hass, config):
-            """Set up mock component."""
-            discovery.load_platform(
-                hass, Platform.SWITCH, "test_circular", {"key": "value"}, config
-            )
-            component_calls.append(1)
-            return True
-
-        def setup_platform(hass, config, add_entities_callback, discovery_info=None):
-            """Set up mock platform."""
-            platform_calls.append("disc" if discovery_info else "component")
-
-        mock_integration(self.hass, MockModule("test_component", setup=component_setup))
-
-        # dependencies are only set in component level
-        # since we are using manifest to hold them
-        mock_integration(
-            self.hass, MockModule("test_circular", dependencies=["test_component"])
-        )
-        mock_entity_platform(
-            self.hass, "switch.test_circular", MockPlatform(setup_platform)
-        )
-
-        setup.setup_component(
-            self.hass,
-            "test_component",
-            {"test_component": None, "switch": [{"platform": "test_circular"}]},
-        )
-
-        self.hass.block_till_done()
-
-        # test_component will only be setup once
-        assert len(component_calls) == 1
-        # The platform will be setup once via the config in `setup_component`
-        # and once via the discovery inside test_component.
-        assert len(platform_calls) == 2
-        assert "test_component" in self.hass.config.components
-        assert "switch" in self.hass.config.components
-
-    @patch("homeassistant.helpers.signal.async_register_signal_handling")
-    def test_1st_discovers_2nd_component(self, mock_signal):
-        """Test that we don't break if one component discovers the other.
-
-        If the first component fires a discovery event to set up the
-        second component while the second component is about to be set up,
-        it should not set up the second component twice.
-        """
-        component_calls = []
-
-        async def component1_setup(hass, config):
-            """Set up mock component."""
-            print("component1 setup")
-            await discovery.async_discover(
-                hass, "test_component2", {}, "test_component2", {}
-            )
-            return True
-
-        def component2_setup(hass, config):
-            """Set up mock component."""
-            component_calls.append(1)
-            return True
-
-        mock_integration(
-            self.hass, MockModule("test_component1", async_setup=component1_setup)
-        )
-
-        mock_integration(
-            self.hass, MockModule("test_component2", setup=component2_setup)
-        )
-
-        @callback
-        def do_setup():
-            """Set up 2 components."""
-            self.hass.async_add_job(
-                setup.async_setup_component(self.hass, "test_component1", {})
-            )
-            self.hass.async_add_job(
-                setup.async_setup_component(self.hass, "test_component2", {})
-            )
-
-        self.hass.add_job(do_setup)
-        self.hass.block_till_done()
-
-        # test_component will only be setup once
-        assert len(component_calls) == 1
+    # test_component will only be setup once
+    assert len(component_calls) == 1

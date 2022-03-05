@@ -14,7 +14,8 @@
                     "individual_address": "Ba\u011flant\u0131 i\u00e7in bireysel adres",
                     "local_ip": "Home Assistant Yerel IP'si (otomatik alg\u0131lama i\u00e7in bo\u015f b\u0131rak\u0131n)",
                     "port": "Port",
-                    "route_back": "Geri Y\u00f6nlendirme / NAT Modu"
+                    "route_back": "Geri Y\u00f6nlendirme / NAT Modu",
+                    "tunneling_type": "KNX T\u00fcnel Tipi"
                 },
                 "description": "L\u00fctfen t\u00fcnel cihaz\u0131n\u0131z\u0131n ba\u011flant\u0131 bilgilerini girin."
             },
@@ -59,7 +60,8 @@
                     "host": "Sunucu",
                     "local_ip": "Yerel IP (emin de\u011filseniz bo\u015f b\u0131rak\u0131n)",
                     "port": "Port",
-                    "route_back": "Geri Y\u00f6nlendirme / NAT Modu"
+                    "route_back": "Geri Y\u00f6nlendirme / NAT Modu",
+                    "tunneling_type": "KNX T\u00fcnel Tipi"
                 }
             }
         }

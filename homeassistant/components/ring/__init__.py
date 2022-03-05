@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from functools import partial
 import logging
 from pathlib import Path
+from typing import Any
 
 from oauthlib.oauth2 import AccessDeniedError
 import requests
@@ -162,7 +164,7 @@ class GlobalDataUpdater:
         self.ring = ring
         self.update_method = update_method
         self.update_interval = update_interval
-        self.listeners = []
+        self.listeners: list[Callable[[], None]] = []
         self._unsub_interval = None
 
     @callback
@@ -225,7 +227,7 @@ class DeviceDataUpdater:
         data_type: str,
         config_entry_id: str,
         ring: Ring,
-        update_method: str,
+        update_method: Callable[[Ring], Any],
         update_interval: timedelta,
     ) -> None:
         """Initialize device data updater."""
@@ -235,7 +237,7 @@ class DeviceDataUpdater:
         self.ring = ring
         self.update_method = update_method
         self.update_interval = update_interval
-        self.devices = {}
+        self.devices: dict = {}
         self._unsub_interval = None
 
     async def async_track_device(self, device, update_callback):

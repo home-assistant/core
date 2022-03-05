@@ -8,11 +8,11 @@ import ephem
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME, CONF_TYPE, DEVICE_CLASS_TIMESTAMP, TIME_DAYS
+from homeassistant.const import CONF_NAME, CONF_TYPE, TIME_DAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -98,12 +98,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ENTITY_NEXT_SEASON,
         name="Next Start Date",
         icon=ICON_NEXT_SEASON,
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
 )
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TYPE, default=TYPE_ASTRONOMICAL): vol.In(VALID_TYPES),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -118,9 +117,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Display the current season."""
-
-    _type = config.get(CONF_TYPE)
-    name = config.get(CONF_NAME)
+    _type: str = config[CONF_TYPE]
+    name: str = config[CONF_NAME]
 
     if hass.config.latitude < 0:
         hemisphere = SOUTHERN
@@ -137,14 +135,14 @@ async def async_setup_platform(
     _LOGGER.debug(_type)
 
     season_data = SeasonData(hemisphere, _type, hass.config.time_zone)
-
+    
     await season_data.async_update()
 
     entities = []
     for description in SENSOR_TYPES:
-        if description.key == ENTITY_SEASON:
+        if description.key in ENTITY_SEASON:
             entities.append(Season(season_data, description, name))
-        elif hemisphere != EQUATOR:
+        elif hemisphere not in EQUATOR:
             entities.append(Season(season_data, description, name))
 
     async_add_entities(entities, True)
@@ -161,7 +159,7 @@ class Season(SensorEntity):
     ):
         """Initialize the sensor."""
         self.entity_description = description
-        if name == DEFAULT_NAME and description.key != ENTITY_SEASON:
+        if name in DEFAULT_NAME and description.key != ENTITY_SEASON:
             self._attr_name = f"{name} {description.name}"
         else:
             self._attr_name = f"{description.name}"
@@ -173,7 +171,7 @@ class Season(SensorEntity):
         await self.season_data.async_update()
         if self.entity_description.key in self.season_data.data:
             self._attr_native_value = self.season_data.data[self.entity_description.key]
-            if self.entity_description.key == ENTITY_SEASON:
+            if self.entity_description.key in ENTITY_SEASON:
                 self._attr_icon = SEASON_ICONS[
                     self.season_data.data[self.entity_description.key]
                 ]
@@ -198,83 +196,84 @@ class SeasonData:
     async def async_update(self):
         """Get the latest data from season."""
         # Update data
-        self.datetime = utcnow().replace(tzinfo=None)
-        self._data = get_season(self)
+        self._data = get_season(
+            self, utcnow().replace(tzinfo=None), self.hemisphere, self.type, self.time_zone, self._data
+        )
 
 
-def get_season(self):
+def get_season(
+    self, current_date: date, hemisphere: str, season_tracking_type: str, time_zone: str, data
+) -> str | None:
     """Calculate the current season."""
 
-    date = self.datetime
-    hemisphere = self.hemisphere
-    season_tracking_type = self.type
-    time_zone = self.time_zone
-    data = {}
-
     if season_tracking_type == TYPE_ASTRONOMICAL:
-        spring_start = ephem.next_equinox(str(date.year)).datetime()
-        summer_start = ephem.next_solstice(str(date.year)).datetime()
+        spring_start = ephem.next_equinox(str(current_date.year)).datetime()
+        summer_start = ephem.next_solstice(str(current_date.year)).datetime()
         autumn_start = ephem.next_equinox(spring_start).datetime()
         winter_start = ephem.next_solstice(summer_start).datetime()
     else:
-        spring_start = datetime(2017, 3, 1).replace(year=date.year)
+        spring_start = datetime(2017, 3, 1).replace(year=current_date.year)
         summer_start = spring_start.replace(month=6)
         autumn_start = spring_start.replace(month=9)
         winter_start = spring_start.replace(month=12)
 
     if hemisphere != EQUATOR:
-        if date < spring_start or date >= winter_start:
+        if current_date < spring_start or current_date >= winter_start:
             season = STATE_WINTER
-            if date.month >= 12:
-                spring_start = ephem.next_equinox(str(date.year + 1)).datetime()
+            if current_date.month >= 12:
+                spring_start = ephem.next_equinox(str(current_date.year + 1)).datetime()
             else:
                 winter_start = ephem.next_solstice(
-                    summer_start.replace(year=date.year - 1)
+                    summer_start.replace(year=current_date.year - 1)
                 ).datetime()
-            days_left = spring_start.date() - date.date()
-            days_in = date.date() - winter_start.date()
+            days_left = spring_start.date() - current_date.date()
+            days_in = current_date.date() - winter_start.date()
             next_date = spring_start
-        elif date < summer_start:
+        elif current_date < summer_start:
             season = STATE_SPRING
-            days_left = summer_start.date() - date.date()
-            days_in = date.date() - spring_start.date()
+            days_left = summer_start.date() - current_date.date()
+            days_in = current_date.date() - spring_start.date()
             next_date = summer_start
-        elif date < autumn_start:
+        elif current_date < autumn_start:
             season = STATE_SUMMER
-            days_left = autumn_start.date() - date.date()
-            days_in = date.date() - summer_start.date()
+            days_left = autumn_start.date() - current_date.date()
+            days_in = current_date.date() - summer_start.date()
             next_date = autumn_start
-        elif date < winter_start:
+        elif current_date < winter_start:
             season = STATE_AUTUMN
-            days_left = winter_start.date() - date.date()
-            days_in = date.date() - autumn_start.date()
+            days_left = winter_start.date() - current_date.date()
+            days_in = current_date.date() - autumn_start.date()
             next_date = winter_start
 
         if time_zone is not None:
             next_date = as_local(next_date.replace(tzinfo=get_time_zone("UTC")))
+    else:
+        season = STATE_NONE
+        days_left = STATE_NONE
+        days_in = STATE_NONE
+        next_date = STATE_NONE
 
-    last_update = as_local(date.replace(tzinfo=get_time_zone("UTC")))
+    last_update = as_local(current_date.replace(tzinfo=get_time_zone("UTC")))
 
-    # If user is located in the southern hemisphere, swap the season
+    # If user is located in the southern hemisphere swap the season
     if hemisphere == SOUTHERN:
         season = HEMISPHERE_SEASON_SWAP.get(season)
 
-    # If user is located at the equator, no season
     if hemisphere == EQUATOR:
         self.data = {
-            ENTITY_SEASON: STATE_NONE,
-            ENTITY_DAYS_LEFT: STATE_NONE,
-            ENTITY_DAYS_IN: STATE_NONE,
-            ENTITY_NEXT_SEASON: STATE_NONE,
-            ATTR_LAST_UPDATED: last_update.isoformat(),
+            ENTITY_SEASON: season,
+            ENTITY_DAYS_LEFT: days_left,
+            ENTITY_DAYS_IN: days_in,
+            ENTITY_NEXT_SEASON: next_date,
+            ATTR_LAST_UPDATED: last_update,
         }
     else:
         self.data = {
             ENTITY_SEASON: season,
             ENTITY_DAYS_LEFT: days_left.days,
             ENTITY_DAYS_IN: abs(days_in.days) + 1,
-            ENTITY_NEXT_SEASON: next_date.isoformat(),
-            ATTR_LAST_UPDATED: last_update.isoformat(),
+            ENTITY_NEXT_SEASON: next_date.strftime("%Y-%m-%d, %H:%M:%S"),
+            ATTR_LAST_UPDATED: last_update,
         }
 
     return data
