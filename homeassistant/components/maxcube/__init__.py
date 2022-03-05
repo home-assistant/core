@@ -57,7 +57,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if DOMAIN not in config:
         return True
-        
+
     if CONF_GATEWAYS not in config[DOMAIN]:
         return True
 
