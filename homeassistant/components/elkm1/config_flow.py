@@ -225,7 +225,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(user_input, self.unique_id)
         except asyncio.TimeoutError:
-            return {CONF_HOST: "cannot_connect"}, None
+            return {"base": "cannot_connect"}, None
         except InvalidAuth:
             return {CONF_PASSWORD: "invalid_auth"}, None
         except Exception:  # pylint: disable=broad-except
@@ -289,7 +289,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     dr.format_mac(device.mac_address), raise_on_progress=False
                 )
                 self._abort_if_unique_id_configured()
-                user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
+                # Ignore the port from discovery since its always going to be
+                # 2601 if secure is turned on even though they may want insecure
+                user_input[CONF_ADDRESS] = device.ip_address
             errors, result = await self._async_create_or_error(user_input, False)
             if not errors:
                 return result
