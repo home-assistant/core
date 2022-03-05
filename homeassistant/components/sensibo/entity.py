@@ -28,16 +28,17 @@ class SensiboBaseEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._device_id = device_id
         self._client = coordinator.client
+        device = coordinator.data[device_id]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data[device_id]["id"])},
-            name=coordinator.data[device_id]["name"],
-            connections={(CONNECTION_NETWORK_MAC, coordinator.data[device_id]["mac"])},
+            identifiers={(DOMAIN, device["id"])},
+            name=device["name"],
+            connections={(CONNECTION_NETWORK_MAC, device["mac"])},
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",
-            model=coordinator.data[device_id]["model"],
-            sw_version=coordinator.data[device_id]["fw_ver"],
-            hw_version=coordinator.data[device_id]["fw_type"],
-            suggested_area=coordinator.data[device_id]["name"],
+            model=device["model"],
+            sw_version=device["fw_ver"],
+            hw_version=device["fw_type"],
+            suggested_area=device["name"],
         )
 
     async def async_send_command(
