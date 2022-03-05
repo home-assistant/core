@@ -19,10 +19,7 @@ from homeassistant.const import (
     CONF_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TIME_DAYS,
     TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -31,37 +28,28 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import (
+    ATTR_SOURCE_ID,
+    CONF_ROUND_DIGITS,
+    CONF_SOURCE_SENSOR,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_UNIT_PREFIX,
+    CONF_UNIT_TIME,
+    DEFAULT_ROUND,
+    INTEGRATION_METHOD,
+    LEFT_METHOD,
+    RIGHT_METHOD,
+    TRAPEZOIDAL_METHOD,
+    UNIT_PREFIXES,
+    UNIT_TIME,
+)
+
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SOURCE_ID = "source"
-
-CONF_SOURCE_SENSOR = "source"
-CONF_ROUND_DIGITS = "round"
-CONF_UNIT_PREFIX = "unit_prefix"
-CONF_UNIT_TIME = "unit_time"
-CONF_UNIT_OF_MEASUREMENT = "unit"
-
-TRAPEZOIDAL_METHOD = "trapezoidal"
-LEFT_METHOD = "left"
-RIGHT_METHOD = "right"
-INTEGRATION_METHOD = [TRAPEZOIDAL_METHOD, LEFT_METHOD, RIGHT_METHOD]
-
-# SI Metric prefixes
-UNIT_PREFIXES = {None: 1, "k": 10**3, "M": 10**6, "G": 10**9, "T": 10**12}
-
-# SI Time prefixes
-UNIT_TIME = {
-    TIME_SECONDS: 1,
-    TIME_MINUTES: 60,
-    TIME_HOURS: 60 * 60,
-    TIME_DAYS: 24 * 60 * 60,
-}
-
 ICON = "mdi:chart-histogram"
 
-DEFAULT_ROUND = 3
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_UNIT_OF_MEASUREMENT),
