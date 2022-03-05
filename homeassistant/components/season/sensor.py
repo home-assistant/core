@@ -135,7 +135,7 @@ async def async_setup_platform(
     _LOGGER.debug(_type)
 
     season_data = SeasonData(hemisphere, _type, hass.config.time_zone)
-    
+
     await season_data.async_update()
 
     entities = []
@@ -197,12 +197,22 @@ class SeasonData:
         """Get the latest data from season."""
         # Update data
         self._data = get_season(
-            self, utcnow().replace(tzinfo=None), self.hemisphere, self.type, self.time_zone, self._data
+            self,
+            utcnow().replace(tzinfo=None),
+            self.hemisphere,
+            self.type,
+            self.time_zone,
+            self._data,
         )
 
 
 def get_season(
-    self, current_date: date, hemisphere: str, season_tracking_type: str, time_zone: str, data
+    self,
+    current_date: datetime,
+    hemisphere: str,
+    season_tracking_type: str,
+    time_zone: str,
+    data,
 ) -> str | None:
     """Calculate the current season."""
 
