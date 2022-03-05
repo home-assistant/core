@@ -333,6 +333,60 @@ async def test_set_fan_mode(hass, mqtt_mock):
     assert state.attributes.get("fan_mode") == "high"
 
 
+# CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
+@pytest.mark.parametrize(
+    "send_if_off,assert_message_sent",
+    [
+        (None, True),
+        (True, True),
+        (False, False),
+    ],
+)
+async def test_set_fan_mode_send_if_off(
+    hass, mqtt_mock, send_if_off, assert_message_sent
+):
+    """Test setting of fan mode if the hvac is off."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    if send_if_off is not None:
+        config[CLIMATE_DOMAIN]["send_if_off"] = send_if_off
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_CLIMATE) is not None
+
+    # Turn on HVAC
+    await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.reset_mock()
+    # Updates for fan_mode should be send
+    await common.async_set_fan_mode(hass, "high", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with("fan-mode-topic", "high", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    await common.async_set_fan_mode(hass, "high", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with("fan-mode-topic", "high", 0, False)
+
+    # Turn off HVAC
+    await common.async_set_hvac_mode(hass, "off", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "off"
+
+    # Updates for fan_mode should be if SEND_IF_OFF is not set or is True
+    await common.async_set_fan_mode(hass, "low", ENTITY_CLIMATE)
+    if assert_message_sent:
+        mqtt_mock.async_publish.assert_called_once_with(
+            "fan-mode-topic", "low", 0, False
+        )
+    else:
+        assert mqtt_mock.async_publish.call_count == 0
+    mqtt_mock.async_publish.reset_mock()
+    await common.async_set_fan_mode(hass, "low", ENTITY_CLIMATE)
+    if assert_message_sent:
+        mqtt_mock.async_publish.assert_called_once_with(
+            "fan-mode-topic", "low", 0, False
+        )
+    else:
+        assert mqtt_mock.async_publish.call_count == 0
+
+
 async def test_set_swing_mode_bad_attr(hass, mqtt_mock, caplog):
     """Test setting swing mode without required attribute."""
     assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
