@@ -146,7 +146,7 @@ class SensiboClimate(SensiboBaseEntity, ClimateEntity):
         return features
 
     @property
-    def current_humidity(self) -> int:
+    def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self.coordinator.data[self.unique_id]["humidity"]
 
@@ -168,7 +168,7 @@ class SensiboClimate(SensiboBaseEntity, ClimateEntity):
         ]
 
     @property
-    def current_temperature(self) -> float:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return convert_temperature(
             self.coordinator.data[self.unique_id]["temp"],
@@ -268,6 +268,7 @@ class SensiboClimate(SensiboBaseEntity, ClimateEntity):
             await self._async_set_ac_state_property("on", True)
 
         await self._async_set_ac_state_property("mode", HA_TO_SENSIBO[hvac_mode])
+        await self.coordinator.async_request_refresh()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
