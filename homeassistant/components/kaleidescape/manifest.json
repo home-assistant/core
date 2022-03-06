@@ -9,7 +9,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/kaleidescape",
-  "requirements": ["pykaleidescape==2022.2.5"],
+  "requirements": ["pykaleidescape==2022.2.6"],
   "codeowners": [
     "@SteveEasley"
   ],
