@@ -74,10 +74,7 @@ class KdeConnectEntity(RestoreEntity, ABC):
         """Initialize the KDE Connect Entity."""
         self.device = device
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the current device's device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device.device_id)},
             name=self.device.device_name,
             manufacturer="KdeConnect",
