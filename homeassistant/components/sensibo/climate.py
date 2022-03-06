@@ -148,6 +148,7 @@ class SensiboClimate(SensiboBaseEntity, ClimateEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional attributes."""
         return {"temperature_list": self.coordinator.data[self.unique_id]["temp_list"]}
 
     @property
