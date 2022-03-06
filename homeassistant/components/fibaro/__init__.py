@@ -364,8 +364,7 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
         return True
 
     # check if already configured
-    domains_list = hass.config_entries.async_domains()
-    if DOMAIN in domains_list:
+    if hass.config_entries.async_entries(DOMAIN):
         return True
 
     for gateway in gateways:
@@ -386,34 +385,31 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
-def _init_controller(data: dict[str, Any]) -> FibaroController:
+def _init_controller(data: dict[str, Any]) -> tuple[bool, FibaroController]:
     """Validate the user input allows us to connect to fibaro."""
     controller = FibaroController(data)
-    if controller.connect():
-        return controller
-
-    raise Exception("Connection to fibaro failed")
+    connected = controller.connect()
+    return connected, controller
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Fibaro Component."""
-    controller = await hass.async_add_executor_job(_init_controller, entry.data)
-    if controller is None:
+    connected, controller = await hass.async_add_executor_job(
+        _init_controller, entry.data
+    )
+    if not connected:
         return False
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-    hass.data[DOMAIN][entry.entry_id][FIBARO_CONTROLLER] = controller
-    hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES] = {}
+    data: dict[str, Any] = {}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
+    data[FIBARO_CONTROLLER] = controller
+    devices = data[FIBARO_DEVICES] = {}
     for platform in PLATFORMS:
-        hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform] = []
-        hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform].extend(
-            controller.fibaro_devices[platform]
-        )
+        devices[platform] = [*controller.fibaro_devices[platform]]
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][entry.entry_id][FIBARO_CONTROLLER].enable_state_handler()
+    controller.enable_state_handler()
 
     return True
 
