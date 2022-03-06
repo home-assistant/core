@@ -2,8 +2,6 @@
     "config": {
       "step": {
         "user": {
-          "title": "Skybell",
-          "description": "",
           "data": {
             "email": "Email",
             "password": "Password"

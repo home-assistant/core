@@ -17,16 +17,25 @@ from . import CONF_CONFIG_FLOW, _patch_skybell
 from tests.common import MockConfigEntry
 
 
-def _patch_setup() -> None:
+def _patch_setup_entry() -> None:
     return patch(
         "homeassistant.components.skybell.async_setup_entry",
         return_value=True,
     )
 
 
+def _patch_setup() -> None:
+    return patch(
+        "homeassistant.components.skybell.async_setup",
+        return_value=True,
+    )
+
+
 async def test_flow_user(hass: HomeAssistant) -> None:
     """Test that the user step works."""
-    with patch("aioskybell.UTILS"), _patch_skybell():
+    with patch(
+        "homeassistant.components.skybell.config_flow.aioskybell.UTILS"
+    ), _patch_skybell():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -77,7 +86,9 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials throws an error."""
     with patch(
         "homeassistant.components.skybell.Skybell.async_login"
-    ) as skybellmock, patch("aioskybell.UTILS"):
+    ) as skybellmock, patch(
+        "homeassistant.components.skybell.config_flow.aioskybell.UTILS"
+    ):
         skybellmock.side_effect = exceptions.SkybellAuthenticationException(hass)
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
@@ -102,7 +113,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_flow_import(hass: HomeAssistant) -> None:
     """Test import step."""
-    with _patch_skybell(), _patch_setup():
+    with _patch_skybell(), _patch_setup_entry(), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}
         )

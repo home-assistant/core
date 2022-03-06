@@ -19,10 +19,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DEFAULT_CACHEDB, DEFAULT_NAME, DOMAIN
 from .coordinator import SkybellDataUpdateCoordinator
@@ -59,11 +56,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     entry_config = {}
     if DOMAIN not in config:
         return True
-    for parameter in config[DOMAIN]:
+    for parameter, value in config[DOMAIN].items():
         if parameter == CONF_USERNAME:
-            entry_config[CONF_EMAIL] = config[DOMAIN][parameter]
+            entry_config[CONF_EMAIL] = value
         else:
-            entry_config[parameter] = config[DOMAIN][parameter]
+            entry_config[parameter] = value
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -94,12 +91,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SkybellException as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 
-    device_coordinators: dict[str, DataUpdateCoordinator] = {}
+    device_coordinators: dict[str, SkybellDataUpdateCoordinator] = {}
     for device in devices:
-        coordinator = SkybellDataUpdateCoordinator(
-            hass,
-            device,
-        )
+        coordinator = SkybellDataUpdateCoordinator(hass, device)
         await coordinator.async_config_entry_first_refresh()
         device_coordinators[device.device_id] = coordinator
     hass.data[DOMAIN][entry.entry_id] = device_coordinators

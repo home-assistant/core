@@ -17,6 +17,6 @@ def _patch_skybell() -> None:
     mocked_skybell = AsyncMock()
     mocked_skybell.user_id = "123456789012345678901234"
     return patch(
-        "homeassistant.components.skybell.config_flow.Skybell.async_get_devices",
+        "homeassistant.components.skybell.config_flow.aioskybell.Skybell.async_get_devices",
         return_value=[mocked_skybell],
     )
