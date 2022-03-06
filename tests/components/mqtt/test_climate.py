@@ -446,7 +446,7 @@ async def test_set_swing_mode_send_if_off(
     # Turn on HVAC
     await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
     mqtt_mock.async_publish.reset_mock()
-    # Updates for fan_mode should be sent when the device is turned on
+    # Updates for swing_mode should be sent when the device is turned on
     await common.async_set_swing_mode(hass, "off", ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with("swing-mode-topic", "off", 0, False)
 
@@ -520,7 +520,7 @@ async def test_set_target_temperature_send_if_off(
     # Turn on HVAC
     await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
     mqtt_mock.async_publish.reset_mock()
-    # Updates for fan_mode should be sent when the device is turned on
+    # Updates for target temperature should be sent when the device is turned on
     await common.async_set_temperature(hass, 16.0, ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with(
         "temperature-topic", "16.0", 0, False
