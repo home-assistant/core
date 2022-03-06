@@ -67,10 +67,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Lidarr sensors based on a config entry."""
     async_add_entities(
-        LidarrSensor(
-            hass.data[DOMAIN][entry.entry_id],
-            description,
-        )
+        LidarrSensor(hass.data[DOMAIN][entry.entry_id], description)
         for description in SENSOR_TYPES
     )
 

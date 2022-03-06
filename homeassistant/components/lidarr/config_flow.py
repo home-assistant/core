@@ -40,7 +40,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return LidarrOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, _: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 

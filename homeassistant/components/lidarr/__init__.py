@@ -4,9 +4,8 @@ from __future__ import annotations
 from aiopyarr.lidarr_client import LidarrClient
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -16,7 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import LidarrDataUpdateCoordinator
 
-PLATFORMS = [SENSOR_DOMAIN]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -58,10 +57,7 @@ class LidarrEntity(CoordinatorEntity):
 
     coordinator: LidarrDataUpdateCoordinator
 
-    def __init__(
-        self,
-        coordinator: LidarrDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: LidarrDataUpdateCoordinator) -> None:
         """Initialize the Lidarr entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
