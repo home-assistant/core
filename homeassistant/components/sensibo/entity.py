@@ -11,7 +11,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
-from .coordinator import SensiboDataUpdateCoordinator
+from .coordinator import MotionSensor, SensiboDataUpdateCoordinator
+from .sensor import SensiboSensorEntityDescription
 
 
 class SensiboBaseEntity(CoordinatorEntity):
@@ -80,3 +81,35 @@ class SensiboBaseEntity(CoordinatorEntity):
                 params["assumed_state"],
             )
         return result
+
+
+class SensiboMotionBaseEntity(CoordinatorEntity):
+    """Representation of a Sensibo numbers."""
+
+    coordinator: SensiboDataUpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: SensiboDataUpdateCoordinator,
+        device_id: str,
+        sensor_id: str,
+        sensor_data: MotionSensor,
+        entity_description: SensiboSensorEntityDescription,
+    ) -> None:
+        """Initiate Sensibo Number."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
+        self._attr_name = f"{sensor_data['model']} {entity_description.name}"
+        self._device_id = device_id
+        self._sensor_id = sensor_id
+        self._client = coordinator.client
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, sensor_id)},
+            name=f"{sensor_data.model} {entity_description.name}",
+            via_device=(DOMAIN, device_id),
+            manufacturer="Sensibo",
+            configuration_url="https://home.sensibo.com/",
+            model=sensor_data.model,
+            sw_version=sensor_data.fw_ver,
+            hw_version=sensor_data.fw_type,
+        )
