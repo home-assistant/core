@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -133,7 +133,7 @@ async def async_setup_entry(
     """Set up a Tradfri config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
     coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    api = coordinator_data[KEY_API]
+    api: Callable[[Command | list[Command]], Awaitable[Any]] = coordinator_data[KEY_API]
 
     entities: list[TradfriSensor] = []
 
@@ -178,7 +178,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Any],
+        api: Callable[[Command | list[Command]], Awaitable[Any]],
         gateway_id: str,
         description: TradfriSensorEntityDescription,
     ) -> None:

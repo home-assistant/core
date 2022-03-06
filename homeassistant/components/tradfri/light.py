@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
 from pytradfri.command import Command
@@ -35,7 +35,7 @@ async def async_setup_entry(
     """Load Tradfri lights based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
     coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    api = coordinator_data[KEY_API]
+    api: Callable[[Command | list[Command]], Awaitable[Any]] = coordinator_data[KEY_API]
 
     async_add_entities(
         TradfriLight(
@@ -58,7 +58,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Any],
+        api: Callable[[Command | list[Command]], Awaitable[Any]],
         gateway_id: str,
     ) -> None:
         """Initialize a Light."""

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, cast
 
@@ -20,7 +20,7 @@ from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
 def handle_error(
-    func: Callable[[Command | list[Command]], Any],
+    func: Callable[[Command | list[Command]], Awaitable[Any]],
 ) -> Callable[[Command | list[Command]], Coroutine[Any, Any, None]]:
     """Handle tradfri api call error."""
 
@@ -44,7 +44,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
         gateway_id: str,
-        api: Callable[[Command | list[Command]], Any],
+        api: Callable[[Command | list[Command]], Awaitable[Any]],
     ) -> None:
         """Initialize a device."""
         super().__init__(device_coordinator)

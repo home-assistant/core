@@ -7,7 +7,6 @@ from typing import Any
 
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
-from pytradfri.command import Command
 from pytradfri.device import Device
 
 from homeassistant.config_entries import ConfigEntry
@@ -74,10 +73,8 @@ async def async_setup_entry(
 
     try:
         gateway_info = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
-        devices_commands: Command = await api(
-            gateway.get_devices(), timeout=TIMEOUT_API
-        )
-        devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)
+        devices_commands = await api(gateway.get_devices(), timeout=TIMEOUT_API)
+        devices = await api(devices_commands, timeout=TIMEOUT_API)
 
     except RequestError as exc:
         await factory.shutdown()

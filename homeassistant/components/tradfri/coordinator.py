@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import Any
 
@@ -27,8 +27,9 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     def __init__(
         self,
         hass: HomeAssistant,
+        *,
         config_entry: ConfigEntry,
-        api: Callable[[Command | list[Command]], Any],
+        api: Callable[[Command | list[Command]], Awaitable[Any]],
         device: Device,
     ) -> None:
         """Initialize device coordinator."""
