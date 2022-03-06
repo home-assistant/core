@@ -6,13 +6,7 @@ from aioskybell.exceptions import SkybellAuthenticationException, SkybellExcepti
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_EMAIL,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -21,7 +15,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DEFAULT_CACHEDB, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_CACHEDB, DEFAULT_NAME, DOMAIN
 from .coordinator import SkybellDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
@@ -112,12 +106,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SkybellEntity(CoordinatorEntity):
     """An HA implementation for Skybell devices."""
 
+    _attr_attribution = "Data provided by Skybell.com"
     coordinator: SkybellDataUpdateCoordinator
 
-    def __init__(
-        self,
-        coordinator: SkybellDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: SkybellDataUpdateCoordinator) -> None:
         """Initialize a SkyBell entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
@@ -133,7 +125,6 @@ class SkybellEntity(CoordinatorEntity):
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "device_id": self.coordinator.device.device_id,
             "status": self.coordinator.device.status,
             "location": self.coordinator.device.location,
