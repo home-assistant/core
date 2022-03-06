@@ -150,7 +150,6 @@ class EfergySensor(EfergyEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(api, server_unique_id)
-        self.api = api
         self.entity_description = description
         if description.key == CONF_CURRENT_VALUES:
             self._attr_name = f"{description.name}_{'' if sid is None else sid}"

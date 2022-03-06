@@ -54,6 +54,7 @@ class EfergyEntity(Entity):
 
     def __init__(self, api: Efergy, server_unique_id: str) -> None:
         """Initialize an Efergy entity."""
+        self.api = api
         self._attr_device_info = DeviceInfo(
             configuration_url="https://engage.efergy.com/user/login",
             connections={(dr.CONNECTION_NETWORK_MAC, api.info["mac"])},
