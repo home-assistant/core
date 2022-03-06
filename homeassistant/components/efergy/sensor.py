@@ -1,7 +1,6 @@
 """Support for Efergy sensors."""
 from __future__ import annotations
 
-import logging
 from re import sub
 from typing import cast
 
@@ -21,9 +20,7 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.typing import StateType
 
 from . import EfergyEntity
-from .const import CONF_CURRENT_VALUES, DATA_KEY_API, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_CURRENT_VALUES, DOMAIN, LOGGER
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -112,7 +109,7 @@ async def async_setup_entry(
     async_add_entities: entity_platform.AddEntitiesCallback,
 ) -> None:
     """Set up Efergy sensors."""
-    api: Efergy = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
+    api: Efergy = hass.data[DOMAIN][entry.entry_id]
     sensors = []
     for description in SENSOR_TYPES:
         if description.key != CONF_CURRENT_VALUES:
@@ -153,6 +150,7 @@ class EfergySensor(EfergyEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(api, server_unique_id)
+        self.api = api
         self.entity_description = description
         if description.key == CONF_CURRENT_VALUES:
             self._attr_name = f"{description.name}_{'' if sid is None else sid}"
@@ -174,8 +172,8 @@ class EfergySensor(EfergyEntity, SensorEntity):
         except (ConnectError, DataError, ServiceError) as ex:
             if self._attr_available:
                 self._attr_available = False
-                _LOGGER.error("Error getting data: %s", ex)
+                LOGGER.error("Error getting data: %s", ex)
             return
         if not self._attr_available:
             self._attr_available = True
-            _LOGGER.info("Connection has resumed")
+            LOGGER.info("Connection has resumed")
