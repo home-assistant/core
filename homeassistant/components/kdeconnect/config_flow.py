@@ -115,7 +115,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_show_device_selection(
         self, client: KdeConnectClient, errors: dict[str, str] | None = None
     ) -> FlowResult:
-        """Shor a device selection dialog."""
+        """Show a device selection dialog."""
         devices = client.pairable_devices
         device_names_to_id = {}
         if self.show_advanced_options:
