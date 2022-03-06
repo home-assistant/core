@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
+
+from kaleidescape import const as kaleidescape_const
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -15,10 +17,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
 )
+from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN as KALEIDESCAPE_DOMAIN
-from .entity import KALEIDESCAPE_PLAYING_STATES, KaleidescapeEntity
+from .entity import KaleidescapeEntity
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -29,6 +32,14 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+
+KALEIDESCAPE_PLAYING_STATES = [
+    kaleidescape_const.PLAY_STATUS_PLAYING,
+    kaleidescape_const.PLAY_STATUS_FORWARD,
+    kaleidescape_const.PLAY_STATUS_REVERSE,
+]
+
+KALEIDESCAPE_PAUSED_STATES = [kaleidescape_const.PLAY_STATUS_PAUSED]
 
 SUPPORTED_FEATURES = (
     SUPPORT_TURN_ON
@@ -88,34 +99,45 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         await self._device.previous()
 
     @property
+    def state(self) -> str:
+        """State of device."""
+        if self._device.power.state == kaleidescape_const.DEVICE_POWER_STATE_STANDBY:
+            return STATE_OFF
+        if self._device.movie.play_status in KALEIDESCAPE_PLAYING_STATES:
+            return STATE_PLAYING
+        if self._device.movie.play_status in KALEIDESCAPE_PAUSED_STATES:
+            return STATE_PAUSED
+        return STATE_IDLE
+
+    @property
     def available(self) -> bool:
         """Return if device is available."""
-        return cast(bool, self._device.is_connected)
+        return self._device.is_connected
 
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         if self._device.movie.handle:
-            return cast(str, self._device.movie.handle)
+            return self._device.movie.handle
         return None
 
     @property
     def media_content_type(self) -> str | None:
         """Content type of current playing media."""
-        return cast(str, self._device.movie.media_type)
+        return self._device.movie.media_type
 
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         if self._device.movie.title_length:
-            return cast(int, self._device.movie.title_length)
+            return self._device.movie.title_length
         return None
 
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if self._device.movie.title_location:
-            return cast(int, self._device.movie.title_location)
+            return self._device.movie.title_location
         return None
 
     @property
@@ -128,9 +150,9 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
     @property
     def media_image_url(self) -> str:
         """Image url of current playing media."""
-        return cast(str, self._device.movie.cover)
+        return self._device.movie.cover
 
     @property
     def media_title(self) -> str:
         """Title of current playing media."""
-        return cast(str, self._device.movie.title)
+        return self._device.movie.title

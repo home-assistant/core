@@ -80,8 +80,6 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
         except UnsupportedError:
             return self.async_abort(reason=ERROR_UNSUPPORTED)
-        except Exception:  # pylint: disable=broad-except
-            return self.async_abort(reason=ERROR_UNKNOWN)
 
         self.context.update(
             {

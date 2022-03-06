@@ -32,8 +32,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await device.connect()
     except (KaleidescapeError, ConnectionError) as err:
         await device.disconnect()
-        _LOGGER.error("Unable to connect: %s", err)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            f"Unable to connect to {entry.data[CONF_HOST]}: {err}"
+        ) from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
 
@@ -75,14 +76,21 @@ class UnsupportedError(HomeAssistantError):
 async def validate_host(host: str) -> KaleidescapeDeviceInfo:
     """Validate device host."""
     device = KaleidescapeDevice(host)
+
     try:
         await device.connect()
-        return KaleidescapeDeviceInfo(
-            host=device.host,
-            serial=device.system.serial_number,
-            name=device.system.friendly_name,
-            model=device.system.type,
-            server_only=device.is_server_only,
-        )
-    finally:
+    except (KaleidescapeError, ConnectionError):
         await device.disconnect()
+        raise
+
+    info = KaleidescapeDeviceInfo(
+        host=device.host,
+        serial=device.system.serial_number,
+        name=device.system.friendly_name,
+        model=device.system.type,
+        server_only=device.is_server_only,
+    )
+
+    await device.disconnect()
+
+    return info

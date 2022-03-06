@@ -128,18 +128,3 @@ async def test_ssdp_config_flow_unsupported_device_aborts(
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unsupported"
-
-
-async def test_ssdp_config_flow_unknown_error_aborts(
-    hass: HomeAssistant, mock_device: AsyncMock
-) -> None:
-    """Test abort when unknown error occurs."""
-    mock_device.connect.side_effect = Exception
-
-    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_info
-    )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "unknown"
