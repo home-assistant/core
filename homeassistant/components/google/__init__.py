@@ -76,7 +76,6 @@ SERVICE_SCAN_CALENDARS = "scan_for_calendars"
 SERVICE_FOUND_CALENDARS = "found_calendar"
 SERVICE_ADD_EVENT = "add_event"
 
-DATA_CALENDARS = "calendars"
 DATA_SERVICE = "service"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
@@ -259,7 +258,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage = Storage(hass.config.path(TOKEN_FILE))
     hass.data[DOMAIN] = {
-        DATA_CALENDARS: {},
         DATA_SERVICE: GoogleCalendarService(hass, storage),
     }
     creds = storage.get()
@@ -284,14 +282,26 @@ def setup_services(
 ) -> None:
     """Set up the service listeners."""
 
+    created_calendars = set()
+    calendars = load_config(hass.config.path(YAML_DEVICES))
+
     def _found_calendar(call: ServiceCall) -> None:
         """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
         calendar = get_calendar_info(hass, call.data)
         calendar_id = calendar[CONF_CAL_ID]
-        if calendar_id in hass.data[DOMAIN][DATA_CALENDARS]:
+
+        if calendar_id in created_calendars:
             return
-        hass.data[DOMAIN][DATA_CALENDARS][calendar_id] = calendar
-        update_config(hass.config.path(YAML_DEVICES), calendar)
+        created_calendars.add(calendar_id)
+
+        # Populate the yaml file with all discovered calendars
+        if calendar_id not in calendars:
+            calendars[calendar_id] = calendar
+            update_config(hass.config.path(YAML_DEVICES), calendar)
+        else:
+            # Prefer entity/name information from yaml, overriding api
+            calendar = calendars[calendar_id]
+
         discovery.load_platform(
             hass,
             Platform.CALENDAR,
@@ -366,10 +376,6 @@ def setup_services(
 
 def do_setup(hass: HomeAssistant, hass_config: ConfigType, config: ConfigType) -> None:
     """Run the setup after we have everything configured."""
-    # Load calendars the user has configured
-    calendars = load_config(hass.config.path(YAML_DEVICES))
-    hass.data[DOMAIN][DATA_CALENDARS] = calendars
-
     calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     track_new_found_calendars = convert(
         config.get(CONF_TRACK_NEW), bool, DEFAULT_CONF_TRACK_NEW
@@ -379,10 +385,7 @@ def do_setup(hass: HomeAssistant, hass_config: ConfigType, config: ConfigType) -
         hass, hass_config, config, track_new_found_calendars, calendar_service
     )
 
-    for calendar in calendars.values():
-        discovery.load_platform(hass, Platform.CALENDAR, DOMAIN, calendar, hass_config)
-
-    # Look for any new calendars
+    # Fetch calendars from the API
     hass.services.call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
 
 
@@ -419,7 +422,8 @@ def load_config(path: str) -> dict[str, Any]:
                 except VoluptuousError as exception:
                     # keep going
                     _LOGGER.warning("Calendar Invalid Data: %s", exception)
-    except FileNotFoundError:
+    except FileNotFoundError as err:
+        _LOGGER.debug("Error reading calendar configuration: %s", err)
         # When YAML file could not be loaded/did not contain a dict
         return {}
 
@@ -428,6 +432,9 @@ def load_config(path: str) -> dict[str, Any]:
 
 def update_config(path: str, calendar: dict[str, Any]) -> None:
     """Write the google_calendar_devices.yaml."""
-    with open(path, "a", encoding="utf8") as out:
-        out.write("\n")
-        yaml.dump([calendar], out, default_flow_style=False)
+    try:
+        with open(path, "a", encoding="utf8") as out:
+            out.write("\n")
+            yaml.dump([calendar], out, default_flow_style=False)
+    except FileNotFoundError as err:
+        _LOGGER.debug("Error persisting calendar configuration: %s", err)
