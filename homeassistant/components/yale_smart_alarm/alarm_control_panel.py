@@ -9,7 +9,6 @@ from yalesmartalarmclient.const import (
     YALE_STATE_ARM_PARTIAL,
     YALE_STATE_DISARM,
 )
-from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
@@ -39,6 +38,7 @@ from .const import (
     MANUFACTURER,
     MODEL,
     STATE_MAP,
+    YALE_ALL_ERRORS,
 )
 from .coordinator import YaleDataUpdateCoordinator
 
@@ -103,81 +103,46 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code=None) -> None:
         """Send disarm command."""
-        if TYPE_CHECKING:
-            assert self.coordinator.yale, "Connection to API is missing"
-
-        try:
-            alarm_state = await self.hass.async_add_executor_job(
-                self.coordinator.yale.disarm
-            )
-        except (
-            AuthenticationError,
-            ConnectionError,
-            TimeoutError,
-            UnknownError,
-        ) as error:
-            raise HomeAssistantError(
-                f"Could not verify disarmed for {self._attr_name}: {error}"
-            ) from error
-
-        LOGGER.debug("Alarm disarmed: %s", alarm_state)
-        if alarm_state:
-            self.coordinator.data["alarm"] = YALE_STATE_DISARM
-            self.async_write_ha_state()
-            return
-        raise HomeAssistantError("Could not disarm, check system ready for disarming.")
+        return await self.async_set_alarm(YALE_STATE_DISARM, code)
 
     async def async_alarm_arm_home(self, code=None) -> None:
         """Send arm home command."""
-        if TYPE_CHECKING:
-            assert self.coordinator.yale, "Connection to API is missing"
-
-        try:
-            alarm_state = await self.hass.async_add_executor_job(
-                self.coordinator.yale.arm_partial
-            )
-        except (
-            AuthenticationError,
-            ConnectionError,
-            TimeoutError,
-            UnknownError,
-        ) as error:
-            raise HomeAssistantError(
-                f"Could not verify armed home for {self._attr_name}: {error}"
-            ) from error
-
-        LOGGER.debug("Alarm armed home: %s", alarm_state)
-        if alarm_state:
-            self.coordinator.data["alarm"] = YALE_STATE_ARM_PARTIAL
-            self.async_write_ha_state()
-            return
-        raise HomeAssistantError("Could not arm home, check system ready for arming.")
+        return await self.async_set_alarm(YALE_STATE_ARM_PARTIAL, code)
 
     async def async_alarm_arm_away(self, code=None) -> None:
         """Send arm away command."""
+        return await self.async_set_alarm(YALE_STATE_ARM_FULL, code)
+
+    async def async_set_alarm(self, command: str, code: str | None = None) -> None:
+        """Set alarm."""
         if TYPE_CHECKING:
             assert self.coordinator.yale, "Connection to API is missing"
 
         try:
-            alarm_state = await self.hass.async_add_executor_job(
-                self.coordinator.yale.arm_full
-            )
-        except (
-            AuthenticationError,
-            ConnectionError,
-            TimeoutError,
-            UnknownError,
-        ) as error:
+            if command == YALE_STATE_ARM_FULL:
+                alarm_state = await self.hass.async_add_executor_job(
+                    self.coordinator.yale.arm_full
+                )
+            if command == YALE_STATE_ARM_PARTIAL:
+                alarm_state = await self.hass.async_add_executor_job(
+                    self.coordinator.yale.arm_partial
+                )
+            if command == YALE_STATE_DISARM:
+                alarm_state = await self.hass.async_add_executor_job(
+                    self.coordinator.yale.disarm
+                )
+        except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
-                f"Could not verify armed away for {self._attr_name}: {error}"
+                f"Could not set alarm for {self._attr_name}: {error}"
             ) from error
 
-        LOGGER.debug("Alarm armed away: %s", alarm_state)
         if alarm_state:
-            self.coordinator.data["alarm"] = YALE_STATE_ARM_FULL
+            self.coordinator.data["alarm"] = command
             self.async_write_ha_state()
             return
-        raise HomeAssistantError("Could not arm away, check system ready for arming.")
+        raise HomeAssistantError(
+            "Could not change alarm check system ready for arming."
+        )
 
     @property
     def available(self) -> bool:
