@@ -3,14 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from deluge_client import DelugeRPCClient
 import voluptuous as vol
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    PLATFORM_SCHEMA,
-    SwitchEntity,
-)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -18,15 +13,16 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DelugeEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DEFAULT_RPC_PORT, DOMAIN
+from .const import DEFAULT_RPC_PORT, DOMAIN
+from .coordinator import DelugeDataUpdateCoordinator
 
 # Deprecated in Home Assistant 2022.3
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -60,48 +56,35 @@ async def async_setup_entry(
     async_add_entities: entity_platform.AddEntitiesCallback,
 ) -> None:
     """Set up the Deluge switch."""
-    async_add_entities(
-        [
-            DelugeSwitch(
-                hass.data[DOMAIN][entry.entry_id][DATA_KEY_API],
-                hass.data[DOMAIN][entry.entry_id][DATA_KEY_COORDINATOR],
-                entry.title,
-                entry.entry_id,
-            )
-        ]
-    )
+    async_add_entities([DelugeSwitch(hass.data[DOMAIN][entry.entry_id])])
 
 
 class DelugeSwitch(DelugeEntity, SwitchEntity):
     """Representation of a Deluge switch."""
 
-    def __init__(
-        self,
-        api: DelugeRPCClient,
-        coordinator: DataUpdateCoordinator,
-        name: str,
-        server_unique_id: str,
-    ) -> None:
+    coordinator: DelugeDataUpdateCoordinator
+
+    def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize the Deluge switch."""
-        super().__init__(api, coordinator, server_unique_id)
-        self._attr_name = name
-        self._attr_unique_id = f"{server_unique_id}/Deluge Switch"
+        super().__init__(coordinator)
+        self._attr_name = coordinator.config_entry.title
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}/Deluge Switch"
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        torrent_ids = self.api.call("core.get_session_state")
-        self.api.call("core.resume_torrent", torrent_ids)
+        torrent_ids = self.coordinator.api.call("core.get_session_state")
+        self.coordinator.api.call("core.resume_torrent", torrent_ids)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        torrent_ids = self.api.call("core.get_session_state")
-        self.api.call("core.pause_torrent", torrent_ids)
+        torrent_ids = self.coordinator.api.call("core.get_session_state")
+        self.coordinator.api.call("core.pause_torrent", torrent_ids)
 
     @property
     def is_on(self) -> bool:
         """Return state of the switch."""
         if self.coordinator.data:
-            data: dict = self.coordinator.data[SWITCH_DOMAIN]
+            data: dict = self.coordinator.data[Platform.SWITCH]
             for torrent in data.values():
                 item = torrent.popitem()
                 if not item[1]:

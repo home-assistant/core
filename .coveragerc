@@ -198,6 +198,7 @@ omit =
     homeassistant/components/decora_wifi/light.py
     homeassistant/components/delijn/*
     homeassistant/components/deluge/__init__.py
+    homeassistant/components/deluge/coordinator.py
     homeassistant/components/deluge/sensor.py
     homeassistant/components/deluge/switch.py
     homeassistant/components/denon/media_player.py

@@ -1,11 +1,9 @@
 """Support for monitoring the Deluge BitTorrent client API."""
 from __future__ import annotations
 
-from deluge_client import DelugeRPCClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
@@ -21,21 +19,16 @@ from homeassistant.const import (
     CONF_USERNAME,
     DATA_RATE_KILOBYTES_PER_SECOND,
     STATE_IDLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DelugeEntity
-from .const import (
-    DATA_KEY_API,
-    DATA_KEY_COORDINATOR,
-    DEFAULT_NAME,
-    DEFAULT_RPC_PORT,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DEFAULT_RPC_PORT, DOMAIN
+from .coordinator import DelugeDataUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -94,13 +87,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Deluge sensor."""
     async_add_entities(
-        DelugeSensor(
-            hass.data[DOMAIN][entry.entry_id][DATA_KEY_API],
-            hass.data[DOMAIN][entry.entry_id][DATA_KEY_COORDINATOR],
-            entry.title,
-            description,
-            entry.entry_id,
-        )
+        DelugeSensor(hass.data[DOMAIN][entry.entry_id], description)
         for description in SENSOR_TYPES
     )
 
@@ -108,25 +95,24 @@ async def async_setup_entry(
 class DelugeSensor(DelugeEntity, SensorEntity):
     """Representation of a Deluge sensor."""
 
+    coordinator: DelugeDataUpdateCoordinator
+
     def __init__(
         self,
-        api: DelugeRPCClient,
-        coordinator: DataUpdateCoordinator,
-        name: str,
+        coordinator: DelugeDataUpdateCoordinator,
         description: SensorEntityDescription,
-        server_unique_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(api, coordinator, server_unique_id)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{server_unique_id}/{description.key}"
+        self._attr_name = f"{coordinator.config_entry.title} {description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}/{description.key}"
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.coordinator.data:
-            data = self.coordinator.data[SENSOR_DOMAIN]
+            data = self.coordinator.data[Platform.SENSOR]
             upload = data[b"upload_rate"] - data[b"dht_upload_rate"]
             download = data[b"download_rate"] - data[b"dht_download_rate"]
             if self.entity_description.key == "current_status":

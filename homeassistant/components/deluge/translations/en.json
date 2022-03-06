@@ -2,17 +2,16 @@
     "config": {
         "step": {
             "user": {
-            "title": "Deluge",
-            "description": "To be able to use this integration, you have to enable the following option in deluge settings: Daemon > Allow remote controls",
-            "data": {
-                "host": "Host",
-                "username": "Username",
-                "password": "Password",
-                "port": "Port",
-                "web_port": "Web port (for visiting service)"
+                "description": "To be able to use this integration, you have to enable the following option in deluge settings: Daemon > Allow remote controls",
+                "data": {
+                    "host": "Host",
+                    "username": "Username",
+                    "password": "Password",
+                    "port": "Port",
+                    "web_port": "Web port (for visiting service)"
+                }
             }
-        }
-    },
+        },
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication"
