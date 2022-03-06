@@ -82,6 +82,7 @@ BLOCK_SLEEPING_PLATFORMS: Final = [
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 RPC_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,

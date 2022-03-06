@@ -50,8 +50,14 @@ async def async_setup_block_entry(
         return
 
     relay_blocks = []
+    motion_blocks = []
     assert wrapper.device.blocks
     for block in wrapper.device.blocks:
+
+        if block.type == "sensor" and hasattr(block, "motionActive"):
+            motion_blocks.append(block)
+            continue
+
         if block.type != "relay" or is_block_channel_type_light(
             wrapper.device.settings, int(block.channel)
         ):
@@ -61,10 +67,11 @@ async def async_setup_block_entry(
         unique_id = f"{wrapper.mac}-{block.type}_{block.channel}"
         await async_remove_shelly_entity(hass, "light", unique_id)
 
-    if not relay_blocks:
-        return
+    if relay_blocks:
+        async_add_entities(BlockRelaySwitch(wrapper, block) for block in relay_blocks)
 
-    async_add_entities(BlockRelaySwitch(wrapper, block) for block in relay_blocks)
+    if motion_blocks:
+        async_add_entities(BlockMotionSwitch(wrapper, block) for block in motion_blocks)
 
 
 async def async_setup_rpc_entry(
@@ -116,6 +123,43 @@ class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
         self.control_result = await self.set_state(turn="off")
+        self.async_write_ha_state()
+
+    @callback
+    def _update_callback(self) -> None:
+        """When device updates, clear control result that overrides state."""
+        self.control_result = None
+        super()._update_callback()
+
+
+class BlockMotionSwitch(ShellyBlockEntity, SwitchEntity):
+    """Entity that controls a motion on Block based Shelly devices."""
+
+    def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
+        """Initialize motion switch."""
+        super().__init__(wrapper, block)
+        self.control_result: dict[str, Any] | None = None
+
+    @property
+    def is_on(self) -> bool:
+        """If switch is on."""
+        if self.control_result:
+            return cast(bool, self.control_result["ison"])
+
+        return bool(self.block.motionActive)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on motion."""
+        self.control_result = await self.wrapper.device.set_shelly_motion_detection(
+            True
+        )
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off motion."""
+        self.control_result = await self.wrapper.device.set_shelly_motion_detection(
+            False
+        )
         self.async_write_ha_state()
 
     @callback
