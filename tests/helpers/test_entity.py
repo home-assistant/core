@@ -559,7 +559,6 @@ async def test_async_remove_ignores_in_flight_polling(hass):
     assert len(result) == 1
     assert hass.states.get("test.test") is None
     ent.async_write_ha_state()
-    assert hass.states.get("test.test") is None
 
 
 async def test_set_context(hass):

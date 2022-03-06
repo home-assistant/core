@@ -295,7 +295,7 @@ class Entity(ABC):
 
     # If entity is added to an entity platform
     _added = False
-    # If entity was removed to an entity platform
+    # If entity was removed from an entity platform
     _removed = False
 
     # Entity Properties
