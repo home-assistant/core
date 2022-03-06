@@ -1,6 +1,5 @@
 """Tests for Kaleidescape media player platform."""
 
-import asyncio
 from unittest.mock import MagicMock
 
 from kaleidescape import const as kaleidescape_const
@@ -56,7 +55,6 @@ async def test_update_state(
     # Device turns on
     mock_device.power.state = kaleidescape_const.DEVICE_POWER_STATE_ON
     mock_device.dispatcher.send(kaleidescape_const.DEVICE_POWER_STATE)
-    await asyncio.sleep(0)
     await hass.async_block_till_done()
     entity = hass.states.get(ENTITY_ID)
     assert entity is not None
@@ -92,7 +90,6 @@ async def test_update_state(
         chapter_location=1,
     )
     mock_device.dispatcher.send(kaleidescape_const.PLAY_STATUS)
-    await asyncio.sleep(0)
     await hass.async_block_till_done()
     entity = hass.states.get(ENTITY_ID)
     assert entity is not None
@@ -101,7 +98,6 @@ async def test_update_state(
     # Devices pauses playing
     mock_device.movie.play_status = kaleidescape_const.PLAY_STATUS_PAUSED
     mock_device.dispatcher.send(kaleidescape_const.PLAY_STATUS)
-    await asyncio.sleep(0)
     await hass.async_block_till_done()
     entity = hass.states.get(ENTITY_ID)
     assert entity is not None
