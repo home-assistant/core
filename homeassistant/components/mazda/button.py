@@ -5,17 +5,20 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
+from pymazda import Client as MazdaAPIClient
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import MazdaEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 
-async def handle_button_press(entity: MazdaButtonEntity):
+async def handle_button_press(entity: MazdaButtonEntity) -> None:
     """Handle a press for a Mazda button entity."""
     api_client = entity.client
     api_method = getattr(api_client, entity.entity_description.key)
@@ -26,7 +29,7 @@ async def handle_button_press(entity: MazdaButtonEntity):
         raise HomeAssistantError(ex) from ex
 
 
-async def handle_refresh_vehicle_status(entity: MazdaButtonEntity):
+async def handle_refresh_vehicle_status(entity: MazdaButtonEntity) -> None:
     """Handle a request to refresh the vehicle status."""
     await handle_button_press(entity)
 
@@ -122,7 +125,13 @@ class MazdaButtonEntity(MazdaEntity, ButtonEntity):
 
     entity_description: MazdaButtonEntityDescription
 
-    def __init__(self, client, coordinator, index, description):
+    def __init__(
+        self,
+        client: MazdaAPIClient,
+        coordinator: DataUpdateCoordinator,
+        index: int,
+        description: MazdaButtonEntityDescription,
+    ) -> None:
         """Initialize Mazda button."""
         super().__init__(client, coordinator, index)
         self.entity_description = description
@@ -130,6 +139,6 @@ class MazdaButtonEntity(MazdaEntity, ButtonEntity):
         self._attr_name = f"{self.vehicle_name} {description.name_suffix}"
         self._attr_unique_id = f"{self.vin}_{description.key}"
 
-    async def async_press(self):
+    async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.async_press(self)

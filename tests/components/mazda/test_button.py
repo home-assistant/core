@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.components.mazda import init_integration
 
 
-async def test_button_setup_non_electric_vehicle(hass):
+async def test_button_setup_non_electric_vehicle(hass) -> None:
     """Test creation of button entities."""
     await init_integration(hass)
 
@@ -52,14 +52,14 @@ async def test_button_setup_non_electric_vehicle(hass):
     assert state.attributes.get(ATTR_ICON) == "mdi:hazard-lights"
 
     # Since this is a non-electric vehicle, electric vehicle buttons should not be created
-    for key in ["start_charging", "stop_charging", "refresh_vehicle_status"]:
+    for key in ("start_charging", "stop_charging", "refresh_vehicle_status"):
         entry = entity_registry.async_get(f"button.my_mazda3_{key}")
         assert entry is None
         state = hass.states.get(f"button.my_mazda3_{key}")
         assert state is None
 
 
-async def test_button_setup_electric_vehicle(hass):
+async def test_button_setup_electric_vehicle(hass) -> None:
     """Test creation of button entities for an electric vehicle."""
     await init_integration(hass, electric_vehicle=True)
 
@@ -136,7 +136,7 @@ async def test_button_setup_electric_vehicle(hass):
         ("refresh_status", "refresh_vehicle_status"),
     ],
 )
-async def test_button_press(hass, entity_id_suffix, api_method_name):
+async def test_button_press(hass, entity_id_suffix, api_method_name) -> None:
     """Test pressing the button entities."""
     client_mock = await init_integration(hass, electric_vehicle=True)
 
@@ -152,7 +152,7 @@ async def test_button_press(hass, entity_id_suffix, api_method_name):
     api_method.assert_called_once_with(12345)
 
 
-async def test_button_press_error(hass):
+async def test_button_press_error(hass) -> None:
     """Test the Mazda API raising an error when a button entity is pressed."""
     client_mock = await init_integration(hass)
 
