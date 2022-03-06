@@ -22,9 +22,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OFF_ACTION, DEFAULT_NAME, DEFAULT_PING_TIMEOUT, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_OFF_ACTION = "turn_off"
+
+DEFAULT_PING_TIMEOUT = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
