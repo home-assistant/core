@@ -1,5 +1,6 @@
 """Support for Sensibo wifi-enabled home thermostats."""
 from __future__ import annotations
+from typing import Any
 
 import voluptuous as vol
 
@@ -40,6 +41,7 @@ from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboBaseEntity
 
 SERVICE_ASSUME_STATE = "assume_state"
+SERVICE_HORIZONTAL_SWING = "horizontal_swing"
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -117,6 +119,13 @@ async def async_setup_entry(
         },
         "async_assume_state",
     )
+    platform.async_register_entity_service(
+        SERVICE_HORIZONTAL_SWING,
+        {
+            vol.Required(ATTR_STATE): cv.string,
+        },
+        "async_set_horizontal_swing",
+    )
 
 
 class SensiboClimate(SensiboBaseEntity, ClimateEntity):
@@ -144,6 +153,15 @@ class SensiboClimate(SensiboBaseEntity, ClimateEntity):
             if key in FIELD_TO_FLAG:
                 features |= FIELD_TO_FLAG[key]
         return features
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional attributes."""
+        return {
+            "horizontal_swing_modes": self.coordinator.data[self.unique_id][
+                "horizontal_swing_modes"
+            ]
+        }
 
     @property
     def current_humidity(self) -> int | None:
@@ -330,3 +348,15 @@ class SensiboClimate(SensiboBaseEntity, ClimateEntity):
         """Sync state with api."""
         await self._async_set_ac_state_property("on", state != HVAC_MODE_OFF, True)
         await self.coordinator.async_refresh()
+
+    async def async_set_horizontal_swing(self, state) -> None:
+        """Set new target swing operation."""
+        if (
+            "horizontalSwing"
+            not in self.coordinator.data[self.unique_id]["active_features"]
+        ):
+            raise HomeAssistantError(
+                "Current mode doesn't support setting horizontal swing"
+            )
+
+        await self._async_set_ac_state_property("horizontalSwing", state)

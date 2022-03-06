@@ -16,3 +16,18 @@ assume_state:
           options:
             - "on"
             - "off"
+horizontal_swing:
+  name: Horizontal swing
+  description: Set Sensibo device horizontal swing
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    state:
+      name: State
+      description: State to set.
+      required: true
+      example: "stopped"
+      selector:
+        text:
