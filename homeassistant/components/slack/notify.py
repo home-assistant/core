@@ -35,6 +35,8 @@ ATTR_PATH = "path"
 ATTR_URL = "url"
 ATTR_USERNAME = "username"
 
+COMMAND_DND = "command_dnd"
+COMMAND_STATUS = "command_status"
 CONF_DEFAULT_CHANNEL = "default_channel"
 
 DEFAULT_TIMEOUT_SECONDS = 15
@@ -297,8 +299,8 @@ class SlackNotificationService(BaseNotificationService):
             kwargs.get(ATTR_TARGET, [self._default_channel])
         )
 
-        if message in ("command_status", "command_dnd"):
-            if message == "command_status":
+        if message in (COMMAND_STATUS, COMMAND_DND):
+            if message == COMMAND_STATUS:
                 title = title if title == "away" else "auto"
                 task = self._client.users_setPresence(presence=title)
             else:
