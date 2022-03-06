@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -107,7 +106,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
         coordinator: SensiboDataUpdateCoordinator,
         device_id: str,
         sensor_id: str,
-        sensor_data: dict[str, Any],
+        sensor_data: MotionSensor,
         entity_description: SensiboSensorEntityDescription,
     ) -> None:
         """Initiate Sensibo Motion Sensor."""

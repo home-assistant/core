@@ -99,7 +99,7 @@ class SensiboMotionBaseEntity(CoordinatorEntity):
         """Initiate Sensibo Number."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
-        self._attr_name = f"{sensor_data['model']} {entity_description.name}"
+        self._attr_name = f"{sensor_data.model} {entity_description.name}"
         self._device_id = device_id
         self._sensor_id = sensor_id
         self._client = coordinator.client
