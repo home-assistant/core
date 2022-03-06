@@ -21,7 +21,7 @@ SENSOR_TYPES = (
         key="acfail",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Powerloss",
+        name="Power Loss",
     ),
     BinarySensorEntityDescription(
         key="battery",
