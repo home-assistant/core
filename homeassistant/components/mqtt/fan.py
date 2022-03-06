@@ -592,9 +592,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        if preset_mode not in self.preset_modes:
-            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
-            return
+        self._valid_preset_mode_or_raise(preset_mode)
 
         mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
 
