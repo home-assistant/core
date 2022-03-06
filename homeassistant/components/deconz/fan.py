@@ -118,6 +118,8 @@ class DeconzFan(DeconzDevice, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
+        if percentage == 0:
+            return await self.async_turn_off()
         await self._device.set_speed(
             percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         )
@@ -129,14 +131,10 @@ class DeconzFan(DeconzDevice, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on fan."""
-        new_speed = self._default_on_speed
-
         if percentage is not None:
-            new_speed = percentage_to_ordered_list_item(
-                ORDERED_NAMED_FAN_SPEEDS, percentage
-            )
-
-        await self._device.set_speed(new_speed)
+            await self.async_set_percentage(percentage)
+        else:
+            await self._device.set_speed(self._default_on_speed)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off fan."""
