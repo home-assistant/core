@@ -194,7 +194,6 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, "percentage-state-topic", "rEset_percentage")
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
-    assert state.attributes.get(fan.ATTR_SPEED) is None
 
     async_fire_mqtt_message(hass, "state-topic", "None")
     state = hass.states.get("fan.test")
