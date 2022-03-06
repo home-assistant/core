@@ -178,7 +178,7 @@ aiokafka==0.6.0
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx==0.7.0
+aiolifx==0.7.1
 
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
@@ -716,13 +716,13 @@ goodwe==0.2.15
 google-api-python-client==2.38.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.9.0
+google-cloud-pubsub==2.10.0
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==2.10.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.7.1
+google-nest-sdm==1.8.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
