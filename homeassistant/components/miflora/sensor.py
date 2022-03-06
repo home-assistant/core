@@ -53,8 +53,7 @@ DEFAULT_FORCE_UPDATE = False
 DEFAULT_MEDIAN = 3
 DEFAULT_NAME = "Mi Flora"
 DEFAULT_GO_UNAVAILABLE_TIMEOUT = timedelta(seconds=7200)
-
-SCAN_INTERVAL = timedelta(seconds=1200)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=1200)
 
 ATTR_LAST_SUCCESSFUL_UPDATE = "last_successful_update"
 
@@ -106,6 +105,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_GO_UNAVAILABLE_TIMEOUT, default=DEFAULT_GO_UNAVAILABLE_TIMEOUT
         ): cv.time_period,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
     }
 )
 
@@ -120,10 +120,9 @@ async def async_setup_platform(
     backend = BACKEND
     _LOGGER.debug("Miflora is using %s backend", backend.__name__)
 
-    cache = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL).total_seconds()
     poller = miflora_poller.MiFloraPoller(
         config[CONF_MAC],
-        cache_timeout=cache,
+        cache_timeout=config[CONF_SCAN_INTERVAL].total_seconds(),
         adapter=config[CONF_ADAPTER],
         backend=backend,
     )
