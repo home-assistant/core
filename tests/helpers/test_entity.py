@@ -545,6 +545,23 @@ async def test_async_remove_runs_callbacks(hass):
     assert len(result) == 1
 
 
+async def test_async_remove_ignores_in_flight_polling(hass):
+    """Test in flight polling is ignored after removing."""
+    result = []
+
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "test.test"
+    ent.async_on_remove(lambda: result.append(1))
+    ent.async_write_ha_state()
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+    await ent.async_remove()
+    assert len(result) == 1
+    assert hass.states.get("test.test") is None
+    ent.async_write_ha_state()
+    assert hass.states.get("test.test") is None
+
+
 async def test_set_context(hass):
     """Test setting context."""
     context = Context()
