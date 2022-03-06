@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from typing import cast
 
 from aiopyarr.models.radarr import RadarrCalendar, RadarrMovie
@@ -31,10 +30,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import RadarrEntity
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import RadarrDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -112,9 +109,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Radarr platform."""
-    # deprecated in 2022.3
+    # deprecated in 2022.4
     if "wanted" in config[CONF_MONITORED_CONDITIONS]:
-        _LOGGER.warning(
+        LOGGER.warning(
             "Wanted is not a valid condition option. Please remove it from your config"
         )
     hass.async_create_task(
@@ -131,10 +128,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Radarr sensors based on a config entry."""
     async_add_entities(
-        RadarrSensor(
-            hass.data[DOMAIN][entry.entry_id],
-            description,
-        )
+        RadarrSensor(hass.data[DOMAIN][entry.entry_id], description)
         for description in SENSOR_TYPES
         if description.key != "wanted"
     )
@@ -154,7 +148,7 @@ class RadarrSensor(RadarrEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"Radarr {description.name}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}/{description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.name}"
 
     @property
     def extra_state_attributes(self) -> dict[str, StateType | datetime]:

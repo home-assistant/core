@@ -55,10 +55,7 @@ class RadarrEntity(CoordinatorEntity):
 
     coordinator: RadarrDataUpdateCoordinator
 
-    def __init__(
-        self,
-        coordinator: RadarrDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: RadarrDataUpdateCoordinator) -> None:
         """Initialize the Radarr entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
