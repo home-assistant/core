@@ -1,13 +1,13 @@
-"""Support for wake on lan."""
+"""Support for wake on lan buttons."""
 from __future__ import annotations
 
 import logging
-import subprocess as sp
+from typing import Any
 
 import voluptuous as vol
 import wakeonlan
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.button import PLATFORM_SCHEMA, ButtonEntity
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
     CONF_BROADCAST_PORT,
@@ -19,10 +19,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OFF_ACTION, DEFAULT_NAME, DEFAULT_PING_TIMEOUT, DOMAIN
+from .const import DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_BROADCAST_PORT): cv.port,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
     }
 )
 
@@ -44,22 +42,20 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up a wake on lan switch."""
+    """Set up a wake on lan button."""
     broadcast_address = config.get(CONF_BROADCAST_ADDRESS)
     broadcast_port = config.get(CONF_BROADCAST_PORT)
     host = config.get(CONF_HOST)
     mac_address = config[CONF_MAC]
     name = config[CONF_NAME]
-    off_action = config.get(CONF_OFF_ACTION)
 
     add_entities(
         [
-            WolSwitch(
+            WolButton(
                 hass,
                 name,
                 host,
                 mac_address,
-                off_action,
                 broadcast_address,
                 broadcast_port,
             )
@@ -68,8 +64,8 @@ def setup_platform(
     )
 
 
-class WolSwitch(SwitchEntity):
-    """Representation of a wake on lan switch."""
+class WolButton(ButtonEntity):
+    """Representation of a wake on lan button."""
 
     def __init__(
         self,
@@ -77,28 +73,17 @@ class WolSwitch(SwitchEntity):
         name,
         host,
         mac_address,
-        off_action,
         broadcast_address,
         broadcast_port,
     ):
-        """Initialize the WOL switch."""
+        """Initialize the WOL button."""
         self._hass = hass
         self._name = name
         self._host = host
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
         self._broadcast_port = broadcast_port
-        self._off_script = (
-            Script(hass, off_action, name, DOMAIN) if off_action else None
-        )
-        self._state = False
-        self._assumed_state = host is None
         self._unique_id = dr.format_mac(mac_address)
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
 
     @property
     def name(self):
@@ -106,22 +91,12 @@ class WolSwitch(SwitchEntity):
         return self._name
 
     @property
-    def assumed_state(self):
-        """Return true if no host is provided."""
-        return self._assumed_state
-
-    @property
-    def should_poll(self):
-        """Return false if assumed state is true."""
-        return not self._assumed_state
-
-    @property
     def unique_id(self):
         """Return the unique id of this switch."""
         return self._unique_id
 
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
+    def press(self, **kwargs: Any) -> None:
+        """Press the button."""
         service_kwargs = {}
         if self._broadcast_address is not None:
             service_kwargs["ip_address"] = self._broadcast_address
@@ -136,30 +111,3 @@ class WolSwitch(SwitchEntity):
         )
 
         wakeonlan.send_magic_packet(self._mac_address, **service_kwargs)
-
-        if self._assumed_state:
-            self._state = True
-            self.async_write_ha_state()
-
-    def turn_off(self, **kwargs):
-        """Turn the device off if an off action is present."""
-        if self._off_script is not None:
-            self._off_script.run(context=self._context)
-
-        if self._assumed_state:
-            self._state = False
-            self.async_write_ha_state()
-
-    def update(self):
-        """Check if device is on and update the state. Only called if assumed state is false."""
-        ping_cmd = [
-            "ping",
-            "-c",
-            "1",
-            "-W",
-            str(DEFAULT_PING_TIMEOUT),
-            str(self._host),
-        ]
-
-        status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
-        self._state = not bool(status)
