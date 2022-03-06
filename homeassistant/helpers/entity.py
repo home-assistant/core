@@ -295,6 +295,8 @@ class Entity(ABC):
 
     # If entity is added to an entity platform
     _added = False
+    # If entity was removed from an entity platform
+    _removed = False
 
     # Entity Properties
     _attr_assumed_state: bool = False
@@ -553,6 +555,10 @@ class Entity(ABC):
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
+        if self._removed:
+            # Polling returned after the entity has already been removed
+            return
+
         if self.registry_entry and self.registry_entry.disabled_by:
             if not self._disabled_reported:
                 self._disabled_reported = True
@@ -767,6 +773,7 @@ class Entity(ABC):
         self.platform = platform
         self.parallel_updates = parallel_updates
         self._added = True
+        self._removed = False
 
     @callback
     def add_to_platform_abort(self) -> None:
@@ -798,6 +805,7 @@ class Entity(ABC):
             )
 
         self._added = False
+        self._removed = True
 
         if self._on_remove is not None:
             while self._on_remove:
