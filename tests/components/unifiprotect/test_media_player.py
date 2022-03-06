@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import copy
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pyunifiprotect.data import Camera
@@ -190,6 +190,39 @@ async def test_media_player_play(
     camera[0].wait_until_audio_completes.assert_called_once()
 
 
+async def test_media_player_play_media_source(
+    hass: HomeAssistant,
+    camera: tuple[Camera, str],
+):
+    """Test media_player entity test play_media."""
+    camera[0].__fields__["stop_audio"] = Mock()
+    camera[0].__fields__["play_audio"] = Mock()
+    camera[0].__fields__["wait_until_audio_completes"] = Mock()
+    camera[0].stop_audio = AsyncMock()
+    camera[0].play_audio = AsyncMock()
+    camera[0].wait_until_audio_completes = AsyncMock()
+
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        return_value=Mock(url="http://example.com/test.mp3"),
+    ):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                ATTR_ENTITY_ID: camera[1],
+                "media_content_id": "media-source://some_source/some_id",
+                "media_content_type": "audio/mpeg",
+            },
+            blocking=True,
+        )
+
+    camera[0].play_audio.assert_called_once_with(
+        "http://example.com/test.mp3", blocking=False
+    )
+    camera[0].wait_until_audio_completes.assert_called_once()
+
+
 async def test_media_player_play_invalid(
     hass: HomeAssistant,
     camera: tuple[Camera, str],
@@ -199,7 +232,7 @@ async def test_media_player_play_invalid(
     camera[0].__fields__["play_audio"] = Mock()
     camera[0].play_audio = AsyncMock()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "media_player",
             "play_media",
