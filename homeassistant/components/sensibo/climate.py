@@ -1,5 +1,6 @@
 """Support for Sensibo wifi-enabled home thermostats."""
 from __future__ import annotations
+from typing import Any
 
 import voluptuous as vol
 
@@ -144,6 +145,10 @@ class SensiboClimate(SensiboBaseEntity, ClimateEntity):
             if key in FIELD_TO_FLAG:
                 features |= FIELD_TO_FLAG[key]
         return features
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {"temperature_list": self.coordinator.data[self.unique_id]["temp_list"]}
 
     @property
     def current_humidity(self) -> int | None:
