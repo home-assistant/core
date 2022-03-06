@@ -87,12 +87,12 @@ class WolButton(ButtonEntity):
 
     @property
     def name(self):
-        """Return the name of the switch."""
+        """Return the name of the button."""
         return self._name
 
     @property
     def unique_id(self):
-        """Return the unique id of this switch."""
+        """Return the unique id of this button."""
         return self._unique_id
 
     def press(self, **kwargs: Any) -> None:
