@@ -133,7 +133,7 @@ class SamsungTVBridge(ABC):
 
     @abstractmethod
     async def async_send_keys(self, keys: list[str]) -> None:
-        """Send a key to the tv and handles exceptions."""
+        """Send a list of keys to the tv."""
 
     @abstractmethod
     async def async_close_remote(self) -> None:
@@ -242,11 +242,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         return self._remote
 
     async def async_send_keys(self, keys: list[str]) -> None:
-        """Send the key using legacy protocol."""
+        """Send a list of keys using legacy protocol."""
         await self.hass.async_add_executor_job(self._send_keys, keys)
 
     def _send_keys(self, keys: list[str]) -> None:
-        """Send the keys using legacy protocol."""
+        """Send a list of keys using legacy protocol."""
         try:  # pylint: disable=[too-many-nested-blocks]
             # recreate connection if connection was dead
             retry_count = 1
@@ -403,7 +403,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         await self._async_send_commands([ChannelEmitCommand.launch_app(app_id)])
 
     async def async_send_keys(self, keys: list[str]) -> None:
-        """Send the key using websocket protocol."""
+        """Send a list of keys using websocket protocol."""
         commands: list[SamsungTVCommand] = []
         for key in keys:
             if key == "KEY_POWEROFF":
