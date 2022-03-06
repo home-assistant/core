@@ -33,7 +33,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import convert
 
 from .api import GoogleCalendarService
 
@@ -51,7 +50,6 @@ CONF_IGNORE_AVAILABILITY = "ignore_availability"
 CONF_MAX_RESULTS = "max_results"
 CONF_CALENDAR_ACCESS = "calendar_access"
 
-DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = "!!"
 
 EVENT_CALENDAR_ID = "calendar_id"
@@ -106,7 +104,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
-                vol.Optional(CONF_TRACK_NEW): cv.boolean,
+                vol.Optional(CONF_TRACK_NEW, default=True): cv.boolean,
                 vol.Optional(CONF_CALENDAR_ACCESS, default="read_write"): cv.enum(
                     FeatureAccess
                 ),
@@ -253,7 +251,7 @@ def do_authentication(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google platform."""
 
-    if not (conf := config.get(DOMAIN, {})):
+    if not (conf := CONFIG_SCHEMA(config.get(DOMAIN, {}))):
         # component is set up by tts platform
         return True
 
@@ -279,7 +277,6 @@ def setup_services(
     hass: HomeAssistant,
     hass_config: ConfigType,
     config: ConfigType,
-    track_new_found_calendars: bool,
     calendar_service: GoogleCalendarService,
 ) -> None:
     """Set up the service listeners."""
@@ -306,7 +303,7 @@ def setup_services(
         """Scan for new calendars."""
         calendars = calendar_service.list_calendars()
         for calendar in calendars:
-            calendar["track"] = track_new_found_calendars
+            calendar[CONF_TRACK] = config[CONF_TRACK_NEW]
             hass.services.call(DOMAIN, SERVICE_FOUND_CALENDARS, calendar)
 
     hass.services.register(DOMAIN, SERVICE_SCAN_CALENDARS, _scan_for_calendars)
@@ -371,13 +368,7 @@ def do_setup(hass: HomeAssistant, hass_config: ConfigType, config: ConfigType) -
     hass.data[DOMAIN][DATA_CALENDARS] = calendars
 
     calendar_service = hass.data[DOMAIN][DATA_SERVICE]
-    track_new_found_calendars = convert(
-        config.get(CONF_TRACK_NEW), bool, DEFAULT_CONF_TRACK_NEW
-    )
-    assert track_new_found_calendars is not None
-    setup_services(
-        hass, hass_config, config, track_new_found_calendars, calendar_service
-    )
+    setup_services(hass, hass_config, config, calendar_service)
 
     for calendar in calendars.values():
         discovery.load_platform(hass, Platform.CALENDAR, DOMAIN, calendar, hass_config)
