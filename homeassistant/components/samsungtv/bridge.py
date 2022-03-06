@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 import asyncio
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 import contextlib
-import time
 from typing import Any, cast
 
 from samsungctl import Remote
@@ -243,23 +242,23 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using legacy protocol."""
-        await self.hass.async_add_executor_job(self._send_keys, keys)
+        first_key = True
+        for key in keys:
+            if first_key:
+                first_key = False
+            else:
+                await asyncio.sleep(KEY_PRESS_TIMEOUT)
+            await self.hass.async_add_executor_job(self._send_key, key)
 
-    def _send_keys(self, keys: list[str]) -> None:
-        """Send a list of keys using legacy protocol."""
-        try:  # pylint: disable=[too-many-nested-blocks]
+    def _send_key(self, key: str) -> None:
+        """Send a key using legacy protocol."""
+        try:
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
                     if remote := self._get_remote():
-                        first_key = True
-                        for key in keys:
-                            if first_key:
-                                first_key = False
-                            else:
-                                time.sleep(KEY_PRESS_TIMEOUT)
-                            remote.control(key)
+                        remote.control(key)
                     break
                 except (ConnectionClosed, BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast

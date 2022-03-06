@@ -853,7 +853,7 @@ async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None
 async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
     """Test for play_media."""
     await setup_samsungtv(hass, MOCK_CONFIG)
-    with patch("homeassistant.components.samsungtv.bridge.time.sleep") as sleep:
+    with patch("homeassistant.components.samsungtv.bridge.asyncio.sleep") as sleep:
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
