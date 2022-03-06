@@ -12,7 +12,7 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KdeConnectEntity
+from . import KdeConnectPluginEntity
 from .const import DATA_KEY_CLIENT, DATA_KEY_DEVICES, DOMAIN
 
 
@@ -26,7 +26,9 @@ async def async_setup_entry(
     async_add_entities([KdeConnectBatteryChargeSensor(device, client.plugin_registry)])
 
 
-class KdeConnectBatteryChargeSensor(KdeConnectEntity, SensorEntity):
+class KdeConnectBatteryChargeSensor(
+    KdeConnectPluginEntity[BatteryReceiverPlugin], SensorEntity
+):
     """A sensor reading the battery charge from a KDE Connect device."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
@@ -37,17 +39,15 @@ class KdeConnectBatteryChargeSensor(KdeConnectEntity, SensorEntity):
         self, device: KdeConnectDevice, plugin_registry: PluginRegistry
     ) -> None:
         """Initialize the battery charge sensor."""
-        super().__init__(device)
-        self.current_charge = None
-        self.battery_plugin = plugin_registry.get_plugin(device, BatteryReceiverPlugin)
-        self.battery_plugin.register_charge_changed_callback(self.on_battery_update)
+        super().__init__(device, plugin_registry, BatteryReceiverPlugin)
+        self.plugin.register_charge_changed_callback(self.on_battery_update)
 
         self._attr_name = f"{device.device_name} Battery Charge"
         self._attr_unique_id = f"{device.device_id}/battery_charge"
 
     def __del__(self) -> None:
         """Clean up callbacks on destruction."""
-        self.battery_plugin.unregister_charge_changed_callback(self.on_battery_update)
+        self.plugin.unregister_charge_changed_callback(self.on_battery_update)
 
     async def on_battery_update(self, charge: int) -> None:
         """Handle a battery update."""

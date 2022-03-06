@@ -3,10 +3,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import logging
-from typing import cast
+from typing import Generic, TypeVar, cast
 
 from pykdeconnect.client import KdeConnectClient
 from pykdeconnect.devices import KdeConnectDevice
+from pykdeconnect.plugin import Plugin
+from pykdeconnect.plugin_registry import PluginRegistry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, Platform
@@ -19,6 +21,9 @@ from .helpers import ensure_running
 from .storage import HomeAssistantStorage
 
 _LOGGER = logging.getLogger(__name__)
+
+
+_P = TypeVar("_P", bound=Plugin)
 
 
 PLATFORMS: list[Platform] = [
@@ -77,7 +82,7 @@ class KdeConnectEntity(RestoreEntity, ABC):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device.device_id)},
             name=self.device.device_name,
-            manufacturer="KdeConnect",
+            manufacturer="KDE Connect",
         )
 
     async def async_added_to_hass(self) -> None:
@@ -90,3 +95,19 @@ class KdeConnectEntity(RestoreEntity, ABC):
     @abstractmethod
     def restore_state(self, state: State) -> None:
         """Restore the state of the device on restart."""
+
+
+class KdeConnectPluginEntity(KdeConnectEntity, Generic[_P], ABC):
+    """A KDE Connect entity that uses a KDE Connect plugin."""
+
+    plugin: _P
+
+    def __init__(
+        self,
+        device: KdeConnectDevice,
+        plugin_registry: PluginRegistry,
+        plugin_class: type[_P],
+    ) -> None:
+        """Initialize the KDE Connect Plugin Entity."""
+        super().__init__(device)
+        self.plugin = plugin_registry.get_plugin(device, plugin_class)

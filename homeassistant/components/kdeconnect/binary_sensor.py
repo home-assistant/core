@@ -15,7 +15,7 @@ from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KdeConnectEntity
+from . import KdeConnectEntity, KdeConnectPluginEntity
 from .const import DATA_KEY_CLIENT, DATA_KEY_DEVICES, DOMAIN
 
 
@@ -35,28 +35,28 @@ async def async_setup_entry(
     )
 
 
-class KdeConnectBatteryChargingSensor(KdeConnectEntity, BinarySensorEntity):
+class KdeConnectBatteryChargingSensor(
+    KdeConnectPluginEntity[BatteryReceiverPlugin], BinarySensorEntity
+):
     """A binary sensor checking if a KDE Connect device is charging."""
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
     _attr_should_poll = False
 
-    device: KdeConnectDevice
-
     def __init__(
         self, device: KdeConnectDevice, plugin_registry: PluginRegistry
     ) -> None:
         """Initialize the battery charging sensor."""
-        super().__init__(device)
-        self.battery_plugin = plugin_registry.get_plugin(device, BatteryReceiverPlugin)
-        self.battery_plugin.register_charging_changed_callback(self.on_battery_update)
+        super().__init__(device, plugin_registry, BatteryReceiverPlugin)
+
+        self.plugin.register_charging_changed_callback(self.on_battery_update)
 
         self._attr_name = f"{device.device_name} Battery Charging"
         self._attr_unique_id = f"{device.device_id}/battery_charging"
 
     def __del__(self) -> None:
         """Clean up callbacks on destruction."""
-        self.battery_plugin.unregister_low_changed_callback(self.on_battery_update)
+        self.plugin.unregister_low_changed_callback(self.on_battery_update)
 
     async def on_battery_update(self, charging: bool) -> None:
         """Handle a battery update."""
@@ -68,7 +68,9 @@ class KdeConnectBatteryChargingSensor(KdeConnectEntity, BinarySensorEntity):
         self._attr_is_on = state.state == STATE_ON
 
 
-class KdeConnectBatteryLowSensor(KdeConnectEntity, BinarySensorEntity):
+class KdeConnectBatteryLowSensor(
+    KdeConnectPluginEntity[BatteryReceiverPlugin], BinarySensorEntity
+):
     """A binary sensor checking if a KDE Connect device is low on battery."""
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
@@ -78,16 +80,15 @@ class KdeConnectBatteryLowSensor(KdeConnectEntity, BinarySensorEntity):
         self, device: KdeConnectDevice, plugin_registry: PluginRegistry
     ) -> None:
         """Initialize the battery low sensor."""
-        super().__init__(device)
-        self.battery_plugin = plugin_registry.get_plugin(device, BatteryReceiverPlugin)
-        self.battery_plugin.register_low_changed_callback(self.on_battery_update)
+        super().__init__(device, plugin_registry, BatteryReceiverPlugin)
+        self.plugin.register_low_changed_callback(self.on_battery_update)
 
         self._attr_name = f"{device.device_name} Battery Low"
         self._attr_unique_id = f"{device.device_id}/battery_low"
 
     def __del__(self) -> None:
         """Clean up callbacks on destruction."""
-        self.battery_plugin.unregister_low_changed_callback(self.on_battery_update)
+        self.plugin.unregister_low_changed_callback(self.on_battery_update)
 
     async def on_battery_update(self, low: bool) -> None:
         """Handle a battery update."""
