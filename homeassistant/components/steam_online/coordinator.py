@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import functools as ft
-import logging
 
 import steam
 from steam.api import _interface_method as INTMethod
@@ -14,9 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ACCOUNTS, DOMAIN
-
-LOGGER = logging.getLogger(__name__)
+from .const import CONF_ACCOUNTS, DOMAIN, LOGGER
 
 
 class SteamDataUpdateCoordinator(DataUpdateCoordinator):

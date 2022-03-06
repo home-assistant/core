@@ -63,10 +63,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Steam platform."""
     async_add_entities(
-        SteamSensor(
-            hass.data[DOMAIN][entry.entry_id],
-            str(account),
-        )
+        SteamSensor(hass.data[DOMAIN][entry.entry_id], str(account))
         for account in entry.options[CONF_ACCOUNTS].keys()
         if entry.options[CONF_ACCOUNTS][account]["enabled"]
     )
@@ -77,11 +74,7 @@ class SteamSensor(SteamEntity, SensorEntity):
 
     coordinator: SteamDataUpdateCoordinator
 
-    def __init__(
-        self,
-        coordinator: SteamDataUpdateCoordinator,
-        account: str,
-    ) -> None:
+    def __init__(self, coordinator: SteamDataUpdateCoordinator, account: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = SensorEntityDescription(

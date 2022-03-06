@@ -8,7 +8,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import SteamDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -34,13 +34,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SteamEntity(CoordinatorEntity):
     """Representation of a Steam entity."""
 
-    _attr_attribution = ATTRIBUTION
+    _attr_attribution = "Data provided by Steam"
     coordinator: SteamDataUpdateCoordinator
 
-    def __init__(
-        self,
-        coordinator: SteamDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: SteamDataUpdateCoordinator) -> None:
         """Initialize a Steam entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(

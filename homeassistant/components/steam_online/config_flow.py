@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import functools as ft
-import logging
 from typing import Any
 
 import steam
@@ -15,9 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DEFAULT_NAME, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DEFAULT_NAME, DOMAIN, LOGGER
 
 
 async def validate_input(user_input: dict, hass: HomeAssistant) -> list[dict[str, str]]:
@@ -118,7 +115,7 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_API_KEY] == import_config[CONF_API_KEY]:
                 return self.async_abort(reason="already_configured")
         _msg = "Steam yaml config in now deprecated and has been imported. Please remove it from your config"
-        _LOGGER.warning(_msg)
+        LOGGER.warning(_msg)
         import_config[CONF_ACCOUNT] = import_config[CONF_ACCOUNTS][0]
         return await self.async_step_user(import_config)
 

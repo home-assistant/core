@@ -16,7 +16,6 @@
                     "api_key": "API Key",
                     "account": "Steam account ID"
                 },
-                "title": "Steam",
                 "description": "Documentation: https://www.home-assistant.io/integrations/steam_online\n\nUse https://steamid.io/ to find your Steam account ID"
             },
             "reauth_confirm": {

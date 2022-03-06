@@ -1,12 +1,15 @@
 """Steam constants."""
-ATTRIBUTION = "Data provided by Steam"
+import logging
+from typing import Final
 
 CONF_ACCOUNT = "account"
 CONF_ACCOUNTS = "accounts"
 
 DATA_KEY_COORDINATOR = "coordinator"
 DEFAULT_NAME = "Steam"
-DOMAIN = "steam_online"
+DOMAIN: Final = "steam_online"
+
+LOGGER = logging.getLogger(__package__)
 
 STATE_OFFLINE = "offline"
 STATE_ONLINE = "online"
