@@ -285,7 +285,9 @@ class FanEntity(ToggleEntity):
     @property
     def is_on(self):
         """Return true if the entity is on."""
-        return self.percentage is not None or self.preset_mode is not None
+        return (
+            self.percentage is not None and self.percentage > 0
+        ) or self.preset_mode is not None
 
     @property
     def percentage(self) -> int | None:
