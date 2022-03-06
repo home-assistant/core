@@ -3,7 +3,7 @@ PIP_CACHE=$1
 
 # Number of existing dependency conflicts
 # Update if a PR resolve one!
-DEPENDENCY_CONFLICTS=9
+DEPENDENCY_CONFLICTS=5
 
 PIP_CHECK=$(pip check --cache-dir=$PIP_CACHE)
 LINE_COUNT=$(echo "$PIP_CHECK" | wc -l)

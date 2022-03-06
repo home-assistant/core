@@ -8,12 +8,12 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
-from homeassistant.core import split_entity_id
+from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
 
 from . import config_validation as cv
 
-SELECTORS = decorator.Registry()
+SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 
 
 def _get_selector_class(config: Any) -> type[Selector]:
@@ -24,12 +24,12 @@ def _get_selector_class(config: Any) -> type[Selector]:
     if len(config) != 1:
         raise vol.Invalid(f"Only one type can be specified. Found {', '.join(config)}")
 
-    selector_type = list(config)[0]
+    selector_type: str = list(config)[0]
 
     if (selector_class := SELECTORS.get(selector_type)) is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
-    return cast(type[Selector], selector_class)
+    return selector_class
 
 
 def selector(config: Any) -> Selector:
@@ -74,44 +74,54 @@ class Selector:
         return {"selector": {self.selector_type: self.config}}
 
 
+SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+    {
+        # Integration that provided the entity
+        vol.Optional("integration"): str,
+        # Domain the entity belongs to
+        vol.Optional("domain"): str,
+        # Device class of the entity
+        vol.Optional("device_class"): str,
+    }
+)
+
+
 @SELECTORS.register("entity")
 class EntitySelector(Selector):
-    """Selector of a single entity."""
+    """Selector of a single or list of entities."""
 
     selector_type = "entity"
 
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            # Integration that provided the entity
-            vol.Optional("integration"): str,
-            # Domain the entity belongs to
-            vol.Optional("domain"): str,
-            # Device class of the entity
-            vol.Optional("device_class"): str,
-        }
+    CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
+        {vol.Optional("multiple", default=False): cv.boolean}
     )
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        try:
-            entity_id = cv.entity_id(data)
-            domain = split_entity_id(entity_id)[0]
-        except vol.Invalid:
-            # Not a valid entity_id, maybe it's an entity entry id
-            return cv.entity_id_or_uuid(cv.string(data))
-        else:
-            if "domain" in self.config and domain != self.config["domain"]:
-                raise vol.Invalid(
-                    f"Entity {entity_id} belongs to domain {domain}, "
-                    f"expected {self.config['domain']}"
-                )
 
-            return entity_id
+        def validate(e_or_u: str) -> str:
+            e_or_u = cv.entity_id_or_uuid(e_or_u)
+            if not valid_entity_id(e_or_u):
+                return e_or_u
+            if allowed_domain := self.config.get("domain"):
+                domain = split_entity_id(e_or_u)[0]
+                if domain != allowed_domain:
+                    raise vol.Invalid(
+                        f"Entity {e_or_u} belongs to domain {domain}, "
+                        f"expected {allowed_domain}"
+                    )
+            return e_or_u
+
+        if not self.config["multiple"]:
+            return validate(data)
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
 @SELECTORS.register("device")
 class DeviceSelector(Selector):
-    """Selector of a single device."""
+    """Selector of a single or list of devices."""
 
     selector_type = "device"
 
@@ -124,31 +134,41 @@ class DeviceSelector(Selector):
             # Model of device
             vol.Optional("model"): str,
             # Device has to contain entities matching this selector
-            vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
+            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("multiple", default=False): cv.boolean,
         }
     )
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        return cv.string(data)
+        if not self.config["multiple"]:
+            return cv.string(data)
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [cv.string(val) for val in data]
 
 
 @SELECTORS.register("area")
 class AreaSelector(Selector):
-    """Selector of a single area."""
+    """Selector of a single or list of areas."""
 
     selector_type = "area"
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
+            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
             vol.Optional("device"): DeviceSelector.CONFIG_SCHEMA,
+            vol.Optional("multiple", default=False): cv.boolean,
         }
     )
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        return cv.string(data)
+        if not self.config["multiple"]:
+            return cv.string(data)
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [cv.string(val) for val in data]
 
 
 @SELECTORS.register("number")

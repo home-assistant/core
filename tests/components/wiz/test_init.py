@@ -50,3 +50,11 @@ async def test_cleanup_on_failed_first_update(hass: HomeAssistant) -> None:
     _, entry = await async_setup_integration(hass, wizlight=bulb)
     assert entry.state == config_entries.ConfigEntryState.SETUP_RETRY
     bulb.async_close.assert_called_once()
+
+
+async def test_wrong_device_now_has_our_ip(hass: HomeAssistant) -> None:
+    """Test setup is retried when the wrong device is found."""
+    bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
+    bulb.mac = "dddddddddddd"
+    _, entry = await async_setup_integration(hass, wizlight=bulb)
+    assert entry.state == config_entries.ConfigEntryState.SETUP_RETRY

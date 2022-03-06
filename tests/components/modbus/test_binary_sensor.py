@@ -25,7 +25,7 @@ from homeassistant.core import State
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
-ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
+ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 
 
 @pytest.mark.parametrize(
@@ -244,8 +244,8 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
     """Run config test for binary sensor."""
     assert SENSOR_DOMAIN in hass.config.components
 
-    for addon in ["", "_1", "_2", "_3"]:
-        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}{addon}"
+    for addon in ["", " 1", " 2", " 3"]:
+        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}{addon}".replace(" ", "_")
         assert hass.states.get(entity_id) is not None
 
 
@@ -257,16 +257,68 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_SLAVE_COUNT: 8,
                 }
             ]
         },
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,expected, slaves",
+    "config_addon,register_words,expected, slaves",
     [
         (
+            {CONF_SLAVE_COUNT: 1},
+            [0x01],
+            STATE_ON,
+            [
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 1},
+            [0x02],
+            STATE_OFF,
+            [
+                STATE_ON,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 1},
+            [0x04],
+            STATE_OFF,
+            [
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 7},
+            [0x01],
+            STATE_ON,
+            [
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 7},
+            [0x82],
+            STATE_OFF,
+            [
+                STATE_ON,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_ON,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 10},
             [0x01, 0x00],
             STATE_ON,
             [
@@ -278,23 +330,12 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
                 STATE_OFF,
                 STATE_OFF,
                 STATE_OFF,
-            ],
-        ),
-        (
-            [0x02, 0x00],
-            STATE_OFF,
-            [
-                STATE_ON,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
                 STATE_OFF,
                 STATE_OFF,
             ],
         ),
         (
+            {CONF_SLAVE_COUNT: 10},
             [0x01, 0x01],
             STATE_ON,
             [
@@ -306,6 +347,25 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
                 STATE_OFF,
                 STATE_OFF,
                 STATE_ON,
+                STATE_OFF,
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 10},
+            [0x81, 0x01],
+            STATE_ON,
+            [
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_ON,
+                STATE_ON,
+                STATE_OFF,
+                STATE_OFF,
             ],
         ),
     ],
@@ -314,6 +374,6 @@ async def test_slave_binary_sensor(hass, expected, slaves, mock_do_cycle):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
 
-    for i in range(8):
-        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}"
+    for i in range(len(slaves)):
+        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}".replace(" ", "_")
         assert hass.states.get(entity_id).state == slaves[i]

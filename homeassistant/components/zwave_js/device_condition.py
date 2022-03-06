@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_ENDPOINT,
@@ -23,7 +24,6 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
     DOMAIN,
-    VALUE_SCHEMA,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,

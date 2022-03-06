@@ -39,6 +39,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -325,26 +327,32 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         """Wrap up FritzboxTools class scan."""
         await self.hass.async_add_executor_job(self.scan_devices, now)
 
+    def manage_device_info(
+        self, dev_info: Device, dev_mac: str, consider_home: bool
+    ) -> bool:
+        """Update device lists."""
+        _LOGGER.debug("Client dev_info: %s", dev_info)
+
+        if dev_mac in self._devices:
+            self._devices[dev_mac].update(dev_info, consider_home)
+            return False
+
+        device = FritzDevice(dev_mac, dev_info.name)
+        device.update(dev_info, consider_home)
+        self._devices[dev_mac] = device
+        return True
+
+    def send_signal_device_update(self, new_device: bool) -> None:
+        """Signal device data updated."""
+        dispatcher_send(self.hass, self.signal_device_update)
+        if new_device:
+            dispatcher_send(self.hass, self.signal_device_new)
+
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
 
         _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
         self._update_available, self._latest_firmware = self._update_device_info()
-
-        topology: dict = {}
-        if (
-            "Hosts1" not in self.connection.services
-            or "X_AVM-DE_GetMeshListPath"
-            not in self.connection.services["Hosts1"].actions
-        ):
-            self.mesh_role = MeshRoles.NONE
-        else:
-            try:
-                topology = self.fritz_hosts.get_mesh_topology()
-            except FritzActionError:
-                self.mesh_role = MeshRoles.SLAVE
-                # Avoid duplicating device trackers
-                return
 
         _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
@@ -370,6 +378,32 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 ssid=None,
                 wan_access=None,
             )
+
+        if (
+            "Hosts1" not in self.connection.services
+            or "X_AVM-DE_GetMeshListPath"
+            not in self.connection.services["Hosts1"].actions
+        ) or (
+            self._options
+            and self._options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY)
+        ):
+            _LOGGER.debug(
+                "Using old hosts discovery method. (Mesh not supported or user option)"
+            )
+            self.mesh_role = MeshRoles.NONE
+            for mac, info in hosts.items():
+                if self.manage_device_info(info, mac, consider_home):
+                    new_device = True
+            self.send_signal_device_update(new_device)
+            return
+
+        try:
+            if not (topology := self.fritz_hosts.get_mesh_topology()):
+                raise Exception("Mesh supported but empty topology reported")
+        except FritzActionError:
+            self.mesh_role = MeshRoles.SLAVE
+            # Avoid duplicating device trackers
+            return
 
         mesh_intf = {}
         # first get all meshed devices
@@ -414,19 +448,11 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
                         dev_info.ssid = intf.get("ssid")
-                _LOGGER.debug("Client dev_info: %s", dev_info)
 
-                if dev_mac in self._devices:
-                    self._devices[dev_mac].update(dev_info, consider_home)
-                else:
-                    device = FritzDevice(dev_mac, dev_info.name)
-                    device.update(dev_info, consider_home)
-                    self._devices[dev_mac] = device
+                if self.manage_device_info(dev_info, dev_mac, consider_home):
                     new_device = True
 
-        dispatcher_send(self.hass, self.signal_device_update)
-        if new_device:
-            dispatcher_send(self.hass, self.signal_device_new)
+        self.send_signal_device_update(new_device)
 
     async def async_trigger_firmware_update(self) -> bool:
         """Trigger firmware update."""
@@ -604,12 +630,33 @@ class AvmWrapper(FritzBoxTools):
             )
         return {}
 
+    async def async_get_upnp_configuration(self) -> dict[str, Any]:
+        """Call X_AVM-DE_UPnP service."""
+
+        return await self.hass.async_add_executor_job(self.get_upnp_configuration)
+
     async def async_get_wan_link_properties(self) -> dict[str, Any]:
         """Call WANCommonInterfaceConfig service."""
 
         return await self.hass.async_add_executor_job(
             partial(self.get_wan_link_properties)
         )
+
+    async def async_get_connection_info(self) -> ConnectionInfo:
+        """Return ConnectionInfo data."""
+
+        link_properties = await self.async_get_wan_link_properties()
+        connection_info = ConnectionInfo(
+            connection=link_properties.get("NewWANAccessType", "").lower(),
+            mesh_role=self.mesh_role,
+            wan_enabled=self.device_is_router,
+        )
+        _LOGGER.debug(
+            "ConnectionInfo for FritzBox %s: %s",
+            self.host,
+            connection_info,
+        )
+        return connection_info
 
     async def async_get_port_mapping(self, con_type: str, index: int) -> dict[str, Any]:
         """Call GetGenericPortMappingEntry action."""
@@ -671,6 +718,11 @@ class AvmWrapper(FritzBoxTools):
         return await self.hass.async_add_executor_job(
             partial(self.set_allow_wan_access, ip_address, turn_on)
         )
+
+    def get_upnp_configuration(self) -> dict[str, Any]:
+        """Call X_AVM-DE_UPnP service."""
+
+        return self._service_call_action("X_AVM-DE_UPnP", "1", "GetInfo")
 
     def get_ontel_num_deflections(self) -> dict[str, Any]:
         """Call GetNumberOfDeflections action from X_AVM-DE_OnTel service."""
@@ -934,3 +986,12 @@ class FritzBoxBaseEntity:
             name=self._device_name,
             sw_version=self._avm_wrapper.current_firmware,
         )
+
+
+@dataclass
+class ConnectionInfo:
+    """Fritz sensor connection information class."""
+
+    connection: str
+    mesh_role: MeshRoles
+    wan_enabled: bool

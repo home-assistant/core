@@ -94,6 +94,7 @@ components: &components
   - homeassistant/components/tag/*
   - homeassistant/components/template/*
   - homeassistant/components/timer/*
+  - homeassistant/components/update/*
   - homeassistant/components/usb/*
   - homeassistant/components/webhook/*
   - homeassistant/components/websocket_api/*
@@ -128,7 +129,7 @@ requirements: &requirements
   - .github/workflows/*
   - homeassistant/package_constraints.txt
   - requirements*.txt
-  - setup.py
+  - setup.cfg
 
 any:
   - *base_platforms

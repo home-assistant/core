@@ -25,13 +25,14 @@ COMMUNITY_POST_INPUTS = {
                 "integration": "zha",
                 "manufacturer": "IKEA of Sweden",
                 "model": "TRADFRI remote control",
+                "multiple": False,
             }
         },
     },
     "light": {
         "name": "Light(s)",
         "description": "The light(s) to control",
-        "selector": {"target": {"entity": {"domain": "light"}}},
+        "selector": {"target": {"entity": {"domain": "light", "multiple": False}}},
     },
     "force_brightness": {
         "name": "Force turn on brightness",
@@ -218,10 +219,17 @@ async def test_fetch_blueprint_from_github_gist_url(hass, aioclient_mock):
         "motion_entity": {
             "name": "Motion Sensor",
             "selector": {
-                "entity": {"domain": "binary_sensor", "device_class": "motion"}
+                "entity": {
+                    "domain": "binary_sensor",
+                    "device_class": "motion",
+                    "multiple": False,
+                }
             },
         },
-        "light_entity": {"name": "Light", "selector": {"entity": {"domain": "light"}}},
+        "light_entity": {
+            "name": "Light",
+            "selector": {"entity": {"domain": "light", "multiple": False}},
+        },
     }
     assert imported_blueprint.suggested_filename == "balloob/motion_light"
     assert imported_blueprint.blueprint.metadata["source_url"] == url

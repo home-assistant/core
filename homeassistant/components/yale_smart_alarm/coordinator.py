@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from yalesmartalarmclient.client import YaleSmartAlarmClient
-from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
+from yalesmartalarmclient.exceptions import AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, YALE_BASE_ERRORS
 
 
 class YaleDataUpdateCoordinator(DataUpdateCoordinator):
@@ -29,7 +30,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Yale."""
 
         updates = await self.hass.async_add_executor_job(self.get_updates)
@@ -120,7 +121,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             "lock_map": _lock_map,
         }
 
-    def get_updates(self) -> dict:
+    def get_updates(self) -> dict[str, Any]:
         """Fetch data from Yale."""
 
         if self.yale is None:
@@ -130,7 +131,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 )
             except AuthenticationError as error:
                 raise ConfigEntryAuthFailed from error
-            except (ConnectionError, TimeoutError, UnknownError) as error:
+            except YALE_BASE_ERRORS as error:
                 raise UpdateFailed from error
 
         try:
@@ -141,7 +142,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
 
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
-        except (ConnectionError, TimeoutError, UnknownError) as error:
+        except YALE_BASE_ERRORS as error:
             raise UpdateFailed from error
 
         return {
