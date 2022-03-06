@@ -308,14 +308,13 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         """Update data."""
         _LOGGER.debug("Updating FRITZ!Box sensors")
 
+        status: FritzStatus = self._avm_wrapper.fritz_status
         try:
-            status: FritzStatus = self._avm_wrapper.fritz_status
-            self._attr_available = True
+            self._attr_native_value = (
+                self._last_device_value
+            ) = self.entity_description.value_fn(status, self._last_device_value)
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
             self._attr_available = False
             return
-
-        self._attr_native_value = (
-            self._last_device_value
-        ) = self.entity_description.value_fn(status, self._last_device_value)
+        self._attr_available = True
