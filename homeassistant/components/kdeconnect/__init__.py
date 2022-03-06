@@ -23,11 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS: list[Platform] = [
-    # Platform.BUTTON,
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
-    # Platform.DEVICE_TRACKER,
-    # Platform.MEDIA_PLAYER,
 ]
 
 
