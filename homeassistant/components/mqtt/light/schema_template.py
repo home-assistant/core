@@ -41,6 +41,7 @@ from ..const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    PAYLOAD_NONE,
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
@@ -66,8 +67,6 @@ CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
-
-PAYLOAD_NONE = "None"
 
 PLATFORM_SCHEMA_TEMPLATE = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(

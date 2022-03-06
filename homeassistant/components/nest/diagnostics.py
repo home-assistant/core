@@ -12,7 +12,7 @@ from google_nest_sdm.exceptions import ApiException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_SUBSCRIBER, DOMAIN
+from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN
 
 REDACT_DEVICE_TRAITS = {InfoTrait.NAME}
 
@@ -21,6 +21,9 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict:
     """Return diagnostics for a config entry."""
+    if DATA_SDM not in config_entry.data:
+        return {}
+
     if DATA_SUBSCRIBER not in hass.data[DOMAIN]:
         return {"error": "No subscriber configured"}
 

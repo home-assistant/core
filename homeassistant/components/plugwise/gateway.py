@@ -2,42 +2,28 @@
 from __future__ import annotations
 
 import asyncio
-import logging
+from typing import Any
 
-import async_timeout
-from plugwise.exceptions import (
-    InvalidAuthentication,
-    PlugwiseException,
-    XMLDataMissingError,
-)
+from plugwise.exceptions import InvalidAuthentication, PlugwiseException
 from plugwise.smile import Smile
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
-from .const import (
-    COORDINATOR,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TIMEOUT,
-    DEFAULT_USERNAME,
-    DOMAIN,
-    GATEWAY,
-    PLATFORMS_GATEWAY,
-    PW_TYPE,
-    SENSOR_PLATFORMS,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, LOGGER, PLATFORMS_GATEWAY
+from .coordinator import PlugwiseDataUpdateCoordinator
 
 
 async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
+    await async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
+
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = Smile(
         host=entry.data[CONF_HOST],
@@ -51,7 +37,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         connected = await api.connect()
     except InvalidAuthentication:
-        _LOGGER.error("Invalid username or Smile ID")
+        LOGGER.error("Invalid username or Smile ID")
         return False
     except PlugwiseException as err:
         raise ConfigEntryNotReady(
@@ -64,35 +50,15 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not connected:
         raise ConfigEntryNotReady("Unable to connect to Smile")
-
-    async def async_update_data():
-        """Update data via API endpoint."""
-        try:
-            async with async_timeout.timeout(DEFAULT_TIMEOUT):
-                await api.full_update_device()
-                return True
-        except XMLDataMissingError as err:
-            raise UpdateFailed("Smile update failed") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"Smile {api.smile_name}",
-        update_method=async_update_data,
-        update_interval=DEFAULT_SCAN_INTERVAL[api.smile_type],
-    )
-    await coordinator.async_config_entry_first_refresh()
-
     api.get_all_devices()
 
     if entry.unique_id is None and api.smile_version[0] != "1.8.0":
         hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "api": api,
-        COORDINATOR: coordinator,
-        PW_TYPE: GATEWAY,
-    }
+    coordinator = PlugwiseDataUpdateCoordinator(hass, api)
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -104,13 +70,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=api.smile_version[0],
     )
 
-    single_master_thermostat = api.single_master_thermostat()
-
-    platforms = PLATFORMS_GATEWAY
-    if single_master_thermostat is None:
-        platforms = SENSOR_PLATFORMS
-
-    hass.config_entries.async_setup_platforms(entry, platforms)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS_GATEWAY)
 
     return True
 
@@ -122,3 +82,16 @@ async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
     ):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
+
+@callback
+def async_migrate_entity_entry(entry: RegistryEntry) -> dict[str, Any] | None:
+    """Migrate Plugwise entity entries.
+
+    - Migrates unique ID from old relay switches to the new unique ID
+    """
+    if entry.domain == SWITCH_DOMAIN and entry.unique_id.endswith("-plug"):
+        return {"new_unique_id": entry.unique_id.replace("-plug", "-relay")}
+
+    # No migration needed
+    return None

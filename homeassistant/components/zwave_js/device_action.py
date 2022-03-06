@@ -29,6 +29,7 @@ from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_CONFIG_PARAMETER,
@@ -48,11 +49,11 @@ from .const import (
     SERVICE_SET_CONFIG_PARAMETER,
     SERVICE_SET_LOCK_USERCODE,
     SERVICE_SET_VALUE,
-    VALUE_SCHEMA,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
     VALUE_ID_REGEX,
+    generate_config_parameter_subtype,
     get_config_parameter_value_schema,
 )
 from .helpers import async_get_node_from_device_id
@@ -165,7 +166,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
                 CONF_TYPE: SERVICE_SET_CONFIG_PARAMETER,
                 ATTR_CONFIG_PARAMETER: config_value.property_,
                 ATTR_CONFIG_PARAMETER_BITMASK: config_value.property_key,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]

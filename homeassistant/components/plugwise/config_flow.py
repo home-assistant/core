@@ -1,7 +1,6 @@
 """Config flow for Plugwise integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from plugwise.exceptions import InvalidAuthentication, PlugwiseException
@@ -29,14 +28,13 @@ from .const import (
     DOMAIN,
     FLOW_SMILE,
     FLOW_STRETCH,
+    LOGGER,
     PW_TYPE,
     SMILE,
     STRETCH,
     STRETCH_USERNAME,
     ZEROCONF_MAP,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _base_gw_schema(discovery_info):
@@ -99,12 +97,17 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
-        self.context["title_placeholders"] = {
-            CONF_HOST: discovery_info.host,
-            CONF_NAME: _name,
-            CONF_PORT: discovery_info.port,
-            CONF_USERNAME: self._username,
-        }
+        self.context.update(
+            {
+                "title_placeholders": {
+                    CONF_HOST: discovery_info.host,
+                    CONF_NAME: _name,
+                    CONF_PORT: discovery_info.port,
+                    CONF_USERNAME: self._username,
+                },
+                "configuration_url": f"http://{discovery_info.host}:{discovery_info.port}",
+            }
+        )
         return await self.async_step_user()
 
     async def async_step_user(
@@ -126,7 +129,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
             except PlugwiseException:
                 errors[CONF_BASE] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors[CONF_BASE] = "unknown"
             else:
                 await self.async_set_unique_id(

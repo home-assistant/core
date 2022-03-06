@@ -4,25 +4,39 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pywizlight import wizlight
-from pywizlight.exceptions import WizLightNotKnownBulb
+from pywizlight import PilotParser, wizlight
+from pywizlight.bulb import PIR_SOURCE
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DISCOVER_SCAN_TIMEOUT, DISCOVERY_INTERVAL, DOMAIN, WIZ_EXCEPTIONS
+from .const import (
+    DISCOVER_SCAN_TIMEOUT,
+    DISCOVERY_INTERVAL,
+    DOMAIN,
+    SIGNAL_WIZ_PIR,
+    WIZ_CONNECT_EXCEPTIONS,
+    WIZ_EXCEPTIONS,
+)
 from .discovery import async_discover_devices, async_trigger_discovery
 from .models import WizData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.LIGHT, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 REQUEST_REFRESH_DELAY = 0.35
 
@@ -46,21 +60,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Get bulb with IP: %s", ip_address)
     bulb = wizlight(ip_address)
     try:
-        await bulb.getMac()
         scenes = await bulb.getSupportedScenes()
-        # ValueError gets thrown if the bulb type
-        # cannot be determined on the first try.
-        # This is likely because way the library
-        # processes responses and can be cleaned up
-        # in the future.
-    except WizLightNotKnownBulb:
-        # This is only thrown on IndexError when the
-        # bulb responds with invalid data? It may
-        # not actually be possible anymore
-        _LOGGER.warning("The WiZ bulb type could not be determined for %s", ip_address)
-        return False
-    except (ValueError, *WIZ_EXCEPTIONS) as err:
-        raise ConfigEntryNotReady from err
+        await bulb.getMac()
+    except WIZ_CONNECT_EXCEPTIONS as err:
+        await bulb.async_close()
+        raise ConfigEntryNotReady(f"{ip_address}: {err}") from err
+
+    if bulb.mac != entry.unique_id:
+        # The ip address of the bulb has changed and its likely offline
+        # and another WiZ device has taken the IP. Avoid setting up
+        # since its the wrong device. As soon as the device comes back
+        # online the ip will get updated and setup will proceed.
+        raise ConfigEntryNotReady(
+            "Found bulb {bulb.mac} at {ip_address}, expected {entry.unique_id}"
+        )
 
     async def _async_update() -> None:
         """Update the WiZ device."""
@@ -81,7 +94,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
         ),
     )
-    await coordinator.async_config_entry_first_refresh()
+
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as err:
+        await bulb.async_close()
+        raise err
+
+    async def _async_shutdown_on_stop(event: Event) -> None:
+        await bulb.async_close()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_on_stop)
+    )
+
+    @callback
+    def _async_push_update(state: PilotParser) -> None:
+        """Receive a push update."""
+        _LOGGER.debug("%s: Got push update: %s", bulb.mac, state.pilotResult)
+        coordinator.async_set_updated_data(None)
+        if state.get_source() == PIR_SOURCE:
+            async_dispatcher_send(hass, SIGNAL_WIZ_PIR.format(bulb.mac))
+
+    await bulb.start_push(_async_push_update)
+    bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
         coordinator=coordinator, bulb=bulb, scenes=scenes
@@ -93,5 +129,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        data: WizData = hass.data[DOMAIN].pop(entry.entry_id)
+        await data.bulb.async_close()
     return unload_ok

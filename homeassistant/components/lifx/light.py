@@ -51,6 +51,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
@@ -199,8 +200,11 @@ async def async_setup_entry(
             interfaces = [{}]
 
     platform = entity_platform.async_get_current_platform()
-    lifx_manager = LIFXManager(hass, platform, async_add_entities)
+    lifx_manager = LIFXManager(hass, platform, config_entry, async_add_entities)
     hass.data[DATA_LIFX_MANAGER] = lifx_manager
+
+    # This is to clean up old litter. Can be removed in Home Assistant 2022.5.
+    await lifx_manager.remove_empty_devices()
 
     for interface in interfaces:
         lifx_manager.start_discovery(interface)
@@ -254,16 +258,20 @@ def merge_hsbk(base, change):
 class LIFXManager:
     """Representation of all known LIFX entities."""
 
-    def __init__(self, hass, platform, async_add_entities):
+    def __init__(self, hass, platform, config_entry, async_add_entities):
         """Initialize the light."""
         self.entities = {}
         self.hass = hass
         self.platform = platform
+        self.config_entry = config_entry
         self.async_add_entities = async_add_entities
         self.effects_conductor = aiolifx_effects().Conductor(hass.loop)
         self.discoveries = []
         self.cleanup_unsub = self.hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP, self.cleanup
+        )
+        self.entity_registry_updated_unsub = self.hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED, self.entity_registry_updated
         )
 
         self.register_set_state()
@@ -289,6 +297,7 @@ class LIFXManager:
     def cleanup(self, event=None):
         """Release resources."""
         self.cleanup_unsub()
+        self.entity_registry_updated_unsub()
 
         for discovery in self.discoveries:
             discovery.cleanup()
@@ -423,6 +432,26 @@ class LIFXManager:
             _LOGGER.debug("%s unregister", entity.who)
             entity.registered = False
             entity.async_write_ha_state()
+
+    async def entity_registry_updated(self, event):
+        """Handle entity registry updated."""
+        if event.data["action"] == "remove":
+            await self.remove_empty_devices()
+
+    async def remove_empty_devices(self):
+        """Remove devices with no entities."""
+        entity_reg = await er.async_get_registry(self.hass)
+        device_reg = dr.async_get(self.hass)
+        device_list = dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        )
+        for device_entry in device_list:
+            if not er.async_entries_for_device(
+                entity_reg,
+                device_entry.id,
+                include_disabled_entities=True,
+            ):
+                device_reg.async_remove_device(device_entry.id)
 
 
 class AwaitAioLIFX:

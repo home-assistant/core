@@ -1129,5 +1129,6 @@
         "commandsDroppedRX": 1,
         "commandsDroppedTX": 0,
         "timeoutResponse": 0
-    }
+    },
+    "isControllerNode": false
 }

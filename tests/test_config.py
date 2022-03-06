@@ -53,8 +53,11 @@ def create_file(path):
         pass
 
 
+@pytest.fixture(autouse=True)
 def teardown():
     """Clean up."""
+    yield
+
     dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
 
     if os.path.isfile(YAML_PATH):
@@ -78,6 +81,11 @@ def teardown():
 
 async def test_create_default_config(hass):
     """Test creation of default config."""
+    assert not os.path.isfile(YAML_PATH)
+    assert not os.path.isfile(SECRET_PATH)
+    assert not os.path.isfile(VERSION_PATH)
+    assert not os.path.isfile(AUTOMATIONS_PATH)
+
     await config_util.async_create_default_config(hass)
 
     assert os.path.isfile(YAML_PATH)
@@ -91,6 +99,7 @@ async def test_ensure_config_exists_creates_config(hass):
 
     If not creates a new config file.
     """
+    assert not os.path.isfile(YAML_PATH)
     with patch("builtins.print") as mock_print:
         await config_util.async_ensure_config_exists(hass)
 

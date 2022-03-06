@@ -299,3 +299,23 @@ async def test_select_white_channel_type(hass: HomeAssistant) -> None:
         == WhiteChannelType.NATURAL.name.lower()
     )
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_select_device_no_wiring(hass: HomeAssistant) -> None:
+    """Test select is not created if the device does not support wiring."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.wiring = None
+    bulb.wirings = ["RGB", "GRB"]
+    bulb.raw_state = bulb.raw_state._replace(model_num=0x25)
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    wiring_entity_id = "select.bulb_rgbcw_ddeeff_wiring"
+    assert hass.states.get(wiring_entity_id) is None

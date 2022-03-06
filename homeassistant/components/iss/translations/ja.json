@@ -12,5 +12,14 @@
                 "description": "\u56fd\u969b\u5b87\u5b99\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u306e\u8a2d\u5b9a\u3092\u3057\u307e\u3059\u304b\uff1f"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "\u5730\u56f3\u306b\u8868\u793a"
+                }
+            }
+        }
     }
 }

@@ -56,7 +56,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "'\u30db\u30fc\u30e0' \u3067\u30c7\u30d0\u30a4\u30b9\u3092\u691c\u8a0e\u3059\u308b\u79d2\u6570"
+                    "consider_home": "'\u30db\u30fc\u30e0' \u3067\u30c7\u30d0\u30a4\u30b9\u3092\u691c\u8a0e\u3059\u308b\u79d2\u6570",
+                    "old_discovery": "\u53e4\u3044\u691c\u51fa\u65b9\u6cd5\u3092\u6709\u52b9\u306b\u3059\u308b"
                 }
             }
         }
