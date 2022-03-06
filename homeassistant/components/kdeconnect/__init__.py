@@ -13,7 +13,6 @@ from homeassistant.const import CONF_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_KEY_CLIENT, DATA_KEY_DEVICES, DATA_KEY_STORAGE, DOMAIN
 from .helpers import ensure_running
@@ -28,18 +27,10 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the KDE Connect integration."""
-    await ensure_running(hass)
-
-    if DOMAIN in config:
-        _LOGGER.warning("%s can't be set up using the configuration file", DOMAIN)
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up KDE Connect from a config entry."""
+    await ensure_running(hass)
+
     client = cast(KdeConnectClient, hass.data[DOMAIN][DATA_KEY_CLIENT])
     storage = cast(HomeAssistantStorage, hass.data[DOMAIN][DATA_KEY_STORAGE])
 
