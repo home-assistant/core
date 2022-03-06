@@ -19,13 +19,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SleepIQ bed sensors."""
     data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
+
     async_add_entities(
         SleepNumberFirmnessEntity(data.data_coordinator, bed, sleeper)
         for bed in data.client.beds.values()
         for sleeper in bed.sleepers
     )
     async_add_entities(
-        SleepNumberActuatorEntity(data.actuator_coordinator, bed, actuator)
+        SleepNumberActuatorEntity(data.data_coordinator, bed, actuator)
         for bed in data.client.beds.values()
         for actuator in bed.foundation.actuators
     )

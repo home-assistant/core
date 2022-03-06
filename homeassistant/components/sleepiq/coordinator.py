@@ -34,9 +34,11 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.client = client
 
     async def _async_update_data(self) -> None:
-        tasks = [self.client.fetch_bed_statuses()] + [
-            bed.foundation.update_lights() for bed in self.client.beds.values()
-        ]
+        tasks = (
+            [self.client.fetch_bed_statuses()]
+            + [bed.foundation.update_lights() for bed in self.client.beds.values()]
+            + [bed.foundation.update_actuators() for bed in self.client.beds.values()]
+        )
         await asyncio.gather(*tasks)
 
 
@@ -64,35 +66,10 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
 
-class SleepIQActuatorUpdateCoordinator(DataUpdateCoordinator[None]):
-    """SleepIQ data update coordinator."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        client: AsyncSleepIQ,
-        username: str,
-    ) -> None:
-        """Initialize coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"{username}@SleepIQActuator",
-            update_interval=UPDATE_INTERVAL,
-        )
-        self.client = client
-
-    async def _async_update_data(self) -> None:
-        await asyncio.gather(
-            *[bed.foundation.update_actuators() for bed in self.client.beds.values()]
-        )
-
-
 @dataclass
 class SleepIQData:
     """Data for the sleepiq integration."""
 
     data_coordinator: SleepIQDataUpdateCoordinator
     pause_coordinator: SleepIQPauseUpdateCoordinator
-    actuator_coordinator: SleepIQActuatorUpdateCoordinator
     client: AsyncSleepIQ
