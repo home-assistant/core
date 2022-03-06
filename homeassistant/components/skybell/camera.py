@@ -1,10 +1,7 @@
 """Camera support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
-import logging
-
 from aiohttp import ClientConnectorError, ClientError, ClientResponse
-from aioskybell.device import SkybellDevice
 import voluptuous as vol
 
 from homeassistant.components.camera import (
@@ -19,15 +16,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SkybellEntity
-from .const import DATA_COORDINATOR, DATA_DEVICES, DOMAIN, IMAGE_ACTIVITY, IMAGE_AVATAR
+from .const import DOMAIN, IMAGE_ACTIVITY, IMAGE_AVATAR, LOGGER
+from .coordinator import SkybellDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-
-# Deprecated in Home Assistant 2022.3
+# Deprecated in Home Assistant 2022.4
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]): vol.All(
@@ -48,39 +42,29 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Skybell switch."""
-    skybell = hass.data[DOMAIN][entry.entry_id]
-
-    cameras = []
-    for description in CAMERA_TYPES:
-        for device in skybell[DATA_DEVICES]:
-            cameras.append(
-                SkybellCamera(
-                    skybell[DATA_COORDINATOR],
-                    device,
-                    description,
-                    entry.entry_id,
-                )
-            )
-
-    async_add_entities(cameras)
+    async_add_entities(
+        SkybellCamera(coordinator, description)
+        for description in CAMERA_TYPES
+        for coordinator in hass.data[DOMAIN][entry.entry_id].values()
+    )
 
 
 class SkybellCamera(SkybellEntity, Camera):
     """A camera implementation for Skybell devices."""
 
+    coordinator: SkybellDataUpdateCoordinator
+
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        device: SkybellDevice,
+        coordinator: SkybellDataUpdateCoordinator,
         description: EntityDescription,
-        server_unique_id: str,
     ) -> None:
         """Initialize a camera for a Skybell device."""
-        super().__init__(coordinator, device, server_unique_id)
+        super().__init__(coordinator)
         Camera.__init__(self)
         self.entity_description = description
-        self._attr_name = f"{device.name} {description.name}"
-        self._attr_unique_id = f"{server_unique_id}/{description.key}"
+        self._attr_name = f"{coordinator.name} {description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
         self._url = ""
         self._response: ClientResponse | None = None
@@ -89,8 +73,8 @@ class SkybellCamera(SkybellEntity, Camera):
     def image_url(self) -> str:
         """Get the camera image url based on type."""
         if self.entity_description.key == IMAGE_ACTIVITY:
-            return self._device.activity_image
-        return self._device.image
+            return self.coordinator.device.activity_image
+        return self.coordinator.device.image
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -104,7 +88,7 @@ class SkybellCamera(SkybellEntity, Camera):
                 self._response = await websession.get(self._url, timeout=10)
 
             except (ClientConnectorError, ClientError) as err:
-                _LOGGER.warning("Failed to get camera image: %s", err)
+                LOGGER.warning("Failed to get camera image: %s", err)
                 return None
 
         return await self._response.read()

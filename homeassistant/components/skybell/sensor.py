@@ -1,9 +1,6 @@
 """Sensor support for Skybell Doorbells."""
 from __future__ import annotations
 
-from datetime import timedelta
-
-from aioskybell.device import SkybellDevice
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -16,12 +13,9 @@ from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DOMAIN, SkybellEntity
-from .const import DATA_COORDINATOR, DATA_DEVICES
-
-SCAN_INTERVAL = timedelta(seconds=30)
+from .coordinator import SkybellDataUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -31,7 +25,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-# Deprecated in Home Assistant 2022.3
+# Deprecated in Home Assistant 2022.4
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
@@ -46,34 +40,30 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Skybell sensor."""
-    skybell = hass.data[DOMAIN][entry.entry_id]
-
-    sensors = [
-        SkybellSensor(skybell[DATA_COORDINATOR], device, description, entry.entry_id)
-        for device in skybell[DATA_DEVICES]
+    async_add_entities(
+        SkybellSensor(coordinator, description)
+        for coordinator in hass.data[DOMAIN][entry.entry_id].values()
         for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(sensors)
+    )
 
 
 class SkybellSensor(SkybellEntity, SensorEntity):
     """A sensor implementation for Skybell devices."""
 
+    coordinator: SkybellDataUpdateCoordinator
+
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        device: SkybellDevice,
+        coordinator: SkybellDataUpdateCoordinator,
         description: SensorEntityDescription,
-        server_unique_id: str,
     ) -> None:
         """Initialize a sensor for a Skybell device."""
-        super().__init__(coordinator, device, server_unique_id)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{device.name} {description.name}"
-        self._attr_unique_id = f"{server_unique_id}/{description.key}"
+        self._attr_name = f"{coordinator.name} {description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
     def native_value(self) -> int:
         """Return the state of the sensor."""
-        return self._device.outdoor_chime_level
+        return self.coordinator.device.outdoor_chime_level

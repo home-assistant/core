@@ -13,7 +13,7 @@ CONF_CONFIG_FLOW = {
 }
 
 
-def _patch_skybell():
+def _patch_skybell() -> None:
     mocked_skybell = AsyncMock()
     mocked_skybell.user_id = "123456789012345678901234"
     return patch(

@@ -1,27 +1,20 @@
 """Support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
-import logging
-
 from aioskybell import Skybell
-from aioskybell.device import SkybellDevice
 from aioskybell.exceptions import SkybellAuthenticationException, SkybellException
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.camera import DOMAIN as CAMERA
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_EMAIL,
     CONF_PASSWORD,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -29,22 +22,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
-from .const import (
-    ATTRIBUTION,
-    DATA_COORDINATOR,
-    DATA_DEVICES,
-    DEFAULT_CACHEDB,
-    DEFAULT_NAME,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-)
+from .const import ATTRIBUTION, DEFAULT_CACHEDB, DEFAULT_NAME, DOMAIN
+from .coordinator import SkybellDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        # Deprecated in Home Assistant 2022.3
+        # Deprecated in Home Assistant 2022.4
         cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
@@ -58,7 +43,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [BINARY_SENSOR, CAMERA, LIGHT, SENSOR, SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -98,33 +89,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         devices = await api.async_initialize()
-    except SkybellAuthenticationException as ex:
-        raise ConfigEntryAuthFailed(
-            f"Authentication Error: please check credentials: {ex}"
-        ) from ex
+    except SkybellAuthenticationException:
+        return False
     except SkybellException as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 
-    async def async_update_data() -> None:
-        """Fetch data from API endpoint."""
-        try:
-            [await device.async_update() for device in devices]
-        except SkybellException as err:
-            raise UpdateFailed(f"Failed to communicate with device: {err}") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        logging.getLogger(__name__),
-        name=DEFAULT_NAME,
-        update_method=async_update_data,
-        update_interval=MIN_TIME_BETWEEN_UPDATES,
-    )
-    await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: coordinator,
-        DATA_DEVICES: devices,
-    }
-
+    device_coordinators: dict[str, DataUpdateCoordinator] = {}
+    for device in devices:
+        coordinator = SkybellDataUpdateCoordinator(
+            hass,
+            device,
+        )
+        await coordinator.async_config_entry_first_refresh()
+        device_coordinators[device.device_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = device_coordinators
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -132,8 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
@@ -141,22 +118,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SkybellEntity(CoordinatorEntity):
     """An HA implementation for Skybell devices."""
 
+    coordinator: SkybellDataUpdateCoordinator
+
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        device: SkybellDevice,
-        server_unique_id: str,
+        coordinator: SkybellDataUpdateCoordinator,
     ) -> None:
         """Initialize a SkyBell entity."""
         super().__init__(coordinator)
-        self._device = device
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
-            identifiers={(DOMAIN, f"{server_unique_id}-{device.serial_no}")},
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.device.mac)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,
-            model=device.type,
-            name=device.name,
-            sw_version=device.firmware_ver,
+            model=coordinator.device.type,
+            name=coordinator.device.name,
+            sw_version=coordinator.device.firmware_ver,
         )
 
     @property
@@ -164,17 +140,17 @@ class SkybellEntity(CoordinatorEntity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            "device_id": self._device.device_id,
-            "status": self._device.status,
-            "location": self._device.location,
-            "wifi_ssid": self._device.wifi_ssid,
-            "wifi_status": self._device.wifi_status,
-            "last_check_in": self._device.last_check_in,
-            "motion_threshold": self._device.motion_threshold,
-            "video_profile": self._device.video_profile,
+            "device_id": self.coordinator.device.device_id,
+            "status": self.coordinator.device.status,
+            "location": self.coordinator.device.location,
+            "wifi_ssid": self.coordinator.device.wifi_ssid,
+            "wifi_status": self.coordinator.device.wifi_status,
+            "last_check_in": self.coordinator.device.last_check_in,
+            "motion_threshold": self.coordinator.device.motion_threshold,
+            "video_profile": self.coordinator.device.video_profile,
         }
 
     @property
     def available(self) -> bool:
         """Return True if device is available."""
-        return super().available and self._device.wifi_status != "offline"
+        return super().available and self.coordinator.device.wifi_status != "offline"

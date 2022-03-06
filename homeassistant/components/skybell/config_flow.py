@@ -1,8 +1,6 @@
 """Config flow for Skybell integration."""
 from __future__ import annotations
 
-from typing import Any
-
 from aioskybell import Skybell, exceptions
 import voluptuous as vol
 
@@ -12,7 +10,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_CACHEDB, DOMAIN
+from .const import DOMAIN
 
 
 class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -38,11 +36,7 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._async_abort_entries_match({CONF_EMAIL: email})
             user_id, error = await self._async_validate_input(email, password)
             if error is None:
-                entry = await self.async_set_unique_id(user_id)
-                if entry:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                await self.async_set_unique_id(user_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=email,
@@ -67,7 +61,6 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         skybell = Skybell(
             email,
             password,
-            cache_path=self.hass.config.path(DEFAULT_CACHEDB),
             disable_cache=True,
             session=async_get_clientsession(self.hass),
         )
@@ -80,7 +73,3 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             return None, "unknown"
         return devices[0].user_id, None
-
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
-        """Handle a reauthorization flow request."""
-        return await self.async_step_user()
