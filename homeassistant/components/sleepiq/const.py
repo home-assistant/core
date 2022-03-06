@@ -3,6 +3,7 @@
 DATA_SLEEPIQ = "data_sleepiq"
 DOMAIN = "sleepiq"
 
+ACTUATOR = "actuator"
 BED = "bed"
 FIRMNESS = "firmness"
 ICON_EMPTY = "mdi:bed-empty"
@@ -11,6 +12,7 @@ IS_IN_BED = "is_in_bed"
 PRESSURE = "pressure"
 SLEEP_NUMBER = "sleep_number"
 SENSOR_TYPES = {
+    ACTUATOR: "Position",
     FIRMNESS: "Firmness",
     PRESSURE: "Pressure",
     IS_IN_BED: "Is In Bed",

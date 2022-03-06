@@ -19,6 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import (
+    SleepIQActuatorUpdateCoordinator,
     SleepIQData,
     SleepIQDataUpdateCoordinator,
     SleepIQPauseUpdateCoordinator,
@@ -89,6 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = SleepIQDataUpdateCoordinator(hass, gateway, email)
     pause_coordinator = SleepIQPauseUpdateCoordinator(hass, gateway, email)
+    actuator_coordinator = SleepIQActuatorUpdateCoordinator(hass, gateway, email)
 
     # Call the SleepIQ API to refresh data
     await coordinator.async_config_entry_first_refresh()
@@ -97,6 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SleepIQData(
         data_coordinator=coordinator,
         pause_coordinator=pause_coordinator,
+        actuator_coordinator=actuator_coordinator,
         client=gateway,
     )
 
