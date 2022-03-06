@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import logging
 import os.path
-from typing import Any
+from typing import Any, cast
 
 import nextcord
+from nextcord.abc import Messageable
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -108,7 +109,9 @@ class DiscordNotificationService(BaseNotificationService):
                 # Must create new instances of File for each channel.
                 files = [nextcord.File(image) for image in images] if images else []
                 try:
-                    channel = await discord_bot.fetch_channel(channelid)
+                    channel = cast(
+                        Messageable, await discord_bot.fetch_channel(channelid)
+                    )
                 except nextcord.NotFound:
                     try:
                         channel = await discord_bot.fetch_user(channelid)
