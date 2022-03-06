@@ -33,9 +33,7 @@ def _patch_setup() -> None:
 
 async def test_flow_user(hass: HomeAssistant) -> None:
     """Test that the user step works."""
-    with patch(
-        "homeassistant.components.skybell.config_flow.aioskybell.UTILS"
-    ), _patch_skybell():
+    with _patch_skybell(), _patch_setup_entry(), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -84,11 +82,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials throws an error."""
-    with patch(
-        "homeassistant.components.skybell.Skybell.async_login"
-    ) as skybellmock, patch(
-        "homeassistant.components.skybell.config_flow.aioskybell.UTILS"
-    ):
+    with patch("homeassistant.components.skybell.Skybell.async_login") as skybellmock:
         skybellmock.side_effect = exceptions.SkybellAuthenticationException(hass)
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW

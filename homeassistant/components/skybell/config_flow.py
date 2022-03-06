@@ -1,7 +1,7 @@
 """Config flow for Skybell integration."""
 from __future__ import annotations
 
-import aioskybell
+from aioskybell import Skybell, exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -58,7 +58,7 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_input(self, email: str, password: str) -> tuple:
         """Validate login credentials."""
-        skybell = aioskybell.Skybell(
+        skybell = Skybell(
             username=email,
             password=password,
             disable_cache=True,
@@ -66,9 +66,9 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             devices = await skybell.async_get_devices()
-        except aioskybell.exceptions.SkybellAuthenticationException:
+        except exceptions.SkybellAuthenticationException:
             return None, "invalid_auth"
-        except aioskybell.exceptions.SkybellException:
+        except exceptions.SkybellException:
             return None, "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             return None, "unknown"
