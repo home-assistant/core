@@ -5,7 +5,8 @@ from unittest.mock import patch
 import pytest
 
 import homeassistant.components.button as button
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 
@@ -40,7 +41,7 @@ async def test_broadcast_config_ip_and_port(hass, mock_send_magic_packet):
 
         await hass.services.async_call(
             button.DOMAIN,
-            SERVICE_TURN_ON,
+            SERVICE_PRESS,
             {ATTR_ENTITY_ID: "button.wake_on_lan"},
             blocking=True,
         )
@@ -73,7 +74,7 @@ async def test_broadcast_config_ip(hass, mock_send_magic_packet):
 
         await hass.services.async_call(
             button.DOMAIN,
-            SERVICE_TURN_ON,
+            SERVICE_PRESS,
             {ATTR_ENTITY_ID: "button.wake_on_lan"},
             blocking=True,
         )
@@ -98,7 +99,7 @@ async def test_broadcast_config_port(hass, mock_send_magic_packet):
 
         await hass.services.async_call(
             button.DOMAIN,
-            SERVICE_TURN_ON,
+            SERVICE_PRESS,
             {ATTR_ENTITY_ID: "button.wake_on_lan"},
             blocking=True,
         )
