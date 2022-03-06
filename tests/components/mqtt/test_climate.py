@@ -335,15 +335,15 @@ async def test_set_fan_mode(hass, mqtt_mock):
 
 # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
 @pytest.mark.parametrize(
-    "send_if_off,assert_message_sent",
+    "send_if_off,assert_async_publish",
     [
-        (None, True),
-        (True, True),
-        (False, False),
+        (None, [call("fan-mode-topic", "low", 0, False)]),
+        (True, [call("fan-mode-topic", "low", 0, False)]),
+        (False, []),
     ],
 )
 async def test_set_fan_mode_send_if_off(
-    hass, mqtt_mock, send_if_off, assert_message_sent
+    hass, mqtt_mock, send_if_off, assert_async_publish
 ):
     """Test setting of fan mode if the hvac is off."""
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -356,35 +356,19 @@ async def test_set_fan_mode_send_if_off(
     # Turn on HVAC
     await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
     mqtt_mock.async_publish.reset_mock()
-    # Updates for fan_mode should be send
-    await common.async_set_fan_mode(hass, "high", ENTITY_CLIMATE)
-    mqtt_mock.async_publish.assert_called_once_with("fan-mode-topic", "high", 0, False)
-    mqtt_mock.async_publish.reset_mock()
+    # Updates for fan_mode should be sent when the device is turned on
     await common.async_set_fan_mode(hass, "high", ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with("fan-mode-topic", "high", 0, False)
 
     # Turn off HVAC
     await common.async_set_hvac_mode(hass, "off", ENTITY_CLIMATE)
-    mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "off"
 
-    # Updates for fan_mode should be if SEND_IF_OFF is not set or is True
-    await common.async_set_fan_mode(hass, "low", ENTITY_CLIMATE)
-    if assert_message_sent:
-        mqtt_mock.async_publish.assert_called_once_with(
-            "fan-mode-topic", "low", 0, False
-        )
-    else:
-        assert mqtt_mock.async_publish.call_count == 0
+    # Updates for fan_mode should be sent if SEND_IF_OFF is not set or is True
     mqtt_mock.async_publish.reset_mock()
     await common.async_set_fan_mode(hass, "low", ENTITY_CLIMATE)
-    if assert_message_sent:
-        mqtt_mock.async_publish.assert_called_once_with(
-            "fan-mode-topic", "low", 0, False
-        )
-    else:
-        assert mqtt_mock.async_publish.call_count == 0
+    mqtt_mock.async_publish.assert_has_calls(assert_async_publish)
 
 
 async def test_set_swing_mode_bad_attr(hass, mqtt_mock, caplog):
@@ -439,6 +423,44 @@ async def test_set_swing(hass, mqtt_mock):
     assert state.attributes.get("swing_mode") == "on"
 
 
+# CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
+@pytest.mark.parametrize(
+    "send_if_off,assert_async_publish",
+    [
+        (None, [call("swing-mode-topic", "on", 0, False)]),
+        (True, [call("swing-mode-topic", "on", 0, False)]),
+        (False, []),
+    ],
+)
+async def test_set_swing_mode_send_if_off(
+    hass, mqtt_mock, send_if_off, assert_async_publish
+):
+    """Test setting of swing mode if the hvac is off."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    if send_if_off is not None:
+        config[CLIMATE_DOMAIN]["send_if_off"] = send_if_off
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_CLIMATE) is not None
+
+    # Turn on HVAC
+    await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.reset_mock()
+    # Updates for fan_mode should be sent when the device is turned on
+    await common.async_set_swing_mode(hass, "off", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with("swing-mode-topic", "off", 0, False)
+
+    # Turn off HVAC
+    await common.async_set_hvac_mode(hass, "off", ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "off"
+
+    # Updates for swing_mode should be sent if SEND_IF_OFF is not set or is True
+    mqtt_mock.async_publish.reset_mock()
+    await common.async_set_swing_mode(hass, "on", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_has_calls(assert_async_publish)
+
+
 async def test_set_target_temperature(hass, mqtt_mock):
     """Test setting the target temperature."""
     assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
@@ -473,6 +495,46 @@ async def test_set_target_temperature(hass, mqtt_mock):
         ]
     )
     mqtt_mock.async_publish.reset_mock()
+
+
+# CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
+@pytest.mark.parametrize(
+    "send_if_off,assert_async_publish",
+    [
+        (None, [call("temperature-topic", "21.0", 0, False)]),
+        (True, [call("temperature-topic", "21.0", 0, False)]),
+        (False, []),
+    ],
+)
+async def test_set_target_temperature_send_if_off(
+    hass, mqtt_mock, send_if_off, assert_async_publish
+):
+    """Test setting of target temperature if the hvac is off."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    if send_if_off is not None:
+        config[CLIMATE_DOMAIN]["send_if_off"] = send_if_off
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_CLIMATE) is not None
+
+    # Turn on HVAC
+    await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.reset_mock()
+    # Updates for fan_mode should be sent when the device is turned on
+    await common.async_set_temperature(hass, 16.0, ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "temperature-topic", "16.0", 0, False
+    )
+
+    # Turn off HVAC
+    await common.async_set_hvac_mode(hass, "off", ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "off"
+
+    # Updates for target temperature sent should be if SEND_IF_OFF is not set or is True
+    mqtt_mock.async_publish.reset_mock()
+    await common.async_set_temperature(hass, 21.0, ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_has_calls(assert_async_publish)
 
 
 async def test_set_target_temperature_pessimistic(hass, mqtt_mock):
