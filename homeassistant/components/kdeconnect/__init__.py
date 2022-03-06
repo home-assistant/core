@@ -75,6 +75,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class KdeConnectEntity(RestoreEntity, ABC):
     """A base class for all KDE Connect Entities."""
 
+    device: KdeConnectDevice
+
     def __init__(self, device: KdeConnectDevice) -> None:
         """Initialize the KDE Connect Entity."""
         self.device = device
