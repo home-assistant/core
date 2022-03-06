@@ -31,5 +31,5 @@ async def async_get_config_entry_diagnostics(
     ]
 
     assert coordinator.yale
-    get_all_data = coordinator.yale.get_all()
+    get_all_data = await hass.async_add_executor_job(coordinator.yale.get_all)
     return async_redact_data(get_all_data, TO_REDACT)
