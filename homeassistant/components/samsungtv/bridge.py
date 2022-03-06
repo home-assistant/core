@@ -413,18 +413,13 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def _async_send_commands(self, commands: list[SamsungTVCommand]) -> None:
         """Send the commands using websocket protocol."""
-        try:  # pylint: disable=[too-many-nested-blocks]
+        try:
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        first_key = True
                         for command in commands:
-                            if first_key:
-                                first_key = False
-                            else:
-                                await asyncio.sleep(KEY_PRESS_TIMEOUT)
                             await remote.send_command(command)
                     break
                 except (
