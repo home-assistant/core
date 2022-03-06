@@ -1,6 +1,6 @@
 """Common stuff for AVM Fritz!Box tests."""
 import logging
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from fritzconnection.core.processor import Service
 from fritzconnection.lib.fritzhosts import FritzHosts
@@ -25,7 +25,7 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
     """FritzConnection mocking."""
 
     def __init__(self, services):
-        """Inint Mocking class."""
+        """Init Mocking class."""
         self.modelname = MOCK_MODELNAME
         self.call_action = self._call_action
         self._services = services
@@ -35,6 +35,13 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
         }
         LOGGER.debug("-" * 80)
         LOGGER.debug("FritzConnectionMock - services: %s", self.services)
+
+    def call_action_side_effect(self, side_effect=None) -> None:
+        """Set or unset a side_effect for call_action."""
+        if side_effect is not None:
+            self.call_action = MagicMock(side_effect=side_effect)
+        else:
+            self.call_action = self._call_action
 
     def _call_action(self, service: str, action: str, **kwargs):
         LOGGER.debug(
