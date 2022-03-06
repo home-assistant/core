@@ -95,15 +95,14 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
         super().__init__(coordinator)
         self._attr_name = coordinator.entry.data[CONF_NAME]
         self._attr_unique_id = coordinator.entry.entry_id
+        panel_info = coordinator.data["panel_info"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.entry.data[CONF_USERNAME])},
             manufacturer=MANUFACTURER,
             model=MODEL,
             name=self._attr_name,
-            connections={
-                (CONNECTION_NETWORK_MAC, coordinator.data["panel_info"]["mac"])
-            },
-            sw_version=coordinator.data["panel_info"]["version"],
+            connections={(CONNECTION_NETWORK_MAC, panel_info["mac"])},
+            sw_version=panel_info["version"],
         )
 
     async def async_alarm_disarm(self, code=None) -> None:

@@ -54,14 +54,13 @@ async def async_setup_entry(
     coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         COORDINATOR
     ]
+    sensors: list[YaleDoorSensor | YaleProblemSensor] = []
+    for data in coordinator.data["door_windows"]:
+        sensors.append(YaleDoorSensor(coordinator, data))
+    for description in SENSOR_TYPES:
+        sensors.append(YaleProblemSensor(coordinator, description))
 
-    async_add_entities(
-        YaleDoorSensor(coordinator, data) for data in coordinator.data["door_windows"]
-    )
-
-    async_add_entities(
-        YaleProblemSensor(coordinator, description) for description in SENSOR_TYPES
-    )
+    async_add_entities(sensors)
 
 
 class YaleDoorSensor(YaleEntity, BinarySensorEntity):
@@ -93,15 +92,14 @@ class YaleProblemSensor(CoordinatorEntity, BinarySensorEntity):
             f"{coordinator.entry.data[CONF_NAME]} {entity_description.name}"
         )
         self._attr_unique_id = f"{coordinator.entry.entry_id}-{entity_description.key}"
+        panel_info = coordinator.data["panel_info"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.entry.data[CONF_USERNAME])},
             manufacturer=MANUFACTURER,
             model=MODEL,
             name=coordinator.entry.data[CONF_NAME],
-            connections={
-                (CONNECTION_NETWORK_MAC, coordinator.data["panel_info"]["mac"])
-            },
-            sw_version=coordinator.data["panel_info"]["version"],
+            connections={(CONNECTION_NETWORK_MAC, panel_info["mac"])},
+            sw_version=panel_info["version"],
         )
 
     @property
