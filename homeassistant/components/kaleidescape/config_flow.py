@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 
-from . import DeviceInfo, UnsupportedError, validate_host
+from . import KaleidescapeDeviceInfo, UnsupportedError, validate_host
 from .const import DEFAULT_HOST, DOMAIN, NAME as KALEIDESCAPE_NAME
 
 if TYPE_CHECKING:
@@ -22,26 +22,33 @@ ERROR_UNKNOWN = "unknown"
 ERROR_UNSUPPORTED = "unsupported"
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class KaleidescapeConfigFlow(config_entries.ConfigFlow):
+class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Kaleidescape integration."""
 
     VERSION = 1
 
-    discovered_device: DeviceInfo
+    discovered_device: KaleidescapeDeviceInfo
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle user initiated device additions."""
         errors = {}
         host = DEFAULT_HOST
 
         if user_input is not None:
-            try:
-                info = await validate_host(user_input[CONF_HOST].strip())
-                host = info.host
+            host = user_input[CONF_HOST].strip()
 
+            try:
+                info = await validate_host(host)
                 if info.server_only:
                     raise UnsupportedError
+            except ConnectionError:
+                errors["base"] = ERROR_CANNOT_CONNECT
+            except UnsupportedError:
+                errors["base"] = ERROR_UNSUPPORTED
+            else:
+                host = info.host
 
                 await self.async_set_unique_id(info.serial, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
@@ -50,10 +57,6 @@ class KaleidescapeConfigFlow(config_entries.ConfigFlow):
                     title=f"{KALEIDESCAPE_NAME} ({info.name})",
                     data={CONF_HOST: host},
                 )
-            except (ConnectionError, ConnectionRefusedError):
-                errors["base"] = ERROR_CANNOT_CONNECT
-            except UnsupportedError:
-                errors["base"] = ERROR_UNSUPPORTED
 
         return self.async_show_form(
             step_id="user",
@@ -73,7 +76,7 @@ class KaleidescapeConfigFlow(config_entries.ConfigFlow):
             self.discovered_device = await validate_host(host)
             if self.discovered_device.server_only:
                 raise UnsupportedError
-        except (ConnectionError, ConnectionRefusedError):
+        except ConnectionError:
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
         except UnsupportedError:
             return self.async_abort(reason=ERROR_UNSUPPORTED)
