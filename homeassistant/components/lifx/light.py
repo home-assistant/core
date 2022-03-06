@@ -401,12 +401,12 @@ class LIFXManager:
             # can be ignored.
             version_resp = await ack(bulb.get_version)
             if version_resp and bulb.product in SWITCH_PRODUCT_IDS:
-                    _LOGGER.warning(
-                        "(Switch) action=skip_discovery, reason=unsupported, serial=%s, ip_addr=%s, type='LIFX Switch'",
-                        str(bulb.mac_addr).replace(":", ""),
-                        bulb.ip_addr,
-                    )
-                    return False
+                _LOGGER.warning(
+                    "(Switch) action=skip_discovery, reason=unsupported, serial=%s, ip_addr=%s, type='LIFX Switch'",
+                    str(bulb.mac_addr).replace(":", ""),
+                    bulb.ip_addr,
+                )
+                return False
 
             color_resp = await ack(bulb.get_color)
 
