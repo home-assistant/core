@@ -11,7 +11,6 @@ from homeassistant.components.button import PLATFORM_SCHEMA, ButtonEntity
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
     CONF_BROADCAST_PORT,
-    CONF_HOST,
     CONF_MAC,
     CONF_NAME,
 )
@@ -30,7 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
         vol.Optional(CONF_BROADCAST_PORT): cv.port,
-        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -45,7 +43,6 @@ def setup_platform(
     """Set up a wake on lan button."""
     broadcast_address = config.get(CONF_BROADCAST_ADDRESS)
     broadcast_port = config.get(CONF_BROADCAST_PORT)
-    host = config.get(CONF_HOST)
     mac_address = config[CONF_MAC]
     name = config[CONF_NAME]
 
@@ -54,13 +51,11 @@ def setup_platform(
             WolButton(
                 hass,
                 name,
-                host,
                 mac_address,
                 broadcast_address,
                 broadcast_port,
             )
         ],
-        host is not None,
     )
 
 
@@ -71,7 +66,6 @@ class WolButton(ButtonEntity):
         self,
         hass,
         name,
-        host,
         mac_address,
         broadcast_address,
         broadcast_port,
@@ -79,11 +73,11 @@ class WolButton(ButtonEntity):
         """Initialize the WOL button."""
         self._hass = hass
         self._name = name
-        self._host = host
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
         self._broadcast_port = broadcast_port
         self._unique_id = dr.format_mac(mac_address)
+        self._attr_icon = "mdi:power"
 
     @property
     def name(self):
