@@ -28,7 +28,7 @@ class SensiboBaseEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._device_id = device_id
         self._client = coordinator.client
-        device = coordinator.data[device_id]
+        device = coordinator.data.parsed[device_id]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device["id"])},
             name=device["name"],
