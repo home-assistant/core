@@ -15,6 +15,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
+MAX_POSSIBLE_STEP = 1000
+
 
 class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
     """A Sensibo Data Update Coordinator."""
@@ -74,7 +76,11 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 .get("values", [0, 1])
             )
             if temperatures_list:
-                temperature_step = temperatures_list[1] - temperatures_list[0]
+                diff = MAX_POSSIBLE_STEP
+                for i in range(len(temperatures_list) - 1):
+                    if temperatures_list[i + 1] - temperatures_list[i] < diff:
+                        diff = temperatures_list[i + 1] - temperatures_list[i]
+                temperature_step = diff
 
             active_features = list(ac_states)
             full_features = set()
