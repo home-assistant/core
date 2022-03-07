@@ -683,7 +683,7 @@ async def test_turn_off_ws_os_error(
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    assert "Could not establish connection" in caplog.text
+    assert "Error closing connection" in caplog.text
 
 
 async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:
