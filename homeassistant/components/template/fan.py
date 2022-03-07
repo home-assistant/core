@@ -277,8 +277,6 @@ class TemplateFan(TemplateEntity, FanEntity):
         """Turn off the fan."""
         await self._off_script.async_run(context=self._context)
         self._state = STATE_OFF
-        self._percentage = 0
-        self._preset_mode = None
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage speed of the fan."""
