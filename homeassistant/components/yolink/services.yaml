@@ -1,0 +1,37 @@
+siren_turn_on:
+  name: Siren Turn On
+  description: Siren Turn On
+  # If the service accepts entity IDs, target allows the user to specify entities by entity, device, or area.
+  # If `target` is specified, `entity_id` should not be defined in the `fields` map.
+  # By default it shows only targets matching entities from the same domain as the service,
+  # but if further customization is required,
+  # target supports the entity, device, and area selectors (https://www.home-assistant.io/docs/blueprint/selectors/).
+  # Entity selector parameters will automatically be applied to device and area,
+  # and device selector parameters will automatically be applied to area.
+  # target:
+  # fields:
+  #   speed:
+  #     name: Speed
+  #     description: Speed setting
+  #     required: true
+  #     advanced: true
+  #     example: "low"
+  #     default: "high"
+  #     selector:
+  #       select:
+  #         options:
+  #           - "off"
+  #           - "low"
+  #           - "medium"
+  #           - "high"
+siren_turn_off:
+  name: Siren Turn Off
+  description: Siren Turn Off
+
+outlet_turn_on:
+  name: Outlet Turn On
+  description: Outlet Turn On
+
+outlet_turn_off:
+  name: Outlet Turn Off
+  description: Outlet Turn Off

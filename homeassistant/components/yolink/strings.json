@@ -20,15 +20,25 @@
   "device_automation": {
     "trigger_type": {
       "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "turned_off": "{entity_name} turned off",
+      "open": "{entity_name} open",
+      "closed": "{entity_name} closed",
+      "water_leak": "{entity_name} water_detected",
+      "motion_detected": "{entity_name} motion_detected"
     },
     "action_type": {
       "turn_on": "Turn on {entity_name}",
-      "turn_off": "Turn off {entity_name}"
+      "turn_off": "Turn off {entity_name}",
+      "open": "open {entity_name}",
+      "close": "close {entity_name}"
     },
     "condition_type": {
       "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off"
+      "is_off": "{entity_name} is off",
+      "is_open": "{entity_name} is open",
+      "is_closed": "{entity_name} is closed",
+      "water_leak": "{entity_name} water_leak",
+      "motion_detected": "{entity_name} motion_detected"
     }
   }
 }

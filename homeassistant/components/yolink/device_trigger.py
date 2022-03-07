@@ -41,33 +41,74 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for YoLink devices."""
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(device_id)
+    _triggers: list[dict] = []
+    if device.model in ["Siren"] or device.manufacturer != "YoLink":
+        return _triggers
+
+    trigger_basic = {
+        CONF_PLATFORM: "device",
+        CONF_DOMAIN: DOMAIN,
+        CONF_DEVICE_ID: device_id,
+    }
     registry = await entity_registry.async_get_registry(hass)
-    triggers = []
 
-    # TODO Read this comment and remove it.
-    # This example shows how to iterate over the entities of this device
-    # that match this integration. If your triggers instead rely on
-    # events fired by devices without entities, do something like:
-    # zha_device = await _async_get_zha_device(hass, device_id)
-    # return zha_device.device_triggers
-
-    # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
-        if entry.domain != "DOMAIN":
+        if entry.platform != DOMAIN:
             continue
-
-        # Add triggers for each entity that belongs to this integration
-        # TODO add your own triggers.
-        base_trigger = {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
-        }
-        triggers.append({**base_trigger, CONF_TYPE: "turned_on"})
-        triggers.append({**base_trigger, CONF_TYPE: "turned_off"})
-
-    return triggers
+        if device.model in ["DoorSensor"]:
+            if entry.device_class == "door":
+                _triggers.append(
+                    {
+                        **trigger_basic,
+                        CONF_TYPE: "open",
+                        CONF_ENTITY_ID: entry.entity_id,
+                    }
+                )
+                _triggers.append(
+                    {
+                        **trigger_basic,
+                        CONF_TYPE: "closed",
+                        CONF_ENTITY_ID: entry.entity_id,
+                    }
+                )
+        elif device.model == "LeakSensor":
+            if entry.device_class == "moisture":
+                _triggers.append(
+                    {
+                        **trigger_basic,
+                        CONF_TYPE: "water_leak",
+                        CONF_ENTITY_ID: entry.entity_id,
+                    }
+                )
+        elif device.model == "MotionSensor":
+            if entry.device_class == "motion":
+                _triggers.append(
+                    {
+                        **trigger_basic,
+                        CONF_TYPE: "motion_detected",
+                        CONF_ENTITY_ID: entry.entity_id,
+                    }
+                )
+        elif device.model == "Outlet":
+            _triggers.append(
+                {
+                    **trigger_basic,
+                    CONF_TYPE: "turned_on",
+                    CONF_ENTITY_ID: entry.entity_id,
+                }
+            )
+            _triggers.append(
+                {
+                    **trigger_basic,
+                    CONF_TYPE: "turned_off",
+                    CONF_ENTITY_ID: entry.entity_id,
+                }
+            )
+            break
+    return _triggers
 
 
 async def async_attach_trigger(
@@ -79,7 +120,6 @@ async def async_attach_trigger(
     """Attach a trigger."""
     # TODO Implement your own logic to attach triggers.
     # Use the existing state or event triggers from the automation integration.
-
     if config[CONF_TYPE] == "turned_on":
         to_state = STATE_ON
     elif config[CONF_TYPE] == "turned_off":

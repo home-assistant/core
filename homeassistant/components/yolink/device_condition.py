@@ -21,7 +21,14 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import DOMAIN
 
 # TODO specify your supported condition types.
-CONDITION_TYPES = {"is_on", "is_off"}
+CONDITION_TYPES = {
+    "is_on",
+    "is_off",
+    "is_open",
+    "is_closed",
+    "water_leak",
+    "motion_detected",
+}
 
 CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
@@ -35,24 +42,71 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for YoLink devices."""
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(device_id)
     registry = await entity_registry.async_get_registry(hass)
     conditions = []
 
+    base_condition = {
+        CONF_CONDITION: "device",
+        CONF_DEVICE_ID: device_id,
+        CONF_DOMAIN: DOMAIN,
+    }
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
-        if entry.domain != DOMAIN:
+        if entry.platform != DOMAIN:
             continue
 
-        # Add conditions for each entity that belongs to this integration
-        # TODO add your own conditions.
-        base_condition = {
-            CONF_CONDITION: "device",
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
-        }
-
-        conditions += [{**base_condition, CONF_TYPE: cond} for cond in CONDITION_TYPES]
+        if device.model in ["DoorSensor"]:
+            if entry.device_class == "door":
+                conditions.append(
+                    {
+                        **base_condition,
+                        CONF_TYPE: "is_open",
+                        CONF_ENTITY_ID: entry.entity_id,
+                    }
+                )
+                conditions.append(
+                    {
+                        **base_condition,
+                        CONF_TYPE: "is_closed",
+                        CONF_ENTITY_ID: entry.entity_id,
+                    }
+                )
+        elif device.model in ["Outlet", "Siren"]:
+            conditions.append(
+                {
+                    **base_condition,
+                    CONF_TYPE: "is_on",
+                    CONF_ENTITY_ID: entry.entity_id,
+                }
+            )
+            conditions.append(
+                {
+                    **base_condition,
+                    CONF_TYPE: "is_off",
+                    CONF_ENTITY_ID: entry.entity_id,
+                }
+            )
+            break
+        elif device.model in ["MotionSensor"]:
+            if entry.device_class == "motion":
+                conditions.append(
+                    {
+                        **base_condition,
+                        CONF_TYPE: "motion_detected",
+                        CONF_ENTITY_ID: entry.entity_id,
+                    }
+                )
+        elif device.model in ["LeakSensor"]:
+            if entry.device_class == "moisture":
+                conditions.append(
+                    {
+                        **base_condition,
+                        CONF_TYPE: "water_leak",
+                        CONF_ENTITY_ID: entry.entity_id,
+                    }
+                )
 
     return conditions
 

@@ -1,5 +1,6 @@
 """Client of YoLink API."""
 
+import asyncio
 import logging
 from typing import Any, Dict, List
 import uuid
@@ -195,7 +196,7 @@ class YoLinkMQTTClient:
         # Enable logging
         self._mqttc.enable_logger()
         self._mqttc.on_connect = self._mqtt_on_connect
-        # self._mqttc.on_disconnect = self._mqtt_on_disconnect
+        self._mqttc.on_disconnect = self._mqtt_disconnect
         self._mqttc.on_message = self._mqtt_on_message
         # self._mqttc.on_publish = self._mqtt_on_callback
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
@@ -247,7 +248,6 @@ class YoLinkMQTTClient:
         # pylint: disable=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
-        _LOGGER.info(self._auth_mgr.accessToken)
         if result_code != mqtt.CONNACK_ACCEPTED:
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
@@ -268,6 +268,16 @@ class YoLinkMQTTClient:
         for sub in self._subscriptions:
             for topic in sub.subscribe():
                 self.hass.add_job(self._async_perform_subscription, topic, 0)
+
+    def _mqtt_disconnect(self, _mqttc, _userdata, _rc):
+        """Mqtt on disconnect."""
+        try:
+            access_token = asyncio.run_coroutine_threadsafe(
+                self._auth_mgr.check_and_refresh_token(), self.hass.loop
+            ).result()
+            _mqttc.username_pw_set(access_token, "")
+        except Exception as e:
+            print(e)
 
     async def _async_perform_subscription(self, topic: str, qos: int) -> None:
         """Perform a paho-mqtt subscription."""
