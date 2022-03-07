@@ -59,7 +59,7 @@ class Device:
         upnp_device = await async_create_upnp_device(hass, ssdp_location)
 
         # Create profile wrapper.
-        igd_device = IgdDevice(upnp_device, None)  # type: ignore[arg-type]
+        igd_device = IgdDevice(upnp_device, None)
         device = cls(hass, igd_device)
 
         # Register SSDP callback for updates.
