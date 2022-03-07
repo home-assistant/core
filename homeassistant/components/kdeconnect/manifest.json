@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/kdeconnect",
   "requirements": [
-    "pykdeconnect==0.1.0"
+    "pykdeconnect==0.1.1"
   ],
   "codeowners": ["@freundTech"],
   "iot_class": "local_push"

@@ -1014,7 +1014,7 @@ pyiss==1.0.1
 pyisy==3.0.1
 
 # homeassistant.components.kdeconnect
-pykdeconnect==0.1.0
+pykdeconnect==0.1.1
 
 # homeassistant.components.kira
 pykira==0.1.1

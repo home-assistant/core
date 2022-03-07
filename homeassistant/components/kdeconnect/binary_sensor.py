@@ -44,10 +44,14 @@ async def async_setup_entry(
     """Set up the KDE Connect binary sensors."""
     client = cast(KdeConnectClient, hass.data[DOMAIN][DATA_KEY_CLIENT])
     device = cast(KdeConnectDevice, hass.data[DOMAIN][DATA_KEY_DEVICES][entry.entry_id])
+    plugin_registry = client.plugin_registry
 
     entities: list[BinarySensorEntity] = [
-        KdeConnectPluginBinarySensor(device, client.plugin_registry, description)
+        KdeConnectPluginBinarySensor(device, plugin_registry, description)
         for description in BINARY_SENSOR_TYPES
+        if plugin_registry.is_plugin_compatible(
+            device, BINARY_SENSOR_PLUGINS[description.key]
+        )
     ]
     entities.append(KdeConnectConnectedSensor(device))
 
