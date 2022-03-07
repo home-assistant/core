@@ -214,14 +214,20 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
     @callback
+    def _async_get_existing_host_entry(self) -> config_entries.ConfigEntry | None:
+        """Get first matching entry with the same host."""
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_HOST] == self._host:
+                return entry
+        return None
+
+    @callback
     def _async_update_existing_host_entry(self) -> config_entries.ConfigEntry | None:
         """Check existing entries and update them.
 
         Returns the existing entry if it was updated.
         """
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] != self._host:
-                continue
+        if entry := self._async_get_existing_host_entry():
             entry_kw_args: dict = {}
             if self.unique_id and entry.unique_id is None:
                 entry_kw_args["unique_id"] = self.unique_id
