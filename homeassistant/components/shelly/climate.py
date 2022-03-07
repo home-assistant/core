@@ -317,4 +317,14 @@ class BlockSleepingClimate(
 
         if self.device_block and self.block:
             _LOGGER.debug("Entity %s attached to blocks", self.name)
+
+            assert self.block.channel
+
+            self._preset_modes = [
+                PRESET_NONE,
+                *self.wrapper.device.settings["thermostats"][int(self.block.channel)][
+                    "schedule_profile_names"
+                ],
+            ]
+
             self.async_write_ha_state()
