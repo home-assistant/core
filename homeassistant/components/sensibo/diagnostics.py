@@ -33,5 +33,4 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    get_all_data = await coordinator.client.async_get_devices()
-    return async_redact_data(get_all_data, TO_REDACT)
+    return async_redact_data(coordinator.data.raw, TO_REDACT)
