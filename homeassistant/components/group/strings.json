@@ -1,5 +1,67 @@
 {
   "title": "Group",
+  "config": {
+    "step": {
+      "init": {
+        "description": "Select group type",
+        "data": {
+          "group_type": "Group type"
+        }
+      },
+      "cover": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members",
+          "name": "Group name"
+        }
+      },
+      "cover_options": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members"
+        }
+      },
+      "fan": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members",
+          "name": "Group name"
+        }
+      },
+      "fan_options": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members"
+        }
+      },
+      "light": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members",
+          "name": "Group name"
+        }
+      },
+      "light_options": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members"
+        }
+      },
+      "media_player": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members",
+          "name": "Group name"
+        }
+      },
+      "media_player_options": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members"
+        }
+      }
+    }
+  },
   "state": {
     "_": {
       "off": "[%key:common::state::off%]",
