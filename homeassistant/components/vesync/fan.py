@@ -69,9 +69,7 @@ def _setup_entities(devices, async_add_entities):
         if DEV_TYPE_TO_HA.get(dev.device_type) == "fan":
             entities.append(VeSyncFanHA(dev))
         else:
-            _LOGGER.warning(
-                f"{dev.device_name} - Unknown device type - {dev.device_type}"
-            )
+            _LOGGER.warning("%s - Unknown device type - %s", dev.device_name, dev.device_type)
             continue
 
     async_add_entities(entities, update_before_add=True)
@@ -176,8 +174,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if preset_mode not in self.preset_modes:
             raise ValueError(
                 (
-                    "{preset_mode} is not one of the valid preset modes: "
-                    "{self.preset_modes}"
+                    f"{preset_mode} is not one of the valid preset modes: "
+                    f"{self.preset_modes}"
                 )
             )
 
