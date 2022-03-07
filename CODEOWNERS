@@ -1057,8 +1057,6 @@ tests/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli @fabaff
 homeassistant/components/upcloud/* @scop
 tests/components/upcloud/* @scop
-homeassistant/components/update/* @home-assistant/core
-tests/components/update/* @home-assistant/core
 homeassistant/components/updater/* @home-assistant/core
 tests/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23
