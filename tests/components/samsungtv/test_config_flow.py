@@ -343,6 +343,34 @@ async def test_ssdp(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote")
+async def test_ssdp_no_device_info(hass: HomeAssistant) -> None:
+    """Test starting a flow from SSDP discovery, with device_info failing."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value=None,
+    ):
+        # confirm to add the entry
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "confirm"
+
+        # entry was added
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input="whatever"
+        )
+        assert result["type"] == "create_entry"
+        assert result["title"] == "fake_model"
+        assert result["data"][CONF_METHOD] == "legacy"
+        assert result["data"][CONF_HOST] == "fake_host"
+        assert result["data"][CONF_NAME] == "fake_model"
+        assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
+        assert result["data"][CONF_MODEL] == "fake_model"
+        assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
+
+
+@pytest.mark.usefixtures("remote")
 async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery without prefixes."""
     with patch(
