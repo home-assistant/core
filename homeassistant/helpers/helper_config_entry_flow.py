@@ -17,6 +17,8 @@ from homeassistant.data_entry_flow import (
     UnknownHandler,
 )
 
+from . import entity_registry as er
+
 
 class HelperCommonFlowHandler:
     """Handle a config or options flow for helper."""
@@ -72,6 +74,7 @@ class HelperCommonFlowHandler:
 class HelperConfigFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow for helper integrations."""
 
+    _config_entry: config_entries.ConfigEntry | None = None
     steps: dict[str, vol.Schema]
 
     VERSION = 1
@@ -201,3 +204,29 @@ class HelperOptionsFlowHandler(config_entries.OptionsFlow):
         # pylint: disable-next=unsubscriptable-object # self.cur_step is a dict
         step_id = self.cur_step["step_id"] if self.cur_step else self._initial_step
         return await self._common_handler.async_step(step_id, user_input)
+
+
+def async_own_entity_not_selected(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    config_entry: config_entries.ConfigEntry,
+    platform: str,
+    domain: str,
+    selected_entities: list[str],
+) -> dict[str, Any]:
+    """Raise is config entry's own entity is included in selection."""
+    registry = er.async_get(hass)
+    entry_id = config_entry.entry_id
+    entity_id = registry.async_get_entity_id(platform, domain, entry_id)
+
+    if not entity_id:
+        return user_input
+
+    if entity_id in selected_entities:
+        raise vol.Invalid("own_entity_not_allowed")
+
+    entity_entry = registry.async_get(entity_id)
+    if entity_entry and entity_entry.id in selected_entities:
+        raise vol.Invalid("own_entity_not_allowed")
+
+    return user_input

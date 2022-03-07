@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITIES
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import helper_config_entry_flow, selector
 
 from . import DOMAIN
@@ -79,3 +80,16 @@ class GroupConfigFlowHandler(
         if step_id == "init":
             return cast(str, user_input["group_type"])
         return None
+
+    async def async_validate_input(
+        self, hass: HomeAssistant, step_id: str, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Validate user input."""
+        if not self._config_entry:
+            return user_input
+
+        group_type = self._config_entry.options["group_type"]
+        selected_entities = user_input[CONF_ENTITIES]
+        return helper_config_entry_flow.async_own_entity_not_selected(
+            hass, user_input, self._config_entry, group_type, DOMAIN, selected_entities
+        )

@@ -15,23 +15,11 @@
           "name": "Group name"
         }
       },
-      "cover_options": {
-        "description": "Select group options",
-        "data": {
-          "entities": "Group members"
-        }
-      },
       "fan": {
         "description": "Select group options",
         "data": {
           "entities": "Group members",
           "name": "Group name"
-        }
-      },
-      "fan_options": {
-        "description": "Select group options",
-        "data": {
-          "entities": "Group members"
         }
       },
       "light": {
@@ -41,17 +29,33 @@
           "name": "Group name"
         }
       },
-      "light_options": {
-        "description": "Select group options",
-        "data": {
-          "entities": "Group members"
-        }
-      },
       "media_player": {
         "description": "Select group options",
         "data": {
           "entities": "Group members",
           "name": "Group name"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "cover_options": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members"
+        }
+      },
+      "fan_options": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members"
+        }
+      },
+      "light_options": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members"
         }
       },
       "media_player_options": {
@@ -60,6 +64,9 @@
           "entities": "Group members"
         }
       }
+    },
+    "error": {
+      "own_entity_not_allowed": "Can't select group as member of own group"
     }
   },
   "state": {
