@@ -86,11 +86,11 @@ async def async_setup_entry(
 ) -> None:
     """Initialize Light Switch config entry."""
     registry = er.async_get(hass)
-    entity_id = er.async_validate_entity_ids(
+    entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]
     )
 
-    async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entity_id)])
+    async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entities)])
 
 
 class FanGroup(GroupEntity, FanEntity):

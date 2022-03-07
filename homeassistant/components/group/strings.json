@@ -8,17 +8,20 @@
           "group_type": "Group type"
         }
       },
+      "binary_sensor": {
+        "description": "Select group options",
+        "data": {
+          "all": "All",
+          "device_class": "Group device class",
+          "entities": "Group members",
+          "name": "Group name"
+        }
+      },
       "cover": {
         "description": "Select group options",
         "data": {
           "entities": "Group members",
           "name": "Group name"
-        }
-      },
-      "cover_options": {
-        "description": "Select group options",
-        "data": {
-          "entities": "Group members"
         }
       },
       "fan": {
@@ -28,12 +31,6 @@
           "name": "Group name"
         }
       },
-      "fan_options": {
-        "description": "Select group options",
-        "data": {
-          "entities": "Group members"
-        }
-      },
       "light": {
         "description": "Select group options",
         "data": {
@@ -41,17 +38,41 @@
           "name": "Group name"
         }
       },
-      "light_options": {
-        "description": "Select group options",
-        "data": {
-          "entities": "Group members"
-        }
-      },
       "media_player": {
         "description": "Select group options",
         "data": {
           "entities": "Group members",
           "name": "Group name"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "binary_sensor_options": {
+        "description": "Select group options",
+        "data": {
+          "all": "All",
+          "device_class": "Group device class",
+          "entities": "Group members"
+        }
+      },
+      "cover_options": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members"
+        }
+      },
+      "fan_options": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members"
+        }
+      },
+      "light_options": {
+        "description": "Select group options",
+        "data": {
+          "entities": "Group members"
         }
       },
       "media_player_options": {
