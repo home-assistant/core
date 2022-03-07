@@ -374,4 +374,3 @@ def _media_mime_type(media_item: dict[str, Any]) -> str:
         return mime_type
 
     raise BrowseError(f"Unable to determine mime type for path {path}")
-
