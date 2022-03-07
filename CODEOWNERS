@@ -453,6 +453,8 @@ homeassistant/components/hyperion/* @dermotduffy
 tests/components/hyperion/* @dermotduffy
 homeassistant/components/ialarm/* @RyuzakiKK
 tests/components/ialarm/* @RyuzakiKK
+homeassistant/components/ialarmxr/* @bigmoby
+tests/components/ialarmxr/* @bigmoby
 homeassistant/components/iammeter/* @lewei50
 homeassistant/components/iaqualink/* @flz
 tests/components/iaqualink/* @flz
