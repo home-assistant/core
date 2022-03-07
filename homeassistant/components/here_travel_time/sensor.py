@@ -244,13 +244,7 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self.coordinator.data is not None:
-            if self._traffic_mode:
-                if (
-                    time := self.coordinator.data.get(ATTR_DURATION_IN_TRAFFIC)
-                ) is not None:
-                    return str(round(time))
-            if (time := self.coordinator.data.get(ATTR_DURATION)) is not None:
-                return str(round(time))
+            return str(round(self.coordinator.data.get(ATTR_DURATION_IN_TRAFFIC if self._traffic_mode else ATTR_DURATION)))
         return None
 
     @property
