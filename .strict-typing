@@ -32,6 +32,7 @@ homeassistant.components.abode.*
 homeassistant.components.acer_projector.*
 homeassistant.components.accuweather.*
 homeassistant.components.actiontec.*
+homeassistant.components.advantage_air.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*

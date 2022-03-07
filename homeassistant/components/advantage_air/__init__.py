@@ -1,6 +1,8 @@
 """Advantage Air climate integration."""
+from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import Any
 
 from advantage_air import ApiError, advantage_air
 
@@ -36,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry=ADVANTAGE_AIR_RETRY,
     )
 
-    async def async_get():
+    async def async_get() -> Any:
         try:
             return await api.async_get()
         except ApiError as err:
@@ -50,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=ADVANTAGE_AIR_SYNC_INTERVAL),
     )
 
-    async def async_change(change):
+    async def async_change(change: Callable) -> None:
         try:
             if await api.async_change(change):
                 await coordinator.async_refresh()

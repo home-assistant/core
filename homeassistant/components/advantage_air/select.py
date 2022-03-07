@@ -1,4 +1,8 @@
 """Select platform for Advantage Air integration."""
+from typing import cast
+
+from advantage_air import advantage_air
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,7 +37,7 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
     _number_to_name = {0: ADVANTAGE_AIR_INACTIVE}
     _name_to_number = {ADVANTAGE_AIR_INACTIVE: 0}
 
-    def __init__(self, instance, ac_key):
+    def __init__(self, instance: advantage_air, ac_key: int) -> None:
         """Initialize an Advantage Air MyZone control."""
         super().__init__(instance, ac_key)
         self._attr_name = f'{self._ac["name"]} MyZone'
@@ -48,11 +52,11 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
                 self._attr_options.append(zone["name"])
 
     @property
-    def current_option(self):
+    def current_option(self) -> str:
         """Return the fresh air status."""
-        return self._number_to_name[self._ac["myZone"]]
+        return self._number_to_name[cast(int, self._ac["myZone"])]
 
-    async def async_select_option(self, option):
+    async def async_select_option(self, option: str) -> None:
         """Set the MyZone."""
         await self.async_change(
             {self.ac_key: {"info": {"myZone": self._name_to_number[option]}}}

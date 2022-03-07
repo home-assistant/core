@@ -1,4 +1,8 @@
 """Switch platform for Advantage Air integration."""
+from typing import Any
+
+from advantage_air import advantage_air
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,7 +37,7 @@ class AdvantageAirFreshAir(AdvantageAirEntity, SwitchEntity):
 
     _attr_icon = "mdi:air-filter"
 
-    def __init__(self, instance, ac_key):
+    def __init__(self, instance: advantage_air, ac_key: int) -> None:
         """Initialize an Advantage Air fresh air control."""
         super().__init__(instance, ac_key)
         self._attr_name = f'{self._ac["name"]} Fresh Air'
@@ -42,17 +46,17 @@ class AdvantageAirFreshAir(AdvantageAirEntity, SwitchEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the fresh air status."""
         return self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn fresh air on."""
         await self.async_change(
             {self.ac_key: {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_ON}}}
         )
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn fresh air off."""
         await self.async_change(
             {self.ac_key: {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_OFF}}}

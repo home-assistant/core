@@ -1,4 +1,8 @@
 """Cover platform for Advantage Air integration."""
+from typing import Any, cast
+
+from advantage_air import advantage_air
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     SUPPORT_CLOSE,
@@ -45,7 +49,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DAMPER
     _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance: advantage_air, ac_key: int, zone_key: str) -> None:
         """Initialize an Advantage Air Cover Class."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]}'
@@ -54,18 +58,18 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
         )
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if vent is fully closed."""
         return self._zone["state"] == ADVANTAGE_AIR_STATE_CLOSE
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return vents current position as a percentage."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return self._zone["value"]
+            return cast(int, self._zone["value"])
         return 0
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Fully open zone vent."""
         await self.async_change(
             {
@@ -77,7 +81,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
             }
         )
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Fully close zone vent."""
         await self.async_change(
             {
@@ -87,7 +91,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
             }
         )
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Change vent position."""
         position = round(kwargs[ATTR_POSITION] / 5) * 5
         if position == 0:

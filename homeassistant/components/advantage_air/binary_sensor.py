@@ -1,6 +1,10 @@
 """Binary Sensor platform for Advantage Air integration."""
 from __future__ import annotations
 
+from typing import cast
+
+from advantage_air import advantage_air
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -44,7 +48,7 @@ class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key):
+    def __init__(self, instance: advantage_air, ac_key: int) -> None:
         """Initialize an Advantage Air Filter."""
         super().__init__(instance, ac_key)
         self._attr_name = f'{self._ac["name"]} Filter'
@@ -53,9 +57,9 @@ class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if filter needs cleaning."""
-        return self._ac["filterCleanStatus"]
+        return cast(bool, self._ac["filterCleanStatus"])
 
 
 class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
@@ -63,7 +67,7 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance: advantage_air, ac_key: int, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Motion."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} Motion'
@@ -72,7 +76,7 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if motion is detect."""
         return self._zone["motion"] == 20
 
@@ -83,7 +87,7 @@ class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance: advantage_air, ac_key: int, zone_key: str) -> None:
         """Initialize an Advantage Air Zone MyZone."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} MyZone'
@@ -92,6 +96,6 @@ class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if this zone is the myZone."""
         return self._zone["number"] == self._ac["myZone"]
