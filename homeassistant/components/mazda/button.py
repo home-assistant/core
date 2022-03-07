@@ -108,16 +108,12 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
 
-    entities: list[ButtonEntity] = []
-
-    for index, data in enumerate(coordinator.data):
-        for description in BUTTON_ENTITIES:
-            if description.is_supported(data):
-                entities.append(
-                    MazdaButtonEntity(client, coordinator, index, description)
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        MazdaButtonEntity(client, coordinator, index, description)
+        for index, data in enumerate(coordinator.data)
+        for description in BUTTON_ENTITIES
+        if description.is_supported(data)
+    )
 
 
 class MazdaButtonEntity(MazdaEntity, ButtonEntity):
