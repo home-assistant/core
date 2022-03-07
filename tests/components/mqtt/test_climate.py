@@ -337,9 +337,9 @@ async def test_set_fan_mode(hass, mqtt_mock):
 @pytest.mark.parametrize(
     "send_if_off,assert_async_publish",
     [
-        (None, [call("fan-mode-topic", "low", 0, False)]),
-        (True, [call("fan-mode-topic", "low", 0, False)]),
-        (False, []),
+        ({}, [call("fan-mode-topic", "low", 0, False)]),
+        ({"send_if_off": True}, [call("fan-mode-topic", "low", 0, False)]),
+        ({"send_if_off": False}, []),
     ],
 )
 async def test_set_fan_mode_send_if_off(
@@ -347,8 +347,7 @@ async def test_set_fan_mode_send_if_off(
 ):
     """Test setting of fan mode if the hvac is off."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    if send_if_off is not None:
-        config[CLIMATE_DOMAIN]["send_if_off"] = send_if_off
+    config[CLIMATE_DOMAIN].update(send_if_off)
     assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_CLIMATE) is not None
@@ -427,9 +426,9 @@ async def test_set_swing(hass, mqtt_mock):
 @pytest.mark.parametrize(
     "send_if_off,assert_async_publish",
     [
-        (None, [call("swing-mode-topic", "on", 0, False)]),
-        (True, [call("swing-mode-topic", "on", 0, False)]),
-        (False, []),
+        ({}, [call("swing-mode-topic", "on", 0, False)]),
+        ({"send_if_off": True}, [call("swing-mode-topic", "on", 0, False)]),
+        ({"send_if_off": False}, []),
     ],
 )
 async def test_set_swing_mode_send_if_off(
@@ -437,8 +436,7 @@ async def test_set_swing_mode_send_if_off(
 ):
     """Test setting of swing mode if the hvac is off."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    if send_if_off is not None:
-        config[CLIMATE_DOMAIN]["send_if_off"] = send_if_off
+    config[CLIMATE_DOMAIN].update(send_if_off)
     assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_CLIMATE) is not None
@@ -501,9 +499,9 @@ async def test_set_target_temperature(hass, mqtt_mock):
 @pytest.mark.parametrize(
     "send_if_off,assert_async_publish",
     [
-        (None, [call("temperature-topic", "21.0", 0, False)]),
-        (True, [call("temperature-topic", "21.0", 0, False)]),
-        (False, []),
+        ({}, [call("temperature-topic", "21.0", 0, False)]),
+        ({"send_if_off": True}, [call("temperature-topic", "21.0", 0, False)]),
+        ({"send_if_off": False}, []),
     ],
 )
 async def test_set_target_temperature_send_if_off(
@@ -511,8 +509,7 @@ async def test_set_target_temperature_send_if_off(
 ):
     """Test setting of target temperature if the hvac is off."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    if send_if_off is not None:
-        config[CLIMATE_DOMAIN]["send_if_off"] = send_if_off
+    config[CLIMATE_DOMAIN].update(send_if_off)
     assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_CLIMATE) is not None
