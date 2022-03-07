@@ -251,7 +251,7 @@ def do_authentication(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google platform."""
 
-    if not (conf := CONFIG_SCHEMA(config.get(DOMAIN, {}))):
+    if not (conf := config.get(DOMAIN, {})):
         # component is set up by tts platform
         return True
 
