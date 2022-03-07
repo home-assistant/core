@@ -74,7 +74,7 @@ async def test_actuators(hass, mock_asyncsleepiq):
     entity_registry = er.async_get(hass)
 
     state = hass.states.get(f"number.sleepnumber_{BED_NAME_LOWER}_head_position")
-    assert state.state == "60"
+    assert state.state == "60.0"
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
@@ -88,7 +88,7 @@ async def test_actuators(hass, mock_asyncsleepiq):
     assert entry.unique_id == f"{BED_ID}_H"
 
     state = hass.states.get(f"number.sleepnumber_{BED_NAME_LOWER}_foot_position")
-    assert state.state == "10"
+    assert state.state == "10.0"
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)

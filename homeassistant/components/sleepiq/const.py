@@ -11,7 +11,7 @@ ICON_OCCUPIED = "mdi:bed"
 IS_IN_BED = "is_in_bed"
 PRESSURE = "pressure"
 SLEEP_NUMBER = "sleep_number"
-SENSOR_TYPES = {
+ENTITY_TYPES = {
     ACTUATOR: "Position",
     FIRMNESS: "Firmness",
     PRESSURE: "Pressure",
