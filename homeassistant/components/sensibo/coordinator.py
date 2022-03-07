@@ -17,6 +17,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
+MAX_POSSIBLE_STEP = 10**20
+
 
 @dataclass
 class MotionSensor:
@@ -93,7 +95,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 .get("values", [0, 1])
             )
             if temperatures_list:
-                diff = 10**20
+                diff = MAX_POSSIBLE_STEP
                 for i in range(len(temperatures_list) - 1):
                     if temperatures_list[i + 1] - temperatures_list[i] < diff:
                         diff = temperatures_list[i + 1] - temperatures_list[i]
