@@ -208,10 +208,7 @@ class SamsungTVDevice(MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
-
-        await self._async_send_keys(["KEY_POWEROFF"])
-        # Force closing of remote session to provide instant UI feedback
-        await self._bridge.async_close_remote()
+        await self._bridge.async_power_off()
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
