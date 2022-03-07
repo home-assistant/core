@@ -15,7 +15,7 @@ class AdvantageAirEntity(CoordinatorEntity):
     """Parent class for Advantage Air Entities."""
 
     def __init__(
-        self, instance: advantage_air, ac_key: int, zone_key: str | None = None
+        self, instance: advantage_air, ac_key: str, zone_key: str | None = None
     ) -> None:
         """Initialize common aspects of an Advantage Air sensor."""
         super().__init__(instance["coordinator"])

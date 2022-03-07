@@ -65,7 +65,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
     _attr_native_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: advantage_air, ac_key: int, action: str) -> None:
+    def __init__(self, instance: advantage_air, ac_key: str, action: str) -> None:
         """Initialize the Advantage Air timer control."""
         super().__init__(instance, ac_key)
         self.action = action
@@ -100,7 +100,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: advantage_air, ac_key: int, zone_key: str) -> None:
+    def __init__(self, instance: advantage_air, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Vent Sensor."""
         super().__init__(instance, ac_key, zone_key=zone_key)
         self._attr_name = f'{self._zone["name"]} Vent'
@@ -130,7 +130,7 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: advantage_air, ac_key: int, zone_key: str) -> None:
+    def __init__(self, instance: advantage_air, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone wireless signal sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} Signal'
@@ -167,7 +167,7 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: advantage_air, ac_key: int, zone_key: str) -> None:
+    def __init__(self, instance: advantage_air, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Temp Sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} Temperature'

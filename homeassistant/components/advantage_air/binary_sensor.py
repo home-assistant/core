@@ -48,7 +48,7 @@ class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: advantage_air, ac_key: int) -> None:
+    def __init__(self, instance: advantage_air, ac_key: str) -> None:
         """Initialize an Advantage Air Filter."""
         super().__init__(instance, ac_key)
         self._attr_name = f'{self._ac["name"]} Filter'
@@ -67,7 +67,7 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
-    def __init__(self, instance: advantage_air, ac_key: int, zone_key: str) -> None:
+    def __init__(self, instance: advantage_air, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Motion."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} Motion'
@@ -87,7 +87,7 @@ class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: advantage_air, ac_key: int, zone_key: str) -> None:
+    def __init__(self, instance: advantage_air, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone MyZone."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} MyZone'

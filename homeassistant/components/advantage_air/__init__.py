@@ -1,5 +1,6 @@
 """Advantage Air climate integration."""
-from collections.abc import Callable
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from typing import Any
@@ -52,7 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=ADVANTAGE_AIR_SYNC_INTERVAL),
     )
 
-    async def async_change(change: Callable) -> None:
+    async def async_change(
+        change: dict[str, dict[str, dict[str, str | int | bool]]]
+    ) -> None:
         try:
             if await api.async_change(change):
                 await coordinator.async_refresh()

@@ -113,7 +113,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     _attr_hvac_modes = AC_HVAC_MODES
     _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
-    def __init__(self, instance: advantage_air, ac_key: int) -> None:
+    def __init__(self, instance: advantage_air, ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
         self._attr_name = cast(str, self._ac["name"])
@@ -174,7 +174,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     _attr_hvac_modes = ZONE_HVAC_MODES
     _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
 
-    def __init__(self, instance: advantage_air, ac_key: int, zone_key: str) -> None:
+    def __init__(self, instance: advantage_air, ac_key: str, zone_key: str) -> None:
         """Initialize an AdvantageAir Zone control."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = cast(str, self._zone["name"])

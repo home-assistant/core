@@ -49,7 +49,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DAMPER
     _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
-    def __init__(self, instance: advantage_air, ac_key: int, zone_key: str) -> None:
+    def __init__(self, instance: advantage_air, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Cover Class."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]}'
