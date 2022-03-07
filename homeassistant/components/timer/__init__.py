@@ -33,18 +33,15 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 DEFAULT_DURATION = 0
 DEFAULT_RESTORE = False
-DEFAULT_RESTORE_GRACE_PERIOD = 0
 
 ATTR_DURATION = "duration"
 ATTR_REMAINING = "remaining"
 ATTR_FINISHES_AT = "finishes_at"
 ATTR_RESTORE = "restore"
-ATTR_RESTORE_GRACE_PERIOD = "restore_grace_period"
 ATTR_FINISHED_AT = "finished_at"
 
 CONF_DURATION = "duration"
 CONF_RESTORE = "restore"
-CONF_RESTORE_GRACE_PERIOD = "restore_grace_period"
 
 STATUS_IDLE = "idle"
 STATUS_ACTIVE = "active"
@@ -55,9 +52,6 @@ EVENT_TIMER_CANCELLED = "timer.cancelled"
 EVENT_TIMER_STARTED = "timer.started"
 EVENT_TIMER_RESTARTED = "timer.restarted"
 EVENT_TIMER_PAUSED = "timer.paused"
-EVENT_TIMER_FINISHED_WHILE_HOMEASSISTANT_STOPPED = (
-    "timer.finished_while_homeassistant_stopped"
-)
 
 SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
@@ -73,16 +67,12 @@ CREATE_FIELDS = {
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
     vol.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
-    vol.Optional(
-        CONF_RESTORE_GRACE_PERIOD, default=DEFAULT_RESTORE_GRACE_PERIOD
-    ): cv.time_period,
 }
 UPDATE_FIELDS = {
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DURATION): cv.time_period,
     vol.Optional(CONF_RESTORE): cv.boolean,
-    vol.Optional(CONF_RESTORE_GRACE_PERIOD): cv.time_period,
 }
 
 
@@ -111,9 +101,6 @@ CONFIG_SCHEMA = vol.Schema(
                         cv.time_period, _format_timedelta
                     ),
                     vol.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
-                    vol.Optional(
-                        CONF_RESTORE_GRACE_PERIOD, default=DEFAULT_RESTORE_GRACE_PERIOD
-                    ): vol.All(cv.time_period, _format_timedelta),
                 },
             )
         )
@@ -191,11 +178,8 @@ class TimerStorageCollection(collection.StorageCollection):
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
-        # make duration and restore grace period JSON serializeable
+        # make duration JSON serializeable
         data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
-        data[CONF_RESTORE_GRACE_PERIOD] = _format_timedelta(
-            data[CONF_RESTORE_GRACE_PERIOD]
-        )
         return data
 
     @callback
@@ -206,13 +190,9 @@ class TimerStorageCollection(collection.StorageCollection):
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
-        # make duration and restore grace period JSON serializeable
+        # make duration JSON serializeable
         if CONF_DURATION in update_data:
             data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
-        if CONF_RESTORE_GRACE_PERIOD in update_data:
-            data[CONF_RESTORE_GRACE_PERIOD] = _format_timedelta(
-                data[CONF_RESTORE_GRACE_PERIOD]
-            )
         return data
 
 
@@ -229,9 +209,6 @@ class Timer(RestoreEntity):
         self._end: datetime | None = None
         self._listener: Callable[[], None] | None = None
         self._restore: bool = self._config[CONF_RESTORE]
-        self._restore_grace_period: timedelta = cv.time_period_str(
-            config[CONF_RESTORE_GRACE_PERIOD]
-        )
 
     @classmethod
     def from_yaml(cls, config: dict) -> Timer:
@@ -279,9 +256,6 @@ class Timer(RestoreEntity):
             attrs[ATTR_REMAINING] = _format_timedelta(self._remaining)
         if self._restore:
             attrs[ATTR_RESTORE] = self._restore
-            attrs[ATTR_RESTORE_GRACE_PERIOD] = _format_timedelta(
-                self._restore_grace_period
-            )
 
         return attrs
 
@@ -320,16 +294,6 @@ class Timer(RestoreEntity):
             self._remaining = remaining
             self._state = STATUS_PAUSED
             self.async_start(timedelta(0))
-        # If the timer ended before now and outside of the grace period, send an
-        # event that indicates that the timer finished while HA was stopped
-        elif end + self._restore_grace_period <= utc_now:
-            self._state = STATUS_IDLE
-            self._end = None
-            self._remaining = None
-            self.hass.bus.async_fire(
-                EVENT_TIMER_FINISHED_WHILE_HOMEASSISTANT_STOPPED,
-                {"entity_id": self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
-            )
         # If the timer ended before now but within the grace period, finish the timer
         else:
             self._end = end
@@ -440,7 +404,4 @@ class Timer(RestoreEntity):
         self._config = config
         self._duration = cv.time_period_str(config[CONF_DURATION])
         self._restore = config[CONF_RESTORE]
-        self._restore_grace_period = cv.time_period_str(
-            config[CONF_RESTORE_GRACE_PERIOD]
-        )
         self.async_write_ha_state()

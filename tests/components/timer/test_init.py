@@ -11,17 +11,14 @@ from homeassistant.components.timer import (
     ATTR_FINISHES_AT,
     ATTR_REMAINING,
     ATTR_RESTORE,
-    ATTR_RESTORE_GRACE_PERIOD,
     CONF_DURATION,
     CONF_ICON,
     CONF_NAME,
     CONF_RESTORE,
-    CONF_RESTORE_GRACE_PERIOD,
     DEFAULT_DURATION,
     DOMAIN,
     EVENT_TIMER_CANCELLED,
     EVENT_TIMER_FINISHED,
-    EVENT_TIMER_FINISHED_WHILE_HOMEASSISTANT_STOPPED,
     EVENT_TIMER_PAUSED,
     EVENT_TIMER_RESTARTED,
     EVENT_TIMER_STARTED,
@@ -78,7 +75,6 @@ def storage_setup(hass, hass_storage):
                             ATTR_NAME: "timer from storage",
                             ATTR_DURATION: "0:00:00",
                             ATTR_RESTORE: False,
-                            ATTR_RESTORE_GRACE_PERIOD: "0:00:00",
                         }
                     ]
                 },
@@ -556,7 +552,6 @@ async def test_update(hass, hass_ws_client, storage_setup):
             f"{DOMAIN}_id": f"{timer_id}",
             CONF_DURATION: 33,
             CONF_RESTORE: True,
-            CONF_RESTORE_GRACE_PERIOD: 15,
         }
     )
     resp = await client.receive_json()
@@ -565,9 +560,6 @@ async def test_update(hass, hass_ws_client, storage_setup):
     state = hass.states.get(timer_entity_id)
     assert state.attributes[ATTR_DURATION] == _format_timedelta(cv.time_period(33))
     assert state.attributes[ATTR_RESTORE]
-    assert state.attributes[ATTR_RESTORE_GRACE_PERIOD] == _format_timedelta(
-        cv.time_period(15)
-    )
 
 
 async def test_ws_create(hass, hass_ws_client, storage_setup):
@@ -646,7 +638,6 @@ async def test_restore_idle(hass):
             CONF_NAME: "test",
             CONF_DURATION: "0:01:00",
             CONF_RESTORE: True,
-            CONF_RESTORE_GRACE_PERIOD: "0:00:15",
         }
     )
     entity.hass = hass
@@ -659,7 +650,6 @@ async def test_restore_idle(hass):
     assert ATTR_REMAINING not in entity.extra_state_attributes
     assert ATTR_FINISHES_AT not in entity.extra_state_attributes
     assert entity.extra_state_attributes[ATTR_RESTORE]
-    assert entity.extra_state_attributes[ATTR_RESTORE_GRACE_PERIOD] == "0:00:15"
 
 
 async def test_restore_paused(hass):
@@ -688,7 +678,6 @@ async def test_restore_paused(hass):
             CONF_NAME: "test",
             CONF_DURATION: "0:01:00",
             CONF_RESTORE: True,
-            CONF_RESTORE_GRACE_PERIOD: "0:00:15",
         }
     )
     entity.hass = hass
@@ -701,7 +690,6 @@ async def test_restore_paused(hass):
     assert entity.extra_state_attributes[ATTR_REMAINING] == "0:00:15"
     assert ATTR_FINISHES_AT not in entity.extra_state_attributes
     assert entity.extra_state_attributes[ATTR_RESTORE]
-    assert entity.extra_state_attributes[ATTR_RESTORE_GRACE_PERIOD] == "0:00:15"
 
 
 async def test_restore_active_resume(hass):
@@ -734,7 +722,6 @@ async def test_restore_active_resume(hass):
             CONF_NAME: "test",
             CONF_DURATION: "0:01:00",
             CONF_RESTORE: True,
-            CONF_RESTORE_GRACE_PERIOD: "0:00:15",
         }
     )
     entity.hass = hass
@@ -753,67 +740,12 @@ async def test_restore_active_resume(hass):
     assert entity.extra_state_attributes[ATTR_REMAINING] == "0:00:15"
     assert entity.extra_state_attributes[ATTR_FINISHES_AT] == finish.isoformat()
     assert entity.extra_state_attributes[ATTR_RESTORE]
-    assert entity.extra_state_attributes[ATTR_RESTORE_GRACE_PERIOD] == "0:00:15"
-    assert len(events) == 1
-
-
-async def test_restore_active_finished_within_grace(hass):
-    """Test entity restore logic: timer is active, end time is over within grace."""
-    events = async_capture_events(hass, EVENT_TIMER_FINISHED)
-    assert not events
-    utc_now = utcnow()
-    finish = utc_now + timedelta(seconds=30)
-    # Test at exact end of grace period to ensure event fires
-    simulated_utc_now = utc_now + timedelta(seconds=45)
-    stored_state = StoredState(
-        State(
-            "timer.test",
-            STATUS_ACTIVE,
-            {ATTR_DURATION: "0:00:30", ATTR_FINISHES_AT: finish.isoformat()},
-        ),
-        None,
-        utc_now,
-    )
-
-    data = await RestoreStateData.async_get_instance(hass)
-    await hass.async_block_till_done()
-    await data.store.async_save([stored_state.as_dict()])
-
-    # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE_TASK)
-
-    entity = Timer(
-        {
-            CONF_ID: "test",
-            CONF_NAME: "test",
-            CONF_DURATION: "0:01:00",
-            CONF_RESTORE: True,
-            CONF_RESTORE_GRACE_PERIOD: "0:00:15",
-        }
-    )
-    entity.hass = hass
-    entity.entity_id = "timer.test"
-
-    with patch(
-        "homeassistant.components.timer.dt_util.utcnow", return_value=simulated_utc_now
-    ):
-        await entity.async_added_to_hass()
-        await hass.async_block_till_done()
-
-    assert entity.state == STATUS_IDLE
-    assert entity.extra_state_attributes[ATTR_DURATION] == "0:00:30"
-    assert ATTR_REMAINING not in entity.extra_state_attributes
-    assert ATTR_FINISHES_AT not in entity.extra_state_attributes
-    assert entity.extra_state_attributes[ATTR_RESTORE]
-    assert entity.extra_state_attributes[ATTR_RESTORE_GRACE_PERIOD] == "0:00:15"
     assert len(events) == 1
 
 
 async def test_restore_active_finished_outside_grace(hass):
-    """Test entity restore logic: timer is active, end time is over outside grace."""
-    events = async_capture_events(
-        hass, EVENT_TIMER_FINISHED_WHILE_HOMEASSISTANT_STOPPED
-    )
+    """Test entity restore logic: timer is active, ended while Home Assistant was stopped."""
+    events = async_capture_events(hass, EVENT_TIMER_FINISHED)
     assert not events
     utc_now = utcnow()
     finish = utc_now + timedelta(seconds=30)
@@ -841,7 +773,6 @@ async def test_restore_active_finished_outside_grace(hass):
             CONF_NAME: "test",
             CONF_DURATION: "0:01:00",
             CONF_RESTORE: True,
-            CONF_RESTORE_GRACE_PERIOD: "0:00:15",
         }
     )
     entity.hass = hass
@@ -858,5 +789,4 @@ async def test_restore_active_finished_outside_grace(hass):
     assert ATTR_REMAINING not in entity.extra_state_attributes
     assert ATTR_FINISHES_AT not in entity.extra_state_attributes
     assert entity.extra_state_attributes[ATTR_RESTORE]
-    assert entity.extra_state_attributes[ATTR_RESTORE_GRACE_PERIOD] == "0:00:15"
     assert len(events) == 1
