@@ -273,6 +273,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # If we cannot get device info for an SSDP discovery
             # its likely a legacy tv.
             self._name = self._title = self._model = model_name
+
+        # The UDN provided by the ssdp discovery doesn't always match the UDN
+        # from the device_info, used by the the other methods so we need to
+        # ensure the device_info is loaded before setting the unique_id
         await self._async_set_unique_id_from_udn()
         self._async_update_and_abort_for_matching_unique_id()
         self._async_abort_if_host_already_in_progress()
