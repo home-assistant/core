@@ -56,7 +56,7 @@ class HelperCommonFlowHandler:
                     step_id=next_step_id, data_schema=self._handler.steps[next_step_id]
                 )
 
-        schema = self._handler.steps[step_id].schema
+        schema = dict(self._handler.steps[step_id].schema)
         for key in list(schema):
             if key in self._options and isinstance(key, vol.Marker):
                 new_key = copy.copy(key)
