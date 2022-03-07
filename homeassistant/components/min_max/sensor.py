@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -13,14 +14,15 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, PLATFORMS
+from . import PLATFORMS
+from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,9 +48,6 @@ ATTR_TO_PROPERTY = [
     ATTR_LAST_ENTITY_ID,
 ]
 
-CONF_ENTITY_IDS = "entity_ids"
-CONF_ROUND_DIGITS = "round_digits"
-
 ICON = "mdi:calculator"
 
 SENSOR_TYPES = {
@@ -71,6 +70,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Light Switch config entry."""
+    registry = er.async_get(hass)
+    entity_ids = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITY_IDS]
+    )
+    sensor_type = config_entry.options[CONF_TYPE]
+    round_digits = int(config_entry.options[CONF_ROUND_DIGITS])
+
+    async_add_entities(
+        [
+            MinMaxSensor(
+                entity_ids,
+                config_entry.title,
+                sensor_type,
+                round_digits,
+                config_entry.entry_id,
+            )
+        ]
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -85,7 +110,9 @@ async def async_setup_platform(
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    async_add_entities([MinMaxSensor(entity_ids, name, sensor_type, round_digits)])
+    async_add_entities(
+        [MinMaxSensor(entity_ids, name, sensor_type, round_digits, None)]
+    )
 
 
 def calc_min(sensor_values):
@@ -148,8 +175,9 @@ def calc_median(sensor_values, round_digits):
 class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
-    def __init__(self, entity_ids, name, sensor_type, round_digits):
+    def __init__(self, entity_ids, name, sensor_type, round_digits, unique_id):
         """Initialize the min/max sensor."""
+        self._attr_unique_id = unique_id
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
@@ -172,6 +200,12 @@ class MinMaxSensor(SensorEntity):
                 self.hass, self._entity_ids, self._async_min_max_sensor_state_listener
             )
         )
+
+        # Replay current state of source entities
+        for entity_id in self._entity_ids:
+            state = self.hass.states.get(entity_id)
+            state_event = Event("", {"entity_id": entity_id, "new_state": state})
+            self._async_min_max_sensor_state_listener(state_event, update_state=False)
 
         self._calc_values()
 
@@ -216,16 +250,24 @@ class MinMaxSensor(SensorEntity):
         return ICON
 
     @callback
-    def _async_min_max_sensor_state_listener(self, event):
+    def _async_min_max_sensor_state_listener(self, event, update_state=True):
         """Handle the sensor state changes."""
         new_state = event.data.get("new_state")
         entity = event.data.get("entity_id")
 
-        if new_state.state is None or new_state.state in [
-            STATE_UNKNOWN,
-            STATE_UNAVAILABLE,
-        ]:
+        if (
+            new_state is None
+            or new_state.state is None
+            or new_state.state
+            in [
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            ]
+        ):
             self.states[entity] = STATE_UNKNOWN
+            if not update_state:
+                return
+
             self._calc_values()
             self.async_write_ha_state()
             return
@@ -251,6 +293,9 @@ class MinMaxSensor(SensorEntity):
             _LOGGER.warning(
                 "Unable to store state. Only numerical states are supported"
             )
+
+        if not update_state:
+            return
 
         self._calc_values()
         self.async_write_ha_state()
