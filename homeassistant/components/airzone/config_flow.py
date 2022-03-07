@@ -16,13 +16,6 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import DEFAULT_LOCAL_API_HOST, DEFAULT_LOCAL_API_PORT, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST, default=DEFAULT_LOCAL_API_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
-    }
-)
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for an Airzone device."""
@@ -57,5 +50,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=DEFAULT_LOCAL_API_HOST): str,
+                    vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
+                }
+            ),
+            errors=errors,
         )

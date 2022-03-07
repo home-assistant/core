@@ -10,8 +10,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirzoneUpdateCoordinator
 from .const import DOMAIN, MANUFACTURER, SENSOR_TYPES
+from .coordinator import AirzoneUpdateCoordinator
 
 
 async def async_setup_entry(

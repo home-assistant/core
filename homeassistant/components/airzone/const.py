@@ -16,8 +16,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-DOMAIN = "airzone"
-MANUFACTURER = "Airzone"
+DOMAIN: Final = "airzone"
+MANUFACTURER: Final = "Airzone"
 
 AIOAIRZONE_DEVICE_TIMEOUT_SEC: Final = 10
 DEFAULT_LOCAL_API_HOST: Final = ""
