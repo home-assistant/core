@@ -1,7 +1,7 @@
 add_product:
   name: Add product to the cart
   description: >-
-    Adds a product to the cart based on a search string or product ID. 
+    Adds a product to the cart based on a search string or product ID.
     The search string is ignored if a product ID is given.
     A product ID can be found by using the picnic.search service.
 
