@@ -77,12 +77,12 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
         if destination is not None and origin is not None:
             here_formatted_destination = destination.split(",")
             here_formatted_origin = origin.split(",")
-            arrival: str | time | None = None
-            departure: str | time | None = "now"
-            if (arrival := self.config.arrival) is not None:
-                arrival = convert_time_to_isodate(str(arrival))
-            if (departure := self.config.departure) is not None:
-                departure = convert_time_to_isodate(str(departure))
+            arrival: str | None = None
+            departure: str | None = "now"
+            if self.config.arrival is not None:
+                arrival = convert_time_to_isodate(self.config.arrival)
+            if self.config.departure is not None:
+                departure = convert_time_to_isodate(self.config.departure)
 
             if departure is None and arrival is None:
                 departure = "now"
