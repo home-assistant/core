@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
-MAX_POSSIBLE_STEP = 10**20
+MAX_POSSIBLE_STEP = 1000
 
 
 @dataclass
