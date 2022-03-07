@@ -1,0 +1,27 @@
+{
+  "config": {
+    "flow_title": "{model} ({name})",
+    "step": {
+      "user": {
+        "title": "Kaleidescape Setup",
+        "data": {
+          "host": "Host"
+        }
+      },
+      "discovery_confirm": {
+          "title": "Kaleidescape Setup",
+          "description": "Do you want to set up the {model} player named {name}?"
+      }
+    },
+    "abort": {
+      "already_configured": "Device is already configured",
+      "already_in_progress": "Configuration flow is already in progress",
+      "unknown": "Unexpected error",
+      "unsupported": "Unsupported device"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "unsupported": "Unsupported device"
+    }
+  }
+}
