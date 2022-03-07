@@ -1,7 +1,7 @@
 """The HERE Travel Time integration."""
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 import logging
 
 import async_timeout
@@ -117,7 +117,9 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
 
             attribution: str | None = None
             if "sourceAttribution" in response.response:  # pylint: disable=no-member
-                attribution = build_hass_attribution(response.response.get("sourceAttribution"))  # pylint: disable=no-member
+                attribution = build_hass_attribution(
+                    response.response.get("sourceAttribution")
+                )  # pylint: disable=no-member
             route: list = response.response["route"]  # pylint: disable=no-member
             summary: dict = route[0]["summary"]
             waypoint: list = route[0]["waypoint"]
