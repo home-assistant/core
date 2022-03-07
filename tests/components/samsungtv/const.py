@@ -58,7 +58,7 @@ SAMPLE_DEVICE_INFO_FRAME = {
         "smartHubAgreement": "true",
         "type": "Samsung SmartTV",
         "udn": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-        "wifiMac": "aa:bb:ww:ii:ff:ii",
+        "wifiMac": "aa:ee:tt:hh:ee:rr",
     },
     "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
     "isSupport": (

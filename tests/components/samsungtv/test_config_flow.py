@@ -746,7 +746,7 @@ async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     assert result["title"] == "Samsung Frame (43) (UE43LS003)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Samsung Frame (43)"
-    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result["data"][CONF_MAC] == "aa:ee:tt:hh:ee:rr"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE43LS003"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
