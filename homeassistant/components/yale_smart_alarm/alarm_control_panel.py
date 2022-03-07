@@ -23,10 +23,8 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_AREA_ID,
@@ -35,12 +33,11 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
-    MANUFACTURER,
-    MODEL,
     STATE_MAP,
     YALE_ALL_ERRORS,
 )
 from .coordinator import YaleDataUpdateCoordinator
+from .entity import YaleAlarmEntity
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -81,7 +78,7 @@ async def async_setup_entry(
     )
 
 
-class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
+class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
     coordinator: YaleDataUpdateCoordinator
@@ -94,12 +91,6 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
         super().__init__(coordinator)
         self._attr_name = coordinator.entry.data[CONF_NAME]
         self._attr_unique_id = coordinator.entry.entry_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.entry.data[CONF_USERNAME])},
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            name=self._attr_name,
-        )
 
     async def async_alarm_disarm(self, code=None) -> None:
         """Send disarm command."""

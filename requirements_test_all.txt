@@ -505,7 +505,7 @@ google-nest-sdm==1.8.0
 googlemaps==2.5.1
 
 # homeassistant.components.gree
-greeclimate==1.0.2
+greeclimate==1.1.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
