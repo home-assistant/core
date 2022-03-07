@@ -267,13 +267,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._udn = _strip_uuid(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         if hostname := urlparse(discovery_info.ssdp_location or "").hostname:
             self._host = hostname
-        await self._async_set_unique_id_from_udn()
         self._manufacturer = discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
         self._abort_if_manufacturer_is_not_samsung()
         if not await self._async_get_and_check_device_info():
             # If we cannot get device info for an SSDP discovery
             # its likely a legacy tv.
             self._name = self._title = self._model = model_name
+        await self._async_set_unique_id_from_udn()
         self._async_update_and_abort_for_matching_unique_id()
         self._async_abort_if_host_already_in_progress()
         self.context["title_placeholders"] = {"device": self._title}
