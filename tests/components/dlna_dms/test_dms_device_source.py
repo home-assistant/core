@@ -9,20 +9,22 @@ from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
 import pytest
 
-from homeassistant.components import media_source
+from homeassistant.components import media_source, ssdp
 from homeassistant.components.dlna_dms.const import DLNA_SORT_CRITERIA, DOMAIN
-from homeassistant.components.dlna_dms.dms import (
-    ActionError,
-    DeviceConnectionError,
-    DidlPlayMedia,
-    DmsDeviceSource,
-)
+from homeassistant.components.dlna_dms.dms import DidlPlayMedia
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import BrowseMediaSource
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_DEVICE_BASE_URL, MOCK_DEVICE_NAME, MOCK_SOURCE_ID
+from .conftest import (
+    MOCK_DEVICE_BASE_URL,
+    MOCK_DEVICE_NAME,
+    MOCK_DEVICE_TYPE,
+    MOCK_DEVICE_UDN,
+    MOCK_DEVICE_USN,
+    MOCK_SOURCE_ID,
+)
 
 # Auto-use a few fixtures from conftest
 pytestmark = [
@@ -60,80 +62,99 @@ async def async_browse_media(
 
 
 async def test_catch_request_error_unavailable(
-    device_source_mock: DmsDeviceSource,
+    hass: HomeAssistant, ssdp_scanner_mock: Mock
 ) -> None:
-    """Test the device is checked for availability before trying requests.
+    """Test the device is checked for availability before trying requests."""
+    # DmsDevice notifies of disconnect via SSDP
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    await ssdp_callback(
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_udn=MOCK_DEVICE_UDN,
+            ssdp_headers={"NTS": "ssdp:byebye"},
+            ssdp_st=MOCK_DEVICE_TYPE,
+            upnp={},
+        ),
+        ssdp.SsdpChange.BYEBYE,
+    )
 
-    Interacts with the DmsDeviceSource directly to bypass earlier availability
-    checks, and to clear _device connection.
-    """
-    device_source_mock._device = None
+    # All attempts to use the device should give an error
+    with pytest.raises(Unresolvable, match="DMS is not connected"):
+        # Resolve object
+        await async_resolve_media(hass, ":id")
+    with pytest.raises(Unresolvable, match="DMS is not connected"):
+        # Resolve path
+        await async_resolve_media(hass, "/path")
+    with pytest.raises(Unresolvable, match="DMS is not connected"):
+        # Resolve search
+        await async_resolve_media(hass, "?query")
+    with pytest.raises(BrowseError, match="DMS is not connected"):
+        # Browse object
+        await async_browse_media(hass, ":id")
+    with pytest.raises(BrowseError, match="DMS is not connected"):
+        # Browse path
+        await async_browse_media(hass, "/path")
+    with pytest.raises(BrowseError, match="DMS is not connected"):
+        # Browse search
+        await async_browse_media(hass, "?query")
 
-    with pytest.raises(DeviceConnectionError):
-        await device_source_mock.async_resolve_object("id")
-    with pytest.raises(DeviceConnectionError):
-        await device_source_mock.async_resolve_path("path")
-    with pytest.raises(DeviceConnectionError):
-        await device_source_mock.async_resolve_search("query")
-    with pytest.raises(DeviceConnectionError):
-        await device_source_mock.async_browse_object("object_id")
-    with pytest.raises(DeviceConnectionError):
-        await device_source_mock.async_browse_search("query")
 
-
-async def test_catch_request_error(
-    hass: HomeAssistant, device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_catch_request_error(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test errors when making requests to the device are handled."""
     dms_device_mock.async_browse_metadata.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.NO_SUCH_OBJECT
     )
-    with pytest.raises(ActionError, match="No such object: bad_id"):
+    with pytest.raises(Unresolvable, match="No such object: bad_id"):
         await async_resolve_media(hass, ":bad_id")
 
     dms_device_mock.async_search_directory.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.INVALID_SEARCH_CRITERIA
     )
-    with pytest.raises(ActionError, match="Invalid query: bad query"):
+    with pytest.raises(Unresolvable, match="Invalid query: bad query"):
         await async_resolve_media(hass, "?bad query")
 
     dms_device_mock.async_browse_metadata.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.CANNOT_PROCESS_REQUEST
     )
-    with pytest.raises(DeviceConnectionError, match="Server failure: "):
+    with pytest.raises(BrowseError, match="Server failure: "):
         await async_resolve_media(hass, ":good_id")
 
     dms_device_mock.async_browse_metadata.side_effect = UpnpError
     with pytest.raises(
-        DeviceConnectionError, match="Server communication failure: UpnpError(.*)"
+        BrowseError, match="Server communication failure: UpnpError(.*)"
     ):
         await async_resolve_media(hass, ":bad_id")
 
-    # UpnpConnectionErrors will cause the device_source_mock to disconnect from the device
-    assert device_source_mock.available
+
+async def test_catch_upnp_connection_error(
+    hass: HomeAssistant, dms_device_mock: Mock
+) -> None:
+    """Test UpnpConnectionError causes the device source to disconnect from the device."""
+    # First check the source can be used
+    object_id = "foo"
+    didl_item = didl_lite.Item(
+        id=object_id,
+        restricted="false",
+        title="Object",
+        res=[didl_lite.Resource(uri="foo", protocol_info="http-get:*:audio/mpeg")],
+    )
+    dms_device_mock.async_browse_metadata.return_value = didl_item
+    await async_browse_media(hass, f":{object_id}")
+    dms_device_mock.async_browse_metadata.assert_awaited_once_with(
+        object_id, metadata_filter=ANY
+    )
+
+    # Cause a UpnpConnectionError when next browsing
     dms_device_mock.async_browse_metadata.side_effect = UpnpConnectionError
     with pytest.raises(
-        DeviceConnectionError, match="Server disconnected: UpnpConnectionError(.*)"
+        BrowseError, match="Server disconnected: UpnpConnectionError(.*)"
     ):
-        await async_resolve_media(hass, ":bad_id")
-    assert not device_source_mock.available
+        await async_browse_media(hass, f":{object_id}")
 
-
-async def test_icon(device_source_mock: DmsDeviceSource, dms_device_mock: Mock) -> None:
-    """Test the device's icon URL is returned."""
-    assert device_source_mock.icon == dms_device_mock.icon
-
-    device_source_mock._device = None
-    assert device_source_mock.icon is None
-
-
-async def test_resolve_media_invalid(device_source_mock: DmsDeviceSource) -> None:
-    """Test async_resolve_media will raise Unresolvable when identifier isn't given.
-
-    Interacts with the DmsDeviceSource directly to bypass earlier checks.
-    """
-    with pytest.raises(Unresolvable, match="Invalid identifier.*"):
-        await device_source_mock.async_resolve_media("")
+    # Clear the error, but the device should be disconnected
+    dms_device_mock.async_browse_metadata.side_effect = None
+    with pytest.raises(BrowseError, match="DMS is not connected"):
+        await async_browse_media(hass, f":{object_id}")
 
 
 async def test_resolve_media_object(hass: HomeAssistant, dms_device_mock: Mock) -> None:
@@ -380,7 +401,7 @@ async def test_resolve_path_quoted(hass: HomeAssistant, dms_device_mock: Mock) -
         ),
         UpnpError("Quick abort"),
     ]
-    with pytest.raises(DeviceConnectionError):
+    with pytest.raises(Unresolvable):
         await async_resolve_media(hass, r'path/quote"back\slash')
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(

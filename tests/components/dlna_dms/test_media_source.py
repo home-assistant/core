@@ -190,6 +190,7 @@ async def test_browse_media_multiple_sources(
     assert isinstance(result.children[0], BrowseMediaSource)
     assert result.children[0].identifier == f"{MOCK_SOURCE_ID}/:0"
     assert result.children[0].title == MOCK_DEVICE_NAME
+    assert result.children[0].thumbnail == dms_device_mock.icon
     assert isinstance(result.children[1], BrowseMediaSource)
     assert result.children[1].identifier == f"{other_source_id}/:0"
     assert result.children[1].title == other_source_title

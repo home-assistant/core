@@ -399,10 +399,7 @@ class DmsDeviceSource:
     @property
     def icon(self) -> str | None:
         """Return an URL to an icon for the media server."""
-        if not self._device:
-            return None
-
-        return self._device.icon
+        return self._device.icon if self._device else None
 
     # MediaSource methods
 
@@ -411,6 +408,8 @@ class DmsDeviceSource:
         LOGGER.debug("async_resolve_media(%s)", identifier)
         action, parameters = _parse_identifier(identifier)
 
+        assert action is not None, f"Invalid identifier: {identifier}"
+
         if action is Action.OBJECT:
             return await self.async_resolve_object(parameters)
 
@@ -418,11 +417,8 @@ class DmsDeviceSource:
             object_id = await self.async_resolve_path(parameters)
             return await self.async_resolve_object(object_id)
 
-        if action is Action.SEARCH:
-            return await self.async_resolve_search(parameters)
-
-        LOGGER.debug("Invalid identifier %s", identifier)
-        raise Unresolvable(f"Invalid identifier {identifier}")
+        assert action is Action.SEARCH
+        return await self.async_resolve_search(parameters)
 
     async def async_browse_media(self, identifier: str | None) -> BrowseMediaSource:
         """Browse media."""
