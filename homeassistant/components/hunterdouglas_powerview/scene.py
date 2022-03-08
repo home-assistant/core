@@ -70,12 +70,11 @@ class PowerViewScene(HDEntity, Scene):
         """Icon to use in the frontend."""
         return "mdi:blinds"
 
+    @property
+    def state(self):
+        """Icon to use in the frontend."""
+        return "happy"
+
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         await self._scene.activate()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
