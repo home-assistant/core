@@ -24,7 +24,7 @@ async def validate_host_input(host: str) -> str:
     api = IntellifireAsync(host)
     await api.poll()
     ret = api.data.serial
-    LOGGER.info("Found a fireplace: %s", ret)
+    LOGGER.debug("Found a fireplace: %s", ret)
     # Return the serial number which will be used to calculate a unique ID for the device/sensors
     return ret
 
