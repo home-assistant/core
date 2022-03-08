@@ -148,6 +148,7 @@ PLATFORMS = [
     Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SCENE,
