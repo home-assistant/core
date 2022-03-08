@@ -27,25 +27,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            options = ConnectionOptions(
-                user_input[CONF_HOST],
-                user_input[CONF_PORT],
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
             )
 
             try:
                 airzone = AirzoneLocalApi(
-                    aiohttp_client.async_get_clientsession(self.hass), options
+                    aiohttp_client.async_get_clientsession(self.hass),
+                    ConnectionOptions(
+                        user_input[CONF_HOST],
+                        user_input[CONF_PORT],
+                    ),
                 )
                 await airzone.validate_airzone()
             except (ClientConnectorError, InvalidHost):
                 errors["base"] = "cannot_connect"
             else:
-                self._async_abort_entries_match(
-                    {
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
-                    }
-                )
                 title = f"Airzone {user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
                 return self.async_create_entry(title=title, data=user_input)
 
