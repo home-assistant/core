@@ -18,22 +18,31 @@ from . import MazdaEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 
-async def handle_button_press(entity: MazdaButtonEntity) -> None:
+async def handle_button_press(
+    client: MazdaAPIClient,
+    key: str,
+    vehicle_id: int,
+    coordinator: DataUpdateCoordinator,
+) -> None:
     """Handle a press for a Mazda button entity."""
-    api_client = entity.client
-    api_method = getattr(api_client, entity.entity_description.key)
+    api_method = getattr(client, key)
 
     try:
-        await api_method(entity.vehicle_id)
+        await api_method(vehicle_id)
     except Exception as ex:
         raise HomeAssistantError(ex) from ex
 
 
-async def handle_refresh_vehicle_status(entity: MazdaButtonEntity) -> None:
+async def handle_refresh_vehicle_status(
+    client: MazdaAPIClient,
+    key: str,
+    vehicle_id: int,
+    coordinator: DataUpdateCoordinator,
+) -> None:
     """Handle a request to refresh the vehicle status."""
-    await handle_button_press(entity)
+    await handle_button_press(client, key, vehicle_id, coordinator)
 
-    await entity.coordinator.async_refresh()
+    await coordinator.async_refresh()
 
 
 @dataclass
@@ -53,7 +62,9 @@ class MazdaButtonEntityDescription(
     # Function to determine whether the vehicle supports this button, given the coordinator data
     is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
 
-    async_press: Callable[[MazdaButtonEntity], Awaitable] = handle_button_press
+    async_press: Callable[
+        [MazdaAPIClient, str, int, DataUpdateCoordinator], Awaitable
+    ] = handle_button_press
 
 
 BUTTON_ENTITIES = [
@@ -137,4 +148,6 @@ class MazdaButtonEntity(MazdaEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.entity_description.async_press(self)
+        await self.entity_description.async_press(
+            self.client, self.entity_description.key, self.vehicle_id, self.coordinator
+        )
