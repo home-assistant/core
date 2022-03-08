@@ -111,6 +111,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 "can_play": False,
                 "can_expand": True,
                 "thumbnail": None,
+                "children_media_class": "directory",
             }
         ],
         "not_shown": 0,
@@ -143,6 +144,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 "can_play": False,
                 "can_expand": True,
                 "thumbnail": None,
+                "children_media_class": "directory",
             }
         ],
         "not_shown": 0,
@@ -174,6 +176,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 "can_play": False,
                 "can_expand": True,
                 "thumbnail": None,
+                "children_media_class": "video",
             },
             {
                 "title": "Images",
@@ -186,6 +189,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 "can_play": False,
                 "can_expand": True,
                 "thumbnail": None,
+                "children_media_class": "image",
             },
         ],
         "not_shown": 0,
@@ -220,6 +224,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 "can_play": False,
                 "can_expand": True,
                 "thumbnail": None,
+                "children_media_class": "directory",
             }
         ],
         "not_shown": 0,
@@ -255,6 +260,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 "can_play": True,
                 "can_expand": False,
                 "thumbnail": "http://movie",
+                "children_media_class": None,
             },
             {
                 "title": "00-36-49.mp4",
@@ -268,6 +274,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 "can_play": True,
                 "can_expand": False,
                 "thumbnail": "http://movie",
+                "children_media_class": None,
             },
             {
                 "title": "00-02-27.mp4",
@@ -281,6 +288,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 "can_play": True,
                 "can_expand": False,
                 "thumbnail": "http://movie",
+                "children_media_class": None,
             },
         ],
         "not_shown": 0,
@@ -331,6 +339,7 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
                 "can_play": False,
                 "can_expand": False,
                 "thumbnail": "http://image",
+                "children_media_class": None,
             }
         ],
         "not_shown": 0,

@@ -185,6 +185,8 @@ ABBREVIATIONS = {
     "set_fan_spd_t": "set_fan_speed_topic",
     "set_pos_tpl": "set_position_template",
     "set_pos_t": "set_position_topic",
+    "title": "title",
+    "trgts": "targets",
     "pos_t": "position_topic",
     "pos_tpl": "position_template",
     "spd_cmd_t": "speed_command_topic",

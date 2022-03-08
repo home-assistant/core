@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "\u039c\u03ad\u03bb\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
+                    "name": "\u038c\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "\u039c\u03ad\u03bb\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+            },
+            "fan": {
+                "data": {
+                    "entities": "\u039c\u03ad\u03bb\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
+                    "name": "\u038c\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "\u039c\u03ad\u03bb\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+            },
+            "init": {
+                "data": {
+                    "group_type": "\u03a4\u03cd\u03c0\u03bf\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c4\u03cd\u03c0\u03bf \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+            },
+            "light": {
+                "data": {
+                    "entities": "\u039c\u03ad\u03bb\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
+                    "name": "\u038c\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "\u039c\u03ad\u03bb\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "\u039c\u03ad\u03bb\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
+                    "name": "\u038c\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "\u039c\u03ad\u03bb\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "\u039a\u03bb\u03b5\u03b9\u03c3\u03c4\u03ae",

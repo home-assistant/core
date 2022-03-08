@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Filter for core changes
         uses: dorny/paths-filter@v2.10.2
         id: core
@@ -151,10 +151,10 @@ jobs:
       pre-commit-key: ${{ steps.generate-pre-commit-key.outputs.key }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Generate partial Python venv restore key
@@ -232,9 +232,9 @@ jobs:
       - prepare-base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -282,9 +282,9 @@ jobs:
       - prepare-base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -333,9 +333,9 @@ jobs:
     needs: prepare-base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -375,9 +375,9 @@ jobs:
       - prepare-base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -485,7 +485,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.7
@@ -509,9 +509,9 @@ jobs:
     needs: prepare-base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -544,7 +544,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Generate partial Python venv restore key
         id: generate-python-key
         run: >-
@@ -612,7 +612,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.7
@@ -654,7 +654,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.7
@@ -698,7 +698,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.7
@@ -741,7 +741,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.7
@@ -829,7 +829,7 @@ jobs:
             -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v3.0.0
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -845,7 +845,7 @@ jobs:
       - pytest
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v2
       - name: Upload coverage to Codecov (full coverage)

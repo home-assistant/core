@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
@@ -55,15 +55,9 @@ def soco_error(
                     )
                     return None
 
-                # In order of preference:
-                #  * SonosSpeaker instance
-                #  * SoCo instance passed as an arg
-                #  * SoCo instance (as self)
-                speaker_or_soco = getattr(self, "speaker", args_soco or self)
-                zone_name = speaker_or_soco.zone_name
-                # Prefer the entity_id if available, zone name as a fallback
-                # Needed as SonosSpeaker instances are not entities
-                target = getattr(self, "entity_id", zone_name)
+                if (target := _find_target_identifier(self, args_soco)) is None:
+                    raise RuntimeError("Unexpected use of soco_error") from err
+
                 message = f"Error calling {function} on {target}: {err}"
                 raise SonosUpdateError(message) from err
 
@@ -78,6 +72,24 @@ def soco_error(
         return wrapper
 
     return decorator
+
+
+def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | None:
+    """Extract the the best available target identifier from the provided instance object."""
+    if entity_id := getattr(instance, "entity_id", None):
+        # SonosEntity instance
+        return entity_id
+    if zone_name := getattr(instance, "zone_name", None):
+        # SonosSpeaker instance
+        return zone_name
+    if speaker := getattr(instance, "speaker", None):
+        # Holds a SonosSpeaker instance attribute
+        return speaker.zone_name
+    if soco := getattr(instance, "soco", fallback_soco):
+        # Holds a SoCo instance attribute
+        # Only use attributes with no I/O
+        return soco._player_name or soco.ip_address  # pylint: disable=protected-access
+    return None
 
 
 def hostname_to_uid(hostname: str) -> str:

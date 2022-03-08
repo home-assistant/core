@@ -32,6 +32,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_STEP,
     MediaPlayerEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -55,7 +56,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
@@ -93,6 +94,22 @@ async def async_setup_platform(
                 config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES]
             )
         ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Light Switch config entry."""
+    registry = er.async_get(hass)
+    entity_id = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITIES]
+    )
+
+    async_add_entities(
+        [MediaGroup(config_entry.entry_id, config_entry.title, entity_id)]
     )
 
 
