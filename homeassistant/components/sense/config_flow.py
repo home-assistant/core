@@ -53,6 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._gateway.authenticate(
             self._auth_data[CONF_EMAIL], self._auth_data[CONF_PASSWORD]
         )
+        await self._gateway.get_monitor_data()
 
     async def create_entry_from_data(self):
         """Create the entry from the config data."""
