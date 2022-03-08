@@ -8,7 +8,6 @@ from homeassistant.util import dt as dt_util
 
 DOMAIN = "zamg"
 
-CONF_STATION_ID = "station_id"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 LOGGER = logging.getLogger(__package__)

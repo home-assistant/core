@@ -87,9 +87,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ZAMG weather platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    async_add_entities([ZamgWeather(coordinator)], False)
+    async_add_entities([ZamgWeather(hass.data[DOMAIN][entry.entry_id])])
 
 
 class ZamgWeather(CoordinatorEntity, WeatherEntity):
@@ -102,19 +100,20 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def __init__(self, zamg_data, stationname=None):
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{self.coordinator.data.get('station_id')}"
-        self._attr_name = f"{self.coordinator.data.get('station_name')}"
+        self._attr_unique_id = f"{coordinator.data.get(CONF_STATION_ID)}"
+        self._attr_name = f"{coordinator.data.get('station_name')}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, coordinator.data.get(CONF_STATION_ID))},
+            manufacturer=ATTRIBUTION,
+            configuration_url=MANUFACTURER_URL,
+            name=coordinator.name,
+        )
 
     @property
     def device_info(self):
         """Return the device info."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
-            manufacturer=ATTRIBUTION,
-            configuration_url=MANUFACTURER_URL,
-            name=self.coordinator.name,
-        )
+        return self._attr_device_info
 
     @property
     def name(self):

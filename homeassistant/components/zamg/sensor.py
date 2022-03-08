@@ -194,12 +194,6 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         col_heading="Zeit",
         dtype=str,
     ),
-    ZamgSensorEntityDescription(
-        key="station_id",
-        name="Station id",
-        col_heading="Station",
-        dtype=str,
-    ),
 )
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
@@ -274,11 +268,8 @@ async def async_setup_entry(
         coordinator.config_entry = entry
 
     async_add_entities(
-        [
-            ZamgSensor(coordinator, entry.title, description)
-            for description in SENSOR_TYPES
-        ],
-        False,
+        ZamgSensor(coordinator, entry.title, description)
+        for description in SENSOR_TYPES
     )
 
 
@@ -292,22 +283,23 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.coordinator = coordinator
+        # self.coordinator = coordinator
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = (
-            f"{self.coordinator.data.get('station_id')}_{description.key}"
+            f"{coordinator.data.get(CONF_STATION_ID)}_{description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, coordinator.data.get(CONF_STATION_ID))},
+            manufacturer=ATTRIBUTION,
+            configuration_url=MANUFACTURER_URL,
+            name=coordinator.name,
         )
 
     @property
     def device_info(self):
         """Return the device info."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
-            manufacturer=DOMAIN,
-            configuration_url=MANUFACTURER_URL,
-            name=self.coordinator.name,
-        )
+        return self._attr_device_info
 
     @property
     def native_value(self):

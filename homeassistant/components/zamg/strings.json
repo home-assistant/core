@@ -5,7 +5,7 @@
       "user": {
         "description": "Set up your ZAMG to integrate with Home Assistant.",
         "data": {
-          "station_id": "[%key:common::config_flow::data::host%]"
+          "station_id": "Station ID (Defaults to nearest station)"
         }
       }
     },

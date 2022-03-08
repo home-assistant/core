@@ -1,4 +1,6 @@
 """Config Flow for zamg the Austrian "Zentralanstalt für Meteorologie und Geodynamik" integration."""
+from __future__ import annotations
+
 from typing import Any
 
 import voluptuous as vol
@@ -17,7 +19,12 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _client: ZamgData
 
-    def _show_setup_form(self, user_input=None, errors=None, station_id: str = ""):
+    def _show_setup_form(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, Any] | None = None,
+        station_id: str = "",
+    ):
         """Show the setup form to the user."""
         if user_input is None:
             user_input = {}
@@ -35,9 +42,9 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """Handle a flow initiated by the user."""
-        errors = {}
+        errors: dict[str, Any] = {}
 
         station_id = await self.hass.async_add_executor_job(
             closest_station,
