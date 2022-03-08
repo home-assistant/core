@@ -23,18 +23,19 @@ class AirzoneEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        zone_id: str,
+        entry: ConfigEntry,
+        system_zone_id: str,
         zone_name: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, zone_id)},
+            "identifiers": {(DOMAIN, f"{entry.entry_id, system_zone_id}")},
             "manufacturer": MANUFACTURER,
-            "name": f"Airzone [{zone_id}] {zone_name}",
+            "name": f"Airzone [{system_zone_id}] {zone_name}",
         }
-        self.zone_id = zone_id
+        self.system_zone_id = system_zone_id
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

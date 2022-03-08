@@ -58,7 +58,7 @@ async def async_setup_entry(
                     AirzoneSensor(
                         coordinator,
                         description,
-                        entry.entry_id,
+                        entry,
                         zone_id,
                         zone_name,
                     )
@@ -74,22 +74,22 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry_id: str,
-        zone_id: str,
+        entry: ConfigEntry,
+        system_zone_id: str,
         zone_name: str,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, zone_id, zone_name)
+        super().__init__(coordinator, entry, system_zone_id, zone_name)
         self._attr_name = f"{zone_name} {description.name}"
-        self._attr_unique_id = f"{entry_id}_{zone_id}_{description.key}"
+        self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}_{description.key}"
         self.entity_description = description
 
     @property
     def native_value(self):
         """Return the state."""
         value = None
-        if self.zone_id in self.coordinator.data[AZD_ZONES]:
-            zone = self.coordinator.data[AZD_ZONES][self.zone_id]
+        if self.system_zone_id in self.coordinator.data[AZD_ZONES]:
+            zone = self.coordinator.data[AZD_ZONES][self.system_zone_id]
             if self.entity_description.key in zone:
                 value = zone[self.entity_description.key]
         return value
