@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from aiohttp import CookieJar
 from sense_energy import (
     ASyncSenseable,
     SenseAuthenticationException,
@@ -69,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create a separate one since we cannot share between
     # multiple entries since the cookies will get overwritten
-    client_session = async_create_clientsession(hass)
+    client_session = async_create_clientsession(hass, cookie_jar=CookieJar())
 
     gateway = ASyncSenseable(
         api_timeout=timeout, wss_timeout=timeout, client_session=client_session
