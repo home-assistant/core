@@ -10,13 +10,35 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 SCAN_INTERVAL = timedelta(seconds=60)
+
+
+class AirzoneDevice(CoordinatorEntity):
+    """Define an Airzone device."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        zone_id: str,
+        zone_name: str,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self._attr_device_info: DeviceInfo = {
+            "identifiers": {(DOMAIN, zone_id)},
+            "manufacturer": MANUFACTURER,
+            "name": f"Airzone [{zone_id}] {zone_name}",
+        }
+        self.zone_id = zone_id
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
