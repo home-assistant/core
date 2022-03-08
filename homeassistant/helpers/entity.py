@@ -573,25 +573,7 @@ class Entity(ABC):
         state = self._stringify_state(available)
         if available:
             attr.update(self.state_attributes or {})
-            extra_state_attributes = self.extra_state_attributes
-            if extra_state_attributes is None:
-                device_state_attributes = self.device_state_attributes
-                # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
-                # Warning added in 2021.12, will be removed in 2022.4
-                if (
-                    device_state_attributes is not None
-                    and not self._deprecated_device_state_attributes_reported
-                ):
-                    report_issue = self._suggest_report_issue()
-                    _LOGGER.warning(
-                        "Entity %s (%s) implements device_state_attributes. Please %s",
-                        self.entity_id,
-                        type(self),
-                        report_issue,
-                    )
-                    self._deprecated_device_state_attributes_reported = True
-                    extra_state_attributes = device_state_attributes
-            attr.update(extra_state_attributes or {})
+            attr.update(self.extra_state_attributes or {})
 
         if (unit_of_measurement := self.unit_of_measurement) is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
