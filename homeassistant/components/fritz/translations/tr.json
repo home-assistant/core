@@ -10,7 +10,8 @@
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "connection_error": "Ba\u011flanma hatas\u0131",
-            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "upnp_not_configured": "Cihazda UPnP ayarlar\u0131 eksik."
         },
         "flow_title": "{name}",
         "step": {

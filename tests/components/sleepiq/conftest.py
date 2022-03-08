@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import create_autospec, patch
 
-from asyncsleepiq import SleepIQBed, SleepIQSleeper
+from asyncsleepiq import SleepIQBed, SleepIQFoundation, SleepIQLight, SleepIQSleeper
 import pytest
 
 from homeassistant.components.sleepiq import DOMAIN
@@ -48,11 +48,22 @@ def mock_asyncsleepiq():
         sleeper_l.name = SLEEPER_L_NAME
         sleeper_l.in_bed = True
         sleeper_l.sleep_number = 40
+        sleeper_l.pressure = 1000
 
         sleeper_r.side = "R"
         sleeper_r.name = SLEEPER_R_NAME
         sleeper_r.in_bed = False
         sleeper_r.sleep_number = 80
+        sleeper_r.pressure = 1400
+
+        bed.foundation = create_autospec(SleepIQFoundation)
+        light_1 = create_autospec(SleepIQLight)
+        light_1.outlet_id = 1
+        light_1.is_on = False
+        light_2 = create_autospec(SleepIQLight)
+        light_2.outlet_id = 2
+        light_2.is_on = False
+        bed.foundation.lights = [light_1, light_2]
 
         yield client
 

@@ -10,7 +10,8 @@
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung",
             "connection_error": "Gagal terhubung",
-            "invalid_auth": "Autentikasi tidak valid"
+            "invalid_auth": "Autentikasi tidak valid",
+            "upnp_not_configured": "Pengaturan UPnP pada perangkat tidak ada."
         },
         "flow_title": "{name}",
         "step": {

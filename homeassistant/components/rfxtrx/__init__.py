@@ -47,7 +47,6 @@ from .const import (
     SERVICE_SEND,
 )
 
-DEFAULT_SIGNAL_REPETITIONS = 1
 DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
@@ -561,15 +560,12 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
-        signal_repetitions: int = 1,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
-        self.signal_repetitions = signal_repetitions
         self._state: bool | None = None
 
     async def _async_send(self, fun, *args):
         rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]
-        for _ in range(self.signal_repetitions):
-            await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)
+        await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

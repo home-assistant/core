@@ -69,7 +69,7 @@ class FlowResult(TypedDict, total=False):
     title: str
     data: Mapping[str, Any]
     step_id: str
-    data_schema: vol.Schema
+    data_schema: vol.Schema | None
     extra: str
     required: bool
     errors: dict[str, str] | None
@@ -408,7 +408,7 @@ class FlowHandler:
         self,
         *,
         step_id: str,
-        data_schema: vol.Schema = None,
+        data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
         description_placeholders: dict[str, Any] | None = None,
         last_step: bool | None = None,
