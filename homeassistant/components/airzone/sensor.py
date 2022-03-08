@@ -58,6 +58,7 @@ async def async_setup_entry(
                     AirzoneSensor(
                         coordinator,
                         description,
+                        entry.entry_id,
                         zone_id,
                         zone_name,
                     )
@@ -73,13 +74,14 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
+        entry_id: str,
         zone_id: str,
         zone_name: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, zone_id, zone_name)
         self._attr_name = f"{zone_name} {description.name}"
-        self._attr_unique_id = f"{zone_id}_{description.key}"
+        self._attr_unique_id = f"{entry_id}_{zone_id}_{description.key}"
         self.entity_description = description
 
     @property
