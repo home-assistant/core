@@ -62,7 +62,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 serial = await validate_host_input(user_input[CONF_HOST])
+            except (ConnectionError, ClientConnectionError):
+                errors["base"] = "cannot_connect"
 
+                return self.async_show_form(
+                    step_id="local_config",
+                    errors=errors,
+                    description_placeholders={CONF_HOST: user_input[CONF_HOST]},
+                    data_schema=vol.Schema(
+                        {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
+                    ),
+                )
+            else:
                 await self.async_set_unique_id(serial)
                 # check if found before
                 self._abort_if_unique_id_configured(
@@ -75,18 +86,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title="Fireplace", data=self._config_context
-                )
-
-            except (ConnectionError, ClientConnectionError):
-                errors["base"] = "cannot_connect"
-
-                return self.async_show_form(
-                    step_id="local_config",
-                    errors=errors,
-                    description_placeholders={CONF_HOST: user_input[CONF_HOST]},
-                    data_schema=vol.Schema(
-                        {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
-                    ),
                 )
 
         return self.async_show_form(
