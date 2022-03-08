@@ -274,9 +274,6 @@ class Entity(ABC):
     # If we reported this entity is updated while disabled
     _disabled_reported = False
 
-    # If we reported this entity is using deprecated device_state_attributes
-    _deprecated_device_state_attributes_reported = False
-
     # Protect for multiple updates
     _update_staged = False
 
