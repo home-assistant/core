@@ -1,6 +1,7 @@
 {
   "domain": "switch",
   "name": "Switch",
+  "dependencies": ["light"],
   "documentation": "https://www.home-assistant.io/integrations/switch",
   "codeowners": [
     "@home-assistant/core"

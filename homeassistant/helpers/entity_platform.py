@@ -48,6 +48,7 @@ from .typing import ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
     from .entity import Entity
+    from .entity_component import EntityComponent
 
 
 SLOW_SETUP_WARNING = 10
@@ -418,6 +419,26 @@ class EntityPlatform:
         """Add an entity to the platform."""
         if entity is None:
             raise ValueError("Entity cannot be None")
+
+        if self.domain == "switch":
+            if entity.unique_id is not None:
+                if existing_entity_id := entity_registry.async_get_entity_id(
+                    self.domain, self.platform_name, entity.unique_id
+                ):
+                    entity_entry = entity_registry.async_get(existing_entity_id)
+                    assert entity_entry
+                    if (options := entity_entry.options) and (
+                        switch_options := options.get("switch")
+                    ):
+                        if switch_options.get("component") == "light":
+                            light: EntityComponent = self.hass.data["light"]
+                            light_platform: EntityPlatform = light._platforms["light"]
+                            return await light_platform._async_add_entity(
+                                entity,
+                                update_before_add,
+                                entity_registry,
+                                device_registry,
+                            )
 
         entity.add_to_platform_start(
             self.hass,

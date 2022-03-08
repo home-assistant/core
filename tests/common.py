@@ -712,6 +712,7 @@ class MockToggleEntity(entity.ToggleEntity):
 
     def __init__(self, name, state, unique_id=None):
         """Initialize the mock entity."""
+        self._attr_unique_id = unique_id
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self.calls = []

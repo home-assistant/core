@@ -166,3 +166,42 @@ async def test_config_entry_unregistered_uuid(hass: HomeAssistant):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
+
+
+async def test_light_switch_hack(hass: HomeAssistant, enable_custom_integrations):
+    """Test light switch hack."""
+    platform = getattr(hass.components, "test.switch")
+    platform.init(empty=True)
+    platform.ENTITIES.append(platform.MockToggleEntity("AC", "on", "unique"))
+
+    registry = er.async_get(hass)
+    switch_registry_entry = registry.async_get_or_create(
+        "switch",
+        "test",
+        "unique",
+    )
+    registry.async_update_entity_options(
+        switch_registry_entry.entity_id, "switch", {"component": "light"}
+    )
+
+    await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "test",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    # No switch state
+    assert not hass.states.async_all("switch")
+
+    # A light state
+    lights = hass.states.async_all("light")
+    assert len(lights) == 1
+
+    # The light has its own entity registry entry
+    light_registry_entry = registry.async_get(lights[0].entity_id)
+    assert light_registry_entry != switch_registry_entry
