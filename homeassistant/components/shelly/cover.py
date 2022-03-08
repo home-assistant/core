@@ -151,34 +151,34 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         super().__init__(wrapper, f"cover:{id_}")
         self._id = id_
         self._attr_supported_features: int = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
-        if self.wrapper.device.status[self.key]["pos_control"]:
+        if self.status["pos_control"]:
             self._attr_supported_features |= SUPPORT_SET_POSITION
 
     @property
     def is_closed(self) -> bool | None:
         """If cover is closed."""
-        if not self.wrapper.device.status[self.key]["pos_control"]:
+        if not self.status["pos_control"]:
             return None
 
-        return cast(bool, self.wrapper.device.status[self.key]["state"] == "closed")
+        return cast(bool, self.status["state"] == "closed")
 
     @property
     def current_cover_position(self) -> int | None:
         """Position of the cover."""
-        if not self.wrapper.device.status[self.key]["pos_control"]:
+        if not self.status["pos_control"]:
             return None
 
-        return cast(int, self.wrapper.device.status[self.key]["current_pos"])
+        return cast(int, self.status["current_pos"])
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
-        return cast(bool, self.wrapper.device.status[self.key]["state"] == "closing")
+        return cast(bool, self.status["state"] == "closing")
 
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
-        return cast(bool, self.wrapper.device.status[self.key]["state"] == "opening")
+        return cast(bool, self.status["state"] == "opening")
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
