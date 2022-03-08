@@ -97,7 +97,7 @@ async def async_setup_entry(
 
 
 class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
-    """Representation of a Sensibo numbers."""
+    """Representation of a Sensibo Motion Sensor."""
 
     entity_description: SensiboSensorEntityDescription
 
