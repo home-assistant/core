@@ -215,15 +215,23 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
     @callback
-    def _async_get_existing_matching_entry(self) -> config_entries.ConfigEntry | None:
-        """Get first existing matching entry."""
+    def _async_get_existing_matching_entry(
+        self,
+    ) -> tuple[config_entries.ConfigEntry | None, bool]:
+        """Get first existing matching entry (prefer unique id)."""
+        matching_host_entry: config_entries.ConfigEntry | None = None
         for entry in self._async_current_entries(include_ignore=False):
-            mac = entry.data.get(CONF_MAC)
-            mac_match = mac and self._mac and mac == self._mac
-            upnp_udn_match = self._upnp_udn and self._upnp_udn == entry.unique_id
-            if entry.data[CONF_HOST] == self._host or mac_match or upnp_udn_match:
-                return entry
-        return None
+            if (self._mac and self._mac == entry.data.get(CONF_MAC)) or (
+                self._upnp_udn and self._upnp_udn == entry.unique_id
+            ):
+                LOGGER.debug("Found entry matching unique_id for %s", self._host)
+                return entry, True
+
+            if entry.data[CONF_HOST] == self._host:
+                LOGGER.debug("Found entry matching host for %s", self._host)
+                matching_host_entry = entry
+
+        return matching_host_entry, False
 
     @callback
     def _async_update_existing_matching_entry(
@@ -233,15 +241,18 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Returns the existing entry if it was updated.
         """
-        if entry := self._async_get_existing_matching_entry():
+        entry, is_unique_match = self._async_get_existing_matching_entry()
+        if entry:
             entry_kw_args: dict = {}
-            if (self._udn and self._upnp_udn and self._upnp_udn != self._udn) or (
-                self.unique_id and entry.unique_id is None
+            if self.unique_id and (
+                entry.unique_id is None
+                or (is_unique_match and self.unique_id != entry.unique_id)
             ):
                 entry_kw_args["unique_id"] = self.unique_id
             if self._mac and not entry.data.get(CONF_MAC):
                 entry_kw_args["data"] = {**entry.data, CONF_MAC: self._mac}
             if entry_kw_args:
+                LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
                 self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
