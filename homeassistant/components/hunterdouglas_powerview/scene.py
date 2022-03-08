@@ -1,6 +1,7 @@
 """Support for Powerview scenes from a Powerview hub."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from aiopvapi.resources.scene import Scene as PvScene
@@ -22,6 +23,8 @@ from .const import (
 )
 from .entity import HDEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -40,6 +43,7 @@ async def async_setup_entry(
         scene = PvScene(raw_scene, pv_request)
         room_name = room_data.get(scene.room_id, {}).get(ROOM_NAME_UNICODE, "")
         pvscenes.append(PowerViewScene(coordinator, device_info, room_name, scene))
+    _LOGGER.debug("New scenes: %s", pvscenes)
     async_add_entities(pvscenes)
 
 
