@@ -10,7 +10,7 @@ from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
-from websockets.exceptions import WebSocketException
+from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.media_player.const import (
@@ -369,27 +369,48 @@ async def test_update_access_denied(hass: HomeAssistant, mock_now: datetime) -> 
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_update_connection_failure(
+async def test_update_ws_connection_failure(
+    hass: HomeAssistant,
+    mock_now: datetime,
+    remotews: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Testing update tv connection failure exception."""
+    await setup_samsungtv(hass, MOCK_CONFIGWS)
+
+    with patch.object(
+        remotews,
+        "start_listening",
+        side_effect=ConnectionFailure('{"event": "ms.voiceApp.hide"}'),
+    ), patch.object(remotews, "is_alive", return_value=False):
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    assert (
+        "Unexpected ConnectionFailure trying to get remote for fake_host, please "
+        'report this issue: ConnectionFailure(\'{"event": "ms.voiceApp.hide"}\')'
+        in caplog.text
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
+async def test_update_ws_connection_closed(
     hass: HomeAssistant, mock_now: datetime, remotews: Mock
 ) -> None:
     """Testing update tv connection failure exception."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[OSError("Boom"), DEFAULT_MOCK],
-    ):
-        await setup_samsungtv(hass, MOCK_CONFIGWS)
+    await setup_samsungtv(hass, MOCK_CONFIGWS)
 
-        with patch.object(
-            remotews, "start_listening", side_effect=ConnectionFailure("Boom")
-        ), patch.object(remotews, "is_alive", return_value=False):
-            next_update = mock_now + timedelta(minutes=5)
-            with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-                async_fire_time_changed(hass, next_update)
-            await hass.async_block_till_done()
-            next_update = mock_now + timedelta(minutes=10)
-            with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-                async_fire_time_changed(hass, next_update)
-            await hass.async_block_till_done()
+    with patch.object(
+        remotews, "start_listening", side_effect=ConnectionClosedError(None, None)
+    ), patch.object(remotews, "is_alive", return_value=False):
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
 
     assert [
         flow
