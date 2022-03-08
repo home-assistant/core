@@ -50,9 +50,8 @@ KEY_PRESS_TIMEOUT = 1.2
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
     """Extract the mac address from the device info."""
-    dev_info = info.get("device", {})
-    if dev_info.get("networkType") == "wireless" and dev_info.get("wifiMac"):
-        return format_mac(dev_info["wifiMac"])
+    if wifi_mac := info.get("device", {}).get("wifiMac"):
+        return format_mac(wifi_mac)
     return None
 
 
