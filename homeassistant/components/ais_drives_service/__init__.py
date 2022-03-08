@@ -192,9 +192,7 @@ def rclone_get_remotes_long():
     fix_rclone_config_permissions()
     #
     rclone_cmd = ["rclone", "listremotes", "--long", G_RCLONE_CONF]
-    proc = subprocess.run(
-        rclone_cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
+    proc = subprocess.run(rclone_cmd, encoding="utf-8", capture_output=True)
     #  will wait for the process to complete and then we are going to return the output
     if "" != proc.stderr:
         _LOGGER.error(
@@ -230,7 +228,8 @@ def rclone_get_auth_url(drive_name, drive_type):
         + " config_is_local false"
     )
     child = pexpect.spawn(rclone_cmd)
-    child.expect("Enter verification code>", timeout=10)
+    # child.expect("Enter verification code>", timeout=10)
+    child.expect("Waiting for code...", timeout=10)
     info = child.before
     child.kill(0)
     info = str(info, "utf-8")
@@ -804,9 +803,7 @@ class LocalData:
         #
         fix_rclone_config_permissions()
         #
-        proc = subprocess.run(
-            rclone_cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        proc = subprocess.run(rclone_cmd, encoding="utf-8", capture_output=True)
 
         #  will wait for the process to complete and then we are going to return the output
         if "" != proc.stderr:
