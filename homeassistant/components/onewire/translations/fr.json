@@ -22,5 +22,23 @@
                 "title": "Configurer 1-Wire"
             }
         }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "S\u00e9lectionnez les appareils \u00e0 configurer"
+        },
+        "step": {
+            "configure_device": {
+                "data": {
+                    "precision": "Pr\u00e9cision du capteur"
+                },
+                "description": "Choisissez la pr\u00e9cision du capteur pour {sensor_id}"
+            },
+            "device_selection": {
+                "data": {
+                    "device_selection": "S\u00e9lectionnez les appareils \u00e0 configurer."
+                }
+            }
+        }
     }
 }

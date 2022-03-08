@@ -173,12 +173,20 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._app_list is not None:
             self._attr_source_list.extend(self._app_list)
 
-    async def _async_send_key(self, key: str, key_type: str | None = None) -> None:
+    async def _async_launch_app(self, app_id: str) -> None:
+        """Send launch_app to the tv."""
+        if self._power_off_in_progress():
+            LOGGER.info("TV is powering off, not sending launch_app command")
+            return
+        assert isinstance(self._bridge, SamsungTVWSBridge)
+        await self._bridge.async_launch_app(app_id)
+
+    async def _async_send_key(self, key: str) -> None:
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() and key != "KEY_POWEROFF":
-            LOGGER.info("TV is powering off, not sending command: %s", key)
+            LOGGER.info("TV is powering off, not sending key: %s", key)
             return
-        await self._bridge.async_send_key(key, key_type)
+        await self._bridge.async_send_key(key)
 
     def _power_off_in_progress(self) -> bool:
         return (
@@ -248,7 +256,7 @@ class SamsungTVDevice(MediaPlayerEntity):
     ) -> None:
         """Support changing a channel."""
         if media_type == MEDIA_TYPE_APP:
-            await self._async_send_key(media_id, "run_app")
+            await self._async_launch_app(media_id)
             return
 
         if media_type != MEDIA_TYPE_CHANNEL:
@@ -284,7 +292,7 @@ class SamsungTVDevice(MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self._app_list and source in self._app_list:
-            await self._async_send_key(self._app_list[source], "run_app")
+            await self._async_launch_app(self._app_list[source])
             return
 
         if source in SOURCES:

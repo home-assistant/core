@@ -2,7 +2,6 @@
 
 CONF_DATA_BITS = "data_bits"
 CONF_AUTOMATIC_ADD = "automatic_add"
-CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_OFF_DELAY = "off_delay"
 CONF_VENETIAN_BLIND_MODE = "venetian_blind_mode"
 CONF_PROTOCOLS = "protocols"

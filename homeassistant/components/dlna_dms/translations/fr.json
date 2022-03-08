@@ -1,0 +1,13 @@
+{
+    "config": {
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "description": "S\u00e9lectionnez l'appareil \u00e0 configurer"
+            }
+        }
+    }
+}

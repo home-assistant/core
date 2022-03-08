@@ -736,7 +736,6 @@ omit =
     homeassistant/components/mysensors/handler.py
     homeassistant/components/mysensors/helpers.py
     homeassistant/components/mysensors/light.py
-    homeassistant/components/mysensors/notify.py
     homeassistant/components/mysensors/switch.py
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
@@ -1016,6 +1015,7 @@ omit =
     homeassistant/components/sensibo/climate.py
     homeassistant/components/sensibo/coordinator.py
     homeassistant/components/sensibo/diagnostics.py
+    homeassistant/components/sensibo/entity.py
     homeassistant/components/sensibo/number.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py
