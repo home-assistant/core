@@ -1,5 +1,7 @@
 """Constants for the Aurora ABB PowerOne integration."""
 
+from .config_flow import CONF_TYPE_SERIAL
+
 DOMAIN = "aurora_abb_powerone"
 
 # Min max addresses and default according to here:
@@ -8,9 +10,9 @@ DOMAIN = "aurora_abb_powerone"
 MIN_ADDRESS = 2
 MAX_ADDRESS = 63
 DEFAULT_ADDRESS = 2
-DEFAULT_TYPE = "serial"
+DEFAULT_TYPE = CONF_TYPE_SERIAL
 DEFAULT_HOST = None
-DEFAULT_PORT = 1234
+DEFAULT_PORT = 2001
 
 DEFAULT_INTEGRATION_TITLE = "PhotoVoltaic Inverters"
 DEFAULT_DEVICE_NAME = "Solar Inverter"

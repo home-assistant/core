@@ -13,14 +13,11 @@ import logging
 from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTCPClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS  # Bus address
-from homeassistant.const import CONF_HOST  # Network address
-from homeassistant.const import CONF_PORT  # RS485 Device or TCP
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .config_flow import validate_and_connect
+from .config_flow import CONF_TYPE_TCP, validate_and_connect
 from .const import ATTR_SERIAL_NUMBER, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
@@ -30,13 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aurora ABB PowerOne from a config entry."""
-    comport = entry.data[CONF_PORT]
-    address = entry.data[CONF_ADDRESS]
 
-    if entry.data[CONF_PORT] == "TCP":
-        ip, __, port = entry.data[CONF_HOST].rpartition(":")
-        client = AuroraTCPClient(ip=ip, port=int(port), address=address)
+    if entry.data[CONF_TYPE] == CONF_TYPE_TCP:
+        host = entry.data[CONF_HOST]
+        port = entry.data[CONF_PORT]
+        address = entry.data[CONF_ADDRESS]
+        client = AuroraTCPClient(ip=host, port=int(port), address=address)
     else:
+        comport = entry.data[CONF_PORT]
+        address = entry.data[CONF_ADDRESS]
         client = AuroraSerialClient(address, comport, parity="N", timeout=1)
 
     # To handle yaml import attempts in darkness, (re)try connecting only if

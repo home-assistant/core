@@ -1,10 +1,12 @@
 {
   "config": {
     "step": {
-      "user": {
+      "user_ctype": {
         "description": "The inverter must connected and on (in daylight), please select connection type (direct serial or TCP/IP based)",
         "data": {
-          "type": "Connection type"
+          "type": "Connection type",
+          "type_tcp": "TCP/IP to Serial Converter",
+          "type_serial": "Direct USB Connection/Serial RS485"
         }
       },
       "user_serial": {
