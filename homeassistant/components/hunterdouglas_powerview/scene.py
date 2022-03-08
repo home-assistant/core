@@ -73,3 +73,8 @@ class PowerViewScene(HDEntity, Scene):
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         await self._scene.activate()
+
+    @property
+    def available(self) -> bool:
+        """Debug."""
+        return True
