@@ -74,7 +74,8 @@ class PowerViewScene(HDEntity, Scene):
         """Activate scene. Try to get entities into requested state."""
         await self._scene.activate()
 
-    @property
-    def available(self) -> bool:
-        """Debug."""
-        return True
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
