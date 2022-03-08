@@ -130,6 +130,7 @@ omit =
     homeassistant/components/bmw_connected_drive/notify.py
     homeassistant/components/bmw_connected_drive/sensor.py
     homeassistant/components/bosch_shc/__init__.py
+    homeassistant/components/bosch_shc/alarm_control_panel.py
     homeassistant/components/bosch_shc/binary_sensor.py
     homeassistant/components/bosch_shc/cover.py
     homeassistant/components/bosch_shc/entity.py

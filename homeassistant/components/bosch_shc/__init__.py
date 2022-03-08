@@ -20,6 +20,7 @@ from .const import (
 )
 
 PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.COVER,
     Platform.SENSOR,
