@@ -38,7 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Config Flow Handler."""
         self._discovered_host: str = ""
         self._config_context = {}
-        self._discovered_hosts: [str] | None = None
+        self._discovered_hosts: list[str] | None = None
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
