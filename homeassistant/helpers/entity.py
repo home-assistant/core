@@ -810,7 +810,7 @@ class Entity(ABC):
         If the entity doesn't have a non disabled entry in the entity registry,
         or if force_remove=True, its state will be removed.
         """
-        if self.platform and not self._platform_state == EntityPlatformState.ADDED:
+        if self.platform and self._platform_state != EntityPlatformState.ADDED:
             raise HomeAssistantError(
                 f"Entity {self.entity_id} async_remove called twice"
             )
