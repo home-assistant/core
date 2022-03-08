@@ -90,7 +90,7 @@ async def async_setup_entry(
     async_add_entities(
         SensiboMotionSensor(coordinator, device_id, sensor_id, sensor_data, description)
         for device_id, device_data in coordinator.data.parsed.items()
-        for sensor_id, sensor_data in device_data["motion_sensors"]
+        for sensor_id, sensor_data in device_data["motion_sensors"].items()
         for description in MOTION_SENSOR_TYPES
         if device_data["motion_sensors"] and sensor_data[sensor_id]
     )
