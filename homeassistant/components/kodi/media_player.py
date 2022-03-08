@@ -718,7 +718,7 @@ class KodiEntity(MediaPlayerEntity):
         elif media_type_lower == MEDIA_TYPE_PLAYLIST:
             await self._kodi.play_playlist(int(media_id))
         elif media_type_lower == "file":
-            await self._kodi.play_file(str(media_id))
+            await self._kodi.play_file(media_id)
         elif media_type_lower == "directory":
             await self._kodi.play_directory(media_id)
         elif media_type_lower in [
