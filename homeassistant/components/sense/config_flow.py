@@ -1,6 +1,7 @@
 """Config flow for Sense integration."""
 import logging
 
+from aiohttp import CookieJar
 from sense_energy import (
     ASyncSenseable,
     SenseAuthenticationException,
@@ -43,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         self._auth_data.update(dict(data))
         timeout = self._auth_data[CONF_TIMEOUT]
-        client_session = async_create_clientsession(self.hass)
+        client_session = async_create_clientsession(self.hass, cookie_jar=CookieJar())
 
         self._gateway = ASyncSenseable(
             api_timeout=timeout, wss_timeout=timeout, client_session=client_session
