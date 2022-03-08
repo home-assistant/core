@@ -493,7 +493,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
     async def async_power_off(self) -> None:
         """Send power off command to remote."""
         if self._get_device_spec("FrameTVSupport") == "true":
-            await self._async_send_commands(SendRemoteKey.hold_key("KEY_POWER", 3))
+            await self._async_send_commands(SendRemoteKey.hold("KEY_POWER", 3))
         else:
             await self._async_send_commands([SendRemoteKey.click("KEY_POWER")])
         # Force closing of remote session to provide instant UI feedback
