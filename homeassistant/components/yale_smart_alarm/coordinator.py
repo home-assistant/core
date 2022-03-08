@@ -119,6 +119,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             "online": updates["online"],
             "sensor_map": _sensor_map,
             "lock_map": _lock_map,
+            "panel_info": updates["panel_info"],
         }
 
     def get_updates(self) -> dict[str, Any]:
@@ -136,9 +137,11 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             arm_status = self.yale.get_armed_status()
-            cycle = self.yale.get_cycle()
-            status = self.yale.get_status()
-            online = self.yale.get_online()
+            data = self.yale.get_all()
+            cycle = data["CYCLE"]
+            status = data["STATUS"]
+            online = data["ONLINE"]
+            panel_info = data["PANEL INFO"]
 
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
@@ -150,4 +153,5 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             "cycle": cycle,
             "status": status,
             "online": online,
+            "panel_info": panel_info,
         }
