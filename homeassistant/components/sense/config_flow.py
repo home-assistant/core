@@ -80,6 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except SENSE_TIMEOUT_EXCEPTIONS:
             errors["base"] = "cannot_connect"
         except SenseAuthenticationException:
+            _LOGGER.exception("Auth failed")
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -97,6 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SENSE_TIMEOUT_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             except SenseAuthenticationException:
+                _LOGGER.exception("Auth failed")
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
