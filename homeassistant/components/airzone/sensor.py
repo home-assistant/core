@@ -1,16 +1,45 @@
 """Support for the Airzone sensors."""
 from __future__ import annotations
 
-from aioairzone.const import AZD_NAME, AZD_ZONES
+from typing import Final
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from aioairzone.const import AZD_HUMIDITY, AZD_NAME, AZD_TEMP, AZD_ZONES
+
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneDevice
-from .const import DOMAIN, SENSOR_TYPES
+from . import AirzoneEntity
+from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
+
+SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+    SensorEntityDescription(
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        key=AZD_TEMP,
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        device_class=DEVICE_CLASS_HUMIDITY,
+        key=AZD_HUMIDITY,
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -34,10 +63,10 @@ async def async_setup_entry(
                     )
                 )
 
-    async_add_entities(sensors, False)
+    async_add_entities(sensors)
 
 
-class AirzoneSensor(AirzoneDevice, SensorEntity):
+class AirzoneSensor(AirzoneEntity, SensorEntity):
     """Define an Airzone sensor."""
 
     def __init__(
@@ -50,7 +79,7 @@ class AirzoneSensor(AirzoneDevice, SensorEntity):
         """Initialize."""
         super().__init__(coordinator, zone_id, zone_name)
         self._attr_name = f"{zone_name} {description.name}"
-        self._attr_unique_id = f"{DOMAIN}_{zone_id}_{description.key}"
+        self._attr_unique_id = f"{zone_id}_{description.key}"
         self.entity_description = description
 
     @property

@@ -1,7 +1,6 @@
 """Tests for the Airzone integration."""
 
 from homeassistant.components.airzone import DOMAIN
-from homeassistant.components.airzone.const import SENSOR_TYPES
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -29,9 +28,6 @@ async def async_init_integration(
     hass: HomeAssistant,
 ):
     """Set up the Airzone integration in Home Assistant."""
-
-    for description in SENSOR_TYPES:
-        description.entity_registry_enabled_default = True
 
     with mock_aiohttp_client() as _m:
         airzone_requests_mock(_m)

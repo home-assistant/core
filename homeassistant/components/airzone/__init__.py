@@ -17,8 +17,8 @@ from .coordinator import AirzoneUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-class AirzoneDevice(CoordinatorEntity):
-    """Define an Airzone device."""
+class AirzoneEntity(CoordinatorEntity):
+    """Define an Airzone entity."""
 
     def __init__(
         self,
@@ -45,8 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
-
-    await airzone.update_airzone()
 
     coordinator = AirzoneUpdateCoordinator(hass, airzone)
     await coordinator.async_config_entry_first_refresh()
