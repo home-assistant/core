@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_LOCAL_API_HOST, DEFAULT_LOCAL_API_PORT, DOMAIN
+from .const import DEFAULT_LOCAL_API_PORT, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -53,7 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=DEFAULT_LOCAL_API_HOST): str,
+                    vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
                 }
             ),
