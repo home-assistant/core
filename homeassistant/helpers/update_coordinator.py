@@ -22,7 +22,6 @@ from .debounce import Debouncer
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
-_LOGGER = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
@@ -311,12 +310,6 @@ class CoordinatorEntity(Generic[T], entity.Entity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        _LOGGER.debug(
-            "%s: coordinator=%s available=%s",
-            self.entity_id,
-            self.coordinator,
-            self.coordinator.last_update_success,
-        )
         return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
