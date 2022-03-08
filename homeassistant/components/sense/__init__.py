@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -67,7 +67,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     user_id = entry_data.get("user_id", "")
     monitor_id = entry_data.get("monitor_id", "")
 
-    client_session = async_get_clientsession(hass)
+    # Create a separate one since we cannot share between
+    # multiple entries since the cookies will get overwritten
+    client_session = async_create_clientsession(hass)
 
     gateway = ASyncSenseable(
         api_timeout=timeout, wss_timeout=timeout, client_session=client_session
