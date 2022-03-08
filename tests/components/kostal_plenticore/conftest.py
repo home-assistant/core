@@ -63,6 +63,7 @@ async def init_integration(
         plenticore = mock_api_class.return_value
         plenticore.async_setup = AsyncMock()
         plenticore.async_setup.return_value = True
+
         plenticore.device_info = DeviceInfo(
             configuration_url="http://192.168.1.2",
             identifiers={("kostal_plenticore", "12345")},
