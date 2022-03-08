@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe"
+                }
+            }
+        }
+    }
+}
