@@ -71,6 +71,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host: str = ""
         self._mac: str | None = None
         self._udn: str | None = None
+        self._upnp_udn: str | None = None
         self._manufacturer: str | None = None
         self._model: str | None = None
         self._name: str | None = None
@@ -220,10 +221,19 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Returns the existing entry if it was updated.
         """
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] != self._host:
+            mac = entry.data.get(CONF_MAC)
+            mac_match = mac and self._mac and mac == self._mac
+            upnp_udn_match = self._upnp_udn and self._upnp_udn == entry.unique_id
+            if (
+                entry.data[CONF_HOST] != self._host
+                and not mac_match
+                and not upnp_udn_match
+            ):
                 continue
             entry_kw_args: dict = {}
-            if self.unique_id and entry.unique_id is None:
+            if (self._udn and self._upnp_udn and self._upnp_udn != self._udn) or (
+                self.unique_id and entry.unique_id is None
+            ):
                 entry_kw_args["unique_id"] = self.unique_id
             if self._mac and not entry.data.get(CONF_MAC):
                 entry_kw_args["data"] = {**entry.data, CONF_MAC: self._mac}
@@ -264,16 +274,22 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
         model_name: str = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
-        self._udn = _strip_uuid(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
+        self._udn = self._upnp_udn = _strip_uuid(
+            discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
+        )
         if hostname := urlparse(discovery_info.ssdp_location or "").hostname:
             self._host = hostname
-        await self._async_set_unique_id_from_udn()
         self._manufacturer = discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
         self._abort_if_manufacturer_is_not_samsung()
         if not await self._async_get_and_check_device_info():
             # If we cannot get device info for an SSDP discovery
             # its likely a legacy tv.
             self._name = self._title = self._model = model_name
+
+        # The UDN provided by the ssdp discovery doesn't always match the UDN
+        # from the device_info, used by the the other methods so we need to
+        # ensure the device_info is loaded before setting the unique_id
+        await self._async_set_unique_id_from_udn()
         self._async_update_and_abort_for_matching_unique_id()
         self._async_abort_if_host_already_in_progress()
         self.context["title_placeholders"] = {"device": self._title}
