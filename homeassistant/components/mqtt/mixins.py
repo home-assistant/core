@@ -5,7 +5,7 @@ from abc import abstractmethod
 from collections.abc import Callable
 import json
 import logging
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -508,7 +508,6 @@ async def cleanup_device_registry(
     entity_registry = er.async_get(hass)
     if (
         device_id
-        and config_entry_id
         and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
         )
@@ -517,7 +516,7 @@ async def cleanup_device_registry(
         and not notify.device_has_notify_services(hass, device_id)
     ):
         device_registry.async_update_device(
-            device_id, remove_config_entry_id=config_entry_id
+            device_id, remove_config_entry_id=cast(str, config_entry_id)
         )
 
 
