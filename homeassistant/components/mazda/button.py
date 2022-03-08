@@ -104,18 +104,6 @@ BUTTON_ENTITIES = [
         icon="mdi:hazard-lights",
     ),
     MazdaButtonEntityDescription(
-        key="start_charging",
-        name_suffix="Start Charging",
-        icon="mdi:ev-station",
-        is_supported=lambda data: data["isElectric"],
-    ),
-    MazdaButtonEntityDescription(
-        key="stop_charging",
-        name_suffix="Stop Charging",
-        icon="mdi:ev-station",
-        is_supported=lambda data: data["isElectric"],
-    ),
-    MazdaButtonEntityDescription(
         key="refresh_vehicle_status",
         name_suffix="Refresh Status",
         icon="mdi:refresh",

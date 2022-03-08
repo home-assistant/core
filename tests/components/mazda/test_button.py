@@ -52,11 +52,10 @@ async def test_button_setup_non_electric_vehicle(hass) -> None:
     assert state.attributes.get(ATTR_ICON) == "mdi:hazard-lights"
 
     # Since this is a non-electric vehicle, electric vehicle buttons should not be created
-    for key in ("start_charging", "stop_charging", "refresh_vehicle_status"):
-        entry = entity_registry.async_get(f"button.my_mazda3_{key}")
-        assert entry is None
-        state = hass.states.get(f"button.my_mazda3_{key}")
-        assert state is None
+    entry = entity_registry.async_get("button.my_mazda3_refresh_vehicle_status")
+    assert entry is None
+    state = hass.states.get("button.my_mazda3_refresh_vehicle_status")
+    assert state is None
 
 
 async def test_button_setup_electric_vehicle(hass) -> None:
@@ -99,22 +98,6 @@ async def test_button_setup_electric_vehicle(hass) -> None:
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:hazard-lights"
 
-    entry = entity_registry.async_get("button.my_mazda3_start_charging")
-    assert entry
-    assert entry.unique_id == "JM000000000000000_start_charging"
-    state = hass.states.get("button.my_mazda3_start_charging")
-    assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Start Charging"
-    assert state.attributes.get(ATTR_ICON) == "mdi:ev-station"
-
-    entry = entity_registry.async_get("button.my_mazda3_stop_charging")
-    assert entry
-    assert entry.unique_id == "JM000000000000000_stop_charging"
-    state = hass.states.get("button.my_mazda3_stop_charging")
-    assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Stop Charging"
-    assert state.attributes.get(ATTR_ICON) == "mdi:ev-station"
-
     entry = entity_registry.async_get("button.my_mazda3_refresh_status")
     assert entry
     assert entry.unique_id == "JM000000000000000_refresh_vehicle_status"
@@ -131,8 +114,6 @@ async def test_button_setup_electric_vehicle(hass) -> None:
         ("stop_engine", "stop_engine"),
         ("turn_on_hazard_lights", "turn_on_hazard_lights"),
         ("turn_off_hazard_lights", "turn_off_hazard_lights"),
-        ("start_charging", "start_charging"),
-        ("stop_charging", "stop_charging"),
         ("refresh_status", "refresh_vehicle_status"),
     ],
 )
