@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "Group members",
+                    "name": "Group name"
+                },
+                "description": "Select group options"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Group members"
+                },
+                "description": "Select group options"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Group members",
+                    "name": "Group name"
+                },
+                "description": "Select group options"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Group members"
+                },
+                "description": "Select group options"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Group type"
+                },
+                "description": "Select group type"
+            },
+            "light": {
+                "data": {
+                    "entities": "Group members",
+                    "name": "Group name"
+                },
+                "description": "Select group options"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Group members"
+                },
+                "description": "Select group options"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Group members",
+                    "name": "Group name"
+                },
+                "description": "Select group options"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Group members"
+                },
+                "description": "Select group options"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Closed",
