@@ -54,10 +54,11 @@ def async_trigger_discovery(
 ) -> None:
     """Trigger config flows for discovered devices."""
     for device in discovered_devices:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_DISCOVERY},
-                data={CONF_ID: device.uuid},
+        if device.uuid:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                    data={CONF_ID: device.uuid},
+                )
             )
-        )

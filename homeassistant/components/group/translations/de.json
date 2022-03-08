@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "Gruppenmitglieder",
+                    "name": "Gruppenname"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Gruppenmitglieder"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Gruppenmitglieder",
+                    "name": "Gruppenname"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Gruppenmitglieder"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Gruppentyp"
+                },
+                "description": "Gruppentyp ausw\u00e4hlen"
+            },
+            "light": {
+                "data": {
+                    "entities": "Gruppenmitglieder",
+                    "name": "Gruppenname"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Gruppenmitglieder"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Gruppenmitglieder",
+                    "name": "Gruppenname"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Gruppenmitglieder"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Geschlossen",

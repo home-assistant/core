@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
@@ -140,14 +140,15 @@ class BlockSleepingClimate(
         self.control_result: dict[str, Any] | None = None
         self.device_block: Block | None = device_block
         self.last_state: State | None = None
-        self.last_state_attributes: MappingProxyType[str, Any]
+        self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.wrapper.mac}-{self.block.description}"
+            assert self.block.channel
             self._preset_modes = [
                 PRESET_NONE,
-                *wrapper.device.settings["thermostats"][cast(int, self.block.channel)][
+                *wrapper.device.settings["thermostats"][int(self.block.channel)][
                     "schedule_profile_names"
                 ],
             ]
@@ -272,10 +273,10 @@ class BlockSleepingClimate(
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        if not self._attr_preset_modes:
+        if not self._preset_modes:
             return
 
-        preset_index = self._attr_preset_modes.index(preset_mode)
+        preset_index = self._preset_modes.index(preset_mode)
 
         if preset_index == 0:
             await self.set_state_full_path(schedule=0)
@@ -314,6 +315,16 @@ class BlockSleepingClimate(
             if hasattr(block, "targetTemp"):
                 self.block = block
 
-                _LOGGER.debug("Entity %s attached to block", self.name)
-                self.async_write_ha_state()
-                return
+        if self.device_block and self.block:
+            _LOGGER.debug("Entity %s attached to blocks", self.name)
+
+            assert self.block.channel
+
+            self._preset_modes = [
+                PRESET_NONE,
+                *self.wrapper.device.settings["thermostats"][int(self.block.channel)][
+                    "schedule_profile_names"
+                ],
+            ]
+
+            self.async_write_ha_state()

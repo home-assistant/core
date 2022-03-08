@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from ast import literal_eval
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime as dt
 from functools import lru_cache, partial, wraps
@@ -12,7 +13,7 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import Any, Awaitable, Callable, Union, cast
+from typing import Any, Union, cast
 import uuid
 
 import attr
@@ -36,6 +37,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     Platform,
 )
 from homeassistant.core import (
@@ -49,10 +51,11 @@ from homeassistant.core import (
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
-from homeassistant.helpers.typing import ConfigType, ServiceDataType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -67,14 +70,20 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
+    CONF_CERTIFICATE,
+    CONF_CLIENT_CERT,
+    CONF_CLIENT_KEY,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_TLS_INSECURE,
+    CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
+    DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
@@ -85,6 +94,7 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    PROTOCOL_31,
     PROTOCOL_311,
 )
 from .discovery import LAST_DISCOVERY
@@ -109,13 +119,6 @@ SERVICE_DUMP = "dump"
 
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_KEEPALIVE = "keepalive"
-CONF_CERTIFICATE = "certificate"
-CONF_CLIENT_KEY = "client_key"
-CONF_CLIENT_CERT = "client_cert"
-CONF_TLS_INSECURE = "tls_insecure"
-CONF_TLS_VERSION = "tls_version"
-
-PROTOCOL_31 = "3.1"
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
@@ -145,10 +148,12 @@ PLATFORMS = [
     Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SCENE,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
     Platform.VACUUM,
 ]
@@ -169,49 +174,53 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     required=True,
 )
 
+CONFIG_SCHEMA_BASE = vol.Schema(
+    {
+        vol.Optional(CONF_CLIENT_ID): cv.string,
+        vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
+            vol.Coerce(int), vol.Range(min=15)
+        ),
+        vol.Optional(CONF_BROKER): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_CERTIFICATE): vol.Any("auto", cv.isfile),
+        vol.Inclusive(
+            CONF_CLIENT_KEY, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
+        ): cv.isfile,
+        vol.Inclusive(
+            CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
+        ): cv.isfile,
+        vol.Optional(CONF_TLS_INSECURE): cv.boolean,
+        vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL): vol.Any(
+            "auto", "1.0", "1.1", "1.2"
+        ),
+        vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
+            cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
+        ),
+        vol.Optional(CONF_WILL_MESSAGE, default=DEFAULT_WILL): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_BIRTH_MESSAGE, default=DEFAULT_BIRTH): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+        # discovery_prefix must be a valid publish topic because if no
+        # state topic is specified, it will be created with the given prefix.
+        vol.Optional(
+            CONF_DISCOVERY_PREFIX, default=DEFAULT_PREFIX
+        ): valid_publish_topic,
+    }
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_TLS_VERSION),
-            vol.Schema(
-                {
-                    vol.Optional(CONF_CLIENT_ID): cv.string,
-                    vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
-                        vol.Coerce(int), vol.Range(min=15)
-                    ),
-                    vol.Optional(CONF_BROKER): cv.string,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Optional(CONF_USERNAME): cv.string,
-                    vol.Optional(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_CERTIFICATE): vol.Any("auto", cv.isfile),
-                    vol.Inclusive(
-                        CONF_CLIENT_KEY, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
-                    ): cv.isfile,
-                    vol.Inclusive(
-                        CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
-                    ): cv.isfile,
-                    vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-                    vol.Optional(
-                        CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL
-                    ): vol.Any("auto", "1.0", "1.1", "1.2"),
-                    vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
-                        cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
-                    ),
-                    vol.Optional(
-                        CONF_WILL_MESSAGE, default=DEFAULT_WILL
-                    ): MQTT_WILL_BIRTH_SCHEMA,
-                    vol.Optional(
-                        CONF_BIRTH_MESSAGE, default=DEFAULT_BIRTH
-                    ): MQTT_WILL_BIRTH_SCHEMA,
-                    vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
-                    # discovery_prefix must be a valid publish topic because if no
-                    # state topic is specified, it will be created with the given prefix.
-                    vol.Optional(
-                        CONF_DISCOVERY_PREFIX, default=DEFAULT_PREFIX
-                    ): valid_publish_topic,
-                }
-            ),
+            cv.deprecated(CONF_BIRTH_MESSAGE),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_BROKER),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_DISCOVERY),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_PASSWORD),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_PORT),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_TLS_VERSION),  # Deprecated June 2020
+            cv.deprecated(CONF_USERNAME),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_WILL_MESSAGE),  # Deprecated in HA Core 2022.3
+            CONFIG_SCHEMA_BASE,
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -402,16 +411,6 @@ class MqttServiceInfo(BaseServiceInfo):
         return getattr(self, name)
 
 
-def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
-    """Build the arguments for the publish service without the payload."""
-    data = {ATTR_TOPIC: topic}
-    if qos is not None:
-        data[ATTR_QOS] = qos
-    if retain is not None:
-        data[ATTR_RETAIN] = retain
-    return data
-
-
 def publish(
     hass: HomeAssistant,
     topic: str,
@@ -584,26 +583,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf: ConfigType | None = config.get(DOMAIN)
 
     websocket_api.async_register_command(hass, websocket_subscribe)
-    websocket_api.async_register_command(hass, websocket_remove_device)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
+    debug_info.initialize(hass)
 
-    if conf is None:
-        # If we have a config entry, setup is done by that config entry.
-        # If there is no config entry, this should fail.
-        return bool(hass.config_entries.async_entries(DOMAIN))
+    if conf:
+        conf = dict(conf)
+        hass.data[DATA_MQTT_CONFIG] = conf
 
-    conf = dict(conf)
-
-    hass.data[DATA_MQTT_CONFIG] = conf
-
-    # Only import if we haven't before.
-    if not hass.config_entries.async_entries(DOMAIN):
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data={},
             )
         )
-
     return True
 
 
@@ -614,25 +608,17 @@ def _merge_config(entry, conf):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf = hass.data.get(DATA_MQTT_CONFIG)
-
-    # Config entry was created because user had configuration.yaml entry
-    # They removed that, so remove entry.
-    if conf is None and entry.source == config_entries.SOURCE_IMPORT:
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
-
     # If user didn't have configuration.yaml config, generate defaults
-    if conf is None:
-        conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
+    if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
+        conf = CONFIG_SCHEMA_BASE(dict(entry.data))
     elif any(key in conf for key in entry.data):
         shared_keys = conf.keys() & entry.data.keys()
         override = {k: entry.data[k] for k in shared_keys}
         if CONF_PASSWORD in override:
             override[CONF_PASSWORD] = "********"
-        _LOGGER.info(
-            "Data in your configuration entry is going to override your "
-            "configuration.yaml: %s",
+        _LOGGER.warning(
+            "Deprecated configuration settings found in configuration.yaml. "
+            "These settings from your configuration entry will override: %s",
             override,
         )
 
@@ -742,6 +728,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(hass, conf, entry)
 
+    if DATA_MQTT_RELOAD_NEEDED in hass.data:
+        hass.data.pop(DATA_MQTT_RELOAD_NEEDED)
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=False,
+        )
+
     return True
 
 
@@ -754,6 +749,58 @@ class Subscription:
     job: HassJob = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str | None = attr.ib(default="utf-8")
+
+
+class MqttClientSetup:
+    """Helper class to setup the paho mqtt client from config."""
+
+    # We don't import on the top because some integrations
+    # should be able to optionally rely on MQTT.
+    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+
+    def __init__(self, config: ConfigType) -> None:
+        """Initialize the MQTT client setup helper."""
+
+        if config[CONF_PROTOCOL] == PROTOCOL_31:
+            proto = self.mqtt.MQTTv31
+        else:
+            proto = self.mqtt.MQTTv311
+
+        if (client_id := config.get(CONF_CLIENT_ID)) is None:
+            # PAHO MQTT relies on the MQTT server to generate random client IDs.
+            # However, that feature is not mandatory so we generate our own.
+            client_id = self.mqtt.base62(uuid.uuid4().int, padding=22)
+        self._client = self.mqtt.Client(client_id, protocol=proto)
+
+        # Enable logging
+        self._client.enable_logger()
+
+        username = config.get(CONF_USERNAME)
+        password = config.get(CONF_PASSWORD)
+        if username is not None:
+            self._client.username_pw_set(username, password)
+
+        if (certificate := config.get(CONF_CERTIFICATE)) == "auto":
+            certificate = certifi.where()
+
+        client_key = config.get(CONF_CLIENT_KEY)
+        client_cert = config.get(CONF_CLIENT_CERT)
+        tls_insecure = config.get(CONF_TLS_INSECURE)
+        if certificate is not None:
+            self._client.tls_set(
+                certificate,
+                certfile=client_cert,
+                keyfile=client_key,
+                tls_version=ssl.PROTOCOL_TLS,
+            )
+
+            if tls_insecure is not None:
+                self._client.tls_insecure_set(tls_insecure)
+
+    @property
+    def client(self) -> mqtt.Client:
+        """Return the paho MQTT client."""
+        return self._client
 
 
 class MQTT:
@@ -807,7 +854,7 @@ class MQTT:
         self = hass.data[DATA_MQTT]
 
         if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
-            conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
+            conf = CONFIG_SCHEMA_BASE(dict(entry.data))
 
         self.conf = _merge_config(entry, conf)
         await self.async_disconnect()
@@ -820,46 +867,7 @@ class MQTT:
 
     def init_client(self):
         """Initialize paho client."""
-        # We don't import on the top because some integrations
-        # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
-
-        if self.conf[CONF_PROTOCOL] == PROTOCOL_31:
-            proto: int = mqtt.MQTTv31
-        else:
-            proto = mqtt.MQTTv311
-
-        if (client_id := self.conf.get(CONF_CLIENT_ID)) is None:
-            # PAHO MQTT relies on the MQTT server to generate random client IDs.
-            # However, that feature is not mandatory so we generate our own.
-            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        self._mqttc = mqtt.Client(client_id, protocol=proto)
-
-        # Enable logging
-        self._mqttc.enable_logger()
-
-        username = self.conf.get(CONF_USERNAME)
-        password = self.conf.get(CONF_PASSWORD)
-        if username is not None:
-            self._mqttc.username_pw_set(username, password)
-
-        if (certificate := self.conf.get(CONF_CERTIFICATE)) == "auto":
-            certificate = certifi.where()
-
-        client_key = self.conf.get(CONF_CLIENT_KEY)
-        client_cert = self.conf.get(CONF_CLIENT_CERT)
-        tls_insecure = self.conf.get(CONF_TLS_INSECURE)
-        if certificate is not None:
-            self._mqttc.tls_set(
-                certificate,
-                certfile=client_cert,
-                keyfile=client_key,
-                tls_version=ssl.PROTOCOL_TLS,
-            )
-
-            if tls_insecure is not None:
-                self._mqttc.tls_insecure_set(tls_insecure)
-
+        self._mqttc = MqttClientSetup(self.conf).client
         self._mqttc.on_connect = self._mqtt_on_connect
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
@@ -902,7 +910,7 @@ class MQTT:
 
     async def async_connect(self) -> None:
         """Connect to the host. Does not process messages yet."""
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         result: int | None = None
@@ -966,10 +974,6 @@ class MQTT:
             self.subscriptions.remove(subscription)
             self._matching_subscriptions.cache_clear()
 
-            if any(other.topic == topic for other in self.subscriptions):
-                # Other subscriptions on topic remaining - don't unsubscribe.
-                return
-
             # Only unsubscribe if currently connected.
             if self.connected:
                 self.hass.async_create_task(self._async_unsubscribe(topic))
@@ -981,6 +985,10 @@ class MQTT:
 
         This method is a coroutine.
         """
+        if any(other.topic == topic for other in self.subscriptions):
+            # Other subscriptions on topic remaining - don't unsubscribe.
+            return
+
         async with self._paho_lock:
             result: int | None = None
             result, mid = await self.hass.async_add_executor_job(
@@ -1007,7 +1015,7 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         if result_code != mqtt.CONNACK_ACCEPTED:
@@ -1166,7 +1174,7 @@ class MQTT:
 
 def _raise_on_error(result_code: int | None) -> None:
     """Raise error if error result."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     import paho.mqtt.client as mqtt
 
     if result_code is not None and result_code != 0:
@@ -1176,7 +1184,7 @@ def _raise_on_error(result_code: int | None) -> None:
 
 
 def _matcher_for_topic(subscription: str) -> Any:
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 
     matcher = MQTTMatcher()
@@ -1188,41 +1196,13 @@ def _matcher_for_topic(subscription: str) -> Any:
 @websocket_api.websocket_command(
     {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
 )
-@websocket_api.async_response
-async def websocket_mqtt_info(hass, connection, msg):
+@callback
+def websocket_mqtt_info(hass, connection, msg):
     """Get MQTT debug info for device."""
     device_id = msg["device_id"]
-    mqtt_info = await debug_info.info_for_device(hass, device_id)
+    mqtt_info = debug_info.info_for_device(hass, device_id)
 
     connection.send_result(msg["id"], mqtt_info)
-
-
-@websocket_api.websocket_command(
-    {vol.Required("type"): "mqtt/device/remove", vol.Required("device_id"): str}
-)
-@websocket_api.async_response
-async def websocket_remove_device(hass, connection, msg):
-    """Delete device."""
-    device_id = msg["device_id"]
-    dev_registry = await hass.helpers.device_registry.async_get_registry()
-
-    if not (device := dev_registry.async_get(device_id)):
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
-        )
-        return
-
-    for config_entry in device.config_entries:
-        config_entry = hass.config_entries.async_get_entry(config_entry)
-        # Only delete the device if it belongs to an MQTT device entry
-        if config_entry.domain == DOMAIN:
-            dev_registry.async_remove_device(device_id)
-            connection.send_message(websocket_api.result_message(msg["id"]))
-            return
-
-    connection.send_error(
-        msg["id"], websocket_api.const.ERR_NOT_FOUND, "Non MQTT device"
-    )
 
 
 @websocket_api.websocket_command(
@@ -1239,20 +1219,29 @@ async def websocket_subscribe(hass, connection, msg):
 
     async def forward_messages(mqttmsg: ReceiveMessage):
         """Forward events to websocket."""
+        try:
+            payload = cast(bytes, mqttmsg.payload).decode(
+                DEFAULT_ENCODING
+            )  # not str because encoding is set to None
+        except (AttributeError, UnicodeDecodeError):
+            # Convert non UTF-8 payload to a string presentation
+            payload = str(mqttmsg.payload)
+
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
                 {
                     "topic": mqttmsg.topic,
-                    "payload": mqttmsg.payload,
+                    "payload": payload,
                     "qos": mqttmsg.qos,
                     "retain": mqttmsg.retain,
                 },
             )
         )
 
+    # Perform UTF-8 decoding directly in callback routine
     connection.subscriptions[msg["id"]] = await async_subscribe(
-        hass, msg["topic"], forward_messages
+        hass, msg["topic"], forward_messages, encoding=None
     )
 
     connection.send_message(websocket_api.result_message(msg["id"]))
@@ -1294,3 +1283,14 @@ def async_subscribe_connection_status(
 def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
     return hass.data[DATA_MQTT].connected
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove MQTT config entry from a device."""
+    # pylint: disable-next=import-outside-toplevel
+    from . import device_automation
+
+    await device_automation.async_removed_from_device(hass, device_entry.id)
+    return True

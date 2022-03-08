@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import schemas
 
-from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -150,7 +150,7 @@ async def test_button_start_charge(hass: HomeAssistant, config_entry: ConfigEntr
         ),
     ) as mock_action:
         await hass.services.async_call(
-            Platform.BUTTON, SERVICE_PRESS, service_data=data, blocking=True
+            BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
@@ -178,7 +178,7 @@ async def test_button_start_air_conditioner(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            Platform.BUTTON, SERVICE_PRESS, service_data=data, blocking=True
+            BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (21, None)

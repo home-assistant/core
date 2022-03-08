@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     MASS_KILOGRAMS,
     POWER_WATT,
@@ -33,6 +32,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,17 +131,19 @@ async def async_setup_platform(
 
         return values
 
+    @callback
     def start_update_interval(event):
         """Start the update interval scheduling."""
         nonlocal remove_interval_update
         remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
 
+    @callback
     def stop_update_interval(event):
         """Properly cancel the scheduled update."""
         remove_interval_update()  # pylint: disable=not-callable
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
+    async_at_start(hass, start_update_interval)
 
 
 @callback

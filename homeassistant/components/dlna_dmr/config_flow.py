@@ -1,10 +1,10 @@
 """Config flow for DLNA DMR."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
 from pprint import pformat
-from typing import Any, Mapping, Optional, cast
+from typing import Any, Optional, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError

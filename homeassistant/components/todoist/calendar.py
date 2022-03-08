@@ -1,7 +1,7 @@
 """Support for Todoist task management (https://todoist.com)."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 
 from todoist.api import TodoistAPI
@@ -19,7 +19,9 @@ from homeassistant.util import dt
 from .const import (
     ALL_DAY,
     ALL_TASKS,
+    ASSIGNEE,
     CHECKED,
+    COLLABORATORS,
     COMPLETED,
     CONF_EXTRA_PROJECTS,
     CONF_PROJECT_DUE_DATE,
@@ -36,6 +38,7 @@ from .const import (
     DUE_DATE_VALID_LANGS,
     DUE_TODAY,
     END,
+    FULL_NAME,
     ID,
     LABELS,
     NAME,
@@ -52,6 +55,7 @@ from .const import (
     SUMMARY,
     TASKS,
 )
+from .types import DueDate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +64,7 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
         vol.Required(CONTENT): cv.string,
         vol.Optional(PROJECT_NAME, default="inbox"): vol.All(cv.string, vol.Lower),
         vol.Optional(LABELS): cv.ensure_list_csv,
+        vol.Optional(ASSIGNEE): cv.string,
         vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
         vol.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
         vol.Optional(DUE_DATE_LANG): vol.All(cv.string, vol.In(DUE_DATE_VALID_LANGS)),
@@ -112,6 +117,7 @@ def setup_platform(
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
     label_id_lookup = {}
+    collaborator_id_lookup = {}
 
     api = TodoistAPI(token)
     api.sync()
@@ -120,6 +126,7 @@ def setup_platform(
     # Grab all projects.
     projects = api.state[PROJECTS]
 
+    collaborators = api.state[COLLABORATORS]
     # Grab all labels
     labels = api.state[LABELS]
 
@@ -136,6 +143,9 @@ def setup_platform(
     # Cache all label names
     for label in labels:
         label_id_lookup[label[NAME].lower()] = label[ID]
+
+    for collaborator in collaborators:
+        collaborator_id_lookup[collaborator[FULL_NAME].lower()] = collaborator[ID]
 
     # Check config for more projects.
     extra_projects = config[CONF_EXTRA_PROJECTS]
@@ -182,6 +192,15 @@ def setup_platform(
             label_ids = [label_id_lookup[label.lower()] for label in task_labels]
             item.update(labels=label_ids)
 
+        if ASSIGNEE in call.data:
+            task_assignee = call.data[ASSIGNEE].lower()
+            if task_assignee in collaborator_id_lookup:
+                item.update(responsible_uid=collaborator_id_lookup[task_assignee])
+            else:
+                raise ValueError(
+                    f"User is not part of the shared project. user: {task_assignee}"
+                )
+
         if PRIORITY in call.data:
             item.update(priority=call.data[PRIORITY])
 
@@ -201,7 +220,7 @@ def setup_platform(
                 due_date = datetime(due.year, due.month, due.day)
             # Format it in the manner Todoist expects
             due_date = dt.as_utc(due_date)
-            date_format = "%Y-%m-%dT%H:%M%S"
+            date_format = "%Y-%m-%dT%H:%M:%S"
             _due["date"] = datetime.strftime(due_date, date_format)
 
         if _due:
@@ -240,15 +259,15 @@ def setup_platform(
     )
 
 
-def _parse_due_date(data: dict, gmt_string) -> datetime | None:
-    """Parse the due date dict into a datetime object."""
-    # Add time information to date only strings.
-    if len(data["date"]) == 10:
-        return datetime.fromisoformat(data["date"]).replace(tzinfo=dt.UTC)
+def _parse_due_date(data: DueDate, timezone_offset: int) -> datetime | None:
+    """Parse the due date dict into a datetime object in UTC.
+
+    This function will always return a timezone aware datetime if it can be parsed.
+    """
     if not (nowtime := dt.parse_datetime(data["date"])):
         return None
     if nowtime.tzinfo is None:
-        data["date"] += gmt_string
+        nowtime = nowtime.replace(tzinfo=timezone(timedelta(hours=timezone_offset)))
     return dt.as_utc(nowtime)
 
 
@@ -423,7 +442,7 @@ class TodoistProjectData:
         task[START] = dt.utcnow()
         if data[DUE] is not None:
             task[END] = _parse_due_date(
-                data[DUE], self._api.state["user"]["tz_info"]["gmt_string"]
+                data[DUE], self._api.state["user"]["tz_info"]["hours"]
             )
 
             if self._due_date_days is not None and (
@@ -546,8 +565,9 @@ class TodoistProjectData:
         for task in project_task_data:
             if task["due"] is None:
                 continue
+            # @NOTE: _parse_due_date always returns the date in UTC time.
             due_date = _parse_due_date(
-                task["due"], self._api.state["user"]["tz_info"]["gmt_string"]
+                task["due"], self._api.state["user"]["tz_info"]["hours"]
             )
             if not due_date:
                 continue

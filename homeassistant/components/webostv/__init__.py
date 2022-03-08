@@ -1,42 +1,63 @@
 """Support for LG webOS Smart TV."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 import json
 import logging
 import os
+from pickle import loads
+from typing import Any
 
-from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
-from sqlitedict import SqliteDict
+from aiowebostv import WebOsClient, WebOsTvPairError
+import sqlalchemy as db
 import voluptuous as vol
-from websockets.exceptions import ConnectionClosed
 
+from homeassistant.components import notify as hass_notify
+from homeassistant.components.automation import AutomationActionType
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
+    CONF_CLIENT_SECRET,
     CONF_CUSTOMIZE,
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import (
+    Context,
+    Event,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
+from homeassistant.helpers import config_validation as cv, discovery, entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_BUTTON,
+    ATTR_CONFIG_ENTRY_ID,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_ON_ACTION,
     CONF_SOURCES,
+    DATA_CONFIG_ENTRY,
+    DATA_HASS_CONFIG,
     DEFAULT_NAME,
     DOMAIN,
+    PLATFORMS,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
     SERVICE_SELECT_SOUND_OUTPUT,
     WEBOSTV_CONFIG_FILE,
+    WEBOSTV_EXCEPTIONS,
 )
 
 CUSTOMIZE_SCHEMA = vol.Schema(
@@ -44,22 +65,25 @@ CUSTOMIZE_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-                        vol.Optional(CONF_ICON): cv.string,
-                    }
-                )
-            ],
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.All(
+                cv.ensure_list,
+                [
+                    vol.Schema(
+                        {
+                            vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
+                            vol.Required(CONF_HOST): cv.string,
+                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                            vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+                            vol.Optional(CONF_ICON): cv.string,
+                        }
+                    )
+                ],
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -85,9 +109,123 @@ SERVICE_TO_METHOD = {
 _LOGGER = logging.getLogger(__name__)
 
 
+def read_client_keys(config_file: str) -> dict[str, str]:
+    """Read legacy client keys from file."""
+    if not os.path.isfile(config_file):
+        return {}
+
+    # Try to parse the file as being JSON
+    with open(config_file, encoding="utf8") as json_file:
+        try:
+            client_keys = json.load(json_file)
+            if isinstance(client_keys, dict):
+                return client_keys
+            return {}
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            pass
+
+    # If the file is not JSON, read it as Sqlite DB
+    engine = db.create_engine(f"sqlite:///{config_file}")
+    table = db.Table("unnamed", db.MetaData(), autoload=True, autoload_with=engine)
+    results = engine.connect().execute(db.select([table])).fetchall()
+    db_client_keys = {k: loads(v) for k, v in results}
+    return db_client_keys
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LG WebOS TV platform."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(DATA_CONFIG_ENTRY, {})
+    hass.data[DOMAIN][DATA_HASS_CONFIG] = config
+
+    if DOMAIN not in config:
+        return True
+
+    config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
+    if not (
+        client_keys := await hass.async_add_executor_job(read_client_keys, config_file)
+    ):
+        _LOGGER.debug("No pairing keys, Not importing webOS Smart TV YAML config")
+        return True
+
+    async def async_migrate_task(
+        entity_id: str, conf: dict[str, str], key: str
+    ) -> None:
+        _LOGGER.debug("Migrating webOS Smart TV entity %s unique_id", entity_id)
+        client = WebOsClient(conf[CONF_HOST], key)
+        tries = 0
+        while not client.is_connected():
+            try:
+                await client.connect()
+            except WEBOSTV_EXCEPTIONS:
+                if tries == 0:
+                    _LOGGER.warning(
+                        "Please make sure webOS TV %s is turned on to complete "
+                        "the migration of configuration.yaml to the UI",
+                        entity_id,
+                    )
+                wait_time = 2 ** min(tries, 4) * 5
+                tries += 1
+                await asyncio.sleep(wait_time)
+            except WebOsTvPairError:
+                return
+
+        ent_reg = entity_registry.async_get(hass)
+        if not (
+            new_entity_id := ent_reg.async_get_entity_id(
+                Platform.MEDIA_PLAYER, DOMAIN, key
+            )
+        ):
+            _LOGGER.debug(
+                "Not updating webOSTV Smart TV entity %s unique_id, entity missing",
+                entity_id,
+            )
+            return
+
+        uuid = client.hello_info["deviceUUID"]
+        ent_reg.async_update_entity(new_entity_id, new_unique_id=uuid)
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                **conf,
+                CONF_CLIENT_SECRET: key,
+                CONF_UNIQUE_ID: uuid,
+            },
+        )
+
+    ent_reg = entity_registry.async_get(hass)
+
+    tasks = []
+    for conf in config[DOMAIN]:
+        host = conf[CONF_HOST]
+        if (key := client_keys.get(host)) is None:
+            _LOGGER.debug(
+                "Not importing webOS Smart TV host %s without pairing key", host
+            )
+            continue
+
+        if entity_id := ent_reg.async_get_entity_id(Platform.MEDIA_PLAYER, DOMAIN, key):
+            tasks.append(asyncio.create_task(async_migrate_task(entity_id, conf, key)))
+
+    async def async_tasks_cancel(_event: Event) -> None:
+        """Cancel config flow import tasks."""
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_tasks_cancel)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set the config entry up."""
+    host = entry.data[CONF_HOST]
+    key = entry.data[CONF_CLIENT_SECRET]
+
+    wrapper = WebOsClientWrapper(host, client_key=key)
+    await wrapper.connect()
 
     async def async_service_handler(service: ServiceCall) -> None:
         method = SERVICE_TO_METHOD[service.service]
@@ -101,124 +239,123 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DOMAIN, service, async_service_handler, schema=schema
         )
 
-    tasks = [async_setup_tv(hass, config, conf) for conf in config[DOMAIN]]
-    if tasks:
-        await asyncio.gather(*tasks)
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = wrapper
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    # set up notify platform, no entry support for notify component yet,
+    # have to use discovery to load platform.
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            "notify",
+            DOMAIN,
+            {
+                CONF_NAME: entry.title,
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+            },
+            hass.data[DOMAIN][DATA_HASS_CONFIG],
+        )
+    )
+
+    if not entry.update_listeners:
+        entry.async_on_unload(entry.add_update_listener(async_update_options))
+
+    async def async_on_stop(_event: Event) -> None:
+        """Unregister callbacks and disconnect."""
+        await wrapper.shutdown()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
+    )
     return True
 
 
-def convert_client_keys(config_file):
-    """In case the config file contains JSON, convert it to a Sqlite config file."""
-    # Return early if config file is non-existing
-    if not os.path.isfile(config_file):
-        return
-
-    # Try to parse the file as being JSON
-    with open(config_file, encoding="utf8") as json_file:
-        try:
-            json_conf = json.load(json_file)
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            json_conf = None
-
-    # If the file contains JSON, convert it to an Sqlite DB
-    if json_conf:
-        _LOGGER.warning("LG webOS TV client-key file is being migrated to Sqlite!")
-
-        # Clean the JSON file
-        os.remove(config_file)
-
-        # Write the data to the Sqlite DB
-        with SqliteDict(config_file) as conf:
-            for host, key in json_conf.items():
-                conf[host] = key
-            conf.commit()
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update options."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_tv(hass, config, conf):
-    """Set up a LG WebOS TV based on host parameter."""
-
-    host = conf[CONF_HOST]
-    config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
-    await hass.async_add_executor_job(convert_client_keys, config_file)
-
-    client = await WebOsClient.create(host, config_file)
-    hass.data[DOMAIN][host] = {"client": client}
-
-    if client.is_registered():
-        await async_setup_tv_finalize(hass, config, conf, client)
-    else:
-        _LOGGER.warning("LG webOS TV %s needs to be paired", host)
-        await async_request_configuration(hass, config, conf, client)
-
-
-async def async_connect(client):
-    """Attempt a connection, but fail gracefully if tv is off for example."""
-    with suppress(
-        OSError,
-        ConnectionClosed,
-        ConnectionRefusedError,
-        asyncio.TimeoutError,
-        asyncio.CancelledError,
-        PyLGTVPairException,
-        PyLGTVCmdException,
-    ):
+async def async_control_connect(host: str, key: str | None) -> WebOsClient:
+    """LG Connection."""
+    client = WebOsClient(host, key)
+    try:
         await client.connect()
+    except WebOsTvPairError:
+        _LOGGER.warning("Connected to LG webOS TV %s but not paired", host)
+        raise
+
+    return client
 
 
-async def async_setup_tv_finalize(hass, config, conf, client):
-    """Make initial connection attempt and call platform setup."""
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    async def async_on_stop(event):
+    if unload_ok:
+        client = hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
+        await hass_notify.async_reload(hass, DOMAIN)
+        await client.shutdown()
+
+    # unregister service calls, check if this is the last entry to unload
+    if unload_ok and not hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
+        for service in SERVICE_TO_METHOD:
+            hass.services.async_remove(DOMAIN, service)
+
+    return unload_ok
+
+
+class PluggableAction:
+    """A pluggable action handler."""
+
+    def __init__(self) -> None:
+        """Initialize."""
+        self._actions: dict[Callable[[], None], tuple[HassJob, dict[str, Any]]] = {}
+
+    def __bool__(self) -> bool:
+        """Return if we have something attached."""
+        return bool(self._actions)
+
+    @callback
+    def async_attach(
+        self, action: AutomationActionType, variables: dict[str, Any]
+    ) -> Callable[[], None]:
+        """Attach a device trigger for turn on."""
+
+        @callback
+        def _remove() -> None:
+            del self._actions[_remove]
+
+        job = HassJob(action)
+
+        self._actions[_remove] = (job, variables)
+
+        return _remove
+
+    @callback
+    def async_run(self, hass: HomeAssistant, context: Context | None = None) -> None:
+        """Run all turn on triggers."""
+        for job, variables in self._actions.values():
+            hass.async_run_hass_job(job, variables, context)
+
+
+class WebOsClientWrapper:
+    """Wrapper for a WebOS TV client with Home Assistant specific functions."""
+
+    def __init__(self, host: str, client_key: str) -> None:
+        """Set up the client."""
+        self.host = host
+        self.client_key = client_key
+        self.turn_on = PluggableAction()
+        self.client: WebOsClient | None = None
+
+    async def connect(self) -> None:
+        """Attempt a connection, but fail gracefully if tv is off for example."""
+        self.client = WebOsClient(self.host, self.client_key)
+        with suppress(*WEBOSTV_EXCEPTIONS, WebOsTvPairError):
+            await self.client.connect()
+
+    async def shutdown(self) -> None:
         """Unregister callbacks and disconnect."""
-        client.clear_state_update_callbacks()
-        await client.disconnect()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
-
-    await async_connect(client)
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform(
-            Platform.MEDIA_PLAYER, DOMAIN, conf, config
-        )
-    )
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform(
-            Platform.NOTIFY, DOMAIN, conf, config
-        )
-    )
-
-
-async def async_request_configuration(hass, config, conf, client):
-    """Request configuration steps from the user."""
-    host = conf.get(CONF_HOST)
-    name = conf.get(CONF_NAME)
-    configurator = hass.components.configurator
-
-    async def lgtv_configuration_callback(data):
-        """Handle actions when configuration callback is called."""
-        try:
-            await client.connect()
-        except PyLGTVPairException:
-            _LOGGER.warning("Connected to LG webOS TV %s but not paired", host)
-            return
-        except (
-            OSError,
-            ConnectionClosed,
-            asyncio.TimeoutError,
-            asyncio.CancelledError,
-            PyLGTVCmdException,
-        ):
-            _LOGGER.error("Unable to connect to host %s", host)
-            return
-
-        await async_setup_tv_finalize(hass, config, conf, client)
-        configurator.async_request_done(request_id)
-
-    request_id = configurator.async_request_config(
-        name,
-        lgtv_configuration_callback,
-        description="Click start and accept the pairing request on your TV.",
-        description_image="/static/images/config_webos.png",
-        submit_caption="Start pairing request",
-    )
+        assert self.client
+        self.client.clear_state_update_callbacks()
+        await self.client.disconnect()

@@ -10,9 +10,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, STATE_ON
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event as evt
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_pt2262_cmd
 from .const import (
@@ -83,10 +85,10 @@ def supported(event: rfxtrxmod.RFXtrxEvent):
 
 
 async def async_setup_entry(
-    hass,
-    config_entry,
-    async_add_entities,
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up config entry."""
 
     def get_sensor_description(type_string: str):
@@ -96,7 +98,7 @@ async def async_setup_entry(
 
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
-        auto: bool,
+        auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
         entity_info: dict,
     ):

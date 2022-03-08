@@ -24,6 +24,7 @@ from .const import BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
 from .utils import BondHub
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,

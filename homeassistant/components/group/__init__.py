@@ -6,11 +6,12 @@ import asyncio
 from collections.abc import Iterable
 from contextvars import ContextVar
 import logging
-from typing import Any, cast
+from typing import Any, Union, cast
 
 import voluptuous as vol
 
 from homeassistant import core as ha
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -36,6 +37,7 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -57,12 +59,21 @@ ATTR_ALL = "all"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
-PLATFORMS = [
-    Platform.LIGHT,
-    Platform.COVER,
-    Platform.NOTIFY,
-    Platform.FAN,
+PLATFORMS_CONFIG_ENTRY = [
     Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
+]
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
 ]
 
 REG_KEY = f"{DOMAIN}_registry"
@@ -216,10 +227,31 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     return groups
 
 
-async def async_setup(hass, config):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    hass.config_entries.async_setup_platforms(entry, (entry.options["group_type"],))
+    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
+    return True
+
+
+async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update listener, called when the config entry options are changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        entry, (entry.options["group_type"],)
+    )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all groups found defined in the configuration."""
-    if (component := hass.data.get(DOMAIN)) is None:
-        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    component: EntityComponent = hass.data[DOMAIN]
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
 
@@ -229,7 +261,11 @@ async def async_setup(hass, config):
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
-        auto = list(filter(lambda e: not e.user_defined, component.entities))
+        auto = [
+            cast(Group, e)
+            for e in component.entities
+            if not cast(Group, e).user_defined
+        ]
 
         if (conf := await component.async_prepare_reload()) is None:
             return
@@ -254,7 +290,7 @@ async def async_setup(hass, config):
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
         entity_id = f"{DOMAIN}.{object_id}"
-        group = component.get_entity(entity_id)
+        group: Group | None = cast(Union[Group, None], component.get_entity(entity_id))
 
         # new group
         if service.service == SERVICE_SET and group is None:

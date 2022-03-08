@@ -52,6 +52,7 @@ NO_IOT_CLASS = [
     "default_config",
     "device_automation",
     "device_tracker",
+    "diagnostics",
     "discovery",
     "downloader",
     "fan",
@@ -217,6 +218,7 @@ MANIFEST_SCHEMA = vol.Schema(
                         str, verify_uppercase, verify_wildcard
                     ),
                     vol.Optional("hostname"): vol.All(str, verify_lowercase),
+                    vol.Optional("registered_devices"): cv.boolean,
                 }
             )
         ],
@@ -243,14 +245,17 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("dependencies"): [str],
         vol.Optional("after_dependencies"): [str],
         vol.Required("codeowners"): [str],
+        vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
+        vol.Optional("supported_brands"): vol.Schema({str: str}),
     }
 )
 
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = MANIFEST_SCHEMA.extend(
     {
         vol.Optional("version"): vol.All(str, verify_version),
+        vol.Remove("supported_brands"): dict,
     }
 )
 
@@ -303,6 +308,13 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         and "iot_class" not in integration.manifest
     ):
         integration.add_error("manifest", "Domain is missing an IoT Class")
+
+    for domain, _name in integration.manifest.get("supported_brands", {}).items():
+        if (core_components_dir / domain).exists():
+            integration.add_warning(
+                "manifest",
+                f"Supported brand domain {domain} collides with built-in core integration",
+            )
 
     if not integration.core:
         validate_version(integration)

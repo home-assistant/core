@@ -6,6 +6,7 @@ import os
 from rtmapi import Rtm, RtmRequestFailedException
 import voluptuous as vol
 
+from homeassistant.components import configurator
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, CONF_TOKEN, STATE_OK
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -105,7 +106,6 @@ def _register_new_account(
     hass, account_name, api_key, shared_secret, stored_rtm_config, component
 ):
     request_id = None
-    configurator = hass.components.configurator
     api = Rtm(api_key, shared_secret, "write", None)
     url, frob = api.authenticate_desktop()
     _LOGGER.debug("Sent authentication request to server")
@@ -117,7 +117,7 @@ def _register_new_account(
         if api.token is None:
             _LOGGER.error("Failed to register, please try again")
             configurator.notify_errors(
-                request_id, "Failed to register, please try again."
+                hass, request_id, "Failed to register, please try again."
             )
             return
 
@@ -134,9 +134,10 @@ def _register_new_account(
             component,
         )
 
-        configurator.request_done(request_id)
+        configurator.request_done(hass, request_id)
 
     request_id = configurator.async_request_config(
+        hass,
         f"{DOMAIN} - {account_name}",
         callback=register_account_callback,
         description=(

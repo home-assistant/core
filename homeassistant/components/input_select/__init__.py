@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -42,19 +43,46 @@ SERVICE_SELECT_LAST = "select_last"
 SERVICE_SET_OPTIONS = "set_options"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
+
+
+def _unique(options: Any) -> Any:
+    try:
+        return vol.Unique()(options)
+    except vol.Invalid as exc:
+        raise HomeAssistantError("Duplicate options are not allowed") from exc
+
 
 CREATE_FIELDS = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+    vol.Required(CONF_OPTIONS): vol.All(
+        cv.ensure_list, vol.Length(min=1), _unique, [cv.string]
+    ),
     vol.Optional(CONF_INITIAL): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
 }
 UPDATE_FIELDS = {
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+    vol.Optional(CONF_OPTIONS): vol.All(
+        cv.ensure_list, vol.Length(min=1), _unique, [cv.string]
+    ),
     vol.Optional(CONF_INITIAL): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
 }
+
+
+def _remove_duplicates(options: list[str], name: str | None) -> list[str]:
+    """Remove duplicated options."""
+    unique_options = list(dict.fromkeys(options))
+    # This check was added in 2022.3
+    # Reject YAML configured input_select with duplicates from 2022.6
+    if len(unique_options) != len(options):
+        _LOGGER.warning(
+            "Input select '%s' with options %s had duplicated options, the duplicates have been removed",
+            name or "<unnamed>",
+            options,
+        )
+    return unique_options
 
 
 def _cv_input_select(cfg: dict[str, Any]) -> dict[str, Any]:
@@ -65,6 +93,7 @@ def _cv_input_select(cfg: dict[str, Any]) -> dict[str, Any]:
         raise vol.Invalid(
             f"initial state {initial} is not part of the options: {','.join(options)}"
         )
+    cfg[CONF_OPTIONS] = _remove_duplicates(options, cfg.get(CONF_NAME))
     return cfg
 
 
@@ -89,6 +118,23 @@ CONFIG_SCHEMA = vol.Schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
+class InputSelectStore(Store):
+    """Store entity registry data."""
+
+    async def _async_migrate_func(
+        self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        if old_major_version == 1:
+            if old_minor_version < 2:
+                for item in old_data["items"]:
+                    options = item[ATTR_OPTIONS]
+                    item[ATTR_OPTIONS] = _remove_duplicates(
+                        options, item.get(CONF_NAME)
+                    )
+        return old_data
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -102,7 +148,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     storage_collection = InputSelectStorageCollection(
-        Store(hass, STORAGE_VERSION, STORAGE_KEY),
+        InputSelectStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        ),
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
@@ -301,6 +349,10 @@ class InputSelect(SelectEntity, RestoreEntity):
 
     async def async_set_options(self, options: list[str]) -> None:
         """Set options."""
+        unique_options = list(dict.fromkeys(options))
+        if len(unique_options) != len(options):
+            raise HomeAssistantError(f"Duplicated options: {options}")
+
         self._attr_options = options
 
         if self.current_option not in self.options:

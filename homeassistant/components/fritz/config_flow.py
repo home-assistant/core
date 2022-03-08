@@ -19,14 +19,17 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .common import FritzBoxTools
+from .common import AvmWrapper
 from .const import (
+    CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
+    ERROR_UPNP_NOT_CONFIGURED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +54,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password: str
         self._port: int | None = None
         self._username: str
-        self.avm_device: FritzBoxTools
+        self.avm_wrapper: AvmWrapper
 
     async def fritz_tools_init(self) -> str | None:
         """Initialize FRITZ!Box Tools class."""
@@ -59,7 +62,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         if not self._host or not self._port:
             return None
 
-        self.avm_device = FritzBoxTools(
+        self.avm_wrapper = AvmWrapper(
             hass=self.hass,
             host=self._host,
             port=self._port,
@@ -68,7 +71,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await self.avm_device.async_setup()
+            await self.avm_wrapper.async_setup()
         except FritzSecurityError:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
@@ -76,6 +79,12 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
+
+        if (
+            "X_AVM-DE_UPnP1" in self.avm_wrapper.connection.services
+            and not (await self.avm_wrapper.async_get_upnp_configuration())["NewEnable"]
+        ):
+            return ERROR_UPNP_NOT_CONFIGURED
 
         return None
 
@@ -100,13 +109,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._name,
             data={
-                CONF_HOST: self.avm_device.host,
-                CONF_PASSWORD: self.avm_device.password,
-                CONF_PORT: self.avm_device.port,
-                CONF_USERNAME: self.avm_device.username,
+                CONF_HOST: self.avm_wrapper.host,
+                CONF_PASSWORD: self.avm_wrapper.password,
+                CONF_PORT: self.avm_wrapper.port,
+                CONF_USERNAME: self.avm_wrapper.username,
             },
             options={
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
+                CONF_OLD_DISCOVERY: DEFAULT_CONF_OLD_DISCOVERY,
             },
         )
 
@@ -204,7 +214,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
 
         if not (error := await self.fritz_tools_init()):
-            self._name = self.avm_device.model
+            self._name = self.avm_wrapper.model
 
             if await self.async_check_configured_entry():
                 error = "already_configured"
@@ -296,6 +306,12 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
+                vol.Optional(
+                    CONF_OLD_DISCOVERY,
+                    default=self.config_entry.options.get(
+                        CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY
+                    ),
+                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

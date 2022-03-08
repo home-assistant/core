@@ -1,12 +1,22 @@
 """Support for Netgear LTE sensors."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_MONITORED_CONDITIONS, CONF_SENSOR, DATA_KEY, LTEEntity
 from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_UNITS, SENSOR_USAGE
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Netgear LTE sensor devices."""
     if discovery_info is None:
         return
@@ -19,7 +29,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     sensor_conf = discovery_info[CONF_SENSOR]
     monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
 
-    sensors = []
+    sensors: list[SensorEntity] = []
     for sensor_type in monitored_conditions:
         if sensor_type == SENSOR_SMS:
             sensors.append(SMSUnreadSensor(modem_data, sensor_type))
@@ -66,7 +76,7 @@ class UsageSensor(LTESensor):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return round(self.modem_data.data.usage / 1024 ** 2, 1)
+        return round(self.modem_data.data.usage / 1024**2, 1)
 
 
 class GenericSensor(LTESensor):

@@ -1,11 +1,11 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
 import logging
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SWITCH_TYPES
@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities(dev, True)
 
 
-class TransmissionSwitch(ToggleEntity):
+class TransmissionSwitch(SwitchEntity):
     """Representation of a Transmission switch."""
 
     def __init__(self, switch_type, switch_name, tm_client, name):

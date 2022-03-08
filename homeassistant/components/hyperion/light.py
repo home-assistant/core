@@ -85,7 +85,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> bool:
+) -> None:
     """Set up a Hyperion platform from config entry."""
 
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
@@ -122,7 +122,6 @@ async def async_setup_entry(
             )
 
     listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
-    return True
 
 
 class HyperionBaseLight(LightEntity):
@@ -245,6 +244,7 @@ class HyperionBaseLight(LightEntity):
             manufacturer=HYPERION_MANUFACTURER_NAME,
             model=HYPERION_MODEL_NAME,
             name=self._instance_name,
+            configuration_url=self._client.remote_url,
         )
 
     def _get_option(self, key: str) -> Any:

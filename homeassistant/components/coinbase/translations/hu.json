@@ -25,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "A k\u00e9rt valutaegyenlegek k\u00f6z\u00fcl egyet vagy t\u00f6bbet nem biztos\u00edt a Coinbase API.",
             "currency_unavaliable": "A k\u00e9rt valutaegyenlegek k\u00f6z\u00fcl egyet vagy t\u00f6bbet nem biztos\u00edt a Coinbase API.",
+            "exchange_rate_unavailable": "A k\u00e9rt \u00e1rfolyamok k\u00f6z\u00fcl egyet vagy t\u00f6bbet a Coinbase nem biztos\u00edt.",
             "exchange_rate_unavaliable": "A k\u00e9rt \u00e1rfolyamok k\u00f6z\u00fcl egyet vagy t\u00f6bbet a Coinbase nem biztos\u00edt.",
             "unknown": "Ismeretlen hiba"
         },

@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from yalesmartalarmclient.client import YaleSmartAlarmClient
-from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
+from yalesmartalarmclient.exceptions import AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, YALE_BASE_ERRORS
 
 
 class YaleDataUpdateCoordinator(DataUpdateCoordinator):
@@ -29,7 +30,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Yale."""
 
         updates = await self.hass.async_add_executor_job(self.get_updates)
@@ -105,15 +106,23 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 door_windows.append(device)
                 continue
 
+        _sensor_map = {
+            contact["address"]: contact["_state"] for contact in door_windows
+        }
+        _lock_map = {lock["address"]: lock["_state"] for lock in locks}
+
         return {
             "alarm": updates["arm_status"],
             "locks": locks,
             "door_windows": door_windows,
             "status": updates["status"],
             "online": updates["online"],
+            "sensor_map": _sensor_map,
+            "lock_map": _lock_map,
+            "panel_info": updates["panel_info"],
         }
 
-    def get_updates(self) -> dict:
+    def get_updates(self) -> dict[str, Any]:
         """Fetch data from Yale."""
 
         if self.yale is None:
@@ -123,18 +132,20 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 )
             except AuthenticationError as error:
                 raise ConfigEntryAuthFailed from error
-            except (ConnectionError, TimeoutError, UnknownError) as error:
+            except YALE_BASE_ERRORS as error:
                 raise UpdateFailed from error
 
         try:
             arm_status = self.yale.get_armed_status()
-            cycle = self.yale.get_cycle()
-            status = self.yale.get_status()
-            online = self.yale.get_online()
+            data = self.yale.get_all()
+            cycle = data["CYCLE"]
+            status = data["STATUS"]
+            online = data["ONLINE"]
+            panel_info = data["PANEL INFO"]
 
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
-        except (ConnectionError, TimeoutError, UnknownError) as error:
+        except YALE_BASE_ERRORS as error:
             raise UpdateFailed from error
 
         return {
@@ -142,4 +153,5 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             "cycle": cycle,
             "status": status,
             "online": online,
+            "panel_info": panel_info,
         }

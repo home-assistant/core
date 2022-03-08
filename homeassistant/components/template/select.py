@@ -1,7 +1,6 @@
 """Support for selects which integrates with other components."""
 from __future__ import annotations
 
-import contextlib
 import logging
 from typing import Any
 
@@ -14,11 +13,11 @@ from homeassistant.components.select.const import (
     DOMAIN as SELECT_DOMAIN,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.template import TemplateError
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
@@ -67,9 +66,9 @@ async def _async_create_entities(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Config,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template select."""
     if discovery_info is None:
@@ -102,21 +101,15 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the select."""
-        super().__init__(config=config)
-        self._attr_name = DEFAULT_NAME
-        name_template = config[CONF_NAME]
-        name_template.hass = hass
-        with contextlib.suppress(TemplateError):
-            self._attr_name = name_template.async_render(parse_result=False)
-        self._name_template = name_template
+        super().__init__(hass, config=config, unique_id=unique_id)
+        assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
         self._command_select_option = Script(
             hass, config[CONF_SELECT_OPTION], self._attr_name, DOMAIN
         )
         self._options_template = config[ATTR_OPTIONS]
         self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
-        self._attr_unique_id = unique_id
-        self._attr_options = None
+        self._attr_options = []
         self._attr_current_option = None
 
     async def async_added_to_hass(self) -> None:
@@ -133,8 +126,6 @@ class TemplateSelect(TemplateEntity, SelectEntity):
             validator=vol.All(cv.ensure_list, [cv.string]),
             none_on_template_error=True,
         )
-        if self._name_template and not self._name_template.is_static:
-            self.add_template_attribute("_attr_name", self._name_template, cv.string)
         await super().async_added_to_hass()
 
     async def async_select_option(self, option: str) -> None:

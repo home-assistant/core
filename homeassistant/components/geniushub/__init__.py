@@ -1,7 +1,7 @@
 """Support for a Genius Hub system."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
@@ -95,6 +96,14 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     }
 )
 
+PLATFORMS = (
+    Platform.CLIMATE,
+    Platform.WATER_HEATER,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Create a Genius Hub system."""
@@ -120,7 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
-    for platform in ("climate", "water_heater", "sensor", "binary_sensor", "switch"):
+    for platform in PLATFORMS:
         hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     setup_service_functions(hass, broker)
@@ -214,7 +223,7 @@ class GeniusEntity(Entity):
 
     def __init__(self) -> None:
         """Initialize the entity."""
-        self._unique_id = self._name = None
+        self._unique_id: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
@@ -228,11 +237,6 @@ class GeniusEntity(Entity):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the geniushub entity."""
-        return self._name
 
     @property
     def should_poll(self) -> bool:
@@ -249,7 +253,8 @@ class GeniusDevice(GeniusEntity):
 
         self._device = device
         self._unique_id = f"{broker.hub_uid}_device_{device.id}"
-        self._last_comms = self._state_attr = None
+        self._last_comms: datetime | None = None
+        self._state_attr = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -328,11 +333,9 @@ class GeniusZone(GeniusEntity):
 class GeniusHeatingZone(GeniusZone):
     """Base for Genius Heating Zones."""
 
-    def __init__(self, broker, zone) -> None:
-        """Initialize the Zone."""
-        super().__init__(broker, zone)
-
-        self._max_temp = self._min_temp = self._supported_features = None
+    _max_temp: float
+    _min_temp: float
+    _supported_features: int
 
     @property
     def current_temperature(self) -> float | None:

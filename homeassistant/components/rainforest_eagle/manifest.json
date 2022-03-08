@@ -10,5 +10,6 @@
     {
       "macaddress": "D8D5B9*"
     }
-  ]
+  ],
+  "loggers": ["aioeagle", "uEagle"]
 }

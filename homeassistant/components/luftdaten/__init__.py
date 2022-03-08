@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data.update(sensor_community.meta)
         return data
 
-    coordinator: DataUpdateCoordinator[dict[Any, Any]] = DataUpdateCoordinator(
+    coordinator: DataUpdateCoordinator[dict[str, Any]] = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"{DOMAIN}_{sensor_community.sensor_id}",

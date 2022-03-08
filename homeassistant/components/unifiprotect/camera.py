@@ -40,7 +40,9 @@ def get_camera_channels(
 
         is_default = True
         for channel in camera.channels:
-            if channel.is_rtsp_enabled:
+            if channel.is_package:
+                yield camera, channel, True
+            elif channel.is_rtsp_enabled:
                 yield camera, channel, is_default
                 is_default = False
 
@@ -60,6 +62,8 @@ async def async_setup_entry(
 
     entities = []
     for camera, channel, is_default in get_camera_channels(data.api):
+        # do not enable streaming for package camera
+        # 2 FPS causes a lot of buferring
         entities.append(
             ProtectCamera(
                 data,
@@ -67,11 +71,11 @@ async def async_setup_entry(
                 channel,
                 is_default,
                 True,
-                disable_stream,
+                disable_stream or channel.is_package,
             )
         )
 
-        if channel.is_rtsp_enabled:
+        if channel.is_rtsp_enabled and not channel.is_package:
             entities.append(
                 ProtectCamera(
                     data,
@@ -158,7 +162,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return the Camera Image."""
-        last_image = await self.device.get_snapshot(width, height)
+        if self.channel.is_package:
+            last_image = await self.device.get_package_snapshot(width, height)
+        else:
+            last_image = await self.device.get_snapshot(width, height)
         self._last_image = last_image
         return self._last_image
 

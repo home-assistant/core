@@ -1,17 +1,19 @@
 """Support for esphome devices."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 import functools
 import logging
 import math
-from typing import Any, Callable, Generic, NamedTuple, TypeVar, cast, overload
+from typing import Any, Generic, NamedTuple, TypeVar, cast, overload
 
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     APIIntEnum,
     APIVersion,
+    BadNameAPIError,
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
@@ -107,13 +109,15 @@ class DomainData:
         return ret
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up the esphome component."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
     noise_psk = entry.data.get(CONF_NOISE_PSK)
-    device_id = None
+    device_id: str | None = None
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -180,11 +184,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return
 
             # Call native tag scan
-            if service_name == "tag_scanned":
+            if service_name == "tag_scanned" and device_id is not None:
+                # Importing tag via hass.components in case it is overridden
+                # in a custom_components (custom_components.tag)
+                tag = hass.components.tag
                 tag_id = service_data["tag_id"]
-                hass.async_create_task(
-                    hass.components.tag.async_scan_tag(tag_id, device_id)
-                )
+                hass.async_create_task(tag.async_scan_tag(tag_id, device_id))
                 return
 
             hass.bus.async_fire(service.service, service_data)
@@ -265,6 +270,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
+            if entry_data.device_info.name:
+                cli.expected_name = entry_data.device_info.name
+                reconnect_logic.name = entry_data.device_info.name
             device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
@@ -295,6 +303,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Start reauth flow if appropriate connect error type."""
         if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
             entry.async_start_reauth(hass)
+        if isinstance(err, BadNameAPIError):
+            _LOGGER.warning(
+                "Name of device %s changed to %s, potentially due to IP reassignment",
+                cli.expected_name,
+                err.received_name,
+            )
 
     reconnect_logic = ReconnectLogic(
         client=cli,
@@ -311,6 +325,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await entry_data.async_update_static_infos(hass, entry, infos)
         await _setup_services(hass, entry_data, services)
 
+        if entry_data.device_info is not None and entry_data.device_info.name:
+            cli.expected_name = entry_data.device_info.name
+            reconnect_logic.name = entry_data.device_info.name
+
         await reconnect_logic.start()
         entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
 
@@ -326,18 +344,30 @@ def _async_setup_device_registry(
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
+
     configuration_url = None
     if device_info.webserver_port > 0:
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+
+    manufacturer = "espressif"
+    model = device_info.model
+    hw_version = None
+    if device_info.project_name:
+        project_name = device_info.project_name.split(".")
+        manufacturer = project_name[0]
+        model = project_name[1]
+        hw_version = device_info.project_version
+
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
         name=device_info.name,
-        manufacturer="espressif",
-        model=device_info.model,
+        manufacturer=manufacturer,
+        model=model,
         sw_version=sw_version,
+        hw_version=hw_version,
     )
     return device_entry.id
 
@@ -428,7 +458,7 @@ async def _register_service(
         }
 
     async def execute_service(call: ServiceCall) -> None:
-        await entry_data.client.execute_service(service, call.data)  # type: ignore[arg-type]
+        await entry_data.client.execute_service(service, call.data)
 
     hass.services.async_register(
         DOMAIN, service_name, execute_service, vol.Schema(schema)

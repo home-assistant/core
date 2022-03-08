@@ -9,7 +9,7 @@ from typing import cast, final
 
 from aiohttp import web
 
-from homeassistant.components import http
+from homeassistant.components import frontend, http
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -42,8 +42,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(CalendarListView(component))
     hass.http.register_view(CalendarEventView(component))
 
-    hass.components.frontend.async_register_built_in_panel(
-        "calendar", "calendar", "hass:calendar"
+    frontend.async_register_built_in_panel(
+        hass, "calendar", "calendar", "hass:calendar"
     )
 
     await component.async_setup(config)

@@ -2,18 +2,26 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from ipaddress import IPv4Address
 import json
-from typing import Any, Callable
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera, Light, WSSubscriptionMessage
+from pyunifiprotect.data import (
+    NVR,
+    Camera,
+    Doorlock,
+    Light,
+    Liveview,
+    Sensor,
+    Viewer,
+    WSSubscriptionMessage,
+)
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
-from pyunifiprotect.data.devices import Sensor, Viewer
-from pyunifiprotect.data.nvr import NVR, Liveview
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import Platform
@@ -21,6 +29,8 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
 import homeassistant.util.dt as dt_util
+
+from . import _patch_discovery
 
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
@@ -38,6 +48,7 @@ class MockBootstrap:
     viewers: dict[str, Any]
     liveviews: dict[str, Any]
     events: dict[str, Any]
+    doorlocks: dict[str, Any]
 
     def reset_objects(self) -> None:
         """Reset all devices on bootstrap for tests."""
@@ -47,6 +58,11 @@ class MockBootstrap:
         self.viewers = {}
         self.liveviews = {}
         self.events = {}
+        self.doorlocks = {}
+
+    def process_ws_packet(self, msg: WSSubscriptionMessage) -> None:
+        """Fake process method for tests."""
+        pass
 
 
 @dataclass
@@ -72,6 +88,24 @@ def mock_nvr_fixture():
     NVR.__config__.validate_assignment = True
 
 
+@pytest.fixture(name="mock_ufp_config_entry")
+def mock_ufp_config_entry():
+    """Mock the unifiprotect config entry."""
+
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+            "id": "UnifiProtect",
+            "port": 443,
+            "verify_ssl": False,
+        },
+        version=2,
+    )
+
+
 @pytest.fixture(name="mock_old_nvr")
 def mock_old_nvr_fixture():
     """Mock UniFi Protect Camera device."""
@@ -92,6 +126,7 @@ def mock_bootstrap_fixture(mock_nvr: NVR):
         viewers={},
         liveviews={},
         events={},
+        doorlocks={},
     )
 
 
@@ -121,33 +156,25 @@ def mock_client(mock_bootstrap: MockBootstrap):
 
 @pytest.fixture
 def mock_entry(
-    hass: HomeAssistant, mock_client  # pylint: disable=redefined-outer-name
+    hass: HomeAssistant,
+    mock_ufp_config_entry: MockConfigEntry,
+    mock_client,  # pylint: disable=redefined-outer-name
 ):
     """Mock ProtectApiClient for testing."""
 
-    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
-        mock_config = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-                "id": "UnifiProtect",
-                "port": 443,
-                "verify_ssl": False,
-            },
-            version=2,
-        )
-        mock_config.add_to_hass(hass)
+    with _patch_discovery(no_device=True), patch(
+        "homeassistant.components.unifiprotect.ProtectApiClient"
+    ) as mock_api:
+        mock_ufp_config_entry.add_to_hass(hass)
 
         mock_api.return_value = mock_client
 
-        yield MockEntityFixture(mock_config, mock_client)
+        yield MockEntityFixture(mock_ufp_config_entry, mock_client)
 
 
 @pytest.fixture
 def mock_liveview():
-    """Mock UniFi Protect Camera device."""
+    """Mock UniFi Protect Liveview."""
 
     data = json.loads(load_fixture("sample_liveview.json", integration=DOMAIN))
     return Liveview.from_unifi_dict(**data)
@@ -163,7 +190,7 @@ def mock_camera():
 
 @pytest.fixture
 def mock_light():
-    """Mock UniFi Protect Camera device."""
+    """Mock UniFi Protect Light device."""
 
     data = json.loads(load_fixture("sample_light.json", integration=DOMAIN))
     return Light.from_unifi_dict(**data)
@@ -183,6 +210,14 @@ def mock_sensor():
 
     data = json.loads(load_fixture("sample_sensor.json", integration=DOMAIN))
     return Sensor.from_unifi_dict(**data)
+
+
+@pytest.fixture
+def mock_doorlock():
+    """Mock UniFi Protect Doorlock device."""
+
+    data = json.loads(load_fixture("sample_doorlock.json", integration=DOMAIN))
+    return Doorlock.from_unifi_dict(**data)
 
 
 @pytest.fixture

@@ -1,9 +1,9 @@
 """Helpers for data entry flows for config entries."""
 from __future__ import annotations
 
-import asyncio  # pylint: disable=unused-import  # used in cast as string
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Awaitable, Callable, Union, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, cast
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, mqtt, ssdp, zeroconf
@@ -12,12 +12,16 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 
-DiscoveryFunctionType = Callable[[HomeAssistant], Union[Awaitable[bool], bool]]
+if TYPE_CHECKING:
+    import asyncio
+
+_R = TypeVar("_R", bound="Awaitable[bool] | bool")
+DiscoveryFunctionType = Callable[[HomeAssistant], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DiscoveryFlowHandler(config_entries.ConfigFlow):
+class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
     """Handle a discovery config flow."""
 
     VERSION = 1
@@ -26,7 +30,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         self,
         domain: str,
         title: str,
-        discovery_function: DiscoveryFunctionType,
+        discovery_function: DiscoveryFunctionType[_R],
     ) -> None:
         """Initialize the discovery config flow."""
         self._domain = domain
@@ -150,7 +154,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 def register_discovery_flow(
     domain: str,
     title: str,
-    discovery_function: DiscoveryFunctionType,
+    discovery_function: DiscoveryFunctionType[Awaitable[bool] | bool],
     connection_class: str | UndefinedType = UNDEFINED,
 ) -> None:
     """Register flow for discovered integrations that not require auth."""
@@ -169,7 +173,7 @@ def register_discovery_flow(
             domain,
         )
 
-    class DiscoveryFlow(DiscoveryFlowHandler):
+    class DiscoveryFlow(DiscoveryFlowHandler[Union[Awaitable[bool], bool]]):
         """Discovery flow handler."""
 
         def __init__(self) -> None:
@@ -212,6 +216,9 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             "cloud" in self.hass.config.components
             and self.hass.components.cloud.async_active_subscription()
         ):
+            if not self.hass.components.cloud.async_is_connected():
+                return self.async_abort(reason="cloud_not_connected")
+
             webhook_url = await self.hass.components.cloud.async_create_cloudhook(
                 webhook_id
             )

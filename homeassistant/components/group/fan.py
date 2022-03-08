@@ -25,6 +25,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -35,10 +36,10 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
 from .util import (
@@ -52,6 +53,8 @@ SUPPORTED_FLAGS = {SUPPORT_SET_SPEED, SUPPORT_DIRECTION, SUPPORT_OSCILLATE}
 
 DEFAULT_NAME = "Fan Group"
 
+# No limit on parallel updates to enable a group calling another group
+PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -68,12 +71,26 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Group Cover platform."""
     async_add_entities(
         [FanGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES])]
     )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Light Switch config entry."""
+    registry = er.async_get(hass)
+    entity_id = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITIES]
+    )
+
+    async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entity_id)])
 
 
 class FanGroup(GroupEntity, FanEntity):

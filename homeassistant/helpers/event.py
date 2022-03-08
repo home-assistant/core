@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Iterable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Sequence
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Callable, Union, cast
+from typing import Any, Union, cast
 
 import attr
 from typing_extensions import Concatenate, ParamSpec
@@ -536,6 +536,7 @@ class _TrackStateChangeFiltered:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._action = action
+        self._action_as_hassjob = HassJob(action)
         self._listeners: dict[str, Callable[[], None]] = {}
         self._last_track_states: TrackStates = track_states
 
@@ -632,12 +633,20 @@ class _TrackStateChangeFiltered:
         )
 
     @callback
+    def _state_added(self, event: Event) -> None:
+        self._cancel_listener(_ENTITIES_LISTENER)
+        self._setup_entities_listener(
+            self._last_track_states.domains, self._last_track_states.entities
+        )
+        self.hass.async_run_hass_job(self._action_as_hassjob, event)
+
+    @callback
     def _setup_domains_listener(self, domains: set[str]) -> None:
         if not domains:
             return
 
         self._listeners[_DOMAINS_LISTENER] = async_track_state_added_domain(
-            self.hass, domains, self._action
+            self.hass, domains, self._state_added
         )
 
     @callback
@@ -1319,8 +1328,8 @@ def async_track_time_interval(
     interval: timedelta,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
-    remove = None
-    interval_listener_job = None
+    remove: CALLBACK_TYPE
+    interval_listener_job: HassJob[None]
 
     job = HassJob(action)
 
@@ -1335,7 +1344,7 @@ def async_track_time_interval(
         nonlocal interval_listener_job
 
         remove = async_track_point_in_utc_time(
-            hass, interval_listener_job, next_interval()  # type: ignore
+            hass, interval_listener_job, next_interval()
         )
         hass.async_run_hass_job(job, now)
 
@@ -1344,7 +1353,7 @@ def async_track_time_interval(
 
     def remove_listener() -> None:
         """Remove interval listener."""
-        remove()  # type: ignore
+        remove()
 
     return remove_listener
 

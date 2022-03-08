@@ -599,6 +599,10 @@ class PlexServer:
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
 
+    def create_station_playqueue(self, key):
+        """Create playqueue on Plex server using a radio station key."""
+        return plexapi.playqueue.PlayQueue.fromStationKey(self._plex_server, key)
+
     def get_playqueue(self, playqueue_id):
         """Retrieve existing playqueue from Plex server."""
         return plexapi.playqueue.PlayQueue.get(self._plex_server, playqueue_id)
@@ -640,7 +644,10 @@ class PlexServer:
             _LOGGER.error("Must specify 'library_name' for this search")
             return None
         except NotFound:
-            _LOGGER.error("Library '%s' not found", library_name)
+            library_sections = [section.title for section in self.library.sections()]
+            _LOGGER.error(
+                "Library '%s' not found in %s", library_name, library_sections
+            )
             return None
 
         return search_media(media_type, library_section, **kwargs)

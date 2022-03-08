@@ -5,17 +5,16 @@ from collections.abc import Iterator
 from functools import lru_cache
 import json
 import logging
-import mimetypes
 import os
 import pathlib
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components import websocket_api
+from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
@@ -28,12 +27,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 
 from .storage import async_setup_frontend_storage
-
-# Fix mimetypes for borked Windows machines
-# https://github.com/home-assistant/frontend/issues/3336
-mimetypes.add_type("text/css", ".css")
-mimetypes.add_type("application/javascript", ".js")
-
 
 DOMAIN = "frontend"
 CONF_THEMES = "themes"
@@ -320,7 +313,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     # pylint: disable=import-outside-toplevel
     import hass_frontend
 
-    return cast(pathlib.Path, hass_frontend.where())
+    return hass_frontend.where()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -583,7 +576,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Serve the index page for panel pages."""
         hass = request.app["hass"]
 
-        if not hass.components.onboarding.async_is_onboarded():
+        if not onboarding.async_is_onboarded(hass):
             return web.Response(status=302, headers={"location": "/onboarding.html"})
 
         template = self._template_cache or await hass.async_add_executor_job(

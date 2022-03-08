@@ -38,7 +38,7 @@ from .const import (
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
-    DISCOVER_SCAN_TIMEOUT,
+    DIRECTED_DISCOVERY_TIMEOUT,
     DOMAIN,
     FLUX_LED_DISCOVERY,
 )
@@ -82,8 +82,7 @@ def async_build_cached_discovery(entry: ConfigEntry) -> FluxLEDDiscovery:
 @callback
 def async_name_from_discovery(device: FluxLEDDiscovery) -> str:
     """Convert a flux_led discovery to a human readable name."""
-    mac_address = device[ATTR_ID]
-    if mac_address is None:
+    if (mac_address := device[ATTR_ID]) is None:
         return device[ATTR_IPADDR]
     short_mac = mac_address[-6:]
     if device[ATTR_MODEL_DESCRIPTION]:
@@ -125,10 +124,13 @@ def async_update_entry_from_discovery(
     if model_num and entry.data.get(CONF_MODEL_NUM) != model_num:
         data_updates[CONF_MODEL_NUM] = model_num
     async_populate_data_from_discovery(entry.data, data_updates, device)
-    if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
-        updates["title"] = data_updates[CONF_NAME] = async_name_from_discovery(device)
-    if data_updates:
+    if is_ip_address(entry.title):
+        updates["title"] = async_name_from_discovery(device)
+    title_matches_name = entry.title == entry.data.get(CONF_NAME)
+    if data_updates or title_matches_name:
         updates["data"] = {**entry.data, **data_updates}
+        if title_matches_name:
+            del updates["data"][CONF_NAME]
     if updates:
         return hass.config_entries.async_update_entry(entry, **updates)
     return False
@@ -194,7 +196,7 @@ async def async_discover_device(
     """Direct discovery at a single ip instead of broadcast."""
     # If we are missing the unique_id we should be able to fetch it
     # from the device by doing a directed discovery at the host only
-    for device in await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host):
+    for device in await async_discover_devices(hass, DIRECTED_DISCOVERY_TIMEOUT, host):
         if device[ATTR_IPADDR] == host:
             return device
     return None
@@ -210,7 +212,7 @@ def async_trigger_discovery(
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_DISCOVERY},
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
                 data={**device},
             )
         )

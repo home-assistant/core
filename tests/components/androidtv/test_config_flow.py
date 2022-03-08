@@ -3,6 +3,8 @@ import json
 from socket import gaierror
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import data_entry_flow
 from homeassistant.components.androidtv.config_flow import (
     APPS_NEW_ID,
@@ -29,6 +31,7 @@ from homeassistant.components.androidtv.const import (
     DEFAULT_PORT,
     DOMAIN,
     PROP_ETHMAC,
+    PROP_WIFIMAC,
 )
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -40,6 +43,7 @@ from tests.components.androidtv.patchers import isfile
 
 ADBKEY = "adbkey"
 ETH_MAC = "a1:b1:c1:d1:e1:f1"
+WIFI_MAC = "a2:b2:c2:d2:e2:f2"
 HOST = "127.0.0.1"
 VALID_DETECT_RULE = [{"paused": {"media_session_state": 3}}]
 
@@ -82,17 +86,28 @@ PATCH_SETUP_ENTRY = patch(
 class MockConfigDevice:
     """Mock class to emulate Android TV device."""
 
-    def __init__(self, eth_mac=ETH_MAC):
+    def __init__(self, eth_mac=ETH_MAC, wifi_mac=None):
         """Initialize a fake device to test config flow."""
         self.available = True
-        self.device_properties = {PROP_ETHMAC: eth_mac}
+        self.device_properties = {PROP_ETHMAC: eth_mac, PROP_WIFIMAC: wifi_mac}
 
     async def adb_close(self):
         """Fake method to close connection."""
         self.available = False
 
 
-async def _test_user(hass, config):
+@pytest.mark.parametrize(
+    ["config", "eth_mac", "wifi_mac"],
+    [
+        (CONFIG_PYTHON_ADB, ETH_MAC, None),
+        (CONFIG_ADB_SERVER, ETH_MAC, None),
+        (CONFIG_PYTHON_ADB, None, WIFI_MAC),
+        (CONFIG_ADB_SERVER, None, WIFI_MAC),
+        (CONFIG_PYTHON_ADB, ETH_MAC, WIFI_MAC),
+        (CONFIG_ADB_SERVER, ETH_MAC, WIFI_MAC),
+    ],
+)
+async def test_user(hass, config, eth_mac, wifi_mac):
     """Test user config."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
@@ -103,7 +118,7 @@ async def _test_user(hass, config):
     # test with all provided
     with patch(
         CONNECT_METHOD,
-        return_value=(MockConfigDevice(), None),
+        return_value=(MockConfigDevice(eth_mac, wifi_mac), None),
     ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP:
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=config
@@ -115,16 +130,6 @@ async def _test_user(hass, config):
         assert result["data"] == config
 
         assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_user_python_adb(hass):
-    """Test user config for Python ADB."""
-    await _test_user(hass, CONFIG_PYTHON_ADB)
-
-
-async def test_user_adb_server(hass):
-    """Test user config for ADB server."""
-    await _test_user(hass, CONFIG_ADB_SERVER)
 
 
 async def test_import(hass):
@@ -179,7 +184,6 @@ async def test_import_data(hass):
     config_data[CONF_PLATFORM] = DOMAIN
     config_data[CONF_ADBKEY] = ADBKEY
     config_data[CONF_TURN_OFF_COMMAND] = "off"
-    config_data[CONF_STATE_DETECTION_RULES] = {"a": "b"}
     platform_data = {MP_DOMAIN: config_data}
 
     with patch(
@@ -278,10 +282,10 @@ async def test_error_invalid_host(hass):
 
 
 async def test_invalid_serial(hass):
-    """Test for invallid serialno."""
+    """Test for invalid serialno."""
     with patch(
         CONNECT_METHOD,
-        return_value=(MockConfigDevice(eth_mac=""), None),
+        return_value=(MockConfigDevice(eth_mac=None), None),
     ), PATCH_GET_HOST_IP:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

@@ -33,8 +33,8 @@ from .const import (
     PLATFORMS,
 )
 from .data import ProtectData
+from .discovery import async_start_discovery
 from .services import async_cleanup_services, async_setup_services
-from .views import ThumbnailProxyView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +44,7 @@ SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the UniFi Protect config entries."""
 
+    async_start_discovery(hass)
     session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
     protect = ProtectApiClient(
         host=entry.data[CONF_HOST],
@@ -84,7 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     async_setup_services(hass)
-    hass.http.register_view(ThumbnailProxyView(hass))
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(

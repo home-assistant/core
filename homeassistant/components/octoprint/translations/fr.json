@@ -21,7 +21,8 @@
                     "path": "Chemin d\u2019acc\u00e8s \u00e0 l\u2019application",
                     "port": "Num\u00e9ro de port",
                     "ssl": "Utiliser SSL",
-                    "username": "Nom d'utilisateur"
+                    "username": "Nom d'utilisateur",
+                    "verify_ssl": "V\u00e9rifier certificat SSL"
                 }
             }
         }

@@ -19,6 +19,7 @@ from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import ATTR_MESSAGE, DOMAIN
 from .data import ProtectData
+from .utils import _async_unifi_mac_from_hass
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
@@ -46,12 +47,6 @@ def _async_all_ufp_instances(hass: HomeAssistant) -> list[ProtectApiClient]:
     return [
         data.api for data in hass.data[DOMAIN].values() if isinstance(data, ProtectData)
     ]
-
-
-@callback
-def _async_unifi_mac_from_hass(mac: str) -> str:
-    # MAC addresses in UFP are always caps
-    return mac.replace(":", "").upper()
 
 
 @callback
