@@ -351,6 +351,11 @@ class ShellyRpcEntity(entity.Entity):
         """Available."""
         return self.wrapper.device.connected
 
+    @property
+    def status(self) -> dict:
+        """Device status by entity key."""
+        return cast(dict, self.wrapper.device.status[self.key])
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
         self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
