@@ -40,10 +40,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except (ClientConnectorError, InvalidHost):
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    }
                 )
-                self._abort_if_unique_id_configured()
                 title = f"Airzone {user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
                 return self.async_create_entry(title=title, data=user_input)
 
