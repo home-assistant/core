@@ -16,6 +16,8 @@ import homeassistant.util.dt as dt_util
 
 from .conftest import TEST_YAML_ENTITY, TEST_YAML_ENTITY_NAME
 
+from tests.common import async_fire_time_changed
+
 TEST_ENTITY = TEST_YAML_ENTITY
 TEST_ENTITY_NAME = TEST_YAML_ENTITY_NAME
 
@@ -290,7 +292,8 @@ async def test_update_error(
         "homeassistant.components.google.api.google_discovery.build",
         side_effect=httplib2.ServerNotFoundError("unit test"),
     ), patch("homeassistant.util.utcnow", return_value=now):
-        await hass.helpers.entity_component.async_update_entity(TEST_ENTITY)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
     # No change
     state = hass.states.get(TEST_ENTITY)
@@ -316,7 +319,8 @@ async def test_update_error(
                 }
             ]
         }
-        await hass.helpers.entity_component.async_update_entity(TEST_ENTITY)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
     # State updated
     state = hass.states.get(TEST_ENTITY)
