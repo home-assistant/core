@@ -52,7 +52,6 @@ class AirzoneSensor(AirzoneDevice, SensorEntity):
         self._attr_name = f"{zone_name} {description.name}"
         self._attr_unique_id = f"{DOMAIN}_{zone_id}_{description.key}"
         self.entity_description = description
-        self.zone_id = zone_id
 
     @property
     def native_value(self):

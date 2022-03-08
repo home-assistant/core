@@ -8,13 +8,10 @@ from aioairzone.localapi_device import AirzoneLocalApi
 from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
 
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import AIOAIRZONE_DEVICE_TIMEOUT_SEC, DOMAIN
-
-PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -27,7 +24,6 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, airzone: AirzoneLocalApi) -> None:
         """Initialize."""
         self.airzone = airzone
-        self.update_checked = None
 
         super().__init__(
             hass,

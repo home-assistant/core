@@ -1,8 +1,6 @@
 """The Airzone integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from aioairzone.common import ConnectionOptions
 from aioairzone.localapi_device import AirzoneLocalApi
 
@@ -17,8 +15,6 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-SCAN_INTERVAL = timedelta(seconds=60)
 
 
 class AirzoneDevice(CoordinatorEntity):
