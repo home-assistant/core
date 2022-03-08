@@ -251,12 +251,13 @@ class TemperatureRatingSensor(SHCEntity, SensorEntity):
 class CommunicationQualitySensor(SHCEntity, SensorEntity):
     """Representation of an SHC communication quality reporting sensor."""
 
+    _attr_icon = "mdi:wifi"
+
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC communication quality reporting sensor."""
         super().__init__(device, parent_id, entry_id)
         self._attr_name = f"{device.name} Communication Quality"
         self._attr_unique_id = f"{device.serial}_communication_quality"
-        self._attr_icon = "mdi:wifi"
 
     @property
     def native_value(self):
