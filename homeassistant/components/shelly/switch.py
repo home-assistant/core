@@ -5,7 +5,7 @@ from typing import Any, cast
 
 from aioshelly.block_device import Block
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -94,6 +94,8 @@ async def async_setup_rpc_entry(
 
 class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
     """Entity that controls a relay on Block based Shelly devices."""
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize relay switch."""
