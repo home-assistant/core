@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import Enum
+from enum import Enum, auto
 import functools as ft
 import logging
 import math
@@ -211,14 +211,14 @@ class EntityCategory(StrEnum):
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
-    # New: Not yet added to a platform, polling updates are written to the state machine
-    NEW = "new"
+    # Not Added: Not yet added to a platform, polling updates are written to the state machine
+    NOT_ADDED = auto()
 
     # Added: Added to a platform, polling updates are written to the state machine
-    ADDED = "added"
+    ADDED = auto()
 
     # Removed: Removed from a platform, polling updates are not written to the state machine
-    REMOVED = "removed"
+    REMOVED = auto()
 
 
 def convert_to_entity_category(
@@ -308,7 +308,7 @@ class Entity(ABC):
     _context_set: datetime | None = None
 
     # If entity is added to an entity platform
-    _platform_state = EntityPlatformState.NEW
+    _platform_state = EntityPlatformState.NOT_ADDED
 
     # Entity Properties
     _attr_assumed_state: bool = False
@@ -792,7 +792,7 @@ class Entity(ABC):
         self.hass = None  # type: ignore[assignment]
         self.platform = None
         self.parallel_updates = None
-        self._platform_state = EntityPlatformState.NEW
+        self._platform_state = EntityPlatformState.NOT_ADDED
 
     async def add_to_platform_finish(self) -> None:
         """Finish adding an entity to a platform."""
