@@ -115,6 +115,7 @@ FLOWS = [
     "fronius",
     "garages_amsterdam",
     "gdacs",
+    "generic",
     "geofency",
     "geonetnz_quakes",
     "geonetnz_volcano",
