@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         gateway.load_auth(access_token, user_id, monitor_id)
         await gateway.get_monitor_data()
     except (SenseAuthenticationException, SenseMFARequiredException) as err:
-        _LOGGER.warning("Sense authentication expired")
+        _LOGGER.warning("Sense authentication expired with getting monitoring data")
         raise ConfigEntryAuthFailed(err) from err
 
     sense_devices_data = SenseDevicesData()
@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await gateway.update_trend_data()
         except (SenseAuthenticationException, SenseMFARequiredException) as err:
-            _LOGGER.warning("Sense authentication expired")
+            _LOGGER.warning("Sense authentication expired while updating trend data")
             raise ConfigEntryAuthFailed(err) from err
 
     trends_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
