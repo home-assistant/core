@@ -191,10 +191,6 @@ class SHCSwitch(SHCEntity, SwitchEntity):
         """Turn the switch off."""
         setattr(self._device, self.entity_description.on_key, False)
 
-    def toggle(self, **kwargs) -> None:
-        """Toggle the switch."""
-        setattr(self._device, self.entity_description.on_key, not self.is_on)
-
     @property
     def should_poll(self) -> bool:
         """Switch needs polling."""
@@ -229,7 +225,3 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
     def turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
         self._device.routing = False
-
-    def toggle(self, **kwargs) -> None:
-        """Toggle the switch."""
-        self._device.routing = not self.is_on
