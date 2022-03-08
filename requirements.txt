@@ -24,6 +24,6 @@ voluptuous==0.12.2
 voluptuous-serialize==2.5.0
 yarl==1.7.2
 # AIS Core
-ais-dom-frontend==20220301.0
+ais-dom-frontend==20220301.1
 aisapi==0.1.1
 tzdata
