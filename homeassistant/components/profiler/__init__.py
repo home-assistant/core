@@ -8,6 +8,7 @@ import sys
 import threading
 import time
 import traceback
+from typing import Any
 
 from guppy import hpy
 import objgraph
@@ -87,13 +88,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         persistent_notification.async_dismiss(hass, "profile_object_logging")
         domain_data.pop(LOG_INTERVAL_SUB)()
 
+    def _safe_repr(obj: Any) -> str:
+        """Get the repr of an object but keep going if there is an exception.
+
+        We wrap repr to ensure if one object cannot be serialized, we can
+        still get the rest.
+        """
+        try:
+            return repr(obj)
+        except Exception:  # pylint: disable=broad-except
+            return f"Failed to serialize {type(obj)}"
+
     def _dump_log_objects(call: ServiceCall) -> None:
         obj_type = call.data[CONF_TYPE]
 
         _LOGGER.critical(
             "%s objects in memory: %s",
             obj_type,
-            objgraph.by_type(obj_type),
+            [_safe_repr(obj) for obj in objgraph.by_type(obj_type)],
         )
 
         persistent_notification.create(
