@@ -1,4 +1,5 @@
-"""Tests for the sensors provided by the Kaleidescape integration."""
+"""Tests for Kaleidescape sensor platform."""
+
 from unittest.mock import MagicMock
 
 from kaleidescape import const as kaleidescape_const

@@ -1,4 +1,5 @@
 """Sensor platform for Kaleidescape integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class BaseEntityDescriptionMixin:
-    """Mixin for required GitHub base description keys."""
+    """Mixin for required descriptor keys."""
 
     value_fn: Callable[[KaleidescapeDevice], StateType]
 
