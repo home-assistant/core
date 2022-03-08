@@ -49,7 +49,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = []
-    for zone_id, zone_data in coordinator.data[AZD_ZONES].items():
+    for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
         zone_name = zone_data[AZD_NAME]
 
         for description in SENSOR_TYPES:
@@ -59,7 +59,7 @@ async def async_setup_entry(
                         coordinator,
                         description,
                         entry,
-                        zone_id,
+                        system_zone_id,
                         zone_name,
                     )
                 )
