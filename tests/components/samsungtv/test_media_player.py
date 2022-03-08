@@ -641,9 +641,10 @@ async def test_turn_off_websocket(
     )
     # key called
     assert remotews.send_command.call_count == 1
-    command = remotews.send_command.call_args_list[0].args[0]
-    assert isinstance(command, SendRemoteKey)
-    assert command.params["DataOfCmd"] == "KEY_POWER"
+    commands = remotews.send_command.call_args_list[0].args[0]
+    assert len(commands) == 1
+    assert isinstance(commands[0], SendRemoteKey)
+    assert commands[0].params["DataOfCmd"] == "KEY_POWER"
 
     # commands not sent : power off in progress
     remotews.send_command.reset_mock()
@@ -678,18 +679,17 @@ async def test_turn_off_websocket_frame(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remotews.send_command.call_count == 3
-    command = remotews.send_command.call_args_list[0].args[0]
-    assert isinstance(command, SendRemoteKey)
-    assert command.params["Cmd"] == "Press"
-    assert command.params["DataOfCmd"] == "KEY_POWER"
-    command = remotews.send_command.call_args_list[1].args[0]
-    assert isinstance(command, SamsungTVSleepCommand)
-    assert command.delay == 3
-    command = remotews.send_command.call_args_list[2].args[0]
-    assert isinstance(command, SendRemoteKey)
-    assert command.params["Cmd"] == "Release"
-    assert command.params["DataOfCmd"] == "KEY_POWER"
+    assert remotews.send_command.call_count == 1
+    commands = remotews.send_command.call_args_list[0].args[0]
+    assert len(commands) == 3
+    assert isinstance(commands[0], SendRemoteKey)
+    assert commands[0].params["Cmd"] == "Press"
+    assert commands[0].params["DataOfCmd"] == "KEY_POWER"
+    assert isinstance(commands[1], SamsungTVSleepCommand)
+    assert commands[1].delay == 3
+    assert isinstance(commands[2], SendRemoteKey)
+    assert commands[2].params["Cmd"] == "Release"
+    assert commands[2].params["DataOfCmd"] == "KEY_POWER"
 
 
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
@@ -1023,9 +1023,10 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
         True,
     )
     assert remotews.send_command.call_count == 1
-    command = remotews.send_command.call_args_list[0].args[0]
-    assert isinstance(command, ChannelEmitCommand)
-    assert command.params["data"]["appId"] == "3201608010191"
+    commands = remotews.send_command.call_args_list[0].args[0]
+    assert len(commands) == 1
+    assert isinstance(commands[0], ChannelEmitCommand)
+    assert commands[0].params["data"]["appId"] == "3201608010191"
 
 
 async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
@@ -1040,6 +1041,7 @@ async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
         True,
     )
     assert remotews.send_command.call_count == 1
-    command = remotews.send_command.call_args_list[0].args[0]
-    assert isinstance(command, ChannelEmitCommand)
-    assert command.params["data"]["appId"] == "3201608010191"
+    commands = remotews.send_command.call_args_list[0].args[0]
+    assert len(commands) == 1
+    assert isinstance(commands[0], ChannelEmitCommand)
+    assert commands[0].params["data"]["appId"] == "3201608010191"
