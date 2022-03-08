@@ -552,9 +552,9 @@ class Entity(ABC):
 
         self._async_write_ha_state()
 
-    def _stringify_state(self) -> str:
+    def _stringify_state(self, available: bool) -> str:
         """Convert state to string."""
-        if not self.available:
+        if not available:
             return STATE_UNAVAILABLE
         if (state := self.state) is None:
             return STATE_UNKNOWN
@@ -587,30 +587,31 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
-        state = self._stringify_state()
-        if self.available:
+        available = self.available  # only call self.available once per update cycle
+        state = self._stringify_state(available)
+        if available:
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
-            # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
-            # Warning added in 2021.12, will be removed in 2022.4
-            if (
-                self.device_state_attributes is not None
-                and not self._deprecated_device_state_attributes_reported
-            ):
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    "Entity %s (%s) implements device_state_attributes. Please %s",
-                    self.entity_id,
-                    type(self),
-                    report_issue,
-                )
-                self._deprecated_device_state_attributes_reported = True
             if extra_state_attributes is None:
-                extra_state_attributes = self.device_state_attributes
+                device_state_attributes = self.device_state_attributes
+                # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
+                # Warning added in 2021.12, will be removed in 2022.4
+                if (
+                    device_state_attributes is not None
+                    and not self._deprecated_device_state_attributes_reported
+                ):
+                    report_issue = self._suggest_report_issue()
+                    _LOGGER.warning(
+                        "Entity %s (%s) implements device_state_attributes. Please %s",
+                        self.entity_id,
+                        type(self),
+                        report_issue,
+                    )
+                    self._deprecated_device_state_attributes_reported = True
+                    extra_state_attributes = device_state_attributes
             attr.update(extra_state_attributes or {})
 
-        unit_of_measurement = self.unit_of_measurement
-        if unit_of_measurement is not None:
+        if (unit_of_measurement := self.unit_of_measurement) is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         entry = self.registry_entry
