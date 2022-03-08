@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "R\u00fchma liikmed",
+                    "name": "R\u00fchma nimi"
+                },
+                "description": "R\u00fchmasuvandite valimine"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "R\u00fchma liikmed"
+                },
+                "description": "R\u00fchmasuvandite valimine"
+            },
+            "fan": {
+                "data": {
+                    "entities": "R\u00fchma liikmed",
+                    "name": "R\u00fchma nimi"
+                },
+                "description": "R\u00fchmasuvandite valimine"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "R\u00fchma liikmed"
+                },
+                "description": "R\u00fchmasuvandite valimine"
+            },
+            "init": {
+                "data": {
+                    "group_type": "R\u00fchma t\u00fc\u00fcp"
+                },
+                "description": "Vali r\u00fchma t\u00fc\u00fcp"
+            },
+            "light": {
+                "data": {
+                    "entities": "R\u00fchma liikmed",
+                    "name": "R\u00fchma nimi"
+                },
+                "description": "R\u00fchmasuvandite valimine"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "R\u00fchma liikmed"
+                },
+                "description": "R\u00fchmasuvandite valimine"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "R\u00fchma liikmed",
+                    "name": "R\u00fchma nimi"
+                },
+                "description": "R\u00fchmasuvandite valimine"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "R\u00fchma liikmed"
+                },
+                "description": "R\u00fchmasuvandite valimine"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Suletud",

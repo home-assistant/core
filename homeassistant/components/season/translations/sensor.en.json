@@ -5,6 +5,12 @@
             "spring": "Spring",
             "summer": "Summer",
             "winter": "Winter"
+        },
+        "season__season__": {
+            "autumn": "Autumn",
+            "spring": "Spring",
+            "summer": "Summer",
+            "winter": "Winter"
         }
     }
 }

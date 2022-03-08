@@ -1,0 +1,12 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

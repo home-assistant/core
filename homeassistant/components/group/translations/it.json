@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "Membri del gruppo",
+                    "name": "Nome del gruppo"
+                },
+                "description": "Seleziona le opzioni di gruppo"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Membri del gruppo"
+                },
+                "description": "Seleziona le opzioni di gruppo"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Membri del gruppo",
+                    "name": "Nome del gruppo"
+                },
+                "description": "Seleziona le opzioni di gruppo"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Membri del gruppo"
+                },
+                "description": "Seleziona le opzioni di gruppo"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Tipo di gruppo"
+                },
+                "description": "Seleziona il tipo di gruppo"
+            },
+            "light": {
+                "data": {
+                    "entities": "Membri del gruppo",
+                    "name": "Nome del gruppo"
+                },
+                "description": "Seleziona le opzioni di gruppo"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Membri del gruppo"
+                },
+                "description": "Seleziona le opzioni di gruppo"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Membri del gruppo",
+                    "name": "Nome del gruppo"
+                },
+                "description": "Seleziona le opzioni di gruppo"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Membri del gruppo"
+                },
+                "description": "Seleziona le opzioni di gruppo"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Chiuso",
