@@ -59,7 +59,6 @@ async def test_form_duplicated_id(hass):
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
-            unique_id=f"{CONFIG[CONF_HOST]}:{CONFIG[CONF_PORT]}",
             data=CONFIG,
         )
         entry.add_to_hass(hass)
