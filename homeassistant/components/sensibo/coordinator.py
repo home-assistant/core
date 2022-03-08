@@ -91,6 +91,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             running = ac_states.get("on")
             fan_mode = ac_states.get("fanLevel")
             swing_mode = ac_states.get("swing")
+            horizontal_swing_mode = ac_states.get("horizontalSwing")
             available = dev["connectionStatus"].get("isAlive", True)
             capabilities = dev["remoteCapabilities"]
             hvac_modes = list(capabilities["modes"])
@@ -168,11 +169,12 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "on": running,
                 "fan_mode": fan_mode,
                 "swing_mode": swing_mode,
-                "horizontal_swing_modes": horizontal_swing_modes,
+                "horizontal_swing_mode": horizontal_swing_mode,
                 "available": available,
                 "hvac_modes": hvac_modes,
                 "fan_modes": fan_modes,
                 "swing_modes": swing_modes,
+                "horizontal_swing_modes": horizontal_swing_modes,
                 "temp_unit": temperature_unit_key,
                 "temp_list": temperatures_list,
                 "temp_step": temperature_step,
