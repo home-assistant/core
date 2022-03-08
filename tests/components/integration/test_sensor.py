@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import mock_restore_cache
+from tests.common import MockConfigEntry, mock_restore_cache
 
 
 async def test_state(hass) -> None:
@@ -406,3 +406,24 @@ async def test_calc_errors(hass):
     state = hass.states.get("sensor.integration")
     assert state is not None
     assert round(float(state.state)) == 0
+
+
+async def test_setup(hass: HomeAssistant):
+    """Test setup using config flow."""
+    config_entry = MockConfigEntry(
+        domain="integration",
+        options={
+            "source": "sensor.power",
+            "round": 3,
+            "unit_prefix": "k",
+            "unit_time": "h",
+            "method": "trapezoidal",
+        },
+        title="power integral",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.power_integral")
+    assert state is not None
