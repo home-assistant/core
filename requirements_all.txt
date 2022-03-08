@@ -323,7 +323,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.25.0
+async-upnp-client==0.26.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -803,7 +803,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220301.0
+home-assistant-frontend==20220301.1
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -2090,7 +2090,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async]==2.1.0
+samsungtvws[async]==2.2.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4

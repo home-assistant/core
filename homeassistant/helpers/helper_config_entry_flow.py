@@ -56,7 +56,7 @@ class HelperCommonFlowHandler:
                     step_id=next_step_id, data_schema=self._handler.steps[next_step_id]
                 )
 
-        schema = self._handler.steps[step_id].schema
+        schema = dict(self._handler.steps[step_id].schema)
         for key in list(schema):
             if key in self._options and isinstance(key, vol.Marker):
                 new_key = copy.copy(key)
@@ -86,6 +86,12 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
             config_entry: config_entries.ConfigEntry,
         ) -> config_entries.OptionsFlow:
             """Get the options flow for this handler."""
+            if (
+                cls.async_initial_options_step
+                is HelperConfigFlowHandler.async_initial_options_step
+            ):
+                raise UnknownHandler
+
             return HelperOptionsFlowHandler(
                 config_entry,
                 cls.steps,
@@ -95,17 +101,26 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
                 cls.async_validate_input,
             )
 
-        if (
-            cls.async_initial_options_step
-            is not HelperConfigFlowHandler.async_initial_options_step
-        ):
-            cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
+        # Create an async_get_options_flow method
+        cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
+        # Create flow step methods for each step defined in the flow schema
         for step in cls.steps:
             setattr(cls, f"async_step_{step}", cls.async_step)
 
     def __init__(self) -> None:
         """Initialize config flow."""
         self._common_handler = HelperCommonFlowHandler(self, None)
+
+    @classmethod
+    @callback
+    def async_supports_options_flow(
+        cls, config_entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Return options flow support for this handler."""
+        return (
+            cls.async_initial_options_step
+            is not HelperConfigFlowHandler.async_initial_options_step
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
