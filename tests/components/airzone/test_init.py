@@ -1,20 +1,22 @@
 """Define tests for the Airzone init."""
 
+from unittest.mock import patch
+
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
-from .util import CONFIG, airzone_requests_mock
+from .util import CONFIG, HVAC_MOCK
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import mock_aiohttp_client
 
 
 async def test_unload_entry(hass):
     """Test unload."""
 
-    with mock_aiohttp_client() as _m:
-        airzone_requests_mock(_m)
-
+    with patch(
+        "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
+        return_value=HVAC_MOCK,
+    ):
         config_entry = MockConfigEntry(
             domain=DOMAIN, unique_id="airzone_unique_id", data=CONFIG
         )

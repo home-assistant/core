@@ -9,10 +9,9 @@ from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .util import CONFIG, airzone_requests_mock
+from .util import CONFIG, HVAC_MOCK
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import mock_aiohttp_client
 
 
 async def test_form(hass):
@@ -21,9 +20,10 @@ async def test_form(hass):
     with patch(
         "homeassistant.components.airzone.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, mock_aiohttp_client() as _m:
-        airzone_requests_mock(_m)
-
+    ) as mock_setup_entry, patch(
+        "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
+        return_value=HVAC_MOCK,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -53,9 +53,10 @@ async def test_form(hass):
 async def test_form_duplicated_id(hass):
     """Test setting up duplicated entry."""
 
-    with mock_aiohttp_client() as _m:
-        airzone_requests_mock(_m)
-
+    with patch(
+        "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
+        return_value=HVAC_MOCK,
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             unique_id=f"{CONFIG[CONF_HOST]}:{CONFIG[CONF_PORT]}",
@@ -75,7 +76,7 @@ async def test_connection_error(hass):
     """Test connection to host error."""
 
     with patch(
-        "homeassistant.components.airzone.config_flow.AirzoneLocalApi.validate_airzone",
+        "aioairzone.localapi_device.AirzoneLocalApi.validate_airzone",
         side_effect=ClientConnectorError(MagicMock(), MagicMock()),
     ):
         result = await hass.config_entries.flow.async_init(
