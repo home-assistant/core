@@ -2150,9 +2150,6 @@ slixmpp==1.8.0.1
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
 
-# homeassistant.components.smarthab
-smarthab==0.21
-
 # homeassistant.components.smhi
 smhi-pkg==1.0.15
 
