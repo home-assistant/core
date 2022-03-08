@@ -27,6 +27,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import template
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.script import SCRIPT_MODE_CHOICES
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -790,3 +791,35 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
     state = hass.states.get("script.last_triggered")
     assert state
     assert state.attributes["last_triggered"] == time
+
+
+@pytest.mark.parametrize("script_mode", SCRIPT_MODE_CHOICES)
+async def test_recursive_script(hass, script_mode):
+    """Test recursive script calls does not deadlock."""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script1"},
+                        {"service": "test.script"},
+                    ],
+                },
+            }
+        },
+    )
+
+    service_called = asyncio.Event()
+
+    async def async_service_handler(service):
+        service_called.set()
+
+    hass.services.async_register("test", "script", async_service_handler)
+    hass.states.async_set("input_boolean.test", "on")
+    hass.states.async_set("input_boolean.test2", "off")
+
+    await hass.services.async_call("script", "script1")
+    await asyncio.wait_for(service_called.wait(), 1)
