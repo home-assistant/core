@@ -11,7 +11,6 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -55,29 +54,6 @@ async def async_setup_platform(
                 config[CONF_NAME],
                 config[CONF_ENTITY_ID],
                 unique_id,
-            )
-        ]
-    )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Initialize Light Switch config entry."""
-
-    registry = er.async_get(hass)
-    entity_id = er.async_validate_entity_id(
-        registry, config_entry.options[CONF_ENTITY_ID]
-    )
-
-    async_add_entities(
-        [
-            LightSwitch(
-                config_entry.title,
-                entity_id,
-                config_entry.entry_id,
             )
         ]
     )

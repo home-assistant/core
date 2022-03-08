@@ -1,11 +1,10 @@
-"""Test the switch light config flow."""
+"""Test the Switch as X config flow."""
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.switch import async_setup_entry
-from homeassistant.components.switch.const import DOMAIN
+from homeassistant.components.switch_as_x import DOMAIN, async_setup_entry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 from homeassistant.helpers import entity_registry as er
@@ -20,7 +19,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.switch.async_setup_entry",
+        "homeassistant.components.switch_as_x.async_setup_entry",
         wraps=async_setup_entry,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -128,7 +127,7 @@ async def test_options(hass: HomeAssistant) -> None:
     assert get_suggested(result["data_schema"].schema, "name") is None
 
     with patch(
-        "homeassistant.components.switch.async_setup_entry",
+        "homeassistant.components.switch_as_x.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(

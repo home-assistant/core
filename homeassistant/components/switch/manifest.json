@@ -5,6 +5,5 @@
   "codeowners": [
     "@home-assistant/core"
   ],
-  "quality_scale": "internal",
-  "config_flow": true
+  "quality_scale": "internal"
 }
