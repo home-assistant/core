@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_SERIAL
 
@@ -37,9 +38,12 @@ async def test_entity(
 ) -> None:
     """Test entity attributes."""
     entity = hass.states.get(ENTITY_ID)
-    assert entity is not None
+    entry = er.async_get(hass).async_get(ENTITY_ID)
+    assert entity
     assert entity.state == STATE_OFF
     assert entity.attributes["friendly_name"] == FRIENDLY_NAME
+    assert entry
+    assert entry.unique_id == MOCK_SERIAL
 
 
 async def test_update_state(
