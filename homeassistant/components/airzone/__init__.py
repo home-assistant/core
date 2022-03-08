@@ -31,7 +31,7 @@ class AirzoneEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self._attr_device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, f"{entry.entry_id, system_zone_id}")},
+            "identifiers": {(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
             "manufacturer": MANUFACTURER,
             "name": f"Airzone [{system_zone_id}] {zone_name}",
         }
