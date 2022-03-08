@@ -167,6 +167,7 @@ FLOWS = [
     "izone",
     "jellyfin",
     "juicenet",
+    "kaleidescape",
     "keenetic_ndms2",
     "kmtronic",
     "knx",

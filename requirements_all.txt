@@ -41,7 +41,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.6.5
+PyTurboJPEG==1.6.6
 
 # homeassistant.components.vicare
 PyViCare==2.16.1
@@ -1560,6 +1560,9 @@ pyisy==3.0.1
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
 
+# homeassistant.components.kaleidescape
+pykaleidescape==2022.2.6
+
 # homeassistant.components.kira
 pykira==0.1.1
 
@@ -1894,7 +1897,7 @@ python-juicenet==1.0.2
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.10
+python-miio==0.5.11
 
 # homeassistant.components.mpd
 python-mpd2==3.0.4
@@ -2090,7 +2093,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async]==2.2.0
+samsungtvws[async]==2.3.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4

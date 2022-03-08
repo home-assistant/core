@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON
+from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON, STATE_UNAVAILABLE
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -117,7 +117,11 @@ class Scene(RestoreEntity):
         """Call when the scene is added to hass."""
         await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
-        if state is not None and state.state is not None:
+        if (
+            state is not None
+            and state.state is not None
+            and state.state != STATE_UNAVAILABLE
+        ):
             self.__last_activated = state.state
 
     def activate(self, **kwargs: Any) -> None:

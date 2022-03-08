@@ -435,7 +435,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Create or return a remote control instance."""
         if self._remote is None or not self._remote.is_alive():
             # We need to create a new instance to reconnect.
-            LOGGER.debug("Create SamsungTVWSBridge for %s (%s)", CONF_NAME, self.host)
+            LOGGER.debug("Create SamsungTVWSBridge for %s", self.host)
             assert self.port
             self._remote = SamsungTVWSAsyncRemote(
                 host=self.host,
@@ -449,20 +449,24 @@ class SamsungTVWSBridge(SamsungTVBridge):
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except ConnectionFailure as err:
-                LOGGER.debug("ConnectionFailure %s", err.__repr__())
+                LOGGER.info(
+                    "Failed to get remote for %s, re-authentication required: %s",
+                    self.host,
+                    err.__repr__(),
+                )
                 self._notify_reauth_callback()
             except (WebSocketException, AsyncioTimeoutError, OSError) as err:
-                LOGGER.debug("WebSocketException, OSError %s", err.__repr__())
+                LOGGER.debug(
+                    "Failed to get remote for %s: %s", self.host, err.__repr__()
+                )
                 self._remote = None
             else:
-                LOGGER.debug(
-                    "Created SamsungTVWSBridge for %s (%s)", CONF_NAME, self.host
-                )
+                LOGGER.debug("Created SamsungTVWSBridge for %s", self.host)
                 if self._device_info is None:
                     # Initialise device info on first connect
                     await self.async_device_info()
                 if self.token != self._remote.token:
-                    LOGGER.debug(
+                    LOGGER.info(
                         "SamsungTVWSBridge has provided a new token %s",
                         self._remote.token,
                     )
@@ -477,5 +481,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 # Close the current remote connection
                 await self._remote.close()
             self._remote = None
-        except OSError:
-            LOGGER.debug("Could not establish connection")
+        except OSError as err:
+            LOGGER.debug(
+                "Error closing connection to %s: %s", self.host, err.__repr__()
+            )
