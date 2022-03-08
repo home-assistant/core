@@ -211,8 +211,8 @@ class EntityCategory(StrEnum):
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
-    # New: Not yet added to a platform, polling updates are written to the state machine
-    NEW = "new"
+    # Not Added: Not yet added to a platform, polling updates are written to the state machine
+    NOT_ADDED = "not_added"
 
     # Added: Added to a platform, polling updates are written to the state machine
     ADDED = "added"
@@ -308,7 +308,7 @@ class Entity(ABC):
     _context_set: datetime | None = None
 
     # If entity is added to an entity platform
-    _platform_state = EntityPlatformState.NEW
+    _platform_state = EntityPlatformState.NOT_ADDED
 
     # Entity Properties
     _attr_assumed_state: bool = False
@@ -792,7 +792,7 @@ class Entity(ABC):
         self.hass = None  # type: ignore[assignment]
         self.platform = None
         self.parallel_updates = None
-        self._platform_state = EntityPlatformState.NEW
+        self._platform_state = EntityPlatformState.NOT_ADDED
 
     async def add_to_platform_finish(self) -> None:
         """Finish adding an entity to a platform."""
