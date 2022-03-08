@@ -1446,6 +1446,9 @@ tesla-powerwall==0.3.17
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.1
 
+# homeassistant.components.todoist
+todoist-python==8.0.0
+
 # homeassistant.components.tolo
 tololib==0.1.0b3
 
