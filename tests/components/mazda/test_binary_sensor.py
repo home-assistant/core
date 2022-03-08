@@ -96,16 +96,3 @@ async def test_electric_vehicle_binary_sensors(hass):
     entry = entity_registry.async_get("binary_sensor.my_mazda3_plugged_in")
     assert entry
     assert entry.unique_id == "JM000000000000000_ev_plugged_in"
-
-    # Charging
-    state = hass.states.get("binary_sensor.my_mazda3_charging")
-    assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Charging"
-    assert (
-        state.attributes.get(ATTR_DEVICE_CLASS)
-        == BinarySensorDeviceClass.BATTERY_CHARGING
-    )
-    assert state.state == "on"
-    entry = entity_registry.async_get("binary_sensor.my_mazda3_charging")
-    assert entry
-    assert entry.unique_id == "JM000000000000000_ev_charging"

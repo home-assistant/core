@@ -46,11 +46,6 @@ def _plugged_in_supported(data):
     )
 
 
-def _charging_supported(data):
-    """Determine if 'charging' binary sensor is supported."""
-    return data["isElectric"] and data["evStatus"]["chargeInfo"]["charging"] is not None
-
-
 BINARY_SENSOR_ENTITIES = [
     MazdaBinarySensorEntityDescription(
         key="driver_door",
@@ -100,13 +95,6 @@ BINARY_SENSOR_ENTITIES = [
         device_class=BinarySensorDeviceClass.PLUG,
         is_supported=_plugged_in_supported,
         value=lambda data: data["evStatus"]["chargeInfo"]["pluggedIn"],
-    ),
-    MazdaBinarySensorEntityDescription(
-        key="ev_charging",
-        name_suffix="Charging",
-        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        is_supported=_charging_supported,
-        value=lambda data: data["evStatus"]["chargeInfo"]["charging"],
     ),
 ]
 
