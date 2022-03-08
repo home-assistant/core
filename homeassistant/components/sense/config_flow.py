@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT, DOMAIN, SENSE_TIMEOUT_EXCEPTIONS
 
@@ -43,7 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         self._auth_data.update(dict(data))
         timeout = self._auth_data[CONF_TIMEOUT]
-        client_session = async_get_clientsession(self.hass)
+        client_session = async_create_clientsession(self.hass)
 
         self._gateway = ASyncSenseable(
             api_timeout=timeout, wss_timeout=timeout, client_session=client_session
