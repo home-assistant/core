@@ -113,9 +113,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set the unique id from the udn."""
         assert self._host is not None
         await self.async_set_unique_id(self._udn, raise_on_progress=raise_on_progress)
-        if (entry := self._async_update_existing_host_entry()) and _entry_is_complete(
-            entry
-        ):
+        if (
+            entry := self._async_update_existing_matching_entry()
+        ) and _entry_is_complete(entry):
             raise data_entry_flow.AbortFlow("already_configured")
 
     def _async_update_and_abort_for_matching_unique_id(self) -> None:
@@ -215,21 +215,25 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
     @callback
-    def _async_update_existing_host_entry(self) -> config_entries.ConfigEntry | None:
-        """Check existing entries and update them.
-
-        Returns the existing entry if it was updated.
-        """
+    def _async_get_existing_matching_entry(self) -> config_entries.ConfigEntry | None:
+        """Get first existing matching entry."""
         for entry in self._async_current_entries(include_ignore=False):
             mac = entry.data.get(CONF_MAC)
             mac_match = mac and self._mac and mac == self._mac
             upnp_udn_match = self._upnp_udn and self._upnp_udn == entry.unique_id
-            if (
-                entry.data[CONF_HOST] != self._host
-                and not mac_match
-                and not upnp_udn_match
-            ):
-                continue
+            if entry.data[CONF_HOST] == self._host or mac_match or upnp_udn_match:
+                return entry
+        return None
+
+    @callback
+    def _async_update_existing_matching_entry(
+        self,
+    ) -> config_entries.ConfigEntry | None:
+        """Check existing entries and update them.
+
+        Returns the existing entry if it was updated.
+        """
+        if entry := self._async_get_existing_matching_entry():
             entry_kw_args: dict = {}
             if (self._udn and self._upnp_udn and self._upnp_udn != self._udn) or (
                 self.unique_id and entry.unique_id is None
@@ -248,7 +252,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_start_discovery_with_mac_address(self) -> None:
         """Start discovery."""
         assert self._host is not None
-        if (entry := self._async_update_existing_host_entry()) and entry.unique_id:
+        if (entry := self._async_update_existing_matching_entry()) and entry.unique_id:
             # If we have the unique id and the mac we abort
             # as we do not need anything else
             raise data_entry_flow.AbortFlow("already_configured")
