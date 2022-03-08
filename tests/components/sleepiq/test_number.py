@@ -73,19 +73,33 @@ async def test_actuators(hass, mock_asyncsleepiq):
     entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get(f"number.sleepnumber_{BED_NAME_LOWER}_head_position")
+    state = hass.states.get(f"number.sleepnumber_{BED_NAME_LOWER}_right_head_position")
     assert state.state == "60.0"
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"SleepNumber {BED_NAME} Head Position"
+        == f"SleepNumber {BED_NAME} Right Head Position"
     )
 
     entry = entity_registry.async_get(
-        f"number.sleepnumber_{BED_NAME_LOWER}_head_position"
+        f"number.sleepnumber_{BED_NAME_LOWER}_right_head_position"
     )
     assert entry
-    assert entry.unique_id == f"{BED_ID}_H"
+    assert entry.unique_id == f"{BED_ID}_R_H"
+
+    state = hass.states.get(f"number.sleepnumber_{BED_NAME_LOWER}_left_head_position")
+    assert state.state == "50.0"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} Left Head Position"
+    )
+
+    entry = entity_registry.async_get(
+        f"number.sleepnumber_{BED_NAME_LOWER}_left_head_position"
+    )
+    assert entry
+    assert entry.unique_id == f"{BED_ID}_L_H"
 
     state = hass.states.get(f"number.sleepnumber_{BED_NAME_LOWER}_foot_position")
     assert state.state == "10.0"
@@ -105,7 +119,7 @@ async def test_actuators(hass, mock_asyncsleepiq):
         DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"number.sleepnumber_{BED_NAME_LOWER}_head_position",
+            ATTR_ENTITY_ID: f"number.sleepnumber_{BED_NAME_LOWER}_right_head_position",
             ATTR_VALUE: 42,
         },
         blocking=True,

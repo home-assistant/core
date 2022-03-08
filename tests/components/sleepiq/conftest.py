@@ -27,7 +27,6 @@ SLEEPER_R_NAME = "Sleeper R"
 SLEEPER_L_NAME_LOWER = SLEEPER_L_NAME.lower().replace(" ", "_")
 SLEEPER_R_NAME_LOWER = SLEEPER_R_NAME.lower().replace(" ", "_")
 
-
 SLEEPIQ_CONFIG = {
     CONF_USERNAME: "user@email.com",
     CONF_PASSWORD: "password",
@@ -71,14 +70,22 @@ def mock_asyncsleepiq():
         light_2.is_on = False
         bed.foundation.lights = [light_1, light_2]
 
-        actuator_h = create_autospec(SleepIQActuator)
+        actuator_h_r = create_autospec(SleepIQActuator)
+        actuator_h_l = create_autospec(SleepIQActuator)
         actuator_f = create_autospec(SleepIQActuator)
-        bed.foundation.actuators = [actuator_h, actuator_f]
+        bed.foundation.actuators = [actuator_h_r, actuator_h_l, actuator_f]
 
-        actuator_h.side = None
-        actuator_h.actuator = "H"
-        actuator_h.actuator_full = "Head"
-        actuator_h.position = 60
+        actuator_h_r.side = "R"
+        actuator_h_r.side_full = "Right"
+        actuator_h_r.actuator = "H"
+        actuator_h_r.actuator_full = "Head"
+        actuator_h_r.position = 60
+
+        actuator_h_l.side = "L"
+        actuator_h_l.side_full = "Left"
+        actuator_h_l.actuator = "H"
+        actuator_h_l.actuator_full = "Head"
+        actuator_h_l.position = 50
 
         actuator_f.side = None
         actuator_f.actuator = "F"
