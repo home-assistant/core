@@ -1,5 +1,4 @@
 """Tests for samsungtv component."""
-import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
@@ -8,6 +7,7 @@ from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
 import pytest
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
+from samsungtvws.command import SamsungTVSleepCommand
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import WebSocketException
@@ -64,7 +64,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .const import SAMPLE_APP_LIST
+from .const import SAMPLE_APP_LIST, SAMPLE_DEVICE_INFO_FRAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -624,29 +624,72 @@ async def test_device_class(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] is MediaPlayerDeviceClass.TV.value
 
 
-async def test_turn_off_websocket(hass: HomeAssistant, remotews: Mock) -> None:
+async def test_turn_off_websocket(
+    hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test for turn_off."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
         await setup_samsungtv(hass, MOCK_CONFIGWS)
-        remotews.send_command.reset_mock()
 
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        # key called
-        assert remotews.send_command.call_count == 1
-        command = remotews.send_command.call_args_list[0].args[0]
-        assert isinstance(command, SendRemoteKey)
-        assert command.params["DataOfCmd"] == "KEY_POWER"
+    remotews.send_command.reset_mock()
 
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        # key not called
-        assert remotews.send_command.call_count == 1
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    # key called
+    assert remotews.send_command.call_count == 1
+    command = remotews.send_command.call_args_list[0].args[0]
+    assert isinstance(command, SendRemoteKey)
+    assert command.params["DataOfCmd"] == "KEY_POWER"
+
+    # commands not sent : power off in progress
+    remotews.send_command.reset_mock()
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert "TV is powering off, not sending keys: ['KEY_VOLUP']" in caplog.text
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Deezer"},
+        True,
+    )
+    assert "TV is powering off, not sending launch_app command" in caplog.text
+    remotews.send_command.assert_not_called()
+
+
+async def test_turn_off_websocket_frame(
+    hass: HomeAssistant, remotews: Mock, rest_api: Mock
+) -> None:
+    """Test for turn_off."""
+    rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_FRAME
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=[OSError("Boom"), DEFAULT_MOCK],
+    ):
+        await setup_samsungtv(hass, MOCK_CONFIGWS)
+
+    remotews.send_command.reset_mock()
+
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    # key called
+    assert remotews.send_command.call_count == 3
+    command = remotews.send_command.call_args_list[0].args[0]
+    assert isinstance(command, SendRemoteKey)
+    assert command.params["Cmd"] == "Press"
+    assert command.params["DataOfCmd"] == "KEY_POWER"
+    command = remotews.send_command.call_args_list[1].args[0]
+    assert isinstance(command, SamsungTVSleepCommand)
+    assert command.delay == 3
+    command = remotews.send_command.call_args_list[2].args[0]
+    assert isinstance(command, SendRemoteKey)
+    assert command.params["Cmd"] == "Release"
+    assert command.params["DataOfCmd"] == "KEY_POWER"
 
 
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
@@ -683,7 +726,7 @@ async def test_turn_off_ws_os_error(
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    assert "Could not establish connection" in caplog.text
+    assert "Error closing connection" in caplog.text
 
 
 async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:
@@ -841,15 +884,8 @@ async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None
 
 async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
     """Test for play_media."""
-    asyncio_sleep = asyncio.sleep
-    sleeps = []
-
-    async def sleep(duration):
-        sleeps.append(duration)
-        await asyncio_sleep(0)
-
     await setup_samsungtv(hass, MOCK_CONFIG)
-    with patch("asyncio.sleep", new=sleep):
+    with patch("homeassistant.components.samsungtv.bridge.asyncio.sleep") as sleep:
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -860,17 +896,17 @@ async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
             },
             True,
         )
-        # keys and update called
-        assert remote.control.call_count == 4
-        assert remote.control.call_args_list == [
-            call("KEY_5"),
-            call("KEY_7"),
-            call("KEY_6"),
-            call("KEY_ENTER"),
-        ]
-        assert remote.close.call_count == 1
-        assert remote.close.call_args_list == [call()]
-        assert len(sleeps) == 3
+    # keys and update called
+    assert remote.control.call_count == 4
+    assert remote.control.call_args_list == [
+        call("KEY_5"),
+        call("KEY_7"),
+        call("KEY_6"),
+        call("KEY_ENTER"),
+    ]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
+    assert sleep.call_count == 3
 
 
 async def test_play_media_invalid_type(hass: HomeAssistant) -> None:

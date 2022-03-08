@@ -41,7 +41,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.6.5
+PyTurboJPEG==1.6.6
 
 # homeassistant.components.vicare
 PyViCare==2.16.1
@@ -156,7 +156,7 @@ aioguardian==2021.11.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.15
+aiohomekit==0.7.16
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -178,7 +178,7 @@ aiokafka==0.6.0
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx==0.7.0
+aiolifx==0.7.1
 
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
@@ -323,13 +323,13 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.25.0
+async-upnp-client==0.26.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.1.0
+asyncsleepiq==1.1.2
 
 # homeassistant.components.aten_pe
 atenpdu==0.3.2
@@ -716,13 +716,13 @@ goodwe==0.2.15
 google-api-python-client==2.38.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.9.0
+google-cloud-pubsub==2.10.0
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==2.10.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.7.1
+google-nest-sdm==1.8.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -737,7 +737,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.0.2
+greeclimate==1.1.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -803,7 +803,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220301.0
+home-assistant-frontend==20220301.1
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -834,7 +834,7 @@ huisbaasje-client==0.1.0
 hydrawiser==0.2
 
 # homeassistant.components.hyperion
-hyperion-py==0.7.4
+hyperion-py==0.7.5
 
 # homeassistant.components.iammeter
 iammeter==0.1.7
@@ -1431,7 +1431,7 @@ pydispatcher==2.0.5
 pydoods==1.0.2
 
 # homeassistant.components.android_ip_webcam
-pydroid-ipcam==0.8
+pydroid-ipcam==1.3.1
 
 # homeassistant.components.ebox
 pyebox==1.1.4
@@ -1559,6 +1559,9 @@ pyisy==3.0.1
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
+
+# homeassistant.components.kaleidescape
+pykaleidescape==2022.2.6
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -1897,7 +1900,7 @@ python-kasa==0.4.1
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.10
+python-miio==0.5.11
 
 # homeassistant.components.mpd
 python-mpd2==3.0.4
@@ -2093,7 +2096,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async]==2.1.0
+samsungtvws[async]==2.3.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4

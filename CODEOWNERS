@@ -513,6 +513,8 @@ tests/components/jewish_calendar/* @tsvi
 homeassistant/components/juicenet/* @jesserockz
 tests/components/juicenet/* @jesserockz
 homeassistant/components/kaiterra/* @Michsior14
+homeassistant/components/kaleidescape/* @SteveEasley
+tests/components/kaleidescape/* @SteveEasley
 homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel
 tests/components/keenetic_ndms2/* @foxel
@@ -859,6 +861,8 @@ homeassistant/components/script/* @home-assistant/core
 tests/components/script/* @home-assistant/core
 homeassistant/components/search/* @home-assistant/core
 tests/components/search/* @home-assistant/core
+homeassistant/components/season/* @frenck
+tests/components/season/* @frenck
 homeassistant/components/select/* @home-assistant/core
 tests/components/select/* @home-assistant/core
 homeassistant/components/sense/* @kbickar
@@ -1018,6 +1022,7 @@ homeassistant/components/time_date/* @fabaff
 tests/components/time_date/* @fabaff
 homeassistant/components/tmb/* @alemuro
 homeassistant/components/todoist/* @boralyl
+tests/components/todoist/* @boralyl
 homeassistant/components/tolo/* @MatthiasLohr
 tests/components/tolo/* @MatthiasLohr
 homeassistant/components/totalconnect/* @austinmroczek
@@ -1053,8 +1058,6 @@ tests/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli @fabaff
 homeassistant/components/upcloud/* @scop
 tests/components/upcloud/* @scop
-homeassistant/components/update/* @home-assistant/core
-tests/components/update/* @home-assistant/core
 homeassistant/components/updater/* @home-assistant/core
 tests/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23

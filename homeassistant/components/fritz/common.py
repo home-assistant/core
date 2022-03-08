@@ -392,6 +392,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             )
             self.mesh_role = MeshRoles.NONE
             for mac, info in hosts.items():
+                if info.ip_address:
+                    info.wan_access = self._get_wan_access(info.ip_address)
                 if self.manage_device_info(info, mac, consider_home):
                     new_device = True
             self.send_signal_device_update(new_device)
@@ -641,6 +643,22 @@ class AvmWrapper(FritzBoxTools):
         return await self.hass.async_add_executor_job(
             partial(self.get_wan_link_properties)
         )
+
+    async def async_get_connection_info(self) -> ConnectionInfo:
+        """Return ConnectionInfo data."""
+
+        link_properties = await self.async_get_wan_link_properties()
+        connection_info = ConnectionInfo(
+            connection=link_properties.get("NewWANAccessType", "").lower(),
+            mesh_role=self.mesh_role,
+            wan_enabled=self.device_is_router,
+        )
+        _LOGGER.debug(
+            "ConnectionInfo for FritzBox %s: %s",
+            self.host,
+            connection_info,
+        )
+        return connection_info
 
     async def async_get_port_mapping(self, con_type: str, index: int) -> dict[str, Any]:
         """Call GetGenericPortMappingEntry action."""
@@ -970,3 +988,12 @@ class FritzBoxBaseEntity:
             name=self._device_name,
             sw_version=self._avm_wrapper.current_firmware,
         )
+
+
+@dataclass
+class ConnectionInfo:
+    """Fritz sensor connection information class."""
+
+    connection: str
+    mesh_role: MeshRoles
+    wan_enabled: bool

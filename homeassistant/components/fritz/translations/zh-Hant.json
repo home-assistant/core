@@ -10,7 +10,8 @@
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "connection_error": "\u9023\u7dda\u5931\u6557",
-            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "upnp_not_configured": "\u672a\u8a2d\u5b9a\u88dd\u7f6e UPnP \u8a2d\u5b9a\u3002"
         },
         "flow_title": "{name}",
         "step": {

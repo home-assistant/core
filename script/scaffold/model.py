@@ -50,7 +50,7 @@ class Info:
         """Update the integration manifest."""
         print(f"Updating {self.domain} manifest: {kwargs}")
         self.manifest_path.write_text(
-            json.dumps({**self.manifest(), **kwargs}, indent=2 + "\n")
+            json.dumps({**self.manifest(), **kwargs}, indent=2) + "\n"
         )
 
     @property

@@ -1,5 +1,6 @@
 """Tests for the Samsung TV Integration."""
-from unittest.mock import patch
+from copy import deepcopy
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -132,3 +133,18 @@ async def test_setup_duplicate_entries(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("media_player")) == 1
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
     assert len(hass.states.async_all("media_player")) == 1
+
+
+@pytest.mark.usefixtures("remotews")
+async def test_setup_h_j_model(
+    hass: HomeAssistant, rest_api: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test Samsung TV integration is setup."""
+    device_info = deepcopy(rest_api.rest_device_info.return_value)
+    device_info["device"]["modelName"] = "UE48JU6400"
+    rest_api.rest_device_info.return_value = device_info
+    await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert "H and J series use an encrypted protocol" in caplog.text
