@@ -12,7 +12,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 from .coordinator import MotionSensor, SensiboDataUpdateCoordinator
-from .sensor import SensiboSensorEntityDescription
 
 
 class SensiboBaseEntity(CoordinatorEntity):
@@ -94,18 +93,16 @@ class SensiboMotionBaseEntity(CoordinatorEntity):
         device_id: str,
         sensor_id: str,
         sensor_data: MotionSensor,
-        entity_description: SensiboSensorEntityDescription,
+        name: str | None,
     ) -> None:
         """Initiate Sensibo Number."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
-        self._attr_name = f"{sensor_data.model} {entity_description.name}"
         self._device_id = device_id
         self._sensor_id = sensor_id
         self._client = coordinator.client
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sensor_id)},
-            name=f"{sensor_data.model} {entity_description.name}",
+            name=f"{sensor_data.model} {name}",
             via_device=(DOMAIN, device_id),
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",

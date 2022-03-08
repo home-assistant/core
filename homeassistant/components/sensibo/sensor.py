@@ -28,7 +28,7 @@ from .entity import SensiboMotionBaseEntity
 
 @dataclass
 class BaseEntityDescriptionMixin:
-    """Mixin for required GitHub base description keys."""
+    """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[MotionSensor], StateType]
 
@@ -89,7 +89,7 @@ async def async_setup_entry(
 
     async_add_entities(
         SensiboMotionSensor(coordinator, device_id, sensor_id, sensor_data, description)
-        for device_id, device_data in coordinator.data.items()
+        for device_id, device_data in coordinator.data.parsed.items()
         for sensor_id, sensor_data in device_data["motion_sensors"]
         for description in MOTION_SENSOR_TYPES
         if device_data["motion_sensors"] and sensor_data[sensor_id]
@@ -111,13 +111,19 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     ) -> None:
         """Initiate Sensibo Motion Sensor."""
         super().__init__(
-            coordinator, device_id, sensor_id, sensor_data, entity_description
+            coordinator,
+            device_id,
+            sensor_id,
+            sensor_data,
+            entity_description.name,
         )
         self.entity_description = entity_description
+        self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
+        self._attr_name = f"{sensor_data.model} {entity_description.name}"
 
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.entity_description.value_fn(
-            self.coordinator.data[self._device_id][self._sensor_id]
+            self.coordinator.data.parsed[self._device_id][self._sensor_id]
         )
