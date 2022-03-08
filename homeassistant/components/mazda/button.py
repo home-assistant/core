@@ -5,7 +5,15 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from pymazda import Client as MazdaAPIClient
+from pymazda import (
+    Client as MazdaAPIClient,
+    MazdaAccountLockedException,
+    MazdaAPIEncryptionException,
+    MazdaAuthenticationException,
+    MazdaException,
+    MazdaLoginFailedException,
+    MazdaTokenExpiredException,
+)
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +37,14 @@ async def handle_button_press(
 
     try:
         await api_method(vehicle_id)
-    except Exception as ex:
+    except (
+        MazdaException,
+        MazdaAuthenticationException,
+        MazdaAccountLockedException,
+        MazdaTokenExpiredException,
+        MazdaAPIEncryptionException,
+        MazdaLoginFailedException,
+    ) as ex:
         raise HomeAssistantError(ex) from ex
 
 
@@ -42,7 +57,7 @@ async def handle_refresh_vehicle_status(
     """Handle a request to refresh the vehicle status."""
     await handle_button_press(client, key, vehicle_id, coordinator)
 
-    await coordinator.async_refresh()
+    await coordinator.async_request_refresh()
 
 
 @dataclass
