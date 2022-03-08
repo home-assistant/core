@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
@@ -21,7 +22,9 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def _get_device_mac(hass: core.HomeAssistant, host, port, username, password):
+async def _get_device_mac(
+    hass: core.HomeAssistant, host: str, username: str, password: str, port: int
+) -> str:
     ialarm = IAlarmXR(host, username, password, port)
     return await hass.async_add_executor_job(ialarm.get_mac)
 
@@ -31,7 +34,7 @@ class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         mac = None
@@ -47,7 +50,7 @@ class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             # If we are able to get the MAC address, we are able to establish
             # a connection to the device.
-            mac = await _get_device_mac(self.hass, host, port, username, password)
+            mac = await _get_device_mac(self.hass, host, username, password, port)
         except ConnectionError:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except

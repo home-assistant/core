@@ -1,6 +1,7 @@
 """iAlarmXR integration."""
 import asyncio
 import logging
+from typing import Optional
 
 from async_timeout import timeout
 from pyialarmxr import IAlarmXR
@@ -39,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (asyncio.TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
-    coordinator = IAlarmDataUpdateCoordinator(hass, ialarm, mac)
+    coordinator = IAlarmXRDataUpdateCoordinator(hass, ialarm, mac)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
@@ -55,19 +56,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload iAlarmXR config."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
 
-class IAlarmDataUpdateCoordinator(DataUpdateCoordinator):
+class IAlarmXRDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching iAlarmXR data."""
 
-    def __init__(self, hass, ialarm, mac):
+    def __init__(self, hass: HomeAssistant, ialarm: IAlarmXR, mac: str) -> None:
         """Initialize global iAlarm data updater."""
         self.ialarm = ialarm
-        self.state = None
+        self.state = Optional[str]
         self.host = ialarm.host
         self.mac = mac
 

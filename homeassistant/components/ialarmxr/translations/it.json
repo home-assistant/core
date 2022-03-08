@@ -10,8 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "port": "Porta"
+                    "host": "Server",
+                    "port": "Porta",
+                    "username": "Nome utente",
+                    "password": "Password"
                 }
             }
         }
