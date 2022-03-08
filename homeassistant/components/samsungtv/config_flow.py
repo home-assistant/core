@@ -285,10 +285,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._host = hostname
         self._manufacturer = discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
         self._abort_if_manufacturer_is_not_samsung()
-        if not await self._async_get_and_check_device_info():
-            # If we cannot get device info for an SSDP discovery
-            # its likely a legacy tv.
-            self._name = self._title = self._model = model_name
+
+        # Set defaults, in case they cannot be extracted from device_info
+        self._name = self._title = self._model = model_name
+        # Update from device_info (if accessible)
+        await self._async_get_and_check_device_info()
 
         # The UDN provided by the ssdp discovery doesn't always match the UDN
         # from the device_info, used by the the other methods so we need to
