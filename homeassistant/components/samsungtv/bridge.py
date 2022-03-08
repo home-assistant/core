@@ -45,6 +45,8 @@ from .const import (
     WEBSOCKET_PORTS,
 )
 
+KEY_PRESS_TIMEOUT = 1.2
+
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
     """Extract the mac address from the device info."""
@@ -129,8 +131,8 @@ class SamsungTVBridge(ABC):
         """Tells if the TV is on."""
 
     @abstractmethod
-    async def async_send_key(self, key: str) -> None:
-        """Send a key to the tv and handles exceptions."""
+    async def async_send_keys(self, keys: list[str]) -> None:
+        """Send a list of keys to the tv."""
 
     @abstractmethod
     async def async_close_remote(self) -> None:
@@ -238,12 +240,18 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 pass
         return self._remote
 
-    async def async_send_key(self, key: str) -> None:
-        """Send the key using legacy protocol."""
-        await self.hass.async_add_executor_job(self._send_key, key)
+    async def async_send_keys(self, keys: list[str]) -> None:
+        """Send a list of keys using legacy protocol."""
+        first_key = True
+        for key in keys:
+            if first_key:
+                first_key = False
+            else:
+                await asyncio.sleep(KEY_PRESS_TIMEOUT)
+            await self.hass.async_add_executor_job(self._send_key, key)
 
     def _send_key(self, key: str) -> None:
-        """Send the key using legacy protocol."""
+        """Send a key using legacy protocol."""
         try:
             # recreate connection if connection was dead
             retry_count = 1
@@ -391,15 +399,18 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_launch_app(self, app_id: str) -> None:
         """Send the launch_app command using websocket protocol."""
-        await self._async_send_command(ChannelEmitCommand.launch_app(app_id))
+        await self._async_send_commands([ChannelEmitCommand.launch_app(app_id)])
 
-    async def async_send_key(self, key: str) -> None:
-        """Send the key using websocket protocol."""
-        if key == "KEY_POWEROFF":
-            key = "KEY_POWER"
-        await self._async_send_command(SendRemoteKey.click(key))
+    async def async_send_keys(self, keys: list[str]) -> None:
+        """Send a list of keys using websocket protocol."""
+        commands: list[SamsungTVCommand] = []
+        for key in keys:
+            if key == "KEY_POWEROFF":
+                key = "KEY_POWER"
+            commands.append(SendRemoteKey.click(key))
+        await self._async_send_commands(commands)
 
-    async def _async_send_command(self, command: SamsungTVCommand) -> None:
+    async def _async_send_commands(self, commands: list[SamsungTVCommand]) -> None:
         """Send the commands using websocket protocol."""
         try:
             # recreate connection if connection was dead
@@ -407,7 +418,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        await remote.send_command(command)
+                        for command in commands:
+                            await remote.send_command(command)
                     break
                 except (
                     BrokenPipeError,
