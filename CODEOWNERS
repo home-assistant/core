@@ -850,6 +850,8 @@ tests/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 tests/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
+homeassistant/components/samsungtv/* @chemelli74 @epenet
+tests/components/samsungtv/* @chemelli74 @epenet
 homeassistant/components/scene/* @home-assistant/core
 tests/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
