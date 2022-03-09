@@ -1,13 +1,18 @@
 """Config flow for Group integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITIES
-from homeassistant.helpers import helper_config_entry_flow, selector
+from homeassistant.core import callback
+from homeassistant.helpers import selector
+from homeassistant.helpers.helper_config_entry_flow import (
+    HelperConfigFlowHandler,
+    HelperFlowStep,
+)
 
 from . import DOMAIN
 
@@ -30,52 +35,54 @@ def basic_group_config_schema(domain: str) -> vol.Schema:
     )
 
 
-STEPS = {
-    "init": vol.Schema(
-        {
-            vol.Required("group_type"): selector.selector(
-                {
-                    "select": {
-                        "options": [
-                            "cover",
-                            "fan",
-                            "light",
-                            "media_player",
-                        ]
-                    }
+INITIAL_STEP_SCHEMA = vol.Schema(
+    {
+        vol.Required("group_type"): selector.selector(
+            {
+                "select": {
+                    "options": [
+                        "cover",
+                        "fan",
+                        "light",
+                        "media_player",
+                    ]
                 }
-            )
-        }
-    ),
-    "cover": basic_group_config_schema("cover"),
-    "fan": basic_group_config_schema("fan"),
-    "light": basic_group_config_schema("light"),
-    "media_player": basic_group_config_schema("media_player"),
-    "cover_options": basic_group_options_schema("cover"),
-    "fan_options": basic_group_options_schema("fan"),
-    "light_options": basic_group_options_schema("light"),
-    "media_player_options": basic_group_options_schema("media_player"),
+            }
+        )
+    }
+)
+
+
+@callback
+def choose_config_step(options: dict[str, Any]) -> str:
+    """Return next step_id when group_type is selected."""
+    return cast(str, options["group_type"])
+
+
+CONFIG_FLOW = {
+    "user": HelperFlowStep(INITIAL_STEP_SCHEMA, next_step=choose_config_step),
+    "cover": HelperFlowStep(basic_group_config_schema("cover")),
+    "fan": HelperFlowStep(basic_group_config_schema("fan")),
+    "light": HelperFlowStep(basic_group_config_schema("light")),
+    "media_player": HelperFlowStep(basic_group_config_schema("media_player")),
 }
 
 
-class GroupConfigFlowHandler(
-    helper_config_entry_flow.HelperConfigFlowHandler, domain=DOMAIN
-):
+OPTIONS_FLOW = {
+    "init": HelperFlowStep(None, next_step=choose_config_step),
+    "cover": HelperFlowStep(basic_group_options_schema("cover")),
+    "fan": HelperFlowStep(basic_group_options_schema("fan")),
+    "light": HelperFlowStep(basic_group_options_schema("light")),
+    "media_player": HelperFlowStep(basic_group_options_schema("media_player")),
+}
+
+
+class GroupConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Switch Light."""
 
-    steps = STEPS
+    config_flow = CONFIG_FLOW
+    options_flow = OPTIONS_FLOW
 
-    def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
+    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return cast(str, user_input["name"]) if "name" in user_input else ""
-
-    @staticmethod
-    def async_initial_options_step(config_entry: ConfigEntry) -> str:
-        """Return initial options step."""
-        return f"{config_entry.options['group_type']}_options"
-
-    def async_next_step(self, step_id: str, user_input: dict[str, Any]) -> str | None:
-        """Return next step_id."""
-        if step_id == "init":
-            return cast(str, user_input["group_type"])
-        return None
+        return cast(str, options["name"]) if "name" in options else ""
