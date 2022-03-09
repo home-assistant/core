@@ -105,12 +105,12 @@ def _minimal_state_changed_event(event: Event) -> dict:
     # We likely don't need event_copy.time_fired either since last_updated on the new_state is the same
     # We only need event.context as its the same for the new_state
     # The entity_id is also duplicated in the message twice but its actually used
-    if event.data["new_state"]:
-        new_state = event.data["new_state"].as_dict()
+    if event_new_state := event.data["new_state"]:
+        new_state = event_new_state.as_dict()
     else:
         new_state = None
     return {
-        "event_type": event.event_type,
+        "event_type": "state_changed",
         "data": {
             "old_state": None,
             "new_state": new_state,
