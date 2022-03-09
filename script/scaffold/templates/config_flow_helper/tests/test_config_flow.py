@@ -54,8 +54,17 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
     # Check the platform is setup correctly
     state = hass.states.get(f"{platform}.my_NEW_DOMAIN")
+    # TODO Check the state of the entity has changed as expected
     assert state.state == "unknown"
     assert state.attributes == {}
+
+    # Remove the config entry
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the state and entity registry entry are removed
+    assert hass.states.get(f"{platform}.my_min_max") is None
+    assert registry.async_get(f"{platform}.my_min_max") is None
 
 
 def get_suggested(schema, key):

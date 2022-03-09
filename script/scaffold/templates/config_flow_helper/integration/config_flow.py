@@ -1,41 +1,46 @@
 """Config flow for NEW_NAME integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers import helper_config_entry_flow, selector
+from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.helpers import selector
+from homeassistant.helpers.helper_config_entry_flow import (
+    HelperConfigFlowHandler,
+    HelperFlowStep,
+)
 
 from .const import DOMAIN
 
-STEPS = {
-    "init": vol.Schema(
-        {
-            vol.Required("name"): selector.selector({"text": {}}),
-            vol.Required("entity_id"): selector.selector(
-                {"entity": {"domain": "sensor"}}
-            ),
-        }
-    )
-}
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY_ID): selector.selector(
+            {"entity": {"domain": "sensor"}}
+        ),
+    }
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required("name"): selector.selector({"text": {}}),
+    }
+).extend(OPTIONS_SCHEMA.schema)
+
+CONFIG_FLOW = {"user": HelperFlowStep(CONFIG_SCHEMA)}
+
+OPTIONS_FLOW = {"init": HelperFlowStep(OPTIONS_SCHEMA)}
 
 
-class ConfigFlowHandler(
-    helper_config_entry_flow.HelperConfigFlowHandler, domain=DOMAIN
-):
+class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for NEW_NAME."""
 
-    steps = STEPS
+    config_flow = CONFIG_FLOW
+    # TODO remove the options_flow if the integration does not have an options flow
+    options_flow = OPTIONS_FLOW
 
-    def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
+    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return cast(str, user_input["name"]) if "name" in user_input else ""
-
-    @staticmethod
-    def async_initial_options_step(config_entry: ConfigEntry) -> str | None:
-        """Return initial options step."""
-        # TODO Return initial option step_id, or remove the method if the integration
-        # does not have an options flow
-        return "init"
+        return cast(str, options["name"]) if "name" in options else ""

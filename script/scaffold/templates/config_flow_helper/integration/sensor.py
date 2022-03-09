@@ -14,13 +14,13 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Initialize Light Switch config entry."""
+    """Initialize NEW_NAME config entry."""
     registry = er.async_get(hass)
+    # Validate + resolve entity registry id to entity_id
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
     )
     # TODO Optionally validate config entry options before creating entity
-    entity_id = config_entry.options[CONF_ENTITY_ID]
     name = config_entry.title
     unique_id = config_entry.entry_id
 
