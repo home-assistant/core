@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from aioairzone.const import AZD_HUMIDITY, AZD_NAME, AZD_TEMP, AZD_ZONES
+from aioairzone.const import AZD_HUMIDITY, AZD_NAME, AZD_TEMP, AZD_TEMP_UNIT, AZD_ZONES
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AirzoneEntity
-from .const import DOMAIN
+from .const import DOMAIN, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 
 SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
@@ -84,12 +84,12 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}_{description.key}"
         self.entity_description = description
 
+        if description.key == AZD_TEMP:
+            unit = TEMP_UNIT_LIB_TO_HASS.get(self.get_zone_value(AZD_TEMP_UNIT))
+            if unit != TEMP_CELSIUS:
+                self._attr_native_unit_of_measurement = unit
+
     @property
     def native_value(self):
         """Return the state."""
-        value = None
-        if self.system_zone_id in self.coordinator.data[AZD_ZONES]:
-            zone = self.coordinator.data[AZD_ZONES][self.system_zone_id]
-            if self.entity_description.key in zone:
-                value = zone[self.entity_description.key]
-        return value
+        return self.get_zone_value(self.entity_description.key)

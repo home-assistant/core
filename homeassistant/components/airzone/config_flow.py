@@ -33,7 +33,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PORT: user_input[CONF_PORT],
                 }
             )
- 
+
             airzone = AirzoneLocalApi(
                 aiohttp_client.async_get_clientsession(self.hass),
                 ConnectionOptions(
