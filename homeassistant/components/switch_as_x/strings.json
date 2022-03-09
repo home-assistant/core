@@ -3,9 +3,10 @@
   "config": {
     "step": {
       "init": {
+        "title": "Make a switch a ...",
         "data": {
           "entity_id": "Switch entity",
-          "entity_domain": "Entity type"
+          "target_domain": "Type"
         }
       }
     }

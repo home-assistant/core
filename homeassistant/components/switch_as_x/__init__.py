@@ -28,12 +28,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    hass.config_entries.async_setup_platforms(entry, (entry.options["entity_type"],))
+    hass.config_entries.async_setup_platforms(entry, (entry.options["target_domain"],))
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(
-        entry, (entry.options["entity_type"],)
+        entry, (entry.options["target_domain"],)
     )

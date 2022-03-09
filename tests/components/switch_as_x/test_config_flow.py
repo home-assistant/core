@@ -10,8 +10,8 @@ from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_
 from homeassistant.helpers import entity_registry as er
 
 
-@pytest.mark.parametrize("entity_type", ("light",))
-async def test_config_flow(hass: HomeAssistant, entity_type) -> None:
+@pytest.mark.parametrize("target_domain", ("light",))
+async def test_config_flow(hass: HomeAssistant, target_domain) -> None:
     """Test the config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -27,7 +27,7 @@ async def test_config_flow(hass: HomeAssistant, entity_type) -> None:
             result["flow_id"],
             {
                 "entity_id": "switch.ceiling",
-                "entity_type": entity_type,
+                "target_domain": target_domain,
             },
         )
         await hass.async_block_till_done()
@@ -37,7 +37,7 @@ async def test_config_flow(hass: HomeAssistant, entity_type) -> None:
     assert result["data"] == {}
     assert result["options"] == {
         "entity_id": "switch.ceiling",
-        "entity_type": entity_type,
+        "target_domain": target_domain,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -45,14 +45,14 @@ async def test_config_flow(hass: HomeAssistant, entity_type) -> None:
     assert config_entry.data == {}
     assert config_entry.options == {
         "entity_id": "switch.ceiling",
-        "entity_type": entity_type,
+        "target_domain": target_domain,
     }
 
-    assert hass.states.get(f"{entity_type}.ceiling")
+    assert hass.states.get(f"{target_domain}.ceiling")
 
 
-@pytest.mark.parametrize("entity_type", ("light",))
-async def test_name(hass: HomeAssistant, entity_type) -> None:
+@pytest.mark.parametrize("target_domain", ("light",))
+async def test_name(hass: HomeAssistant, target_domain) -> None:
     """Test the config flow name is copied from registry entry, with fallback to state."""
     registry = er.async_get(hass)
 
@@ -63,7 +63,7 @@ async def test_name(hass: HomeAssistant, entity_type) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"entity_id": "switch.ceiling", "entity_type": entity_type},
+        {"entity_id": "switch.ceiling", "target_domain": target_domain},
     )
     assert result["title"] == "ceiling"
 
@@ -76,7 +76,7 @@ async def test_name(hass: HomeAssistant, entity_type) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"entity_id": "switch.ceiling", "entity_type": entity_type},
+        {"entity_id": "switch.ceiling", "target_domain": target_domain},
     )
     assert result["title"] == "State Name"
 
@@ -98,7 +98,7 @@ async def test_name(hass: HomeAssistant, entity_type) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"entity_id": "switch.ceiling", "entity_type": entity_type},
+        {"entity_id": "switch.ceiling", "target_domain": target_domain},
     )
     assert result["title"] == "Original Name"
 
@@ -111,13 +111,13 @@ async def test_name(hass: HomeAssistant, entity_type) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"entity_id": "switch.ceiling", "entity_type": entity_type},
+        {"entity_id": "switch.ceiling", "target_domain": target_domain},
     )
     assert result["title"] == "Custom Name"
 
 
-@pytest.mark.parametrize("entity_type", ("light",))
-async def test_options(hass: HomeAssistant, entity_type) -> None:
+@pytest.mark.parametrize("target_domain", ("light",))
+async def test_options(hass: HomeAssistant, target_domain) -> None:
     """Test reconfiguring."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -131,7 +131,7 @@ async def test_options(hass: HomeAssistant, entity_type) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"entity_id": "switch.ceiling", "entity_type": entity_type},
+            {"entity_id": "switch.ceiling", "target_domain": target_domain},
         )
         await hass.async_block_till_done()
 

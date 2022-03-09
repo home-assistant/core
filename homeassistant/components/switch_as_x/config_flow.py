@@ -22,7 +22,7 @@ CONFIG_FLOW = {
                 vol.Required("entity_id"): selector.selector(
                     {"entity": {"domain": "switch"}}
                 ),
-                vol.Required("entity_type"): selector.selector(
+                vol.Required("target_domain"): selector.selector(
                     {"select": {"options": ["light"]}}
                 ),
             }

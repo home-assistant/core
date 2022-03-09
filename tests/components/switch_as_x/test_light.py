@@ -8,13 +8,13 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("entity_type", ("light",))
-async def test_config_entry(hass: HomeAssistant, entity_type):
+@pytest.mark.parametrize("target_domain", ("light",))
+async def test_config_entry(hass: HomeAssistant, target_domain):
     """Test light switch setup from config entry."""
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
-        options={"entity_id": "switch.abc", "entity_type": entity_type},
+        options={"entity_id": "switch.abc", "target_domain": target_domain},
         title="ABC",
     )
 
@@ -25,19 +25,19 @@ async def test_config_entry(hass: HomeAssistant, entity_type):
 
     assert DOMAIN in hass.config.components
 
-    state = hass.states.get(f"{entity_type}.abc")
+    state = hass.states.get(f"{target_domain}.abc")
     assert state.state == "unavailable"
     # Name copied from config entry title
     assert state.name == "ABC"
 
     # Check the light is added to the entity registry
     registry = er.async_get(hass)
-    entity_entry = registry.async_get(f"{entity_type}.abc")
+    entity_entry = registry.async_get(f"{target_domain}.abc")
     assert entity_entry.unique_id == config_entry.entry_id
 
 
-@pytest.mark.parametrize("entity_type", ("light",))
-async def test_config_entry_uuid(hass: HomeAssistant, entity_type):
+@pytest.mark.parametrize("target_domain", ("light",))
+async def test_config_entry_uuid(hass: HomeAssistant, target_domain):
     """Test light switch setup from config entry with entity registry id."""
     registry = er.async_get(hass)
     registry_entry = registry.async_get_or_create("switch", "test", "unique")
@@ -45,7 +45,7 @@ async def test_config_entry_uuid(hass: HomeAssistant, entity_type):
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
-        options={"entity_id": registry_entry.id, "entity_type": entity_type},
+        options={"entity_id": registry_entry.id, "target_domain": target_domain},
         title="ABC",
     )
 
@@ -54,7 +54,7 @@ async def test_config_entry_uuid(hass: HomeAssistant, entity_type):
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{entity_type}.abc")
+    assert hass.states.get(f"{target_domain}.abc")
 
 
 async def test_config_entry_unregistered_uuid(hass: HomeAssistant):
