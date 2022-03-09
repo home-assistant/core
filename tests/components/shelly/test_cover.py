@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     STATE_OPENING,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.helpers.entity_component import async_update_entity
 
 ROLLER_BLOCK_ID = 1
 
@@ -71,12 +72,12 @@ async def test_block_device_update(hass, coap_wrapper, monkeypatch):
     await hass.async_block_till_done()
 
     monkeypatch.setattr(coap_wrapper.device.blocks[ROLLER_BLOCK_ID], "rollerPos", 0)
-    await hass.helpers.entity_component.async_update_entity("cover.test_name")
+    await async_update_entity(hass, "cover.test_name")
     await hass.async_block_till_done()
     assert hass.states.get("cover.test_name").state == STATE_CLOSED
 
     monkeypatch.setattr(coap_wrapper.device.blocks[ROLLER_BLOCK_ID], "rollerPos", 100)
-    await hass.helpers.entity_component.async_update_entity("cover.test_name")
+    await async_update_entity(hass, "cover.test_name")
     await hass.async_block_till_done()
     assert hass.states.get("cover.test_name").state == STATE_OPEN
 
@@ -165,12 +166,12 @@ async def test_rpc_device_update(hass, rpc_wrapper, monkeypatch):
     await hass.async_block_till_done()
 
     monkeypatch.setitem(rpc_wrapper.device.status["cover:0"], "state", "closed")
-    await hass.helpers.entity_component.async_update_entity("cover.test_cover_0")
+    await async_update_entity(hass, "cover.test_cover_0")
     await hass.async_block_till_done()
     assert hass.states.get("cover.test_cover_0").state == STATE_CLOSED
 
     monkeypatch.setitem(rpc_wrapper.device.status["cover:0"], "state", "open")
-    await hass.helpers.entity_component.async_update_entity("cover.test_cover_0")
+    await async_update_entity(hass, "cover.test_cover_0")
     await hass.async_block_till_done()
     assert hass.states.get("cover.test_cover_0").state == STATE_OPEN
 
@@ -186,6 +187,6 @@ async def test_rpc_device_no_position_control(hass, rpc_wrapper, monkeypatch):
     )
     await hass.async_block_till_done()
 
-    await hass.helpers.entity_component.async_update_entity("cover.test_cover_0")
+    await async_update_entity(hass, "cover.test_cover_0")
     await hass.async_block_till_done()
     assert hass.states.get("cover.test_cover_0").state == STATE_UNKNOWN
