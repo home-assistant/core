@@ -6,13 +6,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITY_ID, Platform
+from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 DOMAIN = "switch_as_x"
-
-PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,15 +23,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except vol.Invalid:
         # The entity is identified by an unknown entity registry ID
         _LOGGER.error(
-            "Failed to setup light switch for unknown entity %s",
+            "Failed to setup switch_as_x for unknown entity %s",
             entry.options[CONF_ENTITY_ID],
         )
         return False
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, (entry.options["entity_type"],))
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(
+        entry, (entry.options["entity_type"],)
+    )

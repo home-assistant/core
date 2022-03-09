@@ -2,11 +2,11 @@
   "domain": "switch_as_x",
   "name": "Switch as X",
   "documentation": "https://www.home-assistant.io/integrations/switch_as_x",
-  "dependencies": ["switch"],
+  "after_dependencies": ["switch"],
   "codeowners": [
     "@home-assistant/core"
   ],
   "quality_scale": "internal",
-  "iot_class": "local_push",
+  "iot_class": "calculated",
   "config_flow": true
 }

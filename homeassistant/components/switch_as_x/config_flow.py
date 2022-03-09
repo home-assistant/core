@@ -22,13 +22,16 @@ CONFIG_FLOW = {
                 vol.Required("entity_id"): selector.selector(
                     {"entity": {"domain": "switch"}}
                 ),
+                vol.Required("entity_type"): selector.selector(
+                    {"select": {"options": ["light"]}}
+                ),
             }
         )
     )
 }
 
 
-class SwitchLightConfigFlowHandler(
+class SwitchAsXConfigFlowHandler(
     helper_config_entry_flow.HelperConfigFlowHandler, domain=DOMAIN
 ):
     """Handle a config flow for Switch as X."""

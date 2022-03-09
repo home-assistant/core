@@ -1,7 +1,7 @@
 """Light support for switch entities."""
 from __future__ import annotations
 
-from homeassistant.components.switch.light import LightSwitch
+from homeassistant.components.switch import LightSwitch
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
