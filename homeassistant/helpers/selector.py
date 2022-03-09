@@ -142,10 +142,11 @@ class DeviceSelector(Selector):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            return cv.string(data)
+            device_id: str = vol.Schema(str)(data)
+            return device_id
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [cv.string(val) for val in data]
+        return [vol.Schema(str)(val) for val in data]
 
 
 @SELECTORS.register("area")
@@ -165,10 +166,11 @@ class AreaSelector(Selector):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            return cv.string(data)
+            area_id: str = vol.Schema(str)(data)
+            return area_id
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [cv.string(val) for val in data]
+        return [vol.Schema(str)(val) for val in data]
 
 
 @SELECTORS.register("number")
@@ -207,14 +209,15 @@ class AddonSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("name"): cv.string,
-            vol.Optional("slug"): cv.string,
+            vol.Optional("name"): str,
+            vol.Optional("slug"): str,
         }
     )
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        return cv.string(data)
+        addon: str = vol.Schema(str)(data)
+        return addon
 
 
 @SELECTORS.register("boolean")
@@ -327,7 +330,7 @@ class StringSelector(Selector):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        text = cv.string(data)
+        text: str = vol.Schema(str)(data)
         return text
 
 
@@ -351,7 +354,7 @@ class SelectSelector(Selector):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Required("options"): vol.All(
-                vol.Any([str], [select_option]), vol.Length(1)
+                vol.Any([str], [select_option]), vol.Length(min=1)
             )
         }
     )
@@ -362,7 +365,7 @@ class SelectSelector(Selector):
             options = self.config["options"]
         else:
             options = [option["value"] for option in self.config["options"]]
-        return vol.In(options)(cv.string(data))
+        return vol.In(options)(vol.Schema(str)(data))
 
 
 @SELECTORS.register("attribute")
@@ -375,7 +378,8 @@ class AttributeSelector(Selector):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        return cv.string(data)
+        attribute: str = vol.Schema(str)(data)
+        return attribute
 
 
 @SELECTORS.register("duration")
@@ -404,7 +408,8 @@ class IconSelector(Selector):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        return cv.string(data)
+        icon: str = vol.Schema(str)(data)
+        return icon
 
 
 @SELECTORS.register("theme")
@@ -417,7 +422,8 @@ class ThemeSelector(Selector):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        return cv.string(data)
+        theme: str = vol.Schema(str)(data)
+        return theme
 
 
 @SELECTORS.register("media")
