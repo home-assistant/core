@@ -108,16 +108,12 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
 
-    entities: list[BinarySensorEntity] = []
-
-    for index, data in enumerate(coordinator.data):
-        for description in BINARY_SENSOR_ENTITIES:
-            if description.is_supported(data):
-                entities.append(
-                    MazdaBinarySensorEntity(client, coordinator, index, description)
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        MazdaBinarySensorEntity(client, coordinator, index, description)
+        for index, data in enumerate(coordinator.data)
+        for description in BINARY_SENSOR_ENTITIES
+        if description.is_supported(data)
+    )
 
 
 class MazdaBinarySensorEntity(MazdaEntity, BinarySensorEntity):
