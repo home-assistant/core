@@ -31,6 +31,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -44,7 +45,7 @@ from homeassistant.helpers.entity import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     DATA_MQTT,
@@ -520,8 +521,109 @@ async def cleanup_device_registry(
         )
 
 
+class MqttDiscoveryDeviceUpdateService:
+    """Add support for auto discovery for platforms without an entity."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        log_name: str,
+        discovery_hash: tuple | None = None,
+        device_id: str | None = None,
+        config_entry: ConfigEntry | None = None,
+    ) -> None:
+        """Initialize the update service."""
+
+        # Only activate update service id the parent class has a discover hash
+        if discovery_hash is None:
+            return
+
+        self.hass = hass
+        _device_removed: bool = False
+
+        async def async_discovery_update(
+            discovery_payload: DiscoveryInfoType | None,
+        ) -> None:
+            """Handle discovery update."""
+            if not discovery_payload:
+                # unregister the service through auto discovery
+                async_dispatcher_send(
+                    hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+                )
+                await _async_tear_down()
+                return
+
+            # update the service through auto discovery
+            await self.async_update_service(discovery_payload)
+            _LOGGER.debug(
+                "%s %s updated has been processed",
+                log_name,
+                discovery_hash,
+            )
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
+
+        async def async_device_removed(event):
+            """Handle the removal of a device."""
+            nonlocal _device_removed
+            event_device_id = event.data["device_id"]
+            if (
+                event.data["action"] != "remove"
+                or event_device_id != device_id
+                or _device_removed
+            ):
+                return
+            _device_removed = True
+            await _async_tear_down()
+
+        async def _async_tear_down() -> None:
+            """Handle the removal of the service."""
+            nonlocal _device_removed, self
+            await self.async_tear_down()
+            # remove the service for auto discovery updates and clean up the device registry
+            if not _device_removed and config_entry:
+                _device_removed = True
+                await cleanup_device_registry(hass, device_id, config_entry.entry_id)
+            clear_discovery_hash(hass, discovery_hash)
+            _remove_discovery()
+            _LOGGER.info(
+                "%s %s has been removed",
+                log_name,
+                discovery_hash,
+            )
+            del self
+
+        _remove_discovery = async_dispatcher_connect(
+            hass,
+            MQTT_DISCOVERY_UPDATED.format(discovery_hash),
+            async_discovery_update,
+        )
+        if device_id is not None:
+            self._remove_device_updated = hass.bus.async_listen(
+                EVENT_DEVICE_REGISTRY_UPDATED, async_device_removed
+            )
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        _LOGGER.info(
+            "%s %s has been initialized",
+            log_name,
+            discovery_hash,
+        )
+
+    async def async_tear_down(self) -> None:
+        """Handle the cleanup of platform specific parts."""
+        raise NotImplementedError()
+
+    async def async_update_service(
+        self,
+        discovery_payload: DiscoveryInfoType,
+    ) -> None:
+        """Update the service through auto discovery."""
+        raise NotImplementedError()
+
+
 class MqttDiscoveryUpdate(Entity):
-    """Mixin used to handle updated discovery message."""
+    """Mixin used to handle updated discovery message for entity based platforms."""
 
     def __init__(self, discovery_data, discovery_update=None) -> None:
         """Initialize the discovery update mixin."""
