@@ -59,14 +59,6 @@ ATTR_ALL = "all"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
-PLATFORMS_CONFIG_ENTRY = [
-    Platform.BINARY_SENSOR,
-    Platform.COVER,
-    Platform.FAN,
-    Platform.LIGHT,
-    Platform.MEDIA_PLAYER,
-]
-
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
