@@ -109,10 +109,14 @@ def _cached_state_changed_event_message(event: Event) -> str:
     The IDEN_TEMPLATE is used which will be replaced
     with the actual iden in cached_event_message
     """
+    new_state = copy(event.data["new_state"])
     event_copy = copy(event)
+    new_state.context = NULL_CONTEXT
     event_copy.data["old_state"] = None
     event_copy.data["context"] = NULL_CONTEXT
-    event_copy.context = NULL_CONTEXT
+    event_copy.data["new_state"] = new_state
+    # We likely don't need event_copy.time_fired either since last_updated on the new_state is the same
+    # We only need event.context as its the same for the new_state
     return message_to_json(event_message(IDEN_TEMPLATE, event_copy))
 
 
