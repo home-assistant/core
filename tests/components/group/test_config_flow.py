@@ -14,15 +14,6 @@ from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_
     (
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
-        (
-            "binary_sensor",
-            "on",
-            "on",
-            {},
-            {"device_class": "gas"},
-            {"all": False, "device_class": "gas"},
-            {"device_class": "gas"},
-        ),
         ("cover", "open", "open", {}, {}, {}, {}),
         ("fan", "on", "on", {}, {}, {}, {}),
         ("light", "on", "on", {}, {}, {}, {}),

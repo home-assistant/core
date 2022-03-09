@@ -74,15 +74,12 @@ async def async_setup_entry(
     entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]
     )
-    device_class = config_entry.options.get(CONF_DEVICE_CLASS)
-    if device_class == "none":
-        device_class = None
     mode = config_entry.options[CONF_ALL]
 
     async_add_entities(
         [
             BinarySensorGroup(
-                config_entry.entry_id, config_entry.title, device_class, entities, mode
+                config_entry.entry_id, config_entry.title, None, entities, mode
             )
         ]
     )

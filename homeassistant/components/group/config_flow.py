@@ -6,8 +6,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ENTITIES
+from homeassistant.const import CONF_ENTITIES
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
@@ -40,9 +39,6 @@ def basic_group_config_schema(domain: str) -> vol.Schema:
 BINARY_SENSOR_OPTIONS_SCHEMA = basic_group_options_schema("binary_sensor").extend(
     {
         vol.Required(CONF_ALL, default=False): selector.selector({"boolean": {}}),
-        vol.Optional(CONF_DEVICE_CLASS): selector.selector(
-            {"select": {"options": ["none"] + list(map(str, BinarySensorDeviceClass))}}
-        ),
     }
 )
 
