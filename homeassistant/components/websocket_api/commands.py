@@ -108,7 +108,9 @@ def handle_subscribe_events(
             ):
                 return
 
-            connection.send_message(messages.cached_event_message(msg["id"], event))
+            connection.send_message(
+                messages.cached_state_changed_event_message(msg["id"], event)
+            )
 
     else:
 
