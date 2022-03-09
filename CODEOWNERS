@@ -374,6 +374,7 @@ homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 tests/components/glances/* @fabaff @engrbm87
 homeassistant/components/glinet/* @HarvsG
+tests/components/glinet/* @HarvsG
 homeassistant/components/goalzero/* @tkdrob
 tests/components/goalzero/* @tkdrob
 homeassistant/components/gogogate2/* @vangorra @bdraco
