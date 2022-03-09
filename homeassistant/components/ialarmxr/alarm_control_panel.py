@@ -12,15 +12,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IAlarmXRDataUpdateCoordinator
-from .const import DATA_COORDINATOR, DOMAIN
+from .const import DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a iAlarmXR alarm control panel based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
-    async_add_entities([IAlarmXRPanel(coordinator)], False)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([IAlarmXRPanel(coordinator)])
 
 
 class IAlarmXRPanel(CoordinatorEntity, AlarmControlPanelEntity):
