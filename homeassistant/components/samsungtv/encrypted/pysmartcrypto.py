@@ -4,23 +4,16 @@
 # pylint: disable=[invalid-name,missing-class-docstring,missing-function-docstring,redefined-builtin,unused-variable]
 import re
 import sys
-import threading
-import time
 
 import requests
-import websocket
 
 from . import crypto
-from .command_encryption import AESCipher
 
 
 class PySmartCrypto:
     UserId = "654321"
     AppId = "12345"
     deviceId = "7e509404-9d7c-46b4-8f6a-e2a9668ad184"
-
-    def disconnectCallback(self):
-        self.close()
 
     def getFullUrl(self, urlPath):
         return "http://" + self._host + ":" + self._port + urlPath
@@ -122,45 +115,11 @@ class PySmartCrypto:
         requests.delete(full_url)
         return False
 
-    def connect(self):
-        millis = int(round(time.time() * 1000))
-        step4_url = "http://" + self._host + ":8000/socket.io/1/?t=" + str(millis)
-        websocket_response = requests.get(step4_url)
-        websocket_url = (
-            "ws://"
-            + self._host
-            + ":8000/socket.io/1/websocket/"
-            + websocket_response.text.split(":")[0]
-        )
-        # pairs to this app with this command.
-        connection = websocket.create_connection(websocket_url)
-        connection.send("1::/com.samsung.companion")
-        return connection
-
-    def control(self, key_command):
-        self._connection.send(self._aesLib.generate_command(key_command))
-        # need sleeps cuz if you send commands to quick it fails
-        time.sleep(0.1)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def close(self):
-        """Close the connection."""
-        self._connection.close()
-
-    def __init__(self, host, port, token=None, sessionid=None, command=None):
+    def __init__(self, host, port, token=None, sessionid=None):
         self._lastRequestId = 0
 
         self._host = host
         self._port = port
-        self._connection = self.connect()
-
-        self._timer = threading.Timer(10, self.disconnectCallback)
-        self._timer.start()
 
         if token is None and sessionid is None:
             self.StartPairing()
@@ -186,9 +145,3 @@ class PySmartCrypto:
 
         self._token = token
         self._sessionid = sessionid
-
-        self._aesLib = AESCipher(self._token.upper(), self._sessionid)
-
-        if command is not None:
-            print("Attempting to send command to tv")
-            self.control(command)
