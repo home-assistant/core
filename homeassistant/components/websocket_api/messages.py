@@ -1,14 +1,13 @@
 """Message templates for websocket commands."""
 from __future__ import annotations
 
-from copy import copy
 from functools import lru_cache
 import logging
 from typing import Any, Final
 
 import voluptuous as vol
 
-from homeassistant.core import Context, Event
+from homeassistant.core import Event
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import (
     find_paths_unserializable_data,
@@ -31,19 +30,6 @@ BASE_COMMAND_MESSAGE_SCHEMA: Final = vol.Schema({vol.Required("id"): cv.positive
 
 IDEN_TEMPLATE: Final = "__IDEN__"
 IDEN_JSON_TEMPLATE: Final = '"__IDEN__"'
-
-NULL_DICT: dict[str, str] = {}
-
-
-class NullContext(Context):
-    """A null context."""
-
-    def as_dict(self) -> dict:
-        """Return an empty dict for a null context."""
-        return NULL_DICT
-
-
-NULL_CONTEXT = NullContext()
 
 
 def result_message(iden: int, result: Any = None) -> dict[str, Any]:
@@ -114,18 +100,27 @@ def _cached_state_changed_event_message(event: Event) -> str:
     )
 
 
-def _minimal_state_changed_event(event: Event) -> Event:
+def _minimal_state_changed_event(event: Event) -> dict:
     """Convert a state_changed event to the minimal version."""
     # We likely don't need event_copy.time_fired either since last_updated on the new_state is the same
     # We only need event.context as its the same for the new_state
     # The entity_id is also duplicated in the message twice but its actually used
-    new_state = copy(event.data["new_state"])
-    event_copy = copy(event)
-    new_state.context = NULL_CONTEXT
-    event_copy.data["old_state"] = None
-    event_copy.data["context"] = NULL_CONTEXT
-    event_copy.data["new_state"] = new_state
-    return event_copy
+    if event.data["new_state"]:
+        new_state = event.data["new_state"].as_dict()
+    else:
+        new_state = None
+    return {
+        "event_type": event.event_type,
+        "data": {
+            "old_state": None,
+            "new_state": new_state,
+            "entity_id": event.data["entity_id"],
+            "context": {},
+        },
+        "origin": str(event.origin.value),
+        "time_fired": None,
+        "context": event.context.as_dict(),
+    }
 
 
 def message_to_json(message: dict[str, Any]) -> str:
