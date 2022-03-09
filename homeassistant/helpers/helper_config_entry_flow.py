@@ -25,7 +25,7 @@ class HelperFlowStep:
     # Optional function to identify next step.
     # The next_step function is called if the schema validates successfully or if no
     # schema is defined. The next_step function is passed the union of config entry
-    # options and user input from previous stes.
+    # options and user input from previous steps.
     # If next_step returns None, the flow is ended with RESULT_TYPE_CREATE_ENTRY.
     next_step: Callable[[dict[str, Any]], str | None] = lambda _: None
 
@@ -135,7 +135,11 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
     # pylint: disable-next=no-self-use
     @abstractmethod
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
-        """Return config entry title."""
+        """Return config entry title.
+
+        The options parameter contains config entry options, which is the union of user
+        input from the config flow steps.
+        """
 
     @callback
     def async_create_entry(  # pylint: disable=arguments-differ
