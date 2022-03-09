@@ -36,9 +36,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the Config Flow Handler."""
-        self._discovered_host: str = ""
         self._config_context = {}
-        self._discovered_hosts: list[str] | None = None
+        self._discovered_hosts: list[str] = []
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
@@ -61,7 +60,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-
                 serial = await validate_host_input(user_input[CONF_HOST])
             except (ConnectionError, ClientConnectionError):
                 errors["base"] = "cannot_connect"
@@ -78,11 +76,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # check if found before
                 self._abort_if_unique_id_configured(
                     updates={
-                        CONF_HOST: self._discovered_host,
+                        CONF_HOST: user_input[CONF_HOST],
                     }
                 )
-
-                self._config_context[CONF_HOST] = user_input[CONF_HOST]
 
                 return self.async_create_entry(
                     title="Fireplace", data=self._config_context
@@ -112,8 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Start the user flow."""
 
-        # If the integration was not triggered by DHCP attempt a quick local discovery
-        if self._discovered_host == "":
+        if self._discovered_hosts == []:
             await self._find_fireplaces()
 
         return await self.async_step_local_config()
