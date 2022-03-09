@@ -1,15 +1,17 @@
 """Config flow for Min/Max integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import helper_config_entry_flow, selector
+from homeassistant.helpers import selector
+from homeassistant.helpers.helper_config_entry_flow import (
+    HelperConfigFlowHandler,
+    HelperFlowStep,
+)
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
@@ -35,41 +37,17 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-STEPS = {
-    "init": CONFIG_SCHEMA,
-    "options": OPTIONS_SCHEMA,
-}
+CONFIG_FLOW = {"user": HelperFlowStep(CONFIG_SCHEMA)}
+
+OPTIONS_FLOW = {"init": HelperFlowStep(OPTIONS_SCHEMA)}
 
 
-class ConfigFlowHandler(
-    helper_config_entry_flow.HelperConfigFlowHandler, domain=DOMAIN
-):
+class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Min/Max."""
 
-    steps = STEPS
+    config_flow = CONFIG_FLOW
+    options_flow = OPTIONS_FLOW
 
-    def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
+    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return cast(str, user_input["name"]) if "name" in user_input else ""
-
-    @staticmethod
-    def async_initial_options_step(config_entry: ConfigEntry) -> str:
-        """Return initial options step."""
-        return "options"
-
-    async def async_validate_input(
-        self, hass: HomeAssistant, step_id: str, user_input: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Validate user input."""
-        if not self._config_entry:
-            return user_input
-
-        selected_entities = user_input[CONF_ENTITY_IDS]
-        return helper_config_entry_flow.async_own_entity_not_selected(
-            hass,
-            user_input,
-            self._config_entry,
-            DOMAIN,
-            SENSOR_DOMAIN,
-            selected_entities,
-        )
+        return cast(str, options["name"]) if "name" in options else ""

@@ -4,7 +4,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.min_max import DOMAIN, async_setup_entry
+from homeassistant.components.min_max import async_setup_entry
+from homeassistant.components.min_max.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 from homeassistant.helpers import entity_registry as er
@@ -118,7 +119,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "options"
+    assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_suggested(schema, "entity_ids") == input_sensors1
     assert get_suggested(schema, "round_digits") == 0
@@ -154,7 +155,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     # Check the entity was updated, no new entity was created
     assert len(hass.states.async_all()) == 4
 
-    # TODO Check the state of the entity has changed as expected
+    # Check the state of the entity has changed as expected
     state = hass.states.get(f"{platform}.my_min_max")
     assert state.state == "21.1"
     assert state.attributes["count_sensors"] == 3
