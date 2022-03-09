@@ -8,19 +8,13 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.hvac as hvac
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
-    ATTR_SPEED,
     DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_SPEED,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
     NotValidPresetModeError,
 )
 from homeassistant.components.zha.core.discovery import GROUP_PROBE
@@ -187,7 +181,7 @@ async def test_fan(hass, zha_device_joined_restored, zigpy_device):
 
     # change speed from HA
     cluster.write_attributes.reset_mock()
-    await async_set_speed(hass, entity_id, speed=fan.SPEED_HIGH)
+    await async_set_percentage(hass, entity_id, percentage=100)
     assert len(cluster.write_attributes.mock_calls) == 1
     assert cluster.write_attributes.call_args == call({"fan_mode": 3})
 
@@ -209,11 +203,11 @@ async def test_fan(hass, zha_device_joined_restored, zigpy_device):
     await async_test_rejoin(hass, zigpy_device, [cluster], (1,))
 
 
-async def async_turn_on(hass, entity_id, speed=None):
+async def async_turn_on(hass, entity_id, percentage=None):
     """Turn fan on."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_SPEED, speed)]
+        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_PERCENTAGE, percentage)]
         if value is not None
     }
 
@@ -227,15 +221,17 @@ async def async_turn_off(hass, entity_id):
     await hass.services.async_call(Platform.FAN, SERVICE_TURN_OFF, data, blocking=True)
 
 
-async def async_set_speed(hass, entity_id, speed=None):
-    """Set speed for specified fan."""
+async def async_set_percentage(hass, entity_id, percentage=None):
+    """Set percentage for specified fan."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_SPEED, speed)]
+        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_PERCENTAGE, percentage)]
         if value is not None
     }
 
-    await hass.services.async_call(Platform.FAN, SERVICE_SET_SPEED, data, blocking=True)
+    await hass.services.async_call(
+        Platform.FAN, SERVICE_SET_PERCENTAGE, data, blocking=True
+    )
 
 
 async def async_set_preset_mode(hass, entity_id, preset_mode=None):
@@ -321,7 +317,7 @@ async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinato
 
     # change speed from HA
     group_fan_cluster.write_attributes.reset_mock()
-    await async_set_speed(hass, entity_id, speed=fan.SPEED_HIGH)
+    await async_set_percentage(hass, entity_id, percentage=100)
     assert len(group_fan_cluster.write_attributes.mock_calls) == 1
     assert group_fan_cluster.write_attributes.call_args[0][0] == {"fan_mode": 3}
 
@@ -428,13 +424,13 @@ async def test_zha_group_fan_entity_failure_state(
 
 
 @pytest.mark.parametrize(
-    "plug_read, expected_state, expected_speed, expected_percentage",
+    "plug_read, expected_state, expected_percentage",
     (
-        (None, STATE_OFF, None, None),
-        ({"fan_mode": 0}, STATE_OFF, SPEED_OFF, 0),
-        ({"fan_mode": 1}, STATE_ON, SPEED_LOW, 33),
-        ({"fan_mode": 2}, STATE_ON, SPEED_MEDIUM, 66),
-        ({"fan_mode": 3}, STATE_ON, SPEED_HIGH, 100),
+        (None, STATE_OFF, None),
+        ({"fan_mode": 0}, STATE_OFF, 0),
+        ({"fan_mode": 1}, STATE_ON, 33),
+        ({"fan_mode": 2}, STATE_ON, 66),
+        ({"fan_mode": 3}, STATE_ON, 100),
     ),
 )
 async def test_fan_init(
@@ -443,7 +439,6 @@ async def test_fan_init(
     zigpy_device,
     plug_read,
     expected_state,
-    expected_speed,
     expected_percentage,
 ):
     """Test zha fan platform."""
@@ -455,7 +450,6 @@ async def test_fan_init(
     entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == expected_state
-    assert hass.states.get(entity_id).attributes[ATTR_SPEED] == expected_speed
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == expected_percentage
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
 
@@ -474,7 +468,6 @@ async def test_fan_update_entity(
     entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_OFF
-    assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_OFF
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 0
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
@@ -487,7 +480,6 @@ async def test_fan_update_entity(
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_OFF
-    assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_OFF
     assert cluster.read_attributes.await_count == 3
 
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 1}
@@ -496,7 +488,6 @@ async def test_fan_update_entity(
     )
     assert hass.states.get(entity_id).state == STATE_ON
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 33
-    assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_LOW
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
     assert cluster.read_attributes.await_count == 4

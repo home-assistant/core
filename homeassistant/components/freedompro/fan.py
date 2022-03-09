@@ -92,9 +92,7 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_turn_on(
-        self, speed=None, percentage=None, preset_mode=None, **kwargs
-    ):
+    async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs):
         """Async function to turn on the fan."""
         payload = {"on": True}
         payload = json.dumps(payload)
