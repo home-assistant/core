@@ -153,12 +153,12 @@ async def async_init_integration(
 ):
     """Set up the Airzone integration in Home Assistant."""
 
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
+    entry.add_to_hass(hass)
+
     with patch(
         "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ):
-        entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
-        entry.add_to_hass(hass)
-
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

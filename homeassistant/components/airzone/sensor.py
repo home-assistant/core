@@ -85,9 +85,9 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
         self.entity_description = description
 
         if description.key == AZD_TEMP:
-            unit = TEMP_UNIT_LIB_TO_HASS.get(self.get_zone_value(AZD_TEMP_UNIT))
-            if unit != TEMP_CELSIUS:
-                self._attr_native_unit_of_measurement = unit
+            self._attr_native_unit_of_measurement = TEMP_UNIT_LIB_TO_HASS.get(
+                self.get_zone_value(AZD_TEMP_UNIT)
+            )
 
     @property
     def native_value(self):
