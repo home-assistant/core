@@ -1,4 +1,5 @@
 """Interfaces with iAlarmXR control panels."""
+
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -10,6 +11,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import IAlarmXRDataUpdateCoordinator
 from .const import DATA_COORDINATOR, DOMAIN
 
 
@@ -18,11 +20,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up a iAlarmXR alarm control panel based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
-    async_add_entities([IAlarmPanel(coordinator)], False)
+    async_add_entities([IAlarmXRPanel(coordinator)], False)
 
 
-class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
+class IAlarmXRPanel(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of an iAlarmXR device."""
+
+    def __init__(self, coordinator: IAlarmXRDataUpdateCoordinator) -> None:
+        """Initialize the alarm panel."""
+        super().__init__(coordinator)
+        self.coordinator: IAlarmXRDataUpdateCoordinator = coordinator
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -34,17 +41,17 @@ class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         )
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique id."""
         return self.coordinator.mac
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name."""
         return "iAlarmXR"
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         return self.coordinator.state
 
@@ -53,14 +60,14 @@ class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         """Return the list of supported features."""
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None) -> None:
         """Send disarm command."""
-        self.coordinator.ialarm.disarm()
+        self.coordinator.ialarmxr.disarm()
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None) -> None:
         """Send arm home command."""
-        self.coordinator.ialarm.arm_stay()
+        self.coordinator.ialarmxr.arm_stay()
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None) -> None:
         """Send arm away command."""
-        self.coordinator.ialarm.arm_away()
+        self.coordinator.ialarmxr.arm_away()

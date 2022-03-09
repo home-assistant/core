@@ -1,7 +1,6 @@
 """iAlarmXR integration."""
 import asyncio
 import logging
-from typing import Optional
 
 from async_timeout import timeout
 from pyialarmxr import IAlarmXR
@@ -13,6 +12,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -32,15 +32,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
-    ialarm = IAlarmXR(host, username, password, port)
+    ialarmxr = IAlarmXR(host, username, password, port)
 
     try:
         async with timeout(10):
-            mac = await hass.async_add_executor_job(ialarm.get_mac)
+            mac = await hass.async_add_executor_job(ialarmxr.get_mac)
     except (asyncio.TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
-    coordinator = IAlarmXRDataUpdateCoordinator(hass, ialarm, mac)
+    coordinator = IAlarmXRDataUpdateCoordinator(hass, ialarmxr, mac)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
@@ -64,12 +64,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class IAlarmXRDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching iAlarmXR data."""
 
-    def __init__(self, hass: HomeAssistant, ialarm: IAlarmXR, mac: str) -> None:
+    def __init__(self, hass: HomeAssistant, ialarmxr: IAlarmXR, mac: str) -> None:
         """Initialize global iAlarm data updater."""
-        self.ialarm = ialarm
-        self.state = Optional[str]
-        self.host = ialarm.host
-        self.mac = mac
+        self.ialarmxr: IAlarmXR = ialarmxr
+        self.state: str = STATE_UNKNOWN
+        self.host: str = ialarmxr.host
+        self.mac: str = mac
 
         super().__init__(
             hass,
@@ -80,10 +80,14 @@ class IAlarmXRDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _update_data(self) -> None:
         """Fetch data from iAlarmXR via sync functions."""
-        status = self.ialarm.get_status()
+        status = self.ialarmxr.get_status()
         _LOGGER.debug("iAlarmXR status: %s", status)
 
-        self.state = IALARMXR_TO_HASS.get(status)
+        decoded_status = IALARMXR_TO_HASS.get(status)
+        if decoded_status is not None:
+            self.state = decoded_status
+        else:
+            self.state = STATE_UNKNOWN
 
     async def _async_update_data(self) -> None:
         """Fetch data from iAlarmXR."""
