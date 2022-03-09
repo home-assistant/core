@@ -69,7 +69,6 @@ def async_create(
     notification_id: str | None = None,
     *,
     context: Context | None = None,
-    replace: bool = True,
 ) -> None:
     """Generate a notification."""
     if (notifications := hass.data.get(DOMAIN)) is None:
@@ -82,9 +81,6 @@ def async_create(
             ENTITY_ID_FORMAT, DEFAULT_OBJECT_ID, hass=hass
         )
         notification_id = entity_id.split(".")[1]
-
-    if replace and entity_id in notifications:
-        return
 
     warn = False
 
