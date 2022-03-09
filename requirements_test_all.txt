@@ -87,6 +87,9 @@ aio_geojson_nsw_rfs_incidents==0.4
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.5
 
+# homeassistant.components.airzone
+aioairzone==0.0.2
+
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
 
@@ -269,7 +272,7 @@ aurorapy==0.2.6
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-av==8.1.0
+av==9.0.0
 
 # homeassistant.components.axis
 axis==44

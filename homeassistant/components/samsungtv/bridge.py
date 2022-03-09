@@ -14,7 +14,7 @@ from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.command import SamsungTVCommand
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
-from websockets.exceptions import WebSocketException
+from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant.const import (
     CONF_HOST,
@@ -461,15 +461,24 @@ class SamsungTVWSBridge(SamsungTVBridge):
             )
             try:
                 await self._remote.start_listening()
-            # This is only happening when the auth was switched to DENY
-            # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
-            except ConnectionFailure as err:
+            except ConnectionClosedError as err:
+                # This is only happening when the auth was switched to DENY
+                # A removed auth will lead to socket timeout because waiting
+                # for auth popup is just an open socket
                 LOGGER.info(
                     "Failed to get remote for %s, re-authentication required: %s",
                     self.host,
                     err.__repr__(),
                 )
                 self._notify_reauth_callback()
+            except ConnectionFailure as err:
+                LOGGER.warning(
+                    "Unexpected ConnectionFailure trying to get remote for %s, "
+                    "please report this issue: %s",
+                    self.host,
+                    err.__repr__(),
+                )
+                self._remote = None
             except (WebSocketException, AsyncioTimeoutError, OSError) as err:
                 LOGGER.debug(
                     "Failed to get remote for %s: %s", self.host, err.__repr__()

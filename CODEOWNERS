@@ -45,6 +45,8 @@ homeassistant/components/airtouch4/* @LonePurpleWolf
 tests/components/airtouch4/* @LonePurpleWolf
 homeassistant/components/airvisual/* @bachya
 tests/components/airvisual/* @bachya
+homeassistant/components/airzone/* @Noltari
+tests/components/airzone/* @Noltari
 homeassistant/components/alarm_control_panel/* @home-assistant/core
 tests/components/alarm_control_panel/* @home-assistant/core
 homeassistant/components/alert/* @home-assistant/core

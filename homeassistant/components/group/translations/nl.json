@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "Groep leden",
+                    "name": "Groep naam"
+                },
+                "description": "Selecteer groep opties"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Groep leden"
+                },
+                "description": "Selecteer groep opties"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Groep leden",
+                    "name": "Groep naam"
+                },
+                "description": "Selecteer groep opties"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Groep leden"
+                },
+                "description": "Selecteer groep opties"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Groep type"
+                },
+                "description": "Selecteer groep type"
+            },
+            "light": {
+                "data": {
+                    "entities": "Groep leden",
+                    "name": "Groep naam"
+                },
+                "description": "Selecteer groep opties"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Groep leden"
+                },
+                "description": "Selecteer groep opties"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Groep leden\n",
+                    "name": "Groep naam"
+                },
+                "description": "Selecteer groep opties"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Groep leden"
+                },
+                "description": "Selecteer groep opties"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Gesloten",
