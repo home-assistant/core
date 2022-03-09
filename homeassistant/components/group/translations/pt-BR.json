@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "Membros do grupo",
+                    "name": "Nome do grupo"
+                },
+                "description": "Selecione as op\u00e7\u00f5es do grupo"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Membros do grupo"
+                },
+                "description": "Selecione as op\u00e7\u00f5es do grupo"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Membros do grupo",
+                    "name": "Nome do grupo"
+                },
+                "description": "Selecione as op\u00e7\u00f5es do grupo"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Membros do grupo"
+                },
+                "description": "Selecione as op\u00e7\u00f5es do grupo"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Tipo de grupo"
+                },
+                "description": "Selecione o tipo de grupo"
+            },
+            "light": {
+                "data": {
+                    "entities": "Membros do grupo",
+                    "name": "Nome do grupo"
+                },
+                "description": "Selecione as op\u00e7\u00f5es do grupo"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Membros do grupo"
+                },
+                "description": "Selecione as op\u00e7\u00f5es do grupo"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Membros do grupo",
+                    "name": "Nome do grupo"
+                },
+                "description": "Selecione as op\u00e7\u00f5es do grupo"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Membros do grupo"
+                },
+                "description": "Selecione as op\u00e7\u00f5es do grupo"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Fechado",
