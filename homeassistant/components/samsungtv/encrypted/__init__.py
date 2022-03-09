@@ -1,0 +1,1 @@
+"""SamsungTV Encrypted."""
