@@ -48,7 +48,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle local ip configuration."""
 
         errors = {}
+        placeholder = {}
         local_schema = vol.Schema({vol.Required(CONF_HOST): str})
+
         if user_input is None:
             if len(self._discovered_hosts) > 1:
                 return await self.async_step_pick_device()
@@ -59,20 +61,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         if user_input is not None:
+            placeholder = {CONF_HOST: user_input[CONF_HOST]}
             try:
                 serial = await validate_host_input(user_input[CONF_HOST])
             except (ConnectionError, ClientConnectionError):
                 errors["base"] = "cannot_connect"
-                return self.async_show_form(
-                    step_id="local_config",
-                    errors=errors,
-                    description_placeholders={CONF_HOST: user_input[CONF_HOST]},
-                    data_schema=vol.Schema(
-                        {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
-                    ),
+                local_schema = vol.Schema(
+                    {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
                 )
             else:
                 await self.async_set_unique_id(serial)
+
                 # check if found before
                 self._abort_if_unique_id_configured(
                     updates={
@@ -81,11 +80,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
                 return self.async_create_entry(
-                    title="Fireplace", data=self._config_context
+                    title="Fireplace",
+                    data={
+                        CONF_HOST: user_input[CONF_HOST],
+                    },
                 )
 
         return self.async_show_form(
-            step_id="local_config", errors=errors, data_schema=local_schema
+            step_id="local_config",
+            errors=errors,
+            description_placeholders=placeholder,
+            data_schema=local_schema,
         )
 
     async def async_step_pick_device(
