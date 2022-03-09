@@ -704,6 +704,12 @@ async def test_discovery_with_device_removal(hass, mqtt_mock, caplog, device_reg
         in caplog.text
     )
 
+    # Test if discovery topic is cleared with retained flag
+    mqtt_mock.async_publish.assert_called_once_with(
+        f"homeassistant/{notify.DOMAIN}/{service_name1}/config", "", 0, True
+    )
+    mqtt_mock.async_publish.reset_mock()
+
 
 async def test_publishing_with_custom_encoding(hass, mqtt_mock, caplog):
     """Test publishing MQTT payload with different encoding via discovery and configuration."""

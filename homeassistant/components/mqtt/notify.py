@@ -153,7 +153,7 @@ async def _async_setup_notify(
         config,
         config_entry,
         device_id,
-        discovery_hash,
+        discovery_data,
     )
     hass.data[MQTT_NOTIFY_SERVICES_SETUP][service_name] = service
 
@@ -193,7 +193,7 @@ class MqttNotificationService(
         service_config: MqttNotificationConfig,
         config_entry: ConfigEntry | None = None,
         device_id: str | None = None,
-        discovery_hash: tuple | None = None,
+        discovery_data: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the service."""
         self.hass = hass
@@ -205,7 +205,7 @@ class MqttNotificationService(
         self._device_id = device_id
         self._service_name = slugify(service_config[CONF_NAME])
         MqttDiscoveryDeviceUpdateService.__init__(
-            self, hass, LOG_NAME, discovery_hash, device_id, config_entry
+            self, hass, LOG_NAME, discovery_data, device_id, config_entry
         )
 
     @property
@@ -223,7 +223,7 @@ class MqttNotificationService(
         """Return a dictionary of registered targets."""
         return {target: target for target in self._config[CONF_TARGETS]}
 
-    async def async_update_service(
+    async def async_discovery_update(
         self,
         discovery_payload: DiscoveryInfoType,
     ) -> None:

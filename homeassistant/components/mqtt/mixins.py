@@ -55,6 +55,7 @@ from . import (
     debug_info,
     subscription,
 )
+from ..mqtt import publish
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -528,17 +529,19 @@ class MqttDiscoveryDeviceUpdateService:
         self,
         hass: HomeAssistant,
         log_name: str,
-        discovery_hash: tuple | None = None,
+        discovery_data: dict[str, Any] | None = None,
         device_id: str | None = None,
         config_entry: ConfigEntry | None = None,
     ) -> None:
         """Initialize the update service."""
 
         # Only activate update service id the parent class has a discover hash
-        if discovery_hash is None:
+        if discovery_data is None:
             return
 
         self.hass = hass
+        discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+        discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
         _device_removed: bool = False
 
         async def async_discovery_update(
@@ -554,7 +557,7 @@ class MqttDiscoveryDeviceUpdateService:
                 return
 
             # update the service through auto discovery
-            await self.async_update_service(discovery_payload)
+            await self.async_discovery_update(discovery_payload)
             _LOGGER.debug(
                 "%s %s updated has been processed",
                 log_name,
@@ -575,6 +578,8 @@ class MqttDiscoveryDeviceUpdateService:
             ):
                 return
             _device_removed = True
+            # Clear the discovery topic so the service is not rediscovered after a restart
+            publish(hass, discovery_topic, "", retain=True)
             await _async_tear_down()
 
         async def _async_tear_down() -> None:
@@ -614,11 +619,11 @@ class MqttDiscoveryDeviceUpdateService:
         """Handle the cleanup of platform specific parts."""
         raise NotImplementedError()
 
-    async def async_update_service(
+    async def async_discovery_update(
         self,
         discovery_payload: DiscoveryInfoType,
     ) -> None:
-        """Update the service through auto discovery."""
+        """Update the configuration through discovery."""
         raise NotImplementedError()
 
 
