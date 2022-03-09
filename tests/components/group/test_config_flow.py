@@ -142,7 +142,7 @@ async def test_options(hass: HomeAssistant, group_type, member_state) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == f"{group_type}_options"
+    assert result["step_id"] == group_type
     assert get_suggested(result["data_schema"].schema, "entities") == members1
     assert "name" not in result["data_schema"].schema
 
