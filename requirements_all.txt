@@ -1294,6 +1294,9 @@ py-zabbix==1.1.7
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
 
+# homeassistant.components.samsungtv
+py3rijndael==0.3.3
+
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.1
 
@@ -1405,6 +1408,9 @@ pycomfoconnect==0.4
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
+
+# homeassistant.components.samsungtv
+pycryptodome==3.12.0
 
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.4
