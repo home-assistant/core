@@ -71,6 +71,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host: str = ""
         self._mac: str | None = None
         self._udn: str | None = None
+        self._upnp_udn: str | None = None
         self._manufacturer: str | None = None
         self._model: str | None = None
         self._name: str | None = None
@@ -112,9 +113,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set the unique id from the udn."""
         assert self._host is not None
         await self.async_set_unique_id(self._udn, raise_on_progress=raise_on_progress)
-        if (entry := self._async_update_existing_host_entry()) and _entry_is_complete(
-            entry
-        ):
+        if (
+            entry := self._async_update_existing_matching_entry()
+        ) and _entry_is_complete(entry):
             raise data_entry_flow.AbortFlow("already_configured")
 
     def _async_update_and_abort_for_matching_unique_id(self) -> None:
@@ -214,20 +215,44 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
     @callback
-    def _async_update_existing_host_entry(self) -> config_entries.ConfigEntry | None:
+    def _async_get_existing_matching_entry(
+        self,
+    ) -> tuple[config_entries.ConfigEntry | None, bool]:
+        """Get first existing matching entry (prefer unique id)."""
+        matching_host_entry: config_entries.ConfigEntry | None = None
+        for entry in self._async_current_entries(include_ignore=False):
+            if (self._mac and self._mac == entry.data.get(CONF_MAC)) or (
+                self._upnp_udn and self._upnp_udn == entry.unique_id
+            ):
+                LOGGER.debug("Found entry matching unique_id for %s", self._host)
+                return entry, True
+
+            if entry.data[CONF_HOST] == self._host:
+                LOGGER.debug("Found entry matching host for %s", self._host)
+                matching_host_entry = entry
+
+        return matching_host_entry, False
+
+    @callback
+    def _async_update_existing_matching_entry(
+        self,
+    ) -> config_entries.ConfigEntry | None:
         """Check existing entries and update them.
 
         Returns the existing entry if it was updated.
         """
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] != self._host:
-                continue
+        entry, is_unique_match = self._async_get_existing_matching_entry()
+        if entry:
             entry_kw_args: dict = {}
-            if self.unique_id and entry.unique_id is None:
+            if self.unique_id and (
+                entry.unique_id is None
+                or (is_unique_match and self.unique_id != entry.unique_id)
+            ):
                 entry_kw_args["unique_id"] = self.unique_id
             if self._mac and not entry.data.get(CONF_MAC):
                 entry_kw_args["data"] = {**entry.data, CONF_MAC: self._mac}
             if entry_kw_args:
+                LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
                 self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
@@ -238,7 +263,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_start_discovery_with_mac_address(self) -> None:
         """Start discovery."""
         assert self._host is not None
-        if (entry := self._async_update_existing_host_entry()) and entry.unique_id:
+        if (entry := self._async_update_existing_matching_entry()) and entry.unique_id:
             # If we have the unique id and the mac we abort
             # as we do not need anything else
             raise data_entry_flow.AbortFlow("already_configured")
@@ -264,16 +289,23 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
         model_name: str = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
-        self._udn = _strip_uuid(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
+        self._udn = self._upnp_udn = _strip_uuid(
+            discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
+        )
         if hostname := urlparse(discovery_info.ssdp_location or "").hostname:
             self._host = hostname
-        await self._async_set_unique_id_from_udn()
         self._manufacturer = discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
         self._abort_if_manufacturer_is_not_samsung()
-        if not await self._async_get_and_check_device_info():
-            # If we cannot get device info for an SSDP discovery
-            # its likely a legacy tv.
-            self._name = self._title = self._model = model_name
+
+        # Set defaults, in case they cannot be extracted from device_info
+        self._name = self._title = self._model = model_name
+        # Update from device_info (if accessible)
+        await self._async_get_and_check_device_info()
+
+        # The UDN provided by the ssdp discovery doesn't always match the UDN
+        # from the device_info, used by the the other methods so we need to
+        # ensure the device_info is loaded before setting the unique_id
+        await self._async_set_unique_id_from_udn()
         self._async_update_and_abort_for_matching_unique_id()
         self._async_abort_if_host_already_in_progress()
         self.context["title_placeholders"] = {"device": self._title}

@@ -32,6 +32,7 @@ homeassistant.components.abode.*
 homeassistant.components.acer_projector.*
 homeassistant.components.accuweather.*
 homeassistant.components.actiontec.*
+homeassistant.components.adguard.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
@@ -116,6 +117,7 @@ homeassistant.components.isy994.*
 homeassistant.components.iqvia.*
 homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
+homeassistant.components.kaleidescape.*
 homeassistant.components.kdeconnect.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
@@ -206,7 +208,6 @@ homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
-homeassistant.components.update.*
 homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*

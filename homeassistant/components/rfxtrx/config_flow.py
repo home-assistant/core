@@ -50,16 +50,12 @@ from .const import (
     CONF_OFF_DELAY,
     CONF_PROTOCOLS,
     CONF_REPLACE_DEVICE,
-    CONF_SIGNAL_REPETITIONS,
     CONF_VENETIAN_BLIND_MODE,
     CONST_VENETIAN_BLIND_MODE_DEFAULT,
     CONST_VENETIAN_BLIND_MODE_EU,
     CONST_VENETIAN_BLIND_MODE_US,
     DEVICE_PACKET_TYPE_LIGHTING4,
 )
-from .cover import supported as cover_supported
-from .light import supported as light_supported
-from .switch import supported as switch_supported
 
 CONF_EVENT_CODE = "event_code"
 CONF_MANUAL_PATH = "Enter Manually"
@@ -210,7 +206,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                 devices = {}
                 device = {
                     CONF_DEVICE_ID: device_id,
-                    CONF_SIGNAL_REPETITIONS: user_input.get(CONF_SIGNAL_REPETITIONS, 1),
                 }
 
                 devices[self._selected_device_event_code] = device
@@ -251,21 +246,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(CONF_OFF_DELAY): str,
                 }
             data_schema.update(off_delay_schema)
-
-        if (
-            binary_supported(self._selected_device_object)
-            or cover_supported(self._selected_device_object)
-            or light_supported(self._selected_device_object)
-            or switch_supported(self._selected_device_object)
-        ):
-            data_schema.update(
-                {
-                    vol.Optional(
-                        CONF_SIGNAL_REPETITIONS,
-                        default=device_data.get(CONF_SIGNAL_REPETITIONS, 1),
-                    ): int,
-                }
-            )
 
         if (
             self._selected_device_object.device.packettype

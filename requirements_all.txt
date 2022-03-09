@@ -41,7 +41,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.6.5
+PyTurboJPEG==1.6.6
 
 # homeassistant.components.vicare
 PyViCare==2.16.1
@@ -106,6 +106,9 @@ aio_geojson_nsw_rfs_incidents==0.4
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.5
 
+# homeassistant.components.airzone
+aioairzone==0.0.2
+
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
 
@@ -156,7 +159,7 @@ aioguardian==2021.11.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.15
+aiohomekit==0.7.16
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -178,7 +181,7 @@ aiokafka==0.6.0
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx==0.7.0
+aiolifx==0.7.1
 
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
@@ -323,7 +326,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.25.0
+async-upnp-client==0.26.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -341,7 +344,7 @@ auroranoaa==0.0.2
 aurorapy==0.2.6
 
 # homeassistant.components.stream
-av==8.1.0
+av==9.0.0
 
 # homeassistant.components.avea
 # avea==1.5.1
@@ -716,13 +719,13 @@ goodwe==0.2.15
 google-api-python-client==2.38.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.9.0
+google-cloud-pubsub==2.10.0
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==2.10.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.7.1
+google-nest-sdm==1.8.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -737,7 +740,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.0.2
+greeclimate==1.1.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -803,7 +806,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220301.0
+home-assistant-frontend==20220301.1
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -1560,6 +1563,9 @@ pyisy==3.0.1
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
 
+# homeassistant.components.kaleidescape
+pykaleidescape==2022.2.6
+
 # homeassistant.components.kdeconnect
 pykdeconnect==0.1.1
 
@@ -1900,7 +1906,7 @@ python-kasa==0.4.1
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.10
+python-miio==0.5.11
 
 # homeassistant.components.mpd
 python-mpd2==3.0.4
@@ -2027,7 +2033,7 @@ quantum-gateway==0.0.6
 rachiopy==1.0.3
 
 # homeassistant.components.radio_browser
-radios==0.1.0
+radios==0.1.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -2096,7 +2102,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async]==2.1.0
+samsungtvws[async]==2.3.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
@@ -2377,7 +2383,7 @@ vilfo-api-client==0.3.2
 volkszaehler==0.2.1
 
 # homeassistant.components.volvooncall
-volvooncall==0.9.1
+volvooncall==0.10.0
 
 # homeassistant.components.verisure
 vsure==1.7.3
@@ -2500,7 +2506,7 @@ zigpy==0.43.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.35.1
+zwave-js-server-python==0.35.2
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.2.1
+zwave_me_ws==0.2.2
