@@ -107,17 +107,17 @@ HVAC_MOCK = {
                     API_ZONE_ID: 4,
                     API_NAME: "Despacho",
                     API_ON: 0,
-                    API_MAX_TEMP: 30,
-                    API_MIN_TEMP: 15,
-                    API_SET_POINT: 19.5,
-                    API_ROOM_TEMP: 21.2,
+                    API_MAX_TEMP: 86,
+                    API_MIN_TEMP: 59,
+                    API_SET_POINT: 67.1,
+                    API_ROOM_TEMP: 70.16,
                     API_MODE: 3,
                     API_COLD_STAGES: 1,
                     API_COLD_STAGE: 1,
                     API_HEAT_STAGES: 1,
                     API_HEAT_STAGE: 1,
                     API_HUMIDITY: 36,
-                    API_UNITS: 0,
+                    API_UNITS: 1,
                     API_ERRORS: [],
                     API_AIR_DEMAND: 0,
                     API_FLOOR_DEMAND: 0,
@@ -153,12 +153,12 @@ async def async_init_integration(
 ):
     """Set up the Airzone integration in Home Assistant."""
 
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
+    entry.add_to_hass(hass)
+
     with patch(
         "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ):
-        entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
-        entry.add_to_hass(hass)
-
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
