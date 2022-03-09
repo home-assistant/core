@@ -208,11 +208,25 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections):
             (),
         ),
         ({"min": 10, "max": 1000, "mode": "slider", "step": 0.5}, (), ()),
+        ({"mode": "box"}, (10,), ()),
     ),
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections):
     """Test number selector."""
     _test_selector("number", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        {},  # Must have mandatory fields
+        {"mode": "slider"},  # Must have min+max in slider mode
+    ),
+)
+def test_number_selector_schema_error(schema):
+    """Test select selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"number": schema})
 
 
 @pytest.mark.parametrize(

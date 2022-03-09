@@ -179,24 +179,41 @@ class NumberSelector(Selector):
 
     selector_type = "number"
 
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            vol.Optional("min"): vol.Coerce(float),
-            vol.Optional("max"): vol.Coerce(float),
-            vol.Optional("step", default=1): vol.All(
-                vol.Coerce(float), vol.Range(min=1e-3)
-            ),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-            vol.Optional(CONF_MODE, default="slider"): vol.In(["box", "slider"]),
-        }
+    @staticmethod
+    def has_min_max_if_slider(data: Any) -> Any:
+        """Validate configuration."""
+        if data["mode"] == "box":
+            return data
+
+        if "min" not in data or "max" not in data:
+            raise vol.Invalid("min and max are required in slider mode")
+
+        return data
+
+    CONFIG_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional("min"): vol.Coerce(float),
+                vol.Optional("max"): vol.Coerce(float),
+                vol.Optional("step", default=1): vol.All(
+                    vol.Coerce(float), vol.Range(min=1e-3)
+                ),
+                vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
+                vol.Optional(CONF_MODE, default="slider"): vol.In(["box", "slider"]),
+            }
+        ),
+        has_min_max_if_slider,
     )
 
     def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
         value: float = vol.Coerce(float)(data)
 
-        if not self.config["min"] <= value <= self.config["max"]:
-            raise vol.Invalid(f"Value {value} is too small or too large")
+        if "min" in self.config and value < self.config["min"]:
+            raise vol.Invalid(f"Value {value} is too small")
+
+        if "max" in self.config and value > self.config["max"]:
+            raise vol.Invalid(f"Value {value} is too large")
 
         return value
 
