@@ -430,22 +430,7 @@ class MediaSelector(Selector):
             vol.Optional("entity_id"): cv.entity_id_or_uuid,
             vol.Optional("media_content_id"): str,
             vol.Optional("media_content_type"): str,
-            vol.Optional("metadata"): vol.Schema(
-                {
-                    vol.Optional("title"): str,
-                    vol.Optional("thumbnail"): vol.Any(str, None),
-                    vol.Optional("media_class"): str,
-                    vol.Optional("children_media_class"): vol.Any(str, None),
-                    vol.Optional("navigateIds"): [
-                        vol.Schema(
-                            {
-                                vol.Required("media_content_type"): str,
-                                vol.Required("media_content_id"): str,
-                            }
-                        )
-                    ],
-                }
-            ),
+            vol.Remove("metadata"): dict,
         }
     )
 
