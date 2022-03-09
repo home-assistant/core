@@ -1,5 +1,5 @@
 """Test the Fibaro config flow."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from fiblary3.common.exceptions import HTTPException
 import pytest
@@ -10,28 +10,44 @@ from homeassistant.components.fibaro.const import CONF_IMPORT_PLUGINS
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
 TEST_SERIALNUMBER = "HC2-111111"
-TEST_NAME = "My fibaro home center"
+TEST_NAME = "my_fibaro_home_center"
 TEST_URL = "http://192.168.1.1/api/"
 TEST_USERNAME = "user"
 TEST_PASSWORD = "password"
 
 
-@pytest.fixture(name="fibaro_controller", autouse=True)
-def fibaro_controller_fixture():
-    """Mock fibaro controller."""
-    with patch(
-        "homeassistant.components.fibaro.FibaroController.__init__",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.fibaro.FibaroController.connect",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.fibaro.FibaroController.hub_serial",
-        TEST_SERIALNUMBER,
+@pytest.fixture(name="fibaro_client", autouse=True)
+def fibaro_client_fixture():
+    """Mock fibaro client."""
+    login_obj_get = MagicMock()
+    login_obj_get.status = True
+    login_obj = MagicMock()
+    login_obj.get.return_value = login_obj_get
+
+    info_obj_get = MagicMock()
+    info_obj_get.serialNumber = TEST_SERIALNUMBER
+    info_obj_get.hcName = TEST_NAME
+    info_obj = MagicMock()
+    info_obj.get.return_value = info_obj_get
+
+    array_obj = MagicMock()
+    array_obj.get.return_value = []
+
+    with patch("fiblary3.client.v4.client.Client.__init__", return_value=None,), patch(
+        "fiblary3.client.v4.client.Client.login",
+        login_obj,
+        create=True,
+    ), patch("fiblary3.client.v4.client.Client.info", info_obj, create=True,), patch(
+        "fiblary3.client.v4.client.Client.rooms",
+        return_value=array_obj,
         create=True,
     ), patch(
-        "homeassistant.components.fibaro.FibaroController.name",
-        TEST_NAME,
+        "fiblary3.client.v4.client.Client.devices",
+        return_value=array_obj,
+        create=True,
+    ), patch(
+        "fiblary3.client.v4.client.Client.scenes",
+        return_value=array_obj,
         create=True,
     ):
         yield

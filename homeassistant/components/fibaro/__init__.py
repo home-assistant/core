@@ -369,11 +369,12 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
 
     for gateway in gateways:
         # prepare new config based on configuration.yaml
-        conf = {}
-        conf[CONF_URL] = gateway[CONF_URL]
-        conf[CONF_USERNAME] = gateway[CONF_USERNAME]
-        conf[CONF_PASSWORD] = gateway[CONF_PASSWORD]
-        conf[CONF_IMPORT_PLUGINS] = gateway[CONF_PLUGINS]
+        conf = {
+            CONF_URL: gateway[CONF_URL],
+            CONF_USERNAME: gateway[CONF_USERNAME],
+            CONF_PASSWORD: gateway[CONF_PASSWORD],
+            CONF_IMPORT_PLUGINS: gateway[CONF_PLUGINS],
+        }
 
         # import into config flow based configuration
         hass.async_create_task(
