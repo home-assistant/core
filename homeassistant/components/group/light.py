@@ -98,7 +98,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Initialize Light Switch config entry."""
+    """Initialize Light Group config entry."""
     registry = er.async_get(hass)
     entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]

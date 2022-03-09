@@ -76,7 +76,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Group Cover platform."""
+    """Set up the Cover Group platform."""
     async_add_entities(
         [
             CoverGroup(
@@ -91,7 +91,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Initialize Light Switch config entry."""
+    """Initialize Cover Group config entry."""
     registry = er.async_get(hass)
     entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]

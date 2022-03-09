@@ -50,7 +50,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Group Binary Sensor platform."""
+    """Set up the Binary Sensor Group platform."""
     async_add_entities(
         [
             BinarySensorGroup(
@@ -69,12 +69,14 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Initialize Light Switch config entry."""
+    """Initialize Binary Sensor Group config entry."""
     registry = er.async_get(hass)
     entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]
     )
     device_class = config_entry.options.get(CONF_DEVICE_CLASS)
+    if device_class == "none":
+        device_class = None
     mode = config_entry.options[CONF_ALL]
 
     async_add_entities(

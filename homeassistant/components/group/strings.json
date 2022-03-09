@@ -2,47 +2,41 @@
   "title": "Group",
   "config": {
     "step": {
-      "init": {
-        "description": "Select group type",
+      "user": {
         "data": {
           "group_type": "Group type"
         }
       },
       "binary_sensor": {
-        "description": "Select group options",
         "data": {
           "all": "All",
-          "device_class": "Group device class",
-          "entities": "Group members",
-          "name": "Group name"
+          "device_class": "Device class",
+          "entities": "Members",
+          "name": "Name"
         }
       },
       "cover": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members",
-          "name": "Group name"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
       "fan": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members",
-          "name": "Group name"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
       "light": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members",
-          "name": "Group name"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
       "media_player": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members",
-          "name": "Group name"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       }
     }
@@ -50,35 +44,30 @@
   "options": {
     "step": {
       "binary_sensor_options": {
-        "description": "Select group options",
         "data": {
-          "all": "All",
-          "device_class": "Group device class",
-          "entities": "Group members"
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
+          "device_class": "[%key:component::group::config::step::binary_sensor::data::device_class%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
         }
       },
       "cover_options": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
         }
       },
       "fan_options": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
         }
       },
       "light_options": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
         }
       },
       "media_player_options": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
         }
       }
     }

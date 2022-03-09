@@ -41,7 +41,7 @@ BINARY_SENSOR_OPTIONS_SCHEMA = basic_group_options_schema("binary_sensor").exten
     {
         vol.Required(CONF_ALL, default=False): selector.selector({"boolean": {}}),
         vol.Optional(CONF_DEVICE_CLASS): selector.selector(
-            {"select": {"options": list(map(str, BinarySensorDeviceClass))}}
+            {"select": {"options": ["none"] + list(map(str, BinarySensorDeviceClass))}}
         ),
     }
 )
