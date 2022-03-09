@@ -26,7 +26,7 @@ OPTIONS_SCHEMA = vol.Schema(
             {"select": {"options": _STATISTIC_MEASURES}}
         ),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            {"number": {"min": 0, "max": 6}}
+            {"number": {"min": 0, "max": 6, "mode": "box"}}
         ),
     }
 )
