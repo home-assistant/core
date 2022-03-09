@@ -8,7 +8,7 @@ import logging
 import time
 from types import TracebackType
 
-import requests
+import aiohttp
 from samsungtvws.connection import SamsungTVWSBaseConnection
 from websockets.client import WebSocketClientProtocol, connect
 
@@ -46,6 +46,7 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
         self,
         host: str,
         *,
+        web_session: aiohttp.ClientSession,
         token: str,
         session_id: str,
         port: int = 8000,
@@ -62,6 +63,7 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
             key_press_delay=key_press_delay,
             name=name,
         )
+        self._web_session = web_session
         self._session = SamsungTVEncryptedSession(token, session_id)
 
     async def __aenter__(self) -> SamsungTVEncryptedWSAsyncRemote:
@@ -100,9 +102,12 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
 
         millis = int(round(time.time() * 1000))
         step4_url = self._format_rest_url(f"socket.io/1/?t={millis}")
-        step4_response = requests.get(step4_url)
+        LOGGER.debug("Tx: GET %s", step4_url)
+        async with self._web_session.get(step4_url) as response:
+            LOGGER.debug("Rx: %s", await response.text())
+            step4_response = await response.text()
 
-        url = self._format_websocket_url(step4_response.text.split(":")[0])
+        url = self._format_websocket_url(step4_response.split(":")[0])
 
         LOGGER.debug("WS url %s", url)
         connection = await connect(url, open_timeout=self.timeout)
