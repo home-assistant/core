@@ -319,6 +319,8 @@ class StringSelector(Selector):
         {
             vol.Optional("multiline", default=False): bool,
             vol.Optional("suffix"): str,
+            # The "type" controls the input field in the browser, the resulting
+            # data can be any string so we don't validate it.
             vol.Optional("type"): vol.In(STRING_TYPES),
         }
     )
@@ -427,9 +429,12 @@ class MediaSelector(Selector):
     CONFIG_SCHEMA = vol.Schema({})
     DATA_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity_id"): cv.entity_id_or_uuid,
-            vol.Optional("media_content_id"): str,
-            vol.Optional("media_content_type"): str,
+            # Although marked as optional in frontend, this field is required
+            vol.Required("entity_id"): cv.entity_id_or_uuid,
+            # Although marked as optional in frontend, this field is required
+            vol.Required("media_content_id"): str,
+            # Although marked as optional in frontend, this field is required
+            vol.Required("media_content_type"): str,
             vol.Remove("metadata"): dict,
         }
     )
