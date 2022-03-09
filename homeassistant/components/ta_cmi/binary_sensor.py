@@ -1,9 +1,9 @@
-"""C.M.I sensor platform."""
+"""C.M.I binary sensor platform."""
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
@@ -31,23 +31,23 @@ async def async_setup_entry(
     """Set up entries."""
     coordinator: CMIDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[DeviceChannelSensor] = []
+    entities: list[DeviceChannelBinary] = []
 
     device_registry = dr.async_get(hass)
 
     for ent in coordinator.data:
-        inputs: dict = coordinator.data[ent]["I"]
-        outputs: dict = coordinator.data[ent]["O"]
+        inputs: dict = coordinator.data[ent]["IB"]
+        outputs: dict = coordinator.data[ent]["OB"]
 
         for ch_id in inputs:
-            channel_in: DeviceChannelSensor = DeviceChannelSensor(
-                coordinator, ent, ch_id, "I"
+            channel_in: DeviceChannelBinary = DeviceChannelBinary(
+                coordinator, ent, ch_id, "IB"
             )
             entities.append(channel_in)
 
         for ch_id in outputs:
-            channel_out: DeviceChannelSensor = DeviceChannelSensor(
-                coordinator, ent, ch_id, "O"
+            channel_out: DeviceChannelBinary = DeviceChannelBinary(
+                coordinator, ent, ch_id, "OB"
             )
             entities.append(channel_out)
 
@@ -64,7 +64,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DeviceChannelSensor(CoordinatorEntity, SensorEntity):
+class DeviceChannelBinary(CoordinatorEntity, BinarySensorEntity):
     """Representation of an C.M.I channel."""
 
     def __init__(
@@ -92,7 +92,7 @@ class DeviceChannelSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id: str = f"ta-cmi-{self._node_id}-{mode}{self._id}"
 
     @property
-    def native_value(self) -> str:
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         channel_raw: dict[str, Any] = self._coordinator.data[self._node_id][
             self._input_type
@@ -100,24 +100,7 @@ class DeviceChannelSensor(CoordinatorEntity, SensorEntity):
 
         value: str = channel_raw["value"]
 
-        return value
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-
-        channel_raw: dict[str, Any] = self._coordinator.data[self._node_id][
-            self._input_type
-        ][self._id]
-
-        unit: str = channel_raw["unit"]
-
-        return unit
-
-    @property
-    def state_class(self) -> str:
-        """Return the state class of the sensor."""
-        return "measurement"
+        return value in ("on", "yes")
 
     @property
     def device_info(self) -> DeviceInfo:

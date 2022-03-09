@@ -21,12 +21,14 @@ DUMMY_DEVICE_API_DATA: dict[str, Any] = {
         "Inputs": [
             {"Number": 1, "AD": "A", "Value": {"Value": 92.2, "Unit": "1"}},
             {"Number": 2, "AD": "A", "Value": {"Value": 92.3, "Unit": "1"}},
+            {"Number": 3, "AD": "A", "Value": {"Value": 1, "Unit": "44"}},
         ],
         "Outputs": [
             {"Number": 1, "AD": "D", "Value": {"Value": 1, "Unit": "43"}},
             {"Number": 2, "AD": "D", "Value": {"Value": 0, "Unit": "43"}},
             {"Number": 3, "AD": "D", "Value": {"Value": 1, "Unit": "44"}},
             {"Number": 4, "AD": "D", "Value": {"Value": 0, "Unit": "44"}},
+            {"Number": 5, "AD": "D", "Value": {"Value": 0, "Unit": "1"}},
         ],
     },
     "Status": "OK",
@@ -103,8 +105,17 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
         assert entry_i2.unique_id == "ta-cmi-2-Input2"
 
-        state_o1 = hass.states.get("sensor.output_1")
-        entry_o1 = entity_registry.async_get("sensor.output_1")
+        state_i3 = hass.states.get("binary_sensor.node_2_input_3")
+        entry_i3 = entity_registry.async_get("binary_sensor.node_2_input_3")
+
+        assert state_i3.state == STATE_ON
+        assert state_i3.attributes.get("friendly_name") == "Node: 2 - Input 3"
+        assert state_i3.attributes.get("device_class") == ""
+
+        assert entry_i3.unique_id == "ta-cmi-2-Input3"
+
+        state_o1 = hass.states.get("binary_sensor.output_1")
+        entry_o1 = entity_registry.async_get("binary_sensor.output_1")
 
         assert state_o1.state == STATE_ON
         assert state_o1.attributes.get("friendly_name") == "Output 1"
@@ -112,8 +123,8 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
         assert entry_o1.unique_id == "ta-cmi-2-Output1"
 
-        state_o2 = hass.states.get("sensor.node_2_output_2")
-        entry_o2 = entity_registry.async_get("sensor.node_2_output_2")
+        state_o2 = hass.states.get("binary_sensor.node_2_output_2")
+        entry_o2 = entity_registry.async_get("binary_sensor.node_2_output_2")
 
         assert state_o2.state == STATE_OFF
         assert state_o2.attributes.get("friendly_name") == "Node: 2 - Output 2"
@@ -121,23 +132,32 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
         assert entry_o2.unique_id == "ta-cmi-2-Output2"
 
-        state_o3 = hass.states.get("sensor.node_2_output_3")
-        entry_o3 = entity_registry.async_get("sensor.node_2_output_3")
+        state_o3 = hass.states.get("binary_sensor.node_2_output_3")
+        entry_o3 = entity_registry.async_get("binary_sensor.node_2_output_3")
 
-        assert state_o3.state == "Yes"
+        assert state_o3.state == STATE_ON
         assert state_o3.attributes.get("friendly_name") == "Node: 2 - Output 3"
         assert state_o3.attributes.get("device_class") == ""
 
         assert entry_o3.unique_id == "ta-cmi-2-Output3"
 
-        state_o4 = hass.states.get("sensor.node_2_output_4")
-        entry_o4 = entity_registry.async_get("sensor.node_2_output_4")
+        state_o4 = hass.states.get("binary_sensor.node_2_output_4")
+        entry_o4 = entity_registry.async_get("binary_sensor.node_2_output_4")
 
-        assert state_o4.state == "No"
+        assert state_o4.state == STATE_OFF
         assert state_o4.attributes.get("friendly_name") == "Node: 2 - Output 4"
         assert state_o4.attributes.get("device_class") == ""
 
         assert entry_o4.unique_id == "ta-cmi-2-Output4"
+
+        state_o5 = hass.states.get("sensor.node_2_output_5")
+        entry_o5 = entity_registry.async_get("sensor.node_2_output_5")
+
+        assert state_o5.state == "0"
+        assert state_o5.attributes.get("friendly_name") == "Node: 2 - Output 5"
+        assert state_o5.attributes.get("device_class") == DEVICE_CLASS_TEMPERATURE
+
+        assert entry_o5.unique_id == "ta-cmi-2-Output5"
 
 
 async def test_sensors_invalid_credentials(hass: HomeAssistant) -> None:

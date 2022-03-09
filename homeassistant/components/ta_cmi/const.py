@@ -11,6 +11,9 @@ DEVICE_DELAY: int = 61
 
 DOMAIN: str = "ta_cmi"
 
+API_VERSION: str = "api_version"
+DEVICE_TYPE: str = "device_type"
+
 CONF_DEVICES: str = "devices"
 CONF_DEVICE_ID: str = "id"
 CONF_DEVICE_FETCH_MODE: str = "fetchmode"

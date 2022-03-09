@@ -35,7 +35,7 @@ from .const import (
     SCAN_INTERVAL,
 )
 
-PLATFORMS: list[str] = [Platform.SENSOR]
+PLATFORMS: list[str] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 API_VERSION: str = "api_version"
 DEVICE_TYPE: str = "device_type"
@@ -114,6 +114,8 @@ def _parse_data(device: Device, device_raw: dict[str, Any]) -> dict[str, Any]:
     data: dict[str, Any] = {
         "I": {},
         "O": {},
+        "IB": {},
+        "OB": {},
         API_VERSION: device.apiVersion,
         DEVICE_TYPE: device.getDeviceType(),
     }
@@ -147,7 +149,15 @@ def _parse_data(device: Device, device_raw: dict[str, Any]) -> dict[str, Any]:
 
             value, unit = format_input(channel_input)
 
-            data["I"][ch_id] = {
+            platform = "I"
+
+            if (
+                channel_input.getUnit() == "On/Off"
+                or channel_input.getUnit() == "No/Yes"
+            ):
+                platform = "IB"
+
+            data[platform][ch_id] = {
                 "channel": channel_input,
                 "value": value,
                 "mode": "Input",
@@ -172,7 +182,15 @@ def _parse_data(device: Device, device_raw: dict[str, Any]) -> dict[str, Any]:
 
             value, unit = format_input(channel_output)
 
-            data["O"][ch_id] = {
+            platform = "O"
+
+            if (
+                channel_output.getUnit() == "On/Off"
+                or channel_output.getUnit() == "No/Yes"
+            ):
+                platform = "OB"
+
+            data[platform][ch_id] = {
                 "channel": channel_output,
                 "value": value,
                 "mode": "Output",
@@ -199,8 +217,8 @@ def format_input(channel: Channel) -> tuple[str, str]:
     if unit == "No/Yes":
         unit = ""
         if bool(value):
-            value = "Yes"
+            value = "yes"
         else:
-            value = "No"
+            value = "no"
 
     return (value, unit)
