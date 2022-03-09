@@ -101,7 +101,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.data.get(CONF_STATION_ID)}"
-        self._attr_name = f"{coordinator.data.get('station_name')}"
+        self._attr_name = f"ZAMG {coordinator.data.get('station_name')}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.data.get(CONF_STATION_ID))},
@@ -109,16 +109,6 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
             configuration_url=MANUFACTURER_URL,
             name=coordinator.name,
         )
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._attr_device_info
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"ZAMG {self.coordinator.data.get('station_name')}"
 
     @property
     def condition(self):

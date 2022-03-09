@@ -283,7 +283,6 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        # self.coordinator = coordinator
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = (
             f"{coordinator.data.get(CONF_STATION_ID)}_{description.key}"
@@ -295,11 +294,6 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             configuration_url=MANUFACTURER_URL,
             name=coordinator.name,
         )
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._attr_device_info
 
     @property
     def native_value(self):

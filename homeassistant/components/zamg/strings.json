@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Set up your ZAMG to integrate with Home Assistant.",
+        "description": "Set up ZAMG to integrate with Home Assistant.",
         "data": {
           "station_id": "Station ID (Defaults to nearest station)"
         }

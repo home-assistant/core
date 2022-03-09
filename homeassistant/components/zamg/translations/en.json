@@ -12,9 +12,9 @@
         "step": {
             "user": {
                 "data": {
-                    "station_id": "Host"
+                    "station_id": "Station ID (Defaults to nearest station)"
                 },
-                "description": "Set up your ZAMG to integrate with Home Assistant."
+                "description": "Set up ZAMG to integrate with Home Assistant."
             }
         }
     }
