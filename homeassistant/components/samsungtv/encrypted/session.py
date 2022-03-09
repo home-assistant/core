@@ -7,18 +7,20 @@ from Crypto.Cipher import AES
 
 from .command import SamsungTVEncryptedCommand
 
+
 # Padding for the input string --not related to encryption itself.
-_BLOCK_SIZE = 16  # Bytes
+class _Padding:
+    _BLOCK_SIZE = 16  # Bytes
 
+    @staticmethod
+    def pad(text: str) -> str:
+        return text + (_Padding._BLOCK_SIZE - len(text) % _Padding._BLOCK_SIZE) * chr(
+            _Padding._BLOCK_SIZE - len(text) % _Padding._BLOCK_SIZE
+        )
 
-def _pad(text: str) -> str:
-    return text + (_BLOCK_SIZE - len(text) % _BLOCK_SIZE) * chr(
-        _BLOCK_SIZE - len(text) % _BLOCK_SIZE
-    )
-
-
-def _unpad(text: bytes) -> str:
-    return text[: -ord(text[len(text) - 1 :])].decode()
+    @staticmethod
+    def unpad(text: bytes) -> str:
+        return text[: -ord(text[len(text) - 1 :])].decode()
 
 
 class SamsungTVEncryptedSession:
@@ -28,11 +30,11 @@ class SamsungTVEncryptedSession:
 
     def _decrypt(self, enc: bytes) -> str:
         cipher = AES.new(self._token, AES.MODE_ECB)
-        return _unpad(cipher.decrypt(binascii.unhexlify(enc)))
+        return _Padding.unpad(cipher.decrypt(binascii.unhexlify(enc)))
 
     def _encrypt(self, raw: str) -> bytes:
         cipher = AES.new(self._token, AES.MODE_ECB)
-        return cipher.encrypt(bytes(_pad(raw), encoding="utf8"))
+        return cipher.encrypt(bytes(_Padding.pad(raw), encoding="utf8"))
 
     def encrypt_command(self, command: SamsungTVEncryptedCommand) -> str:
         command_bytes = self._encrypt(command.get_payload())

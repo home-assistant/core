@@ -1,17 +1,173 @@
 """SamsungTV Encrypted."""
 # flake8: noqa
-# pylint: disable=[missing-class-docstring,missing-function-docstring]
+# mypy: ignore-errors
+# pylint: disable=[invalid-name,missing-class-docstring,missing-function-docstring]
+
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
+import struct
 from typing import Any
 
+from Crypto.Cipher import AES
 import aiohttp
-
-from . import crypto
+from py3rijndael.rijndael import Rijndael
 
 LOGGER = logging.getLogger(__name__)
+
+
+BLOCK_SIZE = 16
+SHA_DIGEST_LENGTH = 20
+
+_PUBLIC_KEY = "2cb12bb2cbf7cec713c0fff7b59ae68a96784ae517f41d259a45d20556177c0ffe951ca60ec03a990c9412619d1bee30adc7773088c5721664cffcedacf6d251cb4b76e2fd7aef09b3ae9f9496ac8d94ed2b262eee37291c8b237e880cc7c021fb1be0881f3d0bffa4234d3b8e6a61530c00473ce169c025f47fcc001d9b8051"
+_PRIVATE_KEY = "2fd6334713816fae018cdee4656c5033a8d6b00e8eaea07b3624999242e96247112dcd019c4191f4643c3ce1605002b2e506e7f1d1ef8d9b8044e46d37c0d5263216a87cd783aa185490436c4a0cb2c524e15bc1bfeae703bcbc4b74a0540202e8d79cadaae85c6f9c218bc1107d1f5b4b9bd87160e782f4e436eeb17485ab4d"
+_WB_KEY = "abbb120c09e7114243d1fa0102163b27"
+_TRANS_KEY = "6c9474469ddf7578f3e5ad8a4c703d99"
+_PRIME = "b361eb0ab01c3439f2c16ffda7b05e3e320701ebee3e249123c3586765fd5bf6c1dfa88bb6bb5da3fde74737cd88b6a26c5ca31d81d18e3515533d08df619317063224cf0943a2f29a5fe60c1c31ddf28334ed76a6478a1122fb24c4a94c8711617ddfe90cf02e643cd82d4748d6d4a7ca2f47d88563aa2baf6482e124acd7dd"
+
+
+def _encrypt_parameter_data_with_aes(data):
+    iv = b"\x00" * BLOCK_SIZE
+    output = b""
+    for num in range(0, 128, 16):
+        cipher = AES.new(bytes.fromhex(_WB_KEY), AES.MODE_CBC, iv)
+        output += cipher.encrypt(data[num : num + 16])
+    return output
+
+
+def _decrypt_parameter_data_with_aes(data):
+    iv = b"\x00" * BLOCK_SIZE
+    output = b""
+    for num in range(0, 128, 16):
+        cipher = AES.new(bytes.fromhex(_WB_KEY), AES.MODE_CBC, iv)
+        output += cipher.decrypt(data[num : num + 16])
+    return output
+
+
+def _apply_samy_go_key_transform(data):
+    r = Rijndael(bytes.fromhex(_TRANS_KEY))
+    return r.encrypt(data)
+
+
+def _generate_server_hello(userId, pin):
+    sha1 = hashlib.sha1()
+    sha1.update(pin.encode("utf-8"))
+    pinHash = sha1.digest()
+    aes_key = pinHash[:16]
+    print("AES key: " + aes_key.hex())
+    iv = b"\x00" * BLOCK_SIZE
+    cipher = AES.new(aes_key, AES.MODE_CBC, iv)
+    encrypted = cipher.encrypt(bytes.fromhex(_PUBLIC_KEY))
+    print("AES encrypted: " + encrypted.hex())
+    swapped = _encrypt_parameter_data_with_aes(encrypted)
+    print("AES swapped: " + swapped.hex())
+    data = struct.pack(">I", len(userId)) + userId.encode("utf-8") + swapped
+    print("data buffer: " + data.hex().upper())
+    sha1 = hashlib.sha1()
+    sha1.update(data)
+    dataHash = sha1.digest()
+    print("hash: " + dataHash.hex())
+    serverHello = (
+        b"\x01\x02"
+        + b"\x00" * 5
+        + struct.pack(">I", len(userId) + 132)
+        + data
+        + b"\x00" * 5
+    )
+    return {"serverHello": serverHello, "hash": dataHash, "AES_key": aes_key}
+
+
+def _parse_client_hello(clientHello, dataHash, aesKey, gUserId):
+    USER_ID_POS = 15
+    USER_ID_LEN_POS = 11
+    GX_SIZE = 0x80
+    data = bytes.fromhex(clientHello)
+    # firstLen = struct.unpack(">I", data[7:11])[0]
+    userIdLen = struct.unpack(">I", data[11:15])[0]
+    # destLen = userIdLen + 132 + SHA_DIGEST_LENGTH  # Always equals firstLen????:)
+    thirdLen = userIdLen + 132
+    print("thirdLen: " + str(thirdLen))
+    print("hello: " + data.hex())
+    dest = data[USER_ID_LEN_POS : thirdLen + USER_ID_LEN_POS] + dataHash
+    print("dest: " + dest.hex())
+    userId = data[USER_ID_POS : userIdLen + USER_ID_POS]
+    print("userId: " + userId.decode("utf-8"))
+    pEncWBGx = data[USER_ID_POS + userIdLen : GX_SIZE + USER_ID_POS + userIdLen]
+    print("pEncWBGx: " + pEncWBGx.hex())
+    pEncGx = _decrypt_parameter_data_with_aes(pEncWBGx)
+    print("pEncGx: " + pEncGx.hex())
+    iv = b"\x00" * BLOCK_SIZE
+    cipher = AES.new(aesKey, AES.MODE_CBC, iv)
+    pGx = cipher.decrypt(pEncGx)
+    print("pGx: " + pGx.hex())
+    bnPGx = int(pGx.hex(), 16)
+    bnPrime = int(_PRIME, 16)
+    bnPrivateKey = int(_PRIVATE_KEY, 16)
+    secret = bytes.fromhex(
+        hex(pow(bnPGx, bnPrivateKey, bnPrime)).rstrip("L").lstrip("0x")
+    )
+    print("secret: " + secret.hex())
+    dataHash2 = data[
+        USER_ID_POS
+        + userIdLen
+        + GX_SIZE : USER_ID_POS
+        + userIdLen
+        + GX_SIZE
+        + SHA_DIGEST_LENGTH
+    ]
+    print("hash2: " + dataHash2.hex())
+    secret2 = userId + secret
+    print("secret2: " + secret2.hex())
+    sha1 = hashlib.sha1()
+    sha1.update(secret2)
+    dataHash3 = sha1.digest()
+    print("hash3: " + dataHash3.hex())
+    if dataHash2 != dataHash3:
+        print("Pin error!!!")
+        return False
+    print("Pin OK :)\n")
+    flagPos = userIdLen + USER_ID_POS + GX_SIZE + SHA_DIGEST_LENGTH
+    if ord(data[flagPos : flagPos + 1]):
+        print("First flag error!!!")
+        return False
+    flagPos = userIdLen + USER_ID_POS + GX_SIZE + SHA_DIGEST_LENGTH
+    if struct.unpack(">I", data[flagPos + 1 : flagPos + 5])[0]:
+        print("Second flag error!!!")
+        return False
+    sha1 = hashlib.sha1()
+    sha1.update(dest)
+    dest_hash = sha1.digest()
+    print("dest_hash: " + dest_hash.hex())
+    finalBuffer = (
+        userId + gUserId.encode("utf-8") + pGx + bytes.fromhex(_PUBLIC_KEY) + secret
+    )
+    sha1 = hashlib.sha1()
+    sha1.update(finalBuffer)
+    SKPrime = sha1.digest()
+    print("SKPrime: " + SKPrime.hex())
+    sha1 = hashlib.sha1()
+    sha1.update(SKPrime + b"\x00")
+    SKPrimeHash = sha1.digest()
+    print("SKPrimeHash: " + SKPrimeHash.hex())
+    ctx = _apply_samy_go_key_transform(SKPrimeHash[:16])
+    return {"ctx": ctx, "SKPrime": SKPrime}
+
+
+def _generate_server_acknowledge(SKPrime):
+    sha1 = hashlib.sha1()
+    sha1.update(SKPrime + b"\x01")
+    SKPrimeHash = sha1.digest()
+    return "0103000000000000000014" + SKPrimeHash.hex().upper() + "0000000000"
+
+
+def _parse_client_acknowledge(clientAck, SKPrime):
+    sha1 = hashlib.sha1()
+    sha1.update(SKPrime + b"\x02")
+    SKPrimeHash = sha1.digest()
+    tmpClientAck = "0104000000000000000014" + SKPrimeHash.hex().upper() + "0000000000"
+    return clientAck == tmpClientAck
 
 
 class SamsungTVEncryptedWSAsyncAuthenticator:
@@ -75,7 +231,7 @@ class SamsungTVEncryptedWSAsyncAuthenticator:
             LOGGER.debug("Rx: %s", await response.text())
 
     async def _second_step_of_pairing(self, pin: str) -> dict[str, Any] | None:
-        hello_output = crypto.generateServerHello(
+        hello_output = _generate_server_hello(
             self._USER_ID, pin
         )  # type: ignore[no-untyped-call]
         if not hello_output:
@@ -100,7 +256,7 @@ class SamsungTVEncryptedWSAsyncAuthenticator:
         # request_id = output.group(1)
         client_hello = output.group(2)
         # lastRequestId = int(requestId)
-        return crypto.parseClientHello(  # type: ignore[no-untyped-call,no-any-return]
+        return _parse_client_hello(  # type: ignore[no-untyped-call,no-any-return]
             client_hello, hello_output["hash"], hello_output["AES_key"], self._USER_ID
         )
 
@@ -111,7 +267,7 @@ class SamsungTVEncryptedWSAsyncAuthenticator:
         if result:
             LOGGER.info("Pin accepted :)")
             token = result["ctx"].hex()
-            self._sk_prime = result["SKPrime"]
+            self._sk_prime = result["sk_prime"]
             LOGGER.info("Token (ctx): %s", token)
             return token  # type: ignore[no-any-return]
 
@@ -119,7 +275,7 @@ class SamsungTVEncryptedWSAsyncAuthenticator:
         return None
 
     async def _acknowledge_exchange(self) -> str:
-        server_ack_message = crypto.generateServerAcknowledge(self._sk_prime)  # type: ignore[no-untyped-call]
+        server_ack_message = _generate_server_acknowledge(self._sk_prime)  # type: ignore[no-untyped-call]
         content = (
             '{"auth_Data":{"auth_type":"SPC","request_id":"0","ServerAckMsg":"'
             + server_ack_message
@@ -140,7 +296,7 @@ class SamsungTVEncryptedWSAsyncAuthenticator:
         if output is None:
             raise Exception("Unable to get session_id and/or ClientAckMsg!!!")
         client_ack = output.group(1)
-        if not crypto.parseClientAcknowledge(client_ack, self._sk_prime):  # type: ignore[no-untyped-call]
+        if not _parse_client_acknowledge(client_ack, self._sk_prime):  # type: ignore[no-untyped-call]
             raise Exception("Parse client ac message failed.")
 
         session_id = output.group(2)
@@ -159,20 +315,3 @@ class SamsungTVEncryptedWSAsyncAuthenticator:
         await self._close_pin_page_on_tv()
         LOGGER.info("Authorization successful :)\n")
         return session_id
-
-
-async def get_token(
-    host: str, web_session: aiohttp.ClientSession, port: int = 8000
-) -> tuple[str, str] | None:
-    authenticator = SamsungTVEncryptedWSAsyncAuthenticator(
-        host, web_session=web_session, port=port
-    )
-    await authenticator.start_pairing()
-    token: str | None = None
-    while not token:
-        pin = input("Please enter pin from tv: ")
-        token = await authenticator.try_pin(pin)
-
-    session_id = await authenticator.get_session_id_and_close()
-
-    return (token, session_id)
