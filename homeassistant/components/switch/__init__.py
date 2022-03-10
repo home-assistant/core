@@ -27,9 +27,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .const import DOMAIN
-from .light import LightSwitch
-
-__all__ = ["LightSwitch"]
 
 SCAN_INTERVAL = timedelta(seconds=30)
 

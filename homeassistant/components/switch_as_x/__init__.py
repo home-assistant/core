@@ -10,6 +10,10 @@ from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .light import LightSwitch
+
+__all__ = ["LightSwitch"]
+
 DOMAIN = "switch_as_x"
 
 _LOGGER = logging.getLogger(__name__)
