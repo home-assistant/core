@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "Gruppemedlemmer",
+                    "name": "Gruppenavn"
+                },
+                "description": "Velg gruppealternativer"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Gruppemedlemmer"
+                },
+                "description": "Velg gruppealternativer"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Gruppemedlemmer",
+                    "name": "Gruppenavn"
+                },
+                "description": "Velg gruppealternativer"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Gruppemedlemmer"
+                },
+                "description": "Velg gruppealternativer"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Gruppetype"
+                },
+                "description": "Velg gruppetype"
+            },
+            "light": {
+                "data": {
+                    "entities": "Gruppemedlemmer",
+                    "name": "Gruppenavn"
+                },
+                "description": "Velg gruppealternativer"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Gruppemedlemmer"
+                },
+                "description": "Velg gruppealternativer"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Gruppemedlemmer",
+                    "name": "Gruppenavn"
+                },
+                "description": "Velg gruppealternativer"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Gruppemedlemmer"
+                },
+                "description": "Velg gruppealternativer"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Lukket",

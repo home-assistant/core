@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dienst is al geconfigureerd"
+            "already_configured": "Tjenesten er allerede konfigurert"
         },
         "step": {
             "user": {
                 "data": {
-                    "type": "Type sessie definitie"
+                    "type": "Type sesongdefinisjon"
                 }
             }
         }
