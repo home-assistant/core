@@ -1237,7 +1237,8 @@ class Script:
             and (script_stack := script_stack_cv.get()) is not None
             and id(self) in script_stack
         ):
-            script_execution_set("failed_recursion")
+            script_execution_set("disallowed_recursion_detected")
+            _LOGGER.warning("Disallowed recursion detected")
             return
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
