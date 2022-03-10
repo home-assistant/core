@@ -1230,7 +1230,7 @@ class Script:
             variables = cast(dict, run_variables)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
-        # stop (restart) or wait (queued) for our own script run.
+        # stop (restart) or wait for (queued) our own script run.
         script_stack = script_stack_cv.get()
         if (
             self.script_mode in (SCRIPT_MODE_RESTART, SCRIPT_MODE_QUEUED)
