@@ -133,8 +133,8 @@ class DeconzFan(DeconzDevice, FanEntity):
         """Turn on fan."""
         if percentage is not None:
             await self.async_set_percentage(percentage)
-        else:
-            await self._device.set_speed(self._default_on_speed)
+            return
+        await self._device.set_speed(self._default_on_speed)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off fan."""

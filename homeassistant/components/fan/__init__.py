@@ -63,14 +63,6 @@ ATTR_PRESET_MODE = "preset_mode"
 ATTR_PRESET_MODES = "preset_modes"
 
 
-class NoValidSpeedsError(ValueError):
-    """Exception class when there are no valid speeds."""
-
-
-class NotValidSpeedError(ValueError):
-    """Exception class when the speed in not in the speed list."""
-
-
 class NotValidPresetModeError(ValueError):
     """Exception class when the preset_mode in not in the preset_modes list."""
 

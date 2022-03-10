@@ -53,13 +53,13 @@ async def test_form(hass):
 async def test_form_duplicated_id(hass):
     """Test setting up duplicated entry."""
 
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
+    entry.add_to_hass(hass)
+
     with patch(
         "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ):
-        entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
-        entry.add_to_hass(hass)
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )

@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "\u30b0\u30eb\u30fc\u30d7\u306e\u30e1\u30f3\u30d0\u30fc",
+                    "name": "\u30b0\u30eb\u30fc\u30d7\u540d"
+                },
+                "description": "\u30b0\u30eb\u30fc\u30d7\u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u9078\u629e"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "\u30b0\u30eb\u30fc\u30d7\u306e\u30e1\u30f3\u30d0\u30fc"
+                },
+                "description": "\u30b0\u30eb\u30fc\u30d7\u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u9078\u629e"
+            },
+            "fan": {
+                "data": {
+                    "entities": "\u30b0\u30eb\u30fc\u30d7\u306e\u30e1\u30f3\u30d0\u30fc",
+                    "name": "\u30b0\u30eb\u30fc\u30d7\u540d"
+                },
+                "description": "\u30b0\u30eb\u30fc\u30d7\u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u9078\u629e"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "\u30b0\u30eb\u30fc\u30d7\u306e\u30e1\u30f3\u30d0\u30fc"
+                },
+                "description": "\u30b0\u30eb\u30fc\u30d7\u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u9078\u629e"
+            },
+            "init": {
+                "data": {
+                    "group_type": "\u30b0\u30eb\u30fc\u30d7\u30bf\u30a4\u30d7"
+                },
+                "description": "\u30b0\u30eb\u30fc\u30d7\u306e\u7a2e\u985e\u3092\u9078\u629e"
+            },
+            "light": {
+                "data": {
+                    "entities": "\u30b0\u30eb\u30fc\u30d7\u306e\u30e1\u30f3\u30d0\u30fc",
+                    "name": "\u30b0\u30eb\u30fc\u30d7\u540d"
+                },
+                "description": "\u30b0\u30eb\u30fc\u30d7\u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u9078\u629e"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "\u30b0\u30eb\u30fc\u30d7\u306e\u30e1\u30f3\u30d0\u30fc"
+                },
+                "description": "\u30b0\u30eb\u30fc\u30d7\u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u9078\u629e"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "\u30b0\u30eb\u30fc\u30d7\u306e\u30e1\u30f3\u30d0\u30fc",
+                    "name": "\u30b0\u30eb\u30fc\u30d7\u540d"
+                },
+                "description": "\u30b0\u30eb\u30fc\u30d7\u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u9078\u629e"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "\u30b0\u30eb\u30fc\u30d7\u306e\u30e1\u30f3\u30d0\u30fc"
+                },
+                "description": "\u30b0\u30eb\u30fc\u30d7\u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u9078\u629e"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "\u9589\u9396",

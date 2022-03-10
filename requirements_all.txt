@@ -2028,7 +2028,7 @@ quantum-gateway==0.0.6
 rachiopy==1.0.3
 
 # homeassistant.components.radio_browser
-radios==0.1.0
+radios==0.1.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -2378,7 +2378,7 @@ vilfo-api-client==0.3.2
 volkszaehler==0.2.1
 
 # homeassistant.components.volvooncall
-volvooncall==0.9.1
+volvooncall==0.10.0
 
 # homeassistant.components.verisure
 vsure==1.7.3
@@ -2504,4 +2504,4 @@ zm-py==0.5.2
 zwave-js-server-python==0.35.2
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.2.1
+zwave_me_ws==0.2.2

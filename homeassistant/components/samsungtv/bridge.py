@@ -57,7 +57,7 @@ def mac_from_device_info(info: dict[str, Any]) -> str | None:
 
 async def async_get_device_info(
     hass: HomeAssistant,
-    bridge: SamsungTVWSBridge | SamsungTVLegacyBridge | None,
+    bridge: SamsungTVBridge | None,
     host: str,
 ) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
@@ -87,7 +87,7 @@ class SamsungTVBridge(ABC):
         host: str,
         port: int | None = None,
         token: str | None = None,
-    ) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
+    ) -> SamsungTVBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
             return SamsungTVLegacyBridge(hass, method, host, port)
@@ -114,7 +114,7 @@ class SamsungTVBridge(ABC):
         self._new_token_callback = func
 
     @abstractmethod
-    async def async_try_connect(self) -> str | None:
+    async def async_try_connect(self) -> str:
         """Try to connect to the TV."""
 
     @abstractmethod
