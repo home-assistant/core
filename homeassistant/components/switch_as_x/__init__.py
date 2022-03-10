@@ -7,8 +7,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
 from .light import LightSwitch
@@ -20,9 +20,67 @@ DOMAIN = "switch_as_x"
 _LOGGER = logging.getLogger(__name__)
 
 
+@callback
+def async_add_to_device(
+    hass: HomeAssistant, entry: ConfigEntry, entity_id: str
+) -> str | None:
+    """Add our config entry to the tracked entity's device."""
+    registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    device_id = None
+
+    wrapped_switch = registry.async_get(entity_id)
+    if (
+        not (wrapped_switch := registry.async_get(entity_id))
+        or not (device_id := wrapped_switch.device_id)
+        or not (device_entry := device_registry.async_get(device_id))
+    ):
+        return device_id
+
+    device_registry.async_update_device(device_id, add_config_entry_id=entry.entry_id)
+
+    if (
+        not wrapped_switch.config_entry_id
+        or wrapped_switch.config_entry_id not in device_entry.config_entries
+    ):
+        return device_id
+
+    @callback
+    def async_device_updated(event):
+        """Handle the update of a device.
+
+        Will remove our config entry from the switch's device if the switch's config
+        entry is removed from it.
+        """
+        if (
+            event.data["device_id"] != device_id
+            or event.data["action"] != "update"
+            or "config_entries" not in event.data["changes"]
+        ):
+            return
+
+        if not (device_entry := device_registry.async_get(device_id)):
+            # The device is already removed, no need to do any cleanup
+            return False
+        if wrapped_switch.config_entry_id in device_entry.config_entries:
+            # Not removed from device
+            return False
+
+        device_registry.async_update_device(
+            device_id, remove_config_entry_id=entry.entry_id
+        )
+
+    entry.async_on_unload(
+        hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, async_device_updated)
+    )
+
+    return device_id
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
     try:
         entity_id = er.async_validate_entity_id(registry, entry.options[CONF_ENTITY_ID])
     except vol.Invalid:
@@ -39,17 +97,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if data["action"] == "remove":
             await hass.config_entries.async_remove(entry.entry_id)
 
-        if data["action"] != "update" or "entity_id" not in data["changes"]:
+        if data["action"] != "update":
             return
 
-        # Entity_id changed, reload the config entry
-        await hass.config_entries.async_reload(entry.entry_id)
+        if "entity_id" in data["changes"]:
+            # Entity_id changed, reload the config entry
+            await hass.config_entries.async_reload(entry.entry_id)
+
+        if device_id and "device_id" in data["changes"]:
+            # If the tracked switch is no longer in the device, remove our config entry
+            # from the device
+            if (
+                not (entity_entry := registry.async_get(data["entity_id"]))
+                or not device_registry.async_get(device_id)
+                or entity_entry.device_id == device_id
+            ):
+                # No need to do any cleanup
+                return
+
+            device_registry.async_update_device(
+                device_id, remove_config_entry_id=entry.entry_id
+            )
 
     entry.async_on_unload(
         async_track_entity_registry_updated_event(
             hass, entity_id, async_registry_updated
         )
     )
+
+    device_id = async_add_to_device(hass, entry, entity_id)
 
     hass.config_entries.async_setup_platforms(entry, (entry.options["target_domain"],))
     return True
