@@ -1,7 +1,7 @@
 """The HERE Travel Time integration."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import logging
 
 import async_timeout
