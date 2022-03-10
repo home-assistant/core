@@ -2,7 +2,6 @@
   "domain": "switch_as_x",
   "name": "Switch as X",
   "documentation": "https://www.home-assistant.io/integrations/switch_as_x",
-  "after_dependencies": ["switch"],
   "codeowners": [
     "@home-assistant/core"
   ],
