@@ -292,7 +292,7 @@ class Timer(RestoreEntity):
             self.async_finish()
 
     @callback
-    def async_start(self, duration: timedelta | None=None):
+    def async_start(self, duration: timedelta | None = None):
         """Start a timer."""
         if self._listener:
             self._listener()
