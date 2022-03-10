@@ -68,7 +68,7 @@ def async_register_commands(
     async_reg(hass, handle_test_condition)
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
-    async_reg(hass, handle_subscribe_entites)
+    async_reg(hass, handle_subscribe_entities)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -273,7 +273,7 @@ def handle_get_states(
         vol.Required("type"): "subscribe_entities",
     }
 )
-def handle_subscribe_entites(
+def handle_subscribe_entities(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe entities command."""
