@@ -1,18 +1,34 @@
 """Rabbit Air Update Coordinator."""
+import asyncio
+from datetime import timedelta
+import logging
 from typing import cast
 
-from rabbitair import State
+from rabbitair import Client, State
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RabbitAirDebouncer(Debouncer):
     """Class to rate limit calls to a specific command."""
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+    ) -> None:
+        """Initialize debounce."""
+        # We don't want an immediate refresh since the device needs some time
+        # to apply the changes and reflect the updated state. Two seconds
+        # should be sufficient, since the internal cycle of the device runs at
+        # one-second intervals.
+        super().__init__(hass, _LOGGER, cooldown=2.0, immediate=False)
+
     async def async_call(self) -> None:
         """Call the function."""
-
         # Restart the timer.
         self.async_cancel()
         await super().async_call()
@@ -24,6 +40,25 @@ class RabbitAirDebouncer(Debouncer):
 
 class RabbitAirDataUpdateCoordinator(DataUpdateCoordinator[State]):
     """Class to manage fetching data from single endpoint."""
+
+    def __init__(self, hass: HomeAssistant, device: Client) -> None:
+        """Initialize global data updater."""
+        self.device = device
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="rabbitair",
+            update_interval=timedelta(seconds=10),
+            request_refresh_debouncer=RabbitAirDebouncer(hass),
+        )
+
+    async def _async_update_data(self) -> State:
+        try:
+            return await self.device.get_state()
+        except asyncio.TimeoutError:
+            raise
+        except Exception as err:
+            raise UpdateFailed from err
 
     async def _async_refresh(
         self,

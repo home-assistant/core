@@ -1,32 +1,17 @@
 """The Rabbit Air integration."""
 from __future__ import annotations
 
-import asyncio
-from datetime import timedelta
-import logging
-from typing import NamedTuple
-
-from rabbitair import Client, State, UdpClient
+from rabbitair import Client, UdpClient
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .coordinator import RabbitAirDataUpdateCoordinator, RabbitAirDebouncer
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import RabbitAirDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.FAN]
-
-
-class HomeAssistantRabbitAirData(NamedTuple):
-    """Rabbit Air data stored in the Home Assistant data object."""
-
-    coordinator: DataUpdateCoordinator[State]
-    device: Client
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -40,35 +25,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
     device: Client = UdpClient(host, token, zeroconf=zeroconf_instance)
 
-    async def async_update_data() -> State:
-        try:
-            return await device.get_state()
-        except asyncio.TimeoutError:
-            raise
-        except Exception as err:
-            raise UpdateFailed from err
-
-    coordinator = RabbitAirDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="rabbitair",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=10),
-        # We don't want an immediate refresh since the device needs some time
-        # to apply the changes and reflect the updated state. Two seconds
-        # should be sufficient, since the internal cycle of the device runs at
-        # one-second intervals.
-        request_refresh_debouncer=RabbitAirDebouncer(
-            hass, _LOGGER, cooldown=2.0, immediate=False
-        ),
-    )
+    coordinator = RabbitAirDataUpdateCoordinator(hass, device)
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = HomeAssistantRabbitAirData(
-        coordinator=coordinator,
-        device=device,
-    )
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

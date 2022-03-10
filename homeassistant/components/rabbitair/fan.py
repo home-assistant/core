@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from rabbitair import Client, Mode, Model, Speed, State
+from rabbitair import Mode, Model, Speed
 
 from homeassistant.components.fan import (
     SUPPORT_PRESET_MODE,
@@ -13,14 +13,13 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
 
-from . import HomeAssistantRabbitAirData
 from .const import DOMAIN
+from .coordinator import RabbitAirDataUpdateCoordinator
 from .entity import RabbitAirBaseEntity
 
 SPEED_LIST = [
@@ -46,10 +45,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a config entry."""
-    hass_data: HomeAssistantRabbitAirData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [RabbitAirFanEntity(hass_data.coordinator, hass_data.device, entry)]
-    )
+    coordinator: RabbitAirDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([RabbitAirFanEntity(coordinator, entry)])
 
 
 class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
@@ -59,12 +56,11 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[State],
-        client: Client,
+        coordinator: RabbitAirDataUpdateCoordinator,
         entry: ConfigEntry,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, client, entry)
+        super().__init__(coordinator, entry)
 
         if self._is_model(Model.MinusA2):
             self._attr_preset_modes = list(PRESET_MODES)
