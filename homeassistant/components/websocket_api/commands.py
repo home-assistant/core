@@ -306,8 +306,8 @@ def handle_subscribe_entites(
     data: dict[str, dict[str, dict]] = {"add": {}}
     add_entities = data["add"]
     for state in states:
-        state_dict = state.as_dict()
-        add_entities[state_dict.pop("entity_id")] = state_dict
+        state_dict = dict(state.as_dict())
+        add_entities[state_dict.pop("entity_id")] = state_dict  # type: ignore
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
@@ -325,17 +325,12 @@ def handle_subscribe_entites(
         )
     del response
 
-    data = {"add": {}}
-    add_entities = data["add"]
-
     for state in states:
-        state_dict = state.as_dict()
         try:
-            const.JSON_DUMP(state_dict)
+            const.JSON_DUMP(state.as_dict())
         except (ValueError, TypeError):
-            pass
-        else:
-            add_entities[state_dict.pop("entity_id")] = state_dict
+            del add_entities[state.entity_id]
+
     connection.send_message(const.JSON_DUMP(messages.result_message(msg["id"], data)))
 
 
