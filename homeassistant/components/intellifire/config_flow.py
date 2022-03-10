@@ -52,13 +52,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         local_schema = vol.Schema({vol.Required(CONF_HOST): str})
 
         if user_input is None:
-            if len(self._discovered_hosts) > 1:
-                return await self.async_step_pick_device()
-            if len(self._discovered_hosts) == 1:
-                user_input = {CONF_HOST: self._discovered_hosts[0]}
-                local_schema = vol.Schema(
-                    {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
-                )
+
+            current_hosts = [
+                entry.data[CONF_HOST]
+                for entry in self._async_current_entries(include_ignore=False)
+            ]
+
+            if self._discovered_hosts != []:
+                # Filter out already configured hosts
+                self._discovered_hosts = [
+                    x for x in self._discovered_hosts if x not in current_hosts
+                ]
+
+                if len(self._discovered_hosts) > 1:
+                    return await self.async_step_pick_device()
+                if len(self._discovered_hosts) == 1:
+                    user_input = {CONF_HOST: self._discovered_hosts[0]}
+                    local_schema = vol.Schema(
+                        {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
+                    )
+                if len(self._discovered_hosts) == 0:
+                    errors["base"] = "already_discovered"
+                    LOGGER.debug("All discovered fireplaces have been configured")
 
         if user_input is not None:
             placeholder = {CONF_HOST: user_input[CONF_HOST]}
@@ -101,19 +116,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_local_config(user_input=user_input)
 
-        current_hosts = [
-            entry.data[CONF_HOST]
-            for entry in self._async_current_entries(include_ignore=False)
-        ]
-
-        # Filter out already configured hosts
-        self._discovered_hosts = [
-            x for x in self._discovered_hosts if x not in current_hosts
-        ]
-
-        if self._discovered_hosts == []:
-            return await self.async_step_local_config(user_input=user_input)
-
         return self.async_show_form(
             step_id="pick_device",
             data_schema=vol.Schema(
@@ -126,7 +128,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Start the user flow."""
 
-        # if self._discovered_hosts == []:
-        #     await self._find_fireplaces()
-        self._discovered_hosts = ["192.168.1.65"]
+        if self._discovered_hosts == []:
+            await self._find_fireplaces()
         return await self.async_step_local_config()
