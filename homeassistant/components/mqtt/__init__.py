@@ -13,7 +13,7 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import Any, Union, cast
+from typing import TYPE_CHECKING, Any, Union, cast
 import uuid
 
 import attr
@@ -754,9 +754,10 @@ class Subscription:
 class MqttClientSetup:
     """Helper class to setup the paho mqtt client from config."""
 
-    # We don't import on the top because some integrations
-    # should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+    if TYPE_CHECKING:
+        # Only import for type checking here, imports are done locally
+        # because integrations should be able to optionally rely on MQTT.
+        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the MQTT client setup helper."""
