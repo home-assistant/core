@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A min/max sensor with this configuration already exists."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Entity IDs",
+                    "name": "Name",
+                    "round_digits": "# Digits to Round to",
+                    "type": "Measurement Type"
+                }
+            }
+        }
+    }
+}

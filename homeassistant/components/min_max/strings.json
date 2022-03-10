@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "type": "Measurement Type",
+          "entity_ids": "Entity IDs",
+          "round_digits": "# Digits to Round to"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "A min/max sensor with this configuration already exists."
+    }
+  }
+}

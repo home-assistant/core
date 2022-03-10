@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -17,47 +18,19 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, PLATFORMS
+from .const import (
+    ATTR_MAX_VALUE,
+    ATTR_TO_PROPERTY,
+    CONF_ENTITY_IDS,
+    CONF_ROUND_DIGITS,
+    DOMAIN,
+    ICON,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_MIN_VALUE = "min_value"
-ATTR_MIN_ENTITY_ID = "min_entity_id"
-ATTR_MAX_VALUE = "max_value"
-ATTR_MAX_ENTITY_ID = "max_entity_id"
-ATTR_COUNT_SENSORS = "count_sensors"
-ATTR_MEAN = "mean"
-ATTR_MEDIAN = "median"
-ATTR_LAST = "last"
-ATTR_LAST_ENTITY_ID = "last_entity_id"
-
-ATTR_TO_PROPERTY = [
-    ATTR_COUNT_SENSORS,
-    ATTR_MAX_VALUE,
-    ATTR_MAX_ENTITY_ID,
-    ATTR_MEAN,
-    ATTR_MEDIAN,
-    ATTR_MIN_VALUE,
-    ATTR_MIN_ENTITY_ID,
-    ATTR_LAST,
-    ATTR_LAST_ENTITY_ID,
-]
-
-CONF_ENTITY_IDS = "entity_ids"
-CONF_ROUND_DIGITS = "round_digits"
-
-ICON = "mdi:calculator"
-
-SENSOR_TYPES = {
-    ATTR_MIN_VALUE: "min",
-    ATTR_MAX_VALUE: "max",
-    ATTR_MEAN: "mean",
-    ATTR_MEDIAN: "median",
-    ATTR_LAST: "last",
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -78,14 +51,25 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the min/max/mean sensor."""
-    entity_ids = config.get(CONF_ENTITY_IDS)
-    name = config.get(CONF_NAME)
-    sensor_type = config.get(CONF_TYPE)
-    round_digits = config.get(CONF_ROUND_DIGITS)
+    _LOGGER.warning(
+        "Your Min/Max configuration has been imported into the UI; "
+        "please remove it from configuration.yaml as support for it "
+        "will be removed in a future release"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    async_add_entities([MinMaxSensor(entity_ids, name, sensor_type, round_digits)])
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the min/max/mean sensor."""
+    async_add_entities([MinMaxSensor(config_entry)])
 
 
 def calc_min(sensor_values):
@@ -148,16 +132,13 @@ def calc_median(sensor_values, round_digits):
 class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
-    def __init__(self, entity_ids, name, sensor_type, round_digits):
+    def __init__(self, config_entry):
         """Initialize the min/max sensor."""
-        self._entity_ids = entity_ids
-        self._sensor_type = sensor_type
-        self._round_digits = round_digits
+        self._config_entry = config_entry
+        self._entity_ids = config_entry.data[CONF_ENTITY_IDS]
+        self._sensor_type = config_entry.data[CONF_TYPE]
+        self._round_digits = config_entry.data[CONF_ROUND_DIGITS]
 
-        if name:
-            self._name = name
-        else:
-            self._name = f"{next(v for k, v in SENSOR_TYPES.items() if self._sensor_type == v)} sensor".capitalize()
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = self.last = self.median = None
@@ -165,20 +146,39 @@ class MinMaxSensor(SensorEntity):
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
+        self._attr_name = config_entry.data[CONF_NAME]
+        self._attr_unique_id = config_entry.unique_id
+        self._attr_should_poll = False
+        self._attr_icon = ICON
+
     async def async_added_to_hass(self):
         """Handle added to Hass."""
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, self._entity_ids, self._async_min_max_sensor_state_listener
+                self.hass,
+                self._entity_ids,
+                lambda evt: self._async_min_max_sensor_state_listener(
+                    evt.data.get("entity_id"), evt.data.get("new_state")
+                ),
             )
         )
 
-        self._calc_values()
+        # populate states if not already populated
+        if not self.states:
+            for entity_id in self._entity_ids:
+                state = self.hass.states.get(entity_id)
+                # We only want to write the state after populating all states
+                self._async_min_max_sensor_state_listener(
+                    entity_id, state, write_state=False
+                )
+            self.async_write_ha_state()
+        else:
+            self._calc_values()
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self._config_entry.title
 
     @property
     def native_value(self):
@@ -197,11 +197,6 @@ class MinMaxSensor(SensorEntity):
         return self._unit_of_measurement
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
@@ -210,24 +205,22 @@ class MinMaxSensor(SensorEntity):
             if getattr(self, attr) is not None
         }
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
     @callback
-    def _async_min_max_sensor_state_listener(self, event):
+    def _async_min_max_sensor_state_listener(self, entity, new_state, write_state=True):
         """Handle the sensor state changes."""
-        new_state = event.data.get("new_state")
-        entity = event.data.get("entity_id")
-
-        if new_state.state is None or new_state.state in [
-            STATE_UNKNOWN,
-            STATE_UNAVAILABLE,
-        ]:
+        if (
+            new_state is None
+            or new_state.state is None
+            or new_state.state
+            in [
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            ]
+        ):
             self.states[entity] = STATE_UNKNOWN
             self._calc_values()
-            self.async_write_ha_state()
+            if write_state:
+                self.async_write_ha_state()
             return
 
         if self._unit_of_measurement is None:
@@ -253,7 +246,8 @@ class MinMaxSensor(SensorEntity):
             )
 
         self._calc_values()
-        self.async_write_ha_state()
+        if write_state:
+            self.async_write_ha_state()
 
     @callback
     def _calc_values(self):

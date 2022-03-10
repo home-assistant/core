@@ -1,21 +1,15 @@
 """The test for the min/max sensor platform."""
 import statistics
-from unittest.mock import patch
 
-from homeassistant import config as hass_config
-from homeassistant.components.min_max import DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
-    SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
 
 VALUES = [17, 20, 15.3]
 COUNT = len(VALUES)
@@ -341,43 +335,3 @@ async def test_last_sensor(hass):
     assert state.attributes.get("max_value") == MAX_VALUE
     assert state.attributes.get("mean") == MEAN
     assert state.attributes.get("median") == MEDIAN
-
-
-async def test_reload(hass):
-    """Verify we can reload filter sensors."""
-    hass.states.async_set("sensor.test_1", 12345)
-    hass.states.async_set("sensor.test_2", 45678)
-
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": {
-                "platform": "min_max",
-                "name": "test",
-                "type": "mean",
-                "entity_ids": ["sensor.test_1", "sensor.test_2"],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 3
-
-    assert hass.states.get("sensor.test")
-
-    yaml_path = get_fixture_path("configuration.yaml", "min_max")
-
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 3
-
-    assert hass.states.get("sensor.test") is None
-    assert hass.states.get("sensor.second_test")
