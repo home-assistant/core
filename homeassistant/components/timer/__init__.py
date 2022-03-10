@@ -62,8 +62,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 CREATE_FIELDS = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
     vol.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
@@ -210,6 +209,9 @@ class Timer(RestoreEntity):
         self._listener: Callable[[], None] | None = None
         self._restore: bool = self._config[CONF_RESTORE]
 
+        self._attr_should_poll = False
+        self._attr_force_update = True
+
     @classmethod
     def from_yaml(cls, config: dict) -> Timer:
         """Return entity instance initialized from yaml storage."""
@@ -217,16 +219,6 @@ class Timer(RestoreEntity):
         timer.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
         timer.editable = False
         return timer
-
-    @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
-
-    @property
-    def force_update(self) -> bool:
-        """Return True to fix restart issues."""
-        return True
 
     @property
     def name(self):
@@ -305,9 +297,6 @@ class Timer(RestoreEntity):
         if self._listener:
             self._listener()
             self._listener = None
-        newduration = None
-        if duration:
-            newduration = duration
 
         event = EVENT_TIMER_STARTED
         if self._state in (STATUS_ACTIVE, STATUS_PAUSED):
@@ -316,17 +305,13 @@ class Timer(RestoreEntity):
         self._state = STATUS_ACTIVE
         start = dt_util.utcnow().replace(microsecond=0)
 
-        if self._remaining and newduration is None:
-            self._end = start + self._remaining
-
-        elif newduration:
-            self._duration = newduration
-            self._remaining = newduration
-            self._end = start + self._duration
-
-        else:
+        # Set remaining to new value if needed
+        if duration:
+            self._remaining = self._duration = duration
+        elif not self._remaining:
             self._remaining = self._duration
-            self._end = start + self._duration
+
+        self._end = start + self._remaining
 
         self.hass.bus.async_fire(event, {ATTR_ENTITY_ID: self.entity_id})
 
