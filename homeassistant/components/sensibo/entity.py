@@ -41,6 +41,11 @@ class SensiboBaseEntity(CoordinatorEntity):
             suggested_area=device["name"],
         )
 
+    @property
+    def device_data(self) -> dict[str, Any]:
+        """Return data for device."""
+        return self.coordinator.data.parsed[self._device_id]
+
     async def async_send_command(
         self, command: str, params: dict[str, Any]
     ) -> dict[str, Any]:

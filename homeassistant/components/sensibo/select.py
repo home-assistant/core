@@ -58,8 +58,7 @@ async def async_setup_entry(
         SensiboSelect(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
         for description in SELECT_TYPES
-        if device_data["hvac_modes"]
-        and "horizontalSwing" in device_data["full_features"]
+        if device_data["hvac_modes"] and description.key in device_data["full_features"]
     )
 
 
@@ -84,28 +83,19 @@ class SensiboSelect(SensiboBaseEntity, SelectEntity):
 
     @property
     def current_option(self) -> str | None:
-        """Return the current selected live override."""
-        return self.coordinator.data.parsed[self._device_id][
-            self.entity_description.remote_key
-        ]
+        """Return the current selected option."""
+        return self.device_data[self.entity_description.remote_key]
 
     @property
     def options(self) -> list[str]:
         """Return possible options."""
-        if self.coordinator.data.parsed[self._device_id][
-            self.entity_description.remote_options
-        ]:
-            return self.coordinator.data.parsed[self._device_id][
-                self.entity_description.remote_options
-            ]
+        if self.device_data[self.entity_description.remote_options]:
+            return self.device_data[self.entity_description.remote_options]
         return []
 
     async def async_select_option(self, option: str) -> None:
-        """Set WLED state to the selected live override state."""
-        if (
-            self.entity_description.key
-            not in self.coordinator.data.parsed[self._device_id]["active_features"]
-        ):
+        """Set state to the selected option."""
+        if self.entity_description.key not in self.device_data["active_features"]:
             raise HomeAssistantError(
                 f"Current mode doesn't support setting {self.entity_description.name}"
             )
@@ -113,15 +103,13 @@ class SensiboSelect(SensiboBaseEntity, SelectEntity):
         params = {
             "name": self.entity_description.key,
             "value": option,
-            "ac_states": self.coordinator.data.parsed[self._device_id]["ac_states"],
+            "ac_states": self.device_data["ac_states"],
             "assumed_state": False,
         }
         result = await self.async_send_command("set_ac_state", params)
 
         if result["result"]["status"] == "Success":
-            self.coordinator.data.parsed[self._device_id][
-                self.entity_description.remote_key
-            ] = option
+            self.device_data[self.entity_description.remote_key] = option
             self.async_write_ha_state()
             return
 
