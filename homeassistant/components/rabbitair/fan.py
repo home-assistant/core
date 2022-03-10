@@ -11,7 +11,7 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -53,6 +53,7 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     """Fan control functions of the Rabbit Air air purifier."""
 
     _attr_supported_features = SUPPORT_PRESET_MODE | SUPPORT_SET_SPEED
+    _power: bool | None = None
 
     def __init__(
         self,
@@ -72,14 +73,51 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
 
         self._attr_speed_count = len(SPEED_LIST)
 
+        self._update_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_state()
+        super()._handle_coordinator_update()
+
+    def _update_state(self) -> None:
+        data = self.coordinator.data
+
+        # Power on/off
+        self._power = data.power
+
+        # Speed as a percentage
+        if data.speed is None:
+            self._attr_percentage = None
+        elif data.speed is Speed.SuperSilent:
+            self._attr_percentage = 0
+        else:
+            self._attr_percentage = ordered_list_item_to_percentage(
+                SPEED_LIST, data.speed
+            )
+
+        # Preset mode
+        if data.mode is None:
+            self._attr_preset_mode = None
+        else:
+            # Get key by value in dictionary
+            self._attr_preset_mode = next(
+                k for k, v in PRESET_MODES.items() if v == data.mode
+            )
+
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._set_state(mode=PRESET_MODES[preset_mode])
+        self._attr_preset_mode = preset_mode
+        self.async_write_ha_state()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         value = percentage_to_ordered_list_item(SPEED_LIST, percentage)
         await self._set_state(speed=value)
+        self._attr_percentage = percentage
+        self.async_write_ha_state()
 
     async def async_turn_on(
         self,
@@ -96,31 +134,20 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
         if percentage is not None:
             speed_value = percentage_to_ordered_list_item(SPEED_LIST, percentage)
         await self._set_state(power=True, mode=mode_value, speed=speed_value)
+        self._power = True
+        if percentage is not None:
+            self._attr_percentage = percentage
+        if preset_mode is not None:
+            self._attr_preset_mode = preset_mode
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._set_state(power=False)
+        self._power = False
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return self.coordinator.data.power
-
-    @property
-    def percentage(self) -> int | None:
-        """Return the current speed as a percentage."""
-        speed = self.coordinator.data.speed
-        if speed is None:
-            return None
-        if speed is Speed.SuperSilent:
-            return 0
-        return ordered_list_item_to_percentage(SPEED_LIST, speed)
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return the current preset mode."""
-        mode = self.coordinator.data.mode
-        if mode is None:
-            return None
-        # Get key by value in dictionary
-        return next(k for k, v in PRESET_MODES.items() if v == mode)
+        return self._power
