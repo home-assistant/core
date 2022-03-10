@@ -13,7 +13,7 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import Any, Union, cast
+from typing import TYPE_CHECKING, Any, Union, cast
 import uuid
 
 import attr
@@ -107,6 +107,11 @@ from .models import (
     ReceivePayloadType,
 )
 from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
+
+if TYPE_CHECKING:
+    # Only import for paho-mqtt type checking here, imports are done locally
+    # because integrations should be able to optionally rely on MQTT.
+    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -754,23 +759,23 @@ class Subscription:
 class MqttClientSetup:
     """Helper class to setup the paho mqtt client from config."""
 
-    # We don't import on the top because some integrations
-    # should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
-
     def __init__(self, config: ConfigType) -> None:
         """Initialize the MQTT client setup helper."""
 
+        # We don't import on the top because some integrations
+        # should be able to optionally rely on MQTT.
+        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+
         if config[CONF_PROTOCOL] == PROTOCOL_31:
-            proto = self.mqtt.MQTTv31
+            proto = mqtt.MQTTv31
         else:
-            proto = self.mqtt.MQTTv311
+            proto = mqtt.MQTTv311
 
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
-            client_id = self.mqtt.base62(uuid.uuid4().int, padding=22)
-        self._client = self.mqtt.Client(client_id, protocol=proto)
+            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
+        self._client = mqtt.Client(client_id, protocol=proto)
 
         # Enable logging
         self._client.enable_logger()

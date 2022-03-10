@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from aioairzone.common import ConnectionOptions
+from aioairzone.const import AZD_ZONES
 from aioairzone.localapi_device import AirzoneLocalApi
 
 from homeassistant.config_entries import ConfigEntry
@@ -36,6 +37,15 @@ class AirzoneEntity(CoordinatorEntity):
             "name": f"Airzone [{system_zone_id}] {zone_name}",
         }
         self.system_zone_id = system_zone_id
+
+    def get_zone_value(self, key):
+        """Return zone value by key."""
+        value = None
+        if self.system_zone_id in self.coordinator.data[AZD_ZONES]:
+            zone = self.coordinator.data[AZD_ZONES][self.system_zone_id]
+            if key in zone:
+                value = zone[key]
+        return value
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
