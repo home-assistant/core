@@ -6,12 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.core import split_entity_id
-from homeassistant.helpers import (
-    entity_registry as er,
-    helper_config_entry_flow,
-    selector,
-)
+from homeassistant.helpers import helper_config_entry_flow, selector
 
 from . import DOMAIN
 
@@ -40,12 +35,6 @@ class SwitchAsXConfigFlowHandler(
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        registry = er.async_get(self.hass)
-        object_id = split_entity_id(options["entity_id"])[1]
-        entry = registry.async_get(options["entity_id"])
-        if entry:
-            return entry.name or entry.original_name or object_id
-        state = self.hass.states.get(options["entity_id"])
-        if state:
-            return state.name or object_id
-        return object_id
+        return helper_config_entry_flow.wrapped_entity_config_entry_title(
+            self.hass, options["entity_id"]
+        )
