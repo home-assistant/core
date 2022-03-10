@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
-from .bridge import SamsungTVLegacyBridge, SamsungTVWSBridge
+from .bridge import SamsungTVBridge, SamsungTVWSBridge
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -92,7 +92,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     def __init__(
         self,
-        bridge: SamsungTVLegacyBridge | SamsungTVWSBridge,
+        bridge: SamsungTVBridge,
         config_entry: ConfigEntry,
         on_script: Script | None,
     ) -> None:
