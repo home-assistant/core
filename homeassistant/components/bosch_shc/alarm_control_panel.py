@@ -18,11 +18,11 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DATA_SESSION, DOMAIN
+from .entity import SHCDomainEntity
 
 
 async def async_setup_entry(
@@ -34,7 +34,7 @@ async def async_setup_entry(
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     alarm_control_panel = IntrusionSystemAlarmControlPanel(
-        device=session.intrusion_system,
+        domain=session.intrusion_system,
         parent_id=session.information.unique_id,
         entry_id=config_entry.entry_id,
     )
@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities([alarm_control_panel])
 
 
-class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
+class IntrusionSystemAlarmControlPanel(SHCDomainEntity, AlarmControlPanelEntity):
     """Representation of SHC intrusion detection control."""
 
     _attr_code_arm_required: bool = False
@@ -52,41 +52,6 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
         | SUPPORT_ALARM_ARM_HOME
         | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
     )
-
-    def __init__(
-        self, device: SHCIntrusionSystem, parent_id: str, entry_id: str
-    ) -> None:
-        """Initialize SHC Alarm Control Panel device."""
-        self._device = device
-        self._entry_id = entry_id
-        self._attr_name = device.name
-        self._attr_unique_id = device.id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.id)},
-            manufacturer=device.manufacturer,
-            model=device.device_model,
-            name=device.name,
-            via_device=(DOMAIN, parent_id),
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to SHC events."""
-        await super().async_added_to_hass()
-
-        def on_state_changed():
-            self.schedule_update_ha_state()
-
-        self._device.subscribe_callback(self.entity_id, on_state_changed)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from SHC events."""
-        await super().async_will_remove_from_hass()
-        self._device.unsubscribe_callback(self.entity_id)
-
-    @property
-    def available(self) -> bool:
-        """Return false if status is unavailable."""
-        return self._device.system_availability
 
     @property
     def state(self) -> StateType:
