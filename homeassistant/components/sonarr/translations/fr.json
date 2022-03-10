@@ -22,6 +22,7 @@
                     "host": "H\u00f4te",
                     "port": "Port",
                     "ssl": "Utilise un certificat SSL",
+                    "url": "URL",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
                 }
             }

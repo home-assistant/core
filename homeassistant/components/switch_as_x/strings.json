@@ -1,0 +1,14 @@
+{
+  "title": "Switch as X",
+  "config": {
+    "step": {
+      "init": {
+        "title": "Make a switch a ...",
+        "data": {
+          "entity_id": "Switch entity",
+          "target_domain": "Type"
+        }
+      }
+    }
+  }
+}

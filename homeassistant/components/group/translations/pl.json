@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "Encje w grupie",
+                    "name": "Nazwa grupy"
+                },
+                "description": "Wybierz opcje grupy"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Encje w grupie"
+                },
+                "description": "Wybierz opcje grupy"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Encje w grupie",
+                    "name": "Nazwa grupy"
+                },
+                "description": "Wybierz opcje grupy"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Encje w grupie"
+                },
+                "description": "Wybierz opcje grupy"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Typ grupy"
+                },
+                "description": "Wybierz typ grupy"
+            },
+            "light": {
+                "data": {
+                    "entities": "Encje w grupie",
+                    "name": "Nazwa grupy"
+                },
+                "description": "Wybierz opcje grupy"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Encje w grupie"
+                },
+                "description": "Wybierz opcje grupy"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Encje w grupie",
+                    "name": "Nazwa grupy"
+                },
+                "description": "Wybierz opcje grupy"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Encje w grupie"
+                },
+                "description": "Wybierz opcje grupy"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "zamkni\u0119te",

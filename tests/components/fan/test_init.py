@@ -16,7 +16,6 @@ def test_fanentity():
     """Test fan entity methods."""
     fan = BaseFan()
     assert fan.state == "off"
-    assert len(fan.speed_list) == 4  # legacy compat off,low,medium,high
     assert fan.preset_modes is None
     assert fan.supported_features == 0
     assert fan.percentage_step == 1
@@ -25,7 +24,7 @@ def test_fanentity():
     # Test set_speed not required
     with pytest.raises(NotImplementedError):
         fan.oscillate(True)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(AttributeError):
         fan.set_speed("low")
     with pytest.raises(NotImplementedError):
         fan.set_percentage(0)
@@ -42,7 +41,6 @@ async def test_async_fanentity(hass):
     fan = BaseFan()
     fan.hass = hass
     assert fan.state == "off"
-    assert len(fan.speed_list) == 4  # legacy compat off,low,medium,high
     assert fan.preset_modes is None
     assert fan.supported_features == 0
     assert fan.percentage_step == 1
@@ -51,7 +49,7 @@ async def test_async_fanentity(hass):
     # Test set_speed not required
     with pytest.raises(NotImplementedError):
         await fan.async_oscillate(True)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(AttributeError):
         await fan.async_set_speed("low")
     with pytest.raises(NotImplementedError):
         await fan.async_set_percentage(0)

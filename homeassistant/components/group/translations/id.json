@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "Anggota grup",
+                    "name": "Nama grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Anggota grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Anggota grup",
+                    "name": "Nama grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Anggota grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Jenis grup"
+                },
+                "description": "Pilih jenis grup"
+            },
+            "light": {
+                "data": {
+                    "entities": "Anggota grup",
+                    "name": "Nama grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Anggota grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Anggota grup",
+                    "name": "Nama grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Anggota grup"
+                },
+                "description": "Pilih opsi grup"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Tertutup",
