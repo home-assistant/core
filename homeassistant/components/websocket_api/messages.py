@@ -74,7 +74,7 @@ def _cached_event_message(event: Event) -> str:
     return message_to_json(event_message(IDEN_TEMPLATE, event))
 
 
-def cached_state_changed_event_message(iden: int, event: Event) -> str:
+def cached_state_diff_message(iden: int, event: Event) -> str:
     """Return an event message.
 
     Serialize to json once per message.
@@ -83,24 +83,20 @@ def cached_state_changed_event_message(iden: int, event: Event) -> str:
     all getting many of the same events (mostly state changed)
     we can avoid serializing the same data for each connection.
     """
-    return _cached_state_changed_event_message(event).replace(
-        IDEN_JSON_TEMPLATE, str(iden), 1
-    )
+    return _cached_state_diff_message(event).replace(IDEN_JSON_TEMPLATE, str(iden), 1)
 
 
 @lru_cache(maxsize=128)
-def _cached_state_changed_event_message(event: Event) -> str:
+def _cached_state_diff_message(event: Event) -> str:
     """Cache and serialize the event to json.
 
     The IDEN_TEMPLATE is used which will be replaced
     with the actual iden in cached_event_message
     """
-    return message_to_json(
-        event_message(IDEN_TEMPLATE, _minimal_state_changed_event(event))
-    )
+    return message_to_json(event_message(IDEN_TEMPLATE, _state_diff_event(event)))
 
 
-def _minimal_state_changed_event(event: Event) -> dict:
+def _state_diff_event(event: Event) -> dict:
     """Convert a state_changed event to the minimal version."""
     # The entity_id is also duplicated in the message twice but its actually used
     if event_new_state := event.data["new_state"]:

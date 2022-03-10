@@ -68,6 +68,7 @@ def async_register_commands(
     async_reg(hass, handle_test_condition)
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
+    async_reg(hass, handle_subscribe_entites)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -105,9 +106,7 @@ def handle_subscribe_events(
             ):
                 return
 
-            connection.send_message(
-                messages.cached_state_changed_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     else:
 
@@ -260,6 +259,42 @@ def handle_get_states(
     response2 = const.JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
     response2 = response2.replace('"TO_REPLACE"', ", ".join(serialized))
     connection.send_message(response2)
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "subscribe_entites",
+    }
+)
+def handle_subscribe_entites(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe entities command."""
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
+    from .permissions import SUBSCRIBE_ALLOWLIST
+
+    if "state_changed" not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
+        raise Unauthorized
+
+    @callback
+    def forward_entity_changes(event: Event) -> None:
+        """Forward entity state changed events to websocket."""
+        if not connection.user.permissions.check_entity(
+            event.data["entity_id"], POLICY_READ
+        ):
+            return
+
+        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
+
+    # We must never await between sending the states and listening for
+    # state changed events or we will introduce a race condition
+    # where some states are missed
+    handle_get_states(hass, connection, msg)
+    connection.subscriptions[msg["id"]] = hass.bus.async_listen(
+        "state_changed", forward_entity_changes
+    )
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
