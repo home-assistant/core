@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
-        coordinator.api.close()
+        await coordinator.api.close()
         raise
 
     # Finalize

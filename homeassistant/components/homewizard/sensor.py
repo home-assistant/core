@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SERVICE_DATA, DeviceResponseEntry
+from .const import DOMAIN, SERVICE_DATA, SERVICE_DEVICE, DeviceResponseEntry
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -176,9 +176,9 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
         return {
             "name": self.entry.title,
             "manufacturer": "HomeWizard",
-            "sw_version": self.data["device"].firmware_version,
-            "model": self.data["device"].product_type,
-            "identifiers": {(DOMAIN, self.data["device"].serial)},
+            "sw_version": self.data[SERVICE_DEVICE].firmware_version,
+            "model": self.data[SERVICE_DEVICE].product_type,
+            "identifiers": {(DOMAIN, self.data[SERVICE_DEVICE].serial)},
         }
 
     @property

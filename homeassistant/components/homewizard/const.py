@@ -22,8 +22,8 @@ CONF_PRODUCT_TYPE = "product_type"
 CONF_SERIAL = "serial"
 
 # Services
-SERVICE_DEVICE: Final = "data"
-SERVICE_DATA: Final = "device"
+SERVICE_DEVICE: Final = "device"
+SERVICE_DATA: Final = "data"
 SERVICE_STATE: Final = "state"
 
 UPDATE_INTERVAL = timedelta(seconds=5)

@@ -1,9 +1,9 @@
 """Test the update coordinator for HomeWizard."""
-
 from datetime import timedelta
+import json
 from unittest.mock import AsyncMock, patch
 
-from aiohwenergy.errors import DisabledError
+import homewizard_energy.models as models
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -25,32 +25,11 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from .generator import get_mock_device
-
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, load_fixture
 
 
-async def test_sensor_entity_smr_version(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_smr_version(hass, init_integration):
     """Test entity loads smr version."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "smr_version",
-    ]
-    api.data.smr_version = 50
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -71,27 +50,8 @@ async def test_sensor_entity_smr_version(
     assert state.attributes.get(ATTR_ICON) == "mdi:counter"
 
 
-async def test_sensor_entity_meter_model(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_meter_model(hass, init_integration):
     """Test entity loads meter model."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "meter_model",
-    ]
-    api.data.meter_model = "Model X"
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -103,7 +63,7 @@ async def test_sensor_entity_meter_model(
     assert state
     assert entry.unique_id == "aabbccddeeff_meter_model"
     assert not entry.disabled
-    assert state.state == "Model X"
+    assert state.state == "ISKRA  2M550T-101"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Smart Meter Model"
@@ -114,25 +74,8 @@ async def test_sensor_entity_meter_model(
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
 
 
-async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config_entry):
+async def test_sensor_entity_wifi_ssid(hass, init_integration):
     """Test entity loads wifi ssid."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "wifi_ssid",
-    ]
-    api.data.wifi_ssid = "My Wifi"
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -142,7 +85,7 @@ async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config
     assert state
     assert entry.unique_id == "aabbccddeeff_wifi_ssid"
     assert not entry.disabled
-    assert state.state == "My Wifi"
+    assert state.state == "My Wi-Fi"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Wifi SSID"
@@ -153,27 +96,8 @@ async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config
     assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
 
 
-async def test_sensor_entity_wifi_strength(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_wifi_strength(hass, init_integration):
     """Test entity loads wifi strength."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "wifi_strength",
-    ]
-    api.data.wifi_strength = 42
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -183,27 +107,8 @@ async def test_sensor_entity_wifi_strength(
     assert entry.disabled
 
 
-async def test_sensor_entity_total_power_import_t1_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_total_power_import_t1_kwh(hass, init_integration):
     """Test entity loads total power import t1."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_import_t1_kwh",
-    ]
-    api.data.total_power_import_t1_kwh = 1234.123
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -215,7 +120,7 @@ async def test_sensor_entity_total_power_import_t1_kwh(
     assert state
     assert entry.unique_id == "aabbccddeeff_total_power_import_t1_kwh"
     assert not entry.disabled
-    assert state.state == "1234.123"
+    assert state.state == "1234.111"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Total Power Import T1"
@@ -226,27 +131,8 @@ async def test_sensor_entity_total_power_import_t1_kwh(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_total_power_import_t2_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_total_power_import_t2_kwh(hass, init_integration):
     """Test entity loads total power import t2."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_import_t2_kwh",
-    ]
-    api.data.total_power_import_t2_kwh = 1234.123
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -258,7 +144,7 @@ async def test_sensor_entity_total_power_import_t2_kwh(
     assert state
     assert entry.unique_id == "aabbccddeeff_total_power_import_t2_kwh"
     assert not entry.disabled
-    assert state.state == "1234.123"
+    assert state.state == "5678.222"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Total Power Import T2"
@@ -269,27 +155,8 @@ async def test_sensor_entity_total_power_import_t2_kwh(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_total_power_export_t1_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_total_power_export_t1_kwh(hass, init_integration):
     """Test entity loads total power export t1."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_export_t1_kwh",
-    ]
-    api.data.total_power_export_t1_kwh = 1234.123
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -301,7 +168,7 @@ async def test_sensor_entity_total_power_export_t1_kwh(
     assert state
     assert entry.unique_id == "aabbccddeeff_total_power_export_t1_kwh"
     assert not entry.disabled
-    assert state.state == "1234.123"
+    assert state.state == "4321.333"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Total Power Export T1"
@@ -312,27 +179,8 @@ async def test_sensor_entity_total_power_export_t1_kwh(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_total_power_export_t2_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_total_power_export_t2_kwh(hass, init_integration):
     """Test entity loads total power export t2."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_export_t2_kwh",
-    ]
-    api.data.total_power_export_t2_kwh = 1234.123
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -344,7 +192,7 @@ async def test_sensor_entity_total_power_export_t2_kwh(
     assert state
     assert entry.unique_id == "aabbccddeeff_total_power_export_t2_kwh"
     assert not entry.disabled
-    assert state.state == "1234.123"
+    assert state.state == "8765.444"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Total Power Export T2"
@@ -355,27 +203,8 @@ async def test_sensor_entity_total_power_export_t2_kwh(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_active_power(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_active_power(hass, init_integration):
     """Test entity loads active power."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "active_power_w",
-    ]
-    api.data.active_power_w = 123.123
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -385,7 +214,7 @@ async def test_sensor_entity_active_power(
     assert state
     assert entry.unique_id == "aabbccddeeff_active_power_w"
     assert not entry.disabled
-    assert state.state == "123.123"
+    assert state.state == "-123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Active Power"
@@ -396,27 +225,8 @@ async def test_sensor_entity_active_power(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_active_power_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_active_power_l1(hass, init_integration):
     """Test entity loads active power l1."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "active_power_l1_w",
-    ]
-    api.data.active_power_l1_w = 123.123
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -428,7 +238,7 @@ async def test_sensor_entity_active_power_l1(
     assert state
     assert entry.unique_id == "aabbccddeeff_active_power_l1_w"
     assert not entry.disabled
-    assert state.state == "123.123"
+    assert state.state == "-123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Active Power L1"
@@ -439,27 +249,8 @@ async def test_sensor_entity_active_power_l1(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_active_power_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_active_power_l2(hass, init_integration):
     """Test entity loads active power l2."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "active_power_l2_w",
-    ]
-    api.data.active_power_l2_w = 456.456
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -471,7 +262,7 @@ async def test_sensor_entity_active_power_l2(
     assert state
     assert entry.unique_id == "aabbccddeeff_active_power_l2_w"
     assert not entry.disabled
-    assert state.state == "456.456"
+    assert state.state == "456"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Active Power L2"
@@ -482,27 +273,8 @@ async def test_sensor_entity_active_power_l2(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_active_power_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_active_power_l3(hass, init_integration):
     """Test entity loads active power l3."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "active_power_l3_w",
-    ]
-    api.data.active_power_l3_w = 789.789
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -514,7 +286,7 @@ async def test_sensor_entity_active_power_l3(
     assert state
     assert entry.unique_id == "aabbccddeeff_active_power_l3_w"
     assert not entry.disabled
-    assert state.state == "789.789"
+    assert state.state == "123.456"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Active Power L3"
@@ -525,25 +297,8 @@ async def test_sensor_entity_active_power_l3(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config_entry):
+async def test_sensor_entity_total_gas(hass, init_integration):
     """Test entity loads total gas."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_gas_m3",
-    ]
-    api.data.total_gas_m3 = 50
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -553,7 +308,7 @@ async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config
     assert state
     assert entry.unique_id == "aabbccddeeff_total_gas_m3"
     assert not entry.disabled
-    assert state.state == "50"
+    assert state.state == "1122.333"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Total Gas"
@@ -564,70 +319,99 @@ async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_disabled_when_null(
-    hass, mock_config_entry_data, mock_config_entry
+async def test_sensor_entity_not_loaded_when_null(
+    hass, mock_config_entry, mock_homewizard_energy_minimal
 ):
-    """Test sensor disables data with null by default."""
+    """Test sensor is not loaded when data was null."""
 
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "active_power_l2_w",
-        "active_power_l3_w",
-        "total_gas_m3",
-    ]
-    api.data.active_power_l2_w = None
-    api.data.active_power_l3_w = None
-    api.data.total_gas_m3 = None
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=mock_homewizard_energy_minimal,
     ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
-    entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_active_power_l2"
+    assert (
+        entity_registry.async_get("sensor.product_name_aabbccddeeff_smr_version")
+        is None
     )
-    assert entry is None
-
-    entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_active_power_l3"
+    assert (
+        entity_registry.async_get("sensor.product_name_aabbccddeeff_meter_model")
+        is None
     )
-    assert entry is None
+    assert (
+        entity_registry.async_get("sensor.product_name_aabbccddeeff_wifi_ssid")
+        is not None
+    )
+    assert (
+        entity_registry.async_get("sensor.product_name_aabbccddeeff_wifi_strength")
+        is not None
+    )
+    assert (
+        entity_registry.async_get(
+            "sensor.product_name_aabbccddeeff_total_power_import_t1"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get(
+            "sensor.product_name_aabbccddeeff_total_power_import_t2"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get(
+            "sensor.product_name_aabbccddeeff_total_power_export_t1"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get(
+            "sensor.product_name_aabbccddeeff_total_power_export_t2"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get("sensor.product_name_aabbccddeeff_active_power")
+        is not None
+    )
+    assert (
+        entity_registry.async_get("sensor.product_name_aabbccddeeff_active_power_l1")
+        is not None
+    )
+    assert (
+        entity_registry.async_get("sensor.product_name_aabbccddeeff_active_power_l2")
+        is None
+    )
+    assert (
+        entity_registry.async_get("sensor.product_name_aabbccddeeff_active_power_l3")
+        is None
+    )
+    assert (
+        entity_registry.async_get("sensor.product_name_aabbccddeeff_total_gas") is None
+    )
+    assert (
+        entity_registry.async_get("sensor.product_name_aabbccddeeff_gas_timestamp")
+        is None
+    )
 
-    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_total_gas")
-    assert entry is None
 
-
-async def test_sensor_entity_export_disabled_when_unused(
-    hass, mock_config_entry_data, mock_config_entry
+async def test_sensor_export_disabled_when_zero(
+    hass, mock_config_entry, mock_homewizard_energy_minimal
 ):
-    """Test sensor disables export if value is 0."""
+    """Test export sensors are disabled when value is '0'."""
 
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_export_t1_kwh",
-        "total_power_export_t2_kwh",
-    ]
-    api.data.total_power_export_t1_kwh = 0
-    api.data.total_power_export_t2_kwh = 0
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=mock_homewizard_energy_minimal,
     ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
@@ -645,26 +429,20 @@ async def test_sensor_entity_export_disabled_when_unused(
     assert entry.disabled
 
 
-async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_entry):
+async def test_sensors_unreachable(hass, mock_config_entry, mock_homewizard_energy):
     """Test sensor handles api unreachable."""
 
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_import_t1_kwh",
-    ]
-    api.data.total_power_import_t1_kwh = 1234.123
+    data_model = models.Data.from_dict(json.loads(load_fixture("homewizard/data.json")))
+
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=mock_homewizard_energy,
     ):
-        api.update = AsyncMock(return_value=True)
 
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
+        mock_homewizard_energy.data = AsyncMock(return_value=data_model)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         utcnow = dt_util.utcnow()  # Time after the integration is setup
 
@@ -672,10 +450,10 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
             hass.states.get(
                 "sensor.product_name_aabbccddeeff_total_power_import_t1"
             ).state
-            == "1234.123"
+            == "1234.111"
         )
 
-        api.update = AsyncMock(return_value=False)
+        mock_homewizard_energy.data = AsyncMock(side_effect=Exception)
         async_fire_time_changed(hass, utcnow + timedelta(seconds=5))
         await hass.async_block_till_done()
         assert (
@@ -685,63 +463,12 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
             == "unavailable"
         )
 
-        api.update = AsyncMock(return_value=True)
+        mock_homewizard_energy.data = AsyncMock(return_value=data_model)
         async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
         await hass.async_block_till_done()
         assert (
             hass.states.get(
                 "sensor.product_name_aabbccddeeff_total_power_import_t1"
             ).state
-            == "1234.123"
-        )
-
-
-async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
-    """Test sensor handles api unreachable."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_import_t1_kwh",
-    ]
-    api.data.total_power_import_t1_kwh = 1234.123
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        api.update = AsyncMock(return_value=True)
-
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        utcnow = dt_util.utcnow()  # Time after the integration is setup
-
-        assert (
-            hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_t1"
-            ).state
-            == "1234.123"
-        )
-
-        api.update = AsyncMock(side_effect=DisabledError)
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=5))
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_t1"
-            ).state
-            == "unavailable"
-        )
-
-        api.update = AsyncMock(return_value=True)
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_t1"
-            ).state
-            == "1234.123"
+            == "1234.111"
         )
