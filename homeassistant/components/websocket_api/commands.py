@@ -306,8 +306,8 @@ def handle_subscribe_entites(
     data: dict[str, dict[str, dict]] = {"add": {}}
     add_entities = data["add"]
     for state in states:
-        state_dict = dict(state.as_dict())
-        add_entities[state_dict.pop("entity_id")] = state_dict  # type: ignore
+        state_dict: dict[str, Any] = dict(state.as_dict())
+        add_entities[state_dict.pop("entity_id")] = state_dict
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required

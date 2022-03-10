@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import voluptuous as vol
 
@@ -114,7 +114,7 @@ def _state_diff_event(event: Event) -> dict:
         return {"delete": [event.data["entity_id"]]}
     assert isinstance(event_new_state, State)
     if (event_old_state := event.data["old_state"]) is None:
-        state_dict = event_new_state.as_dict()
+        state_dict = dict(event_new_state.as_dict())
         return {"add": {state_dict.pop("entity_id"): state_dict}}
     assert isinstance(event_old_state, State)
     return _state_diff(event_old_state, event_new_state)
@@ -124,14 +124,14 @@ def _state_diff(
     old_state: State, new_state: State
 ) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
     """Create a diff dict that can be used to overlay changes."""
-    old_state_dict = old_state.as_dict()
-    new_state_dict = new_state.as_dict()
+    old_state_dict = cast(dict[str, Any], old_state.as_dict())
+    new_state_dict = cast(dict[str, Any], new_state.as_dict())
     diff: dict = {}
     for item, value in new_state_dict.items():
         if isinstance(value, dict):
             old_dict = old_state_dict[item]
             for sub_item, sub_value in value.items():
-                if old_dict[sub_item] != sub_value:  # type: ignore
+                if old_dict[sub_item] != sub_value:
                     diff.setdefault("+", {}).setdefault(item, {})[sub_item] = sub_value
         elif old_state_dict[item] != value:
             diff.setdefault("+", {})[item] = value
@@ -141,7 +141,7 @@ def _state_diff(
             for sub_item, sub_value in value.items():
                 if sub_item not in new_dict:
                     diff.setdefault("-", {}).setdefault(item, []).append(sub_item)
-    return {"changed": {new_state_dict["entity_id"]: diff}}  # type: ignore
+    return {"changed": {new_state_dict["entity_id"]: diff}}
 
 
 def message_to_json(message: dict[str, Any]) -> str:
