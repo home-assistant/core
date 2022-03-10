@@ -111,7 +111,7 @@ def _state_diff_event(event: Event) -> dict:
     """
     # The entity_id is also duplicated in the message twice but its actually used
     if (event_new_state := event.data["new_state"]) is None:
-        return {"delete": [event.data["entity_id"]]}
+        return {"remove": [event.data["entity_id"]]}
     assert isinstance(event_new_state, State)
     if (event_old_state := event.data["old_state"]) is None:
         state_dict = dict(event_new_state.as_dict())
