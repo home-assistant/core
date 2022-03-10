@@ -101,9 +101,9 @@ def _state_diff_event(event: Event) -> dict:
 
     State update
 
-    Add: {entity_id: state,…}
-    Change: {entity_id: diff, entity_id: diff,…}
-    Delete: [entity_id,…]
+    add: {entity_id: state,…}
+    changed: {entity_id: diff,…}
+    removed: [entity_id,…]
 
     Init state should do as_dict, copy, remove entity id since it will be in the key
 
