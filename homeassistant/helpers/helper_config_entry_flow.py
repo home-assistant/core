@@ -10,8 +10,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import FlowResult, UnknownHandler
+
+from . import entity_registry as er
 
 
 @dataclass
@@ -181,3 +183,25 @@ class HelperOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
         return super().async_create_entry(title="", **kwargs)
+
+
+@callback
+def wrapped_entity_config_entry_title(
+    hass: HomeAssistant, entity_id_or_uuid: str
+) -> str:
+    """Generate title for a config entry wrapping a single entity.
+
+    If the entity is registered, use the registry entry's name.
+    If the entity is in the state machine, use the name from the state.
+    Otherwise, fall back to the object ID.
+    """
+    registry = er.async_get(hass)
+    entity_id = er.async_validate_entity_id(registry, entity_id_or_uuid)
+    object_id = split_entity_id(entity_id)[1]
+    entry = registry.async_get(entity_id)
+    if entry:
+        return entry.name or entry.original_name or object_id
+    state = hass.states.get(entity_id)
+    if state:
+        return state.name or object_id
+    return object_id
