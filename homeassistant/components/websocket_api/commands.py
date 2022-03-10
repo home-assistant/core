@@ -270,7 +270,7 @@ def handle_get_states(
 @callback
 @decorators.websocket_command(
     {
-        vol.Required("type"): "subscribe_entites",
+        vol.Required("type"): "subscribe_entities",
     }
 )
 def handle_subscribe_entites(
@@ -312,7 +312,7 @@ def handle_subscribe_entites(
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
     # to succeed for the UI to show.
-    response = messages.result_message(msg["id"], data)
+    response = messages.event_message(msg["id"], data)
     try:
         connection.send_message(const.JSON_DUMP(response))
         return
@@ -331,7 +331,7 @@ def handle_subscribe_entites(
         except (ValueError, TypeError):
             del add_entities[state.entity_id]
 
-    connection.send_message(const.JSON_DUMP(messages.result_message(msg["id"], data)))
+    connection.send_message(const.JSON_DUMP(messages.event_message(msg["id"], data)))
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})

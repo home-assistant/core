@@ -666,6 +666,113 @@ async def test_subscribe_unsubscribe_events_state_changed(
     assert msg["event"]["data"]["entity_id"] == "light.permitted"
 
 
+async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin_user):
+    """Test subscribe/unsubscribe entities."""
+    hass.states.async_set("light.permitted", "off", {"color": "red"})
+
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
+
+    await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "add": {
+            "light.permitted": {
+                "attributes": {"color": "red"},
+                "context": {"id": ANY, "parent_id": None, "user_id": None},
+                "last_changed": ANY,
+                "last_updated": ANY,
+                "state": "off",
+            }
+        }
+    }
+
+    hass.states.async_set("light.not_permitted", "on")
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+    hass.states.async_set("light.permitted", "on", {"effect": "help"})
+    hass.states.async_set(
+        "light.permitted", "on", {"effect": "help", "color": ["blue", "green"]}
+    )
+    hass.states.async_remove("light.permitted")
+    hass.states.async_set("light.permitted", "on", {"effect": "help", "color": "blue"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "changed": {
+            "light.permitted": {
+                "+": {
+                    "attributes": {"color": "blue"},
+                    "context": {"id": ANY},
+                    "last_changed": ANY,
+                    "last_updated": ANY,
+                    "state": "on",
+                }
+            }
+        }
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "changed": {
+            "light.permitted": {
+                "+": {
+                    "attributes": {"effect": "help"},
+                    "context": {"id": ANY},
+                    "last_updated": ANY,
+                },
+                "-": {"attributes": ["color"]},
+            }
+        }
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "changed": {
+            "light.permitted": {
+                "+": {
+                    "attributes": {"color": ["blue", "green"]},
+                    "context": {"id": ANY},
+                    "last_updated": ANY,
+                }
+            }
+        }
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {"delete": ["light.permitted"]}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "add": {
+            "light.permitted": {
+                "attributes": {"color": "blue", "effect": "help"},
+                "context": {"id": ANY, "parent_id": None, "user_id": None},
+                "last_changed": ANY,
+                "last_updated": ANY,
+                "state": "on",
+            }
+        }
+    }
+
+
 async def test_render_template_renders_template(hass, websocket_client):
     """Test simple template is rendered and updated."""
     hass.states.async_set("light.test", "on")

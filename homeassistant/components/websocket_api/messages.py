@@ -131,7 +131,7 @@ def _state_diff(
         if isinstance(value, dict):
             old_dict = old_state_dict[item]
             for sub_item, sub_value in value.items():
-                if old_dict[sub_item] != sub_value:
+                if old_dict.get(sub_item) != sub_value:
                     diff.setdefault("+", {}).setdefault(item, {})[sub_item] = sub_value
         elif old_state_dict[item] != value:
             diff.setdefault("+", {})[item] = value
