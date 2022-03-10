@@ -255,7 +255,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
                         default=self._get_current_configured_sensors(),
                         description="Multiselect with list of devices to choose from",
                     ): cv.multi_select(
-                        {device: False for device in self.configurable_devices.keys()}
+                        {device: False for device in self.configurable_devices}
                     ),
                 }
             ),
