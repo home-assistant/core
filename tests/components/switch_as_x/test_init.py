@@ -55,17 +55,15 @@ async def test_entity_registry_events(hass: HomeAssistant, target_domain):
     # Change entity_id
     new_switch_entity_id = f"{switch_entity_id}_new"
     registry.async_update_entity(switch_entity_id, new_entity_id=new_switch_entity_id)
+    hass.states.async_set(new_switch_entity_id, "off")
     await hass.async_block_till_done()
-
-    assert hass.states.get(f"{target_domain}.abc").state == "unavailable"
-
-    # The old entity_id should no longer be tracked
-    hass.states.async_set(switch_entity_id, "off")
-    await hass.async_block_till_done()
-    assert hass.states.get(f"{target_domain}.abc").state == "unavailable"
 
     # Check tracking the new entity_id
-    hass.states.async_set(new_switch_entity_id, "off")
+    await hass.async_block_till_done()
+    assert hass.states.get(f"{target_domain}.abc").state == "off"
+
+    # The old entity_id should no longer be tracked
+    hass.states.async_set(switch_entity_id, "on")
     await hass.async_block_till_done()
     assert hass.states.get(f"{target_domain}.abc").state == "off"
 
