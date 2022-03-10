@@ -16,6 +16,7 @@ class ZWaveMePlatform(StrEnum):
     NUMBER = "switchMultilevel"
     SWITCH = "switchBinary"
     SENSOR = "sensorMultilevel"
+    SIREN = "siren"
     RGBW_LIGHT = "switchRGBW"
     RGB_LIGHT = "switchRGB"
 
@@ -28,5 +29,6 @@ PLATFORMS = [
     Platform.LOCK,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
 ]

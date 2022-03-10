@@ -134,6 +134,10 @@
             "off": "Pas en charge",
             "on": "En charge"
         },
+        "carbon_monoxide": {
+            "off": "RAS",
+            "on": "D\u00e9tect\u00e9"
+        },
         "co": {
             "off": "Clair",
             "on": "D\u00e9tect\u00e9e"

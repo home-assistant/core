@@ -1017,7 +1017,7 @@ async def test_ignore_flow(hass, hass_ws_client):
 
         async def async_step_user(self, user_input=None):
             await self.async_set_unique_id("mock-unique-id")
-            return self.async_show_form(step_id="account", data_schema=vol.Schema({}))
+            return self.async_show_form(step_id="account")
 
     ws_client = await hass_ws_client(hass)
 

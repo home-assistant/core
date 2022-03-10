@@ -121,6 +121,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cancel_discovered_callback()
 
     # Create device.
+    assert discovery_info is not None
+    assert discovery_info.ssdp_location is not None
     location = discovery_info.ssdp_location
     try:
         device = await Device.async_create_device(hass, location)

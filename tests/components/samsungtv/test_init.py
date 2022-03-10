@@ -1,5 +1,6 @@
 """Tests for the Samsung TV Integration."""
-from unittest.mock import patch
+from copy import deepcopy
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -55,7 +56,7 @@ REMOTE_CALL = {
 }
 
 
-@pytest.mark.usefixtures("remotews", "no_mac_address")
+@pytest.mark.usefixtures("remotews")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test Samsung TV integration is setup."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
@@ -80,7 +81,7 @@ async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant) 
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS.open",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
         side_effect=OSError,
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
@@ -102,7 +103,7 @@ async def test_setup_from_yaml_without_port_device_online(hass: HomeAssistant) -
 
     config_entries_domain = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
     assert len(config_entries_domain) == 1
-    assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
 
 
 @pytest.mark.usefixtures("remote")
@@ -123,7 +124,7 @@ async def test_setup_duplicate_config(
     assert "duplicate host entries found" in caplog.text
 
 
-@pytest.mark.usefixtures("remote", "remotews", "no_mac_address")
+@pytest.mark.usefixtures("remote", "remotews")
 async def test_setup_duplicate_entries(hass: HomeAssistant) -> None:
     """Test duplicate setup of platform."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
@@ -132,3 +133,18 @@ async def test_setup_duplicate_entries(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("media_player")) == 1
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
     assert len(hass.states.async_all("media_player")) == 1
+
+
+@pytest.mark.usefixtures("remotews")
+async def test_setup_h_j_model(
+    hass: HomeAssistant, rest_api: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test Samsung TV integration is setup."""
+    device_info = deepcopy(rest_api.rest_device_info.return_value)
+    device_info["device"]["modelName"] = "UE48JU6400"
+    rest_api.rest_device_info.return_value = device_info
+    await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert "H and J series use an encrypted protocol" in caplog.text

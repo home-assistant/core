@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -15,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-DEFAULT_NAME = "Moon"
+from .const import DEFAULT_NAME, DOMAIN
 
 STATE_FIRST_QUARTER = "first_quarter"
 STATE_FULL_MOON = "full_moon"
@@ -49,23 +50,37 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Moon sensor."""
-    name: str = config[CONF_NAME]
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
-    async_add_entities([MoonSensor(name)], True)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the platform from config_entry."""
+    async_add_entities([MoonSensorEntity(entry)], True)
 
 
-class MoonSensor(SensorEntity):
+class MoonSensorEntity(SensorEntity):
     """Representation of a Moon sensor."""
 
     _attr_device_class = "moon__phase"
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the moon sensor."""
-        self._attr_name = name
+        self._attr_name = entry.title
+        self._attr_unique_id = entry.entry_id
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the time and updates the states."""
-        today = dt_util.as_local(dt_util.utcnow()).date()
+        today = dt_util.now().date()
         state = moon.phase(today)
 
         if state < 0.5 or state > 27.5:

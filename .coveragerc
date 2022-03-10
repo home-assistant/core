@@ -129,6 +129,7 @@ omit =
     homeassistant/components/bosch_shc/cover.py
     homeassistant/components/bosch_shc/entity.py
     homeassistant/components/bosch_shc/sensor.py
+    homeassistant/components/bosch_shc/switch.py
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
@@ -706,7 +707,6 @@ omit =
     homeassistant/components/mjpeg/util.py
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
-    homeassistant/components/modbus/binary_sensor.py
     homeassistant/components/modem_callerid/button.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/moehlenhoff_alpha2/__init__.py
@@ -737,7 +737,6 @@ omit =
     homeassistant/components/mysensors/handler.py
     homeassistant/components/mysensors/helpers.py
     homeassistant/components/mysensors/light.py
-    homeassistant/components/mysensors/notify.py
     homeassistant/components/mysensors/switch.py
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
@@ -949,7 +948,6 @@ omit =
     homeassistant/components/rainmachine/model.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
-    homeassistant/components/raspihats/*
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/__init__.py
     homeassistant/components/recollect_waste/sensor.py
@@ -996,6 +994,7 @@ omit =
     homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
+    homeassistant/components/screenlogic/diagnostics.py
     homeassistant/components/screenlogic/light.py
     homeassistant/components/screenlogic/number.py
     homeassistant/components/screenlogic/sensor.py
@@ -1017,6 +1016,7 @@ omit =
     homeassistant/components/sensibo/climate.py
     homeassistant/components/sensibo/coordinator.py
     homeassistant/components/sensibo/diagnostics.py
+    homeassistant/components/sensibo/entity.py
     homeassistant/components/sensibo/number.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py
@@ -1409,6 +1409,7 @@ omit =
     homeassistant/components/xiaomi_miio/air_quality.py
     homeassistant/components/xiaomi_miio/alarm_control_panel.py
     homeassistant/components/xiaomi_miio/binary_sensor.py
+    homeassistant/components/xiaomi_miio/button.py
     homeassistant/components/xiaomi_miio/device.py
     homeassistant/components/xiaomi_miio/device_tracker.py
     homeassistant/components/xiaomi_miio/fan.py
@@ -1477,6 +1478,7 @@ omit =
     homeassistant/components/zwave_me/lock.py
     homeassistant/components/zwave_me/number.py
     homeassistant/components/zwave_me/sensor.py
+    homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
 
 [report]
