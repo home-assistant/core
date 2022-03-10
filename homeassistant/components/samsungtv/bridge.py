@@ -106,12 +106,13 @@ class SamsungTVBridge(ABC):
         host: str,
         port: int | None = None,
         token: str | None = None,
+        session_id: str | None = None,
     ) -> SamsungTVBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
             return SamsungTVLegacyBridge(hass, method, host, port)
         if method == METHOD_ENCRYPTED_WEBSOCKET or port == ENCRYPTED_WEBSOCKET_PORT:
-            return SamsungTVEncryptedBridge(hass, method, host, port)
+            return SamsungTVEncryptedBridge(hass, method, host, port, token, session_id)
         return SamsungTVWSBridge(hass, method, host, port, token)
 
     def __init__(

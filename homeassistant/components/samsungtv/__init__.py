@@ -29,6 +29,7 @@ from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     CONF_MODEL,
     CONF_ON_ACTION,
+    CONF_SESSION_ID,
     DEFAULT_NAME,
     DOMAIN,
     LEGACY_PORT,
@@ -103,6 +104,7 @@ def _async_get_device_bridge(
         data[CONF_HOST],
         data[CONF_PORT],
         data.get(CONF_TOKEN),
+        data.get(CONF_SESSION_ID),
     )
 
 
