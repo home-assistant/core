@@ -16,7 +16,7 @@ from homeassistant.const import (
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATONS,
 )
-from homeassistant.core import Context, Event, HomeAssistant, callback
+from homeassistant.core import Context, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
@@ -215,20 +215,26 @@ async def handle_call_service(
 
 
 @callback
+def _async_get_allowed_states(
+    hass: HomeAssistant, connection: ActiveConnection
+) -> list[State]:
+    if connection.user.permissions.access_all_entities("read"):
+        return hass.states.async_all()
+    entity_perm = connection.user.permissions.check_entity
+    return [
+        state
+        for state in hass.states.async_all()
+        if entity_perm(state.entity_id, "read")
+    ]
+
+
+@callback
 @decorators.websocket_command({vol.Required("type"): "get_states"})
 def handle_get_states(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get states command."""
-    if connection.user.permissions.access_all_entities("read"):
-        states = hass.states.async_all()
-    else:
-        entity_perm = connection.user.permissions.check_entity
-        states = [
-            state
-            for state in hass.states.async_all()
-            if entity_perm(state.entity_id, "read")
-        ]
+    states = _async_get_allowed_states(hass, connection)
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
@@ -291,10 +297,46 @@ def handle_subscribe_entites(
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
     # where some states are missed
-    handle_get_states(hass, connection, msg)
+    states = _async_get_allowed_states(hass, connection)
+
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         "state_changed", forward_entity_changes
     )
+    connection.send_result(msg["id"])
+    data: dict[str, dict[str, dict]] = {"add": {}}
+    add_entities = data["add"]
+    for state in states:
+        state_dict = state.as_dict()
+        add_entities[state_dict.pop("entity_id")] = state_dict
+
+    # JSON serialize here so we can recover if it blows up due to the
+    # state machine containing unserializable data. This command is required
+    # to succeed for the UI to show.
+    response = messages.result_message(msg["id"], data)
+    try:
+        connection.send_message(const.JSON_DUMP(response))
+        return
+    except (ValueError, TypeError):
+        connection.logger.error(
+            "Unable to serialize to JSON. Bad data found at %s",
+            format_unserializable_data(
+                find_paths_unserializable_data(response, dump=const.JSON_DUMP)
+            ),
+        )
+    del response
+
+    data = {"add": {}}
+    add_entities = data["add"]
+
+    for state in states:
+        state_dict = state.as_dict()
+        try:
+            const.JSON_DUMP(state_dict)
+        except (ValueError, TypeError):
+            pass
+        else:
+            add_entities[state_dict.pop("entity_id")] = state_dict
+    connection.send_message(const.JSON_DUMP(messages.result_message(msg["id"], data)))
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
