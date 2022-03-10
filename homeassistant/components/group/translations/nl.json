@@ -3,61 +3,61 @@
         "step": {
             "cover": {
                 "data": {
-                    "entities": "Groep leden",
-                    "name": "Groep naam"
+                    "entities": "Groepsleden",
+                    "name": "Groepsnaam"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "cover_options": {
                 "data": {
-                    "entities": "Groep leden"
+                    "entities": "Groepsleden"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "fan": {
                 "data": {
-                    "entities": "Groep leden",
-                    "name": "Groep naam"
+                    "entities": "Groepsleden",
+                    "name": "Groepsnaam"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "fan_options": {
                 "data": {
-                    "entities": "Groep leden"
+                    "entities": "Groepsleden"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "init": {
                 "data": {
-                    "group_type": "Groep type"
+                    "group_type": "Groepstype"
                 },
-                "description": "Selecteer groep type"
+                "description": "Selecteer groepstype"
             },
             "light": {
                 "data": {
-                    "entities": "Groep leden",
-                    "name": "Groep naam"
+                    "entities": "Groepsleden",
+                    "name": "Groepsnaam"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "light_options": {
                 "data": {
-                    "entities": "Groep leden"
+                    "entities": "Groepsleden"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "media_player": {
                 "data": {
-                    "entities": "Groep leden\n",
-                    "name": "Groep naam"
+                    "entities": "Groepsleden",
+                    "name": "Groepsnaam"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "media_player_options": {
                 "data": {
-                    "entities": "Groep leden"
+                    "entities": "Groepsleden"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             }
         }
     },
