@@ -1697,6 +1697,7 @@ class Config:
         self.internal_url: str | None = None
         self.external_url: str | None = None
         self.currency: str = "EUR"
+        self.proxies: dict[str, str] = {}
 
         self.config_source: ConfigSource = ConfigSource.DEFAULT
 
@@ -1803,6 +1804,7 @@ class Config:
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
+            "proxies": self.proxies,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
@@ -1828,6 +1830,7 @@ class Config:
         external_url: str | dict[Any, Any] | None = _UNDEF,
         internal_url: str | dict[Any, Any] | None = _UNDEF,
         currency: str | None = None,
+        proxies: dict[str, str] = {},
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -1852,6 +1855,8 @@ class Config:
             self.internal_url = cast(Optional[str], internal_url)
         if currency is not None:
             self.currency = currency
+        if proxies is not None:
+            self.proxies = proxies
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
@@ -1893,6 +1898,7 @@ class Config:
             external_url=data.get("external_url", _UNDEF),
             internal_url=data.get("internal_url", _UNDEF),
             currency=data.get("currency"),
+            proxies=data.get("proxies"),
         )
 
     async def async_store(self) -> None:
@@ -1907,6 +1913,7 @@ class Config:
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
+            "proxies": self.proxies,
         }
 
         store = self.hass.helpers.storage.Store(

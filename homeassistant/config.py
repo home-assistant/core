@@ -40,6 +40,7 @@ from .const import (
     CONF_MEDIA_DIRS,
     CONF_NAME,
     CONF_PACKAGES,
+    CONF_PROXIES,
     CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE,
     CONF_TYPE,
@@ -174,6 +175,8 @@ PACKAGES_CONFIG_SCHEMA = cv.schema_with_slug_keys(  # Package names are slugs
     vol.Schema({cv.string: vol.Any(dict, list, None)})  # Component config
 )
 
+PROXIES_CONFIG_SCHEMA = vol.Schema({cv.string: cv.string})
+
 CUSTOMIZE_DICT_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -219,6 +222,7 @@ CORE_CONFIG_SCHEMA = vol.All(
                 cv.ensure_list, [cv.url]
             ),
             vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
+            vol.Optional(CONF_PROXIES, default={}): PROXIES_CONFIG_SCHEMA,
             vol.Optional(CONF_AUTH_PROVIDERS): vol.All(
                 cv.ensure_list,
                 [
@@ -530,6 +534,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
             CONF_CURRENCY,
+            CONF_PROXIES,
         )
     ):
         hac.config_source = ConfigSource.YAML
@@ -544,6 +549,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_MEDIA_DIRS, "media_dirs"),
         (CONF_LEGACY_TEMPLATES, "legacy_templates"),
         (CONF_CURRENCY, "currency"),
+        (CONF_PROXIES, "proxies"),
     ):
         if key in config:
             setattr(hac, attr, config[key])

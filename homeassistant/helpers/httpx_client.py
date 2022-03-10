@@ -66,6 +66,7 @@ def create_async_httpx_client(
     client = HassHttpXAsyncClient(
         verify=verify_ssl,
         headers={USER_AGENT: SERVER_SOFTWARE},
+        proxies=hass.config.proxies,  # type: ignore[arg-type]
         **kwargs,
     )
 
