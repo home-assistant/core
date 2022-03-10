@@ -4,13 +4,16 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import time
 from types import TracebackType
 
 import aiohttp
 from samsungtvws.connection import SamsungTVWSBaseConnection
+from samsungtvws.exceptions import ConnectionFailure
 from websockets.client import WebSocketClientProtocol, connect
+from websockets.exceptions import ConnectionClosed
 
 from .command import SamsungTVEncryptedCommand
 from .session import SamsungTVEncryptedSession
@@ -95,10 +98,10 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
 
         return self._REST_URL_FORMAT.format(**params)
 
-    async def open(self) -> WebSocketClientProtocol:
+    async def _open(self) -> None:
         if self.connection:
             # someone else already created a new connection
-            return self.connection
+            return
 
         millis = int(round(time.time() * 1000))
         step4_url = self._format_rest_url(f"socket.io/1/?t={millis}")
@@ -114,7 +117,28 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
         await connection.send("1::/com.samsung.companion")
 
         self.connection = connection
-        return connection
+
+    async def start_listening(self) -> None:
+        """Open, and start listening."""
+        if self.connection:
+            raise ConnectionFailure("Connection already exists")
+
+        await self._open()
+        assert self.connection
+
+        self._recv_loop = asyncio.ensure_future(
+            self._do_start_listening(self.connection)
+        )
+
+    @staticmethod
+    async def _do_start_listening(
+        connection: WebSocketClientProtocol,
+    ) -> None:
+        """Do start listening."""
+        with contextlib.suppress(ConnectionClosed):
+            while True:
+                data = await connection.recv()
+                LOGGER.debug("SamsungTVEncryptedWS websocket event: %s", data)
 
     async def send_command(
         self,
@@ -129,7 +153,8 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
         key_press_delay: float | None = None,
     ) -> None:
         if self.connection is None:
-            self.connection = await self.open()
+            await self._open()
+            assert self.connection
 
         delay = self.key_press_delay if key_press_delay is None else key_press_delay
 
