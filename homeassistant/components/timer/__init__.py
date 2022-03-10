@@ -285,14 +285,14 @@ class Timer(RestoreEntity):
         if (remaining := end - utc_now) > timedelta(0):
             self._remaining = remaining
             self._state = STATUS_PAUSED
-            self.async_start(timedelta(0))
+            self.async_start()
         # If the timer ended before now but within the grace period, finish the timer
         else:
             self._end = end
             self.async_finish()
 
     @callback
-    def async_start(self, duration: timedelta):
+    def async_start(self, duration: timedelta | None=None):
         """Start a timer."""
         if self._listener:
             self._listener()
