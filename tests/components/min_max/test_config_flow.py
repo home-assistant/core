@@ -65,6 +65,14 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert state.state == "20.0"
     assert state.attributes["count_sensors"] == 2
 
+    # Remove the config entry
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the state and entity registry entry are removed
+    assert hass.states.get(f"{platform}.my_min_max") is None
+    assert registry.async_get(f"{platform}.my_min_max") is None
+
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
