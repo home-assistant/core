@@ -1017,7 +1017,7 @@ pyiss==1.0.1
 pyisy==3.0.1
 
 # homeassistant.components.kaleidescape
-pykaleidescape==1.0.0
+pykaleidescape==1.0.1
 
 # homeassistant.components.kira
 pykira==0.1.1
