@@ -92,7 +92,7 @@ async def async_setup_entry(
         for device_id, device_data in coordinator.data.parsed.items()
         for sensor_id, sensor_data in device_data["motion_sensors"].items()
         for description in MOTION_SENSOR_TYPES
-        if device_data["motion_sensors"] and sensor_data[sensor_id]
+        if device_data["motion_sensors"]
     )
 
 
@@ -125,5 +125,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.entity_description.value_fn(
-            self.coordinator.data.parsed[self._device_id][self._sensor_id]
+            self.coordinator.data.parsed[self._device_id]["motion_sensors"][
+                self._sensor_id
+            ]
         )
