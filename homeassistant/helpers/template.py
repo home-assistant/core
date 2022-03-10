@@ -999,6 +999,17 @@ def is_device_attr(
     return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
 
 
+def in_area(hass: HomeAssistant, lookup_value: str, area_id_or_name: str) -> bool:
+    """Test if a device ID or entity ID is in an area (name or ID)."""
+    area_reg = area_registry.async_get(hass)
+    in_area_name = area_id_or_name
+    if area := area_reg.async_get_area(area_id_or_name):
+        in_area_name = area.name
+
+    lookup_area_name = area_name(hass, lookup_value)
+    return bool(lookup_area_name) and lookup_area_name == in_area_name
+
+
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the area ID from an area name, device id, or entity id."""
     area_reg = area_registry.async_get(hass)
@@ -1984,6 +1995,24 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["integration_entities"] = pass_context(
             self.globals["integration_entities"]
         )
+
+        # This is using the same technique as hassfunction to get hass to our function.
+        # However using hassfunction for a test doesn't work properly, using
+        # the test in a `select` or `selectattr` filter fails with this error:
+        # > Attempted to invoke a context test without context
+        # Using pass_environment works though and we don't care about the
+        # environment or context either way.
+        def hassfunction_env(func):
+            """Wrap function that depend on hass."""
+
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                return func(hass, *args[1:], **kwargs)
+
+            return pass_environment(wrapper)
+
+        self.globals["in_area"] = hassfunction_env(in_area)
+        self.tests["in_area"] = pass_environment(self.globals["in_area"])
 
         if limited:
             # Only device_entities is available to limited templates, mark other

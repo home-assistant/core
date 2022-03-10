@@ -2340,6 +2340,141 @@ async def test_device_attr(hass):
     assert info.rate_limit is None
 
 
+async def test_in_area(hass):
+    """Test in_area function."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non-existing entity id and area (test form)
+    info = render_to_info(hass, "{{ 'sensor.fake' is in_area('fake') }}")
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    # Test non-existing device id and area (function form)
+    info = render_to_info(hass, "{{ in_area('123abc', 'fake') }}")
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    # Test non-existing IDs and areas (select form)
+    info = render_to_info(
+        hass, "{{ ['sensor.fake', '123abc'] | select('in_area', 'fake') | list }}"
+    )
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ in_area(12, 34) }}")
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("room")
+
+    # Device and entity with area
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    device_entry = device_registry.async_update_device(
+        device_entry.id, area_id=area_entry.id
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry.id
+    )
+    # Device and entity without area
+    device_entry_no_area = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:AA:BB:CC")},
+    )
+    entity_entry_no_area = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry_no_area.id,
+    )
+
+    # Test entity with area by name (test form)
+    info = render_to_info(
+        hass, f"{{{{ '{entity_entry.entity_id}' is in_area('{area_entry.name}') }}}}"
+    )
+    assert_result_info(info, True)
+    assert info.rate_limit is None
+
+    # Test entity with area by id (function form)
+    info = render_to_info(
+        hass, f"{{{{ in_area('{entity_entry.entity_id}', '{area_entry.id}') }}}}"
+    )
+    assert_result_info(info, True)
+    assert info.rate_limit is None
+
+    # Test device with area by name (test form)
+    info = render_to_info(
+        hass, f"{{{{ '{device_entry.id}' is in_area('{area_entry.name}') }}}}"
+    )
+    assert_result_info(info, True)
+    assert info.rate_limit is None
+
+    # Test device with area by id (function form)
+    info = render_to_info(
+        hass, f"{{{{ in_area('{device_entry.id}', '{area_entry.id}') }}}}"
+    )
+    assert_result_info(info, True)
+    assert info.rate_limit is None
+
+    # Test entity not in area by name (test form)
+    info = render_to_info(
+        hass,
+        f"{{{{ '{entity_entry_no_area.entity_id}' is in_area('{area_entry.name}') }}}}",
+    )
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    # Test entity not in area by id (test form)
+    info = render_to_info(
+        hass,
+        f"{{{{ in_area('{entity_entry_no_area.entity_id}', '{area_entry.id}') }}}}",
+    )
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    # Test only entities in area by name remain (select form)
+    info = render_to_info(
+        hass,
+        (
+            "{{ ["
+            f"'{entity_entry.entity_id}','{device_entry.id}',"
+            f"'{entity_entry_no_area.entity_id}','{device_entry_no_area.id}'"
+            f"] | select('in_area', '{area_entry.name}') | list"
+            "}}"
+        ),
+    )
+    assert_result_info(info, [entity_entry.entity_id, device_entry.id])
+    assert info.rate_limit is None
+
+    # Test only entities without an area by id remain (reject form)
+    info = render_to_info(
+        hass,
+        (
+            "{{ ["
+            f"'{entity_entry.entity_id}','{device_entry.id}',"
+            f"'{entity_entry_no_area.entity_id}','{device_entry_no_area.id}'"
+            f"] | reject('in_area', '{area_entry.id}') | list"
+            "}}"
+        ),
+    )
+    assert_result_info(info, [entity_entry_no_area.entity_id, device_entry_no_area.id])
+    assert info.rate_limit is None
+
+
 async def test_area_id(hass):
     """Test area_id function."""
     config_entry = MockConfigEntry(domain="light")
