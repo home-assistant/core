@@ -340,17 +340,7 @@ async def async_load_platform_helper(hass, platform, async_setup):
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT notify service."""
-        discovery_data = discovery_payload.discovery_data
         await async_setup(discovery_payload)
-        try:
-            pass
-        except Exception:
-            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-            clear_discovery_hash(hass, discovery_hash)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
-            raise
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(platform, DOMAIN), async_discover
