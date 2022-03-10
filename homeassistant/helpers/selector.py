@@ -195,6 +195,8 @@ class NumberSelector(Selector):
             {
                 vol.Optional("min"): vol.Coerce(float),
                 vol.Optional("max"): vol.Coerce(float),
+                # Controls slider steps, and up/down keyboard binding for the box
+                # user input is not rounded
                 vol.Optional("step", default=1): vol.All(
                     vol.Coerce(float), vol.Range(min=1e-3)
                 ),
@@ -420,7 +422,8 @@ class IconSelector(Selector):
     selector_type = "icon"
 
     CONFIG_SCHEMA = vol.Schema(
-        {vol.Optional("placeholder"): str, vol.Optional("fallbackPath"): str}
+        {vol.Optional("placeholder"): str}
+        # Frontend also has a fallbackPath option, this is not used by core
     )
 
     def __call__(self, data: Any) -> str:
