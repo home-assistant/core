@@ -31,27 +31,22 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the alarm control panel platform."""
-    entities = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
-    intrusion_system = session.intrusion_system
     alarm_control_panel = IntrusionSystemAlarmControlPanel(
-        device=intrusion_system,
+        device=session.intrusion_system,
         parent_id=session.information.unique_id,
         entry_id=config_entry.entry_id,
     )
-    entities.append(alarm_control_panel)
 
-    async_add_entities(entities)
+    async_add_entities([alarm_control_panel])
 
 
 class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
     """Representation of SHC intrusion detection control."""
 
-    _attr_icon: str = "mdi:security"
     _attr_code_arm_required: bool = False
-    _attr_code_format: str | None = None
-    _attr_should_poll = False
+    _attr_should_poll: bool = False
     _attr_supported_features: int = (
         SUPPORT_ALARM_ARM_AWAY
         | SUPPORT_ALARM_ARM_HOME
@@ -61,7 +56,7 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
     def __init__(
         self, device: SHCIntrusionSystem, parent_id: str, entry_id: str
     ) -> None:
-        """Initialize the generic SHC device."""
+        """Initialize SHC Alarm Control Panel device."""
         self._device = device
         self._entry_id = entry_id
         self._attr_name = device.name
@@ -74,7 +69,7 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
             via_device=(DOMAIN, parent_id),
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
 
@@ -83,13 +78,13 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
 
         self._device.subscribe_callback(self.entity_id, on_state_changed)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
         self._device.unsubscribe_callback(self.entity_id)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return false if status is unavailable."""
         return self._device.system_availability
 
@@ -120,18 +115,18 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
                 return STATE_ALARM_ARMED_CUSTOM_BYPASS
         return None
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._device.disarm()
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._device.arm_full_protection()
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._device.arm_partial_protection()
 
-    def alarm_arm_custom_bypass(self, code=None):
+    def alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._device.arm_individual_protection()
