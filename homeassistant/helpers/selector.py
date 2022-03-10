@@ -173,22 +173,22 @@ class AreaSelector(Selector):
         return [vol.Schema(str)(val) for val in data]
 
 
+def has_min_max_if_slider(data: Any) -> Any:
+    """Validate configuration."""
+    if data["mode"] == "box":
+        return data
+
+    if "min" not in data or "max" not in data:
+        raise vol.Invalid("min and max are required in slider mode")
+
+    return data
+
+
 @SELECTORS.register("number")
 class NumberSelector(Selector):
     """Selector of a numeric value."""
 
     selector_type = "number"
-
-    @staticmethod
-    def has_min_max_if_slider(data: Any) -> Any:
-        """Validate configuration."""
-        if data["mode"] == "box":
-            return data
-
-        if "min" not in data or "max" not in data:
-            raise vol.Invalid("min and max are required in slider mode")
-
-        return data
 
     CONFIG_SCHEMA = vol.All(
         vol.Schema(
