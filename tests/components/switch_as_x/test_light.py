@@ -1,4 +1,4 @@
-"""The tests for the Light Switch platform."""
+"""Tests for the Switch as X Light platform."""
 import pytest
 
 from homeassistant.components.light import (
@@ -104,6 +104,34 @@ async def test_switch_service_calls(hass):
 
     assert hass.states.get("switch.decorative_lights").state == "on"
     assert hass.states.get("light.decorative_lights").state == "on"
+
+
+@pytest.mark.parametrize("target_domain", ("light",))
+async def test_config_entry_entity_id(hass: HomeAssistant, target_domain):
+    """Test light switch setup from config entry with entity id."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={"entity_id": "switch.abc", "target_domain": target_domain},
+        title="ABC",
+    )
+
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert DOMAIN in hass.config.components
+
+    state = hass.states.get(f"{target_domain}.abc")
+    assert state.state == "unavailable"
+    # Name copied from config entry title
+    assert state.name == "ABC"
+
+    # Check the light is added to the entity registry
+    registry = er.async_get(hass)
+    entity_entry = registry.async_get(f"{target_domain}.abc")
+    assert entity_entry.unique_id == config_entry.entry_id
 
 
 @pytest.mark.parametrize("target_domain", ("light",))
