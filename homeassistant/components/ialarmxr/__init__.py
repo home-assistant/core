@@ -76,7 +76,7 @@ class IAlarmXRDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _update_data(self) -> None:
         """Fetch data from iAlarmXR via sync functions."""
-        status = self.ialarmxr.get_status()
+        status: int = self.ialarmxr.get_status()
         _LOGGER.debug("iAlarmXR status: %s", status)
 
         decoded_status = IALARMXR_TO_HASS.get(status)
