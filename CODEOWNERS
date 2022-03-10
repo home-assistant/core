@@ -980,6 +980,8 @@ homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switch/* @home-assistant/core
 tests/components/switch/* @home-assistant/core
+homeassistant/components/switch_as_x/* @home-assistant/core
+tests/components/switch_as_x/* @home-assistant/core
 homeassistant/components/switchbot/* @danielhiversen @RenierM26
 tests/components/switchbot/* @danielhiversen @RenierM26
 homeassistant/components/switcher_kis/* @tomerfi @thecode
