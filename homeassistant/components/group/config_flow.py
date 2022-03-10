@@ -15,6 +15,7 @@ from homeassistant.helpers.helper_config_entry_flow import (
 )
 
 from . import DOMAIN
+from .binary_sensor import CONF_ALL
 
 
 def basic_group_options_schema(domain: str) -> vol.Schema:
@@ -35,12 +36,24 @@ def basic_group_config_schema(domain: str) -> vol.Schema:
     )
 
 
+BINARY_SENSOR_OPTIONS_SCHEMA = basic_group_options_schema("binary_sensor").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.selector({"boolean": {}}),
+    }
+)
+
+BINARY_SENSOR_CONFIG_SCHEMA = vol.Schema(
+    {vol.Required("name"): selector.selector({"text": {}})}
+).extend(BINARY_SENSOR_OPTIONS_SCHEMA.schema)
+
+
 INITIAL_STEP_SCHEMA = vol.Schema(
     {
         vol.Required("group_type"): selector.selector(
             {
                 "select": {
                     "options": [
+                        "binary_sensor",
                         "cover",
                         "fan",
                         "light",
@@ -61,6 +74,7 @@ def choose_config_step(options: dict[str, Any]) -> str:
 
 CONFIG_FLOW = {
     "user": HelperFlowStep(INITIAL_STEP_SCHEMA, next_step=choose_config_step),
+    "binary_sensor": HelperFlowStep(BINARY_SENSOR_CONFIG_SCHEMA),
     "cover": HelperFlowStep(basic_group_config_schema("cover")),
     "fan": HelperFlowStep(basic_group_config_schema("fan")),
     "light": HelperFlowStep(basic_group_config_schema("light")),
@@ -70,6 +84,7 @@ CONFIG_FLOW = {
 
 OPTIONS_FLOW = {
     "init": HelperFlowStep(None, next_step=choose_config_step),
+    "binary_sensor": HelperFlowStep(BINARY_SENSOR_OPTIONS_SCHEMA),
     "cover": HelperFlowStep(basic_group_options_schema("cover")),
     "fan": HelperFlowStep(basic_group_options_schema("fan")),
     "light": HelperFlowStep(basic_group_options_schema("light")),
