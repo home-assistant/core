@@ -2,62 +2,77 @@
   "title": "Group",
   "config": {
     "step": {
-      "init": {
-        "description": "Select group type",
+      "user": {
+        "title": "New Group",
         "data": {
           "group_type": "Group type"
         }
       },
-      "cover": {
-        "description": "Select group options",
+      "binary_sensor": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on.",
         "data": {
-          "entities": "Group members",
-          "name": "Group name"
+          "all": "All entities",
+          "entities": "Members",
+          "name": "Name"
         }
       },
-      "cover_options": {
-        "description": "Select group options",
+      "cover": {
         "data": {
-          "entities": "Group members"
+          "title": "[%key:component::group::config::step::user::title%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
       "fan": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members",
-          "name": "Group name"
-        }
-      },
-      "fan_options": {
-        "description": "Select group options",
-        "data": {
-          "entities": "Group members"
+          "title": "[%key:component::group::config::step::user::title%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
       "light": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members",
-          "name": "Group name"
-        }
-      },
-      "light_options": {
-        "description": "Select group options",
-        "data": {
-          "entities": "Group members"
+          "title": "[%key:component::group::config::step::user::title%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
       "media_player": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members",
-          "name": "Group name"
+          "title": "[%key:component::group::config::step::user::title%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "binary_sensor_options": {
+        "data": {
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
+        }
+      },
+      "cover_options": {
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
+        }
+      },
+      "fan_options": {
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
+        }
+      },
+      "light_options": {
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
         }
       },
       "media_player_options": {
-        "description": "Select group options",
         "data": {
-          "entities": "Group members"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
         }
       }
     }
