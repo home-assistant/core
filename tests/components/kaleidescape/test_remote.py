@@ -1,4 +1,4 @@
-"""Tests for Kaleidescape media player platform."""
+"""Tests for Kaleidescape remote platform."""
 
 from unittest.mock import MagicMock
 

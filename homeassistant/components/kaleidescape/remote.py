@@ -1,4 +1,5 @@
-"""Kaleidescape remote."""
+"""Sensor platform for Kaleidescape integration."""
+
 from __future__ import annotations
 
 import logging
