@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Final
+from typing import Final, cast
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, DeviceResponseEntry
+from .const import DOMAIN, SERVICE_DATA, DeviceResponseEntry
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,16 +134,15 @@ async def async_setup_entry(
     entities = []
     if coordinator.api.data is not None:
         for description in SENSORS:
-            if (
-                description.key in coordinator.api.data.available_datapoints
-                and getattr(coordinator.api.data, description.key) is not None
-            ):
+            if getattr(coordinator.data[SERVICE_DATA], description.key) is not None:
                 entities.append(HWEnergySensor(coordinator, entry, description))
     async_add_entities(entities)
 
 
-class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
+class HWEnergySensor(CoordinatorEntity, SensorEntity):
     """Representation of a HomeWizard Sensor."""
+
+    coordinator: HWEnergyDeviceUpdateCoordinator
 
     def __init__(
         self,
@@ -168,7 +167,7 @@ class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
             "total_power_export_t1_kwh",
             "total_power_export_t2_kwh",
         ]:
-            if self.data["data"][self.data_type] == 0:
+            if self.native_value == 0:
                 self._attr_entity_registry_enabled_default = False
 
     @property
@@ -190,9 +189,9 @@ class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return state of meter."""
-        return self.data["data"][self.data_type]
+        return cast(StateType, getattr(self.data[SERVICE_DATA], self.data_type))
 
     @property
     def available(self) -> bool:
         """Return availability of meter."""
-        return super().available and self.data_type in self.data["data"]
+        return super().available and self.native_value is not None

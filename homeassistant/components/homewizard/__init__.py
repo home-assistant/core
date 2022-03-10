@@ -1,14 +1,11 @@
 """The Homewizard integration."""
 import logging
 
-from aiohwenergy import DisabledError
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import HWEnergyDeviceUpdateCoordinator as Coordinator
@@ -69,16 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create coordinator
     coordinator = Coordinator(hass, entry.data[CONF_IP_ADDRESS])
     try:
-        await coordinator.initialize_api()
-
-    except DisabledError:
-        _LOGGER.error("API is disabled, enable API in HomeWizard Energy app")
-        return False
-
-    except UpdateFailed as ex:
-        raise ConfigEntryNotReady from ex
-
-    await coordinator.async_config_entry_first_refresh()
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        coordinator.api.close()
+        raise
 
     # Finalize
     hass.data.setdefault(DOMAIN, {})

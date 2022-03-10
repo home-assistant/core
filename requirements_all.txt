@@ -168,9 +168,6 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==4.3.0
 
-# homeassistant.components.homewizard
-aiohwenergy==0.8.0
-
 # homeassistant.components.imap
 aioimaplib==0.9.0
 
@@ -1883,6 +1880,9 @@ python-gc100==1.0.3a0
 
 # homeassistant.components.gitlab_ci
 python-gitlab==1.6.0
+
+# homeassistant.components.homewizard
+python-homewizard-energy==1.0.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3

@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TypedDict
+from typing import Final, TypedDict
 
 # Set up.
-from aiohwenergy.device import Device
+from homewizard_energy.models import Data, Device, State
 
 from homeassistant.const import Platform
-from homeassistant.helpers.typing import StateType
 
 DOMAIN = "homewizard"
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
@@ -22,6 +21,11 @@ CONF_PRODUCT_NAME = "product_name"
 CONF_PRODUCT_TYPE = "product_type"
 CONF_SERIAL = "serial"
 
+# Services
+SERVICE_DEVICE: Final = "data"
+SERVICE_DATA: Final = "device"
+SERVICE_STATE: Final = "state"
+
 UPDATE_INTERVAL = timedelta(seconds=5)
 
 
@@ -29,4 +33,5 @@ class DeviceResponseEntry(TypedDict):
     """Dict describing a single response entry."""
 
     device: Device
-    data: dict[str, StateType]
+    data: Data
+    state: State | None

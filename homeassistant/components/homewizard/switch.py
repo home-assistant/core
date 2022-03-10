@@ -1,7 +1,9 @@
 """Creates Homewizard Energy switch entities."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
+
+from homewizard_energy.models import State
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +12,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_STATE
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 
@@ -22,7 +24,7 @@ async def async_setup_entry(
     """Set up switches."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if coordinator.api.state:
+    if coordinator.data[SERVICE_STATE]:
         async_add_entities(
             [
                 HWEnergyMainSwitchEntity(coordinator, entry),
@@ -70,12 +72,12 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.api.state.set(power_on=True)
+        await self.coordinator.api.state_set(power_on=True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.api.state.set(power_on=False)
+        await self.coordinator.api.state_set(power_on=False)
         await self.coordinator.async_refresh()
 
     @property
@@ -85,12 +87,14 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
 
         This switch becomes unavailable when switch_lock is enabled.
         """
-        return super().available and not self.coordinator.api.state.switch_lock
+        state = cast(State, self.coordinator.data[SERVICE_STATE])
+        return super().available and not state.switch_lock
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return bool(self.coordinator.api.state.power_on)
+        state = cast(State, self.coordinator.data[SERVICE_STATE])
+        return bool(state.power_on)
 
 
 class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
@@ -115,15 +119,16 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch-lock on."""
-        await self.coordinator.api.state.set(switch_lock=True)
+        await self.coordinator.api.state_set(switch_lock=True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch-lock off."""
-        await self.coordinator.api.state.set(switch_lock=False)
+        await self.coordinator.api.state_set(switch_lock=False)
         await self.coordinator.async_refresh()
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return bool(self.coordinator.api.state.switch_lock)
+        state = cast(State, self.coordinator.data[SERVICE_STATE])
+        return bool(state.switch_lock)

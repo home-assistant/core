@@ -146,9 +146,6 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==4.3.0
 
-# homeassistant.components.homewizard
-aiohwenergy==0.8.0
-
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
 
@@ -1210,6 +1207,9 @@ python-ecobee-api==0.2.14
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
+
+# homeassistant.components.homewizard
+python-homewizard-energy==1.0.0
 
 # homeassistant.components.izone
 python-izone==1.2.3
