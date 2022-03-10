@@ -1564,7 +1564,7 @@ pyisy==3.0.1
 pyitachip2ir==0.0.7
 
 # homeassistant.components.kaleidescape
-pykaleidescape==2022.2.6
+pykaleidescape==1.0.1
 
 # homeassistant.components.kira
 pykira==0.1.1
