@@ -27,9 +27,8 @@ from .const import (
     NO_ROUTE_ERROR_MESSAGE,
     TRAFFIC_MODE_ENABLED,
     TRAVEL_MODES_VEHICLE,
-    HERERoutingData,
-    HERETravelTimeConfig,
 )
+from .model import HERERoutingData, HERETravelTimeConfig
 
 PLATFORMS = [Platform.SENSOR]
 

@@ -1,45 +1,9 @@
 """Constants for the HERE Travel Time integration."""
-from __future__ import annotations
-
-from dataclasses import dataclass
-from datetime import time
-from typing import TypedDict
-
 from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
 )
-
-
-class HERERoutingData(TypedDict):
-    """Routing information calculated from a herepy.RoutingResponse."""
-
-    ATTR_ATTRIBUTION: str | None
-    ATTR_DURATION: float
-    ATTR_DURATION_IN_TRAFFIC: float
-    ATTR_DISTANCE: float
-    ATTR_ROUTE: str
-    ATTR_ORIGIN: str
-    ATTR_DESTINATION: str
-    ATTR_ORIGIN_NAME: str
-    ATTR_DESTINATION_NAME: str
-
-
-@dataclass
-class HERETravelTimeConfig:
-    """Configuration for HereTravelTimeDataUpdateCoordinator."""
-
-    origin: str | None
-    destination: str | None
-    origin_entity_id: str | None
-    destination_entity_id: str | None
-    travel_mode: str
-    route_mode: str
-    units: str
-    arrival: time
-    departure: time
-
 
 DOMAIN = "here_travel_time"
 DEFAULT_SCAN_INTERVAL = 300

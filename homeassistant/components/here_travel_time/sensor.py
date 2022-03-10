@@ -27,7 +27,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HereTravelTimeDataUpdateCoordinator
-from .const import HERETravelTimeConfig
+from .model import HERETravelTimeConfig
 
 _LOGGER = logging.getLogger(__name__)
 
