@@ -99,11 +99,13 @@ def _cached_state_diff_message(event: Event) -> str:
 def _state_diff_event(event: Event) -> dict:
     """Convert a state_changed event to the minimal version.
 
-    State update
+    State update example
 
-    add: {entity_id: state,…}
-    changed: {entity_id: diff,…}
-    removed: [entity_id,…]
+    {
+        add: {entity_id: state,…}
+        changed: {entity_id: diff,…}
+        removed: [entity_id,…]
+    }
 
     Init state should do as_dict, copy, remove entity id since it will be in the key
 
