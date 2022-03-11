@@ -8,14 +8,11 @@ from unittest.mock import Mock, patch
 import pytest
 from rabbitair import Mode, Model, Speed
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.rabbitair.const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant import config_entries
+from homeassistant.components.rabbitair.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 from homeassistant.helpers.device_registry import format_mac
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.1.1.1"
 TEST_TOKEN = "0123456789abcdef0123456789abcdef"
@@ -154,42 +151,3 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
-
-
-@pytest.mark.usefixtures("rabbitair_connect")
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test options flow."""
-    # Set up config entry.
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_UNIQUE_ID,
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_ACCESS_TOKEN: TEST_TOKEN,
-        },
-        title=TEST_TITLE,
-        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Options flow with no input results in form.
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    # Options flow with input results in update to entry.
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL + 5,
-        },
-    )
-
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert config_entry.options == {
-        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL + 5,
-    }
