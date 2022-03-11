@@ -41,7 +41,7 @@ class TokenNotReady(Exception):
 
 
 class DeviceAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
-    """OAuth implementation using OAuth for desktop applications."""
+    """OAuth implementation for Device Auth."""
 
     def __init__(self, hass: HomeAssistant, client_id: str, client_secret: str) -> None:
         """Initialize InstalledAppAuth."""
@@ -55,7 +55,7 @@ class DeviceAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
         )
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
-        """Resolve a Google API Credentails object to Home Assistant token."""
+        """Resolve a Google API Credentials object to Home Assistant token."""
         creds: Credentials = external_data["creds"]
         return {
             "access_token": creds.access_token,

@@ -160,7 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
     )
 
-    # Import credentails from the old token file into the new way as
+    # Import credentials from the old token file into the new way as
     # a ConfigEntry managed by home assistant.
     storage = Storage(hass.config.path(TOKEN_FILE))
     creds = await hass.async_add_executor_job(storage.get)
