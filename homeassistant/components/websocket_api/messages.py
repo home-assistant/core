@@ -164,10 +164,10 @@ def compressed_state_dict_add(state: State) -> dict[str, Any]:
 
     Sends c (context) as a string if it only contains an id.
     """
-    state_dict = state.as_compressed_dict()
+    state_dict = state.as_compressed_dict().copy()
     if state_dict["lu"] == state_dict["lc"]:
-        return {k: v for k, v in state_dict.items() if k != "lu"}
-    if state_dict["c"]["parent_id"] is None and state_dict["c"]["user_id"]:
+        del state_dict["lu"]
+    if state_dict["c"]["parent_id"] is None and state_dict["c"]["user_id"] is None:
         state_dict["c"] = state_dict["c"]["id"]
     return state_dict
 
