@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from functools import lru_cache
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import voluptuous as vol
 
-from homeassistant.core import Event
+from homeassistant.core import Event, State
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import (
     find_paths_unserializable_data,
@@ -30,6 +30,16 @@ BASE_COMMAND_MESSAGE_SCHEMA: Final = vol.Schema({vol.Required("id"): cv.positive
 
 IDEN_TEMPLATE: Final = "__IDEN__"
 IDEN_JSON_TEMPLATE: Final = '"__IDEN__"'
+
+
+STATE_KEY_SHORT_NAMES = {
+    "entity_id": "e",
+    "state": "s",
+    "last_changed": "lc",
+    "last_updated": "lu",
+    "context": "c",
+    "attributes": "a",
+}
 
 
 def result_message(iden: int, result: Any = None) -> dict[str, Any]:
@@ -74,7 +84,7 @@ def _cached_event_message(event: Event) -> str:
     return message_to_json(event_message(IDEN_TEMPLATE, event))
 
 
-def cached_state_changed_event_message(iden: int, event: Event) -> str:
+def cached_state_diff_message(iden: int, event: Event) -> str:
     """Return an event message.
 
     Serialize to json once per message.
@@ -83,42 +93,75 @@ def cached_state_changed_event_message(iden: int, event: Event) -> str:
     all getting many of the same events (mostly state changed)
     we can avoid serializing the same data for each connection.
     """
-    return _cached_state_changed_event_message(event).replace(
-        IDEN_JSON_TEMPLATE, str(iden), 1
-    )
+    return _cached_state_diff_message(event).replace(IDEN_JSON_TEMPLATE, str(iden), 1)
 
 
 @lru_cache(maxsize=128)
-def _cached_state_changed_event_message(event: Event) -> str:
+def _cached_state_diff_message(event: Event) -> str:
     """Cache and serialize the event to json.
 
     The IDEN_TEMPLATE is used which will be replaced
     with the actual iden in cached_event_message
     """
-    return message_to_json(
-        event_message(IDEN_TEMPLATE, _minimal_state_changed_event(event))
-    )
+    return message_to_json(event_message(IDEN_TEMPLATE, _state_diff_event(event)))
 
 
-def _minimal_state_changed_event(event: Event) -> dict:
-    """Convert a state_changed event to the minimal version."""
-    # The entity_id is also duplicated in the message twice but its actually used
-    if event_new_state := event.data["new_state"]:
-        new_state = event_new_state.as_dict()
-    else:
-        new_state = None
-    return {
-        "event_type": "state_changed",
-        "data": {
-            "old_state": None,
-            "new_state": new_state,
-            "entity_id": event.data["entity_id"],
-            "context": {},
-        },
-        "origin": str(event.origin.value),
-        "time_fired": None,
-        "context": event.context.as_dict(),
+def _state_diff_event(event: Event) -> dict:
+    """Convert a state_changed event to the minimal version.
+
+    State update example
+
+    {
+        add: {entity_id: state,…}
+        changed: {entity_id: diff,…}
+        removed: [entity_id,…]
     }
+
+    Init state should do as_dict, copy, remove entity id since it will be in the key
+
+    Fetch function is empty
+    """
+    # The entity_id is also duplicated in the message twice but its actually used
+    if (event_new_state := event.data["new_state"]) is None:
+        return {"remove": [event.data["entity_id"]]}
+    assert isinstance(event_new_state, State)
+    if (event_old_state := event.data["old_state"]) is None:
+        state_dict = compress_state_key_names(event_new_state.as_dict())
+        return {"add": {state_dict.pop("e"): state_dict}}
+    assert isinstance(event_old_state, State)
+    return _state_diff(event_old_state, event_new_state)
+
+
+def _state_diff(
+    old_state: State, new_state: State
+) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
+    """Create a diff dict that can be used to overlay changes."""
+    old_state_dict = cast(dict[str, Any], old_state.as_dict())
+    new_state_dict = cast(dict[str, Any], new_state.as_dict())
+    diff: dict = {}
+    for item, value in new_state_dict.items():
+        if isinstance(value, dict):
+            old_dict = old_state_dict[item]
+            for sub_item, sub_value in value.items():
+                if old_dict.get(sub_item) != sub_value:
+                    diff.setdefault("+", {}).setdefault(
+                        STATE_KEY_SHORT_NAMES[item], {}
+                    )[sub_item] = sub_value
+        elif old_state_dict[item] != value:
+            diff.setdefault("+", {})[STATE_KEY_SHORT_NAMES[item]] = value
+    for item, value in old_state_dict.items():
+        if isinstance(value, dict):
+            new_dict = new_state_dict[item]
+            for sub_item, sub_value in value.items():
+                if sub_item not in new_dict:
+                    diff.setdefault("-", {}).setdefault(
+                        STATE_KEY_SHORT_NAMES[item], []
+                    ).append(sub_item)
+    # Omit last_updated(lu) if last_changed(lc) is set since they
+    # will always be the same
+    if "+" in diff and "lu" in diff["+"] and "lc" in diff["+"]:
+        del diff["+"]["lu"]
+    return {"changed": {new_state_dict["entity_id"]: diff}}
 
 
 def message_to_json(message: dict[str, Any]) -> str:
@@ -137,3 +180,13 @@ def message_to_json(message: dict[str, Any]) -> str:
                 message["id"], const.ERR_UNKNOWN_ERROR, "Invalid JSON in response"
             )
         )
+
+
+def compress_state_key_names(state_dict: dict[str, Any]) -> dict:
+    """Convert a state dict keys to short names."""
+    compressed = {STATE_KEY_SHORT_NAMES[k]: v for k, v in state_dict.items()}
+    # Omit last_updated(lu) if last_changed(lc) is set since they
+    # will always be the same
+    if "lu" in compressed and "lc" in compressed:
+        del compressed["lu"]
+    return compressed

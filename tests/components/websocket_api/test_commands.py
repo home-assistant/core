@@ -1,4 +1,5 @@
 """Tests for WebSocket API commands."""
+from copy import deepcopy
 import datetime
 from unittest.mock import ANY, patch
 
@@ -13,8 +14,9 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import URL
+from homeassistant.components.websocket_api.messages import STATE_KEY_SHORT_NAMES
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -664,6 +666,190 @@ async def test_subscribe_unsubscribe_events_state_changed(
     assert msg["type"] == "event"
     assert msg["event"]["event_type"] == "state_changed"
     assert msg["event"]["data"]["entity_id"] == "light.permitted"
+
+
+async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin_user):
+    """Test subscribe/unsubscribe entities."""
+
+    STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
+
+    def _apply_changes(state_dict: dict, change_dict: dict) -> None:
+        """Apply a diff set to a dict.
+
+        Port of the client side merging
+        """
+        additions = change_dict.get("+", {})
+        if "lc" in additions:
+            additions["lu"] = additions["lc"]
+        sub_dicts = [
+            key for key, change in additions.items() if isinstance(change, dict)
+        ]
+        for key in sub_dicts:
+            state_dict[STATE_KEY_LONG_NAMES[key]].update(additions.pop(key))
+        for k, v in additions.items():
+            state_dict[STATE_KEY_LONG_NAMES[k]] = v
+        for key, items in change_dict.get("-", {}).items():
+            for item in items:
+                del state_dict[STATE_KEY_LONG_NAMES[key]][item]
+
+    hass.states.async_set("light.permitted", "off", {"color": "red"})
+    original_state = hass.states.get("light.permitted")
+    assert isinstance(original_state, State)
+    state_dict = {
+        "attributes": dict(original_state.attributes),
+        "context": dict(original_state.context.as_dict()),
+        "entity_id": original_state.entity_id,
+        "last_changed": original_state.last_changed.isoformat(),
+        "last_updated": original_state.last_updated.isoformat(),
+        "state": original_state.state,
+    }
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
+
+    await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "add": {
+            "light.permitted": {
+                "a": {"color": "red"},
+                "c": {"id": ANY, "parent_id": None, "user_id": None},
+                "lc": ANY,
+                "s": "off",
+            }
+        }
+    }
+    hass.states.async_set("light.not_permitted", "on")
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+    hass.states.async_set("light.permitted", "on", {"effect": "help"})
+    hass.states.async_set(
+        "light.permitted", "on", {"effect": "help", "color": ["blue", "green"]}
+    )
+    hass.states.async_remove("light.permitted")
+    hass.states.async_set("light.permitted", "on", {"effect": "help", "color": "blue"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "changed": {
+            "light.permitted": {
+                "+": {
+                    "a": {"color": "blue"},
+                    "c": {"id": ANY},
+                    "lc": ANY,
+                    "s": "on",
+                }
+            }
+        }
+    }
+
+    change_set = msg["event"]["changed"]["light.permitted"]
+    additions = deepcopy(change_set["+"])
+    _apply_changes(state_dict, change_set)
+    assert state_dict == {
+        "attributes": {"color": "blue"},
+        "context": {
+            "id": additions["c"]["id"],
+            "parent_id": None,
+            "user_id": None,
+        },
+        "entity_id": "light.permitted",
+        "last_changed": additions["lc"],
+        "last_updated": additions["lc"],
+        "state": "on",
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "changed": {
+            "light.permitted": {
+                "+": {
+                    "a": {"effect": "help"},
+                    "c": {"id": ANY},
+                    "lu": ANY,
+                },
+                "-": {"a": ["color"]},
+            }
+        }
+    }
+
+    change_set = msg["event"]["changed"]["light.permitted"]
+    additions = deepcopy(change_set["+"])
+    _apply_changes(state_dict, change_set)
+
+    assert state_dict == {
+        "attributes": {"effect": "help"},
+        "context": {
+            "id": additions["c"]["id"],
+            "parent_id": None,
+            "user_id": None,
+        },
+        "entity_id": "light.permitted",
+        "last_changed": ANY,
+        "last_updated": additions["lu"],
+        "state": "on",
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "changed": {
+            "light.permitted": {
+                "+": {
+                    "a": {"color": ["blue", "green"]},
+                    "c": {"id": ANY},
+                    "lu": ANY,
+                }
+            }
+        }
+    }
+
+    change_set = msg["event"]["changed"]["light.permitted"]
+    additions = deepcopy(change_set["+"])
+    _apply_changes(state_dict, change_set)
+
+    assert state_dict == {
+        "attributes": {"effect": "help", "color": ["blue", "green"]},
+        "context": {
+            "id": additions["c"]["id"],
+            "parent_id": None,
+            "user_id": None,
+        },
+        "entity_id": "light.permitted",
+        "last_changed": ANY,
+        "last_updated": additions["lu"],
+        "state": "on",
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {"remove": ["light.permitted"]}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "add": {
+            "light.permitted": {
+                "a": {"color": "blue", "effect": "help"},
+                "c": {"id": ANY, "parent_id": None, "user_id": None},
+                "lc": ANY,
+                "s": "on",
+            }
+        }
+    }
 
 
 async def test_render_template_renders_template(hass, websocket_client):
