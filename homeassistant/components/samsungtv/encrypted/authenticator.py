@@ -55,19 +55,19 @@ def _generate_server_hello(userId, pin):
     sha1.update(pin.encode("utf-8"))
     pinHash = sha1.digest()
     aes_key = pinHash[:16]
-    print("AES key: " + aes_key.hex())
+    LOGGER.debug("AES key: %s", aes_key.hex())
     iv = b"\x00" * BLOCK_SIZE
     cipher = AES.new(aes_key, AES.MODE_CBC, iv)
     encrypted = cipher.encrypt(bytes.fromhex(_PUBLIC_KEY))
-    print("AES encrypted: " + encrypted.hex())
+    LOGGER.debug("AES encrypted: %s", encrypted.hex())
     swapped = _encrypt_parameter_data_with_aes(encrypted)
-    print("AES swapped: " + swapped.hex())
+    LOGGER.debug("AES swapped: %s", swapped.hex())
     data = struct.pack(">I", len(userId)) + userId.encode("utf-8") + swapped
-    print("data buffer: " + data.hex().upper())
+    LOGGER.debug("data buffer: %s", data.hex().upper())
     sha1 = hashlib.sha1()
     sha1.update(data)
     dataHash = sha1.digest()
-    print("hash: " + dataHash.hex())
+    LOGGER.debug("hash: %s", dataHash.hex())
     serverHello = (
         b"\x01\x02"
         + b"\x00" * 5
@@ -87,27 +87,27 @@ def _parse_client_hello(clientHello, dataHash, aesKey, gUserId):
     userIdLen = struct.unpack(">I", data[11:15])[0]
     # destLen = userIdLen + 132 + SHA_DIGEST_LENGTH  # Always equals firstLen????:)
     thirdLen = userIdLen + 132
-    print("thirdLen: " + str(thirdLen))
-    print("hello: " + data.hex())
+    LOGGER.debug("thirdLen: %s", str(thirdLen))
+    LOGGER.debug("hello: %s", data.hex())
     dest = data[USER_ID_LEN_POS : thirdLen + USER_ID_LEN_POS] + dataHash
-    print("dest: " + dest.hex())
+    LOGGER.debug("dest: %s", dest.hex())
     userId = data[USER_ID_POS : userIdLen + USER_ID_POS]
-    print("userId: " + userId.decode("utf-8"))
+    LOGGER.debug("userId: %s", userId.decode("utf-8"))
     pEncWBGx = data[USER_ID_POS + userIdLen : GX_SIZE + USER_ID_POS + userIdLen]
-    print("pEncWBGx: " + pEncWBGx.hex())
+    LOGGER.debug("pEncWBGx: %s", pEncWBGx.hex())
     pEncGx = _decrypt_parameter_data_with_aes(pEncWBGx)
-    print("pEncGx: " + pEncGx.hex())
+    LOGGER.debug("pEncGx: %s", pEncGx.hex())
     iv = b"\x00" * BLOCK_SIZE
     cipher = AES.new(aesKey, AES.MODE_CBC, iv)
     pGx = cipher.decrypt(pEncGx)
-    print("pGx: " + pGx.hex())
+    LOGGER.debug("pGx: %s", pGx.hex())
     bnPGx = int(pGx.hex(), 16)
     bnPrime = int(_PRIME, 16)
     bnPrivateKey = int(_PRIVATE_KEY, 16)
     secret = bytes.fromhex(
         hex(pow(bnPGx, bnPrivateKey, bnPrime)).rstrip("L").lstrip("0x")
     )
-    print("secret: " + secret.hex())
+    LOGGER.debug("secret: %s", secret.hex())
     dataHash2 = data[
         USER_ID_POS
         + userIdLen
@@ -116,40 +116,40 @@ def _parse_client_hello(clientHello, dataHash, aesKey, gUserId):
         + GX_SIZE
         + SHA_DIGEST_LENGTH
     ]
-    print("hash2: " + dataHash2.hex())
+    LOGGER.debug("hash2: %s", dataHash2.hex())
     secret2 = userId + secret
-    print("secret2: " + secret2.hex())
+    LOGGER.debug("secret2: %s", secret2.hex())
     sha1 = hashlib.sha1()
     sha1.update(secret2)
     dataHash3 = sha1.digest()
-    print("hash3: " + dataHash3.hex())
+    LOGGER.debug("hash3: %s", dataHash3.hex())
     if dataHash2 != dataHash3:
-        print("Pin error!!!")
+        LOGGER.error("Pin error!!!")
         return False
-    print("Pin OK :)\n")
+    LOGGER.info("Pin OK :)\n")
     flagPos = userIdLen + USER_ID_POS + GX_SIZE + SHA_DIGEST_LENGTH
     if ord(data[flagPos : flagPos + 1]):
-        print("First flag error!!!")
+        LOGGER.error("First flag error!!!")
         return False
     flagPos = userIdLen + USER_ID_POS + GX_SIZE + SHA_DIGEST_LENGTH
     if struct.unpack(">I", data[flagPos + 1 : flagPos + 5])[0]:
-        print("Second flag error!!!")
+        LOGGER.error("Second flag error!!!")
         return False
     sha1 = hashlib.sha1()
     sha1.update(dest)
     dest_hash = sha1.digest()
-    print("dest_hash: " + dest_hash.hex())
+    LOGGER.debug("dest_hash: %s", dest_hash.hex())
     finalBuffer = (
         userId + gUserId.encode("utf-8") + pGx + bytes.fromhex(_PUBLIC_KEY) + secret
     )
     sha1 = hashlib.sha1()
     sha1.update(finalBuffer)
     SKPrime = sha1.digest()
-    print("SKPrime: " + SKPrime.hex())
+    LOGGER.debug("SKPrime: %s", SKPrime.hex())
     sha1 = hashlib.sha1()
     sha1.update(SKPrime + b"\x00")
     SKPrimeHash = sha1.digest()
-    print("SKPrimeHash: " + SKPrimeHash.hex())
+    LOGGER.debug("SKPrimeHash: %s", SKPrimeHash.hex())
     ctx = _apply_samy_go_key_transform(SKPrimeHash[:16])
     return {"ctx": ctx, "SKPrime": SKPrime}
 
