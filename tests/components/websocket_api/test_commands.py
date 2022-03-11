@@ -14,7 +14,6 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import URL
-from homeassistant.components.websocket_api.messages import STATE_KEY_SHORT_NAMES
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -25,6 +24,14 @@ from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
 from tests.common import MockEntity, MockEntityPlatform, async_mock_service
 
+STATE_KEY_SHORT_NAMES = {
+    "entity_id": "e",
+    "state": "s",
+    "last_changed": "lc",
+    "last_updated": "lu",
+    "context": "c",
+    "attributes": "a",
+}
 STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
 
 
