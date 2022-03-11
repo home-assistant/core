@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
+from collections.abc import Callable, Mapping
 import contextlib
 from typing import Any, cast
 
@@ -24,6 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TIMEOUT,
+    CONF_TOKEN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -104,15 +106,17 @@ class SamsungTVBridge(ABC):
         self.host = host
         self.token: str | None = None
         self._reauth_callback: CALLBACK_TYPE | None = None
-        self._new_token_callback: CALLBACK_TYPE | None = None
+        self._update_config_entry: Callable[[Mapping[str, Any]], None] | None = None
 
     def register_reauth_callback(self, func: CALLBACK_TYPE) -> None:
         """Register a callback function."""
         self._reauth_callback = func
 
-    def register_new_token_callback(self, func: CALLBACK_TYPE) -> None:
+    def register_update_config_entry_callback(
+        self, func: Callable[[Mapping[str, Any]], None]
+    ) -> None:
         """Register a callback function."""
-        self._new_token_callback = func
+        self._update_config_entry = func
 
     @abstractmethod
     async def async_try_connect(self) -> str:
@@ -147,10 +151,10 @@ class SamsungTVBridge(ABC):
         if self._reauth_callback is not None:
             self._reauth_callback()
 
-    def _notify_new_token_callback(self) -> None:
-        """Notify new token callback."""
-        if self._new_token_callback is not None:
-            self._new_token_callback()
+    def _notify_update_config_entry(self, updates: Mapping[str, Any]) -> None:
+        """Notify update config callback."""
+        if self._update_config_entry is not None:
+            self._update_config_entry(updates)
 
 
 class SamsungTVLegacyBridge(SamsungTVBridge):
@@ -496,7 +500,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                         self._remote.token,
                     )
                     self.token = self._remote.token
-                    self._notify_new_token_callback()
+                    self._notify_update_config_entry({CONF_TOKEN: self.token})
         return self._remote
 
     @staticmethod
