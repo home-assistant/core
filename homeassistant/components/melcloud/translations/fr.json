@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Mot de passe",
-                    "username": "Email"
+                    "username": "Courriel"
                 },
                 "description": "Se connecter en utilisant votre MELCloud compte.",
                 "title": "Se connecter \u00e0 MELCloud"
