@@ -49,6 +49,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.BINARY_SENSOR,
+]
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Establish connection to MAX! Cube."""
@@ -152,12 +156,7 @@ async def _setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, Platform.CLIMATE)
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, Platform.BINARY_SENSOR)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -173,7 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, [Platform.CLIMATE, Platform.BINARY_SENSOR]
+        entry, PLATFORMS
     )
 
     host = entry.data[CONF_HOST]
