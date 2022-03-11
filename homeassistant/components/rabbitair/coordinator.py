@@ -33,9 +33,9 @@ class RabbitAirDebouncer(Debouncer):
         self.async_cancel()
         await super().async_call()
 
-    def is_cooling_down(self) -> bool:
-        """Indicate that the debouncer is waiting for cooldown."""
-        return self._timer_task is not None
+    def has_pending_call(self) -> bool:
+        """Indicate that the debouncer has a call waiting for cooldown."""
+        return self._execute_at_end_of_timer
 
 
 class RabbitAirDataUpdateCoordinator(DataUpdateCoordinator[State]):
@@ -70,7 +70,7 @@ class RabbitAirDataUpdateCoordinator(DataUpdateCoordinator[State]):
 
         # Skip a scheduled refresh if there is a pending requested refresh.
         debouncer = cast(RabbitAirDebouncer, self._debounced_refresh)
-        if scheduled and debouncer.is_cooling_down():
+        if scheduled and debouncer.has_pending_call():
             return
 
         await super()._async_refresh(log_failures, raise_on_auth_failed, scheduled)
