@@ -18,7 +18,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Voulez-vous commencer la configuration ?"
+                "description": "Voulez-vous commencer la configuration\u00a0?"
             },
             "import_turn_on": {
                 "description": "Veuillez allumer l'appareil et cliquer sur soumettre pour continuer la migration"

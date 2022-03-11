@@ -1764,7 +1764,7 @@ pyrituals==0.0.6
 pyruckus==0.12
 
 # homeassistant.components.sabnzbd
-pysabnzbd==1.1.0
+pysabnzbd==1.1.1
 
 # homeassistant.components.saj
 pysaj==0.0.16

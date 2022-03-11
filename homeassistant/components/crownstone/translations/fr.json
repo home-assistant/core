@@ -34,7 +34,7 @@
             },
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe"
                 },
                 "title": "Compte Crownstone"

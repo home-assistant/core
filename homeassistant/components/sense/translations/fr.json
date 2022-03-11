@@ -16,7 +16,7 @@
             },
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe",
                     "timeout": "D\u00e9lai expir\u00e9"
                 },

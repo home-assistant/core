@@ -8,7 +8,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.switch_as_x import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -153,3 +153,35 @@ async def test_config_entry_uuid(hass: HomeAssistant, target_domain):
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{target_domain}.abc")
+
+
+@pytest.mark.parametrize("target_domain", ("light",))
+async def test_device(hass: HomeAssistant, target_domain):
+    """Test the entity is added to the wrapped entity's device."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    test_config_entry = MockConfigEntry()
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=test_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    switch_entity_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", device_id=device_entry.id
+    )
+
+    switch_as_x_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={"entity_id": switch_entity_entry.id, "target_domain": target_domain},
+        title="ABC",
+    )
+
+    switch_as_x_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    assert entity_entry.device_id == switch_entity_entry.device_id
