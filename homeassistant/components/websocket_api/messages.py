@@ -161,17 +161,9 @@ def _state_diff(
 
 def state_to_compressed_dict(state: State, omit_lu_matching_lc: bool) -> dict[str, Any]:
     """Build a compressed dict of a state."""
-    state_dict: dict[str, Any] = {
-        "s": state.state,
-        "a": state.attributes,
-        "c": state.context.as_dict(),
-        "lc": state.last_changed.timestamp(),
-    }
-    if state.last_changed == state.last_updated:
-        if not omit_lu_matching_lc:
-            state_dict["lu"] = state_dict["lc"]
-    else:
-        state_dict["lu"] = state.last_updated.timestamp()
+    state_dict = state.as_compressed_dict()
+    if omit_lu_matching_lc and state_dict["lu"] == state_dict["lc"]:
+        return {k: v for k, v in state_dict.items() if k != "lu"}
     return state_dict
 
 
