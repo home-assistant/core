@@ -13,7 +13,11 @@ from oauth2client.client import (
 )
 import pytest
 
-from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
+from homeassistant.components.google import (
+    DOMAIN,
+    SERVICE_ADD_EVENT,
+    SERVICE_SCAN_CALENDARS,
+)
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, State
 from homeassistant.util.dt import utcnow
@@ -109,10 +113,13 @@ async def test_init_success(
     mock_code_flow: Mock,
     mock_exchange: Mock,
     mock_notification: Mock,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
     mock_calendars_yaml: None,
     component_setup: ComponentSetup,
 ) -> None:
     """Test successful creds setup."""
+    mock_calendars_list({"items": [test_api_calendar]})
     assert await component_setup()
 
     # Run one tick to invoke the credential exchange check
@@ -199,9 +206,12 @@ async def test_existing_token(
     mock_token_read: None,
     component_setup: ComponentSetup,
     mock_calendars_yaml: None,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
     mock_notification: Mock,
 ) -> None:
     """Test setup with an existing token file."""
+    mock_calendars_list({"items": [test_api_calendar]})
     assert await component_setup()
 
     state = hass.states.get(TEST_YAML_ENTITY)
@@ -221,11 +231,14 @@ async def test_existing_token_missing_scope(
     mock_token_read: None,
     component_setup: ComponentSetup,
     mock_calendars_yaml: None,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
     mock_notification: Mock,
     mock_code_flow: Mock,
     mock_exchange: Mock,
 ) -> None:
     """Test setup where existing token does not have sufficient scopes."""
+    mock_calendars_list({"items": [test_api_calendar]})
     assert await component_setup()
 
     # Run one tick to invoke the credential exchange check
@@ -279,6 +292,25 @@ async def test_invalid_calendar_yaml(
     mock_notification.assert_not_called()
 
 
+async def test_calendar_yaml_error(
+    hass: HomeAssistant,
+    mock_token_read: None,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_notification: Mock,
+) -> None:
+    """Test setup with yaml file not found."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+
+    with patch("homeassistant.components.google.open", side_effect=FileNotFoundError()):
+        assert await component_setup()
+
+    assert not hass.states.get(TEST_YAML_ENTITY)
+    assert hass.states.get(TEST_API_ENTITY)
+
+
 @pytest.mark.parametrize(
     "google_config_track_new,calendars_config,expected_state",
     [
@@ -324,7 +356,6 @@ async def test_track_new(
     mock_calendars_list({"items": [test_api_calendar]})
     assert await component_setup()
 
-    # The calendar does not
     state = hass.states.get(TEST_API_ENTITY)
     assert_state(state, expected_state)
 
@@ -343,7 +374,6 @@ async def test_found_calendar_from_api(
     mock_calendars_list({"items": [test_api_calendar]})
     assert await component_setup()
 
-    # The calendar does not
     state = hass.states.get(TEST_API_ENTITY)
     assert state
     assert state.name == TEST_API_ENTITY_NAME
@@ -387,12 +417,6 @@ async def test_calendar_config_track_new(
 
     state = hass.states.get(TEST_YAML_ENTITY)
     assert_state(state, expected_state)
-    if calendars_config_track:
-        assert state
-        assert state.name == TEST_YAML_ENTITY_NAME
-        assert state.state == STATE_OFF
-    else:
-        assert not state
 
 
 async def test_add_event(
@@ -573,3 +597,47 @@ async def test_add_event_date_time(
             },
         },
     )
+
+
+async def test_scan_calendars(
+    hass: HomeAssistant,
+    mock_token_read: None,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+) -> None:
+    """Test finding a calendar from the API."""
+
+    assert await component_setup()
+
+    calendar_1 = {
+        "id": "calendar-id-1",
+        "summary": "Calendar 1",
+    }
+    calendar_2 = {
+        "id": "calendar-id-2",
+        "summary": "Calendar 2",
+    }
+
+    mock_calendars_list({"items": [calendar_1]})
+    await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, {}, blocking=True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.calendar_1")
+    assert state
+    assert state.name == "Calendar 1"
+    assert state.state == STATE_OFF
+    assert not hass.states.get("calendar.calendar_2")
+
+    mock_calendars_list({"items": [calendar_1, calendar_2]})
+    await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, {}, blocking=True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.calendar_1")
+    assert state
+    assert state.name == "Calendar 1"
+    assert state.state == STATE_OFF
+    state = hass.states.get("calendar.calendar_2")
+    assert state
+    assert state.name == "Calendar 2"
+    assert state.state == STATE_OFF

@@ -7,8 +7,8 @@
         },
         "tuya__basic_nightvision": {
             "0": "automatique",
-            "1": "Inactif",
-            "2": "Actif"
+            "1": "D\u00e9sactiv\u00e9",
+            "2": "Activ\u00e9"
         },
         "tuya__countdown": {
             "1h": "1 heure",
@@ -76,7 +76,7 @@
             "led": "LED"
         },
         "tuya__light_mode": {
-            "none": "Inactif",
+            "none": "D\u00e9sactiv\u00e9",
             "pos": "Indiquer l'emplacement du commutateur",
             "relay": "Indiquer l\u2019\u00e9tat marche/arr\u00eat de l\u2019interrupteur"
         },
@@ -92,10 +92,10 @@
         "tuya__relay_status": {
             "last": "Se souvenir du dernier \u00e9tat",
             "memory": "Se souvenir du dernier \u00e9tat",
-            "off": "Inactif",
-            "on": "Actif",
-            "power_off": "Inactif",
-            "power_on": "Actif"
+            "off": "D\u00e9sactiv\u00e9",
+            "on": "Activ\u00e9",
+            "power_off": "D\u00e9sactiv\u00e9",
+            "power_on": "Activ\u00e9"
         },
         "tuya__vacuum_cistern": {
             "closed": "Ferm\u00e9",

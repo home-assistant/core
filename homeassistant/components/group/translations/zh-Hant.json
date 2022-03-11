@@ -1,4 +1,66 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "\u7fa4\u7d44\u6210\u54e1",
+                    "name": "\u7fa4\u7d44\u540d\u7a31"
+                },
+                "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "\u7fa4\u7d44\u6210\u54e1"
+                },
+                "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
+            },
+            "fan": {
+                "data": {
+                    "entities": "\u7fa4\u7d44\u6210\u54e1",
+                    "name": "\u7fa4\u7d44\u540d\u7a31"
+                },
+                "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "\u7fa4\u7d44\u6210\u54e1"
+                },
+                "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
+            },
+            "init": {
+                "data": {
+                    "group_type": "\u7fa4\u7d44\u985e\u578b"
+                },
+                "description": "\u9078\u64c7\u7fa4\u7d44\u985e\u578b"
+            },
+            "light": {
+                "data": {
+                    "entities": "\u7fa4\u7d44\u6210\u54e1",
+                    "name": "\u7fa4\u7d44\u540d\u7a31"
+                },
+                "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "\u7fa4\u7d44\u6210\u54e1"
+                },
+                "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "\u7fa4\u7d44\u6210\u54e1",
+                    "name": "\u7fa4\u7d44\u540d\u7a31"
+                },
+                "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "\u7fa4\u7d44\u6210\u54e1"
+                },
+                "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "\u95dc\u9589",
