@@ -463,6 +463,86 @@ async def test_preset_modes(hass, setup_comp):
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_MODE_SLEEP
     assert ATTR_ASSUMED_STATE not in state.attributes
 
+    # Test when fans has completely different preset modes
+    # Preset_modes has to be None and Preset_mode has to be None
+    hass.states.async_set(
+        LIVING_ROOM_FAN_ENTITY_ID,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
+            ATTR_PRESET_MODE: "A",
+            ATTR_PRESET_MODES: [
+                "A",
+                "B",
+                "C",
+                "D",
+            ],
+        },
+    )
+    hass.states.async_set(
+        PERCENTAGE_FULL_FAN_ENTITY_ID,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
+            ATTR_PRESET_MODE: "I",
+            ATTR_PRESET_MODES: [
+                "I",
+                "II",
+                "III",
+                "IV",
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FAN_GROUP)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
+    assert state.attributes[ATTR_ENTITY_ID] == [*FULL_FAN_ENTITY_IDS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == FULL_SUPPORT_FEATURES
+    assert state.attributes[ATTR_PRESET_MODES] is None
+    assert state.attributes[ATTR_PRESET_MODE] is None
+
+    # Test when fans has only one common preset modes
+    #  Preset_modes has to be None and Preset_mode has to be None
+    hass.states.async_set(
+        LIVING_ROOM_FAN_ENTITY_ID,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
+            ATTR_PRESET_MODE: "A",
+            ATTR_PRESET_MODES: [
+                "A",
+                "B",
+                "C",
+                "I",
+            ],
+        },
+    )
+    hass.states.async_set(
+        PERCENTAGE_FULL_FAN_ENTITY_ID,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
+            ATTR_PRESET_MODE: "I",
+            ATTR_PRESET_MODES: [
+                "I",
+                "II",
+                "III",
+                "IV",
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FAN_GROUP)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
+    assert state.attributes[ATTR_ENTITY_ID] == [*FULL_FAN_ENTITY_IDS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == FULL_SUPPORT_FEATURES
+    assert state.attributes[ATTR_PRESET_MODES] is None
+    assert state.attributes[ATTR_PRESET_MODE] is None
+
 
 @pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
 async def test_state_missing_entity_id(hass, setup_comp):
