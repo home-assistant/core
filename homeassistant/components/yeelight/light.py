@@ -708,7 +708,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Activate flash."""
         if not flash:
             return
-        if int(self._bulb.last_properties["color_mode"]) != 1:
+        if int(self._get_property("color_mode")) != 1:
             _LOGGER.error("Flash supported currently only in RGB mode")
             return
 
