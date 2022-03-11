@@ -55,10 +55,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    if DOMAIN not in config:
-        return True
-
-    if CONF_GATEWAYS not in config[DOMAIN]:
+    if DOMAIN not in config or CONF_GATEWAYS not in config[DOMAIN]:
         return True
 
     connection_failed = 0
