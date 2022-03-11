@@ -46,7 +46,7 @@ def generate_current_interval(
         renewables=50.6,
         channel_type=channel_type.value,
         spike_status=SpikeStatus.NO_SPIKE.value,
-        descriptor=Descriptor.LOW.value,
+        descriptor=Descriptor.EXTREMELY_LOW.value,
         estimate=True,
     )
 
@@ -67,7 +67,7 @@ def generate_forecast_interval(
         renewables=50,
         channel_type=channel_type.value,
         spike_status=SpikeStatus.NO_SPIKE.value,
-        descriptor=Descriptor.LOW.value,
+        descriptor=Descriptor.VERY_LOW.value,
         estimate=True,
     )
 
