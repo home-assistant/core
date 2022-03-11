@@ -8,6 +8,7 @@ from homeassistant.components.modbus.const import (
     CONF_DATA_TYPE,
     CONF_LAZY_ERROR,
     CONF_TARGET_TEMP,
+    MODBUS_DOMAIN,
     DataType,
 )
 from homeassistant.const import (
@@ -19,6 +20,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
@@ -299,3 +301,15 @@ async def test_lazy_error_climate(hass, mock_do_cycle, start_expect, end_expect)
 async def test_wrong_unpack_climate(hass, mock_do_cycle):
     """Run test for sensor."""
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_no_discovery_info(hass, caplog):
+    """Test setup without discovery info."""
+    assert CLIMATE_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {CLIMATE_DOMAIN: {"platform": MODBUS_DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert CLIMATE_DOMAIN in hass.config.components
