@@ -61,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._discovered_hosts != []:
                 # Filter out already configured hosts
                 self._discovered_hosts = [
-                    x for x in self._discovered_hosts if x not in current_hosts
+                    ip for ip in self._discovered_hosts if ip not in current_hosts
                 ]
 
                 if len(self._discovered_hosts) > 1:
@@ -72,6 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
                     )
                 if len(self._discovered_hosts) == 0:
+                    # If there were discoverd hosts AND all got filtered out fire an error message
                     errors["base"] = "already_discovered"
                     LOGGER.debug("All discovered fireplaces have been configured")
 
