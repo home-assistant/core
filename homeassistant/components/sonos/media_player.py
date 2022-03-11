@@ -478,7 +478,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.play_from_queue(0)
 
     @property
-    def source_list(self) -> list[str | None]:
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         model = self.coordinator.model_name.split()[-1].upper()
         if model in MODELS_LINEIN_ONLY:
