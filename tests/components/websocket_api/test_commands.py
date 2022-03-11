@@ -43,9 +43,13 @@ def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
     additions = change_dict.get("+", {})
     if "lc" in additions:
         additions["lu"] = additions["lc"]
-    sub_dicts = [key for key, change in additions.items() if isinstance(change, dict)]
-    for key in sub_dicts:
-        state_dict[STATE_KEY_LONG_NAMES[key]].update(additions.pop(key))
+    if attributes := additions.pop("a", None):
+        state_dict["attributes"].update(attributes)
+    if context := additions.pop("c", None):
+        if isinstance(context, str):
+            state_dict["context"]["id"] = context
+        else:
+            state_dict["context"].update(context)
     for k, v in additions.items():
         state_dict[STATE_KEY_LONG_NAMES[k]] = v
     for key, items in change_dict.get("-", {}).items():
@@ -760,7 +764,7 @@ async def test_subscribe_entities_with_unserializable_state(
             "light.permitted": {
                 "+": {
                     "a": {"effect": "help"},
-                    "c": {"id": ANY},
+                    "c": ANY,
                     "lc": ANY,
                     "s": "on",
                 },
@@ -779,7 +783,7 @@ async def test_subscribe_entities_with_unserializable_state(
     assert msg["event"] == {
         "changed": {
             "light.cannot_serialize": {
-                "+": {"a": {"effect": "help"}, "c": {"id": ANY}, "lc": ANY, "s": "on"},
+                "+": {"a": {"effect": "help"}, "c": ANY, "lc": ANY, "s": "on"},
                 "-": {"a": {"color", "cannot_serialize"}},
             }
         }
@@ -867,7 +871,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
             "light.permitted": {
                 "+": {
                     "a": {"color": "blue"},
-                    "c": {"id": ANY},
+                    "c": ANY,
                     "lc": ANY,
                     "s": "on",
                 }
@@ -881,7 +885,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert state_dict == {
         "attributes": {"color": "blue"},
         "context": {
-            "id": additions["c"]["id"],
+            "id": additions["c"],
             "parent_id": None,
             "user_id": None,
         },
@@ -899,7 +903,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
             "light.permitted": {
                 "+": {
                     "a": {"effect": "help"},
-                    "c": {"id": ANY},
+                    "c": ANY,
                     "lu": ANY,
                 },
                 "-": {"a": ["color"]},
@@ -914,7 +918,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert state_dict == {
         "attributes": {"effect": "help"},
         "context": {
-            "id": additions["c"]["id"],
+            "id": additions["c"],
             "parent_id": None,
             "user_id": None,
         },
@@ -932,7 +936,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
             "light.permitted": {
                 "+": {
                     "a": {"color": ["blue", "green"]},
-                    "c": {"id": ANY},
+                    "c": ANY,
                     "lu": ANY,
                 }
             }
@@ -946,7 +950,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert state_dict == {
         "attributes": {"effect": "help", "color": ["blue", "green"]},
         "context": {
-            "id": additions["c"]["id"],
+            "id": additions["c"],
             "parent_id": None,
             "user_id": None,
         },
