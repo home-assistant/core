@@ -9,7 +9,7 @@ from oauth2client.client import Credentials
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .api import DeviceAuth, DeviceFlow, OAuthError, async_create_device_flow
+from .api import DeviceFlow, OAuthError, async_create_device_flow
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,10 +68,8 @@ class OAuth2FlowHandler(
 
         if not self._device_flow:
             _LOGGER.debug("Creating DeviceAuth flow")
-            assert isinstance(self.flow_impl, DeviceAuth)
-            device_auth: DeviceAuth = self.flow_impl
             try:
-                device_flow = await async_create_device_flow(self.hass, device_auth)
+                device_flow = await async_create_device_flow(self.hass)
             except OAuthError as err:
                 _LOGGER.error("Error initializing device flow: %s", str(err))
                 return self.async_abort(reason="oauth_error")

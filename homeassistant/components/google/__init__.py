@@ -32,7 +32,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
-from .api import DeviceAuth, DeviceAuthSession, GoogleCalendarService
+from .api import DeviceAuth, GoogleCalendarService
 from .const import (
     CONF_CALENDAR_ACCESS,
     DATA_CONFIG,
@@ -47,7 +47,6 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_TRACK_NEW = "track_new_calendar"
-CONF_AUTH_IMPL = "auth_impl"
 
 CONF_CAL_ID = "cal_id"
 CONF_TRACK = "track"
@@ -187,7 +186,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     assert isinstance(implementation, DeviceAuth)
-    session = DeviceAuthSession(hass, entry, implementation)
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     required_scope = hass.data[DOMAIN][DATA_CONFIG][CONF_CALENDAR_ACCESS].scope
     if required_scope not in session.token.get("scope", []):
         raise ConfigEntryAuthFailed(
@@ -218,8 +217,8 @@ def async_setup_services(
     created_calendars = set()
     calendars = load_config(hass.config.path(YAML_DEVICES))
 
-    def _found_calendar(call: ServiceCall) -> None:
-        calendar = call.data
+    async def _found_calendar(call: ServiceCall) -> None:
+        calendar = get_calendar_info(hass, call.data)
         calendar_id = calendar[CONF_CAL_ID]
 
         if calendar_id in created_calendars:
@@ -247,9 +246,7 @@ def async_setup_services(
         for calendar in calendars:
             calendar[CONF_TRACK] = config[CONF_TRACK_NEW]
             tasks.append(
-                hass.services.async_call(
-                    DOMAIN, SERVICE_FOUND_CALENDARS, get_calendar_info(hass, calendar)
-                )
+                hass.services.async_call(DOMAIN, SERVICE_FOUND_CALENDARS, calendar)
             )
         await asyncio.gather(*tasks)
 

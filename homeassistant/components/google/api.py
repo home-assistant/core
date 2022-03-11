@@ -18,6 +18,7 @@ from oauth2client.client import (
     OAuth2WebServerFlow,
 )
 
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.event import async_track_time_interval
@@ -52,7 +53,6 @@ class DeviceAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
             oauth2client.GOOGLE_AUTH_URI,
             oauth2client.GOOGLE_TOKEN_URI,
         )
-        self.scope = hass.data[DOMAIN][DATA_CONFIG][CONF_CALENDAR_ACCESS].scope
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentails object to Home Assistant token."""
@@ -134,14 +134,13 @@ class DeviceFlow:
         )
 
 
-async def async_create_device_flow(
-    hass: HomeAssistant, device_auth: DeviceAuth
-) -> DeviceFlow:
+async def async_create_device_flow(hass: HomeAssistant) -> DeviceFlow:
     """Create a new Device flow."""
+    conf = hass.data[DOMAIN][DATA_CONFIG]
     oauth_flow = OAuth2WebServerFlow(
-        client_id=device_auth.client_id,
-        client_secret=device_auth.client_secret,
-        scope=device_auth.scope,
+        client_id=conf[CONF_CLIENT_ID],
+        client_secret=conf[CONF_CLIENT_SECRET],
+        scope=conf[CONF_CALENDAR_ACCESS].scope,
         redirect_uri="",
     )
     try:
@@ -153,41 +152,40 @@ async def async_create_device_flow(
     return DeviceFlow(hass, oauth_flow, device_flow_info)
 
 
+def _async_google_creds(hass: HomeAssistant, token: dict[str, Any]) -> Credentials:
+    """Convert a Home Assistant token to a Google API Credentials object."""
+    conf = hass.data[DOMAIN][DATA_CONFIG]
+    return OAuth2Credentials(
+        access_token=token["access_token"],
+        client_id=conf[CONF_CLIENT_ID],
+        client_secret=conf[CONF_CLIENT_SECRET],
+        refresh_token=token["refresh_token"],
+        token_expiry=token["expires_at"],
+        token_uri=oauth2client.GOOGLE_TOKEN_URI,
+        scopes=[conf[CONF_CALENDAR_ACCESS].scope],
+        user_agent=None,
+    )
+
+
 def _api_time_format(time: datetime.datetime | None) -> str | None:
     """Convert a datetime to the api string format."""
     return time.isoformat("T") if time else None
 
 
-class DeviceAuthSession(config_entry_oauth2_flow.OAuth2Session):
-    """An OAuth2Session that handles creds creation for Google API libraries."""
-
-    async def async_google_creds(self) -> Credentials:
-        """Convert a Home Assistant token to a Google API Credentials object."""
-        await self.async_ensure_token_valid()
-        assert isinstance(self.implementation, DeviceAuth)
-        return OAuth2Credentials(
-            access_token=self.token["access_token"],
-            client_id=self.implementation.client_id,
-            client_secret=self.implementation.client_secret,
-            refresh_token=self.token["refresh_token"],
-            token_expiry=self.token["expires_at"],
-            token_uri=self.implementation.token_url,
-            scopes=[self.implementation.scope],
-            user_agent=None,
-        )
-
-
 class GoogleCalendarService:
     """Calendar service interface to Google."""
 
-    def __init__(self, hass: HomeAssistant, session: DeviceAuthSession) -> None:
+    def __init__(
+        self, hass: HomeAssistant, session: config_entry_oauth2_flow.OAuth2Session
+    ) -> None:
         """Init the Google Calendar service."""
         self._hass = hass
         self._session = session
 
     async def _async_get_service(self) -> google_discovery.Resource:
         """Get the calendar service with valid credetnails."""
-        creds = await self._session.async_google_creds()
+        await self._session.async_ensure_token_valid()
+        creds = _async_google_creds(self._hass, self._session.token)
         return google_discovery.build(
             "calendar", "v3", credentials=creds, cache_discovery=False
         )
