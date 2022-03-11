@@ -82,19 +82,18 @@ def _async_setup_entities(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any],
+    disc_info: dict[str, Any],
 ):
-    calendar_id = discovery_info[CONF_CAL_ID]
     calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     entities = []
-    for data in discovery_info[CONF_ENTITIES]:
+    for data in disc_info[CONF_ENTITIES]:
         if not data[CONF_TRACK]:
             continue
         entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, data[CONF_DEVICE_ID], hass=hass
         )
         entity = GoogleCalendarEventDevice(
-            calendar_service, calendar_id, data, entity_id
+            calendar_service, disc_info[CONF_CAL_ID], data, entity_id
         )
         entities.append(entity)
 
