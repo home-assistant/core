@@ -1,6 +1,8 @@
 """SamsungTV Encrypted."""
 # flake8: noqa
 # pylint: disable=[missing-class-docstring,missing-function-docstring]
+from __future__ import annotations
+
 import json
 from typing import Any
 

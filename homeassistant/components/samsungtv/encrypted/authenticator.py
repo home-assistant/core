@@ -2,7 +2,6 @@
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: disable=[invalid-name,missing-class-docstring,missing-function-docstring]
-
 from __future__ import annotations
 
 import hashlib
