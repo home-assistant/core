@@ -835,6 +835,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == "event"
+    assert isinstance(msg["event"]["add"]["light.permitted"]["c"], str)
     assert msg["event"] == {
         "add": {
             "light.permitted": {

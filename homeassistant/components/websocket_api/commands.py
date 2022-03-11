@@ -298,15 +298,16 @@ def handle_subscribe_entities(
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
-
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         "state_changed", forward_entity_changes
     )
     connection.send_result(msg["id"])
-    data: dict[str, dict[str, dict]] = {"add": {}}
-    add_entities = data["add"]
-    for state in states:
-        add_entities[state.entity_id] = messages.compressed_state_dict_add(state)
+    data: dict[str, dict[str, dict]] = {
+        "add": {
+            state.entity_id: messages.compressed_state_dict_add(state)
+            for state in states
+        }
+    }
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
@@ -324,6 +325,7 @@ def handle_subscribe_entities(
         )
     del response
 
+    add_entities = data["add"]
     cannot_serialize: list[str] = []
     for entity_id, state_dict in add_entities.items():
         try:
