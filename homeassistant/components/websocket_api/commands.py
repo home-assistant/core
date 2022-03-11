@@ -306,7 +306,7 @@ def handle_subscribe_entities(
     data: dict[str, dict[str, dict]] = {"add": {}}
     add_entities = data["add"]
     for state in states:
-        state_dict: dict[str, Any] = messages.compress_state_key_names(state.as_dict())
+        state_dict: dict[str, Any] = messages.state_to_compressed_dict(state)
         add_entities[state_dict.pop("e")] = state_dict
 
     # JSON serialize here so we can recover if it blows up due to the
