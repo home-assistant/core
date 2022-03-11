@@ -165,7 +165,9 @@ class SamsungTVEncryptedWSAsyncRemote:
         session: SamsungTVEncryptedSession,
         delay: float,
     ) -> None:
+        LOGGER.debug("SamsungTVEncryptedWS websocket command: %s", command.as_dict())
         payload = session.encrypt_command(command)
+        LOGGER.debug("SamsungTVEncryptedWS websocket command (encrypted): %s", payload)
         await connection.send(payload)
 
         await asyncio.sleep(delay)
