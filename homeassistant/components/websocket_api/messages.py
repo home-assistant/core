@@ -118,7 +118,9 @@ def _state_diff_event(event: Event) -> dict:
     if (event_old_state := event.data["old_state"]) is None:
         return {
             "add": {
-                event_new_state.entity_id: state_to_compressed_dict(event_new_state)
+                event_new_state.entity_id: state_to_compressed_dict(
+                    event_new_state, True
+                )
             }
         }
     assert isinstance(event_old_state, State)
@@ -129,8 +131,8 @@ def _state_diff(
     old_state: State, new_state: State
 ) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
     """Create a diff dict that can be used to overlay changes."""
-    old_state_dict = state_to_compressed_dict(old_state)
-    new_state_dict = state_to_compressed_dict(new_state)
+    old_state_dict = state_to_compressed_dict(old_state, False)
+    new_state_dict = state_to_compressed_dict(new_state, False)
     diff: dict = {}
     for item, value in new_state_dict.items():
         if isinstance(value, dict):
@@ -146,22 +148,28 @@ def _state_diff(
             for sub_item, sub_value in value.items():
                 if sub_item not in new_dict:
                     diff.setdefault("-", {}).setdefault(item, []).append(sub_item)
-    return {"changed": {new_state_dict["entity_id"]: diff}}
+    # Omit last_updated(lu) if last_changed(lc) is set since they
+    # will always be the same
+    if (
+        (additions := diff.get("+"))
+        and "lu" in additions
+        and additions.get("lc") == additions.get("lu")
+    ):
+        del additions["lu"]
+    return {"changed": {new_state.entity_id: diff}}
 
 
-def state_to_compressed_dict(state: State) -> dict[str, Any]:
+def state_to_compressed_dict(state: State, omit_lu_matching_lc: bool) -> dict[str, Any]:
     """Build a compressed dict of a state."""
     state_dict: dict[str, Any] = {
         "s": state.state,
         "a": state.attributes,
         "c": state.context.as_dict(),
+        "lc": state.last_changed.timestamp(),
+        "lu": state.last_updated.timestamp(),
     }
-    # Omit last_updated(lu) if last_changed(lc) is the same
-    if state.last_changed != state.last_updated:
-        state_dict["lc"] = state.last_changed.timestamp()
-        state_dict["lu"] = state.last_updated.timestamp()
-    else:
-        state_dict["lc"] = state.last_changed.timestamp()
+    if omit_lu_matching_lc and state_dict["lc"] == state_dict["lu"]:
+        del state_dict["lu"]
     return state_dict
 
 
