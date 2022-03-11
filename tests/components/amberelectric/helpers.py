@@ -6,7 +6,7 @@ from amberelectric.model.actual_interval import ActualInterval
 from amberelectric.model.channel import ChannelType
 from amberelectric.model.current_interval import CurrentInterval
 from amberelectric.model.forecast_interval import ForecastInterval
-from amberelectric.model.interval import SpikeStatus
+from amberelectric.model.interval import Descriptor, SpikeStatus
 from dateutil import parser
 
 
@@ -26,6 +26,7 @@ def generate_actual_interval(
         renewables=50,
         channel_type=channel_type.value,
         spike_status=SpikeStatus.NO_SPIKE.value,
+        descriptor=Descriptor.LOW.value,
     )
 
 
@@ -45,6 +46,7 @@ def generate_current_interval(
         renewables=50.6,
         channel_type=channel_type.value,
         spike_status=SpikeStatus.NO_SPIKE.value,
+        descriptor=Descriptor.LOW.value,
         estimate=True,
     )
 
@@ -65,6 +67,7 @@ def generate_forecast_interval(
         renewables=50,
         channel_type=channel_type.value,
         spike_status=SpikeStatus.NO_SPIKE.value,
+        descriptor=Descriptor.LOW.value,
         estimate=True,
     )
 

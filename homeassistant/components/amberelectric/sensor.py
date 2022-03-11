@@ -106,6 +106,7 @@ class AmberPriceSensor(AmberSensor):
         data["renewables"] = round(interval.renewables)
         data["estimate"] = interval.estimate
         data["spike_status"] = interval.spike_status.value
+        data["descriptor"] = interval.descriptor.value
         data["channel_type"] = interval.channel_type.value
 
         if interval.range is not None:
@@ -160,6 +161,7 @@ class AmberForecastSensor(AmberSensor):
             datum["end_time"] = interval.end_time.isoformat()
             datum["renewables"] = round(interval.renewables)
             datum["spike_status"] = interval.spike_status.value
+            datum["descriptor"] = interval.descriptor.value
 
             if interval.range is not None:
                 datum["range_min"] = format_cents_to_dollars(interval.range.min)
