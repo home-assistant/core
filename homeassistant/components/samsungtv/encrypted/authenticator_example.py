@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 import aiohttp
 
 from .authenticator import SamsungTVEncryptedWSAsyncAuthenticator
+
+logging.basicConfig(level=logging.DEBUG)
 
 _HOST = "192.168.0.14"
 _PORT = 8080
