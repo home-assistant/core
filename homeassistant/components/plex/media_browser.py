@@ -1,6 +1,7 @@
 """Support to interface with the Plex API."""
 from __future__ import annotations
 
+import json
 import logging
 
 from homeassistant.components.media_player import BrowseMedia
@@ -59,17 +60,20 @@ def browse_media(  # noqa: C901
 ):
     """Implement the websocket media browsing helper."""
 
-    def item_payload(item, short_name=False):
+    def item_payload(item, short_name=False, extra_content_id_params=None):
         """Create response payload for a single media item."""
         try:
             media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
         except KeyError as err:
             _LOGGER.debug("Unknown type received: %s", item.type)
             raise UnknownMediaType from err
+        content_id = {"plex_key": item.ratingKey}
+        if extra_content_id_params:
+            content_id |= extra_content_id_params
         payload = {
             "title": pretty_title(item, short_name),
             "media_class": media_class,
-            "media_content_id": PLEX_URI_SCHEME + str(item.ratingKey),
+            "media_content_id": PLEX_URI_SCHEME + json.dumps(content_id),
             "media_content_type": item.type,
             "can_play": True,
             "can_expand": item.type in EXPANDABLES,
@@ -176,13 +180,20 @@ def browse_media(  # noqa: C901
                     continue
                 payload["children"].append(station_payload(item))
             else:
-                payload["children"].append(item_payload(item))
+                extra_params = None
+                hub_context = hub.context.split(".")[-1]
+                if hub_context in ("continue", "inprogress", "ondeck"):
+                    extra_params = {"resume": True}
+                payload["children"].append(
+                    item_payload(item, extra_content_id_params=extra_params)
+                )
         return BrowseMedia(**payload)
 
-    if media_content_id and ":" in media_content_id:
+    special_folder = None
+    if media_content_id and "plex_key" in media_content_id:
+        media_content_id = json.loads(media_content_id)["plex_key"]
+    elif media_content_id and ":" in media_content_id:
         media_content_id, special_folder = media_content_id.split(":")
-    else:
-        special_folder = None
 
     if special_folder:
         if media_content_type == "server":
