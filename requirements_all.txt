@@ -2350,6 +2350,9 @@ upb_lib==0.4.12
 # homeassistant.components.upcloud
 upcloud-api==2.0.0
 
+# homeassistant.components.uptime_kuma
+uptime_kuma_monitor==1.0.0
+
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
 # homeassistant.components.zwave_me

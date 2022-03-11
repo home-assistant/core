@@ -355,6 +355,7 @@ FLOWS = [
     "upb",
     "upcloud",
     "upnp",
+    "uptime_kuma",
     "uptimerobot",
     "vallox",
     "velbus",
