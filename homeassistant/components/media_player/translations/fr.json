@@ -18,9 +18,9 @@
     },
     "state": {
         "_": {
-            "idle": "En veille",
-            "off": "Inactif",
-            "on": "Actif",
+            "idle": "Inactif",
+            "off": "D\u00e9sactiv\u00e9",
+            "on": "Activ\u00e9",
             "paused": "En pause",
             "playing": "Lecture en cours",
             "standby": "En veille"

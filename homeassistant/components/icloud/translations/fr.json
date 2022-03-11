@@ -28,7 +28,7 @@
             "user": {
                 "data": {
                     "password": "Mot de passe",
-                    "username": "Email",
+                    "username": "Courriel",
                     "with_family": "Avec la famille"
                 },
                 "description": "Entrez vos identifiants",

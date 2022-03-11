@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "target_domain": "Type"
+                },
+                "title": "Schakel een..."
+            }
+        }
+    }
+}

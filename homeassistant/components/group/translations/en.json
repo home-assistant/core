@@ -1,10 +1,20 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "name": "Name"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on.",
+                "title": "New Group"
+            },
             "cover": {
                 "data": {
-                    "entities": "Group members",
-                    "name": "Group name"
+                    "entities": "Members",
+                    "name": "Name",
+                    "title": "New Group"
                 },
                 "description": "Select group options"
             },
@@ -16,8 +26,9 @@
             },
             "fan": {
                 "data": {
-                    "entities": "Group members",
-                    "name": "Group name"
+                    "entities": "Members",
+                    "name": "Name",
+                    "title": "New Group"
                 },
                 "description": "Select group options"
             },
@@ -35,8 +46,9 @@
             },
             "light": {
                 "data": {
-                    "entities": "Group members",
-                    "name": "Group name"
+                    "entities": "Members",
+                    "name": "Name",
+                    "title": "New Group"
                 },
                 "description": "Select group options"
             },
@@ -48,8 +60,9 @@
             },
             "media_player": {
                 "data": {
-                    "entities": "Group members",
-                    "name": "Group name"
+                    "entities": "Members",
+                    "name": "Name",
+                    "title": "New Group"
                 },
                 "description": "Select group options"
             },
@@ -58,6 +71,42 @@
                     "entities": "Group members"
                 },
                 "description": "Select group options"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Group type"
+                },
+                "title": "New Group"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Members"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Members"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Members"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Members"
+                }
             }
         }
     },
