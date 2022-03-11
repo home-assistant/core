@@ -5,14 +5,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_KEY
-
+from . import DATA_KEY, _LOGGER, DOMAIN
 
 def setup_platform(
     hass: HomeAssistant,
@@ -21,6 +20,27 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Iterate through all MAX! Devices and add window shutters."""
+    _LOGGER.warning(
+        "Configuration of the maxcube platform in YAML is deprecated and will be "
+        "removed in future release; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
+    """Set up a binary sensor for maxcube."""
     devices: list[MaxCubeBinarySensorBase] = []
     for handler in hass.data[DATA_KEY].values():
         for device in handler.cube.devices:
@@ -30,16 +50,7 @@ def setup_platform(
                 devices.append(MaxCubeShutter(handler, device))
 
     if devices:
-        add_entities(devices)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
-) -> None:
-    """Set up a binary sensor for maxcube."""
-    setup_platform(hass, config_entry.data.copy(), async_add_devices)
+        async_add_devices(devices)
 
 
 class MaxCubeBinarySensorBase(BinarySensorEntity):
