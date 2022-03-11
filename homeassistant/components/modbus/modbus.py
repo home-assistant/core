@@ -130,10 +130,7 @@ async def async_modbus_setup(
 ) -> bool:
     """Set up Modbus component."""
 
-    platform_names = []
-    for entry in PLATFORMS:
-        platform_names.append(entry[1])
-    await async_setup_reload_service(hass, DOMAIN, platform_names)
+    await async_setup_reload_service(hass, DOMAIN, [DOMAIN])
 
     hass.data[DOMAIN] = hub_collect = {}
     for conf_hub in config[DOMAIN]:
@@ -243,14 +240,6 @@ async def async_modbus_setup(
             schema=vol.Schema({vol.Required(ATTR_HUB): cv.string}),
         )
     return True
-
-
-async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
-    """Release modbus resources."""
-    _LOGGER.info("Modbus reloading")
-    for hub in hass.data[DOMAIN]:
-        await hub.async_close()
-    del hass.data[DOMAIN]
 
 
 class ModbusHub:

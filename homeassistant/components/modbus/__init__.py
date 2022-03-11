@@ -1,6 +1,7 @@
 """Support for Modbus."""
 from __future__ import annotations
 
+import logging
 from typing import cast
 
 import voluptuous as vol
@@ -109,6 +110,9 @@ from .validators import (
     scan_interval_validator,
     struct_validator,
 )
+
+_LOGGER = logging.getLogger(__name__)
+
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
@@ -342,3 +346,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         config,
     )
+
+
+async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
+    """Release modbus resources."""
+    _LOGGER.info("Modbus reloading")
+    hubs = hass.data[DOMAIN]
+    for name in hubs:
+        await hubs[name].async_close()
+    del hass.data[DOMAIN]
