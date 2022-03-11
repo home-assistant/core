@@ -306,8 +306,8 @@ def handle_subscribe_entities(
     data: dict[str, dict[str, dict]] = {"add": {}}
     add_entities = data["add"]
     for state in states:
-        state_dict: dict[str, Any] = dict(state.as_dict())
-        add_entities[state_dict.pop("entity_id")] = state_dict
+        state_dict: dict[str, Any] = messages.compress_state_key_names(state.as_dict())
+        add_entities[state_dict.pop("e")] = state_dict
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
@@ -325,11 +325,15 @@ def handle_subscribe_entities(
         )
     del response
 
-    for state in states:
+    cannot_serialize: list[str] = []
+    for entity_id, state_dict in add_entities.items():
         try:
-            const.JSON_DUMP(state.as_dict())
+            const.JSON_DUMP(state_dict)
         except (ValueError, TypeError):
-            del add_entities[state.entity_id]
+            cannot_serialize.append(entity_id)
+
+    for entity_id in cannot_serialize:
+        del add_entities[entity_id]
 
     connection.send_message(const.JSON_DUMP(messages.event_message(msg["id"], data)))
 

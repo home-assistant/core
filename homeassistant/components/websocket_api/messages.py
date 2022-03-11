@@ -32,6 +32,16 @@ IDEN_TEMPLATE: Final = "__IDEN__"
 IDEN_JSON_TEMPLATE: Final = '"__IDEN__"'
 
 
+STATE_KEY_SHORT_NAMES = {
+    "entity_id": "e",
+    "state": "s",
+    "last_changed": "lc",
+    "last_updated": "lu",
+    "context": "c",
+    "attributes": "a",
+}
+
+
 def result_message(iden: int, result: Any = None) -> dict[str, Any]:
     """Return a success result message."""
     return {"id": iden, "type": const.TYPE_RESULT, "success": True, "result": result}
@@ -116,8 +126,8 @@ def _state_diff_event(event: Event) -> dict:
         return {"remove": [event.data["entity_id"]]}
     assert isinstance(event_new_state, State)
     if (event_old_state := event.data["old_state"]) is None:
-        state_dict = dict(event_new_state.as_dict())
-        return {"add": {state_dict.pop("entity_id"): state_dict}}
+        state_dict = compress_state_key_names(event_new_state.as_dict())
+        return {"add": {state_dict.pop("e"): state_dict}}
     assert isinstance(event_old_state, State)
     return _state_diff(event_old_state, event_new_state)
 
@@ -134,15 +144,19 @@ def _state_diff(
             old_dict = old_state_dict[item]
             for sub_item, sub_value in value.items():
                 if old_dict.get(sub_item) != sub_value:
-                    diff.setdefault("+", {}).setdefault(item, {})[sub_item] = sub_value
+                    diff.setdefault("+", {}).setdefault(
+                        STATE_KEY_SHORT_NAMES[item], {}
+                    )[sub_item] = sub_value
         elif old_state_dict[item] != value:
-            diff.setdefault("+", {})[item] = value
+            diff.setdefault("+", {})[STATE_KEY_SHORT_NAMES[item]] = value
     for item, value in old_state_dict.items():
         if isinstance(value, dict):
             new_dict = new_state_dict[item]
             for sub_item, sub_value in value.items():
                 if sub_item not in new_dict:
-                    diff.setdefault("-", {}).setdefault(item, []).append(sub_item)
+                    diff.setdefault("-", {}).setdefault(
+                        STATE_KEY_SHORT_NAMES[item], []
+                    ).append(sub_item)
     return {"changed": {new_state_dict["entity_id"]: diff}}
 
 
@@ -162,3 +176,8 @@ def message_to_json(message: dict[str, Any]) -> str:
                 message["id"], const.ERR_UNKNOWN_ERROR, "Invalid JSON in response"
             )
         )
+
+
+def compress_state_key_names(state_dict: dict[str, Any]) -> dict:
+    """Convert a state dict keys to short names."""
+    return {STATE_KEY_SHORT_NAMES[k]: v for k, v in state_dict.items()}

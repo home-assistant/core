@@ -14,6 +14,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import URL
+from homeassistant.components.websocket_api.messages import STATE_KEY_SHORT_NAMES
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -670,6 +671,8 @@ async def test_subscribe_unsubscribe_events_state_changed(
 async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin_user):
     """Test subscribe/unsubscribe entities."""
 
+    STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
+
     def _apply_changes(state_dict: dict, change_dict: dict) -> None:
         """Apply a diff set to a dict.
 
@@ -680,11 +683,12 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
             key for key, change in additions.items() if isinstance(change, dict)
         ]
         for key in sub_dicts:
-            state_dict[key].update(additions.pop(key))
-        state_dict.update(additions)
+            state_dict[STATE_KEY_LONG_NAMES[key]].update(additions.pop(key))
+        for k, v in additions.items():
+            state_dict[STATE_KEY_LONG_NAMES[k]] = v
         for key, items in change_dict.get("-", {}).items():
             for item in items:
-                del state_dict[key][item]
+                del state_dict[STATE_KEY_LONG_NAMES[key]][item]
 
     hass.states.async_set("light.permitted", "off", {"color": "red"})
     original_state = hass.states.get("light.permitted")
@@ -713,15 +717,14 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert msg["event"] == {
         "add": {
             "light.permitted": {
-                "attributes": {"color": "red"},
-                "context": {"id": ANY, "parent_id": None, "user_id": None},
-                "last_changed": ANY,
-                "last_updated": ANY,
-                "state": "off",
+                "a": {"color": "red"},
+                "c": {"id": ANY, "parent_id": None, "user_id": None},
+                "lc": ANY,
+                "lu": ANY,
+                "s": "off",
             }
         }
     }
-
     hass.states.async_set("light.not_permitted", "on")
     hass.states.async_set("light.permitted", "on", {"color": "blue"})
     hass.states.async_set("light.permitted", "on", {"effect": "help"})
@@ -738,11 +741,11 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
         "changed": {
             "light.permitted": {
                 "+": {
-                    "attributes": {"color": "blue"},
-                    "context": {"id": ANY},
-                    "last_changed": ANY,
-                    "last_updated": ANY,
-                    "state": "on",
+                    "a": {"color": "blue"},
+                    "c": {"id": ANY},
+                    "lc": ANY,
+                    "lu": ANY,
+                    "s": "on",
                 }
             }
         }
@@ -754,13 +757,13 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert state_dict == {
         "attributes": {"color": "blue"},
         "context": {
-            "id": additions["context"]["id"],
+            "id": additions["c"]["id"],
             "parent_id": None,
             "user_id": None,
         },
         "entity_id": "light.permitted",
-        "last_changed": additions["last_changed"],
-        "last_updated": additions["last_updated"],
+        "last_changed": additions["lc"],
+        "last_updated": additions["lu"],
         "state": "on",
     }
 
@@ -771,11 +774,11 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
         "changed": {
             "light.permitted": {
                 "+": {
-                    "attributes": {"effect": "help"},
-                    "context": {"id": ANY},
-                    "last_updated": ANY,
+                    "a": {"effect": "help"},
+                    "c": {"id": ANY},
+                    "lu": ANY,
                 },
-                "-": {"attributes": ["color"]},
+                "-": {"a": ["color"]},
             }
         }
     }
@@ -787,13 +790,13 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert state_dict == {
         "attributes": {"effect": "help"},
         "context": {
-            "id": additions["context"]["id"],
+            "id": additions["c"]["id"],
             "parent_id": None,
             "user_id": None,
         },
         "entity_id": "light.permitted",
         "last_changed": ANY,
-        "last_updated": additions["last_updated"],
+        "last_updated": additions["lu"],
         "state": "on",
     }
 
@@ -804,9 +807,9 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
         "changed": {
             "light.permitted": {
                 "+": {
-                    "attributes": {"color": ["blue", "green"]},
-                    "context": {"id": ANY},
-                    "last_updated": ANY,
+                    "a": {"color": ["blue", "green"]},
+                    "c": {"id": ANY},
+                    "lu": ANY,
                 }
             }
         }
@@ -819,13 +822,13 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert state_dict == {
         "attributes": {"effect": "help", "color": ["blue", "green"]},
         "context": {
-            "id": additions["context"]["id"],
+            "id": additions["c"]["id"],
             "parent_id": None,
             "user_id": None,
         },
         "entity_id": "light.permitted",
         "last_changed": ANY,
-        "last_updated": additions["last_updated"],
+        "last_updated": additions["lu"],
         "state": "on",
     }
 
@@ -840,11 +843,11 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert msg["event"] == {
         "add": {
             "light.permitted": {
-                "attributes": {"color": "blue", "effect": "help"},
-                "context": {"id": ANY, "parent_id": None, "user_id": None},
-                "last_changed": ANY,
-                "last_updated": ANY,
-                "state": "on",
+                "a": {"color": "blue", "effect": "help"},
+                "c": {"id": ANY, "parent_id": None, "user_id": None},
+                "lc": ANY,
+                "lu": ANY,
+                "s": "on",
             }
         }
     }
