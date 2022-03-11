@@ -508,9 +508,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
             if (data := response.get("data")) and (
                 message := data.get("message")
             ) == "unrecognized method value : ms.remote.control":
-                LOGGER.warning(
+                LOGGER.error(
                     "Your TV seems to be unsupported by "
-                    "SamsungTVWSBridge and may need a PIN %s",
+                    "SamsungTVWSBridge and may need a PIN: '%s'",
                     message,
                 )
 
