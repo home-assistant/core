@@ -331,8 +331,8 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
         """Initialize Bridge."""
         super().__init__(hass, method, host, port)
         self.token = token
-        self.session_id = session_id
-        self._app_list: dict[str, str] | None = None
+        self._session_id = session_id
+        self._rest_api: SamsungTVAsyncRest | None = None
         self._device_info: dict[str, Any] | None = None
         self._remote: SamsungTVEncryptedWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
@@ -367,9 +367,8 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 port=self.port,
                 web_session=async_get_clientsession(self.hass),
                 token=self.token or "",
-                session_id=self.session_id or "",
+                session_id=self._session_id or "",
                 timeout=TIMEOUT_REQUEST,
-                name=VALUE_CONF_NAME,
             ) as remote:
                 await remote.start_listening()
                 LOGGER.debug("Working config: %s", config)
@@ -384,6 +383,21 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
 
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
+        if self._rest_api is None:
+            assert self.port
+            self._rest_api = SamsungTVAsyncRest(
+                host=self.host,
+                session=async_get_clientsession(self.hass),
+                port=self.port,
+                timeout=TIMEOUT_WEBSOCKET,
+            )
+
+        with contextlib.suppress(HttpApiError, AsyncioTimeoutError):
+            device_info: dict[str, Any] = await self._rest_api.rest_device_info()
+            LOGGER.debug("Device info on %s is: %s", self.host, device_info)
+            self._device_info = device_info
+            return device_info
+
         return None
 
     async def async_send_keys(self, keys: list[str]) -> None:
@@ -432,16 +446,15 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
         """Create or return a remote control instance."""
         if self._remote is None or not self._remote.is_alive():
             # We need to create a new instance to reconnect.
-            LOGGER.debug("Create SamsungTVWSBridge for %s", self.host)
+            LOGGER.debug("Create SamsungTVEncryptedBridge for %s", self.host)
             assert self.port
             self._remote = SamsungTVEncryptedWSAsyncRemote(
                 host=self.host,
                 port=self.port,
                 web_session=async_get_clientsession(self.hass),
                 token=self.token or "",
-                session_id=self.session_id or "",
+                session_id=self._session_id or "",
                 timeout=TIMEOUT_WEBSOCKET,
-                name=VALUE_CONF_NAME,
             )
             try:
                 await self._remote.start_listening()
@@ -469,17 +482,10 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 )
                 self._remote = None
             else:
-                LOGGER.debug("Created SamsungTVWSBridge for %s", self.host)
+                LOGGER.debug("Created SamsungTVEncryptedBridge for %s", self.host)
                 if self._device_info is None:
                     # Initialise device info on first connect
                     await self.async_device_info()
-                if self.token != self._remote.token:
-                    LOGGER.info(
-                        "SamsungTVWSBridge has provided a new token %s",
-                        self._remote.token,
-                    )
-                    self.token = self._remote.token
-                    self._notify_new_token_callback()
         return self._remote
 
     async def async_power_off(self) -> None:
