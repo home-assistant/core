@@ -29,50 +29,14 @@ def async_add_to_device(
     device_registry = dr.async_get(hass)
     device_id = None
 
-    wrapped_switch = registry.async_get(entity_id)
     if (
         not (wrapped_switch := registry.async_get(entity_id))
         or not (device_id := wrapped_switch.device_id)
-        or not (device_entry := device_registry.async_get(device_id))
+        or not (device_registry.async_get(device_id))
     ):
         return device_id
 
     device_registry.async_update_device(device_id, add_config_entry_id=entry.entry_id)
-
-    if (
-        not wrapped_switch.config_entry_id
-        or wrapped_switch.config_entry_id not in device_entry.config_entries
-    ):
-        return device_id
-
-    @callback
-    def async_device_updated(event):
-        """Handle the update of a device.
-
-        Will remove our config entry from the switch's device if the switch's config
-        entry is removed from it.
-        """
-        if (
-            event.data["device_id"] != device_id
-            or event.data["action"] != "update"
-            or "config_entries" not in event.data["changes"]
-        ):
-            return
-
-        if not (device_entry := device_registry.async_get(device_id)):
-            # The device is already removed, no need to do any cleanup
-            return False
-        if wrapped_switch.config_entry_id in device_entry.config_entries:
-            # Not removed from device
-            return False
-
-        device_registry.async_update_device(
-            device_id, remove_config_entry_id=entry.entry_id
-        )
-
-    entry.async_on_unload(
-        hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, async_device_updated)
-    )
 
     return device_id
 

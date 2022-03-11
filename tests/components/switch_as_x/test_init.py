@@ -90,17 +90,17 @@ async def test_device_registry_config_entry_1(hass: HomeAssistant, target_domain
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    test_config_entry = MockConfigEntry()
+    switch_config_entry = MockConfigEntry()
 
     device_entry = device_registry.async_get_or_create(
-        config_entry_id=test_config_entry.entry_id,
+        config_entry_id=switch_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     switch_entity_entry = entity_registry.async_get_or_create(
         "switch",
         "test",
         "unique",
-        config_entry=test_config_entry,
+        config_entry=switch_config_entry,
         device_id=device_entry.id,
     )
     # Add another config entry to the same device
@@ -128,9 +128,11 @@ async def test_device_registry_config_entry_1(hass: HomeAssistant, target_domain
 
     # Remove the wrapped switch's config entry from the device
     device_registry.async_update_device(
-        device_entry.id, remove_config_entry_id=test_config_entry.entry_id
+        device_entry.id, remove_config_entry_id=switch_config_entry.entry_id
     )
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
 
@@ -141,17 +143,17 @@ async def test_device_registry_config_entry_2(hass: HomeAssistant, target_domain
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    test_config_entry = MockConfigEntry()
+    switch_config_entry = MockConfigEntry()
 
     device_entry = device_registry.async_get_or_create(
-        config_entry_id=test_config_entry.entry_id,
+        config_entry_id=switch_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     switch_entity_entry = entity_registry.async_get_or_create(
         "switch",
         "test",
         "unique",
-        config_entry=test_config_entry,
+        config_entry=switch_config_entry,
         device_id=device_entry.id,
     )
 
@@ -176,5 +178,6 @@ async def test_device_registry_config_entry_2(hass: HomeAssistant, target_domain
     # Remove the wrapped switch from the device
     entity_registry.async_update_entity(switch_entity_entry.entity_id, device_id=None)
     await hass.async_block_till_done()
+    # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
