@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
-    CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -103,7 +102,7 @@ def _async_get_device_bridge(
         data[CONF_METHOD],
         data[CONF_HOST],
         data[CONF_PORT],
-        data.get(CONF_TOKEN),
+        data,
     )
 
 

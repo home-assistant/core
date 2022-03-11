@@ -89,12 +89,12 @@ class SamsungTVBridge(ABC):
         method: str,
         host: str,
         port: int | None = None,
-        token: str | None = None,
+        entry_data: Mapping[str, Any] | None = None,
     ) -> SamsungTVBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
             return SamsungTVLegacyBridge(hass, method, host, port)
-        return SamsungTVWSBridge(hass, method, host, port, token)
+        return SamsungTVWSBridge(hass, method, host, port, entry_data)
 
     def __init__(
         self, hass: HomeAssistant, method: str, host: str, port: int | None = None
@@ -308,11 +308,12 @@ class SamsungTVWSBridge(SamsungTVBridge):
         method: str,
         host: str,
         port: int | None = None,
-        token: str | None = None,
+        entry_data: Mapping[str, Any] | None = None,
     ) -> None:
         """Initialize Bridge."""
         super().__init__(hass, method, host, port)
-        self.token = token
+        if entry_data:
+            self.token = entry_data.get(CONF_TOKEN)
         self._rest_api: SamsungTVAsyncRest | None = None
         self._app_list: dict[str, str] | None = None
         self._device_info: dict[str, Any] | None = None
