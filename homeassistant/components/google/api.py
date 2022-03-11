@@ -108,16 +108,18 @@ class DeviceFlow:
         )
         expiration_time = min(user_code_expiry, max_timeout)
 
+        def _exchange() -> Credentials:
+            return self._oauth_flow.step2_exchange(
+                device_flow_info=self._device_flow_info
+            )
+
         async def _poll_attempt(now: datetime.datetime):
             assert self._exchange_task_unsub
             _LOGGER.debug("Attempting OAuth code exchange")
             creds: Credentials | None = None
             if now < expiration_time:
                 try:
-                    creds = await self._hass.async_add_executor_job(
-                        self._oauth_flow.step2_exchange,
-                        self._device_flow_info.device_code,
-                    )
+                    creds = await self._hass.async_add_executor_job(_exchange)
                 except FlowExchangeError:
                     _LOGGER.debug("Token not yet ready; trying again later")
                     return
