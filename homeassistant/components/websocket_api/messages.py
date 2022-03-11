@@ -159,8 +159,12 @@ def _state_diff(
                     ).append(sub_item)
     # Omit last_updated(lu) if last_changed(lc) is set since they
     # will always be the same
-    if "+" in diff and "lu" in diff["+"] and "lc" in diff["+"]:
-        del diff["+"]["lu"]
+    if (
+        (additions := diff.get("+"))
+        and "lu" in additions
+        and additions.get("lc") == additions.get("lu")
+    ):
+        del additions["lu"]
     return {"changed": {new_state_dict["entity_id"]: diff}}
 
 
@@ -187,6 +191,16 @@ def compress_state_key_names(state_dict: dict[str, Any]) -> dict:
     compressed = {STATE_KEY_SHORT_NAMES[k]: v for k, v in state_dict.items()}
     # Omit last_updated(lu) if last_changed(lc) is set since they
     # will always be the same
-    if "lu" in compressed and "lc" in compressed:
+    if (
+        "lu" in compressed
+        and "lc" in compressed
+        and compressed["lu"] == compressed["lc"]
+    ):
         del compressed["lu"]
+    if (
+        (context := compressed.get("c"))
+        and context.get("parent_id") is None
+        and context.get("user_id") is None
+    ):
+        compressed["c"] = context["id"]
     return compressed

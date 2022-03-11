@@ -25,6 +25,26 @@ from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
 from tests.common import MockEntity, MockEntityPlatform, async_mock_service
 
+STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
+
+
+def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
+    """Apply a diff set to a dict.
+
+    Port of the client side merging
+    """
+    additions = change_dict.get("+", {})
+    if "lc" in additions:
+        additions["lu"] = additions["lc"]
+    sub_dicts = [key for key, change in additions.items() if isinstance(change, dict)]
+    for key in sub_dicts:
+        state_dict[STATE_KEY_LONG_NAMES[key]].update(additions.pop(key))
+    for k, v in additions.items():
+        state_dict[STATE_KEY_LONG_NAMES[k]] = v
+    for key, items in change_dict.get("-", {}).items():
+        for item in items:
+            del state_dict[STATE_KEY_LONG_NAMES[key]][item]
+
 
 async def test_fire_event(hass, websocket_client):
     """Test fire event command."""
@@ -668,29 +688,121 @@ async def test_subscribe_unsubscribe_events_state_changed(
     assert msg["event"]["data"]["entity_id"] == "light.permitted"
 
 
+async def test_subscribe_entities_with_unserializable_state(
+    hass, websocket_client, hass_admin_user
+):
+    """Test subscribe entities with an unserializeable state."""
+
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+        def __init__(self):
+            """Init cannot serialize this."""
+
+    hass.states.async_set("light.permitted", "off", {"color": "red"})
+    hass.states.async_set(
+        "light.cannot_serialize",
+        "off",
+        {"color": "red", "cannot_serialize": CannotSerializeMe()},
+    )
+    original_state = hass.states.get("light.cannot_serialize")
+    assert isinstance(original_state, State)
+    state_dict = {
+        "attributes": dict(original_state.attributes),
+        "context": dict(original_state.context.as_dict()),
+        "entity_id": original_state.entity_id,
+        "last_changed": original_state.last_changed.isoformat(),
+        "last_updated": original_state.last_updated.isoformat(),
+        "state": original_state.state,
+    }
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy(
+        {
+            "entities": {
+                "entity_ids": {"light.permitted": True, "light.cannot_serialize": True}
+            }
+        }
+    )
+
+    await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "add": {
+            "light.permitted": {
+                "a": {"color": "red"},
+                "c": ANY,
+                "lc": ANY,
+                "s": "off",
+            }
+        }
+    }
+    hass.states.async_set("light.permitted", "on", {"effect": "help"})
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "changed": {
+            "light.permitted": {
+                "+": {
+                    "a": {"effect": "help"},
+                    "c": {"id": ANY},
+                    "lc": ANY,
+                    "s": "on",
+                },
+                "-": {"a": ["color"]},
+            }
+        }
+    }
+    hass.states.async_set("light.cannot_serialize", "on", {"effect": "help"})
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "changed": {
+            "light.cannot_serialize": {
+                "+": {"a": {"effect": "help"}, "c": {"id": ANY}, "lc": ANY, "s": "on"},
+                "-": {"a": ["color", "cannot_serialize"]},
+            }
+        }
+    }
+    change_set = msg["event"]["changed"]["light.cannot_serialize"]
+    _apply_entities_changes(state_dict, change_set)
+    assert state_dict == {
+        "attributes": {"effect": "help"},
+        "context": {
+            "id": ANY,
+            "parent_id": None,
+            "user_id": None,
+        },
+        "entity_id": "light.cannot_serialize",
+        "last_changed": ANY,
+        "last_updated": ANY,
+        "state": "on",
+    }
+    hass.states.async_set(
+        "light.cannot_serialize",
+        "off",
+        {"color": "red", "cannot_serialize": CannotSerializeMe()},
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "result"
+    assert msg["error"] == {
+        "code": "unknown_error",
+        "message": "Invalid JSON in response",
+    }
+
+
 async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin_user):
     """Test subscribe/unsubscribe entities."""
-
-    STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
-
-    def _apply_changes(state_dict: dict, change_dict: dict) -> None:
-        """Apply a diff set to a dict.
-
-        Port of the client side merging
-        """
-        additions = change_dict.get("+", {})
-        if "lc" in additions:
-            additions["lu"] = additions["lc"]
-        sub_dicts = [
-            key for key, change in additions.items() if isinstance(change, dict)
-        ]
-        for key in sub_dicts:
-            state_dict[STATE_KEY_LONG_NAMES[key]].update(additions.pop(key))
-        for k, v in additions.items():
-            state_dict[STATE_KEY_LONG_NAMES[k]] = v
-        for key, items in change_dict.get("-", {}).items():
-            for item in items:
-                del state_dict[STATE_KEY_LONG_NAMES[key]][item]
 
     hass.states.async_set("light.permitted", "off", {"color": "red"})
     original_state = hass.states.get("light.permitted")
@@ -720,7 +832,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
         "add": {
             "light.permitted": {
                 "a": {"color": "red"},
-                "c": {"id": ANY, "parent_id": None, "user_id": None},
+                "c": ANY,
                 "lc": ANY,
                 "s": "off",
             }
@@ -753,7 +865,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
 
     change_set = msg["event"]["changed"]["light.permitted"]
     additions = deepcopy(change_set["+"])
-    _apply_changes(state_dict, change_set)
+    _apply_entities_changes(state_dict, change_set)
     assert state_dict == {
         "attributes": {"color": "blue"},
         "context": {
@@ -785,7 +897,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
 
     change_set = msg["event"]["changed"]["light.permitted"]
     additions = deepcopy(change_set["+"])
-    _apply_changes(state_dict, change_set)
+    _apply_entities_changes(state_dict, change_set)
 
     assert state_dict == {
         "attributes": {"effect": "help"},
@@ -817,7 +929,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
 
     change_set = msg["event"]["changed"]["light.permitted"]
     additions = deepcopy(change_set["+"])
-    _apply_changes(state_dict, change_set)
+    _apply_entities_changes(state_dict, change_set)
 
     assert state_dict == {
         "attributes": {"effect": "help", "color": ["blue", "green"]},
@@ -844,7 +956,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
         "add": {
             "light.permitted": {
                 "a": {"color": "blue", "effect": "help"},
-                "c": {"id": ANY, "parent_id": None, "user_id": None},
+                "c": ANY,
                 "lc": ANY,
                 "s": "on",
             }
