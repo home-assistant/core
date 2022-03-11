@@ -303,7 +303,7 @@ async def test_wrong_unpack_climate(hass, mock_do_cycle):
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
-async def test_no_discovery_info(hass, caplog):
+async def test_no_discovery_info_climate(hass, caplog):
     """Test setup without discovery info."""
     assert CLIMATE_DOMAIN not in hass.config.components
     assert await async_setup_component(
