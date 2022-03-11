@@ -10,7 +10,6 @@ import time
 from types import TracebackType
 
 import aiohttp
-from samsungtvws.connection import SamsungTVWSBaseConnection
 from websockets.client import WebSocketClientProtocol, connect
 from websockets.exceptions import ConnectionClosed
 
@@ -38,12 +37,12 @@ class SendRemoteKey:
         )
 
 
-class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
-    connection: WebSocketClientProtocol | None
-    _recv_loop: asyncio.Task[None] | None
-
-    _URL_FORMAT = "ws://{host}:{port}/socket.io/1/websocket/{app}"
+class SamsungTVEncryptedWSAsyncRemote:
     _REST_URL_FORMAT = "http://{host}:{port}/{route}"
+    _URL_FORMAT = "ws://{host}:{port}/socket.io/1/websocket/{app}"
+
+    _connection: WebSocketClientProtocol | None
+    _recv_loop: asyncio.Task[None] | None
 
     def __init__(
         self,
@@ -55,19 +54,17 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
         port: int = 8000,
         timeout: float | None = None,
         key_press_delay: float = 1,
-        name: str = "SamsungTvRemote",
     ) -> None:
-        super().__init__(
-            host,
-            endpoint="",
-            token=token,
-            port=port,
-            timeout=timeout,
-            key_press_delay=key_press_delay,
-            name=name,
-        )
-        self._web_session = web_session
+        self._host = host
+        self._key_press_delay = key_press_delay
+        self._port = port
         self._session = SamsungTVEncryptedSession(token, session_id)
+        self._timeout = None if timeout == 0 else timeout
+        self._token = token
+        self._web_session = web_session
+
+        self._connection = None
+        self._recv_loop = None
 
     async def __aenter__(self) -> SamsungTVEncryptedWSAsyncRemote:
         return self
@@ -82,8 +79,8 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
 
     def _format_websocket_url(self, app: str) -> str:
         params = {
-            "host": self.host,
-            "port": self.port,
+            "host": self._host,
+            "port": self._port,
             "app": app,
         }
 
@@ -91,15 +88,15 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
 
     def _format_rest_url(self, route: str = "") -> str:
         params = {
-            "host": self.host,
-            "port": self.port,
+            "host": self._host,
+            "port": self._port,
             "route": route,
         }
 
         return self._REST_URL_FORMAT.format(**params)
 
     async def _open(self) -> None:
-        if self.connection:
+        if self._connection:
             # someone else already created a new connection
             return
 
@@ -113,21 +110,21 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
         url = self._format_websocket_url(step4_response.split(":")[0])
 
         LOGGER.debug("WS url %s", url)
-        connection = await connect(url, open_timeout=self.timeout)
+        connection = await connect(url, open_timeout=self._timeout)
         await connection.send("1::/com.samsung.companion")
 
-        self.connection = connection
+        self._connection = connection
 
     async def start_listening(self) -> None:
         """Open, and start listening."""
-        if self.connection:
+        if self._connection:
             raise SamsungTVEncryptedConnectionFailure("Connection already exists")
 
         await self._open()
-        assert self.connection
+        assert self._connection
 
         self._recv_loop = asyncio.ensure_future(
-            self._do_start_listening(self.connection)
+            self._do_start_listening(self._connection)
         )
 
     @staticmethod
@@ -152,14 +149,14 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
         commands: list[SamsungTVEncryptedCommand],
         key_press_delay: float | None = None,
     ) -> None:
-        if self.connection is None:
+        if self._connection is None:
             await self._open()
-            assert self.connection
+            assert self._connection
 
-        delay = self.key_press_delay if key_press_delay is None else key_press_delay
+        delay = self._key_press_delay if key_press_delay is None else key_press_delay
 
         for command in commands:
-            await self._send_command(self.connection, command, self._session, delay)
+            await self._send_command(self._connection, command, self._session, delay)
 
     @staticmethod
     async def _send_command(
@@ -174,13 +171,13 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
         await asyncio.sleep(delay)
 
     async def close(self) -> None:
-        if self.connection:
-            await self.connection.close()
+        if self._connection:
+            await self._connection.close()
             if self._recv_loop:
                 await self._recv_loop
 
-        self.connection = None
+        self._connection = None
         LOGGER.debug("Connection closed")
 
     def is_alive(self) -> bool:
-        return self.connection is not None and not self.connection.closed
+        return self._connection is not None and not self._connection.closed
