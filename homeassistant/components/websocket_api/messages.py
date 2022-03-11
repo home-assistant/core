@@ -137,12 +137,15 @@ def _state_diff(
         additions["lc"] = new_state.last_changed.timestamp()
     elif old_state.last_updated != new_state.last_updated:
         additions["lu"] = new_state.last_updated.timestamp()
-    if old_state.context.id != new_state.context.id:
-        additions.setdefault("c", {})["id"] = new_state.context.id
     if old_state.context.parent_id != new_state.context.parent_id:
         additions.setdefault("c", {})["parent_id"] = new_state.context.parent_id
     if old_state.context.user_id != new_state.context.user_id:
         additions.setdefault("c", {})["user_id"] = new_state.context.user_id
+    if old_state.context.id != new_state.context.id:
+        if "c" in additions:
+            additions["c"]["id"] = new_state.context.id
+        else:
+            additions["c"] = new_state.context.id
     old_attributes = old_state.attributes
     for key, value in new_state.attributes.items():
         if old_attributes.get(key) != value:
