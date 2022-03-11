@@ -157,6 +157,10 @@ def _state_diff(
                     diff.setdefault("-", {}).setdefault(
                         STATE_KEY_SHORT_NAMES[item], []
                     ).append(sub_item)
+    # Omit last_updated(lu) if last_changed(lc) is set since they
+    # will always be the same
+    if "+" in diff and "lu" in diff["+"] and "lc" in diff["+"]:
+        del diff["+"]["lu"]
     return {"changed": {new_state_dict["entity_id"]: diff}}
 
 
@@ -180,4 +184,9 @@ def message_to_json(message: dict[str, Any]) -> str:
 
 def compress_state_key_names(state_dict: dict[str, Any]) -> dict:
     """Convert a state dict keys to short names."""
-    return {STATE_KEY_SHORT_NAMES[k]: v for k, v in state_dict.items()}
+    compressed = {STATE_KEY_SHORT_NAMES[k]: v for k, v in state_dict.items()}
+    # Omit last_updated(lu) if last_changed(lc) is set since they
+    # will always be the same
+    if "lu" in compressed and "lc" in compressed:
+        del compressed["lu"]
+    return compressed

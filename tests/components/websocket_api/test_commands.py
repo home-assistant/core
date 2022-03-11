@@ -679,6 +679,8 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
         Port of the client side merging
         """
         additions = change_dict.get("+", {})
+        if "lc" in additions:
+            additions["lu"] = additions["lc"]
         sub_dicts = [
             key for key, change in additions.items() if isinstance(change, dict)
         ]
@@ -720,7 +722,6 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
                 "a": {"color": "red"},
                 "c": {"id": ANY, "parent_id": None, "user_id": None},
                 "lc": ANY,
-                "lu": ANY,
                 "s": "off",
             }
         }
@@ -744,7 +745,6 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
                     "a": {"color": "blue"},
                     "c": {"id": ANY},
                     "lc": ANY,
-                    "lu": ANY,
                     "s": "on",
                 }
             }
@@ -763,7 +763,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
         },
         "entity_id": "light.permitted",
         "last_changed": additions["lc"],
-        "last_updated": additions["lu"],
+        "last_updated": additions["lc"],
         "state": "on",
     }
 
@@ -846,7 +846,6 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
                 "a": {"color": "blue", "effect": "help"},
                 "c": {"id": ANY, "parent_id": None, "user_id": None},
                 "lc": ANY,
-                "lu": ANY,
                 "s": "on",
             }
         }
