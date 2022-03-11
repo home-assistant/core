@@ -245,7 +245,7 @@ def _parse_custom_effects(effects_config):
 def _async_cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
 
-    async def _async_wrap(self, *args, **kwargs):
+    async def _async_wrap(self: "YeelightGenericLight", *args, **kwargs):
         for attempts in range(2):
             try:
                 _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
