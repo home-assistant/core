@@ -306,7 +306,7 @@ def handle_subscribe_entities(
     data: dict[str, dict[str, dict]] = {"add": {}}
     add_entities = data["add"]
     for state in states:
-        add_entities[state.entity_id] = messages.state_to_compressed_dict(state, True)
+        add_entities[state.entity_id] = messages.compressed_dict_omit_matching_lu(state)
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
