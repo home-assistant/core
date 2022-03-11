@@ -118,9 +118,7 @@ def _state_diff_event(event: Event) -> dict:
     if (event_old_state := event.data["old_state"]) is None:
         return {
             "add": {
-                event_new_state.entity_id: compressed_dict_omit_matching_lu(
-                    event_new_state
-                )
+                event_new_state.entity_id: compressed_state_dict_add(event_new_state)
             }
         }
     assert isinstance(event_old_state, State)
@@ -159,11 +157,18 @@ def _state_diff(
     return {"changed": {new_state.entity_id: diff}}
 
 
-def compressed_dict_omit_matching_lu(state: State) -> dict[str, Any]:
-    """Build a compressed dict of a state omitting the last_updated if it matches last_changed."""
+def compressed_state_dict_add(state: State) -> dict[str, Any]:
+    """Build a compressed dict of a state for adds.
+
+    Omits the lu (last_updated) if it matches (lc) last_changed.
+
+    Sends c (context) as a string if it only contains an id.
+    """
     state_dict = state.as_compressed_dict()
     if state_dict["lu"] == state_dict["lc"]:
         return {k: v for k, v in state_dict.items() if k != "lu"}
+    if state_dict["c"]["parent_id"] is None and state_dict["c"]["user_id"]:
+        state_dict["c"] = state_dict["c"]["id"]
     return state_dict
 
 
