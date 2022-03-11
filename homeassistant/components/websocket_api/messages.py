@@ -116,8 +116,11 @@ def _state_diff_event(event: Event) -> dict:
         return {"remove": [event.data["entity_id"]]}
     assert isinstance(event_new_state, State)
     if (event_old_state := event.data["old_state"]) is None:
-        state_dict = state_to_compressed_dict(event_new_state)
-        return {"add": {state_dict.pop("e"): state_dict}}
+        return {
+            "add": {
+                event_new_state.entity_id: state_to_compressed_dict(event_new_state)
+            }
+        }
     assert isinstance(event_old_state, State)
     return _state_diff(event_old_state, event_new_state)
 
@@ -149,7 +152,6 @@ def _state_diff(
 def state_to_compressed_dict(state: State) -> dict[str, Any]:
     """Build a compressed dict of a state."""
     state_dict: dict[str, Any] = {
-        "e": state.entity_id,
         "s": state.state,
         "a": state.attributes,
         "c": state.context.as_dict(),
