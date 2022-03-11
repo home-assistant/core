@@ -166,10 +166,12 @@ def state_to_compressed_dict(state: State, omit_lu_matching_lc: bool) -> dict[st
         "a": state.attributes,
         "c": state.context.as_dict(),
         "lc": state.last_changed.timestamp(),
-        "lu": state.last_updated.timestamp(),
     }
-    if omit_lu_matching_lc and state_dict["lc"] == state_dict["lu"]:
-        del state_dict["lu"]
+    if state.last_changed == state.last_updated:
+        if not omit_lu_matching_lc:
+            state_dict["lu"] = state_dict["lc"]
+    else:
+        state_dict["lu"] = state.last_updated.timestamp()
     return state_dict
 
 
