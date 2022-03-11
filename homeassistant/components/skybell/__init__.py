@@ -1,12 +1,20 @@
 """Support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
+import os
+
 from aioskybell import Skybell
 from aioskybell.exceptions import SkybellAuthenticationException, SkybellException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -63,6 +71,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
+    # Clean up unused cache file since we are using an account specific name
+    if os.path.exists(hass.config.path(DEFAULT_CACHEDB)):
+        os.remove(hass.config.path(DEFAULT_CACHEDB))
+
     return True
 
 
@@ -75,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         username=email,
         password=password,
         get_devices=True,
-        cache_path=hass.config.path(DEFAULT_CACHEDB),
+        cache_path=hass.config.path(f"./skybell_{entry.unique_id}.pickle"),
         session=async_get_clientsession(hass),
     )
     try:
@@ -85,11 +97,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SkybellException as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 
-    device_coordinators: dict[str, SkybellDataUpdateCoordinator] = {}
+    device_coordinators: list[SkybellDataUpdateCoordinator] = []
     for device in devices:
         coordinator = SkybellDataUpdateCoordinator(hass, device)
         await coordinator.async_config_entry_first_refresh()
-        device_coordinators[device.device_id] = coordinator
+        device_coordinators.append(coordinator)
     hass.data[DOMAIN][entry.entry_id] = device_coordinators
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -104,7 +116,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class SkybellEntity(CoordinatorEntity):
-    """An HA implementation for Skybell devices."""
+    """An HA implementation for Skybell entity."""
 
     _attr_attribution = "Data provided by Skybell.com"
     coordinator: SkybellDataUpdateCoordinator
@@ -113,27 +125,32 @@ class SkybellEntity(CoordinatorEntity):
         """Initialize a SkyBell entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.device.mac)},
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, self.coordinator.device.device_id)},
             manufacturer=DEFAULT_NAME,
-            model=coordinator.device.type,
-            name=coordinator.device.name,
-            sw_version=coordinator.device.firmware_ver,
+            model=self.coordinator.device.type,
+            name=self.coordinator.device.name,
+            sw_version=self.coordinator.device.firmware_ver,
         )
+        if self.coordinator.device.mac:
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_NETWORK_MAC, self.coordinator.device.mac)
+            }
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, str | int | tuple[str, str]]:
         """Return the state attributes."""
-        return {
+        attr: dict[str, str | int | tuple[str, str]] = {
             "device_id": self.coordinator.device.device_id,
             "status": self.coordinator.device.status,
             "location": self.coordinator.device.location,
-            "wifi_ssid": self.coordinator.device.wifi_ssid,
-            "wifi_status": self.coordinator.device.wifi_status,
-            "last_check_in": self.coordinator.device.last_check_in,
             "motion_threshold": self.coordinator.device.motion_threshold,
             "video_profile": self.coordinator.device.video_profile,
         }
+        if self.coordinator.device.owner:
+            attr["wifi_ssid"] = self.coordinator.device.wifi_ssid
+            attr["wifi_status"] = self.coordinator.device.wifi_status
+            attr["last_check_in"] = self.coordinator.device.last_check_in
+        return attr
 
     @property
     def available(self) -> bool:

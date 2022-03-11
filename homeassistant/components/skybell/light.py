@@ -5,15 +5,14 @@ from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
     COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_HS,
+    COLOR_MODE_RGB,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
 
 from . import SkybellEntity
 from .const import DOMAIN
@@ -25,15 +24,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up Skybell switch."""
     async_add_entities(
-        SkybellLight(coordinator)
-        for coordinator in hass.data[DOMAIN][entry.entry_id].values()
+        SkybellLight(coordinator) for coordinator in hass.data[DOMAIN][entry.entry_id]
     )
 
 
 class SkybellLight(SkybellEntity, LightEntity):
     """A light implementation for Skybell devices."""
 
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS, COLOR_MODE_HS}
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS, COLOR_MODE_RGB}
     coordinator: SkybellDataUpdateCoordinator
 
     def __init__(
@@ -43,18 +41,16 @@ class SkybellLight(SkybellEntity, LightEntity):
         """Initialize a light for a Skybell device."""
         super().__init__(coordinator)
         self._attr_name = coordinator.name
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.name}"
+        self._attr_unique_id = f"{coordinator.device.device_id}_{self.name}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        if ATTR_HS_COLOR in kwargs:
-            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-            await self.coordinator.device.async_set_setting(ATTR_HS_COLOR, rgb)
-        elif ATTR_BRIGHTNESS in kwargs:
-            level = int((kwargs[ATTR_BRIGHTNESS] * 100) / 255)
+        if ATTR_RGB_COLOR in kwargs:
+            rgb = kwargs[ATTR_RGB_COLOR]
+            await self.coordinator.device.async_set_setting(ATTR_RGB_COLOR, rgb)
+        if ATTR_BRIGHTNESS in kwargs:
+            level = int((kwargs.get(ATTR_BRIGHTNESS, 0) * 100) / 255)
             await self.coordinator.device.async_set_setting(ATTR_BRIGHTNESS, level)
-        else:
-            await self.coordinator.device.async_set_setting(ATTR_BRIGHTNESS, 100)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
@@ -69,8 +65,3 @@ class SkybellLight(SkybellEntity, LightEntity):
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return int((self.coordinator.device.led_intensity * 255) / 100)
-
-    @property
-    def hs_color(self) -> tuple[float, float]:
-        """Return the color of the light."""
-        return color_util.color_RGB_to_hs(*self.coordinator.device.led_rgb)

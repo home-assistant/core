@@ -42,7 +42,7 @@ async def async_setup_entry(
     """Set up Skybell sensor."""
     async_add_entities(
         SkybellSensor(coordinator, description)
-        for coordinator in hass.data[DOMAIN][entry.entry_id].values()
+        for coordinator in hass.data[DOMAIN][entry.entry_id]
         for description in SENSOR_TYPES
     )
 
@@ -61,7 +61,7 @@ class SkybellSensor(SkybellEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{coordinator.name} {description.name}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.device.device_id}_{description.key}"
 
     @property
     def native_value(self) -> int:

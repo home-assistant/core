@@ -65,11 +65,11 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass),
         )
         try:
-            devices = await skybell.async_get_devices()
+            await skybell.async_initialize()
         except exceptions.SkybellAuthenticationException:
             return None, "invalid_auth"
         except exceptions.SkybellException:
             return None, "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             return None, "unknown"
-        return devices[0].user_id, None
+        return skybell.user_id, None

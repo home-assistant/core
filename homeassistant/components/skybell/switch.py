@@ -48,7 +48,7 @@ async def async_setup_entry(
     """Set up the SkyBell switch."""
     async_add_entities(
         SkybellSwitch(coordinator, description)
-        for coordinator in hass.data[DOMAIN][entry.entry_id].values()
+        for coordinator in hass.data[DOMAIN][entry.entry_id]
         for description in SWITCH_TYPES
     )
 
@@ -67,7 +67,7 @@ class SkybellSwitch(SkybellEntity, SwitchEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{coordinator.name} {description.name}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.device.device_id}_{description.key}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""

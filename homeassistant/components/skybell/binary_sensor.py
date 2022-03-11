@@ -1,6 +1,7 @@
 """Binary sensor support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
+from aioskybell.helpers import const as CONST
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -14,7 +15,6 @@ from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import DOMAIN, SkybellEntity
 from .coordinator import SkybellDataUpdateCoordinator
@@ -50,7 +50,7 @@ async def async_setup_entry(
     async_add_entities(
         SkybellBinarySensor(coordinator, sensor)
         for sensor in BINARY_SENSOR_TYPES
-        for coordinator in hass.data[DOMAIN][entry.entry_id].values()
+        for coordinator in hass.data[DOMAIN][entry.entry_id]
     )
 
 
@@ -69,22 +69,20 @@ class SkybellBinarySensor(SkybellEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_name = f"{coordinator.name} {description.name}"
         self._event: dict[str, str] = {}
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.device.device_id}_{description.key}"
 
     @property
-    def extra_state_attributes(self) -> dict[str, StateType]:
+    def extra_state_attributes(self) -> dict[str, str | int | tuple[str, str]]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        attrs["event_date"] = self._event.get("createdAt")
+        if event := self._event.get(CONST.CREATED_AT):
+            attrs["event_date"] = event
         return attrs
 
     @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
-        self._event = (
-            self.coordinator.device.latest(
-                f"device:sensor:{self.entity_description.key}"
-            )
-            or {}
-        )
-        return bool(self._event and self._event.get("id") != self._event.get("id"))
+        event = self.coordinator.device.latest(f"{self.entity_description.key}")
+        result = bool(event.get(CONST.ID) != self._event.get(CONST.ID))
+        self._event = event
+        return result

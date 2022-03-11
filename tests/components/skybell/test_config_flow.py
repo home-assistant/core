@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import CONF_CONFIG_FLOW, _patch_skybell
+from . import CONF_CONFIG_FLOW, _patch_skybell, _patch_skybell_devices
 
 from tests.common import MockConfigEntry
 
@@ -33,7 +33,7 @@ def _patch_setup() -> None:
 
 async def test_flow_user(hass: HomeAssistant) -> None:
     """Test that the user step works."""
-    with _patch_skybell(), _patch_setup_entry(), _patch_setup():
+    with _patch_skybell(), _patch_skybell_devices(), _patch_setup_entry(), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -95,7 +95,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
 
 async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
-    with _patch_skybell() as skybellmock:
+    with _patch_skybell_devices() as skybellmock:
         skybellmock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
@@ -107,7 +107,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_flow_import(hass: HomeAssistant) -> None:
     """Test import step."""
-    with _patch_skybell(), _patch_setup_entry(), _patch_setup():
+    with _patch_skybell(), _patch_skybell_devices(), _patch_setup_entry(), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}
         )

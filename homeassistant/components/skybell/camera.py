@@ -1,7 +1,6 @@
 """Camera support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
-from aiohttp import ClientConnectorError, ClientError, ClientResponse
 import voluptuous as vol
 
 from homeassistant.components.camera import (
@@ -12,13 +11,12 @@ from homeassistant.components.camera import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SkybellEntity
-from .const import DOMAIN, IMAGE_ACTIVITY, IMAGE_AVATAR, LOGGER
+from .const import DOMAIN, IMAGE_ACTIVITY, IMAGE_AVATAR
 from .coordinator import SkybellDataUpdateCoordinator
 
 # Deprecated in Home Assistant 2022.4
@@ -45,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(
         SkybellCamera(coordinator, description)
         for description in CAMERA_TYPES
-        for coordinator in hass.data[DOMAIN][entry.entry_id].values()
+        for coordinator in hass.data[DOMAIN][entry.entry_id]
     )
 
 
@@ -64,31 +62,10 @@ class SkybellCamera(SkybellEntity, Camera):
         Camera.__init__(self)
         self.entity_description = description
         self._attr_name = f"{coordinator.name} {description.name}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
-
-        self._url = ""
-        self._response: ClientResponse | None = None
-
-    @property
-    def image_url(self) -> str:
-        """Get the camera image url based on type."""
-        if self.entity_description.key == IMAGE_ACTIVITY:
-            return self.coordinator.device.activity_image
-        return self.coordinator.device.image
+        self._attr_unique_id = f"{coordinator.device.device_id}_{description.key}"
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Get the latest camera image."""
-        if self._url != self.image_url or not self._response:
-            self._url = self.image_url
-
-            try:
-                websession = async_get_clientsession(self.hass)
-                self._response = await websession.get(self._url, timeout=10)
-
-            except (ClientConnectorError, ClientError) as err:
-                LOGGER.warning("Failed to get camera image: %s", err)
-                return None
-
-        return await self._response.read()
+        return self.coordinator.device.images[self.entity_description.key]
