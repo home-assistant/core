@@ -1621,7 +1621,7 @@ pymata-express==1.19
 pymazda==0.3.2
 
 # homeassistant.components.mediaroom
-pymediaroom==0.6.4.1
+pymediaroom==0.6.5.3
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.6
