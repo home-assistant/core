@@ -1796,6 +1796,11 @@ def iif(
     return if_false
 
 
+def to_set(iterable: Iterable[Any]) -> set[Any]:
+    """Convert a list to a set."""
+    return set(iterable)
+
+
 @contextmanager
 def set_template(template_str: str, action: str) -> Generator:
     """Store template being parsed or rendered in a Contextvar to aid error handling."""
@@ -1909,6 +1914,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
         self.filters["iif"] = iif
+        self.filters["set"] = to_set
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1939,6 +1945,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
         self.globals["iif"] = iif
+        self.globals["set"] = to_set
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search

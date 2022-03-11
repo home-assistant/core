@@ -977,6 +977,18 @@ def test_slugify(hass):
     )
 
 
+def test_set(hass):
+    """Test the set filter."""
+    assert template.Template("{{ set(['a', 'b', 'a']) }}", hass).async_render() == {
+        "a",
+        "b",
+    }
+    assert template.Template("{{ ['a', 'b', 'a'] | set }}", hass).async_render() == {
+        "a",
+        "b",
+    }
+
+
 def test_ordinal(hass):
     """Test the ordinal filter."""
     tests = [
