@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_host": "Nom d'h\u00f4te ou adresse IP non valide",
+            "invalid_host": "Nom d'h\u00f4te ou adresse IP invalide",
             "pwd_and_ssh": "Fournissez uniquement le mot de passe ou le fichier de cl\u00e9 SSH",
             "pwd_or_ssh": "Veuillez fournir un mot de passe ou un fichier de cl\u00e9 SSH",
             "ssh_not_file": "Fichier cl\u00e9 SSH non trouv\u00e9",
