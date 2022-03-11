@@ -180,7 +180,7 @@ class SamsungTVEncryptedWSAsyncAuthenticator:
         host: str,
         *,
         web_session: aiohttp.ClientSession,
-        port: int = 8000,
+        port: int = 8080,
         timeout: float | None = None,
     ) -> None:
         self._host = host

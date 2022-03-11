@@ -8,7 +8,7 @@ import aiohttp
 from .authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 
 _HOST = "192.168.0.14"
-_PORT = 8000
+_PORT = 8080
 
 
 async def _get_token(
