@@ -11,11 +11,11 @@ from types import TracebackType
 
 import aiohttp
 from samsungtvws.connection import SamsungTVWSBaseConnection
-from samsungtvws.exceptions import ConnectionFailure
 from websockets.client import WebSocketClientProtocol, connect
 from websockets.exceptions import ConnectionClosed
 
 from .command import SamsungTVEncryptedCommand
+from .exceptions import SamsungTVEncryptedConnectionFailure
 from .session import SamsungTVEncryptedSession
 
 LOGGER = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ class SamsungTVEncryptedWSAsyncRemote(SamsungTVWSBaseConnection):
     async def start_listening(self) -> None:
         """Open, and start listening."""
         if self.connection:
-            raise ConnectionFailure("Connection already exists")
+            raise SamsungTVEncryptedConnectionFailure("Connection already exists")
 
         await self._open()
         assert self.connection
