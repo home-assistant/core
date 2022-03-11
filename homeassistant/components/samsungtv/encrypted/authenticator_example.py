@@ -11,7 +11,7 @@ from .authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 logging.basicConfig(level=logging.DEBUG)
 
 _HOST = "192.168.0.14"
-_PORT = 8080
+_PORT = 8080  # Warning: this can be different from the remote port
 
 
 async def _get_token(

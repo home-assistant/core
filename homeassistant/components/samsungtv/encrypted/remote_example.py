@@ -11,7 +11,7 @@ from .remote import SamsungTVEncryptedWSAsyncRemote, SendRemoteKey
 logging.basicConfig(level=logging.DEBUG)
 
 _HOST = "192.168.0.14"
-_PORT = 8000
+_PORT = 8000  # Warning: this can be different from the authenticator port
 
 _TOKEN = ""
 _SESSION_ID = ""
