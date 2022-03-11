@@ -31,6 +31,8 @@ async def async_setup_entry(
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
     )
+    wrapped_switch = registry.async_get(entity_id)
+    device_id = wrapped_switch.device_id if wrapped_switch else None
 
     async_add_entities(
         [
@@ -38,6 +40,7 @@ async def async_setup_entry(
                 config_entry.title,
                 entity_id,
                 config_entry.entry_id,
+                device_id,
             )
         ]
     )
@@ -50,8 +53,15 @@ class LightSwitch(LightEntity):
     _attr_should_poll = False
     _attr_supported_color_modes = {COLOR_MODE_ONOFF}
 
-    def __init__(self, name: str, switch_entity_id: str, unique_id: str | None) -> None:
+    def __init__(
+        self,
+        name: str,
+        switch_entity_id: str,
+        unique_id: str | None,
+        device_id: str | None = None,
+    ) -> None:
         """Initialize Light Switch."""
+        self._device_id = device_id
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._switch_entity_id = switch_entity_id
@@ -100,3 +110,7 @@ class LightSwitch(LightEntity):
 
         # Call once on adding
         async_state_changed_listener()
+
+        # Add this entity to the wrapped switch's device
+        registry = er.async_get(self.hass)
+        registry.async_update_entity(self.entity_id, device_id=self._device_id)
