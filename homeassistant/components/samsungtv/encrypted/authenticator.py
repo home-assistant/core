@@ -267,7 +267,7 @@ class SamsungTVEncryptedWSAsyncAuthenticator:
         if result:
             LOGGER.info("Pin accepted :)")
             token = result["ctx"].hex()
-            self._sk_prime = result["sk_prime"]
+            self._sk_prime = result["SKPrime"]
             LOGGER.info("Token (ctx): %s", token)
             return token  # type: ignore[no-any-return]
 
