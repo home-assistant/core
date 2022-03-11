@@ -76,7 +76,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "already_discovered"
                     LOGGER.debug("All discovered fireplaces have been configured")
 
-        if user_input is not None:
+        else:  # There was User Input
+
             placeholder = {CONF_HOST: user_input[CONF_HOST]}
             try:
                 serial = await validate_host_input(user_input[CONF_HOST])
