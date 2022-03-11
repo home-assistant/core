@@ -34,7 +34,7 @@ async def main() -> None:
         )
         await remote.start_listening()
 
-        await remote.send_command(SendRemoteKey.click("KEY_POWER"))
+        await remote.send_command(SendRemoteKey.click("KEY_POWEROFF"))
 
         await asyncio.sleep(15)
 
