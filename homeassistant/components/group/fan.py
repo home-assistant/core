@@ -83,7 +83,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Group Cover platform."""
+    """Set up the Fan Group platform."""
     async_add_entities(
         [FanGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES])]
     )
@@ -94,13 +94,13 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Initialize Light Switch config entry."""
+    """Initialize Fan Group config entry."""
     registry = er.async_get(hass)
-    entity_id = er.async_validate_entity_ids(
+    entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]
     )
 
-    async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entity_id)])
+    async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entities)])
 
 
 class FanGroup(GroupEntity, FanEntity):
@@ -238,7 +238,6 @@ class FanGroup(GroupEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

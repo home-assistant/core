@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe"
                 },
                 "description": "Connectez-vous \u00e0 votre compte Flipr.",

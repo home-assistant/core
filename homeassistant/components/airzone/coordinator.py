@@ -37,6 +37,6 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator):
         async with async_timeout.timeout(AIOAIRZONE_DEVICE_TIMEOUT_SEC):
             try:
                 await self.airzone.update_airzone()
-                return self.airzone.data()
             except ClientConnectorError as error:
                 raise UpdateFailed(error) from error
+            return self.airzone.data()

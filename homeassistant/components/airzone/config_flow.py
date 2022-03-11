@@ -34,14 +34,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
+            airzone = AirzoneLocalApi(
+                aiohttp_client.async_get_clientsession(self.hass),
+                ConnectionOptions(
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                ),
+            )
+
             try:
-                airzone = AirzoneLocalApi(
-                    aiohttp_client.async_get_clientsession(self.hass),
-                    ConnectionOptions(
-                        user_input[CONF_HOST],
-                        user_input[CONF_PORT],
-                    ),
-                )
                 await airzone.validate_airzone()
             except (ClientConnectorError, InvalidHost):
                 errors["base"] = "cannot_connect"

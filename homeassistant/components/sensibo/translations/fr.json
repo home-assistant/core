@@ -10,6 +10,11 @@
             "no_devices": "Aucun appareil d\u00e9couvert"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "Cl\u00e9 d'API",

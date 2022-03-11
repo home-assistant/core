@@ -323,7 +323,7 @@ FLOWS = [
     "stookalert",
     "subaru",
     "surepetcare",
-    "switch",
+    "switch_as_x",
     "switchbot",
     "switcher_kis",
     "syncthing",
