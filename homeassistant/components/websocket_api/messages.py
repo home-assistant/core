@@ -118,8 +118,8 @@ def _state_diff_event(event: Event) -> dict:
     if (event_old_state := event.data["old_state"]) is None:
         return {
             "add": {
-                event_new_state.entity_id: state_to_compressed_dict(
-                    event_new_state, True
+                event_new_state.entity_id: compressed_dict_omit_matching_lu(
+                    event_new_state
                 )
             }
         }
@@ -131,8 +131,8 @@ def _state_diff(
     old_state: State, new_state: State
 ) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
     """Create a diff dict that can be used to overlay changes."""
-    old_state_dict = state_to_compressed_dict(old_state, False)
-    new_state_dict = state_to_compressed_dict(new_state, False)
+    old_state_dict = old_state.as_compressed_dict()
+    new_state_dict = new_state.as_compressed_dict()
     diff: dict = {}
     for item, value in new_state_dict.items():
         if isinstance(value, dict):
@@ -159,10 +159,10 @@ def _state_diff(
     return {"changed": {new_state.entity_id: diff}}
 
 
-def state_to_compressed_dict(state: State, omit_lu_matching_lc: bool) -> dict[str, Any]:
-    """Build a compressed dict of a state."""
+def compressed_dict_omit_matching_lu(state: State) -> dict[str, Any]:
+    """Build a compressed dict of a state omitting the last_updated if it matches last_changed."""
     state_dict = state.as_compressed_dict()
-    if omit_lu_matching_lc and state_dict["lu"] == state_dict["lc"]:
+    if state_dict["lu"] == state_dict["lc"]:
         return {k: v for k, v in state_dict.items() if k != "lu"}
     return state_dict
 
