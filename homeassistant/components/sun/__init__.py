@@ -101,6 +101,7 @@ class Sun(Entity):
         self.rising = self.phase = None
         self._next_change = None
 
+        @callback
         def update_location(_event):
             location, elevation = get_astral_location(self.hass)
             if location == self.location:

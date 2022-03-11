@@ -331,7 +331,12 @@ class AbstractConfig(ABC):
         payload = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Received local message:\n%s\n", pprint.pformat(payload))
+            _LOGGER.debug(
+                "Received local message from %s (JS %s):\n%s\n",
+                request.remote,
+                request.headers.get("HA-Cloud-Version", "unknown"),
+                pprint.pformat(payload),
+            )
 
         if not self.enabled:
             return json_response(smart_home.turned_off_response(payload))

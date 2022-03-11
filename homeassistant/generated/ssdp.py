@@ -168,6 +168,12 @@ SSDP = {
             "manufacturer": "Universal Devices Inc."
         }
     ],
+    "kaleidescape": [
+        {
+            "deviceType": "schemas-upnp-org:device:Basic:1",
+            "manufacturer": "Kaleidescape, Inc."
+        }
+    ],
     "keenetic_ndms2": [
         {
             "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",

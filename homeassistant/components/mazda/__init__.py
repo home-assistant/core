@@ -37,7 +37,7 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN, SERVICE
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.LOCK, Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.LOCK, Platform.SENSOR]
 
 
 async def with_timeout(task, timeout_seconds=10):
@@ -101,6 +101,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if vehicle_id == 0 or api_client is None:
             raise HomeAssistantError("Vehicle ID not found")
+
+        if service_call.service in (
+            "start_engine",
+            "stop_engine",
+            "turn_on_hazard_lights",
+            "turn_off_hazard_lights",
+        ):
+            _LOGGER.warning(
+                "The mazda.%s service is deprecated and has been replaced by a button entity; "
+                "Please use the button entity instead",
+                service_call.service,
+            )
 
         api_method = getattr(api_client, service_call.service)
         try:

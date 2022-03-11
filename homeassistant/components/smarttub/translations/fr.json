@@ -14,7 +14,7 @@
             },
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe"
                 },
                 "description": "Entrez votre adresse e-mail et votre mot de passe SmartTub pour vous connecter",
