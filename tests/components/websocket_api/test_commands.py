@@ -772,11 +772,15 @@ async def test_subscribe_entities_with_unserializable_state(
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == "event"
+    # Order does not matter
+    msg["event"]["changed"]["light.cannot_serialize"]["-"]["a"] = set(
+        msg["event"]["changed"]["light.cannot_serialize"]["-"]["a"]
+    )
     assert msg["event"] == {
         "changed": {
             "light.cannot_serialize": {
                 "+": {"a": {"effect": "help"}, "c": {"id": ANY}, "lc": ANY, "s": "on"},
-                "-": {"a": ["color", "cannot_serialize"]},
+                "-": {"a": {"color", "cannot_serialize"}},
             }
         }
     }

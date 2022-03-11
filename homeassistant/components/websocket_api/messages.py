@@ -31,6 +31,8 @@ BASE_COMMAND_MESSAGE_SCHEMA: Final = vol.Schema({vol.Required("id"): cv.positive
 IDEN_TEMPLATE: Final = "__IDEN__"
 IDEN_JSON_TEMPLATE: Final = '"__IDEN__"'
 
+CONTEXT_KEYS = ("id", "parent_id", "user_id")
+
 
 def result_message(iden: int, result: Any = None) -> dict[str, Any]:
     """Return a success result message."""
@@ -129,31 +131,27 @@ def _state_diff(
     old_state: State, new_state: State
 ) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
     """Create a diff dict that can be used to overlay changes."""
-    old_state_dict = old_state.as_compressed_dict()
-    new_state_dict = new_state.as_compressed_dict()
-    diff: dict = {}
-    for item, value in new_state_dict.items():
-        if isinstance(value, dict):
-            old_dict = old_state_dict[item]
-            for sub_item, sub_value in value.items():
-                if old_dict.get(sub_item) != sub_value:
-                    diff.setdefault("+", {}).setdefault(item, {})[sub_item] = sub_value
-        elif old_state_dict[item] != value:
-            diff.setdefault("+", {})[item] = value
-    for item, value in old_state_dict.items():
-        if isinstance(value, dict):
-            new_dict = new_state_dict[item]
-            for sub_item, sub_value in value.items():
-                if sub_item not in new_dict:
-                    diff.setdefault("-", {}).setdefault(item, []).append(sub_item)
-    # Omit last_updated(lu) if last_changed(lc) is set since they
-    # will always be the same
-    if (
-        (additions := diff.get("+"))
-        and "lu" in additions
-        and additions.get("lc") == additions.get("lu")
-    ):
-        del additions["lu"]
+    diff: dict = {"+": {}}
+    additions = diff["+"]
+    if old_state.state != new_state.state:
+        additions["s"] = new_state.state
+    if old_state.last_changed != new_state.last_changed:
+        additions["lc"] = new_state.last_changed.timestamp()
+    elif old_state.last_updated != new_state.last_updated:
+        additions["lu"] = new_state.last_updated.timestamp()
+    if old_state.context != new_state.context:
+        context_additions = additions["c"] = {}
+        for key in CONTEXT_KEYS:
+            if getattr(old_state.context, key) != getattr(new_state.context, key):
+                context_additions["id"] = getattr(new_state.context, key)
+    if old_state.attributes != new_state.attributes:
+        old_attributes = old_state.attributes
+        new_attributes = new_state.attributes
+        for key, value in new_attributes.items():
+            if old_attributes.get(key) != value:
+                additions.setdefault("a", {})[key] = value
+        if removed := set(old_attributes).difference(new_attributes):
+            diff["-"] = {"a": removed}
     return {"changed": {new_state.entity_id: diff}}
 
 
