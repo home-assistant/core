@@ -89,15 +89,13 @@ class SensiboSelect(SensiboBaseEntity, SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return possible options."""
-        if self.device_data[self.entity_description.remote_options]:
-            return self.device_data[self.entity_description.remote_options]
-        return []
+        return self.device_data[self.entity_description.remote_options] or []
 
     async def async_select_option(self, option: str) -> None:
         """Set state to the selected option."""
         if self.entity_description.key not in self.device_data["active_features"]:
             raise HomeAssistantError(
-                f"Current mode doesn't support setting {self.entity_description.name}"
+                f"Current mode {self.device_data['hvac_mode']} doesn't support setting {self.entity_description.name}"
             )
 
         params = {
