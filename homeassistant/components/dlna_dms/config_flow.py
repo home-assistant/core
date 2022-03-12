@@ -14,7 +14,8 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONFIG_VERSION, CONF_SOURCE_ID, DEFAULT_NAME, DOMAIN
+from .util import generate_source_id
 
 LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     the DMS is an embedded device.
     """
 
-    VERSION = 1
+    VERSION = CONFIG_VERSION
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -113,7 +114,11 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._location
         assert self._usn
 
-        data = {CONF_URL: self._location, CONF_DEVICE_ID: self._usn}
+        data = {
+            CONF_URL: self._location,
+            CONF_DEVICE_ID: self._usn,
+            CONF_SOURCE_ID: generate_source_id(self.hass, self._name),
+        }
         return self.async_create_entry(title=self._name, data=data)
 
     async def _async_parse_discovery(

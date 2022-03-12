@@ -29,9 +29,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.util import slugify
 
 from .const import (
+    CONF_SOURCE_ID,
     DLNA_BROWSE_FILTER,
     DLNA_PATH_FILTER,
     DLNA_RESOLVE_FILTER,
@@ -81,15 +81,11 @@ class DlnaDmsData:
         """Create a DMS device connection from a config entry."""
         assert config_entry.unique_id
         async with self.lock:
-            source_id = self._generate_source_id(config_entry.title)
-            device = DmsDeviceSource(self.hass, config_entry, source_id)
+            source_id = config_entry.data[CONF_SOURCE_ID]
+            assert source_id not in self.sources
+            device = DmsDeviceSource(self.hass, config_entry)
             self.devices[config_entry.unique_id] = device
             self.sources[device.source_id] = device
-
-        # Update the device when the associated config entry is modified
-        config_entry.async_on_unload(
-            config_entry.add_update_listener(self.async_update_entry)
-        )
 
         await device.async_added_to_hass()
         return True
@@ -102,33 +98,6 @@ class DlnaDmsData:
             del self.sources[device.source_id]
         await device.async_will_remove_from_hass()
         return True
-
-    async def async_update_entry(
-        self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> None:
-        """Update a DMS device when the config entry changes."""
-        assert config_entry.unique_id
-        async with self.lock:
-            device = self.devices[config_entry.unique_id]
-            # Update the source_id to match the new name
-            del self.sources[device.source_id]
-            device.source_id = self._generate_source_id(config_entry.title)
-            self.sources[device.source_id] = device
-
-    def _generate_source_id(self, name: str) -> str:
-        """Generate a unique source ID.
-
-        Caller should hold self.lock when calling this method.
-        """
-        source_id_base = slugify(name)
-        if source_id_base not in self.sources:
-            return source_id_base
-
-        tries = 1
-        while (suggested_source_id := f"{source_id_base}_{tries}") in self.sources:
-            tries += 1
-
-        return suggested_source_id
 
 
 @callback
@@ -205,9 +174,6 @@ def catch_request_errors(
 class DmsDeviceSource:
     """DMS Device wrapper, providing media files as a media_source."""
 
-    # Unique slug used for media-source URIs
-    source_id: str
-
     # Last known URL for the device, used when adding this wrapper to hass to
     # try to connect before SSDP has rediscovered it, or when SSDP discovery
     # fails.
@@ -222,13 +188,10 @@ class DmsDeviceSource:
     # Track BOOTID in SSDP advertisements for device changes
     _bootid: int | None = None
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, source_id: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize a DMS Source."""
         self.hass = hass
         self.config_entry = config_entry
-        self.source_id = source_id
         self.location = self.config_entry.data[CONF_URL]
         self._device_lock = asyncio.Lock()
 
@@ -395,6 +358,11 @@ class DmsDeviceSource:
     def name(self) -> str:
         """Return a name for the media server."""
         return self.config_entry.title
+
+    @property
+    def source_id(self) -> str:
+        """Return a unique ID (slug) for this source for people to use in URLs."""
+        return self.config_entry.data[CONF_SOURCE_ID]
 
     @property
     def icon(self) -> str | None:

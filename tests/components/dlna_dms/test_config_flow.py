@@ -11,7 +11,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.components.dlna_dms.const import DOMAIN
+from homeassistant.components.dlna_dms.const import CONF_SOURCE_ID, DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.core import HomeAssistant
 
@@ -22,6 +22,7 @@ from .conftest import (
     MOCK_DEVICE_TYPE,
     MOCK_DEVICE_UDN,
     MOCK_DEVICE_USN,
+    MOCK_SOURCE_ID,
     NEW_DEVICE_LOCATION,
 )
 
@@ -99,6 +100,7 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
         CONF_DEVICE_ID: MOCK_DEVICE_USN,
+        CONF_SOURCE_ID: MOCK_SOURCE_ID,
     }
     assert result["options"] == {}
 
@@ -141,6 +143,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
         CONF_DEVICE_ID: MOCK_DEVICE_USN,
+        CONF_SOURCE_ID: MOCK_SOURCE_ID,
     }
     assert result["options"] == {}
 
@@ -173,6 +176,7 @@ async def test_ssdp_flow_unavailable(
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
         CONF_DEVICE_ID: MOCK_DEVICE_USN,
+        CONF_SOURCE_ID: MOCK_SOURCE_ID,
     }
     assert result["options"] == {}
 
@@ -245,15 +249,16 @@ async def test_ssdp_flow_bad_data(
 async def test_duplicate_name(
     hass: HomeAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
-    """Test device with name same as another results in no error."""
+    """Test device with name same as other devices results in no error."""
+    # Add two entries to test generate_source_id() tries for no collisions
     config_entry_mock.add_to_hass(hass)
-
     mock_entry_1 = MockConfigEntry(
         unique_id="mock_entry_1",
         domain=DOMAIN,
         data={
             CONF_URL: "not-important",
             CONF_DEVICE_ID: "not-important",
+            CONF_SOURCE_ID: f"{MOCK_SOURCE_ID}_1",
         },
         title=MOCK_DEVICE_NAME,
     )
@@ -290,6 +295,7 @@ async def test_duplicate_name(
     assert result["data"] == {
         CONF_URL: new_device_location,
         CONF_DEVICE_ID: new_device_usn,
+        CONF_SOURCE_ID: f"{MOCK_SOURCE_ID}_2",
     }
     assert result["options"] == {}
 

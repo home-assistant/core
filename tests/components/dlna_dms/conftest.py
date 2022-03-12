@@ -9,7 +9,11 @@ from async_upnp_client import UpnpDevice, UpnpService
 from async_upnp_client.utils import absolute_url
 import pytest
 
-from homeassistant.components.dlna_dms.const import DOMAIN
+from homeassistant.components.dlna_dms.const import (
+    CONFIG_VERSION,
+    CONF_SOURCE_ID,
+    DOMAIN,
+)
 from homeassistant.components.dlna_dms.dms import DlnaDmsData, DmsDeviceSource
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -86,14 +90,16 @@ def aiohttp_session_requester_mock() -> Iterable[Mock]:
 
 
 @pytest.fixture
-def config_entry_mock(hass: HomeAssistant) -> MockConfigEntry:
+def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
     mock_entry = MockConfigEntry(
         unique_id=MOCK_DEVICE_USN,
         domain=DOMAIN,
+        version=CONFIG_VERSION,
         data={
             CONF_URL: MOCK_DEVICE_LOCATION,
             CONF_DEVICE_ID: MOCK_DEVICE_USN,
+            CONF_SOURCE_ID: MOCK_SOURCE_ID,
         },
         title=MOCK_DEVICE_NAME,
     )
