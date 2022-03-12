@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import contextlib
-import logging
 from typing import Any, Final, cast
 
 from flux_led.const import (
@@ -13,7 +12,7 @@ from flux_led.const import (
     ATTR_MODEL_INFO,
     ATTR_VERSION_NUM,
 )
-from flux_led.scanner import FluxLEDDiscovery, is_legacy_device
+from flux_led.scanner import FluxLEDDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -30,11 +29,9 @@ from .const import (
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
     DEFAULT_EFFECT_SPEED,
-    DIRECTED_DISCOVERY_TIMEOUT,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_LED_EXCEPTIONS,
-    LEGACY_DIRECTED_DISCOVERY_TIMEOUT,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
@@ -49,7 +46,6 @@ from .discovery import (
 from .util import format_as_flux_mac, mac_matches_by_one
 
 CONF_DEVICE: Final = "device"
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -70,7 +66,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
-        _LOGGER.debug("Discovered via dhcp: %s", discovery_info)
         self._discovered_device = FluxLEDDiscovery(
             ipaddr=discovery_info.ip,
             model=None,
@@ -241,12 +236,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FluxLEDDiscovery:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
-        timeout = DIRECTED_DISCOVERY_TIMEOUT
-        if is_legacy_device(discovery):
-            timeout = LEGACY_DIRECTED_DISCOVERY_TIMEOUT
-        if (
-            device := await async_discover_device(self.hass, host, timeout=timeout)
-        ) and device[ATTR_MODEL_DESCRIPTION]:
+        if (device := await async_discover_device(self.hass, host)) and device[
+            ATTR_MODEL_DESCRIPTION
+        ]:
             # Older models do not return enough information
             # to build the model description via UDP so we have
             # to fallback to making a tcp connection to avoid

@@ -200,12 +200,12 @@ async def async_discover_devices(
 
 
 async def async_discover_device(
-    hass: HomeAssistant, host: str, timeout: int = DIRECTED_DISCOVERY_TIMEOUT
+    hass: HomeAssistant, host: str
 ) -> FluxLEDDiscovery | None:
     """Direct discovery at a single ip instead of broadcast."""
     # If we are missing the unique_id we should be able to fetch it
     # from the device by doing a directed discovery at the host only
-    for device in await async_discover_devices(hass, timeout, host):
+    for device in await async_discover_devices(hass, DIRECTED_DISCOVERY_TIMEOUT, host):
         if device[ATTR_IPADDR] == host:
             return device
     return None
