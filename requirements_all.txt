@@ -409,7 +409,7 @@ blockchain==1.4.4
 bond-api==0.1.16
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.29
+boschshcpy==0.2.30
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -1538,7 +1538,7 @@ pyialarm==1.9.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.0.16
+pyinsteon==1.0.13
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.6
@@ -1565,7 +1565,7 @@ pyisy==3.0.1
 pyitachip2ir==0.0.7
 
 # homeassistant.components.kaleidescape
-pykaleidescape==2022.2.6
+pykaleidescape==1.0.1
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -1622,7 +1622,7 @@ pymata-express==1.19
 pymazda==0.3.2
 
 # homeassistant.components.mediaroom
-pymediaroom==0.6.4.1
+pymediaroom==0.6.5.4
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.6
@@ -1765,7 +1765,7 @@ pyrituals==0.0.6
 pyruckus==0.12
 
 # homeassistant.components.sabnzbd
-pysabnzbd==1.1.0
+pysabnzbd==1.1.1
 
 # homeassistant.components.saj
 pysaj==0.0.16

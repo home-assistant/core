@@ -1,10 +1,20 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Minden entit\u00e1s",
+                    "entities": "Csoporttagok",
+                    "name": "N\u00e9v"
+                },
+                "description": "Ha \u201eMinden entit\u00e1s\u201d enged\u00e9lyezve van, a csoport \u00e1llapota csak akkor van bekapcsolva, ha minden tag \u00e1llapota bekapcsolt. Ha \u201eMinden entit\u00e1s\u201d le van tiltva, a csoport \u00e1llapota akkor van bekapcsolva, ha b\u00e1rmelyik tag bekapcsolt \u00e1llapotban van.",
+                "title": "\u00daj csoport"
+            },
             "cover": {
                 "data": {
                     "entities": "A csoport tagjai",
-                    "name": "Csoport neve"
+                    "name": "Csoport neve",
+                    "title": "\u00daj csoport"
                 },
                 "description": "Csoport be\u00e1ll\u00edt\u00e1sai"
             },
@@ -17,7 +27,8 @@
             "fan": {
                 "data": {
                     "entities": "A csoport tagjai",
-                    "name": "A csoport elnevez\u00e9se"
+                    "name": "A csoport elnevez\u00e9se",
+                    "title": "\u00daj csoport"
                 },
                 "description": "Csoport be\u00e1ll\u00edt\u00e1sai"
             },
@@ -36,7 +47,8 @@
             "light": {
                 "data": {
                     "entities": "A csoport tagjai",
-                    "name": "A csoport elnevez\u00e9se"
+                    "name": "A csoport elnevez\u00e9se",
+                    "title": "\u00daj csoport"
                 },
                 "description": "Csoport be\u00e1ll\u00edt\u00e1sai"
             },
@@ -49,7 +61,8 @@
             "media_player": {
                 "data": {
                     "entities": "A csoport tagjai",
-                    "name": "A csoport elnevez\u00e9se"
+                    "name": "A csoport elnevez\u00e9se",
+                    "title": "\u00daj csoport"
                 },
                 "description": "Csoport be\u00e1ll\u00edt\u00e1sai"
             },
@@ -58,6 +71,42 @@
                     "entities": "A csoport tagjai"
                 },
                 "description": "Csoport be\u00e1ll\u00edt\u00e1sai"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Csoport t\u00edpusa"
+                },
+                "title": "\u00daj csoport"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "Minden entit\u00e1s",
+                    "entities": "Csoporttagok"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Csoporttagok"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Csoporttagok"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Csoporttagok"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Csoporttagok"
+                }
             }
         }
     },

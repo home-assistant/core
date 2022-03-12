@@ -16,7 +16,7 @@
                     "host": "URL",
                     "password": "Mot de passe",
                     "tls": "La version TLS du contr\u00f4leur ISY.",
-                    "username": "Username"
+                    "username": "Nom d'utilisateur"
                 },
                 "description": "L'entr\u00e9e d'h\u00f4te doit \u00eatre au format URL complet, par exemple, http://192.168.10.100:80",
                 "title": "Connect\u00e9 \u00e0 votre ISY994"

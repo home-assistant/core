@@ -48,72 +48,17 @@ async def test_config_flow(hass: HomeAssistant, target_domain) -> None:
         "target_domain": target_domain,
     }
 
-    assert hass.states.get(f"{target_domain}.ceiling")
+    # Check the wrapped switch has a state and is added to the registry
+    state = hass.states.get(f"{target_domain}.ceiling")
+    assert state.state == "unavailable"
 
+    # Name copied from config entry title
+    assert state.name == "ceiling"
 
-@pytest.mark.parametrize("target_domain", ("light",))
-async def test_name(hass: HomeAssistant, target_domain) -> None:
-    """Test the config flow name is copied from registry entry, with fallback to state."""
+    # Check the light is added to the entity registry
     registry = er.async_get(hass)
-
-    # No entry or state, use Object ID
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"entity_id": "switch.ceiling", "target_domain": target_domain},
-    )
-    assert result["title"] == "ceiling"
-
-    # State set, use name from state
-    hass.states.async_set("switch.ceiling", "on", {"friendly_name": "State Name"})
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"entity_id": "switch.ceiling", "target_domain": target_domain},
-    )
-    assert result["title"] == "State Name"
-
-    # Entity registered, use original name from registry entry
-    hass.states.async_remove("switch.ceiling")
-    entry = registry.async_get_or_create(
-        "switch",
-        "test",
-        "unique",
-        suggested_object_id="ceiling",
-        original_name="Original Name",
-    )
-    assert entry.entity_id == "switch.ceiling"
-    hass.states.async_set("switch.ceiling", "on", {"friendly_name": "State Name"})
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"entity_id": "switch.ceiling", "target_domain": target_domain},
-    )
-    assert result["title"] == "Original Name"
-
-    # Entity has customized name
-    registry.async_update_entity("switch.ceiling", name="Custom Name")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"entity_id": "switch.ceiling", "target_domain": target_domain},
-    )
-    assert result["title"] == "Custom Name"
+    entity_entry = registry.async_get(f"{target_domain}.ceiling")
+    assert entity_entry.unique_id == config_entry.entry_id
 
 
 @pytest.mark.parametrize("target_domain", ("light",))

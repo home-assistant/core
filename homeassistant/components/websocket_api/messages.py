@@ -31,6 +31,19 @@ BASE_COMMAND_MESSAGE_SCHEMA: Final = vol.Schema({vol.Required("id"): cv.positive
 IDEN_TEMPLATE: Final = "__IDEN__"
 IDEN_JSON_TEMPLATE: Final = '"__IDEN__"'
 
+COMPRESSED_STATE_STATE = "s"
+COMPRESSED_STATE_ATTRIBUTES = "a"
+COMPRESSED_STATE_CONTEXT = "c"
+COMPRESSED_STATE_LAST_CHANGED = "lc"
+COMPRESSED_STATE_LAST_UPDATED = "lu"
+
+STATE_DIFF_ADDITIONS = "+"
+STATE_DIFF_REMOVALS = "-"
+
+ENTITY_EVENT_ADD = "a"
+ENTITY_EVENT_REMOVE = "r"
+ENTITY_EVENT_CHANGE = "c"
+
 
 def result_message(iden: int, result: Any = None) -> dict[str, Any]:
     """Return a success result message."""
@@ -112,11 +125,11 @@ def _state_diff_event(event: Event) -> dict:
     Fetch function is empty
     """
     if (event_new_state := event.data["new_state"]) is None:
-        return {"remove": [event.data["entity_id"]]}
+        return {ENTITY_EVENT_REMOVE: [event.data["entity_id"]]}
     assert isinstance(event_new_state, State)
     if (event_old_state := event.data["old_state"]) is None:
         return {
-            "add": {
+            ENTITY_EVENT_ADD: {
                 event_new_state.entity_id: compressed_state_dict_add(event_new_state)
             }
         }
@@ -128,30 +141,34 @@ def _state_diff(
     old_state: State, new_state: State
 ) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
     """Create a diff dict that can be used to overlay changes."""
-    diff: dict = {"+": {}}
-    additions = diff["+"]
+    diff: dict = {STATE_DIFF_ADDITIONS: {}}
+    additions = diff[STATE_DIFF_ADDITIONS]
     if old_state.state != new_state.state:
-        additions["s"] = new_state.state
+        additions[COMPRESSED_STATE_STATE] = new_state.state
     if old_state.last_changed != new_state.last_changed:
-        additions["lc"] = new_state.last_changed.timestamp()
+        additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed.timestamp()
     elif old_state.last_updated != new_state.last_updated:
-        additions["lu"] = new_state.last_updated.timestamp()
+        additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated.timestamp()
     if old_state.context.parent_id != new_state.context.parent_id:
-        additions.setdefault("c", {})["parent_id"] = new_state.context.parent_id
+        additions.setdefault(COMPRESSED_STATE_CONTEXT, {})[
+            "parent_id"
+        ] = new_state.context.parent_id
     if old_state.context.user_id != new_state.context.user_id:
-        additions.setdefault("c", {})["user_id"] = new_state.context.user_id
+        additions.setdefault(COMPRESSED_STATE_CONTEXT, {})[
+            "user_id"
+        ] = new_state.context.user_id
     if old_state.context.id != new_state.context.id:
-        if "c" in additions:
-            additions["c"]["id"] = new_state.context.id
+        if COMPRESSED_STATE_CONTEXT in additions:
+            additions[COMPRESSED_STATE_CONTEXT]["id"] = new_state.context.id
         else:
-            additions["c"] = new_state.context.id
+            additions[COMPRESSED_STATE_CONTEXT] = new_state.context.id
     old_attributes = old_state.attributes
     for key, value in new_state.attributes.items():
         if old_attributes.get(key) != value:
-            additions.setdefault("a", {})[key] = value
+            additions.setdefault(COMPRESSED_STATE_ATTRIBUTES, {})[key] = value
     if removed := set(old_attributes).difference(new_state.attributes):
-        diff["-"] = {"a": removed}
-    return {"changed": {new_state.entity_id: diff}}
+        diff[STATE_DIFF_REMOVALS] = {COMPRESSED_STATE_ATTRIBUTES: removed}
+    return {ENTITY_EVENT_CHANGE: {new_state.entity_id: diff}}
 
 
 def compressed_state_dict_add(state: State) -> dict[str, Any]:
@@ -166,15 +183,15 @@ def compressed_state_dict_add(state: State) -> dict[str, Any]:
     else:
         context = state.context.as_dict()
     compressed_state: dict[str, Any] = {
-        "s": state.state,
-        "a": state.attributes,
-        "c": context,
+        COMPRESSED_STATE_STATE: state.state,
+        COMPRESSED_STATE_ATTRIBUTES: state.attributes,
+        COMPRESSED_STATE_CONTEXT: context,
     }
     if state.last_changed == state.last_updated:
-        compressed_state["lc"] = state.last_changed.timestamp()
+        compressed_state[COMPRESSED_STATE_LAST_CHANGED] = state.last_changed.timestamp()
     else:
-        compressed_state["lc"] = state.last_changed.timestamp()
-        compressed_state["lu"] = state.last_updated.timestamp()
+        compressed_state[COMPRESSED_STATE_LAST_CHANGED] = state.last_changed.timestamp()
+        compressed_state[COMPRESSED_STATE_LAST_UPDATED] = state.last_updated.timestamp()
     return compressed_state
 
 

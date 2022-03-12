@@ -302,7 +302,7 @@ blinkpy==0.18.0
 bond-api==0.1.16
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.29
+boschshcpy==0.2.30
 
 # homeassistant.components.braviatv
 bravia-tv==1.0.11
@@ -1000,7 +1000,7 @@ pyialarm==1.9.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.0.16
+pyinsteon==1.0.13
 
 # homeassistant.components.ipma
 pyipma==2.0.5
@@ -1018,7 +1018,7 @@ pyiss==1.0.1
 pyisy==3.0.1
 
 # homeassistant.components.kaleidescape
-pykaleidescape==2022.2.6
+pykaleidescape==1.0.1
 
 # homeassistant.components.kira
 pykira==0.1.1

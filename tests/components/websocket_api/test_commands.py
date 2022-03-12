@@ -746,7 +746,7 @@ async def test_subscribe_entities_with_unserializable_state(
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"] == {
-        "add": {
+        "a": {
             "light.permitted": {
                 "a": {"color": "red"},
                 "c": ANY,
@@ -760,7 +760,7 @@ async def test_subscribe_entities_with_unserializable_state(
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"] == {
-        "changed": {
+        "c": {
             "light.permitted": {
                 "+": {
                     "a": {"effect": "help"},
@@ -777,18 +777,18 @@ async def test_subscribe_entities_with_unserializable_state(
     assert msg["id"] == 7
     assert msg["type"] == "event"
     # Order does not matter
-    msg["event"]["changed"]["light.cannot_serialize"]["-"]["a"] = set(
-        msg["event"]["changed"]["light.cannot_serialize"]["-"]["a"]
+    msg["event"]["c"]["light.cannot_serialize"]["-"]["a"] = set(
+        msg["event"]["c"]["light.cannot_serialize"]["-"]["a"]
     )
     assert msg["event"] == {
-        "changed": {
+        "c": {
             "light.cannot_serialize": {
                 "+": {"a": {"effect": "help"}, "c": ANY, "lc": ANY, "s": "on"},
                 "-": {"a": {"color", "cannot_serialize"}},
             }
         }
     }
-    change_set = msg["event"]["changed"]["light.cannot_serialize"]
+    change_set = msg["event"]["c"]["light.cannot_serialize"]
     _apply_entities_changes(state_dict, change_set)
     assert state_dict == {
         "attributes": {"effect": "help"},
@@ -843,9 +843,9 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert isinstance(msg["event"]["add"]["light.permitted"]["c"], str)
+    assert isinstance(msg["event"]["a"]["light.permitted"]["c"], str)
     assert msg["event"] == {
-        "add": {
+        "a": {
             "light.permitted": {
                 "a": {"color": "red"},
                 "c": ANY,
@@ -867,7 +867,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"] == {
-        "changed": {
+        "c": {
             "light.permitted": {
                 "+": {
                     "a": {"color": "blue"},
@@ -879,7 +879,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
         }
     }
 
-    change_set = msg["event"]["changed"]["light.permitted"]
+    change_set = msg["event"]["c"]["light.permitted"]
     additions = deepcopy(change_set["+"])
     _apply_entities_changes(state_dict, change_set)
     assert state_dict == {
@@ -899,7 +899,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"] == {
-        "changed": {
+        "c": {
             "light.permitted": {
                 "+": {
                     "a": {"effect": "help"},
@@ -911,7 +911,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
         }
     }
 
-    change_set = msg["event"]["changed"]["light.permitted"]
+    change_set = msg["event"]["c"]["light.permitted"]
     additions = deepcopy(change_set["+"])
     _apply_entities_changes(state_dict, change_set)
 
@@ -932,7 +932,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"] == {
-        "changed": {
+        "c": {
             "light.permitted": {
                 "+": {
                     "a": {"color": ["blue", "green"]},
@@ -943,7 +943,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
         }
     }
 
-    change_set = msg["event"]["changed"]["light.permitted"]
+    change_set = msg["event"]["c"]["light.permitted"]
     additions = deepcopy(change_set["+"])
     _apply_entities_changes(state_dict, change_set)
 
@@ -963,13 +963,13 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == {"remove": ["light.permitted"]}
+    assert msg["event"] == {"r": ["light.permitted"]}
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"] == {
-        "add": {
+        "a": {
             "light.permitted": {
                 "a": {"color": "blue", "effect": "help"},
                 "c": ANY,
