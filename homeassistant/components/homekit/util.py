@@ -100,6 +100,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
 VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
+MAX_VERSION_PART = 2**32 - 1
 
 
 MAX_PORT = 65535
@@ -363,7 +364,15 @@ def convert_to_float(state):
         return None
 
 
-def cleanup_name_for_homekit(name: str | None) -> str | None:
+def coerce_int(state: str) -> int:
+    """Return int."""
+    try:
+        return int(state)
+    except (ValueError, TypeError):
+        return 0
+
+
+def cleanup_name_for_homekit(name: str | None) -> str:
     """Ensure the name of the device will not crash homekit."""
     #
     # This is not a security measure.
@@ -371,7 +380,7 @@ def cleanup_name_for_homekit(name: str | None) -> str | None:
     # UNICODE_EMOJI is also not allowed but that
     # likely isn't a problem
     if name is None:
-        return None
+        return "None"  # None crashes apple watches
     return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
 
 
@@ -398,6 +407,32 @@ def density_to_air_quality(density):
     return 5
 
 
+def density_to_air_quality_pm10(density):
+    """Map PM10 density to HomeKit AirQuality level."""
+    if density <= 40:
+        return 1
+    if density <= 80:
+        return 2
+    if density <= 120:
+        return 3
+    if density <= 300:
+        return 4
+    return 5
+
+
+def density_to_air_quality_pm25(density):
+    """Map PM2.5 density to HomeKit AirQuality level."""
+    if density <= 25:
+        return 1
+    if density <= 50:
+        return 2
+    if density <= 100:
+        return 3
+    if density <= 300:
+        return 4
+    return 5
+
+
 def get_persist_filename_for_entry_id(entry_id: str):
     """Determine the filename of the homekit state file."""
     return f"{DOMAIN}.{entry_id}.state"
@@ -420,14 +455,23 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
     )
 
 
+def _format_version_part(version_part: str) -> str:
+    return str(max(0, min(MAX_VERSION_PART, coerce_int(version_part))))
+
+
 def format_version(version):
     """Extract the version string in a format homekit can consume."""
-    split_ver = str(version).replace("-", ".")
+    split_ver = str(version).replace("-", ".").replace(" ", ".")
     num_only = NUMBERS_ONLY_RE.sub("", split_ver)
-    match = VERSION_RE.search(num_only)
-    if match:
-        return match.group(0)
-    return None
+    if (match := VERSION_RE.search(num_only)) is None:
+        return None
+    value = ".".join(map(_format_version_part, match.group(0).split(".")))
+    return None if _is_zero_but_true(value) else value
+
+
+def _is_zero_but_true(value):
+    """Zero but true values can crash apple watches."""
+    return convert_to_float(value) == 0
 
 
 def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str):

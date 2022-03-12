@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from homeassistant.const import (
@@ -21,13 +20,11 @@ from . import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    ATTR_SPEED,
     DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_SPEED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +33,6 @@ VALID_STATES = {STATE_ON, STATE_OFF}
 ATTRIBUTES = {  # attribute: service
     ATTR_DIRECTION: SERVICE_SET_DIRECTION,
     ATTR_OSCILLATING: SERVICE_OSCILLATE,
-    ATTR_SPEED: SERVICE_SET_SPEED,
     ATTR_PERCENTAGE: SERVICE_SET_PERCENTAGE,
     ATTR_PRESET_MODE: SERVICE_SET_PRESET_MODE,
 }
@@ -112,8 +108,6 @@ async def async_reproduce_states(
     )
 
 
-def check_attr_equal(
-    attr1: MappingProxyType, attr2: MappingProxyType, attr_str: str
-) -> bool:
+def check_attr_equal(attr1: Mapping, attr2: Mapping, attr_str: str) -> bool:
     """Return true if the given attributes are equal."""
     return attr1.get(attr_str) == attr2.get(attr_str)

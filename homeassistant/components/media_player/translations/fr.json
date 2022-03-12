@@ -8,6 +8,7 @@
             "is_playing": "{entity_name} joue"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} a chang\u00e9 d'\u00e9tat",
             "idle": "{entity_name} devient inactif",
             "paused": "{entity_name} est mis en pause",
             "playing": "{entity_name} commence \u00e0 jouer",
@@ -17,9 +18,9 @@
     },
     "state": {
         "_": {
-            "idle": "En veille",
-            "off": "Inactif",
-            "on": "Actif",
+            "idle": "Inactif",
+            "off": "D\u00e9sactiv\u00e9",
+            "on": "Activ\u00e9",
             "paused": "En pause",
             "playing": "Lecture en cours",
             "standby": "En veille"

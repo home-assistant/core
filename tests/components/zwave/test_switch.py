@@ -1,9 +1,14 @@
 """Test Z-Wave switches."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.zwave import switch
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 def test_get_device_detects_switch(mock_openzwave):

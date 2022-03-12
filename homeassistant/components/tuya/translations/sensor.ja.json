@@ -1,5 +1,11 @@
 {
     "state": {
+        "tuya__air_quality": {
+            "good": "\u30b0\u30c3\u30c9",
+            "great": "\u30b0\u30ec\u30fc\u30c8",
+            "mild": "\u30de\u30a4\u30eb\u30c9",
+            "severe": "\u30b7\u30d3\u30a2"
+        },
         "tuya__status": {
             "boiling_temp": "\u6cb8\u70b9",
             "cooling": "\u51b7\u5374",

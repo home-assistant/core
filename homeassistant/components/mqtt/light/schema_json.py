@@ -100,8 +100,6 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 
-PAYLOAD_NONE = "None"
-
 
 def valid_color_configuration(config):
     """Test color_mode is not combined with deprecated config."""
@@ -638,8 +636,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             json.dumps(message),
             self._config[CONF_QOS],
@@ -664,8 +661,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             json.dumps(message),
             self._config[CONF_QOS],

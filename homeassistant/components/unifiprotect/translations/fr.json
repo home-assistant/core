@@ -10,14 +10,16 @@
             "protect_version": "La version minimale requise est la v1.20.0. Veuillez mettre \u00e0 jour UniFi Protect, puis r\u00e9essayer.",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "{name} ( {ip_address} )",
+        "flow_title": "{name} ({ip_address})",
         "step": {
             "discovery_confirm": {
                 "data": {
                     "password": "Mot de passe",
-                    "username": "Nom d'utilisateur"
+                    "username": "Nom d'utilisateur",
+                    "verify_ssl": "V\u00e9rifier le certificat SSL"
                 },
-                "description": "Voulez-vous configurer {name} ( {ip_address} )\u00a0?"
+                "description": "Voulez-vous configurer {name} ({ip_address})\u00a0? Vous aurez besoin d'un utilisateur local cr\u00e9\u00e9 dans votre console UniFi OS pour vous connecter. Les utilisateurs Ubiquiti Cloud ne fonctionneront pas. Pour plus d'informations\u00a0: {local_user_documentation_url}",
+                "title": "UniFi Protect d\u00e9couvert"
             },
             "reauth_confirm": {
                 "data": {
@@ -36,6 +38,7 @@
                     "username": "Nom d'utilisateur",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
                 },
+                "description": "Vous aurez besoin d'un utilisateur local cr\u00e9\u00e9 dans votre console UniFi OS pour vous connecter. Les utilisateurs Ubiquiti Cloud ne fonctionneront pas. Pour plus d'informations\u00a0: {local_user_documentation_url}",
                 "title": "Configuration d'UniFi Protect"
             }
         }

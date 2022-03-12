@@ -5,12 +5,13 @@ from homeassistant.const import Platform
 
 DOMAIN = "netgear"
 
+PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
+
 CONF_CONSIDER_HOME = "consider_home"
 
 KEY_ROUTER = "router"
 KEY_COORDINATOR = "coordinator"
-
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
+KEY_COORDINATOR_TRAFFIC = "coordinator_traffic"
 
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 DEFAULT_NAME = "Netgear router"

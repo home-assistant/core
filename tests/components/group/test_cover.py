@@ -1,6 +1,7 @@
 """The tests for the group cover platform."""
 from datetime import timedelta
 
+import async_timeout
 import pytest
 
 from homeassistant.components.cover import (
@@ -735,3 +736,52 @@ async def test_is_opening_closing(hass, setup_comp):
     assert hass.states.get(DEMO_COVER_TILT).state == STATE_OPENING
     assert hass.states.get(DEMO_COVER_POS).state == STATE_OPEN
     assert hass.states.get(COVER_GROUP).state == STATE_OPENING
+
+
+async def test_nested_group(hass):
+    """Test nested cover group."""
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {"platform": "demo"},
+                {
+                    "platform": "group",
+                    "entities": ["cover.bedroom_group"],
+                    "name": "Nested Group",
+                },
+                {
+                    "platform": "group",
+                    CONF_ENTITIES: [DEMO_COVER_POS, DEMO_COVER_TILT],
+                    "name": "Bedroom Group",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.bedroom_group")
+    assert state is not None
+    assert state.state == STATE_OPEN
+    assert state.attributes.get(ATTR_ENTITY_ID) == [DEMO_COVER_POS, DEMO_COVER_TILT]
+
+    state = hass.states.get("cover.nested_group")
+    assert state is not None
+    assert state.state == STATE_OPEN
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["cover.bedroom_group"]
+
+    # Test controlling the nested group
+    async with async_timeout.timeout(0.5):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.nested_group"},
+            blocking=True,
+        )
+    assert hass.states.get(DEMO_COVER_POS).state == STATE_CLOSING
+    assert hass.states.get(DEMO_COVER_TILT).state == STATE_CLOSING
+    assert hass.states.get("cover.bedroom_group").state == STATE_CLOSING
+    assert hass.states.get("cover.nested_group").state == STATE_CLOSING

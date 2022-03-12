@@ -14,13 +14,13 @@
             "cloud": {
                 "data": {
                     "account_id": "Identifiant de compte",
-                    "password": "Mot der passe"
+                    "password": "Mot de passe"
                 }
             },
             "local": {
                 "data": {
-                    "wifi_pswd": "Mot de passe WiFi",
-                    "wifi_ssid": "identifiant Wifi"
+                    "wifi_pswd": "Mot de passe Wi-Fi",
+                    "wifi_ssid": "R\u00e9seau Wi-Fi"
                 },
                 "description": "R\u00e9initialisez le radiateur en appuyant sur + et OK jusqu'\u00e0 ce que l'\u00e9cran affiche \u00ab\u00a0Reset\u00a0\u00bb. Appuyez ensuite sur le bouton OK du radiateur et maintenez-le enfonc\u00e9 jusqu'\u00e0 ce que le voyant bleu commence \u00e0 clignoter avant d'appuyer sur Soumettre. La configuration du chauffage peut prendre quelques minutes."
             },

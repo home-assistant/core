@@ -10,7 +10,7 @@
         "generic": {"key": 17, "label":"Routing Slave"},
         "specific": {"key": 0, "label":"Unused"},
         "mandatorySupportedCCs": [],
-        "mandatoryControlCCs": []
+        "mandatoryControlledCCs": []
     },
     "isListening": false,
     "isFrequentListening": true,
@@ -353,5 +353,6 @@
                 "label": "Z-Wave chip hardware version"
             }
         }
-    ]
+    ],
+    "isControllerNode": false
 }
