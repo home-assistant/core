@@ -78,4 +78,4 @@ class SleepIQSleeperEntity(SleepIQBedEntity):
         super().__init__(coordinator, bed)
 
         self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {ENTITY_TYPES[name]}"
-        self._attr_unique_id = f"{bed.id}_{sleeper.name}_{name}"
+        self._attr_unique_id = f"{sleeper.sleeper_id}_{name}"
