@@ -162,7 +162,7 @@ def compressed_state_dict_add(state: State) -> dict[str, Any]:
     Sends c (context) as a string if it only contains an id.
     """
     if state.context.parent_id is None and state.context.user_id is None:
-        context: dict[str, Any] | str = state.context.id
+        context: dict[str, Any] | str = state.context.id  # type: ignore[unreachable]
     else:
         context = state.context.as_dict()
     compressed_state: dict[str, Any] = {
