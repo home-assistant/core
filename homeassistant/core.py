@@ -701,7 +701,7 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    user_id: str = attr.ib(default=None)
+    user_id: str | None = attr.ib(default=None)
     parent_id: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
@@ -1024,7 +1024,6 @@ class State:
         "domain",
         "object_id",
         "_as_dict",
-        "_as_compressed_dict",
     ]
 
     def __init__(
@@ -1060,7 +1059,6 @@ class State:
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
-        self._as_compressed_dict: dict[str, Any] | None = None
 
     @property
     def name(self) -> str:
@@ -1094,28 +1092,6 @@ class State:
                 }
             )
         return self._as_dict
-
-    def as_compressed_dict(self) -> dict[str, Any]:
-        """Return a compressed dict representation of the State.
-
-        Async friendly.
-
-        To be used for compressed JSON serialization.
-        """
-        if not self._as_compressed_dict:
-            last_changed_timestamp = self.last_changed.timestamp()
-            if self.last_changed == self.last_updated:
-                last_updated_timestamp = last_changed_timestamp
-            else:
-                last_updated_timestamp = self.last_updated.timestamp()
-            self._as_compressed_dict = {
-                "s": self.state,
-                "a": self.attributes,
-                "c": self.context.as_dict(),
-                "lc": last_changed_timestamp,
-                "lu": last_updated_timestamp,
-            }
-        return self._as_compressed_dict
 
     @classmethod
     def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:

@@ -111,7 +111,6 @@ def _state_diff_event(event: Event) -> dict:
 
     Fetch function is empty
     """
-    # The entity_id is also duplicated in the message twice but its actually used
     if (event_new_state := event.data["new_state"]) is None:
         return {"remove": [event.data["entity_id"]]}
     assert isinstance(event_new_state, State)
@@ -162,12 +161,21 @@ def compressed_state_dict_add(state: State) -> dict[str, Any]:
 
     Sends c (context) as a string if it only contains an id.
     """
-    state_dict = state.as_compressed_dict().copy()
-    if state_dict["lu"] == state_dict["lc"]:
-        del state_dict["lu"]
-    if state_dict["c"]["parent_id"] is None and state_dict["c"]["user_id"] is None:
-        state_dict["c"] = state_dict["c"]["id"]
-    return state_dict
+    if state.context.parent_id is None and state.context.user_id is None:
+        context: dict[str, Any] | str = state.context.id
+    else:
+        context = state.context.as_dict()
+    compressed_state: dict[str, Any] = {
+        "s": state.state,
+        "a": state.attributes,
+        "c": context,
+    }
+    if state.last_changed == state.last_updated:
+        compressed_state["lc"] = state.last_changed.timestamp()
+    else:
+        compressed_state["lc"] = state.last_changed.timestamp()
+        compressed_state["lu"] = state.last_updated.timestamp()
+    return compressed_state
 
 
 def message_to_json(message: dict[str, Any]) -> str:
