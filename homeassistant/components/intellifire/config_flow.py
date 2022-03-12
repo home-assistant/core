@@ -38,11 +38,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Config Flow Handler."""
         self._config_context = {}
         self._discovered_hosts: list[str] = []
+        self._not_configured_hosts: list[str] = []
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
         fireplace_finder = AsyncUDPFireplaceFinder()
         self._discovered_hosts = await fireplace_finder.search_fireplace(timeout=1)
+        configured_hosts = [
+            entry.data[CONF_HOST]
+            for entry in self._async_current_entries(include_ignore=False)
+        ]
+        self._not_configured_hosts = [
+            ip for ip in self._discovered_hosts if ip not in configured_hosts
+        ]
+        LOGGER.debug("Discovered Hosts: %s", str(self._discovered_hosts))
+        LOGGER.debug("Configured Hosts: %s", str(configured_hosts))
+        LOGGER.debug("Not Configured Hosts: %s", str(self._not_configured_hosts))
 
     async def async_step_local_config(self, user_input=None):
         """Handle local ip configuration."""
@@ -53,33 +64,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
 
-            current_hosts = [
-                entry.data[CONF_HOST]
-                for entry in self._async_current_entries(include_ignore=False)
-            ]
-
-            if self._discovered_hosts != []:
-                # Filter out already configured hosts
-                self._discovered_hosts = [
-                    ip for ip in self._discovered_hosts if ip not in current_hosts
-                ]
-
-                if len(self._discovered_hosts) > 1:
-                    return await self.async_step_pick_device()
-                if len(self._discovered_hosts) == 1:
-                    user_input = {CONF_HOST: self._discovered_hosts[0]}
-                    local_schema = vol.Schema(
-                        {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
-                    )
-                if len(self._discovered_hosts) == 0:
+            if self._not_configured_hosts:
+                user_input = {CONF_HOST: self._not_configured_hosts[0]}
+                local_schema = vol.Schema(
+                    {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
+                )
+            else:
+                if self._discovered_hosts:
                     # If there were discoverd hosts AND all got filtered out fire an error message
                     errors["base"] = "already_discovered"
                     LOGGER.debug("All discovered fireplaces have been configured")
 
-        else:  # There was User Input
-
+        else:
+            # There was User Input
             placeholder = {CONF_HOST: user_input[CONF_HOST]}
+
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: user_input[CONF_HOST],
+                }
+            )
+
             try:
+                # Validate the ip address
                 serial = await validate_host_input(user_input[CONF_HOST])
             except (ConnectionError, ClientConnectionError):
                 errors["base"] = "cannot_connect"
@@ -88,13 +95,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 await self.async_set_unique_id(serial)
-
-                # check if found before
-                self._abort_if_unique_id_configured(
-                    updates={
-                        CONF_HOST: user_input[CONF_HOST],
-                    }
-                )
 
                 return self.async_create_entry(
                     title="Fireplace",
@@ -130,6 +130,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Start the user flow."""
 
-        if self._discovered_hosts == []:
-            await self._find_fireplaces()
+        # Launch fireplaces discovery
+        await self._find_fireplaces()
+
+        if len(self._not_configured_hosts) > 1:
+            return await self.async_step_pick_device()
         return await self.async_step_local_config()
