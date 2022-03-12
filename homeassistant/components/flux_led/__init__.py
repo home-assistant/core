@@ -112,7 +112,7 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
         ):
             # Old format {dhcp_mac}....., New format {discovery_mac}....
             new_unique_id = f"{unique_id}{entity_unique_id[len(unique_id):]}"
-        if not new_unique_id:
+        else:
             return None
         _LOGGER.info(
             "Migrating unique_id from [%s] to [%s]",
