@@ -1885,7 +1885,7 @@ python-izone==1.2.3
 python-join-api==0.0.6
 
 # homeassistant.components.juicenet
-python-juicenet==1.0.2
+python-juicenet==1.1.0
 
 # homeassistant.components.tplink
 python-kasa==0.4.1
