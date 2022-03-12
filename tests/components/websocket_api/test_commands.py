@@ -980,6 +980,68 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     }
 
 
+async def test_subscribe_unsubscribe_entities_specific_entities(
+    hass, websocket_client, hass_admin_user
+):
+    """Test subscribe/unsubscribe entities with a list of entity ids."""
+
+    hass.states.async_set("light.permitted", "off", {"color": "red"})
+    hass.states.async_set("light.not_intrested", "off", {"color": "blue"})
+    original_state = hass.states.get("light.permitted")
+    assert isinstance(original_state, State)
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy(
+        {
+            "entities": {
+                "entity_ids": {"light.permitted": True, "light.not_intrested": True}
+            }
+        }
+    )
+
+    await websocket_client.send_json(
+        {"id": 7, "type": "subscribe_entities", "entity_ids": ["light.permitted"]}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert isinstance(msg["event"]["a"]["light.permitted"]["c"], str)
+    assert msg["event"] == {
+        "a": {
+            "light.permitted": {
+                "a": {"color": "red"},
+                "c": ANY,
+                "lc": ANY,
+                "s": "off",
+            }
+        }
+    }
+    hass.states.async_set("light.not_intrested", "on", {"effect": "help"})
+    hass.states.async_set("light.not_permitted", "on")
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {
+            "light.permitted": {
+                "+": {
+                    "a": {"color": "blue"},
+                    "c": ANY,
+                    "lc": ANY,
+                    "s": "on",
+                }
+            }
+        }
+    }
+
+
 async def test_render_template_renders_template(hass, websocket_client):
     """Test simple template is rendered and updated."""
     hass.states.async_set("light.test", "on")
