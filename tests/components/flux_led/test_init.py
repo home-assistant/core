@@ -129,11 +129,11 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
         # Only return discovery results when doing directed discovery
         nonlocal last_address
         last_address = address
-        return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+        return [discovery] if address == IP_ADDRESS else []
 
     def _mock_getBulbInfo(*args, **kwargs):
         nonlocal last_address
-        return [FLUX_DISCOVERY] if last_address == IP_ADDRESS else []
+        return [discovery] if last_address == IP_ADDRESS else []
 
     with patch(
         "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
@@ -243,15 +243,38 @@ async def test_unique_id_migrate_when_mac_discovered_via_discovery(
         == f"{MAC_ADDRESS_ONE_OFF}_remote_access"
     )
 
-    with _patch_discovery(), _patch_wifibulb(device=bulb):
-        await hass.config_entries.async_reload(config_entry.entry_id)
-        await hass.async_block_till_done()
+    for _ in range(2):
+        with _patch_discovery(), _patch_wifibulb(device=bulb):
+            await hass.config_entries.async_reload(config_entry.entry_id)
+            await hass.async_block_till_done()
 
-    assert (
-        entity_registry.async_get("light.bulb_rgbcw_ddeeff").unique_id
-        == config_entry.unique_id
+        assert (
+            entity_registry.async_get("light.bulb_rgbcw_ddeeff").unique_id
+            == config_entry.unique_id
+        )
+        assert (
+            entity_registry.async_get(
+                "switch.bulb_rgbcw_ddeeff_remote_access"
+            ).unique_id
+            == f"{config_entry.unique_id}_remote_access"
+        )
+
+
+async def test_name_removed_when_it_matches_entry_title(hass: HomeAssistant) -> None:
+    """Test name is removed when it matches the entry title."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_REMOTE_ACCESS_HOST: "any",
+            CONF_REMOTE_ACCESS_ENABLED: True,
+            CONF_REMOTE_ACCESS_PORT: 1234,
+            CONF_HOST: IP_ADDRESS,
+            CONF_NAME: DEFAULT_ENTRY_TITLE,
+        },
+        title=DEFAULT_ENTRY_TITLE,
     )
-    assert (
-        entity_registry.async_get("switch.bulb_rgbcw_ddeeff_remote_access").unique_id
-        == f"{config_entry.unique_id}_remote_access"
-    )
+    config_entry.add_to_hass(hass)
+    with _patch_discovery(), _patch_wifibulb():
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+    assert CONF_NAME not in config_entry.data
