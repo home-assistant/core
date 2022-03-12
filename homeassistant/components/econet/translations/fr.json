@@ -12,7 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe"
                 },
                 "title": "Configurer le compte Rheem EcoNet"

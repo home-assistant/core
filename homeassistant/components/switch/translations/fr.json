@@ -1,4 +1,13 @@
 {
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Entit\u00e9 du commutateur"
+                }
+            }
+        }
+    },
     "device_automation": {
         "action_type": {
             "toggle": "Basculer {entity_name}",
@@ -18,8 +27,8 @@
     },
     "state": {
         "_": {
-            "off": "Inactif",
-            "on": "Actif"
+            "off": "D\u00e9sactiv\u00e9",
+            "on": "Activ\u00e9"
         }
     },
     "title": "Interrupteur"

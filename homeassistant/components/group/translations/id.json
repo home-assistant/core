@@ -1,10 +1,20 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Semua entitas",
+                    "entities": "Anggota",
+                    "name": "Nama"
+                },
+                "description": "Jika \"semua entitas\" diaktifkan, status grup akan menyala jika semua anggota nyala. Jika \"semua entitas\" dinonaktifkan, status grup akan menyala jika ada salah satu atau lebih anggota yang menyala.",
+                "title": "Grup Baru"
+            },
             "cover": {
                 "data": {
-                    "entities": "Anggota grup",
-                    "name": "Nama grup"
+                    "entities": "Anggota",
+                    "name": "Nama",
+                    "title": "Grup Baru"
                 },
                 "description": "Pilih opsi grup"
             },
@@ -16,8 +26,9 @@
             },
             "fan": {
                 "data": {
-                    "entities": "Anggota grup",
-                    "name": "Nama grup"
+                    "entities": "Anggota",
+                    "name": "Nama",
+                    "title": "Grup Baru"
                 },
                 "description": "Pilih opsi grup"
             },
@@ -35,8 +46,9 @@
             },
             "light": {
                 "data": {
-                    "entities": "Anggota grup",
-                    "name": "Nama grup"
+                    "entities": "Anggota",
+                    "name": "Nama",
+                    "title": "Grup Baru"
                 },
                 "description": "Pilih opsi grup"
             },
@@ -48,8 +60,9 @@
             },
             "media_player": {
                 "data": {
-                    "entities": "Anggota grup",
-                    "name": "Nama grup"
+                    "entities": "Anggota",
+                    "name": "Nama",
+                    "title": "Grup Baru"
                 },
                 "description": "Pilih opsi grup"
             },
@@ -58,6 +71,42 @@
                     "entities": "Anggota grup"
                 },
                 "description": "Pilih opsi grup"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Jenis grup"
+                },
+                "title": "Grup Baru"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "Semua entitas",
+                    "entities": "Anggota"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Anggota"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Anggota"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Anggota"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Anggota"
+                }
             }
         }
     },

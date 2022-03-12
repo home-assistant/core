@@ -8,7 +8,7 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe"
                 },
                 "description": "Pour des raisons techniques, utilisez un compte sp\u00e9cifique \u00e0 Home Assistant. Vous pouvez cr\u00e9er un compte secondaire depuis l'application SmartHab.",
