@@ -35,11 +35,9 @@ def mac_matches_by_one(formatted_mac_1: str, formatted_mac_2: str) -> bool:
     one off from each other. We need to treat them as the same
     since its the same device.
     """
-    return (
-        int(formatted_mac_1.replace(":", ""), 16)
-        - int(formatted_mac_2.replace(":", ""), 16)
-        < 2
-    )
+    mac_int_1 = int(formatted_mac_1.replace(":", ""), 16)
+    mac_int_2 = int(formatted_mac_2.replace(":", ""), 16)
+    return abs(mac_int_1 - mac_int_2) < 2
 
 
 def _flux_color_mode_to_hass(
