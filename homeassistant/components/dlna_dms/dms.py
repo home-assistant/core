@@ -290,14 +290,11 @@ class DmsDeviceSource:
     async def device_connect(self) -> None:
         """Connect to the device now that it's available."""
         LOGGER.debug("Connecting to device at %s", self.location)
+        assert self.location
 
         async with self._device_lock:
             if self._device:
                 LOGGER.debug("Trying to connect when device already connected")
-                return
-
-            if not self.location:
-                LOGGER.debug("Not connecting because location is not known")
                 return
 
             domain_data = get_domain_data(self.hass)

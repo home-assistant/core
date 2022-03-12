@@ -591,34 +591,19 @@ async def test_ssdp_bootid(
     )
     await hass.async_block_till_done()
 
-    assert entity.available
+    await assert_source_available(hass)
     assert upnp_factory_mock.async_create_device.await_count == 2
 
 
 async def test_repeated_connect(
     caplog: pytest.LogCaptureFixture,
-    device_source_mock: DmsDeviceSource,
+    hass: HomeAssistant,
     upnp_factory_mock: Mock,
+    connected_source_mock: None,
 ) -> None:
     """Test trying to connect an already connected device is safely ignored."""
     upnp_factory_mock.async_create_device.reset_mock()
-    # Calling internal function directly to skip trying to time 2 SSDP messages carefully
-    with caplog.at_level(logging.DEBUG):
-        await device_source_mock.device_connect()
-    assert (
-        "Trying to connect when device already connected" == caplog.records[-1].message
-    )
-    assert not upnp_factory_mock.async_create_device.await_count
 
-
-async def test_connect_no_location(
-    caplog: pytest.LogCaptureFixture,
-    disconnected_source_mock: DmsDeviceSource,
-    upnp_factory_mock: Mock,
-) -> None:
-    """Test trying to connect without a location is safely ignored."""
-    disconnected_source_mock.location = ""
-    upnp_factory_mock.async_create_device.reset_mock()
     # Calling internal function directly to skip trying to time 2 SSDP messages carefully
     with caplog.at_level(logging.DEBUG):
         await disconnected_source_mock.device_connect()
@@ -628,7 +613,7 @@ async def test_connect_no_location(
 
 async def test_become_unavailable(
     hass: HomeAssistant,
-    device_source_mock: DmsDeviceSource,
+    connected_source_mock: None,
     dms_device_mock: Mock,
 ) -> None:
     """Test a device becoming unavailable."""
