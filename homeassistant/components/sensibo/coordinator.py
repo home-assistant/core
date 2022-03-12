@@ -26,6 +26,7 @@ class MotionSensor:
 
     id: str
     alive: bool | None = None
+    motion: bool | None = None
     fw_ver: str | None = None
     fw_type: str | None = None
     is_main_sensor: bool | None = None
@@ -33,6 +34,7 @@ class MotionSensor:
     humidity: int | None = None
     temperature: float | None = None
     model: str | None = None
+    rssi: int | None = None
 
 
 @dataclass
@@ -147,21 +149,23 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 temperature = measurements.get("temperature")
                 humidity = measurements.get("humidity")
 
-            motion_sensors = [
-                MotionSensor(
-                    id=motionsensor["id"],
-                    alive=motionsensor["connectionStatus"].get("isAlive"),
-                    fw_ver=motionsensor.get("firmwareVersion"),
-                    fw_type=motionsensor.get("firmwareType"),
-                    is_main_sensor=motionsensor.get("isMainSensor"),
-                    battery_voltage=motionsensor["measurements"].get("batteryVoltage"),
-                    humidity=motionsensor["measurements"].get("humidity"),
-                    temperature=motionsensor["measurements"].get("temperature"),
-                    model=motionsensor.get("productModel"),
-                )
-                for motionsensor in dev["motionSensors"]
-                if dev["motionSensors"]
-            ]
+            motion_sensors: dict[str, Any] = {}
+            if dev["motionSensors"]:
+                for sensor in dev["motionSensors"]:
+                    measurement = sensor["measurements"]
+                    motion_sensors[sensor["id"]] = MotionSensor(
+                        id=sensor["id"],
+                        alive=sensor["connectionStatus"].get("isAlive"),
+                        motion=measurement.get("motion"),
+                        fw_ver=sensor.get("firmwareVersion"),
+                        fw_type=sensor.get("firmwareType"),
+                        is_main_sensor=sensor.get("isMainSensor"),
+                        battery_voltage=measurement.get("batteryVoltage"),
+                        humidity=measurement.get("humidity"),
+                        temperature=measurement.get("temperature"),
+                        model=sensor.get("productModel"),
+                        rssi=measurement.get("rssi"),
+                    )
 
             device_data[unique_id] = {
                 "id": unique_id,
