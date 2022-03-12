@@ -548,7 +548,7 @@ class AmcrestCam(Camera):
         # recording on if video stream is being turned off.
         if self.is_recording and not enable:
             await self._async_enable_recording(False)
-        await self._async_change_setting(enable, "video", "is_streaming")
+        await self._async_change_setting(enable, "video", "_attr_is_streaming")
         if self._control_light:
             await self._async_change_light()
 
