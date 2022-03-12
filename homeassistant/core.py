@@ -701,7 +701,7 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    user_id: str | None = attr.ib(default=None)
+    user_id: str = attr.ib(default=None)
     parent_id: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
