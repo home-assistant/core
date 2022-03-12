@@ -303,11 +303,11 @@ class GenericOptionsFlowHandler(OptionsFlow):
                         CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
                         CONF_CONTENT_TYPE: still_format,
                         CONF_USERNAME: user_input.get(CONF_USERNAME),
-                        CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input.get(
+                        CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input[
                             CONF_LIMIT_REFETCH_TO_URL_CHANGE
-                        ),
-                        CONF_FRAMERATE: user_input.get(CONF_FRAMERATE),
-                        CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
+                        ],
+                        CONF_FRAMERATE: user_input[CONF_FRAMERATE],
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                     },
                 )
         return self.async_show_form(
