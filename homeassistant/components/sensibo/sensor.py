@@ -123,7 +123,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
-        self._attr_name = f"{sensor_data.model} {entity_description.name}"
+        self._attr_name = f"Motion Sensor {entity_description.name}"
 
     @property
     def native_value(self) -> StateType:
