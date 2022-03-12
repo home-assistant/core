@@ -97,28 +97,29 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
 
     @callback
     def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
-        # Old format {entry_id}.....
-        # New format {unique_id}....
+
         assert unique_id is not None
         entity_unique_id = entity_entry.unique_id
-        if entity_unique_id.startswith(entry_id):
-            new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
-            _LOGGER.info(
-                "Migrating unique_id from [%s] to [%s]",
-                entity_unique_id,
-                new_unique_id,
-            )
-            return {"new_unique_id": new_unique_id}
         entity_mac = entity_unique_id[: len(unique_id)]
-        if entity_mac != unique_id and mac_matches_by_one(entity_mac, unique_id):
+        new_unique_id = None
+        if entity_unique_id.startswith(entry_id):
+            # Old format {entry_id}....., New format {unique_id}....
+            new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
+        elif (
+            ":" in entity_mac
+            and entity_mac != unique_id
+            and mac_matches_by_one(entity_mac, unique_id)
+        ):
+            # Old format {dhcp_mac}....., New format {discovery_mac}....
             new_unique_id = f"{unique_id}{entity_unique_id[len(unique_id):]}"
-            _LOGGER.info(
-                "Migrating unique_id from [%s] to [%s]",
-                entity_unique_id,
-                new_unique_id,
-            )
-            return {"new_unique_id": new_unique_id}
-        return None
+        if not new_unique_id:
+            return None
+        _LOGGER.info(
+            "Migrating unique_id from [%s] to [%s]",
+            entity_unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
 
     await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 

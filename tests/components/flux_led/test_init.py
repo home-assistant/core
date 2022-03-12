@@ -26,6 +26,7 @@ from . import (
     FLUX_DISCOVERY_PARTIAL,
     IP_ADDRESS,
     MAC_ADDRESS,
+    MAC_ADDRESS_ONE_OFF,
     _mocked_bulb,
     _patch_discovery,
     _patch_wifibulb,
@@ -82,7 +83,9 @@ async def test_configuring_flux_led_causes_discovery_multiple_addresses(
 
 async def test_config_entry_reload(hass: HomeAssistant) -> None:
     """Test that a config entry can be reloaded."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
     config_entry.add_to_hass(hass)
     with _patch_discovery(), _patch_wifibulb():
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
@@ -149,7 +152,9 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
 
 async def test_time_sync_startup_and_next_day(hass: HomeAssistant) -> None:
     """Test that time is synced on startup and next day."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     with _patch_discovery(), _patch_wifibulb(device=bulb):
@@ -190,6 +195,52 @@ async def test_unique_id_migrate_when_mac_discovered(hass: HomeAssistant) -> Non
     assert (
         entity_registry.async_get("switch.bulb_rgbcw_ddeeff_remote_access").unique_id
         == f"{config_entry.entry_id}_remote_access"
+    )
+
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get("light.bulb_rgbcw_ddeeff").unique_id
+        == config_entry.unique_id
+    )
+    assert (
+        entity_registry.async_get("switch.bulb_rgbcw_ddeeff_remote_access").unique_id
+        == f"{config_entry.unique_id}_remote_access"
+    )
+
+
+async def test_unique_id_migrate_when_mac_discovered_via_discovery(
+    hass: HomeAssistant,
+) -> None:
+    """Test unique id migrated when mac discovered via discovery and the mac address from dhcp was one off."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_REMOTE_ACCESS_HOST: "any",
+            CONF_REMOTE_ACCESS_ENABLED: True,
+            CONF_REMOTE_ACCESS_PORT: 1234,
+            CONF_HOST: IP_ADDRESS,
+            CONF_NAME: DEFAULT_ENTRY_TITLE,
+        },
+        unique_id=MAC_ADDRESS_ONE_OFF,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    assert config_entry.unique_id == MAC_ADDRESS_ONE_OFF
+    entity_registry = er.async_get(hass)
+    assert (
+        entity_registry.async_get("light.bulb_rgbcw_ddeeff").unique_id
+        == MAC_ADDRESS_ONE_OFF
+    )
+    assert (
+        entity_registry.async_get("switch.bulb_rgbcw_ddeeff_remote_access").unique_id
+        == f"{MAC_ADDRESS_ONE_OFF}_remote_access"
     )
 
     with _patch_discovery(), _patch_wifibulb(device=bulb):
