@@ -92,8 +92,6 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
         if energy_keys in self.data:
             energy_values = [self.data[v] for v in energy_keys]
             for index, value in enumerate(energy_values, start=1):
-                if index > len(energy_values):
-                    break
                 # All coming values in list should be larger than the current value.
                 if any(v > value for v in energy_values[index:]):
                     raise UpdateFailed("Invalid energy values, skipping update")
