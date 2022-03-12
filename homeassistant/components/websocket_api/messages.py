@@ -111,7 +111,6 @@ def _state_diff_event(event: Event) -> dict:
 
     Fetch function is empty
     """
-    # The entity_id is also duplicated in the message twice but its actually used
     if (event_new_state := event.data["new_state"]) is None:
         return {"remove": [event.data["entity_id"]]}
     assert isinstance(event_new_state, State)
