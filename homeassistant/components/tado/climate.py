@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    CONST_EXCLUSIVE_OVERLAY_GROUP,
     CONST_FAN_AUTO,
     CONST_FAN_OFF,
     CONST_MODE_AUTO,
@@ -66,10 +67,12 @@ ATTR_REQUESTED_OVERLAY = "requested_overlay"
 
 CLIMATE_TIMER_SCHEMA = {
     vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
-    vol.Optional(ATTR_TIME_PERIOD): vol.All(
+    vol.Exclusive(ATTR_TIME_PERIOD, CONST_EXCLUSIVE_OVERLAY_GROUP): vol.All(
         cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
     ),
-    vol.Optional(ATTR_REQUESTED_OVERLAY): vol.In(CONST_OVERLAY_TADO_OPTIONS),
+    vol.Exclusive(ATTR_REQUESTED_OVERLAY, CONST_EXCLUSIVE_OVERLAY_GROUP): vol.In(
+        CONST_OVERLAY_TADO_OPTIONS
+    ),
 }
 
 SERVICE_TEMP_OFFSET = "set_climate_temperature_offset"
@@ -587,7 +590,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
                 if self._tado.fallback is not None
                 else CONST_OVERLAY_TADO_MODE
             )
-        # If default is Tado default then loop it up
+        # If default is Tado default then look it up
         if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
             overlay_mode = (
                 self._tado_zone_data.default_overlay_termination_type

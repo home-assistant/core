@@ -18,9 +18,7 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_FALLBACK,
-    CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
-    CONST_OVERLAY_TADO_OPTIONS,
     DATA,
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
@@ -121,29 +119,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s for %s", config_entry.version, DOMAIN)
-
-    if config_entry.version == 1:
-        options = {**config_entry.options}
-        if options[CONF_FALLBACK] not in CONST_OVERLAY_TADO_OPTIONS:
-            if options[CONF_FALLBACK]:  # If was True set to next time block
-                options[CONF_FALLBACK] = CONST_OVERLAY_TADO_MODE
-            else:  # Otherwise set to manual
-                options[CONF_FALLBACK] = CONST_OVERLAY_MANUAL
-
-            hass.config_entries.async_update_entry(config_entry, options=options)
-
-        config_entry.version = 2
-
-    _LOGGER.info(
-        "Migration to version %s for %s successful", config_entry.version, DOMAIN
-    )
-
-    return True
 
 
 class TadoConnector:

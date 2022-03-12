@@ -103,6 +103,9 @@ CONST_OVERLAY_TADO_OPTIONS = [
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_DEFAULT,
 ]
+CONST_EXCLUSIVE_OVERLAY_GROUP = (
+    "overlay_group"  # Overlay group for set_climate_timer service
+)
 
 
 # Heat always comes first since we get the
