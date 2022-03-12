@@ -124,7 +124,7 @@ def async_update_entry_from_discovery(
     mac_address = device[ATTR_ID]
     assert mac_address is not None
     updates: dict[str, Any] = {}
-    if not entry.unique_id:
+    if not entry.unique_id:  ## allow this to change by 1
         updates["unique_id"] = dr.format_mac(mac_address)
     if model_num and entry.data.get(CONF_MODEL_NUM) != model_num:
         data_updates[CONF_MODEL_NUM] = model_num
