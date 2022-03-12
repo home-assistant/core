@@ -190,9 +190,9 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
         return HVAC_MODE_OFF
 
     @property
-    def current_temperature(self) -> int:
+    def current_temperature(self) -> float:
         """Return the current temperature."""
-        return cast(int, self._zone["measuredTemp"])
+        return cast(float, self._zone["measuredTemp"])
 
     @property
     def target_temperature(self) -> int:
