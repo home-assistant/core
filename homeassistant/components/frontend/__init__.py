@@ -357,8 +357,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     local = hass.config.path("www")
-    if os.path.isdir(local):
-        hass.http.register_static_path("/local", local, not is_dev)
+    if not os.path.isdir(local):
+        os.mkdir(local)
+    hass.http.register_static_path("/local", local, not is_dev)
+    hass.http.register_static_path("/config/www", local, not is_dev)
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
