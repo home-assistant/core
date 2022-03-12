@@ -4,6 +4,8 @@
   "documentation": "https://www.home-assistant.io/integrations/samsungtv",
   "requirements": [
     "getmac==0.8.2",
+    "py3rijndael==0.3.3",
+    "pycryptodome==3.12.0",
     "samsungctl[websocket]==0.7.1",
     "samsungtvws[async]==2.3.0",
     "wakeonlan==2.0.1"
