@@ -303,7 +303,7 @@ def handle_subscribe_entities(
     )
     connection.send_result(msg["id"])
     data: dict[str, dict[str, dict]] = {
-        "add": {
+        messages.ENTITY_EVENT_ADD: {
             state.entity_id: messages.compressed_state_dict_add(state)
             for state in states
         }
@@ -325,7 +325,7 @@ def handle_subscribe_entities(
         )
     del response
 
-    add_entities = data["add"]
+    add_entities = data[messages.ENTITY_EVENT_ADD]
     cannot_serialize: list[str] = []
     for entity_id, state_dict in add_entities.items():
         try:
