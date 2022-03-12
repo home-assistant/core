@@ -43,7 +43,7 @@ from .const import (
     DOMAIN,
     FLUX_LED_DISCOVERY,
 )
-from .util import format_as_flux_mac
+from .util import format_as_flux_mac, mac_matches_by_one
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,8 +124,12 @@ def async_update_entry_from_discovery(
     mac_address = device[ATTR_ID]
     assert mac_address is not None
     updates: dict[str, Any] = {}
-    if not entry.unique_id:  ## allow this to change by 1
-        updates["unique_id"] = dr.format_mac(mac_address)
+    formatted_mac = dr.format_mac(mac_address)
+    if not entry.unique_id or (
+        entry.unique_id != formatted_mac
+        and mac_matches_by_one(formatted_mac, entry.unique_id)
+    ):
+        updates["unique_id"] = formatted_mac
     if model_num and entry.data.get(CONF_MODEL_NUM) != model_num:
         data_updates[CONF_MODEL_NUM] = model_num
     async_populate_data_from_discovery(entry.data, data_updates, device)

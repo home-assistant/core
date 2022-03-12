@@ -41,6 +41,7 @@ from .discovery import (
     async_trigger_discovery,
     async_update_entry_from_discovery,
 )
+from .util import mac_matches_by_one
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,8 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.unique_id and discovery.get(ATTR_ID):
         mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
-        # TODO: allow this to be off by one for older devices, convert to int and subtract and if > 1 fail
-        if mac != entry.unique_id:
+        if not mac_matches_by_one(mac, entry.unique_id):
             # The device is offline and another flux_led device is now using the ip address
             raise ConfigEntryNotReady(
                 f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"

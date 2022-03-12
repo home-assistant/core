@@ -46,7 +46,7 @@ from .discovery import (
     async_populate_data_from_discovery,
     async_update_entry_from_discovery,
 )
-from .util import format_as_flux_mac
+from .util import format_as_flux_mac, mac_matches_by_one
 
 CONF_DEVICE: Final = "device"
 _LOGGER = logging.getLogger(__name__)
@@ -129,7 +129,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_id = device[ATTR_ID]
                 assert device_id is not None
                 discovered_mac = dr.format_mac(device_id)
-                if device[ATTR_MODEL_DESCRIPTION] or discovered_mac != mac:
+                if device[ATTR_MODEL_DESCRIPTION] or (
+                    discovered_mac != mac and mac_matches_by_one(discovered_mac, mac)
+                ):
                     self._discovered_device = device
                     await self._async_set_discovered_mac(host, device, mac)
         return await self.async_step_discovery_confirm()
