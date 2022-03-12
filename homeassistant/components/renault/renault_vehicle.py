@@ -104,7 +104,7 @@ class RenaultVehicleProxy:
             coordinator = self.coordinators[key]
             if coordinator.not_supported:
                 # Remove endpoint as it is not supported for this vehicle.
-                LOGGER.warning(
+                LOGGER.info(
                     "Ignoring endpoint %s as it is not supported for this vehicle: %s",
                     coordinator.name,
                     coordinator.last_exception,
@@ -112,7 +112,7 @@ class RenaultVehicleProxy:
                 del self.coordinators[key]
             elif coordinator.access_denied:
                 # Remove endpoint as it is denied for this vehicle.
-                LOGGER.warning(
+                LOGGER.info(
                     "Ignoring endpoint %s as it is denied for this vehicle: %s",
                     coordinator.name,
                     coordinator.last_exception,

@@ -25,14 +25,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .bridge import (
-    SamsungTVBridge,
-    SamsungTVLegacyBridge,
-    SamsungTVWSBridge,
-    async_get_device_info,
-    mac_from_device_info,
-)
+from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
+    CONF_MODEL,
     CONF_ON_ACTION,
     DEFAULT_NAME,
     DOMAIN,
@@ -100,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @callback
 def _async_get_device_bridge(
     hass: HomeAssistant, data: dict[str, Any]
-) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
+) -> SamsungTVBridge:
     """Get device bridge."""
     return SamsungTVBridge.get_bridge(
         hass,
@@ -125,11 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data={**entry.data, CONF_TOKEN: bridge.token}
         )
 
-    def new_token_callback() -> None:
-        """Update config entry with the new token."""
-        hass.add_job(_update_token)
-
-    bridge.register_new_token_callback(new_token_callback)
+    bridge.register_new_token_callback(_update_token)
 
     async def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
@@ -147,44 +138,71 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: ConfigEntry
-) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
+) -> SamsungTVBridge:
     """Create a bridge object and update any missing data in the config entry."""
     updated_data: dict[str, str | int] = {}
     host: str = entry.data[CONF_HOST]
     port: int | None = entry.data.get(CONF_PORT)
     method: str | None = entry.data.get(CONF_METHOD)
+    load_info_attempted = False
     info: dict[str, Any] | None = None
 
     if not port or not method:
+        LOGGER.debug("Attempting to get port or method for %s", host)
         if method == METHOD_LEGACY:
             port = LEGACY_PORT
         else:
             # When we imported from yaml we didn't setup the method
             # because we didn't know it
             port, method, info = await async_get_device_info(hass, None, host)
+            load_info_attempted = True
             if not port or not method:
                 raise ConfigEntryNotReady(
                     "Failed to determine connection method, make sure the device is on."
                 )
 
+        LOGGER.info("Updated port to %s and method to %s for %s", port, method, host)
         updated_data[CONF_PORT] = port
         updated_data[CONF_METHOD] = method
 
     bridge = _async_get_device_bridge(hass, {**entry.data, **updated_data})
 
     mac: str | None = entry.data.get(CONF_MAC)
-    if not mac:
-        if info:
-            mac = mac_from_device_info(info)
-        else:
-            mac = await bridge.async_mac_from_device()
+    model: str | None = entry.data.get(CONF_MODEL)
+    if (not mac or not model) and not load_info_attempted:
+        info = await bridge.async_device_info()
 
     if not mac:
-        mac = await hass.async_add_executor_job(
-            partial(getmac.get_mac_address, ip=host)
+        LOGGER.debug("Attempting to get mac for %s", host)
+        if info:
+            mac = mac_from_device_info(info)
+
+        if not mac:
+            mac = await hass.async_add_executor_job(
+                partial(getmac.get_mac_address, ip=host)
+            )
+
+        if mac:
+            LOGGER.info("Updated mac to %s for %s", mac, host)
+            updated_data[CONF_MAC] = mac
+        else:
+            LOGGER.info("Failed to get mac for %s", host)
+
+    if not model:
+        LOGGER.debug("Attempting to get model for %s", host)
+        if info:
+            model = info.get("device", {}).get("modelName")
+            if model:
+                LOGGER.info("Updated model to %s for %s", model, host)
+                updated_data[CONF_MODEL] = model
+
+    if model and len(model) > 4 and model[4] in ("H", "J"):
+        LOGGER.info(
+            "Detected model %s for %s. Some televisions from H and J series use "
+            "an encrypted protocol that may not be supported in this integration",
+            model,
+            host,
         )
-    if mac:
-        updated_data[CONF_MAC] = mac
 
     if updated_data:
         data = {**entry.data, **updated_data}

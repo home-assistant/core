@@ -1,7 +1,9 @@
 """Common methods for SleepIQ."""
+from __future__ import annotations
+
 from unittest.mock import create_autospec, patch
 
-from asyncsleepiq import SleepIQBed, SleepIQSleeper
+from asyncsleepiq import SleepIQBed, SleepIQFoundation, SleepIQLight, SleepIQSleeper
 import pytest
 
 from homeassistant.components.sleepiq import DOMAIN
@@ -18,6 +20,12 @@ SLEEPER_L_NAME = "SleeperL"
 SLEEPER_R_NAME = "Sleeper R"
 SLEEPER_L_NAME_LOWER = SLEEPER_L_NAME.lower().replace(" ", "_")
 SLEEPER_R_NAME_LOWER = SLEEPER_R_NAME.lower().replace(" ", "_")
+
+
+SLEEPIQ_CONFIG = {
+    CONF_USERNAME: "user@email.com",
+    CONF_PASSWORD: "password",
+}
 
 
 @pytest.fixture
@@ -40,23 +48,34 @@ def mock_asyncsleepiq():
         sleeper_l.name = SLEEPER_L_NAME
         sleeper_l.in_bed = True
         sleeper_l.sleep_number = 40
+        sleeper_l.pressure = 1000
 
         sleeper_r.side = "R"
         sleeper_r.name = SLEEPER_R_NAME
         sleeper_r.in_bed = False
         sleeper_r.sleep_number = 80
+        sleeper_r.pressure = 1400
+
+        bed.foundation = create_autospec(SleepIQFoundation)
+        light_1 = create_autospec(SleepIQLight)
+        light_1.outlet_id = 1
+        light_1.is_on = False
+        light_2 = create_autospec(SleepIQLight)
+        light_2.outlet_id = 2
+        light_2.is_on = False
+        bed.foundation.lights = [light_1, light_2]
 
         yield client
 
 
-async def setup_platform(hass: HomeAssistant, platform) -> MockConfigEntry:
+async def setup_platform(
+    hass: HomeAssistant, platform: str | None = None
+) -> MockConfigEntry:
     """Set up the SleepIQ platform."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_USERNAME: "user@email.com",
-            CONF_PASSWORD: "password",
-        },
+        data=SLEEPIQ_CONFIG,
+        unique_id=SLEEPIQ_CONFIG[CONF_USERNAME].lower(),
     )
     mock_entry.add_to_hass(hass)
 

@@ -15,8 +15,10 @@ TO_REDACT = {
     "name",
     "mac",
     "device_id",
-    "sensor_map",
-    "lock_map",
+    "user_id",
+    "id",
+    "mail_address",
+    "report_account",
 }
 
 
@@ -27,4 +29,7 @@ async def async_get_config_entry_diagnostics(
     coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         COORDINATOR
     ]
-    return async_redact_data(coordinator.data, TO_REDACT)
+
+    assert coordinator.yale
+    get_all_data = await hass.async_add_executor_job(coordinator.yale.get_all)
+    return async_redact_data(get_all_data, TO_REDACT)

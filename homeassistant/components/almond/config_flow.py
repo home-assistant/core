@@ -8,7 +8,6 @@ from typing import Any
 from aiohttp import ClientError
 import async_timeout
 from pyalmond import AlmondLocalAuth, WebAlmondAPI
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant import core, data_entry_flow
@@ -122,5 +121,4 @@ class AlmondFlowHandler(
         return self.async_show_form(
             step_id="hassio_confirm",
             description_placeholders={"addon": data["addon"]},
-            data_schema=vol.Schema({}),
         )
