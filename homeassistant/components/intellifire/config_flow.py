@@ -116,7 +116,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Pick which device to configure."""
 
         if user_input is not None:
-            return await self.async_step_local_config(user_input=user_input)
+            # Update not_configured_hosts in order to trigger correct
+            # behavior in next step
+            self._not_configured_hosts = [user_input[CONF_HOST]]
+            return await self.async_step_local_config()
 
         return self.async_show_form(
             step_id="pick_device",
