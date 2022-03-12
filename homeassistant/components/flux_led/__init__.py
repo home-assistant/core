@@ -41,6 +41,7 @@ from .discovery import (
     async_trigger_discovery,
     async_update_entry_from_discovery,
 )
+from .util import mac_matches_by_one
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,12 +97,23 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
 
     @callback
     def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
-        # Old format {entry_id}.....
-        # New format {unique_id}....
+
+        assert unique_id is not None
         entity_unique_id = entity_entry.unique_id
-        if not entity_unique_id.startswith(entry_id):
+        entity_mac = entity_unique_id[: len(unique_id)]
+        new_unique_id = None
+        if entity_unique_id.startswith(entry_id):
+            # Old format {entry_id}....., New format {unique_id}....
+            new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
+        elif (
+            ":" in entity_mac
+            and entity_mac != unique_id
+            and mac_matches_by_one(entity_mac, unique_id)
+        ):
+            # Old format {dhcp_mac}....., New format {discovery_mac}....
+            new_unique_id = f"{unique_id}{entity_unique_id[len(unique_id):]}"
+        else:
             return None
-        new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
         _LOGGER.info(
             "Migrating unique_id from [%s] to [%s]",
             entity_unique_id,
@@ -148,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.unique_id and discovery.get(ATTR_ID):
         mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
-        if mac != entry.unique_id:
+        if not mac_matches_by_one(mac, entry.unique_id):
             # The device is offline and another flux_led device is now using the ip address
             raise ConfigEntryNotReady(
                 f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
@@ -157,7 +169,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not discovery_cached:
         # Only update the entry once we have verified the unique id
         # is either missing or we have verified it matches
-        async_update_entry_from_discovery(hass, entry, discovery, device.model_num)
+        async_update_entry_from_discovery(
+            hass, entry, discovery, device.model_num, True
+        )
 
     await _async_migrate_unique_ids(hass, entry)
 
