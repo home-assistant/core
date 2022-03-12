@@ -181,6 +181,12 @@ def controller_state_fixture():
     return json.loads(load_fixture("zwave_js/controller_state.json"))
 
 
+@pytest.fixture(name="controller_node_state", scope="session")
+def controller_node_state_fixture():
+    """Load the controller node state fixture data."""
+    return json.loads(load_fixture("zwave_js/controller_node_state.json"))
+
+
 @pytest.fixture(name="version_state", scope="session")
 def version_state_fixture():
     """Load the version state fixture data."""
@@ -533,6 +539,14 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
         client.ws_server_url = "ws://test:3000/zjs"
 
         yield client
+
+
+@pytest.fixture(name="controller_node")
+def controller_node_fixture(client, controller_node_state):
+    """Mock a controller node."""
+    node = Node(client, copy.deepcopy(controller_node_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
 
 
 @pytest.fixture(name="multisensor_6")

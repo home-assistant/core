@@ -7,7 +7,7 @@
         },
         "error": {
             "discovery_error": "Impossibile individuare un gateway Xiaomi Aqara, prova a utilizzare l'IP del dispositivo che esegue HomeAssistant come interfaccia",
-            "invalid_host": "Nome host o indirizzo IP non valido, vedere https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_host": "Nome host o indirizzo IP non valido, vedi https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "Interfaccia di rete non valida",
             "invalid_key": "Chiave gateway non valida",
             "invalid_mac": "Indirizzo Mac non valido"

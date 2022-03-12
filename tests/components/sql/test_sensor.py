@@ -115,7 +115,9 @@ async def test_query_limit(hass: HomeAssistant) -> None:
     assert state.attributes["value"] == 5
 
 
-async def test_query_no_value(hass: HomeAssistant) -> None:
+async def test_query_no_value(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the SQL sensor with a query that returns no value."""
     config = {
         "sensor": {
@@ -136,6 +138,9 @@ async def test_query_no_value(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == STATE_UNKNOWN
+
+    text = "SELECT 5 as value where 1=2 returned no results"
+    assert text in caplog.text
 
 
 async def test_invalid_query(hass: HomeAssistant) -> None:

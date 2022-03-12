@@ -1,7 +1,7 @@
 """Support for HERE travel time sensors."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import logging
 
 import herepy
@@ -443,9 +443,9 @@ class HERETravelTimeData:
             return attribution
 
 
-def convert_time_to_isodate(timestr: str) -> str:
-    """Take a string like 08:00:00 and combine it with the current date."""
-    combined = datetime.combine(dt.start_of_local_day(), dt.parse_time(timestr))
+def convert_time_to_isodate(simple_time: time) -> str:
+    """Take a time like 08:00:00 and combine it with the current date."""
+    combined = datetime.combine(dt.start_of_local_day(), simple_time)
     if combined < datetime.now():
         combined = combined + timedelta(days=1)
     return combined.isoformat()

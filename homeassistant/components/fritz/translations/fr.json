@@ -10,7 +10,8 @@
             "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "cannot_connect": "\u00c9chec de connexion",
             "connection_error": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification invalide",
+            "upnp_not_configured": "Param\u00e8tres UPnP manquants sur l'appareil."
         },
         "flow_title": "{name}",
         "step": {
@@ -56,7 +57,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Secondes pour consid\u00e9rer un appareil \u00e0 la 'maison'"
+                    "consider_home": "Secondes pour consid\u00e9rer un appareil \u00e0 la 'maison'",
+                    "old_discovery": "Activer l'ancienne m\u00e9thode de d\u00e9couverte"
                 }
             }
         }

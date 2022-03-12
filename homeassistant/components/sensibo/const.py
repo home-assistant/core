@@ -12,7 +12,7 @@ LOGGER = logging.getLogger(__package__)
 
 DEFAULT_SCAN_INTERVAL = 60
 DOMAIN = "sensibo"
-PLATFORMS = [Platform.CLIMATE, Platform.NUMBER]
+PLATFORMS = [Platform.CLIMATE, Platform.NUMBER, Platform.SELECT]
 ALL = ["all"]
 DEFAULT_NAME = "Sensibo"
 TIMEOUT = 8

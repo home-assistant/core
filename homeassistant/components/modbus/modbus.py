@@ -20,6 +20,7 @@ from pymodbus.transaction import ModbusRtuFramer
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_STATE,
     CONF_DELAY,
     CONF_HOST,
     CONF_METHOD,
@@ -34,13 +35,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
-    ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
@@ -128,6 +129,8 @@ async def async_modbus_setup(
     config: ConfigType,
 ) -> bool:
     """Set up Modbus component."""
+
+    await async_setup_reload_service(hass, DOMAIN, [DOMAIN])
 
     hass.data[DOMAIN] = hub_collect = {}
     for conf_hub in config[DOMAIN]:
@@ -396,7 +399,7 @@ class ModbusHub:
             return None
         async with self._lock:
             if not self._client:
-                return None  # pragma: no cover
+                return None
             result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )

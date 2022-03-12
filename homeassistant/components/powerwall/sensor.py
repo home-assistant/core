@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tesla_powerwall import MeterType
+from tesla_powerwall import Meter, MeterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,7 +28,6 @@ from .models import PowerwallData, PowerwallRuntimeData
 
 _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
-_METER_DIRECTIONS = [_METER_DIRECTION_EXPORT, _METER_DIRECTION_IMPORT]
 
 
 async def async_setup_entry(
@@ -42,20 +41,24 @@ async def async_setup_entry(
     assert coordinator is not None
     data: PowerwallData = coordinator.data
     entities: list[
-        PowerWallEnergySensor | PowerWallEnergyDirectionSensor | PowerWallChargeSensor
-    ] = []
-    for meter in data.meters.meters:
-        entities.append(PowerWallEnergySensor(powerwall_data, meter))
-        for meter_direction in _METER_DIRECTIONS:
-            entities.append(
-                PowerWallEnergyDirectionSensor(
-                    powerwall_data,
-                    meter,
-                    meter_direction,
-                )
-            )
+        PowerWallEnergySensor
+        | PowerWallImportSensor
+        | PowerWallExportSensor
+        | PowerWallChargeSensor
+        | PowerWallBackupReserveSensor
+    ] = [
+        PowerWallChargeSensor(powerwall_data),
+        PowerWallBackupReserveSensor(powerwall_data),
+    ]
 
-    entities.append(PowerWallChargeSensor(powerwall_data))
+    for meter in data.meters.meters:
+        entities.extend(
+            [
+                PowerWallEnergySensor(powerwall_data, meter),
+                PowerWallExportSensor(powerwall_data, meter),
+                PowerWallImportSensor(powerwall_data, meter),
+            ]
+        )
 
     async_add_entities(entities)
 
@@ -112,10 +115,29 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
         }
 
 
+class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
+    """Representation of the Powerwall backup reserve setting."""
+
+    _attr_name = "Powerwall Backup Reserve"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.BATTERY
+
+    @property
+    def unique_id(self) -> str:
+        """Device Uniqueid."""
+        return f"{self.base_unique_id}_backup_reserve"
+
+    @property
+    def native_value(self) -> int:
+        """Get the current value in percentage."""
+        return round(self.data.backup_reserve)
+
+
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
 
@@ -128,18 +150,54 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(powerwall_data)
         self._meter = meter
-        self._meter_direction = meter_direction
-        self._attr_name = (
-            f"Powerwall {self._meter.value.title()} {self._meter_direction.title()}"
-        )
-        self._attr_unique_id = (
-            f"{self.base_unique_id}_{self._meter.value}_{self._meter_direction}"
-        )
+        self._attr_name = f"Powerwall {meter.value.title()} {meter_direction.title()}"
+        self._attr_unique_id = f"{self.base_unique_id}_{meter.value}_{meter_direction}"
+
+    @property
+    def available(self) -> bool:
+        """Check if the reading is actually available.
+
+        The device reports 0 when something goes wrong which
+        we do not want to include in statistics and its a
+        transient data error.
+        """
+        return super().available and self.native_value != 0
+
+    @property
+    def meter(self) -> Meter:
+        """Get the meter for the sensor."""
+        return self.data.meters.get_meter(self._meter)
+
+
+class PowerWallExportSensor(PowerWallEnergyDirectionSensor):
+    """Representation of an Powerwall Export sensor."""
+
+    def __init__(
+        self,
+        powerwall_data: PowerwallRuntimeData,
+        meter: MeterType,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(powerwall_data, meter, _METER_DIRECTION_EXPORT)
 
     @property
     def native_value(self) -> float:
         """Get the current value in kWh."""
-        meter = self.data.meters.get_meter(self._meter)
-        if self._meter_direction == _METER_DIRECTION_EXPORT:
-            return meter.get_energy_exported()
-        return meter.get_energy_imported()
+        return self.meter.get_energy_exported()
+
+
+class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
+    """Representation of an Powerwall Import sensor."""
+
+    def __init__(
+        self,
+        powerwall_data: PowerwallRuntimeData,
+        meter: MeterType,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(powerwall_data, meter, _METER_DIRECTION_IMPORT)
+
+    @property
+    def native_value(self) -> float:
+        """Get the current value in kWh."""
+        return self.meter.get_energy_imported()

@@ -592,10 +592,12 @@ async def test_cleanup_device(hass, hass_ws_client, device_reg, entity_reg, mqtt
     assert state is not None
 
     # Remove MQTT from the device
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await ws_client.send_json(
         {
             "id": 6,
-            "type": "mqtt/device/remove",
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
             "device_id": device_entry.id,
         }
     )
@@ -717,10 +719,12 @@ async def test_cleanup_device_multiple_config_entries(
     assert state is not None
 
     # Remove MQTT from the device
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await ws_client.send_json(
         {
             "id": 6,
-            "type": "mqtt/device/remove",
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
             "device_id": device_entry.id,
         }
     )
