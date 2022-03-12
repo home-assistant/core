@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import BaseEntity
+from .entity import BaseToggleEntity
 
 
 async def async_setup_entry(
@@ -36,7 +36,7 @@ async def async_setup_entry(
     )
 
 
-class LightSwitch(BaseEntity, LightEntity):
+class LightSwitch(BaseToggleEntity, LightEntity):
     """Represents a Switch as a Light."""
 
     _attr_color_mode = COLOR_MODE_ONOFF
