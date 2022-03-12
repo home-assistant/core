@@ -12,6 +12,7 @@ from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledRespo
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.command import SamsungTVCommand
+from samsungtvws.event import MS_ERROR_EVENT
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -460,7 +461,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 name=VALUE_CONF_NAME,
             )
             try:
-                await self._remote.start_listening()
+                await self._remote.start_listening(self._remote_event)
             except ConnectionClosedError as err:
                 # This is only happening when the auth was switched to DENY
                 # A removed auth will lead to socket timeout because waiting
@@ -497,6 +498,21 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self.token = self._remote.token
                     self._notify_new_token_callback()
         return self._remote
+
+    @staticmethod
+    def _remote_event(event: str, response: Any) -> None:
+        """Received event from remote websocket."""
+        if event == MS_ERROR_EVENT:
+            # { 'event': 'ms.error',
+            #   'data': {'message': 'unrecognized method value : ms.remote.control'}}
+            if (data := response.get("data")) and (
+                message := data.get("message")
+            ) == "unrecognized method value : ms.remote.control":
+                LOGGER.error(
+                    "Your TV seems to be unsupported by "
+                    "SamsungTVWSBridge and may need a PIN: '%s'",
+                    message,
+                )
 
     async def async_power_off(self) -> None:
         """Send power off command to remote."""
