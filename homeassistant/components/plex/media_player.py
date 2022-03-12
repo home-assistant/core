@@ -4,6 +4,7 @@ from __future__ import annotations
 from functools import wraps
 import json
 import logging
+from urllib.parse import parse_qs
 
 import plexapi.exceptions
 import requests.exceptions
@@ -490,6 +491,12 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if media_id.startswith(PLEX_URI_SCHEME):
             media_id = media_id[len(PLEX_URI_SCHEME) :]
 
+        if "?" in media_id:
+            media_id, query_params = media_id.split("?")
+            extra_params = parse_qs(query_params)
+        else:
+            extra_params = {}
+
         if media_type == "station":
             playqueue = self.plex_server.create_station_playqueue(media_id)
             try:
@@ -503,6 +510,8 @@ class PlexMediaPlayer(MediaPlayerEntity):
         src = json.loads(media_id)
         if isinstance(src, int):
             src = {"plex_key": src}
+
+        src.update(extra_params)
 
         offset = 0
 

@@ -1,8 +1,8 @@
 """Support to interface with the Plex API."""
 from __future__ import annotations
 
-import json
 import logging
+from urllib.parse import urlencode
 
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
@@ -67,13 +67,14 @@ def browse_media(  # noqa: C901
         except KeyError as err:
             _LOGGER.debug("Unknown type received: %s", item.type)
             raise UnknownMediaType from err
-        content_id = {"plex_key": item.ratingKey}
+        content_uri = str(item.ratingKey)
         if extra_content_id_params:
-            content_id |= extra_content_id_params
+            params = urlencode(extra_content_id_params)
+            content_uri += f"?{params}"
         payload = {
             "title": pretty_title(item, short_name),
             "media_class": media_class,
-            "media_content_id": PLEX_URI_SCHEME + json.dumps(content_id),
+            "media_content_id": PLEX_URI_SCHEME + content_uri,
             "media_content_type": item.type,
             "can_play": True,
             "can_expand": item.type in EXPANDABLES,
@@ -189,11 +190,10 @@ def browse_media(  # noqa: C901
                 )
         return BrowseMedia(**payload)
 
-    special_folder = None
-    if media_content_id and "plex_key" in media_content_id:
-        media_content_id = json.loads(media_content_id)["plex_key"]
-    elif media_content_id and ":" in media_content_id:
+    if media_content_id and ":" in media_content_id:
         media_content_id, special_folder = media_content_id.split(":")
+    else:
+        special_folder = None
 
     if special_folder:
         if media_content_type == "server":

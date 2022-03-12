@@ -1,6 +1,5 @@
 """Tests for Plex media browser."""
 from http import HTTPStatus
-import json
 from unittest.mock import patch
 
 from homeassistant.components.media_player.const import (
@@ -306,8 +305,7 @@ async def test_browse_media(
     assert msg["success"]
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "show"
-    result_payload = result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :]
-    result_id = int(json.loads(result_payload)["plex_key"])
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :])
     assert result["title"] == mock_plex_server.fetch_item(result_id).title
     assert result["children"][0]["title"] == f"{mock_season.title} ({mock_season.year})"
 
@@ -337,8 +335,7 @@ async def test_browse_media(
     assert msg["success"]
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "season"
-    result_payload = result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :]
-    result_id = int(json.loads(result_payload)["plex_key"])
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :])
     assert (
         result["title"]
         == f"{mock_season.parentTitle} - {mock_season.title} ({mock_season.year})"
@@ -393,8 +390,7 @@ async def test_browse_media(
     assert mock_fetch.called
     assert msg["success"]
     result = msg["result"]
-    result_payload = result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :]
-    result_id = int(json.loads(result_payload)["plex_key"])
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :])
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "artist"
     assert result["title"] == mock_artist.title
     assert result["children"][0]["title"] == "Radio Station"
@@ -415,8 +411,7 @@ async def test_browse_media(
 
     assert msg["success"]
     result = msg["result"]
-    result_payload = result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :]
-    result_id = int(json.loads(result_payload)["plex_key"])
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :])
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "album"
     assert (
         result["title"]
