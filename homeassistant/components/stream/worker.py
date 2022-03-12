@@ -27,6 +27,7 @@ from .const import (
     SOURCE_TIMEOUT,
 )
 from .core import KeyFrameConverter, Part, Segment, StreamOutput, StreamSettings
+from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ class StreamState:
         self,
         hass: HomeAssistant,
         outputs_callback: Callable[[], Mapping[str, StreamOutput]],
+        diagnostics: Diagnostics,
     ) -> None:
         """Initialize StreamState."""
         self._stream_id: int = 0
@@ -62,6 +64,7 @@ class StreamState:
         # sequence gets incremented before the first segment so the first segment
         # has a sequence number of 0.
         self._sequence = -1
+        self._diagnostics = diagnostics
 
     @property
     def sequence(self) -> int:
@@ -92,6 +95,11 @@ class StreamState:
     def outputs(self) -> list[StreamOutput]:
         """Return the active stream outputs."""
         return list(self._outputs_callback().values())
+
+    @property
+    def diagnostics(self) -> Diagnostics:
+        """Return diagnostics object."""
+        return self._diagnostics
 
 
 class StreamMuxer:
@@ -468,6 +476,10 @@ def stream_worker(
     # Some audio streams do not have a profile and throw errors when remuxing
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
+    stream_state.diagnostics.set_value("container_format", container.format.name)
+    stream_state.diagnostics.set_value("video_stream", video_stream.name)
+    if audio_stream:
+        stream_state.diagnostics.set_value("audio_stream", audio_stream.name)
 
     dts_validator = TimestampValidator()
     container_packets = PeekIterator(

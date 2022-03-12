@@ -177,6 +177,14 @@ async def test_hls_stream(
     fail_response = await hls_client.get()
     assert fail_response.status == HTTPStatus.NOT_FOUND
 
+    assert stream.get_diagnostics() == {
+        "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "keepalive": False,
+        "start_worker": 1,
+        "video_stream": "h264",
+        "worker_error": 1,
+    }
+
 
 async def test_stream_timeout(
     hass, hass_client, setup_component, stream_worker_sync, h264_video
