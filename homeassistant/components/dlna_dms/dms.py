@@ -7,12 +7,7 @@ from dataclasses import dataclass
 import functools
 from typing import Any, TypeVar, cast
 
-from async_upnp_client import (
-    UpnpEventHandler,
-    UpnpFactory,
-    UpnpNotifyServer,
-    UpnpRequester,
-)
+from async_upnp_client import UpnpFactory, UpnpRequester
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
@@ -57,7 +52,6 @@ class DlnaDmsData:
     lock: asyncio.Lock
     requester: UpnpRequester
     upnp_factory: UpnpFactory
-    event_handler: UpnpEventHandler
     devices: dict[str, DmsDeviceSource]  # Indexed by config_entry.unique_id
     sources: dict[str, DmsDeviceSource]  # Indexed by source_id
 
@@ -71,9 +65,6 @@ class DlnaDmsData:
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
         self.requester = AiohttpSessionRequester(session, with_sleep=True)
         self.upnp_factory = UpnpFactory(self.requester, non_strict=True)
-        # NOTE: event_handler is not actually used, and is only created to
-        # satisfy the DmsDevice.__init__ signature
-        self.event_handler = UpnpEventHandler(UpnpNotifyServer(), self.requester)
         self.devices = {}
         self.sources = {}
 
@@ -317,7 +308,7 @@ class DmsDeviceSource:
             )
 
             # Create profile wrapper
-            self._device = DmsDevice(upnp_device, domain_data.event_handler)
+            self._device = DmsDevice(upnp_device, event_handler=None)
 
             # Update state variables. We don't care if they change, so this is
             # only done once, here.
