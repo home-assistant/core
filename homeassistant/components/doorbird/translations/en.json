@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Device is already configured",
             "link_local_address": "Link local addresses are not supported",
-            "not_doorbird_device": "This device is not a DoorBird"
+            "not_doorbird_device": "This device is not a DoorBird",
+            "not_ipv4_address": "Only IPv4 addresess are supported"
         },
         "error": {
             "cannot_connect": "Failed to connect",
