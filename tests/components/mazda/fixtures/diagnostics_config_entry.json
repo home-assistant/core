@@ -30,11 +30,11 @@
                 "odometerKm": 2795.8,
                 "doors": {
                     "driverDoorOpen": false,
-                    "passengerDoorOpen": false,
+                    "passengerDoorOpen": true,
                     "rearLeftDoorOpen": false,
                     "rearRightDoorOpen": false,
                     "trunkOpen": false,
-                    "hoodOpen": false,
+                    "hoodOpen": true,
                     "fuelLidOpen": false
                 },
                 "doorLocks": {

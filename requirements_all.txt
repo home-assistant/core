@@ -1011,7 +1011,7 @@ mitemp_bt==0.0.5
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.5.13
+motionblinds==0.6.1
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1621,7 +1621,7 @@ pymata-express==1.19
 pymazda==0.3.2
 
 # homeassistant.components.mediaroom
-pymediaroom==0.6.4.1
+pymediaroom==0.6.5.4
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.6

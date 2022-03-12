@@ -47,10 +47,10 @@
             "public_weather": {
                 "data": {
                     "area_name": "Nom de la zone",
-                    "lat_ne": "Latitude Nord-Est",
-                    "lat_sw": "Latitude Sud-Ouest",
-                    "lon_ne": "Longitude Nord-Est",
-                    "lon_sw": "Longitude Sud-Ouest",
+                    "lat_ne": "Latitude du coin nord-est",
+                    "lat_sw": "Latitude du coin sud-ouest",
+                    "lon_ne": "Longitude du coin nord-est",
+                    "lon_sw": "Longitude du coin sud-ouest",
                     "mode": "Calcul",
                     "show_on_map": "Montrer sur la carte"
                 },

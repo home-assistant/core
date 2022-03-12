@@ -12,12 +12,12 @@
             "too_many_requests": "Trop de demandes, r\u00e9essayez plus tard.",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Passerelle : {gateway_id}",
+        "flow_title": "Passerelle\u00a0: {gateway_id}",
         "step": {
             "user": {
                 "data": {
                     "host": "H\u00f4te",
-                    "hub": "Moyeu",
+                    "hub": "Hub",
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
                 },
