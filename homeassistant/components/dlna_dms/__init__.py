@@ -8,7 +8,7 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG_VERSION, CONF_SOURCE_ID, LOGGER
+from .const import CONF_SOURCE_ID, CONFIG_VERSION, LOGGER
 from .dms import get_domain_data
 from .util import generate_source_id
 

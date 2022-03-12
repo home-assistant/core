@@ -14,7 +14,7 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
-from .const import CONFIG_VERSION, CONF_SOURCE_ID, DEFAULT_NAME, DOMAIN
+from .const import CONF_SOURCE_ID, CONFIG_VERSION, DEFAULT_NAME, DOMAIN
 from .util import generate_source_id
 
 LOGGER = logging.getLogger(__name__)

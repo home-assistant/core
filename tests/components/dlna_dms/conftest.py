@@ -10,8 +10,8 @@ from async_upnp_client.utils import absolute_url
 import pytest
 
 from homeassistant.components.dlna_dms.const import (
-    CONFIG_VERSION,
     CONF_SOURCE_ID,
+    CONFIG_VERSION,
     DOMAIN,
 )
 from homeassistant.components.dlna_dms.dms import DlnaDmsData

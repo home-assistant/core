@@ -4,16 +4,14 @@ from typing import cast
 from unittest.mock import Mock
 
 from homeassistant.components.dlna_dms.const import (
-    CONFIG_VERSION,
     CONF_SOURCE_ID,
+    CONFIG_VERSION,
     DOMAIN,
 )
 from homeassistant.components.dlna_dms.dms import DlnaDmsData
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 from .conftest import (
     MOCK_DEVICE_LOCATION,
@@ -22,6 +20,8 @@ from .conftest import (
     MOCK_DEVICE_USN,
     MOCK_SOURCE_ID,
 )
+
+from tests.common import MockConfigEntry
 
 
 async def test_resource_lifecycle(

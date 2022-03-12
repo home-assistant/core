@@ -20,7 +20,6 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import (
     MOCK_DEVICE_LOCATION,
-    MOCK_DEVICE_NAME,
     MOCK_DEVICE_TYPE,
     MOCK_DEVICE_UDN,
     MOCK_DEVICE_USN,
