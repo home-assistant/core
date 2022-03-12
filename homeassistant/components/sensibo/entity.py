@@ -15,7 +15,7 @@ from .coordinator import MotionSensor, SensiboDataUpdateCoordinator
 
 
 class SensiboBaseEntity(CoordinatorEntity):
-    """Representation of a Sensibo numbers."""
+    """Representation of a Sensibo entity."""
 
     coordinator: SensiboDataUpdateCoordinator
 
@@ -28,23 +28,34 @@ class SensiboBaseEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._device_id = device_id
         self._client = coordinator.client
-        device = coordinator.data.parsed[device_id]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device["id"])},
-            name=device["name"],
-            connections={(CONNECTION_NETWORK_MAC, device["mac"])},
-            manufacturer="Sensibo",
-            configuration_url="https://home.sensibo.com/",
-            model=device["model"],
-            sw_version=device["fw_ver"],
-            hw_version=device["fw_type"],
-            suggested_area=device["name"],
-        )
 
     @property
     def device_data(self) -> dict[str, Any]:
         """Return data for device."""
         return self.coordinator.data.parsed[self._device_id]
+
+
+class SensiboDeviceBaseEntity(SensiboBaseEntity):
+    """Representation of a Sensibo device."""
+
+    def __init__(
+        self,
+        coordinator: SensiboDataUpdateCoordinator,
+        device_id: str,
+    ) -> None:
+        """Initiate Sensibo Number."""
+        super().__init__(coordinator, device_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.device_data["id"])},
+            name=self.device_data["name"],
+            connections={(CONNECTION_NETWORK_MAC, self.device_data["mac"])},
+            manufacturer="Sensibo",
+            configuration_url="https://home.sensibo.com/",
+            model=self.device_data["model"],
+            sw_version=self.device_data["fw_ver"],
+            hw_version=self.device_data["fw_type"],
+            suggested_area=self.device_data["name"],
+        )
 
     async def async_send_command(
         self, command: str, params: dict[str, Any]
@@ -82,10 +93,8 @@ class SensiboBaseEntity(CoordinatorEntity):
         return result
 
 
-class SensiboMotionBaseEntity(CoordinatorEntity):
-    """Representation of a Sensibo numbers."""
-
-    coordinator: SensiboDataUpdateCoordinator
+class SensiboMotionBaseEntity(SensiboBaseEntity):
+    """Representation of a Sensibo motion entity."""
 
     def __init__(
         self,
@@ -96,13 +105,12 @@ class SensiboMotionBaseEntity(CoordinatorEntity):
         name: str | None,
     ) -> None:
         """Initiate Sensibo Number."""
-        super().__init__(coordinator)
-        self._device_id = device_id
+        super().__init__(coordinator, device_id)
         self._sensor_id = sensor_id
-        self._client = coordinator.client
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sensor_id)},
-            name=f"{sensor_data.model} {name}",
+            name=f"{self.device_data['name']} Motion Sensor {name}",
             via_device=(DOMAIN, device_id),
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",
@@ -114,6 +122,4 @@ class SensiboMotionBaseEntity(CoordinatorEntity):
     @property
     def sensor_data(self) -> MotionSensor:
         """Return data for device."""
-        return self.coordinator.data.parsed[self._device_id]["motion_sensors"][
-            self._sensor_id
-        ]
+        return self.device_data["motion_sensors"][self._sensor_id]
