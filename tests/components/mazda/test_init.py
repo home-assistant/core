@@ -20,8 +20,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
+from . import init_integration
+
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
-from tests.components.mazda import init_integration
 
 FIXTURE_USER_INPUT = {
     CONF_EMAIL: "example@example.com",
