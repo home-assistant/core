@@ -1172,9 +1172,6 @@ panacotta==0.1
 # homeassistant.components.panasonic_viera
 panasonic_viera==0.3.6
 
-# homeassistant.components.pcal9535a
-pcal9535a==0.7
-
 # homeassistant.components.dunehd
 pdunehd==1.3.2
 
@@ -1192,12 +1189,6 @@ phone_modem==0.1.1
 
 # homeassistant.components.onewire
 pi1wire==0.1.0
-
-# homeassistant.components.rpi_pfio
-pifacecommon==4.2.2
-
-# homeassistant.components.rpi_pfio
-pifacedigitalio==3.0.5
 
 # homeassistant.components.pilight
 pilight==0.1.1
@@ -1901,7 +1892,7 @@ python-izone==1.2.3
 python-join-api==0.0.6
 
 # homeassistant.components.juicenet
-python-juicenet==1.0.2
+python-juicenet==1.1.0
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
