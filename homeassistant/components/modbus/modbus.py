@@ -399,7 +399,7 @@ class ModbusHub:
             return None
         async with self._lock:
             if not self._client:
-                return None  # pragma: no cover
+                return None
             result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )
