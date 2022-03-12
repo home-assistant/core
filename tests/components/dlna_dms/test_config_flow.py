@@ -221,9 +221,7 @@ async def test_ssdp_flow_duplicate_location(
     assert config_entry_mock.data[CONF_URL] == MOCK_DEVICE_LOCATION
 
 
-async def test_ssdp_flow_bad_data(
-    hass: HomeAssistant, config_entry_mock: MockConfigEntry
-) -> None:
+async def test_ssdp_flow_bad_data(hass: HomeAssistant) -> None:
     """Test bad SSDP discovery information is rejected cleanly."""
     # Missing location
     discovery = dataclasses.replace(MOCK_DISCOVERY, ssdp_location="")
