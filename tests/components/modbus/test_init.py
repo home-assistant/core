@@ -857,9 +857,12 @@ async def test_integration_reload(hass, caplog, mock_modbus):
     caplog.clear()
 
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
+    now = dt_util.utcnow()
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        for i in range(4):
+            now = now + timedelta(seconds=1)
+            async_fire_time_changed(hass, now)
+            await hass.async_block_till_done()
     assert "Modbus reloading" in caplog.text
