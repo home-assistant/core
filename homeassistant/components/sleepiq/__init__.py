@@ -128,7 +128,7 @@ async def _async_migrate_unique_ids(
         for sleeper in bed.sleepers
     }
 
-    bed_ids = [bed.id for bed in gateway.beds.values()]
+    bed_ids = {bed.id for bed in gateway.beds.values()}
 
     @callback
     def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
