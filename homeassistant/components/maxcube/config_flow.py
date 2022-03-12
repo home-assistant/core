@@ -38,6 +38,8 @@ class MaxCubeFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, import_config) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST], CONF_PORT: import_config[CONF_PORT]})
+        self._async_abort_entries_match(
+            {CONF_HOST: import_config[CONF_HOST], CONF_PORT: import_config[CONF_PORT]}
+        )
 
         return await self.async_step_user(user_input=import_config)
