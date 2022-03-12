@@ -31,7 +31,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_KEY
 
@@ -54,30 +53,20 @@ MAX_TEMPERATURE = 30.0
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Iterate through all MAX! Devices and add thermostats."""
-    devices = []
-    for handler in hass.data[DATA_KEY].values():
-        for device in handler.cube.devices:
-            if device.is_thermostat() or device.is_wallthermostat():
-                devices.append(MaxCubeClimate(handler, device))
-
-    if devices:
-        add_entities(devices)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up a climate for maxcube."""
-    setup_platform(hass, config_entry.data.copy(), async_add_devices)
+    devices: list[MaxCubeClimate] = []
+    for handler in hass.data[DATA_KEY].values():
+        for device in handler.cube.devices:
+            if device.is_thermostat() or device.is_wallthermostat():
+                devices.append(MaxCubeClimate(handler, device))
+
+    if devices:
+        async_add_devices(devices)
 
 
 class MaxCubeClimate(ClimateEntity):

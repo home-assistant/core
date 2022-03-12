@@ -2,6 +2,8 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
 
@@ -26,10 +28,16 @@ class MaxCubeFlowHandler(config_entries.ConfigFlow):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("host"): str,
-                    vol.Optional("port", default=62910): int,
-                    vol.Optional("scan_interval", default=300): int,
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_PORT, default=62910): int,
+                    vol.Optional(CONF_SCAN_INTERVAL, default=300): int,
                 }
             ),
             errors=self._errors,
         )
+
+    async def async_step_import(self, import_config) -> FlowResult:
+        """Import a config entry from configuration.yaml."""
+        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST], CONF_PORT: import_config[CONF_PORT]})
+
+        return await self.async_step_user(user_input=import_config)

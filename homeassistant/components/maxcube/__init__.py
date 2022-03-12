@@ -8,11 +8,10 @@ from maxcube.cube import MaxCube
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
 
@@ -54,6 +53,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
 ]
 
+
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Establish connection to MAX! Cube."""
     if DATA_KEY not in hass.data:
@@ -62,31 +62,28 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config or CONF_GATEWAYS not in config[DOMAIN]:
         return True
 
-    connection_failed = 0
+    _LOGGER.warning(
+        "Configuration of the maxcube platform in YAML is deprecated and will be "
+        "removed in future release; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+
     gateways = config[DOMAIN][CONF_GATEWAYS]
     for gateway in gateways:
-        host = gateway[CONF_HOST]
-        port = gateway[CONF_PORT]
-        scan_interval = gateway[CONF_SCAN_INTERVAL].total_seconds()
+        data = {
+            CONF_HOST: gateway[CONF_HOST],
+            CONF_PORT: gateway[CONF_PORT],
+            CONF_SCAN_INTERVAL: gateway[CONF_SCAN_INTERVAL].total_seconds(),
+        }
 
-        try:
-            cube = MaxCube(host, port, now=now)
-            hass.data[DATA_KEY][host] = MaxCubeHandle(cube, scan_interval)
-        except timeout as ex:
-            _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
-            persistent_notification.create(
-                hass,
-                f"Error: {ex}<br />You will need to restart Home Assistant after fixing.",
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID,
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=data,
             )
-            connection_failed += 1
-
-    if connection_failed >= len(gateways):
-        return False
-
-    load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
-    load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+        )
 
     return True
 
@@ -126,8 +123,8 @@ class MaxCubeHandle:
             self.cube.disconnect()
 
 
-async def _setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up using flow."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up config entry."""
     config = entry.data
 
     if DATA_KEY not in hass.data:
@@ -137,6 +134,8 @@ async def _setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = config[CONF_HOST]
     port = config[CONF_PORT]
     scan_interval = config[CONF_SCAN_INTERVAL]
+
+    entry.add_update_listener(async_reload_entry)
 
     if host in hass.data[DATA_KEY]:
         # Already configured, do nothing
@@ -159,14 +158,6 @@ async def _setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up config entry."""
-    res = await _setup(hass, entry)
-
-    entry.add_update_listener(async_reload_entry)
-    return res
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
