@@ -110,3 +110,10 @@ class SensiboMotionBaseEntity(CoordinatorEntity):
             sw_version=sensor_data.fw_ver,
             hw_version=sensor_data.fw_type,
         )
+
+    @property
+    def sensor_data(self) -> dict[str, Any]:
+        """Return data for device."""
+        return self.coordinator.data.parsed[self._device_id]["motion_sensors"][
+            self._sensor_id
+        ]

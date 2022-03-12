@@ -18,6 +18,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -44,15 +45,18 @@ MOTION_SENSOR_TYPES: tuple[SensiboSensorEntityDescription, ...] = (
     SensiboSensorEntityDescription(
         key="rssi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         name="rssi",
         icon="mdi:wifi",
         value_fn=lambda data: data.rssi,
+        entity_registry_enabled_default=False,
     ),
     SensiboSensorEntityDescription(
         key="battery_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         name="Battery Voltage",
@@ -124,8 +128,4 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.entity_description.value_fn(
-            self.coordinator.data.parsed[self._device_id]["motion_sensors"][
-                self._sensor_id
-            ]
-        )
+        return self.entity_description.value_fn(self.sensor_data)
