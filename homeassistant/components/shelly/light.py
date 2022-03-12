@@ -336,7 +336,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 ATTR_RGBW_COLOR
             ]
 
-        if ATTR_EFFECT in kwargs:
+        if ATTR_EFFECT in kwargs and ATTR_COLOR_TEMP not in kwargs:
             # Color effect change - used only in color mode, switch device mode to color
             set_mode = "color"
             if self.wrapper.model == "SHBLB-1":
