@@ -17,6 +17,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
+MAX_POSSIBLE_STEP = 1000
+
 
 @dataclass
 class MotionSensor:
@@ -24,6 +26,7 @@ class MotionSensor:
 
     id: str
     alive: bool | None = None
+    motion: bool | None = None
     fw_ver: str | None = None
     fw_type: str | None = None
     is_main_sensor: bool | None = None
@@ -31,10 +34,21 @@ class MotionSensor:
     humidity: int | None = None
     temperature: float | None = None
     model: str | None = None
+    rssi: int | None = None
+
+
+@dataclass
+class SensiboData:
+    """Dataclass for Sensibo data."""
+
+    raw: dict
+    parsed: dict
 
 
 class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
     """A Sensibo Data Update Coordinator."""
+
+    data: SensiboData
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Sensibo coordinator."""
@@ -50,7 +64,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
-    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
+    async def _async_update_data(self) -> SensiboData:
         """Fetch data from Sensibo."""
 
         devices = []
@@ -63,7 +77,10 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
         except SensiboError as error:
             raise UpdateFailed from error
 
-        device_data: dict[str, dict[str, Any]] = {}
+        if not devices:
+            raise UpdateFailed("No devices found")
+
+        device_data: dict[str, Any] = {}
         for dev in devices:
             unique_id = dev["id"]
             mac = dev["macAddress"]
@@ -76,6 +93,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             running = ac_states.get("on")
             fan_mode = ac_states.get("fanLevel")
             swing_mode = ac_states.get("swing")
+            horizontal_swing_mode = ac_states.get("horizontalSwing")
+            light_mode = ac_states.get("light")
             available = dev["connectionStatus"].get("isAlive", True)
             capabilities = dev["remoteCapabilities"]
             hvac_modes = list(capabilities["modes"])
@@ -84,6 +103,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             current_capabilities = capabilities["modes"][ac_states.get("mode")]
             fan_modes = current_capabilities.get("fanLevels")
             swing_modes = current_capabilities.get("swing")
+            horizontal_swing_modes = current_capabilities.get("horizontalSwing")
+            light_modes = current_capabilities.get("light")
             temperature_unit_key = dev.get("temperatureUnit") or ac_states.get(
                 "temperatureUnit"
             )
@@ -93,7 +114,11 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 .get("values", [0, 1])
             )
             if temperatures_list:
-                temperature_step = temperatures_list[1] - temperatures_list[0]
+                diff = MAX_POSSIBLE_STEP
+                for i in range(len(temperatures_list) - 1):
+                    if temperatures_list[i + 1] - temperatures_list[i] < diff:
+                        diff = temperatures_list[i + 1] - temperatures_list[i]
+                temperature_step = diff
 
             active_features = list(ac_states)
             full_features = set()
@@ -104,6 +129,10 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                     full_features.add("swing")
                 if "fanLevels" in capabilities["modes"][mode]:
                     full_features.add("fanLevel")
+                if "horizontalSwing" in capabilities["modes"][mode]:
+                    full_features.add("horizontalSwing")
+                if "light" in capabilities["modes"][mode]:
+                    full_features.add("light")
 
             state = hvac_mode if hvac_mode else "off"
 
@@ -120,21 +149,23 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 temperature = measurements.get("temperature")
                 humidity = measurements.get("humidity")
 
-            motion_sensors = [
-                MotionSensor(
-                    id=motionsensor["id"],
-                    alive=motionsensor["connectionStatus"].get("isAlive"),
-                    fw_ver=motionsensor.get("firmwareVersion"),
-                    fw_type=motionsensor.get("firmwareType"),
-                    is_main_sensor=motionsensor.get("isMainSensor"),
-                    battery_voltage=motionsensor["measurements"].get("batteryVoltage"),
-                    humidity=motionsensor["measurements"].get("humidity"),
-                    temperature=motionsensor["measurements"].get("temperature"),
-                    model=motionsensor.get("productModel"),
-                )
-                for motionsensor in dev["motionSensors"]
-                if dev["motionSensors"]
-            ]
+            motion_sensors: dict[str, Any] = {}
+            if dev["motionSensors"]:
+                for sensor in dev["motionSensors"]:
+                    measurement = sensor["measurements"]
+                    motion_sensors[sensor["id"]] = MotionSensor(
+                        id=sensor["id"],
+                        alive=sensor["connectionStatus"].get("isAlive"),
+                        motion=measurement.get("motion"),
+                        fw_ver=sensor.get("firmwareVersion"),
+                        fw_type=sensor.get("firmwareType"),
+                        is_main_sensor=sensor.get("isMainSensor"),
+                        battery_voltage=measurement.get("batteryVoltage"),
+                        humidity=measurement.get("humidity"),
+                        temperature=measurement.get("temperature"),
+                        model=sensor.get("productModel"),
+                        rssi=measurement.get("rssi"),
+                    )
 
             device_data[unique_id] = {
                 "id": unique_id,
@@ -148,10 +179,14 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "on": running,
                 "fan_mode": fan_mode,
                 "swing_mode": swing_mode,
+                "horizontal_swing_mode": horizontal_swing_mode,
+                "light_mode": light_mode,
                 "available": available,
                 "hvac_modes": hvac_modes,
                 "fan_modes": fan_modes,
                 "swing_modes": swing_modes,
+                "horizontal_swing_modes": horizontal_swing_modes,
+                "light_modes": light_modes,
                 "temp_unit": temperature_unit_key,
                 "temp_list": temperatures_list,
                 "temp_step": temperature_step,
@@ -166,4 +201,5 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "full_capabilities": capabilities,
                 "motion_sensors": motion_sensors,
             }
-        return device_data
+
+        return SensiboData(raw=data, parsed=device_data)

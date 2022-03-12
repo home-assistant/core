@@ -25,13 +25,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .bridge import (
-    SamsungTVBridge,
-    SamsungTVLegacyBridge,
-    SamsungTVWSBridge,
-    async_get_device_info,
-    mac_from_device_info,
-)
+from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     CONF_MODEL,
     CONF_ON_ACTION,
@@ -101,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @callback
 def _async_get_device_bridge(
     hass: HomeAssistant, data: dict[str, Any]
-) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
+) -> SamsungTVBridge:
     """Get device bridge."""
     return SamsungTVBridge.get_bridge(
         hass,
@@ -144,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: ConfigEntry
-) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
+) -> SamsungTVBridge:
     """Create a bridge object and update any missing data in the config entry."""
     updated_data: dict[str, str | int] = {}
     host: str = entry.data[CONF_HOST]

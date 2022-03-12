@@ -7,16 +7,16 @@
         },
         "tuya__basic_nightvision": {
             "0": "automatique",
-            "1": "Inactif",
-            "2": "Actif"
+            "1": "D\u00e9sactiv\u00e9",
+            "2": "Activ\u00e9"
         },
         "tuya__countdown": {
-            "1h": "1 heure",
-            "2h": "2 heures",
-            "3h": "3 heures",
-            "4h": "4 heures",
-            "5h": "5 heures",
-            "6h": "6 heures",
+            "1h": "1\u00a0heure",
+            "2h": "2\u00a0heures",
+            "3h": "3\u00a0heures",
+            "4h": "4\u00a0heures",
+            "5h": "5\u00a0heures",
+            "6h": "6\u00a0heures",
             "cancel": "Annuler"
         },
         "tuya__curtain_mode": {
@@ -24,8 +24,8 @@
             "night": "Nuit"
         },
         "tuya__curtain_motor_mode": {
-            "back": "Retour",
-            "forward": "Avance rapide"
+            "back": "En arri\u00e8re",
+            "forward": "En avant"
         },
         "tuya__decibel_sensitivity": {
             "0": "Faible sensibilit\u00e9",
@@ -76,7 +76,7 @@
             "led": "LED"
         },
         "tuya__light_mode": {
-            "none": "Inactif",
+            "none": "D\u00e9sactiv\u00e9",
             "pos": "Indiquer l'emplacement du commutateur",
             "relay": "Indiquer l\u2019\u00e9tat marche/arr\u00eat de l\u2019interrupteur"
         },
@@ -92,10 +92,10 @@
         "tuya__relay_status": {
             "last": "Se souvenir du dernier \u00e9tat",
             "memory": "Se souvenir du dernier \u00e9tat",
-            "off": "Inactif",
-            "on": "Actif",
-            "power_off": "Inactif",
-            "power_on": "Actif"
+            "off": "D\u00e9sactiv\u00e9",
+            "on": "Activ\u00e9",
+            "power_off": "D\u00e9sactiv\u00e9",
+            "power_on": "Activ\u00e9"
         },
         "tuya__vacuum_cistern": {
             "closed": "Ferm\u00e9",

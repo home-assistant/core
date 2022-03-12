@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe",
                     "region": "R\u00e9gion"
                 },
