@@ -43,6 +43,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
@@ -52,7 +53,9 @@ async def with_timeout(task, timeout_seconds=10):
         return await task
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Mazda Connected Services from a config entry."""
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
@@ -117,6 +120,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.warning(
                 "The mazda.%s service is deprecated and has been replaced by a button entity; "
                 "Please use the button entity instead",
+                service_call.service,
+            )
+
+        if service_call.service in ("start_charging", "stop_charging"):
+            _LOGGER.warning(
+                "The mazda.%s service is deprecated and has been replaced by a switch entity; "
+                "Please use the charging switch entity instead",
                 service_call.service,
             )
 
