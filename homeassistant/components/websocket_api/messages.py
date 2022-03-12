@@ -115,14 +115,10 @@ def _state_diff_event(event: Event) -> dict:
     State update example
 
     {
-        add: {entity_id: state,…}
-        changed: {entity_id: diff,…}
-        removed: [entity_id,…]
+        "a": {entity_id: compressed_state,…}
+        "c": {entity_id: diff,…}
+        "r": [entity_id,…]
     }
-
-    Init state should do as_dict, copy, remove entity id since it will be in the key
-
-    Fetch function is empty
     """
     if (event_new_state := event.data["new_state"]) is None:
         return {ENTITY_EVENT_REMOVE: [event.data["entity_id"]]}
