@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
 from aioshelly.const import MODEL_NAMES
@@ -21,6 +20,7 @@ from .const import (
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
     DOMAIN,
+    LOGGER,
     MAX_RPC_KEY_INSTANCES,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -28,8 +28,6 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
 )
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 
 async def async_remove_shelly_entity(
@@ -39,7 +37,7 @@ async def async_remove_shelly_entity(
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
     entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
     if entity_id:
-        _LOGGER.debug("Removing entity: %s", entity_id)
+        LOGGER.debug("Removing entity: %s", entity_id)
         entity_reg.async_remove(entity_id)
 
 
@@ -220,7 +218,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     else:
         port = DEFAULT_COAP_PORT
-    _LOGGER.info("Starting CoAP context with UDP port %s", port)
+    LOGGER.info("Starting CoAP context with UDP port %s", port)
     await context.initialize(port)
 
     @callback
@@ -362,7 +360,7 @@ def device_update_info(
 ) -> None:
     """Update device registry info."""
 
-    _LOGGER.debug("Updating device registry info for %s", entry.title)
+    LOGGER.debug("Updating device registry info for %s", entry.title)
 
     assert entry.unique_id
 
