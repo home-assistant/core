@@ -91,6 +91,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             running = ac_states.get("on")
             fan_mode = ac_states.get("fanLevel")
             swing_mode = ac_states.get("swing")
+            horizontal_swing_mode = ac_states.get("horizontalSwing")
+            light_mode = ac_states.get("light")
             available = dev["connectionStatus"].get("isAlive", True)
             capabilities = dev["remoteCapabilities"]
             hvac_modes = list(capabilities["modes"])
@@ -99,6 +101,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             current_capabilities = capabilities["modes"][ac_states.get("mode")]
             fan_modes = current_capabilities.get("fanLevels")
             swing_modes = current_capabilities.get("swing")
+            horizontal_swing_modes = current_capabilities.get("horizontalSwing")
+            light_modes = current_capabilities.get("light")
             temperature_unit_key = dev.get("temperatureUnit") or ac_states.get(
                 "temperatureUnit"
             )
@@ -123,6 +127,10 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                     full_features.add("swing")
                 if "fanLevels" in capabilities["modes"][mode]:
                     full_features.add("fanLevel")
+                if "horizontalSwing" in capabilities["modes"][mode]:
+                    full_features.add("horizontalSwing")
+                if "light" in capabilities["modes"][mode]:
+                    full_features.add("light")
 
             state = hvac_mode if hvac_mode else "off"
 
@@ -167,10 +175,14 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "on": running,
                 "fan_mode": fan_mode,
                 "swing_mode": swing_mode,
+                "horizontal_swing_mode": horizontal_swing_mode,
+                "light_mode": light_mode,
                 "available": available,
                 "hvac_modes": hvac_modes,
                 "fan_modes": fan_modes,
                 "swing_modes": swing_modes,
+                "horizontal_swing_modes": horizontal_swing_modes,
+                "light_modes": light_modes,
                 "temp_unit": temperature_unit_key,
                 "temp_list": temperatures_list,
                 "temp_step": temperature_step,

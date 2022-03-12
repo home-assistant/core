@@ -64,6 +64,9 @@ from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
     MEDIA_TYPES_TO_SONOS,
+    MODELS_LINEIN_AND_TV,
+    MODELS_LINEIN_ONLY,
+    MODELS_TV_ONLY,
     PLAYABLE_MEDIA_TYPES,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_MEDIA_UPDATED,
@@ -474,20 +477,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.add_to_queue(favorite.reference)
             soco.play_from_queue(0)
 
-    @property  # type: ignore[misc]
+    @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        sources = [fav.title for fav in self.speaker.favorites]
-
-        model = self.coordinator.model_name.upper()
-        if "PLAY:5" in model or "CONNECT" in model:
-            sources += [SOURCE_LINEIN]
-        elif "PLAYBAR" in model:
-            sources += [SOURCE_LINEIN, SOURCE_TV]
-        elif "BEAM" in model or "PLAYBASE" in model:
-            sources += [SOURCE_TV]
-
-        return sources
+        model = self.coordinator.model_name.split()[-1].upper()
+        if model in MODELS_LINEIN_ONLY:
+            return [SOURCE_LINEIN]
+        if model in MODELS_TV_ONLY:
+            return [SOURCE_TV]
+        if model in MODELS_LINEIN_AND_TV:
+            return [SOURCE_LINEIN, SOURCE_TV]
+        return []
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def media_play(self) -> None:

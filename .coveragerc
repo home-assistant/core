@@ -706,7 +706,6 @@ omit =
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mjpeg/util.py
     homeassistant/components/mochad/*
-    homeassistant/components/modbus/climate.py
     homeassistant/components/modem_callerid/button.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/moehlenhoff_alpha2/__init__.py
@@ -879,7 +878,6 @@ omit =
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
-    homeassistant/components/pcal9535a/*
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/diagnostics.py
@@ -961,6 +959,7 @@ omit =
     homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
+    homeassistant/components/rfxtrx/diagnostics.py
     homeassistant/components/ridwell/__init__.py
     homeassistant/components/ridwell/sensor.py
     homeassistant/components/ridwell/switch.py
@@ -983,7 +982,6 @@ omit =
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
     homeassistant/components/rpi_gpio/*
-    homeassistant/components/rpi_pfio/*
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
@@ -1018,6 +1016,7 @@ omit =
     homeassistant/components/sensibo/diagnostics.py
     homeassistant/components/sensibo/entity.py
     homeassistant/components/sensibo/number.py
+    homeassistant/components/sensibo/select.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py

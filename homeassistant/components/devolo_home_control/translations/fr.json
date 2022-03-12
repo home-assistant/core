@@ -13,14 +13,14 @@
                 "data": {
                     "mydevolo_url": "URL mydevolo",
                     "password": "Mot de passe",
-                    "username": "Courriel / devolo ID"
+                    "username": "Courriel / ID devolo"
                 }
             },
             "zeroconf_confirm": {
                 "data": {
-                    "mydevolo_url": "mydevolo URL",
+                    "mydevolo_url": "URL mydevolo",
                     "password": "Mot de passe",
-                    "username": "Courriel / devolo ID"
+                    "username": "Courriel / ID devolo"
                 }
             }
         }

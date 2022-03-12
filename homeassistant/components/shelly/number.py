@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-import logging
 from typing import Any, Final, cast
 
 import async_timeout
@@ -20,15 +19,13 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, LOGGER
 from .entity import (
     BlockEntityDescription,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
 )
 from .utils import get_device_entry_gen
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 
 @dataclass
@@ -119,12 +116,12 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
     async def _set_state_full_path(self, path: str, params: Any) -> Any:
         """Set block state (HTTP request)."""
 
-        _LOGGER.debug("Setting state for entity %s, state: %s", self.name, params)
+        LOGGER.debug("Setting state for entity %s, state: %s", self.name, params)
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 return await self.wrapper.device.http_request("get", path, params)
         except (asyncio.TimeoutError, OSError) as err:
-            _LOGGER.error(
+            LOGGER.error(
                 "Setting state for entity %s failed, state: %s, error: %s",
                 self.name,
                 params,

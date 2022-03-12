@@ -6,8 +6,10 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
+            "incorrect_api_key": "Cl\u00e9 d'API non valide pour le compte s\u00e9lectionn\u00e9",
             "invalid_auth": "Authentification invalide",
-            "no_devices": "Aucun appareil d\u00e9couvert"
+            "no_devices": "Aucun appareil d\u00e9couvert",
+            "no_username": "Impossible d'obtenir le nom d'utilisateur"
         },
         "step": {
             "reauth_confirm": {
