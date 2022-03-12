@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.remote import (
     ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
@@ -9,6 +11,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import MOCK_SERIAL
 
@@ -26,7 +29,7 @@ async def test_entity(
     assert hass.states.get(ENTITY_ID)
 
 
-async def test_services(
+async def test_commands(
     hass: HomeAssistant,
     mock_device: MagicMock,
     mock_integration: MockConfigEntry,
@@ -135,3 +138,19 @@ async def test_services(
         blocking=True,
     )
     assert mock_device.menu_toggle.call_count == 1
+
+
+async def test_unknown_command(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_integration: MockConfigEntry,
+) -> None:
+    """Test service calls."""
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            SERVICE_SEND_COMMAND,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["bad"]},
+            blocking=True,
+        )
+    assert str(err.value) == "bad is not a known command"

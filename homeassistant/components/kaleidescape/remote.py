@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from kaleidescape import const as kaleidescape_const
 
 from homeassistant.components.remote import RemoteEntity
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN as KALEIDESCAPE_DOMAIN
 from .entity import KaleidescapeEntity
@@ -31,6 +32,21 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
+VALID_COMMANDS = [
+    "select",
+    "up",
+    "down",
+    "left",
+    "right",
+    "cancel",
+    "replay",
+    "scan_forward",
+    "scan_reverse",
+    "go_movie_covers",
+    "menu_toggle",
+]
+
+
 class KaleidescapeRemote(KaleidescapeEntity, RemoteEntity):
     """Representation of a Kaleidescape device."""
 
@@ -49,26 +65,8 @@ class KaleidescapeRemote(KaleidescapeEntity, RemoteEntity):
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device."""
-        for single_command in command:
-            if single_command == "select":
-                await self._device.select()
-            elif single_command == "up":
-                await self._device.up()
-            elif single_command == "down":
-                await self._device.down()
-            elif single_command == "left":
-                await self._device.left()
-            elif single_command == "right":
-                await self._device.right()
-            elif single_command == "cancel":
-                await self._device.cancel()
-            elif single_command == "replay":
-                await self._device.replay()
-            elif single_command == "scan_forward":
-                await self._device.scan_forward()
-            elif single_command == "scan_reverse":
-                await self._device.scan_reverse()
-            elif single_command == "go_movie_covers":
-                await self._device.go_movie_covers()
-            elif single_command == "menu_toggle":
-                await self._device.menu_toggle()
+        for cmd in command:
+            if cmd in VALID_COMMANDS:
+                await getattr(self._device, cmd)()
+            else:
+                raise HomeAssistantError(f"{cmd} is not a known command")
