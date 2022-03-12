@@ -88,7 +88,8 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
             self.data[key] = data
 
         # Sanity check the energy values. SolarEdge API sometimes report "lifetimedata" of zero,
-        # while the Year, Month and Day energy are still OK. Skip update if that is the case.
+        # while values for last Year, Month and Day energy are still OK.
+        # See https://github.com/home-assistant/core/issues/59285 .
         if set(energy_keys).issubset(self.data.keys()):
             for index, key in enumerate(energy_keys, start=1):
                 # All coming values in list should be larger than the current value.
