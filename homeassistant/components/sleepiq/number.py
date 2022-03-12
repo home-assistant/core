@@ -64,7 +64,7 @@ def _get_sleeper_name(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
 
 
 def _get_sleeper_unique_id(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
-    return f"{bed.id}_{sleeper.sleeper_id}_{FIRMNESS}"
+    return f"{sleeper.sleeper_id}_{FIRMNESS}"
 
 
 NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {

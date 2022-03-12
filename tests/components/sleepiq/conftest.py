@@ -22,6 +22,8 @@ from tests.common import MockConfigEntry
 BED_ID = "123456"
 BED_NAME = "Test Bed"
 BED_NAME_LOWER = BED_NAME.lower().replace(" ", "_")
+SLEEPER_L_ID = "98765"
+SLEEPER_R_ID = "43219"
 SLEEPER_L_NAME = "SleeperL"
 SLEEPER_R_NAME = "Sleeper R"
 SLEEPER_L_NAME_LOWER = SLEEPER_L_NAME.lower().replace(" ", "_")
@@ -54,12 +56,14 @@ def mock_asyncsleepiq():
         sleeper_l.in_bed = True
         sleeper_l.sleep_number = 40
         sleeper_l.pressure = 1000
+        sleeper_l.sleeper_id = SLEEPER_L_ID
 
         sleeper_r.side = "R"
         sleeper_r.name = SLEEPER_R_NAME
         sleeper_r.in_bed = False
         sleeper_r.sleep_number = 80
         sleeper_r.pressure = 1400
+        sleeper_r.sleeper_id = SLEEPER_R_ID
 
         bed.foundation = create_autospec(SleepIQFoundation)
         light_1 = create_autospec(SleepIQLight)

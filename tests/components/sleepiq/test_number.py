@@ -8,8 +8,10 @@ from tests.components.sleepiq.conftest import (
     BED_ID,
     BED_NAME,
     BED_NAME_LOWER,
+    SLEEPER_L_ID,
     SLEEPER_L_NAME,
     SLEEPER_L_NAME_LOWER,
+    SLEEPER_R_ID,
     SLEEPER_R_NAME,
     SLEEPER_R_NAME_LOWER,
     setup_platform,
@@ -35,7 +37,7 @@ async def test_firmness(hass, mock_asyncsleepiq):
         f"number.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_firmness"
     )
     assert entry
-    assert entry.unique_id == f"{BED_ID}_{SLEEPER_L_NAME}_firmness"
+    assert entry.unique_id == f"{SLEEPER_L_ID}_firmness"
 
     state = hass.states.get(
         f"number.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_firmness"
@@ -51,7 +53,7 @@ async def test_firmness(hass, mock_asyncsleepiq):
         f"number.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_firmness"
     )
     assert entry
-    assert entry.unique_id == f"{BED_ID}_{SLEEPER_R_NAME}_firmness"
+    assert entry.unique_id == f"{SLEEPER_R_ID}_firmness"
 
     await hass.services.async_call(
         DOMAIN,
