@@ -144,7 +144,7 @@ async def _async_migrate_unique_ids(
         if parts[0] not in bed_ids or not old_unique_id.endswith(tuple(sensor_types)):
             return None
 
-        sensor_type = filter(old_unique_id.endswith, sensor_types).__next__()
+        sensor_type = next(filter(old_unique_id.endswith, sensor_types), None)
         sleeper_name = "_".join(parts[1:]).removesuffix(f"_{sensor_type}")
         sleeper_id = names_to_ids.get(sleeper_name)
 
