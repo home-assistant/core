@@ -287,13 +287,6 @@ def handle_subscribe_entities(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe entities command."""
-    # Circular dep
-    # pylint: disable=import-outside-toplevel
-    from .permissions import SUBSCRIBE_ALLOWLIST
-
-    if "state_changed" not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
-        raise Unauthorized
-
     entity_ids = set(msg.get("entity_ids", []))
 
     @callback
