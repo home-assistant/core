@@ -158,7 +158,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not discovery_cached:
         # Only update the entry once we have verified the unique id
         # is either missing or we have verified it matches
-        async_update_entry_from_discovery(hass, entry, discovery, device.model_num)
+        async_update_entry_from_discovery(
+            hass, entry, discovery, device.model_num, True
+        )
 
     await _async_migrate_unique_ids(hass, entry)
 

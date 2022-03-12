@@ -118,6 +118,7 @@ def async_update_entry_from_discovery(
     entry: config_entries.ConfigEntry,
     device: FluxLEDDiscovery,
     model_num: int | None,
+    allow_update_mac: bool,
 ) -> bool:
     """Update a config entry from a flux_led discovery."""
     data_updates: dict[str, Any] = {}
@@ -126,7 +127,8 @@ def async_update_entry_from_discovery(
     updates: dict[str, Any] = {}
     formatted_mac = dr.format_mac(mac_address)
     if not entry.unique_id or (
-        entry.unique_id != formatted_mac
+        allow_update_mac
+        and entry.unique_id != formatted_mac
         and mac_matches_by_one(formatted_mac, entry.unique_id)
     ):
         updates["unique_id"] = formatted_mac

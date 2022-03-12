@@ -57,6 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, FluxLEDDiscovery] = {}
         self._discovered_device: FluxLEDDiscovery | None = None
+        self._discovery_source: str | None = None
 
     @staticmethod
     @callback
@@ -66,6 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
+        self._discovery_source = self.context["source"]
         self._discovered_device = FluxLEDDiscovery(
             ipaddr=discovery_info.ip,
             model=None,
@@ -85,17 +87,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle integration discovery."""
+        self._discovery_source = self.context["source"]
         self._discovered_device = cast(FluxLEDDiscovery, discovery_info)
         return await self._async_handle_discovery()
 
     async def _async_set_discovered_mac(
-        self, host: str, device: FluxLEDDiscovery, mac: str
+        self, device: FluxLEDDiscovery, allow_update_mac: bool
     ) -> None:
         """Set the discovered mac."""
+        mac_address = device[ATTR_ID]
+        assert mac_address is not None
+        mac = dr.format_mac(mac_address)
         await self.async_set_unique_id(mac)
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id == mac or entry.data[CONF_HOST] == host:
-                if async_update_entry_from_discovery(self.hass, entry, device, None):
+            if entry.data[CONF_HOST] == device[ATTR_IPADDR] or (
+                entry.unique_id
+                and ":" in entry.unique_id
+                and mac_matches_by_one(entry.unique_id, mac)
+            ):
+                if async_update_entry_from_discovery(
+                    self.hass, entry, device, None, allow_update_mac
+                ):
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(entry.entry_id)
                     )
@@ -105,16 +117,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle any discovery."""
         device = self._discovered_device
         assert device is not None
-        mac_address = device[ATTR_ID]
-        assert mac_address is not None
-        mac = dr.format_mac(mac_address)
+        await self._async_set_discovered_mac(
+            device,
+            self._discovery_source == config_entries.SOURCE_INTEGRATION_DISCOVERY,
+        )
         host = device[ATTR_IPADDR]
-        await self._async_set_discovered_mac(host, device, mac)
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
         if not device[ATTR_MODEL_DESCRIPTION]:
+            mac_address = device[ATTR_ID]
+            assert mac_address is not None
+            mac = dr.format_mac(mac_address)
             try:
                 device = await self._async_try_connect(host, device)
             except FLUX_LED_EXCEPTIONS:
@@ -128,7 +143,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     discovered_mac != mac and mac_matches_by_one(discovered_mac, mac)
                 ):
                     self._discovered_device = device
-                    await self._async_set_discovered_mac(host, device, mac)
+                    await self._async_set_discovered_mac(device, True)
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
