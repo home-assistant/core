@@ -163,7 +163,7 @@ async def webhook_platform(hass, config_webhooks, mock_register_webhook):
 
 @pytest.fixture
 async def polling_platform(hass, config_polling):
-    """Fixture for setting up the polliong platform using appropriate config and mocks."""
+    """Fixture for setting up the polling platform using appropriate config and mocks."""
     await async_setup_component(
         hass,
         DOMAIN,
