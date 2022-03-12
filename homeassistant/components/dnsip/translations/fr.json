@@ -7,8 +7,8 @@
             "user": {
                 "data": {
                     "hostname": "Le nom d'h\u00f4te pour lequel la requ\u00eate DNS doit \u00eatre effectu\u00e9e.",
-                    "resolver": "R\u00e9solveur pour la recherche IPV4",
-                    "resolver_ipv6": "R\u00e9solveur pour la recherche IPV6"
+                    "resolver": "R\u00e9solveur pour la recherche IPv4",
+                    "resolver_ipv6": "R\u00e9solveur pour la recherche IPv6"
                 }
             }
         }
@@ -20,8 +20,8 @@
         "step": {
             "init": {
                 "data": {
-                    "resolver": "R\u00e9solveur pour la recherche IPV4",
-                    "resolver_ipv6": "R\u00e9solveur pour la recherche IPV6"
+                    "resolver": "R\u00e9solveur pour la recherche IPv4",
+                    "resolver_ipv6": "R\u00e9solveur pour la recherche IPv6"
                 }
             }
         }

@@ -1,4 +1,13 @@
 {
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Entit\u00e9 du commutateur"
+                }
+            }
+        }
+    },
     "device_automation": {
         "action_type": {
             "toggle": "Basculer {entity_name}",
