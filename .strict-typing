@@ -66,6 +66,7 @@ homeassistant.components.deconz.config_flow
 homeassistant.components.deconz.diagnostics
 homeassistant.components.deconz.gateway
 homeassistant.components.deconz.services
+homeassistant.components.decora_wifi.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*
