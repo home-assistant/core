@@ -14,7 +14,6 @@ async def setup_integration(hass):
             "host": "mock-host",
             "identity": "mock-identity",
             "key": "mock-key",
-            "import_groups": True,
             "gateway_id": GATEWAY_ID,
         },
     )
