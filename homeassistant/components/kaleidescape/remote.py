@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
 from kaleidescape import const as kaleidescape_const
@@ -21,8 +20,6 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -32,7 +29,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-VALID_COMMANDS = [
+VALID_COMMANDS = {
     "select",
     "up",
     "down",
@@ -44,7 +41,7 @@ VALID_COMMANDS = [
     "scan_reverse",
     "go_movie_covers",
     "menu_toggle",
-]
+}
 
 
 class KaleidescapeRemote(KaleidescapeEntity, RemoteEntity):
@@ -66,7 +63,6 @@ class KaleidescapeRemote(KaleidescapeEntity, RemoteEntity):
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device."""
         for cmd in command:
-            if cmd in VALID_COMMANDS:
-                await getattr(self._device, cmd)()
-            else:
+            if cmd not in VALID_COMMANDS:
                 raise HomeAssistantError(f"{cmd} is not a known command")
+            await getattr(self._device, cmd)()
