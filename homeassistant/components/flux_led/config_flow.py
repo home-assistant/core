@@ -13,14 +13,14 @@ from flux_led.const import (
     ATTR_MODEL_INFO,
     ATTR_VERSION_NUM,
 )
-from flux_led.scanner import FluxLEDDiscovery
+from flux_led.scanner import FluxLEDDiscovery, is_legacy_device
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -30,9 +30,11 @@ from .const import (
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
     DEFAULT_EFFECT_SPEED,
+    DIRECTED_DISCOVERY_TIMEOUT,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_LED_EXCEPTIONS,
+    LEGACY_DIRECTED_DISCOVERY_TIMEOUT,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
@@ -91,6 +93,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device = cast(FluxLEDDiscovery, discovery_info)
         return await self._async_handle_discovery()
 
+    async def _async_set_discovered_mac(
+        self, host: str, device: FluxLEDDiscovery, mac: str
+    ) -> None:
+        """Set the discovered mac."""
+        await self.async_set_unique_id(mac)
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.unique_id == mac or entry.data[CONF_HOST] == host:
+                if async_update_entry_from_discovery(self.hass, entry, device, None):
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+                raise AbortFlow("already_configured")
+
     async def _async_handle_discovery(self) -> FlowResult:
         """Handle any discovery."""
         device = self._discovered_device
@@ -99,14 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert mac_address is not None
         mac = dr.format_mac(mac_address)
         host = device[ATTR_IPADDR]
-        await self.async_set_unique_id(mac)
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id == mac or entry.data[CONF_HOST] == host:
-                if async_update_entry_from_discovery(self.hass, entry, device, None):
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
-                return self.async_abort(reason="already_configured")
+        await self._async_set_discovered_mac(host, device, mac)
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
@@ -117,8 +125,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except FLUX_LED_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
             else:
-                if device[ATTR_MODEL_DESCRIPTION]:
+                # The mac address can be off by one on some of the older models
+                device_id = device[ATTR_ID]
+                assert device_id is not None
+                discovered_mac = dr.format_mac(device_id)
+                if device[ATTR_MODEL_DESCRIPTION] or discovered_mac != mac:
                     self._discovered_device = device
+                    await self._async_set_discovered_mac(host, device, mac)
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -226,9 +239,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FluxLEDDiscovery:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
-        if (device := await async_discover_device(self.hass, host)) and device[
-            ATTR_MODEL_DESCRIPTION
-        ]:
+        timeout = DIRECTED_DISCOVERY_TIMEOUT
+        if is_legacy_device(discovery):
+            timeout = LEGACY_DIRECTED_DISCOVERY_TIMEOUT
+        if (
+            device := await async_discover_device(self.hass, host, timeout=timeout)
+        ) and device[ATTR_MODEL_DESCRIPTION]:
             # Older models do not return enough information
             # to build the model description via UDP so we have
             # to fallback to making a tcp connection to avoid

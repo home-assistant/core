@@ -19,6 +19,7 @@ from flux_led.const import (
     ATTR_REMOTE_ACCESS_PORT,
     ATTR_VERSION_NUM,
 )
+from flux_led.models_db import get_model_description
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant import config_entries
@@ -80,13 +81,17 @@ def async_build_cached_discovery(entry: ConfigEntry) -> FluxLEDDiscovery:
 
 
 @callback
-def async_name_from_discovery(device: FluxLEDDiscovery) -> str:
+def async_name_from_discovery(
+    device: FluxLEDDiscovery, model_num: int | None = None
+) -> str:
     """Convert a flux_led discovery to a human readable name."""
     if (mac_address := device[ATTR_ID]) is None:
         return device[ATTR_IPADDR]
     short_mac = mac_address[-6:]
     if device[ATTR_MODEL_DESCRIPTION]:
         return f"{device[ATTR_MODEL_DESCRIPTION]} {short_mac}"
+    if model_num is not None:
+        return f"{get_model_description(model_num, None)} {short_mac}"
     return f"{device[ATTR_MODEL]} {short_mac}"
 
 
@@ -125,7 +130,7 @@ def async_update_entry_from_discovery(
         data_updates[CONF_MODEL_NUM] = model_num
     async_populate_data_from_discovery(entry.data, data_updates, device)
     if is_ip_address(entry.title):
-        updates["title"] = async_name_from_discovery(device)
+        updates["title"] = async_name_from_discovery(device, model_num)
     title_matches_name = entry.title == entry.data.get(CONF_NAME)
     if data_updates or title_matches_name:
         updates["data"] = {**entry.data, **data_updates}
@@ -191,12 +196,12 @@ async def async_discover_devices(
 
 
 async def async_discover_device(
-    hass: HomeAssistant, host: str
+    hass: HomeAssistant, host: str, timeout: int = DIRECTED_DISCOVERY_TIMEOUT
 ) -> FluxLEDDiscovery | None:
     """Direct discovery at a single ip instead of broadcast."""
     # If we are missing the unique_id we should be able to fetch it
     # from the device by doing a directed discovery at the host only
-    for device in await async_discover_devices(hass, DIRECTED_DISCOVERY_TIMEOUT, host):
+    for device in await async_discover_devices(hass, timeout, host):
         if device[ATTR_IPADDR] == host:
             return device
     return None
