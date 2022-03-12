@@ -90,7 +90,7 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
         # Sanity check energy values. SolarEdge API sometime reports "lifetimedata" of zero,
         # while the Year, Month and Day energy are still OK. Skip update if that is the case.
         if energy_keys in self.data:
-            energy_values = [self.data[x] for x in energy_keys]
+            energy_values = [self.data[v] for v in energy_keys]
             for index, value in enumerate(energy_values, start=1):
                 if index > len(energy_values):
                     break
