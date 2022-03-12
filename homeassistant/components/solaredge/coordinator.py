@@ -87,13 +87,12 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
                 data = value
             self.data[key] = data
 
-        # Sanity check energy values. SolarEdge API sometime reports "lifetimedata" of zero,
+        # Sanity check the energy values. SolarEdge API sometimes report "lifetimedata" of zero,
         # while the Year, Month and Day energy are still OK. Skip update if that is the case.
-        if energy_keys in self.data:
-            energy_values = [self.data[v] for v in energy_keys]
-            for index, value in enumerate(energy_values, start=1):
+        if set(energy_keys).issubset(self.data.keys()):
+            for index, key in enumerate(energy_keys, start=1):
                 # All coming values in list should be larger than the current value.
-                if any(v > value for v in energy_values[index:]):
+                if any(self.data[k] > self.data[key] for k in energy_keys[index:]):
                     raise UpdateFailed("Invalid energy values, skipping update")
 
         LOGGER.debug("Updated SolarEdge overview: %s", self.data)
