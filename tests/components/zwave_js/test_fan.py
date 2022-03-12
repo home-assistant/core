@@ -3,7 +3,6 @@ import math
 
 import pytest
 from voluptuous.error import MultipleInvalid
-from zwave_js_server.event import Event
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
@@ -12,10 +11,8 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
-    ATTR_SPEED,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PRESET_MODE,
-    SPEED_MEDIUM,
     SUPPORT_PRESET_MODE,
 )
 from homeassistant.components.zwave_js.fan import ATTR_FAN_STATE
