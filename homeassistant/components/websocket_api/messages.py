@@ -175,18 +175,16 @@ def compressed_state_dict_add(state: State) -> dict[str, Any]:
     Sends c (context) as a string if it only contains an id.
     """
     if state.context.parent_id is None and state.context.user_id is None:
-        context: dict[str, Any] | str = state.context.id  # type: ignore[unreachable]
+        context: dict[str, Any] | str = state.context.id
     else:
         context = state.context.as_dict()
     compressed_state: dict[str, Any] = {
         COMPRESSED_STATE_STATE: state.state,
         COMPRESSED_STATE_ATTRIBUTES: state.attributes,
         COMPRESSED_STATE_CONTEXT: context,
+        COMPRESSED_STATE_LAST_CHANGED: state.last_changed.timestamp(),
     }
-    if state.last_changed == state.last_updated:
-        compressed_state[COMPRESSED_STATE_LAST_CHANGED] = state.last_changed.timestamp()
-    else:
-        compressed_state[COMPRESSED_STATE_LAST_CHANGED] = state.last_changed.timestamp()
+    if state.last_changed != state.last_updated:
         compressed_state[COMPRESSED_STATE_LAST_UPDATED] = state.last_updated.timestamp()
     return compressed_state
 
