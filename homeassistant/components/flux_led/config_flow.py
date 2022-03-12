@@ -57,7 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, FluxLEDDiscovery] = {}
         self._discovered_device: FluxLEDDiscovery | None = None
-        self._discovery_source: str | None = None
+        self._allow_update_mac = False
 
     @staticmethod
     @callback
@@ -67,7 +67,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
-        self._discovery_source = self.context["source"]
         self._discovered_device = FluxLEDDiscovery(
             ipaddr=discovery_info.ip,
             model=None,
@@ -87,14 +86,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle integration discovery."""
-        self._discovery_source = self.context["source"]
+        self._allow_update_mac = True
         self._discovered_device = cast(FluxLEDDiscovery, discovery_info)
         return await self._async_handle_discovery()
 
     async def _async_set_discovered_mac(
         self, device: FluxLEDDiscovery, allow_update_mac: bool
     ) -> None:
-        """Set the discovered mac."""
+        """Set the discovered mac.
+
+        We only allow it to be updated if it comes from udp
+        discovery since the dhcp mac can be one digit off from
+        the udp discovery mac for devices with multiple network interfaces
+        """
         mac_address = device[ATTR_ID]
         assert mac_address is not None
         mac = dr.format_mac(mac_address)
@@ -117,10 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle any discovery."""
         device = self._discovered_device
         assert device is not None
-        await self._async_set_discovered_mac(
-            device,
-            self._discovery_source == config_entries.SOURCE_INTEGRATION_DISCOVERY,
-        )
+        await self._async_set_discovered_mac(device, self._allow_update_mac)
         host = device[ATTR_IPADDR]
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
