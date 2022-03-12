@@ -148,6 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.unique_id and discovery.get(ATTR_ID):
         mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
+        # TODO: allow this to be off by one for older devices, convert to int and subtract and if > 1 fail
         if mac != entry.unique_id:
             # The device is offline and another flux_led device is now using the ip address
             raise ConfigEntryNotReady(
