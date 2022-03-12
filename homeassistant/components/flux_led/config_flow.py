@@ -136,12 +136,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except FLUX_LED_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
             else:
-                # The mac address can be off by one on some of the older models
-                device_id = device[ATTR_ID]
-                assert device_id is not None
-                discovered_mac = dr.format_mac(device_id)
+                discovered_mac = device[ATTR_ID]
                 if device[ATTR_MODEL_DESCRIPTION] or (
-                    discovered_mac != mac and mac_matches_by_one(discovered_mac, mac)
+                    discovered_mac is not None
+                    and (formatted_discovered_mac := dr.format_mac(discovered_mac))
+                    and formatted_discovered_mac != mac
+                    and mac_matches_by_one(discovered_mac, mac)
                 ):
                     self._discovered_device = device
                     await self._async_set_discovered_mac(device, True)
