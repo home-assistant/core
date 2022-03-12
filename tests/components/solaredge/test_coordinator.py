@@ -67,7 +67,7 @@ def test_solaredgeoverviewdataservice_valid_all_zero_energy(mock_solaredge):
     data_service = SolarEdgeOverviewDataService(Mock(), mock_solaredge, SITE_ID)
 
     invalid_data = mock_overview_data
-    # Invalid energy values, lastYearData energy is lower than last month or day.
+    # All zero energy values should be valid.
     invalid_data["overview"]["lifeTimeData"]["energy"] = 0.0
     invalid_data["overview"]["lastYearData"]["energy"] = 0.0
     invalid_data["overview"]["lastMonthData"]["energy"] = 0.0
