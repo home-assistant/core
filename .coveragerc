@@ -960,6 +960,7 @@ omit =
     homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
+    homeassistant/components/rfxtrx/diagnostics.py
     homeassistant/components/ridwell/__init__.py
     homeassistant/components/ridwell/sensor.py
     homeassistant/components/ridwell/switch.py
