@@ -1,6 +1,7 @@
 """Support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
+import asyncio
 import os
 
 from aioskybell import Skybell
@@ -97,11 +98,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SkybellException as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 
-    device_coordinators: list[SkybellDataUpdateCoordinator] = []
-    for device in devices:
-        coordinator = SkybellDataUpdateCoordinator(hass, device)
-        await coordinator.async_config_entry_first_refresh()
-        device_coordinators.append(coordinator)
+    device_coordinators: list[SkybellDataUpdateCoordinator] = [
+        SkybellDataUpdateCoordinator(hass, device) for device in devices
+    ]
+    await asyncio.gather(
+        *[
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in device_coordinators
+        ]
+    )
     hass.data[DOMAIN][entry.entry_id] = device_coordinators
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -155,4 +160,4 @@ class SkybellEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return True if device is available."""
-        return super().available and self.coordinator.device.wifi_status != "offline"
+        return super().available
