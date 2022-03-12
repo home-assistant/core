@@ -77,14 +77,26 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
 
         self.data = {}
 
+        energy_keys = ["lifeTimeData", "lastYearData", "lastMonthData", "lastDayData"]
         for key, value in overview.items():
-            if key in ["lifeTimeData", "lastYearData", "lastMonthData", "lastDayData"]:
+            if key in energy_keys:
                 data = value["energy"]
             elif key in ["currentPower"]:
                 data = value["power"]
             else:
                 data = value
             self.data[key] = data
+
+        # Sanity check energy values. SolarEdge API sometime reports "lifetimedata" of zero,
+        # while the Year, Month and Day energy are still OK. Skip update if that is the case.
+        if energy_keys in self.data:
+            energy_values = [self.data[x] for x in energy_keys]
+            for index, value in enumerate(energy_values, start=1):
+                if index > len(energy_values):
+                    break
+                # All coming values in list should be larger than the current value.
+                if any(v > value for v in energy_values[index:]):
+                    raise UpdateFailed("Invalid energy values, skipping update")
 
         LOGGER.debug("Updated SolarEdge overview: %s", self.data)
 
