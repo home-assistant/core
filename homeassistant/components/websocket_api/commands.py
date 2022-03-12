@@ -271,6 +271,7 @@ def handle_get_states(
 @decorators.websocket_command(
     {
         vol.Required("type"): "subscribe_entities",
+        vol.Optional("entity_ids"): cv.entity_ids,
     }
 )
 def handle_subscribe_entities(
@@ -284,12 +285,16 @@ def handle_subscribe_entities(
     if "state_changed" not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
         raise Unauthorized
 
+    entity_ids = set(msg.get("entity_ids", []))
+
     @callback
     def forward_entity_changes(event: Event) -> None:
         """Forward entity state changed events to websocket."""
         if not connection.user.permissions.check_entity(
             event.data["entity_id"], POLICY_READ
         ):
+            return
+        if entity_ids and event.data["entity_id"] not in entity_ids:
             return
 
         connection.send_message(messages.cached_state_diff_message(msg["id"], event))
@@ -306,6 +311,7 @@ def handle_subscribe_entities(
         messages.ENTITY_EVENT_ADD: {
             state.entity_id: messages.compressed_state_dict_add(state)
             for state in states
+            if not entity_ids or state.entity_id in entity_ids
         }
     }
 
