@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboBaseEntity
+from .entity import SensiboDeviceBaseEntity
 
 
 @dataclass
@@ -62,7 +62,7 @@ async def async_setup_entry(
     )
 
 
-class SensiboSelect(SensiboBaseEntity, SelectEntity):
+class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
     """Representation of a Sensibo Select."""
 
     entity_description: SensiboSelectEntityDescription
