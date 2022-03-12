@@ -84,10 +84,7 @@ async def test_mutli_discovery(
             result["flow_id"], user_input={CONF_HOST: "192.168.1.33"}
         )
         await hass.async_block_till_done()
-        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == "Fireplace"
-        assert result2["data"] == {CONF_HOST: "192.168.1.33"}
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert result2["step_id"] == "local_config"
 
 
 async def test_form_cannot_connect(
