@@ -50,7 +50,6 @@ async def test_form(hass):
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "fallback": "NEXT_TIME_BLOCK",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
