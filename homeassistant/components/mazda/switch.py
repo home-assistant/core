@@ -30,6 +30,8 @@ async def async_setup_entry(
 class MazdaChargingSwitch(MazdaEntity, SwitchEntity):
     """Class for the charging switch."""
 
+    _attr_icon = "mdi:ev-station"
+
     def __init__(
         self,
         client: MazdaAPIClient,
@@ -41,33 +43,28 @@ class MazdaChargingSwitch(MazdaEntity, SwitchEntity):
 
         self._attr_name = f"{self.vehicle_name} Charging"
         self._attr_unique_id = self.vin
-        self._attr_icon = "mdi:ev-station"
 
     @property
     def is_on(self):
         """Return true if the vehicle is charging."""
         return self.data["evStatus"]["chargeInfo"]["charging"]
 
+    async def refresh_status_and_write_state(self):
+        """Request a status update, retrieve it through the coordinator, and write the state."""
+        await self.client.refresh_vehicle_status(self.vehicle_id)
+
+        await self.coordinator.async_request_refresh()
+
+        self.async_write_ha_state()
+
     async def async_turn_on(self, **kwargs):
         """Start charging the vehicle."""
         await self.client.start_charging(self.vehicle_id)
 
-        # Request that the vehicle provide a status update
-        await self.client.refresh_vehicle_status(self.vehicle_id)
-
-        # Retrieve the latest status update
-        await self.coordinator.async_request_refresh()
-
-        self.async_write_ha_state()
+        await self.refresh_status_and_write_state()
 
     async def async_turn_off(self, **kwargs):
         """Stop charging the vehicle."""
         await self.client.stop_charging(self.vehicle_id)
 
-        # Request that the vehicle provide a status update
-        await self.client.refresh_vehicle_status(self.vehicle_id)
-
-        # Retrieve the latest status update
-        await self.coordinator.async_request_refresh()
-
-        self.async_write_ha_state()
+        await self.refresh_status_and_write_state()

@@ -6,7 +6,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
@@ -24,6 +24,7 @@ async def test_switch_setup(hass):
     state = hass.states.get("switch.my_mazda3_charging")
     assert state
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Charging"
+    assert state.attributes.get(ATTR_ICON) == "mdi:ev-station"
 
     assert state.state == STATE_ON
 
