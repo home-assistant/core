@@ -1,10 +1,20 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Tutte le entit\u00e0",
+                    "entities": "Membri",
+                    "name": "Nome"
+                },
+                "description": "Se \"tutte le entit\u00e0\" \u00e8 abilitata, lo stato del gruppo \u00e8 attivo solo se tutti i membri sono attivi. Se \"tutte le entit\u00e0\" \u00e8 disabilitata, lo stato del gruppo \u00e8 attivo se un membro \u00e8 attivo.",
+                "title": "Nuovo gruppo"
+            },
             "cover": {
                 "data": {
-                    "entities": "Membri del gruppo",
-                    "name": "Nome del gruppo"
+                    "entities": "Membri",
+                    "name": "Nome",
+                    "title": "Nuovo gruppo"
                 },
                 "description": "Seleziona le opzioni di gruppo"
             },
@@ -16,8 +26,9 @@
             },
             "fan": {
                 "data": {
-                    "entities": "Membri del gruppo",
-                    "name": "Nome del gruppo"
+                    "entities": "Membri",
+                    "name": "Nome",
+                    "title": "Nuovo gruppo"
                 },
                 "description": "Seleziona le opzioni di gruppo"
             },
@@ -35,8 +46,9 @@
             },
             "light": {
                 "data": {
-                    "entities": "Membri del gruppo",
-                    "name": "Nome del gruppo"
+                    "entities": "Membri",
+                    "name": "Nome",
+                    "title": "Nuovo gruppo"
                 },
                 "description": "Seleziona le opzioni di gruppo"
             },
@@ -48,8 +60,9 @@
             },
             "media_player": {
                 "data": {
-                    "entities": "Membri del gruppo",
-                    "name": "Nome del gruppo"
+                    "entities": "Membri",
+                    "name": "Nome",
+                    "title": "Nuovo gruppo"
                 },
                 "description": "Seleziona le opzioni di gruppo"
             },
@@ -58,6 +71,42 @@
                     "entities": "Membri del gruppo"
                 },
                 "description": "Seleziona le opzioni di gruppo"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Tipo di gruppo"
+                },
+                "title": "Nuovo gruppo"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "Tutte le entit\u00e0",
+                    "entities": "Membri"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Membri"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Membri"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Membri"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Membri"
+                }
             }
         }
     },
