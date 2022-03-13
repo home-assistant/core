@@ -812,7 +812,7 @@ home-assistant-frontend==20220312.0
 # homeassistant-pyozw==0.1.10
 
 # homeassistant.components.home_connect
-homeconnect==0.6.3
+homeconnect==0.7.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.2
@@ -1214,7 +1214,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.16.6
+plugwise==0.16.8
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1549,7 +1549,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.1
+pyisy==3.0.5
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2148,7 +2148,7 @@ skybellpy==0.6.3
 slackclient==2.5.0
 
 # homeassistant.components.xmpp
-slixmpp==1.7.1
+slixmpp==1.8.0.1
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
@@ -2417,7 +2417,7 @@ wirelesstagpy==0.8.1
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.13.0
+wled==0.13.1
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11

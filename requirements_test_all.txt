@@ -562,7 +562,7 @@ home-assistant-frontend==20220312.0
 # homeassistant-pyozw==0.1.10
 
 # homeassistant.components.home_connect
-homeconnect==0.6.3
+homeconnect==0.7.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.2
@@ -799,7 +799,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.16.6
+plugwise==0.16.8
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1014,7 +1014,7 @@ pyiqvia==2021.11.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.1
+pyisy==3.0.5
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1543,7 +1543,7 @@ wiffi==1.1.0
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.13.0
+wled==0.13.1
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
