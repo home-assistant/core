@@ -1,9 +1,11 @@
 """Adds config flow for maxcube."""
+from maxcube.cube import MaxCube
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.dt import now
 
 from . import DOMAIN
 
@@ -22,7 +24,16 @@ class MaxCubeFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if user_input is not None:
-            return self.async_create_entry(title="eQ3 MAX!", data=user_input)
+            host = user_input.get(CONF_HOST)
+            port = user_input.get(CONF_PORT, 62910)
+
+            try:
+                cube = MaxCube(host, port, now=now)
+                cube.disconnect()
+            except Exception:  # pylint: disable=broad-except
+                return self.async_abort(reason="connection_error")
+
+            return self.async_create_entry(title=f"Cube@{host}:{port}", data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -39,7 +50,10 @@ class MaxCubeFlowHandler(config_entries.ConfigFlow):
     async def async_step_import(self, import_config) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         self._async_abort_entries_match(
-            {CONF_HOST: import_config[CONF_HOST], CONF_PORT: import_config[CONF_PORT]}
+            {
+                CONF_HOST: import_config.get(CONF_HOST),
+                CONF_PORT: import_config.get(CONF_PORT),
+            }
         )
 
         return await self.async_step_user(user_input=import_config)

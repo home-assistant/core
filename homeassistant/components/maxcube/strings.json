@@ -11,5 +11,8 @@
                 }
             }
         }
+    },
+    "abort": {
+        "connection_error": "Error connecting to MaxCube"
     }
 }
