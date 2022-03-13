@@ -171,6 +171,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             pure_conf = dev["pureBoostConfig"]
             pure_sensitivity = pure_conf.get("sensitivity") if pure_conf else None
             pure_boost_enabled = pure_conf.get("enabled") if pure_conf else None
+            pm25 = dev["measurements"].get("pm25")
 
             device_data[unique_id] = {
                 "id": unique_id,
@@ -207,6 +208,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "motion_sensors": motion_sensors,
                 "pure_sensitivity": pure_sensitivity,
                 "pure_boost_enabled": pure_boost_enabled,
+                "pm25": pm25,
             }
 
         return SensiboData(raw=data, parsed=device_data)
