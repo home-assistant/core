@@ -16,13 +16,11 @@ ATTR_TRADFRI_GATEWAY_MODEL = "E1526"
 ATTR_TRADFRI_MANUFACTURER = "IKEA of Sweden"
 ATTR_TRANSITION_TIME = "transition_time"
 ATTR_MODEL = "model"
-CONF_ALLOW_TRADFRI_GROUPS = "allow_tradfri_groups"
 CONF_IDENTITY = "identity"
 CONF_IMPORT_GROUPS = "import_groups"
 CONF_GATEWAY_ID = "gateway_id"
 CONF_KEY = "key"
 
-DEFAULT_ALLOW_TRADFRI_GROUPS = False
 DOMAIN = "tradfri"
 KEY_API = "tradfri_api"
 DEVICES = "tradfri_devices"

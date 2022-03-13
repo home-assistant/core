@@ -9,7 +9,6 @@ from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 from pytradfri.command import Command
 from pytradfri.device import Device
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
@@ -27,13 +26,11 @@ from .const import (
     ATTR_TRADFRI_GATEWAY,
     ATTR_TRADFRI_GATEWAY_MODEL,
     ATTR_TRADFRI_MANUFACTURER,
-    CONF_ALLOW_TRADFRI_GROUPS,
     CONF_GATEWAY_ID,
     CONF_IDENTITY,
     CONF_KEY,
     COORDINATOR,
     COORDINATOR_LIST,
-    DEFAULT_ALLOW_TRADFRI_GROUPS,
     DOMAIN,
     KEY_API,
     PLATFORMS,
@@ -47,25 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 FACTORY = "tradfri_factory"
 LISTENERS = "tradfri_listeners"
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            vol.All(
-                cv.removed(CONF_HOST),
-                cv.removed(
-                    CONF_ALLOW_TRADFRI_GROUPS,
-                ),
-                {
-                    vol.Optional(CONF_HOST): cv.string,
-                    vol.Optional(
-                        CONF_ALLOW_TRADFRI_GROUPS, default=DEFAULT_ALLOW_TRADFRI_GROUPS
-                    ): cv.boolean,
-                },
-            ),
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(
