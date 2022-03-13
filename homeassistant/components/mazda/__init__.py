@@ -53,9 +53,7 @@ async def with_timeout(task, timeout_seconds=10):
         return await task
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Mazda Connected Services from a config entry."""
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
@@ -223,17 +221,12 @@ async def async_setup_entry(  # noqa: C901
 
     # Register services
     for service in SERVICES:
-        if service == "send_poi":
-            hass.services.async_register(
-                DOMAIN,
-                service,
-                async_handle_service_call,
-                schema=service_schema_send_poi,
-            )
-        else:
-            hass.services.async_register(
-                DOMAIN, service, async_handle_service_call, schema=service_schema
-            )
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            async_handle_service_call,
+            schema=service_schema_send_poi if service == "send_poi" else service_schema,
+        )
 
     return True
 
