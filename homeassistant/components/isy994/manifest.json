@@ -2,7 +2,7 @@
   "domain": "isy994",
   "name": "Universal Devices ISY994",
   "documentation": "https://www.home-assistant.io/integrations/isy994",
-  "requirements": ["pyisy==3.0.4"],
+  "requirements": ["pyisy==3.0.5"],
   "codeowners": ["@bdraco", "@shbatm"],
   "config_flow": true,
   "ssdp": [
