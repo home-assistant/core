@@ -10,9 +10,9 @@
                     "scan_interval": "Scan interval (seconds)"
                 }
             }
+        },
+        "abort": {
+            "connection_error": "Error connecting to MaxCube"
         }
-    },
-    "abort": {
-        "connection_error": "Error connecting to MaxCube"
     }
 }
