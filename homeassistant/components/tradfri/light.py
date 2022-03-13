@@ -48,15 +48,13 @@ async def async_setup_entry(
     api = coordinator_data[KEY_API]
 
     async_add_entities(
-        [
-            TradfriLight(
-                device_coordinator,
-                api,
-                gateway_id,
-            )
-            for device_coordinator in coordinator_data[COORDINATOR_LIST]
-            if device_coordinator.device.has_light_control
-        ]
+        TradfriLight(
+            device_coordinator,
+            api,
+            gateway_id,
+        )
+        for device_coordinator in coordinator_data[COORDINATOR_LIST]
+        if device_coordinator.device.has_light_control
     )
 
 
