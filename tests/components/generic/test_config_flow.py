@@ -36,7 +36,6 @@ TESTDATA = {
     CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
     CONF_USERNAME: "fred_flintstone",
     CONF_PASSWORD: "bambam",
-    CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
     CONF_FRAMERATE: 5,
     CONF_VERIFY_SSL: False,
 }
@@ -175,7 +174,6 @@ async def test_form_still_and_stream_not_provided(hass, user_flow):
         user_flow["flow_id"],
         {
             CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-            CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
             CONF_FRAMERATE: 5,
             CONF_VERIFY_SSL: False,
         },

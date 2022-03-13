@@ -6,6 +6,7 @@ from errno import EHOSTUNREACH, EIO
 from functools import partial
 import imghdr
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from async_timeout import timeout
@@ -56,7 +57,10 @@ DEFAULT_DATA = {
 SUPPORTED_IMAGE_TYPES = ["png", "jpeg", "svg+xml"]
 
 
-def build_schema(user_input):
+def build_schema(
+    user_input: dict[str, Any] | MappingProxyType[str, Any],
+    is_options_flow: bool = False,
+):
     """Create schema for camera config setup."""
     spec = {
         vol.Optional(
@@ -82,10 +86,6 @@ def build_schema(user_input):
             description={"suggested_value": user_input.get(CONF_PASSWORD, "")},
         ): str,
         vol.Required(
-            CONF_LIMIT_REFETCH_TO_URL_CHANGE,
-            default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False),
-        ): bool,
-        vol.Required(
             CONF_FRAMERATE,
             description={"suggested_value": user_input.get(CONF_FRAMERATE, 2)},
         ): int,
@@ -93,6 +93,14 @@ def build_schema(user_input):
             CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
         ): bool,
     }
+    if is_options_flow:
+        spec = {
+            **spec,
+            vol.Required(
+                CONF_LIMIT_REFETCH_TO_URL_CHANGE,
+                default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False),
+            ): bool,
+        }
     return vol.Schema(spec)
 
 
@@ -239,6 +247,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
+                    user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
                     await self.async_set_unique_id(self.flow_id)
                     return self.async_create_entry(
                         title=name, data={}, options=user_input
@@ -262,7 +271,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         still_url = import_config.get(CONF_STILL_IMAGE_URL)
         stream_url = import_config.get(CONF_STREAM_SOURCE)
         name = import_config.get(CONF_NAME, still_url or stream_url or DEFAULT_NAME)
-
+        if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
+            import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
         if not errors:
             import_config[CONF_CONTENT_TYPE] = still_format
             await self.async_set_unique_id(self.flow_id)
@@ -312,6 +322,6 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 )
         return self.async_show_form(
             step_id="init",
-            data_schema=build_schema(user_input or self.config_entry.options),
+            data_schema=build_schema(user_input or self.config_entry.options, True),
             errors=errors,
         )
