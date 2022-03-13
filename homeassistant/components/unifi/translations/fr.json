@@ -6,7 +6,7 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "faulty_credentials": "Authentification invalide",
+            "faulty_credentials": "Authentification non valide",
             "service_unavailable": "\u00c9chec de connexion",
             "unknown_client_mac": "Aucun client disponible sur cette adresse MAC"
         },
