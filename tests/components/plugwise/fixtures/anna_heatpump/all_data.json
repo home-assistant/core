@@ -16,9 +16,6 @@
       "model": "Generic heater",
       "name": "OpenTherm",
       "vendor": "Techneco",
-      "lower_bound": -10,
-      "upper_bound": 40,
-      "resolution": 1,
       "compressor_state": true,
       "binary_sensors": {
         "dhw_state": false,
@@ -37,8 +34,7 @@
       },
       "switches": {
         "dhw_cm_switch": false
-      },
-      "cooling_active": false
+      }
     },
     "015ae9ea3f964e668e490fa39da3870b": {
       "class": "gateway",
@@ -65,8 +61,8 @@
       "model": "Anna",
       "name": "Anna",
       "vendor": "Plugwise",
-      "lower_bound": 4,
-      "upper_bound": 30,
+      "lower_bound": 4.0,
+      "upper_bound": 30.0,
       "resolution": 0.1,
       "preset_modes": [
         "no_frost",
@@ -107,10 +103,10 @@
       "mode": "heat",
       "sensors": {
         "temperature": 19.3,
-        "setpoint": 21,
+        "setpoint": 21.0,
         "illuminance": 86.0,
         "cooling_activation_outdoor_temperature": 21.0,
-        "cooling_deactivation_threshold": 4
+        "cooling_deactivation_threshold": 4.0
       }
     }
   }
