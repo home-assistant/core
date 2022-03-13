@@ -556,7 +556,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220301.1
+home-assistant-frontend==20220312.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -1215,7 +1215,7 @@ python-forecastio==1.4.0
 python-izone==1.2.3
 
 # homeassistant.components.juicenet
-python-juicenet==1.0.2
+python-juicenet==1.1.0
 
 # homeassistant.components.tplink
 python-kasa==0.4.1
