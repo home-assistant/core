@@ -9,7 +9,7 @@
 -r requirements_test_pre_commit.txt
 codecov==2.1.12
 coverage==6.3.2
-freezegun==1.1.0
+freezegun==1.2.0
 mock-open==1.4.0
 mypy==0.940
 pre-commit==2.17.0
