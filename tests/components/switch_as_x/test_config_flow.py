@@ -8,7 +8,6 @@ from homeassistant.components.switch_as_x.const import CONF_TARGET_DOMAIN, DOMAI
 from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
-from homeassistant.helpers import entity_registry as er
 
 
 @pytest.mark.parametrize("target_domain", (Platform.LIGHT,))
@@ -48,20 +47,6 @@ async def test_config_flow(
         CONF_ENTITY_ID: "switch.ceiling",
         CONF_TARGET_DOMAIN: target_domain,
     }
-
-    # Check the wrapped switch has a state and is added to the registry
-    state = hass.states.get(f"{target_domain}.ceiling")
-    assert state
-    assert state.state == "unavailable"
-
-    # Name copied from config entry title
-    assert state.name == "ceiling"
-
-    # Check the light is added to the entity registry
-    registry = er.async_get(hass)
-    entity_entry = registry.async_get(f"{target_domain}.ceiling")
-    assert entity_entry
-    assert entity_entry.unique_id == config_entry.entry_id
 
 
 @pytest.mark.parametrize("target_domain", (Platform.LIGHT,))
