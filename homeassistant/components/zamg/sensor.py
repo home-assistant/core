@@ -264,8 +264,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ZAMG sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    if coordinator.config_entry is None:
-        coordinator.config_entry = entry
 
     async_add_entities(
         ZamgSensor(coordinator, entry.title, description)
@@ -310,12 +308,11 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_STATION: self.coordinator.data.get("station_name"),
-            CONF_STATION_ID: self.coordinator.config_entry.unique_id,
+            CONF_STATION_ID: self.coordinator.data.get(CONF_STATION_ID),
             ATTR_UPDATED: update_time.isoformat(),
         }
 
 
-@dataclass
 class ZamgData:
     """The class for handling the data retrieval."""
 
@@ -387,20 +384,27 @@ def _get_ogd_stations():
 
 
 def _get_zamg_stations():
-    """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config."""
+    """Return {CONF_STATION: (lat, lon, name)} for all stations, for auto-config."""
     capital_stations = _get_ogd_stations()
     req = requests.get(
         "https://www.zamg.ac.at/cms/en/documents/climate/"
         "doc_metnetwork/zamg-observation-points",
         timeout=15,
     )
+
+    def to_float(val: str):
+        try:
+            return float(val.replace(",", "."))
+        except ValueError:
+            return val
+
     stations = {}
     for row in csv.DictReader(req.text.splitlines(), delimiter=";", quotechar='"'):
         if row.get("synnr") in capital_stations:
             try:
                 stations[row["synnr"]] = tuple(
-                    float(row[coord].replace(",", "."))
-                    for coord in ("breite_dezi", "länge_dezi")
+                    to_float(row[coord])
+                    for coord in ("breite_dezi", "länge_dezi", "name")
                 )
             except KeyError:
                 _LOGGER.error("ZAMG schema changed again, cannot autodetect station")
@@ -408,7 +412,7 @@ def _get_zamg_stations():
 
 
 def zamg_stations(cache_dir):
-    """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config.
+    """Return {CONF_STATION: (lat, lon, name)} for all stations, for auto-config.
 
     Results from internet requests are cached as compressed json, making
     subsequent calls very much faster.
@@ -431,7 +435,7 @@ def closest_station(lat, lon, cache_dir):
 
     def comparable_dist(zamg_id):
         """Calculate the pseudo-distance from lat/lon."""
-        station_lat, station_lon = stations[zamg_id]
+        station_lat, station_lon, _ = stations[zamg_id]
         return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
 
     return min(stations, key=comparable_dist)

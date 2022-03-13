@@ -17,6 +17,7 @@ from .conftest import TEST_STATION_ID, TEST_STATION_NAME
 async def test_full_user_flow_implementation(
     hass: HomeAssistant,
     mock_closest_station: MagicMock,
+    mock_zamg_stations: MagicMock,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -29,7 +30,14 @@ async def test_full_user_flow_implementation(
     assert result.get("type") == RESULT_TYPE_FORM
     assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_STATION_ID: TEST_STATION_ID}
+        result["flow_id"],
+        user_input=None,
+    )
+    # assert result.get("data_schema") == "test"
+    assert result.get("type") == RESULT_TYPE_FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
     )
     assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
     assert "data" in result
@@ -41,6 +49,7 @@ async def test_full_user_flow_implementation(
 async def test_full_import_flow_implementation(
     hass: HomeAssistant,
     mock_closest_station: MagicMock,
+    mock_zamg_stations: MagicMock,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -57,6 +66,8 @@ async def test_full_import_flow_implementation(
 async def test_user_flow_not_found(
     hass: HomeAssistant,
     mock_closest_station: MagicMock,
+    mock_zamg_stations: MagicMock,
+    mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
     """Test the full manual user flow from start to finish."""
@@ -72,15 +83,16 @@ async def test_user_flow_not_found(
         side_effect=ValueError(TEST_STATION_ID),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_STATION_ID: ""}
+            result["flow_id"], user_input={CONF_STATION_ID: int(TEST_STATION_ID)}
         )
         assert result.get("type") == RESULT_TYPE_ABORT
-        assert result.get("reason") == "unknown"
+        assert result.get("reason") == "cannot_connect"
 
 
 async def test_import_flow_not_found(
     hass: HomeAssistant,
     mock_closest_station: MagicMock,
+    mock_zamg_stations: MagicMock,
     mock_setup_entry: None,
 ) -> None:
     """Test the full manual user flow from start to finish."""
@@ -100,6 +112,7 @@ async def test_import_flow_not_found(
 async def test_user_flow_duplicate(
     hass: HomeAssistant,
     mock_closest_station: MagicMock,
+    mock_zamg_stations: MagicMock,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -108,11 +121,13 @@ async def test_user_flow_duplicate(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
+
     assert result.get("step_id") == "user"
     assert result.get("type") == RESULT_TYPE_FORM
     assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_STATION_ID: TEST_STATION_ID}
+        result["flow_id"],
+        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
     )
     assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
     assert "data" in result
@@ -127,7 +142,8 @@ async def test_user_flow_duplicate(
     assert result.get("step_id") == "user"
     assert result.get("type") == RESULT_TYPE_FORM
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_STATION_ID: TEST_STATION_ID}
+        result["flow_id"],
+        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
     )
     assert result.get("type") == RESULT_TYPE_ABORT
     assert result.get("reason") == "already_configured"

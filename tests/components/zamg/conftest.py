@@ -67,6 +67,19 @@ def mock_zamg(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None
 
 
 @pytest.fixture
+def mock_zamg_stations(
+    request: pytest.FixtureRequest,
+) -> Generator[None, MagicMock, None]:
+    """Return a mocked Zamg client."""
+    with patch("homeassistant.components.zamg.sensor.zamg_stations") as zamg_mock:
+        zamg_mock.return_value = {
+            "11240": (46.99305556, 15.43916667, "GRAZ-FLUGHAFEN"),
+            "11244": (46.87222222, 15.90361111, "BAD GLEICHENBERG"),
+        }
+        yield zamg_mock
+
+
+@pytest.fixture
 def mock_closest_station(
     request: pytest.FixtureRequest,
 ) -> Generator[None, MagicMock, None]:
