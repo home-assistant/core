@@ -15,6 +15,7 @@ import time
 from typing import Any, TypeVar
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
@@ -53,7 +54,6 @@ from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
-from homeassistant.util.executor import InterruptibleThreadPoolExecutor
 
 from . import history, migration, purge, statistics, websocket_api
 from .const import (
@@ -63,6 +63,7 @@ from .const import (
     MAX_QUEUE_BACKLOG,
     SQLITE_URL_PREFIX,
 )
+from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
     Base,
     Events,
@@ -526,7 +527,7 @@ class Recorder(threading.Thread):
         self.async_db_ready: asyncio.Future = asyncio.Future()
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
-        self.engine: Any = None
+        self.engine: Engine | None = None
         self.run_info: Any = None
 
         self.entity_filter = entity_filter
@@ -546,7 +547,8 @@ class Recorder(threading.Thread):
         self._queue_watcher = None
         self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
-        self._db_executor: InterruptibleThreadPoolExecutor | None = None
+        self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
+        self._db_executor_shutdown = None
 
         self.enabled = True
 
@@ -557,12 +559,24 @@ class Recorder(threading.Thread):
     @callback
     def async_start_executor(self):
         """Start the executor."""
-        self._db_executor = InterruptibleThreadPoolExecutor(
-            thread_name_prefix="DbWorker", max_workers=MAX_DB_EXECUTOR_WORKERS
+        if self._db_executor:
+            self._db_executor_shutdown()
+            self._db_executor.shutdown()
+        self._db_executor = DBInterruptibleThreadPoolExecutor(
+            thread_name_prefix="DbWorker",
+            max_workers=MAX_DB_EXECUTOR_WORKERS,
+            shutdown=self._shutdown_pool,
         )
-        self.hass.bus.async_listen_once(
+        self._db_executor_shutdown = self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_CLOSE, self._async_stop_executor
         )
+
+    def _shutdown_pool(self):
+        """Close the pool connection in the current thread."""
+        assert self.engine is not None
+        pool = self.engine.pool
+        if hasattr(pool, "shutdown"):
+            pool.shutdown()
 
     @callback
     def async_initialize(self):
@@ -713,6 +727,7 @@ class Recorder(threading.Thread):
     def async_connection_success(self):
         """Connect success tasks."""
         self.async_db_ready.set_result(True)
+        self.async_start_executor()
 
     @callback
     def _async_recorder_ready(self):
