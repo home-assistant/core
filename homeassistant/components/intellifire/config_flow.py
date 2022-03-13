@@ -41,6 +41,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._config_context = {}
         self._discovered_hosts: list[str] = []
         self._not_configured_hosts: list[str] = []
+        print("CLAZZ")
+        print(self.__class__)
+        print(self._not_configured_hosts.__class__)
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""

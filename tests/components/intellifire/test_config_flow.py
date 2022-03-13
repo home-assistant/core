@@ -8,6 +8,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
+from tests.common import MockConfigEntry
+
 
 async def test_no_discovery(
     hass: HomeAssistant,
@@ -166,3 +168,31 @@ async def test_form_cannot_connect_manual_entry(
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_picker_already_discovered(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_intellifire_config_flow: MagicMock,
+) -> None:
+    """Test single firedplace UDP discovery."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "192.168.1.3",
+        },
+        title="Fireplace",
+        unique_id=1234,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
+        return_value=["192.168.1.3"],
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["step_id"] == "manual_device_entry"
+        assert result["errors"] == {"base": "already_discovered"}
