@@ -198,7 +198,6 @@ omit =
     homeassistant/components/decora_wifi/__init__.py
     homeassistant/components/decora_wifi/common.py
     homeassistant/components/decora_wifi/const.py
-    homeassistant/components/decora_wifi/fan.py
     homeassistant/components/decora_wifi/light.py
     homeassistant/components/delijn/*
     homeassistant/components/deluge/sensor.py
