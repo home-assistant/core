@@ -36,7 +36,7 @@ async def test_no_discovery(
         )
         await hass.async_block_till_done()
         assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == "Fireplace"
+        assert result2["title"] == "Fireplace 12345"
         assert result2["data"] == {CONF_HOST: "1.1.1.1"}
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -63,7 +63,7 @@ async def test_single_discovery(
         print("Result:", result)
 
         assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == "Fireplace"
+        assert result2["title"] == "Fireplace 12345"
         assert result2["data"] == {CONF_HOST: "192.168.1.69"}
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -183,16 +183,25 @@ async def test_picker_already_discovered(
             "host": "192.168.1.3",
         },
         title="Fireplace",
-        unique_id=1234,
+        unique_id=44444,
     )
     entry.add_to_hass(hass)
     with patch(
         "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.3"],
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["step_id"] == "manual_device_entry"
-        assert result["errors"] == {"base": "already_discovered"}
+        await hass.async_block_till_done()
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.4",
+        },
+    )
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "Fireplace 12345"
+    assert result2["data"] == {CONF_HOST: "192.168.1.4"}
+    assert len(mock_setup_entry.mock_calls) == 2
