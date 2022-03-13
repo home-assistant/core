@@ -723,7 +723,7 @@ google-api-python-client==2.38.0
 google-cloud-pubsub==2.11.0
 
 # homeassistant.components.google_cloud
-google-cloud-texttospeech==2.10.0
+google-cloud-texttospeech==2.11.0
 
 # homeassistant.components.nest
 google-nest-sdm==1.8.0
@@ -813,7 +813,7 @@ home-assistant-frontend==20220312.0
 # homeassistant-pyozw==0.1.10
 
 # homeassistant.components.home_connect
-homeconnect==0.6.3
+homeconnect==0.7.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.2
@@ -1215,7 +1215,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.16.6
+plugwise==0.16.8
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2122,7 +2122,7 @@ sendgrid==6.8.2
 sense_energy==0.10.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.6
+sentry-sdk==1.5.7
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2152,7 +2152,7 @@ skybellpy==0.6.3
 slackclient==2.5.0
 
 # homeassistant.components.xmpp
-slixmpp==1.7.1
+slixmpp==1.8.0.1
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
@@ -2421,7 +2421,7 @@ wirelesstagpy==0.8.1
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.13.0
+wled==0.13.1
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
