@@ -5,7 +5,12 @@ from collections.abc import Callable
 from contextlib import suppress
 from functools import partial
 import logging
+from typing import cast
 from urllib.parse import quote_plus, unquote
+
+from soco.data_structures import DidlFavorite, DidlObject
+from soco.ms_data_structures import MusicServiceItem
+from soco.music_library import MusicLibrary
 
 from homeassistant.components import media_source, plex, spotify
 from homeassistant.components.media_player import BrowseMedia
@@ -50,12 +55,12 @@ def get_thumbnail_url_full(
 ) -> str | None:
     """Get thumbnail URL."""
     if is_internal:
-        item = get_media(  # type: ignore[no-untyped-call]
+        item = get_media(
             media.library,
             media_content_id,
             media_content_type,
         )
-        return getattr(item, "album_art_uri", None)  # type: ignore[no-any-return]
+        return getattr(item, "album_art_uri", None)
 
     return get_browse_image_url(
         media_content_type,
@@ -64,19 +69,19 @@ def get_thumbnail_url_full(
     )
 
 
-def media_source_filter(item: BrowseMedia):
+def media_source_filter(item: BrowseMedia) -> bool:
     """Filter media sources."""
     return item.media_content_type.startswith("audio/")
 
 
 async def async_browse_media(
-    hass,
+    hass: HomeAssistant,
     speaker: SonosSpeaker,
     media: SonosMedia,
     get_browse_image_url: GetBrowseImageUrlType,
     media_content_id: str | None,
     media_content_type: str | None,
-):
+) -> BrowseMedia:
     """Browse media."""
 
     if media_content_id is None:
@@ -100,7 +105,7 @@ async def async_browse_media(
     if media_content_type == "plex":
         return await plex.async_browse_media(hass, None, None, platform=DOMAIN)
 
-    if spotify.is_spotify_media_type(media_content_type):
+    if media_content_type and spotify.is_spotify_media_type(media_content_type):
         return await spotify.async_browse_media(
             hass, media_content_type, media_content_id, can_play_artist=False
         )
@@ -150,7 +155,9 @@ async def async_browse_media(
     return response
 
 
-def build_item_response(media_library, payload, get_thumbnail_url=None):
+def build_item_response(
+    media_library: MusicLibrary, payload: dict[str, str], get_thumbnail_url=None
+) -> BrowseMedia | None:
     """Create response payload for the provided media query."""
     if payload["search_type"] == MEDIA_TYPE_ALBUM and payload["idstring"].startswith(
         ("A:GENRE", "A:COMPOSER")
@@ -166,7 +173,7 @@ def build_item_response(media_library, payload, get_thumbnail_url=None):
             "Unknown media type received when building item response: %s",
             payload["search_type"],
         )
-        return
+        return None
 
     media = media_library.browse_by_idstring(
         search_type,
@@ -176,7 +183,7 @@ def build_item_response(media_library, payload, get_thumbnail_url=None):
     )
 
     if media is None:
-        return
+        return None
 
     thumbnail = None
     title = None
@@ -222,7 +229,7 @@ def build_item_response(media_library, payload, get_thumbnail_url=None):
     )
 
 
-def item_payload(item, get_thumbnail_url=None):
+def item_payload(item: DidlObject, get_thumbnail_url=None) -> BrowseMedia:
     """
     Create response payload for a single media item.
 
@@ -256,7 +263,7 @@ async def root_payload(
     speaker: SonosSpeaker,
     media: SonosMedia,
     get_browse_image_url: GetBrowseImageUrlType,
-):
+) -> BrowseMedia:
     """Return root payload for Sonos."""
     children = []
 
@@ -303,14 +310,15 @@ async def root_payload(
 
     if "spotify" in hass.config.components:
         result = await spotify.async_browse_media(hass, None, None)
-        children.extend(result.children)
+        if result.children:
+            children.extend(result.children)
 
     try:
         item = await media_source.async_browse_media(
             hass, None, content_filter=media_source_filter
         )
         # If domain is None, it's overview of available sources
-        if item.domain is None:
+        if item.domain is None and item.children is not None:
             children.extend(item.children)
         else:
             children.append(item)
@@ -338,7 +346,7 @@ async def root_payload(
     )
 
 
-def library_payload(media_library, get_thumbnail_url=None):
+def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> BrowseMedia:
     """
     Create response payload to describe contents of a specific library.
 
@@ -360,7 +368,7 @@ def library_payload(media_library, get_thumbnail_url=None):
     )
 
 
-def favorites_payload(favorites):
+def favorites_payload(favorites: list[DidlFavorite]) -> BrowseMedia:
     """
     Create response payload to describe contents of a specific library.
 
@@ -398,7 +406,9 @@ def favorites_payload(favorites):
     )
 
 
-def favorites_folder_payload(favorites, media_content_id):
+def favorites_folder_payload(
+    favorites: list[DidlFavorite], media_content_id: str
+) -> BrowseMedia:
     """Create response payload to describe all items of a type of favorite.
 
     Used by async_browse_media.
@@ -432,7 +442,7 @@ def favorites_folder_payload(favorites, media_content_id):
     )
 
 
-def get_media_type(item):
+def get_media_type(item: DidlObject) -> str:
     """Extract media type of item."""
     if item.item_class == "object.item.audioItem.musicTrack":
         return SONOS_TRACKS
@@ -450,7 +460,7 @@ def get_media_type(item):
     return SONOS_TYPES_MAPPING.get(item.item_id.split("/")[0], item.item_class)
 
 
-def can_play(item):
+def can_play(item: DidlObject) -> bool:
     """
     Test if playable.
 
@@ -459,7 +469,7 @@ def can_play(item):
     return SONOS_TO_MEDIA_TYPES.get(item) in PLAYABLE_MEDIA_TYPES
 
 
-def can_expand(item):
+def can_expand(item: DidlObject) -> bool:
     """
     Test if expandable.
 
@@ -474,14 +484,16 @@ def can_expand(item):
     return SONOS_TYPES_MAPPING.get(item.item_id) in EXPANDABLE_MEDIA_TYPES
 
 
-def get_content_id(item):
+def get_content_id(item: DidlObject) -> str:
     """Extract content id or uri."""
     if item.item_class == "object.item.audioItem.musicTrack":
-        return item.get_uri()
-    return item.item_id
+        return cast(str, item.get_uri())
+    return cast(str, item.item_id)
 
 
-def get_media(media_library, item_id, search_type):
+def get_media(
+    media_library: MusicLibrary, item_id: str, search_type: str
+) -> MusicServiceItem:
     """Fetch media/album."""
     search_type = MEDIA_TYPES_TO_SONOS.get(search_type, search_type)
 

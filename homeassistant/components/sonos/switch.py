@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Any
+from typing import Any, cast
 
+from soco.alarms import Alarm
 from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
@@ -178,14 +179,14 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         if self.needs_coordinator and not self.speaker.is_coordinator:
-            return getattr(self.speaker.coordinator, self.feature_type)
-        return getattr(self.speaker, self.feature_type)
+            return cast(bool, getattr(self.speaker.coordinator, self.feature_type))
+        return cast(bool, getattr(self.speaker, self.feature_type))
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.send_command(True)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.send_command(False)
 
@@ -207,6 +208,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:alarm"
+    speaker: SonosSpeaker
 
     def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
@@ -228,7 +230,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         )
 
     @property
-    def alarm(self):
+    def alarm(self) -> Alarm:
         """Return the alarm instance."""
         return self.hass.data[DATA_SONOS].alarms[self.household_id].get(self.alarm_id)
 
@@ -246,7 +248,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         await self.hass.data[DATA_SONOS].alarms[self.household_id].async_poll()
 
     @callback
-    def async_check_if_available(self):
+    def async_check_if_available(self) -> bool:
         """Check if alarm exists and remove alarm entity if not available."""
         if self.alarm:
             return True
@@ -278,7 +280,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @callback
-    def _async_update_device(self):
+    def _async_update_device(self) -> None:
         """Update the device, since this alarm moved to a different player."""
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
@@ -287,22 +289,20 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         if entity is None:
             raise RuntimeError("Alarm has been deleted by accident.")
 
-        entry_id = entity.config_entry_id
-
         new_device = device_registry.async_get_or_create(
-            config_entry_id=entry_id,
+            config_entry_id=cast(str, entity.config_entry_id),
             identifiers={(SONOS_DOMAIN, self.soco.uid)},
             connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
         )
-        if not entity_registry.async_get(self.entity_id).device_id == new_device.id:
+        if (
+            device := entity_registry.async_get(self.entity_id)
+        ) and device.device_id != new_device.id:
             _LOGGER.debug("%s is moving to %s", self.entity_id, new_device.name)
-            # pylint: disable=protected-access
-            entity_registry._async_update_entity(
-                self.entity_id, device_id=new_device.id
-            )
+            entity_registry.async_update_entity(self.entity_id, device_id=new_device.id)
 
     @property
-    def _is_today(self):
+    def _is_today(self) -> bool:
+        """Return whether this alarm is scheduled for today."""
         recurrence = self.alarm.recurrence
         timestr = int(datetime.datetime.today().strftime("%w"))
         return (
@@ -320,12 +320,12 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         return (self.alarm is not None) and self.speaker.available
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return state of Sonos alarm switch."""
         return self.alarm.enabled
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str | bool | float]:
         """Return attributes of Sonos alarm switch."""
         return {
             ATTR_ID: str(self.alarm_id),

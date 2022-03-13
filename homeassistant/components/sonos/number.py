@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -31,7 +32,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sonos number platform from a config entry."""
 
-    def available_soco_attributes(speaker: SonosSpeaker) -> list[str]:
+    def available_soco_attributes(
+        speaker: SonosSpeaker,
+    ) -> list[tuple[str, tuple[int, int]]]:
         features = []
         for level_type, valid_range in LEVEL_TYPES.items():
             if (state := getattr(speaker.soco, level_type, None)) is not None:
@@ -42,9 +45,9 @@ async def async_setup_entry(
     async def _async_create_entities(speaker: SonosSpeaker) -> None:
         entities = []
 
-        available_features = await hass.async_add_executor_job(
-            available_soco_attributes, speaker
-        )
+        available_features: list[
+            tuple[str, tuple[int, int]]
+        ] = await hass.async_add_executor_job(available_soco_attributes, speaker)
 
         for level_type, valid_range in available_features:
             _LOGGER.debug(
@@ -64,7 +67,7 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, speaker: SonosSpeaker, level_type: str, valid_range: tuple[int]
+        self, speaker: SonosSpeaker, level_type: str, valid_range: tuple[int, int]
     ) -> None:
         """Initialize the level entity."""
         super().__init__(speaker)
@@ -92,4 +95,4 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
     @property
     def value(self) -> float:
         """Return the current value."""
-        return getattr(self.speaker, self.level_type)
+        return cast(float, getattr(self.speaker, self.level_type))

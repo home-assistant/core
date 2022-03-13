@@ -71,7 +71,7 @@ class SonosEntity(Entity):
         if not self.speaker.subscriptions_failed:
             if soco_config.EVENT_ADVERTISE_IP:
                 listener_msg = f"{self.speaker.subscription_address} (advertising as {soco_config.EVENT_ADVERTISE_IP})"
-            else:
+            elif self.speaker.subscription_address:
                 listener_msg = self.speaker.subscription_address
             message = f"{self.speaker.zone_name} cannot reach {listener_msg}, falling back to polling, functionality may be limited"
             log_link_msg = f", see {SUB_FAIL_URL} for more details"

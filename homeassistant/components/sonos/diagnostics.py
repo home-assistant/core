@@ -47,11 +47,11 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    payload = {"current_timestamp": time.monotonic()}
+    payload: dict[str, Any] = {"current_timestamp": time.monotonic()}
 
     for section in ("discovered", "discovery_known", "discovery_ignored"):
         payload[section] = {}
-        data = getattr(hass.data[DATA_SONOS], section)
+        data: dict[str, Any] = getattr(hass.data[DATA_SONOS], section)
         if isinstance(data, set):
             payload[section] = data
             continue
@@ -60,7 +60,6 @@ async def async_get_config_entry_diagnostics(
                 payload[section][key] = await async_generate_speaker_info(hass, value)
             else:
                 payload[section][key] = value
-
     return payload
 
 
@@ -90,7 +89,7 @@ async def async_generate_media_info(
     for attrib in MEDIA_DIAGNOSTIC_ATTRIBUTES:
         payload[attrib] = getattr(speaker.media, attrib)
 
-    def poll_current_track_info():
+    def poll_current_track_info() -> str:
         try:
             return speaker.soco.avTransport.GetPositionInfo(
                 [("InstanceID", 0), ("Channel", "Master")],
@@ -112,7 +111,9 @@ async def async_generate_speaker_info(
     """Generate the diagnostic payload for a specific speaker."""
     payload = {}
 
-    def get_contents(item):
+    def get_contents(
+        item: int | float | str | dict[str, Any]
+    ) -> int | float | str | dict[str, Any]:
         if isinstance(item, (int, float, str)):
             return item
         if isinstance(item, dict):
@@ -128,7 +129,7 @@ async def async_generate_speaker_info(
         value = getattr(speaker, attrib)
         payload[attrib] = get_contents(value)
 
-    payload["enabled_entities"] = {
+    payload["enabled_entities"] = {  # type:ignore[assignment]
         entity_id
         for entity_id, s in hass.data[DATA_SONOS].entity_id_mappings.items()
         if s is speaker

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -111,4 +111,4 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
-        return self.speaker.mic_enabled
+        return cast(bool, self.speaker.mic_enabled)
