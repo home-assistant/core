@@ -12,7 +12,9 @@ import socket
 from typing import cast
 from urllib.parse import urlparse
 
-from soco import config as soco_config, core, events_asyncio
+from soco import events_asyncio
+import soco.config as soco_config
+from soco.core import SoCo
 from soco.exceptions import NotSupportedException, SoCoException
 import voluptuous as vol
 
@@ -173,15 +175,13 @@ class SonosDiscoveryManager:
         await self._async_stop_event_listener()
         self._stop_manual_heartbeat()
 
-    def _create_soco(
-        self, ip_address: str, source: SoCoCreationSource
-    ) -> core.SoCo | None:
+    def _create_soco(self, ip_address: str, source: SoCoCreationSource) -> SoCo | None:
         """Create a soco instance and return if successful."""
         if ip_address in self.data.discovery_ignored:
             return None
 
         try:
-            soco = core.SoCo(ip_address)
+            soco = SoCo(ip_address)
             # Ensure that the player is available and UID is cached
             uid = soco.uid
             # Abort early if the device is not visible
@@ -213,7 +213,7 @@ class SonosDiscoveryManager:
             self.data.hosts_heartbeat()
             self.data.hosts_heartbeat = None
 
-    def _discovered_player(self, soco: core.SoCo) -> None:
+    def _discovered_player(self, soco: SoCo) -> None:
         """Handle a (re)discovered player."""
         try:
             speaker_info = soco.get_speaker_info(True)
