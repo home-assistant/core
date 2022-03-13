@@ -7,7 +7,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
-PLATFORMS = [Platform.LIGHT, Platform.FAN]
+PLATFORMS = [Platform.LIGHT]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

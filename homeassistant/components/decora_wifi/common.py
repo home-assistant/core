@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import Enum, auto
 import logging
 from typing import Any
 
@@ -63,15 +62,7 @@ class BaseDecoraWifiEntity(Entity):
             _LOGGER.error("Failed to update myLeviton switch data")
 
 
-class EntityTypes(Enum):
-    """Supported Decora WiFi entity types."""
-
-    LIGHT = auto()
-    FAN = auto()
-
-
 def _setup_platform(
-    entity_type: EntityTypes,
     model: type[BaseDecoraWifiEntity],
     hass: HomeAssistant,
     config: ConfigEntry,
@@ -109,7 +100,7 @@ def _setup_platform(
 
         switches = filter(
             None,
-            [map_switch_type(entity_type, model, sw) for sw in all_switches],
+            [model(sw) for sw in all_switches],
         )
         add_entities(switches)
     except ValueError:
@@ -124,16 +115,3 @@ def _setup_platform(
             _LOGGER.error("Failed to log out of myLeviton Service")
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, logout)
-
-
-def map_switch_type(
-    entity_type: EntityTypes, model: type[BaseDecoraWifiEntity], switch: IotSwitch
-) -> BaseDecoraWifiEntity | None:
-    """Map decora_wifi's IotSwitch type to custom types as appropriate."""
-
-    fan_models = ["DW4SF"]
-    if entity_type == EntityTypes.FAN and switch.model in fan_models:
-        return model(switch)
-    if entity_type == EntityTypes.LIGHT and switch.model not in fan_models:
-        return model(switch)
-    return None

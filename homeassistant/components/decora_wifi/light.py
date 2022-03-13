@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import BaseDecoraWifiEntity, EntityTypes, _setup_platform
+from .common import BaseDecoraWifiEntity, _setup_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +68,6 @@ async def async_setup_entry(
 
     await hass.async_add_executor_job(
         _setup_platform,
-        EntityTypes.LIGHT,
         DecoraWifiLight,
         hass,
         config_entry,
