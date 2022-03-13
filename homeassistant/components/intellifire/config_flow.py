@@ -50,6 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries(include_ignore=False)
             if CONF_HOST in entry.data  # CONF_HOST will be missing for ignored entries
         }
+
         self._not_configured_hosts = [
             ip for ip in discovered_hosts if ip not in configured_hosts
         ]
@@ -122,5 +123,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._find_fireplaces()
 
         if self._not_configured_hosts:
+            LOGGER.debug("Running Step: pick_device")
             return await self.async_step_pick_device()
+        LOGGER.debug("Running Step: manual_device_entry")
         return await self.async_step_manual_device_entry()

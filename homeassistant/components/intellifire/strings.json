@@ -1,7 +1,7 @@
 {
   "config": {
     "step": {
-      "local_config": {
+      "manual_device_entry": {
         "description": "Local Configuration",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
