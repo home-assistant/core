@@ -32,9 +32,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up an ``RemootioCover`` entity based on the given configuration entry."""
 
-    _LOGGER.debug(f"config_entry [{config_entry.as_dict()}]")
+    _LOGGER.debug("config_entry [%s]", config_entry.as_dict())
     _LOGGER.debug(
-        f"hass.data[{DOMAIN}][{config_entry.entry_id}] [{hass.data[DOMAIN][config_entry.entry_id]}]]"
+        "hass.data[%s][%s] [%s]]",
+        DOMAIN,
+        config_entry.entry_id,
+        hass.data[DOMAIN][config_entry.entry_id],
     )
 
     serial_number: str = config_entry.data[CONF_SERIAL_NUMBER]
@@ -55,7 +58,7 @@ async def async_setup_entry(
 class RemootioCover(cover.CoverEntity):
     """Cover entity which represents an Remootio device controlled garage door or gate."""
 
-    __remootio_client: RemootioClient
+    _remootio_client: RemootioClient
 
     def __init__(
         self,
@@ -69,7 +72,7 @@ class RemootioCover(cover.CoverEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_class = device_class
-        self.__remootio_client = remootio_client
+        self._remootio_client = remootio_client
         self._attr_device_info = DeviceInfo(
             name="Remootio",
             manufacturer="Assemblabs Ltd",
@@ -81,38 +84,36 @@ class RemootioCover(cover.CoverEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register listeners to the used Remootio client to be notified on state changes and events."""
-        await self.__remootio_client.add_state_change_listener(
+        await self._remootio_client.add_state_change_listener(
             RemootioCoverStateChangeListener(self)
         )
 
-        await self.__remootio_client.add_event_listener(
-            RemootioCoverEventListener(self)
-        )
+        await self._remootio_client.add_event_listener(RemootioCoverEventListener(self))
 
         self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_will_remove_from_hass(self) -> None:
         """Terminate the used Remootio client."""
-        await self.__remootio_client.terminate()
+        await self._remootio_client.terminate()
 
     async def async_update(self) -> None:
         """Trigger state update of the used Remootio client."""
-        await self.__remootio_client.trigger_state_update()
+        await self._remootio_client.trigger_state_update()
 
     @property
     def is_opening(self):
         """Return True when the Remootio controlled garage door or gate is currently opening."""
-        return self.__remootio_client.state == State.OPENING
+        return self._remootio_client.state == State.OPENING
 
     @property
     def is_closing(self):
         """Return True when the Remootio controlled garage door or gate is currently closing."""
-        return self.__remootio_client.state == State.CLOSING
+        return self._remootio_client.state == State.CLOSING
 
     @property
     def is_closed(self):
         """Return True when the Remootio controlled garage door or gate is currently closed."""
-        return self.__remootio_client.state == State.CLOSED
+        return self._remootio_client.state == State.CLOSED
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the Remootio controlled garage door or gate."""
@@ -120,7 +121,7 @@ class RemootioCover(cover.CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the Remootio controlled garage door or gate."""
-        await self.__remootio_client.trigger_open()
+        await self._remootio_client.trigger_open()
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close the Remootio controlled garage door or gate."""
@@ -128,7 +129,7 @@ class RemootioCover(cover.CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close the Remootio controlled garage door or gate."""
-        await self.__remootio_client.trigger_close()
+        await self._remootio_client.trigger_close()
 
 
 class RemootioCoverStateChangeListener(Listener[StateChange]):
@@ -144,7 +145,11 @@ class RemootioCoverStateChangeListener(Listener[StateChange]):
     async def execute(self, client: RemootioClient, subject: StateChange) -> None:
         """Execute this listener. Tell Home Assistant that the Remootio controlled garage door or gate has changed its state."""
         _LOGGER.debug(
-            f"Telling Home Assistant that the Remootio controlled garage door or gate has changed its state. RemootioClientState [{client.state}] RemootioCoverEntityId [{self.__owner.entity_id}] RemootioCoverUniqueId [{self.__owner.unique_id}] RemootioCoverState [{self.__owner.state}]"
+            "Telling Home Assistant that the Remootio controlled garage door or gate has changed its state. RemootioClientState [%s] RemootioCoverEntityId [%s] RemootioCoverUniqueId [%s] RemootioCoverState [%s]",
+            client.state,
+            self.__owner.entity_id,
+            self.__owner.unique_id,
+            self.__owner.state,
         )
         self.__owner.async_schedule_update_ha_state()
 
@@ -170,7 +175,10 @@ class RemootioCoverEventListener(Listener[Event]):
             event_type = f"{DOMAIN.lower()}_{subject.type.name.lower()}"
 
             _LOGGER.debug(
-                f"Firing event. EvenType [{event_type}] RemootioCoverEntityId [{self.__owner.entity_id}] RemootioCoverUniqueId [{self.__owner.unique_id}]"
+                "Firing event. EvenType [%s] RemootioCoverEntityId [%s] RemootioCoverUniqueId [%s]",
+                event_type,
+                self.__owner.entity_id,
+                self.__owner.unique_id,
             )
 
             self.__owner.hass.bus.async_fire(

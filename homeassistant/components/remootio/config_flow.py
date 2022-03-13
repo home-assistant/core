@@ -76,7 +76,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     _LOGGER.debug("Validating input... Input [%s]", data)
 
-    INPUT_VALIDATION_SCHEMA(data)
+    data = INPUT_VALIDATION_SCHEMA(data)
 
     connection_options: ConnectionOptions = ConnectionOptions(
         data[CONF_HOST], data[CONF_API_SECRET_KEY], data[CONF_API_AUTH_KEY]
@@ -99,9 +99,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the class."""
-        super().__init__()
-
-        self.form_displayed = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -114,28 +111,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
             except UnsupportedRemootioDeviceError:
-                _LOGGER.debug("Remootio device isn't supported.", exc_info=True)
+                _LOGGER.debug("Remootio device isn't supported", exc_info=True)
                 return self.async_abort(reason="unsupported_device")
-            except vol.MultipleInvalid as e:
+            except vol.MultipleInvalid as ex:
                 _LOGGER.error(
-                    f"Invalid user input. MultipleInvalid.Errors [{e.errors}]"
+                    "Invalid user input. MultipleInvalid.Errors [%s]", ex.errors
                 )
-                for error in e.errors:
+                for error in ex.errors:
                     _LOGGER.debug(
-                        f"Error [{error.__class__.__name__}] Path [{error.path[0]}]"
+                        "Error [%s] Path [%s]", error.__class__.__name__, error.path[0]
                     )
                     if isinstance(error, RequiredFieldInvalid):
                         errors[str(error.path[0])] = f"{error.path[0]}_required"
                     else:
                         errors[str(error.path[0])] = f"{error.path[0]}_invalid"
             except RemootioClientConnectionEstablishmentError:
-                _LOGGER.error("Can't connect to Remootio device.")
+                _LOGGER.error("Can't connect to Remootio device")
                 errors["base"] = "cannot_connect"
             except RemootioClientAuthenticationError:
-                _LOGGER.error("Can't authenticate by the Remootio device.")
+                _LOGGER.error("Can't authenticate by the Remootio device")
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception/error.")
+                _LOGGER.exception("Unexpected exception/error")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(info[CONF_SERIAL_NUMBER])
@@ -144,8 +141,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_SERIAL_NUMBER] = info[CONF_SERIAL_NUMBER]
 
                 return self.async_create_entry(title=info[CONF_TITLE], data=user_input)
-
-        self.form_displayed = True
 
         return self.async_show_form(
             step_id="user",

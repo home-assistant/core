@@ -8,7 +8,7 @@ from aioremootio import ConnectionOptions, RemootioClient
 from aioremootio import ConnectionOptions, RemootioClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -28,7 +28,7 @@ PLATFORMS = [Platform.COVER]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Remootio from a config entry."""
 
-    _LOGGER.debug(f"entry [{entry.as_dict()}]")
+    _LOGGER.debug("entry [%s]", entry.as_dict())
 
     connection_options: ConnectionOptions = ConnectionOptions(
         entry.data[CONF_HOST],
@@ -41,9 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, connection_options, _LOGGER, serial_number
     )
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})
-    hass_data = hass.data[DOMAIN][entry.entry_id]
+    hass_data = hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
     hass_data[REMOOTIO_CLIENT] = remootio_client
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
