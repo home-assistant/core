@@ -71,7 +71,7 @@ from .models import (
     StatisticsRuns,
     process_timestamp,
 )
-from .pool import RecorderPool
+from .pool import POOL_SIZE, RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -186,7 +186,9 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-MAX_DB_EXECUTOR_WORKERS = 8
+
+# Subtrace one for the recorder thread
+MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
 
 
 @bind_hass
