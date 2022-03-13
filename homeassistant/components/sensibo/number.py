@@ -66,7 +66,6 @@ async def async_setup_entry(
         SensiboNumber(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
         for description in NUMBER_TYPES
-        if device_data["hvac_modes"]
     )
 
 
