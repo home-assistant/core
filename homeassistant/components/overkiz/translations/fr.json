@@ -7,7 +7,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "server_in_maintenance": "Le serveur est ferm\u00e9 pour maintenance",
             "too_many_requests": "Trop de demandes, r\u00e9essayez plus tard.",
             "unknown": "Erreur inattendue"
