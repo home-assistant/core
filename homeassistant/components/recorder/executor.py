@@ -1,6 +1,7 @@
 """Database executor helpers."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from concurrent.futures.thread import _threads_queues, _worker
 import threading
 from typing import Any
@@ -9,10 +10,10 @@ import weakref
 from homeassistant.util.executor import InterruptibleThreadPoolExecutor
 
 
-def _worker_with_shutdown_hook(shutdown, *args, **kwargs):
+def _worker_with_shutdown_hook(shutdown_hook, *args, **kwargs):
     """Create a worker that calls a function after its finished."""
     _worker(*args, **kwargs)
-    shutdown()
+    shutdown_hook()
 
 
 class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
@@ -20,7 +21,7 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Init the executor."""
-        self._shutdown = kwargs.pop("shutdown")
+        self._shutdown_hook: Callable[[], None] = kwargs.pop("shutdown_hook")
         super().__init__(*args, **kwargs)
 
     def _adjust_thread_count(self) -> None:
@@ -42,7 +43,7 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
                 name=thread_name,
                 target=_worker_with_shutdown_hook,
                 args=(
-                    self._shutdown,
+                    self._shutdown_hook,
                     weakref.ref(self, weakref_cb),
                     self._work_queue,
                     self._initializer,

@@ -26,7 +26,6 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
-    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -565,10 +564,10 @@ class Recorder(threading.Thread):
         self._db_executor = DBInterruptibleThreadPoolExecutor(
             thread_name_prefix="DbWorker",
             max_workers=MAX_DB_EXECUTOR_WORKERS,
-            shutdown=self._shutdown_pool,
+            shutdown_hook=self._shutdown_pool,
         )
         self._db_executor_shutdown = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_CLOSE, self._async_stop_executor
+            EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_stop_executor
         )
 
     def _shutdown_pool(self):
