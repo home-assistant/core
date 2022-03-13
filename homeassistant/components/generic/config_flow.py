@@ -185,7 +185,7 @@ async def async_test_stream(hass, info) -> dict[str, str]:
     except av.error.HTTPUnauthorizedError:  # pylint: disable=c-extension-no-member
         return {CONF_STREAM_SOURCE: "stream_unauthorised"}
     except (KeyError, IndexError):
-        return {CONF_STREAM_SOURCE: "stream_novideo"}
+        return {CONF_STREAM_SOURCE: "stream_no_video"}
     except PermissionError:
         return {CONF_STREAM_SOURCE: "stream_not_permitted"}
     except OSError as err:

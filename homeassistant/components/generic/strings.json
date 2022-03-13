@@ -13,7 +13,7 @@
       "stream_io_error": "Input/Output error while trying to connect to stream. Wrong RTSP transport protocol?",
       "stream_unauthorised": "Authorisation failed while trying to connect to stream",
       "stream_not_permitted": "Operation not permitted while trying to connect to stream. Wrong RTSP transport protocol?",
-      "stream_novideo": "Stream has no video"
+      "stream_no_video": "Stream has no video"
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
@@ -71,7 +71,7 @@
       "stream_io_error": "Input/Output error while trying to connect to stream. Wrong RTSP transport protocol?",
       "stream_unauthorised": "Authorisation failed while trying to connect to stream",
       "stream_not_permitted": "Operation not permitted while trying to connect to stream. Wrong RTSP transport protocol?",
-      "stream_novideo": "Stream has no video"
+      "stream_no_video": "Stream has no video"
     }
   }
 }

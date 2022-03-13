@@ -318,7 +318,7 @@ async def test_form_stream_novideo(hass, fakeimg_png, user_flow):
             TESTDATA,
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"stream_source": "stream_novideo"}
+    assert result2["errors"] == {"stream_source": "stream_no_video"}
 
 
 @respx.mock
