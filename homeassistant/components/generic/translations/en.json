@@ -63,7 +63,6 @@
                     "content_type": "Content Type",
                     "framerate": "Frame Rate (Hz)",
                     "limit_refetch_to_url_change": "Limit refetch to url change",
-                    "name": "Device Name",
                     "password": "Password",
                     "rtsp_transport": "RTSP transport protocol",
                     "still_image_url": "Still Image URL (e.g. http://...)",
