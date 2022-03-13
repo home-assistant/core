@@ -174,7 +174,7 @@ class GLinetRouter:
             )
 
     async def update_all(self, now: datetime | None = None) -> None:
-        """Update all AsusWrt platforms."""
+        """Update all Gli-net platforms."""
         await self.update_devices()
 
     async def update_devices(self) -> None:
