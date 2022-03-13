@@ -113,4 +113,5 @@ class LightSwitch(LightEntity):
 
         # Add this entity to the wrapped switch's device
         registry = er.async_get(self.hass)
-        registry.async_update_entity(self.entity_id, device_id=self._device_id)
+        if registry.async_get(self.entity_id) is not None:
+            registry.async_update_entity(self.entity_id, device_id=self._device_id)
