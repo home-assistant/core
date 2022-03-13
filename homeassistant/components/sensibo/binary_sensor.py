@@ -60,7 +60,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
     SensiboMotionBinarySensorEntityDescription(
         key="is_main_sensor",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Is main sensor",
+        name="Is Main Sensor",
         icon="mdi:connection",
         value_fn=lambda data: data.is_main_sensor,
     ),
@@ -85,7 +85,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         key="update_available",
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Update available",
+        name="Update Available",
         icon="mdi:rocket-launch",
         value_fn=lambda data: data["update_available"],
     ),
