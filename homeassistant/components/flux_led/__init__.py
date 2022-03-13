@@ -91,14 +91,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate entities when the mac address gets discovered."""
-    if not (unique_id := entry.unique_id):
-        return
-    entry_id = entry.entry_id
 
     @callback
     def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
-
-        assert unique_id is not None
+        entry_id = entry.entry_id
+        if not (unique_id := entry.unique_id):
+            return None
         entity_unique_id = entity_entry.unique_id
         entity_mac = entity_unique_id[: len(unique_id)]
         new_unique_id = None
