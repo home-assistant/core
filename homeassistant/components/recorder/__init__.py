@@ -33,7 +33,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -557,6 +557,9 @@ class Recorder(threading.Thread):
     @callback
     def async_start_executor(self):
         """Start the executor."""
+        self._db_executor = InterruptibleThreadPoolExecutor(
+            thread_name_prefix="DbWorker", max_workers=MAX_DB_EXECUTOR_WORKERS
+        )
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_CLOSE, self._async_stop_executor
         )
@@ -570,9 +573,6 @@ class Recorder(threading.Thread):
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)
         )
-        self._db_executor = InterruptibleThreadPoolExecutor(
-            thread_name_prefix="DbWorker", max_workers=MAX_DB_EXECUTOR_WORKERS
-        )
 
     @callback
     def async_add_executor_job(
@@ -582,8 +582,9 @@ class Recorder(threading.Thread):
         return self.hass.loop.run_in_executor(self._db_executor, target, *args)
 
     @callback
-    def _async_stop_executor(self):
+    def _async_stop_executor(self, event: Event) -> None:
         """Stop the executor."""
+        assert self._db_executor is not None
         self._db_executor.shutdown()
 
     @callback

@@ -17,7 +17,8 @@ class RecorderPool(SingletonThreadPool, NullPool):
 
     def __init__(self, *args, **kw):  # pylint: disable=super-init-not-called
         """Create the pool."""
-        SingletonThreadPool.__init__(self, *args, pool_size=POOL_SIZE, **kw)
+        kw["pool_size"] = POOL_SIZE
+        SingletonThreadPool.__init__(self, *args, **kw)
 
     @property
     def recorder_or_dbworker(self) -> bool:
