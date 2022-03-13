@@ -42,7 +42,7 @@
     },
     "options": {
         "error": {
-            "invalid_url": "URL invalide"
+            "invalid_url": "URL non valide"
         },
         "step": {
             "init": {
