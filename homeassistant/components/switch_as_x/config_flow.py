@@ -6,19 +6,26 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.helpers import helper_config_entry_flow, selector
 
-from . import DOMAIN
+from .const import CONF_TARGET_DOMAIN, DOMAIN
 
 CONFIG_FLOW = {
     "user": helper_config_entry_flow.HelperFlowStep(
         vol.Schema(
             {
-                vol.Required("entity_id"): selector.selector(
-                    {"entity": {"domain": "switch"}}
+                vol.Required(CONF_ENTITY_ID): selector.selector(
+                    {"entity": {"domain": Platform.SWITCH}}
                 ),
-                vol.Required("target_domain"): selector.selector(
-                    {"select": {"options": ["light"]}}
+                vol.Required(CONF_TARGET_DOMAIN): selector.selector(
+                    {
+                        "select": {
+                            "options": [
+                                {"value": Platform.LIGHT, "label": "Light"},
+                            ]
+                        }
+                    }
                 ),
             }
         )
@@ -36,5 +43,5 @@ class SwitchAsXConfigFlowHandler(
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return helper_config_entry_flow.wrapped_entity_config_entry_title(
-            self.hass, options["entity_id"]
+            self.hass, options[CONF_ENTITY_ID]
         )
