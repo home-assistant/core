@@ -720,7 +720,7 @@ goodwe==0.2.15
 google-api-python-client==2.38.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.10.0
+google-cloud-pubsub==2.11.0
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==2.10.0
@@ -2199,7 +2199,7 @@ spotipy==2.19.0
 # homeassistant.components.recorder
 # homeassistant.components.sql
 # homeassistant.components.webostv
-sqlalchemy==1.4.27
+sqlalchemy==1.4.32
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6

@@ -23,8 +23,8 @@
     "device_automation": {
         "trigger_subtype": {
             "away": "absent",
-            "hg": "garde-gel",
-            "schedule": "horaire"
+            "hg": "hors-gel",
+            "schedule": "programm\u00e9"
         },
         "trigger_type": {
             "alarm_started": "{entity_name} a d\u00e9tect\u00e9 une alarme",

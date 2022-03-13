@@ -27,7 +27,7 @@ pyudev==0.22.0
 pyyaml==6.0
 requests==2.27.1
 scapy==2.4.5
-sqlalchemy==1.4.27
+sqlalchemy==1.4.32
 typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.12.2

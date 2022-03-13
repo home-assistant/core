@@ -7,7 +7,7 @@
         "error": {
             "adbkey_not_file": "Fichier de cl\u00e9 ADB introuvable",
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_host": "Nom d'h\u00f4te ou adresse IP invalide",
+            "invalid_host": "Nom d'h\u00f4te ou adresse IP non valide",
             "key_and_server": "Fournissez uniquement la cl\u00e9 ADB ou le serveur ADB",
             "unknown": "Erreur inattendue"
         },
