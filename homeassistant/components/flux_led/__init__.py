@@ -94,9 +94,9 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
 
     @callback
     def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
-        entry_id = entry.entry_id
         if not (unique_id := entry.unique_id):
             return None
+        entry_id = entry.entry_id
         entity_unique_id = entity_entry.unique_id
         entity_mac = entity_unique_id[: len(unique_id)]
         new_unique_id = None
