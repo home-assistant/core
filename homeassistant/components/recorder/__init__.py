@@ -12,7 +12,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any
+from typing import Any, TypeVar
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -25,6 +25,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -52,6 +53,7 @@ from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
+from homeassistant.util.executor import InterruptibleThreadPoolExecutor
 
 from . import history, migration, purge, statistics, websocket_api
 from .const import (
@@ -82,6 +84,9 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+T = TypeVar("T")
+
 
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
@@ -181,6 +186,14 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+MAX_DB_EXECUTOR_WORKERS = 8
+
+
+@bind_hass
+def get_instance(hass: HomeAssistant) -> Recorder:
+    """Get the recorder instance."""
+    return hass.data[DATA_INSTANCE]
+
 
 @bind_hass
 def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
@@ -265,6 +278,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         exclude_t=exclude_t,
     )
     instance.async_initialize()
+    instance.async_start_executor()
     instance.start()
     _async_register_services(hass, instance)
     history.async_setup(hass)
@@ -530,12 +544,20 @@ class Recorder(threading.Thread):
         self._queue_watcher = None
         self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
+        self._db_executor: InterruptibleThreadPoolExecutor | None = None
 
         self.enabled = True
 
     def set_enable(self, enable):
         """Enable or disable recording events and states."""
         self.enabled = enable
+
+    @callback
+    def async_start_executor(self):
+        """Start the executor."""
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_CLOSE, self._async_stop_executor
+        )
 
     @callback
     def async_initialize(self):
@@ -546,6 +568,21 @@ class Recorder(threading.Thread):
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)
         )
+        self._db_executor = InterruptibleThreadPoolExecutor(
+            thread_name_prefix="DbWorker", max_workers=MAX_DB_EXECUTOR_WORKERS
+        )
+
+    @callback
+    def async_add_executor_job(
+        self, target: Callable[..., T], *args: Any
+    ) -> asyncio.Future[T]:
+        """Add an executor job from within the event loop."""
+        return self.hass.loop.run_in_executor(self._db_executor, target, *args)
+
+    @callback
+    def _async_stop_executor(self):
+        """Stop the executor."""
+        self._db_executor.shutdown()
 
     @callback
     def _async_check_queue(self, *_):
