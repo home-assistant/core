@@ -20,12 +20,9 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 
-# from homeassistant.helpers import config_validation as cv
-
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default="http://192.168.8.1"): str,

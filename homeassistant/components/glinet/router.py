@@ -54,11 +54,9 @@ class ClientDevInfo:
 
     def update(self, dev_info: dict = None, consider_home=0):
         """Update connected device info."""
-        # TODO actually cause this function to run by configuring some devices to track
         now: datetime = dt_util.utcnow()
         if dev_info:
             if not self._name:
-                pass  # TODO access device name - GLinet usus '*' if unknown
                 if dev_info["name"] == "*":
                     self._name = self._mac.replace(":", "_")
                 else:
@@ -110,11 +108,8 @@ class GLinetRouter:
 
         self._api: GLinet = None
         self._host: str = entry.data[CONF_HOST]
-        # self._model = "GL-inet router"
-        # self._sw_v = None
         self._connect_error: bool = False
         self._token_error: bool = False
-        # self._devices should
         self._devices: dict[str, ClientDevInfo] = {}
         self._connected_devices: int = 0
         self._on_close: list[Callable] = []
@@ -127,8 +122,6 @@ class GLinetRouter:
 
         try:
             self._api = get_api(self._entry.data)
-            # self._devices = await self._api.list_all_clients() #DELETEME
-            # self._connected_devices = await self._api.connected_clients()
         except OSError as exc:
             _LOGGER.error(
                 "Error connecting to GL-inet router %s for setup: %s",
@@ -234,9 +227,7 @@ class GLinetRouter:
         consider_home = self._options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
-        # track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
-        # TODO - ensure the output of gli_py devices has the correct data structure
         for device_mac, device in self._devices.items():
             dev_info = wrt_devices.get(device_mac)
             device.update(dev_info, consider_home)
@@ -315,7 +306,6 @@ def get_api(conf) -> GLinet:
         )
     if CONF_PASSWORD in conf:
         router = GLinet(sync=False, base_url=conf[CONF_HOST] + "/cgi-bin/api/")
-        # this is synchronous code, ergh
         router.login(conf[CONF_PASSWORD])
         return router
     else:
