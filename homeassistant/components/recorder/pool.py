@@ -4,7 +4,7 @@ import threading
 
 from sqlalchemy.pool import NullPool, SingletonThreadPool
 
-POOL_SIZE = 8
+POOL_SIZE = 5
 _LOGGER = logging.getLogger(__name__)
 
 
