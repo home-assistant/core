@@ -1,9 +1,11 @@
 """A pool for sqlite connections."""
+import logging
 import threading
 
 from sqlalchemy.pool import NullPool, SingletonThreadPool
 
 POOL_SIZE = 8
+_LOGGER = logging.getLogger(__name__)
 
 
 class RecorderPool(SingletonThreadPool, NullPool):
@@ -36,6 +38,11 @@ class RecorderPool(SingletonThreadPool, NullPool):
     def _do_get(self):
         if self.recorder_or_dbworker:
             return super()._do_get()
+        _LOGGER.warning(
+            "Database access is slower in the default executor, "
+            "use homeassistant.components.recorder.get_instance(hass).async_add_executor_job() "
+            "for database operations"
+        )
         return super(  # pylint: disable=bad-super-call
             NullPool, self
         )._create_connection()
