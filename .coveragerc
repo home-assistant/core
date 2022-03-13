@@ -195,7 +195,11 @@ omit =
     homeassistant/components/darksky/weather.py
     homeassistant/components/ddwrt/device_tracker.py
     homeassistant/components/decora/light.py
-    homeassistant/components/decora_wifi/*
+    homeassistant/components/decora_wifi/__init__.py
+    homeassistant/components/decora_wifi/common.py
+    homeassistant/components/decora_wifi/const.py
+    homeassistant/components/decora_wifi/fan.py
+    homeassistant/components/decora_wifi/light.py
     homeassistant/components/delijn/*
     homeassistant/components/deluge/sensor.py
     homeassistant/components/deluge/switch.py

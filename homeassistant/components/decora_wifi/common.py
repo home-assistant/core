@@ -6,7 +6,6 @@ from enum import Enum, auto
 import logging
 from typing import Any
 
-# pylint: disable=import-error
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.iot_switch import IotSwitch
 from decora_wifi.models.person import Person
@@ -14,11 +13,11 @@ from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 
 from homeassistant.components import persistent_notification
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,12 +74,11 @@ def _setup_platform(
     entity_type: EntityTypes,
     model: type[BaseDecoraWifiEntity],
     hass: HomeAssistant,
-    config: ConfigType,
+    config: ConfigEntry,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    email = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
+    email = config.data[CONF_USERNAME]
+    password = config.data[CONF_PASSWORD]
     session = DecoraWiFiSession()
 
     try:
@@ -95,7 +93,7 @@ def _setup_platform(
             )
             return
 
-        # Gather all the available devices...
+        # Gather all the available devices.
         perms = session.user.get_residential_permissions()
         all_switches = []
         for permission in perms:

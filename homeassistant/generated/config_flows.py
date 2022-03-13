@@ -66,6 +66,7 @@ FLOWS = [
     "crownstone",
     "daikin",
     "deconz",
+    "decora_wifi",
     "denonavr",
     "devolo_home_control",
     "devolo_home_network",
