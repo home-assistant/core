@@ -324,16 +324,28 @@ def is_rpc_momentary_input(config: dict[str, Any], key: str) -> bool:
     return cast(bool, config[key]["type"] == "button")
 
 
-def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
+def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
+    """Return true if block should be excludeed from switch platform."""
+
+    if settings.get("mode") == "roller":
+        return True
+
+    if block.channel is None:
+        return False
+
+    return is_block_channel_type_light(settings, block.channel)
+
+
+def is_block_channel_type_light(settings: dict[str, Any], channel: str) -> bool:
     """Return true if block channel appliance type is set to light."""
-    app_type = settings["relays"][channel].get("appliance_type")
+    app_type = settings["relays"][int(channel)].get("appliance_type")
     return app_type is not None and app_type.lower().startswith("light")
 
 
-def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
+def is_rpc_channel_type_light(config: dict[str, Any], channel: str) -> bool:
     """Return true if rpc channel consumption type is set to light."""
     con_types = config["sys"]["ui_data"].get("consumption_types")
-    return con_types is not None and con_types[channel].lower().startswith("light")
+    return con_types is not None and con_types[int(channel)].lower().startswith("light")
 
 
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:

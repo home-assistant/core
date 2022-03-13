@@ -22,7 +22,11 @@ from .entity import (
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen
+from .utils import (
+    get_device_entry_gen,
+    is_block_exclude_from_relay,
+    is_rpc_channel_type_light,
+)
 
 
 @dataclass
@@ -36,9 +40,10 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
 
 
 SWITCHES: Final = {
-    ("relay", "input"): BlockSwitchDescription(
-        key="relay|input",
+    ("relay", "output"): BlockSwitchDescription(
+        key="relay|output",
         name="Switch",
+        removal_condition=is_block_exclude_from_relay,
     ),
 }
 
@@ -47,7 +52,8 @@ RPC_SWITCHES: Final = {
         key="switch",
         sub_key="output",
         name="Switch",
-    ),
+        removal_condition=is_rpc_channel_type_light,
+    )
 }
 
 
