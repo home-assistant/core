@@ -499,7 +499,7 @@ goodwe==0.2.15
 google-api-python-client==2.38.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.10.0
+google-cloud-pubsub==2.11.0
 
 # homeassistant.components.nest
 google-nest-sdm==1.8.0
