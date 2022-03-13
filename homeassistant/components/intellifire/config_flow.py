@@ -15,6 +15,8 @@ from .const import DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
+MANUAL_ENTRY_STRING = "Enter a manual IP address."
+
 
 async def validate_host_input(host: str) -> str:
     """Validate the user input allows us to connect.
@@ -55,27 +57,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Configured Hosts: %s", str(configured_hosts))
         LOGGER.debug("Not Configured Hosts: %s", str(self._not_configured_hosts))
 
-    async def async_step_local_config(self, user_input=None):
-        """Handle local ip configuration."""
-
+    async def async_step_manual_device_entry(self, user_input=None):
+        """Handle manual input of local IP configuration."""
         errors = {}
         placeholder = {}
         local_schema = vol.Schema({vol.Required(CONF_HOST): str})
 
-        if user_input is None:
-
-            if self._not_configured_hosts:
-                user_input = {CONF_HOST: self._not_configured_hosts[0]}
-                local_schema = vol.Schema(
-                    {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
-                )
-            else:
-                if self._discovered_hosts:
-                    # If there were discoverd hosts AND all got filtered out fire an error message
-                    errors["base"] = "already_discovered"
-                    LOGGER.debug("All discovered fireplaces have been configured")
-
-        else:
+        if user_input is not None:
             # There was User Input
             placeholder = {CONF_HOST: user_input[CONF_HOST]}
 
@@ -102,9 +90,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                     },
                 )
+        else:  # User input IS none
+            if (self._not_configured_hosts == []) and len(self._discovered_hosts) > 0:
+                # User has configured all discovered hosts - so show a warning message
+                errors["base"] = "already_discovered"
+                LOGGER.debug("All discovered fireplaces have been configured")
 
         return self.async_show_form(
-            step_id="local_config",
+            step_id="manual_device_entry",
             errors=errors,
             description_placeholders=placeholder,
             data_schema=local_schema,
@@ -114,17 +107,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Pick which device to configure."""
+        errors = {}
 
         if user_input is not None:
-            # Update not_configured_hosts in order to trigger correct
-            # behavior in next step
 
-            return await self.async_step_local_config(user_input=user_input)
+            if user_input[CONF_HOST] == MANUAL_ENTRY_STRING:
+                return await self.async_step_manual_device_entry()
+
+            try:
+                # Validate the ip address
+                serial = await validate_host_input(user_input[CONF_HOST])
+            except (ConnectionError, ClientConnectionError):
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(serial)
+
+                return self.async_create_entry(
+                    title="Fireplace",
+                    data={
+                        CONF_HOST: user_input[CONF_HOST],
+                    },
+                )
 
         return self.async_show_form(
             step_id="pick_device",
+            errors=errors,
             data_schema=vol.Schema(
-                {vol.Required(CONF_HOST): vol.In(self._not_configured_hosts)}
+                {
+                    vol.Required(CONF_HOST): vol.In(
+                        self._not_configured_hosts + [MANUAL_ENTRY_STRING]
+                    )
+                }
             ),
         )
 
@@ -136,6 +149,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Launch fireplaces discovery
         await self._find_fireplaces()
 
-        if len(self._not_configured_hosts) > 1:
+        if len(self._not_configured_hosts) > 0:
             return await self.async_step_pick_device()
-        return await self.async_step_local_config()
+        return await self.async_step_manual_device_entry()

@@ -13,7 +13,7 @@ async def test_no_discovery(
     mock_setup_entry: AsyncMock,
     mock_intellifire_config_flow: MagicMock,
 ) -> None:
-    """Test we get the form."""
+    """Test we should get the manual discovery form - because no discovered fireplaces."""
     with patch(
         "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=[],
@@ -23,6 +23,7 @@ async def test_no_discovery(
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["errors"] == {}
+        assert result["step_id"] == "manual_device_entry"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -83,8 +84,9 @@ async def test_mutli_discovery(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: "192.168.1.33"}
         )
+
         await hass.async_block_till_done()
-        assert result2["step_id"] == "local_config"
+        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_form_cannot_connect(
