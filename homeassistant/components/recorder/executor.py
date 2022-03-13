@@ -1,4 +1,4 @@
-"""Executor util helpers."""
+"""Database executor helpers."""
 from __future__ import annotations
 
 from concurrent.futures.thread import _threads_queues, _worker
