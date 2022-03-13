@@ -12,8 +12,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import CONF_IP_ADDRESS, STATE_OFF, STATE_ON
-from homeassistant.helpers import entity_platform
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.entity_platform import async_get_current_platform
 
 from .const import CONF_SOURCES, DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT, WS66I_OBJECT
 
@@ -51,33 +51,42 @@ def _get_sources_from_dict(data):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the WS66i 6-zone amplifier platform."""
-    ip_addr = config_entry.data[CONF_IP_ADDRESS]
     ws66i = hass.data[DOMAIN][config_entry.entry_id][WS66I_OBJECT]
     sources = _get_sources_from_dict(config_entry.options)
 
     # Build the entities that control each of the zones.
     # Zones 11 - 16 are the master amp
     # Zones 21,31 - 26,36 are the daisy-chained amps
-    entities = []
-    for amp_num in range(1, 4):
+    async def _async_generate_entities(ws66i, sources) -> list:
+        """Generate zone entities by searching for presence of zones."""
+        entities = []
+        for amp_num in range(1, 4):
 
-        if amp_num > 1:
-            # Don't add entities that aren't present
-            status = await hass.async_add_executor_job(
-                ws66i.zone_status, (amp_num * 10 + 1)
-            )
-            if status is None:
-                break
+            if amp_num > 1:
+                # Don't add entities that aren't present
+                status = await hass.async_add_executor_job(
+                    ws66i.zone_status, (amp_num * 10 + 1)
+                )
+                if status is None:
+                    break
 
-        _LOGGER.info("Detected amp %d at ip %s", amp_num, ip_addr)
-        for zone_num in range(1, 7):
-            zone_id = (amp_num * 10) + zone_num
-            entities.append(Ws66iZone(ws66i, sources, config_entry.entry_id, zone_id))
+            for zone_num in range(1, 7):
+                zone_id = (amp_num * 10) + zone_num
+                entities.append(
+                    Ws66iZone(ws66i, sources, config_entry.entry_id, zone_id)
+                )
 
+        _LOGGER.info("Detected %d amp(s)", amp_num - 1)
+        return entities
+
+    # Generate a list of entities to add to HA
+    entities = await _async_generate_entities(ws66i, sources)
+
+    # Add them to HA
     async_add_entities(entities)
 
     # Set up services
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SNAPSHOT,
@@ -95,7 +104,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class Ws66iZone(MediaPlayerEntity):
     """Representation of a WS66i amplifier zone."""
 
-    def __init__(self, ws66i, sources, namespace, zone_id):
+    def __init__(self, ws66i, sources, entry_id, zone_id):
         """Initialize new zone."""
         self._ws66i = ws66i
         self._zone_id = zone_id
@@ -105,7 +114,7 @@ class Ws66iZone(MediaPlayerEntity):
         self._source_name_id = sources[1]
         # ordered list of all source names
         self._attr_source_list = sources[2]
-        self._attr_unique_id = f"{namespace}_{self._zone_id}"
+        self._attr_unique_id = f"{entry_id}_{self._zone_id}"
         self._attr_name = f"Zone {self._zone_id}"
         self._attr_supported_features = SUPPORT_WS66I
         self._attr_available = True
@@ -129,7 +138,10 @@ class Ws66iZone(MediaPlayerEntity):
         new_state = self._ws66i.zone_status(self._zone_id)
         if not new_state:
             # End-user should turn on Amp and reload integration
-            _LOGGER.warning("Zone %d not detected. Is it turned off?", self._zone_id)
+            _LOGGER.warning(
+                "Zone %d not detected. Check WS66i power and reload integration",
+                self._zone_id,
+            )
             self._attr_available = False
             self._attr_should_poll = False
             return
