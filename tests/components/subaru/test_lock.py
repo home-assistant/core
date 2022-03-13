@@ -49,13 +49,14 @@ async def test_unlock_cmd(hass, ev_entry):
 
 async def test_lock_cmd_fails(hass, ev_entry):
     """Test subaru lock request that initiates but fails."""
-    with patch(MOCK_API_LOCK, return_value=False) as mock_lock:
-        with raises(HomeAssistantError):
-            await hass.services.async_call(
-                LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
-            )
-            await hass.async_block_till_done()
-            mock_lock.assert_called_once()
+    with patch(MOCK_API_LOCK, return_value=False) as mock_lock, raises(
+        HomeAssistantError
+    ):
+        await hass.services.async_call(
+            LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+        )
+        await hass.async_block_till_done()
+        mock_lock.assert_called_once()
 
 
 async def test_unlock_specific_door(hass, ev_entry):

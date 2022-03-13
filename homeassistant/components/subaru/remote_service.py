@@ -28,6 +28,6 @@ async def async_call_remote_service(controller, cmd, vehicle_info, arg=None):
 
     if success:
         _LOGGER.debug("%s command successfully completed for %s", cmd, car_name)
-        return True
+        return
 
     raise HomeAssistantError(f"Service {cmd} failed for {car_name}: {err_msg}")

@@ -29,12 +29,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entry = hass.data[DOMAIN][config_entry.entry_id]
     controller = entry[ENTRY_CONTROLLER]
     vehicle_info = entry[ENTRY_VEHICLES]
-    entities = [
+    async_add_entities(
         SubaruLock(vehicle, controller)
         for vehicle in vehicle_info.values()
         if vehicle[VEHICLE_HAS_REMOTE_SERVICE]
-    ]
-    async_add_entities(entities)
+    )
 
     platform = entity_platform.async_get_current_platform()
 
