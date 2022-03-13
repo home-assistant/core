@@ -559,7 +559,7 @@ home-assistant-frontend==20220301.2
 # homeassistant-pyozw==0.1.10
 
 # homeassistant.components.home_connect
-homeconnect==0.6.3
+homeconnect==0.7.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.2
