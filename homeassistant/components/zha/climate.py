@@ -836,3 +836,72 @@ class ZONNSMARTThermostat(Thermostat):
                 {"operation_preset": 4}, manufacturer=mfg_code
             )
         return False
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers={
+        "_TYST11_jeaxp72v",
+        "_TYST11_kfvq6avy",
+        "_TYST11_zivfvd7h",
+        "_TYST11_hhrtiq0x",
+        "_TYST11_ps5v5jor",
+        "_TYST11_owwdxjbx",
+        "_TYST11_8daqwrsj",
+        "_TYST11_czk78ptr",
+        "_TZE200_jeaxp72v",
+        "_TZE200_kfvq6avy",
+        "_TZE200_zivfvd7h",
+        "_TZE200_hhrtiq0x",
+        "_TZE200_ps5v5jor",
+        "_TZE200_owwdxjbx",
+        "_TZE200_8daqwrsj",
+        "_TZE200_czk78ptr",
+    },
+)
+class SiterwellThermostat(Thermostat):
+    """Siterwell Thermostat implementation."""
+
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Initialize ZHA Thermostat instance."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._presets = [
+            PRESET_NONE,
+            PRESET_AWAY,
+            PRESET_SCHEDULE,
+        ]
+        self._supported_flags |= SUPPORT_PRESET_MODE
+
+    @property
+    def hvac_modes(self) -> tuple[str, ...]:
+        """Return only the heat mode, because the device can't be turned off."""
+        return (HVAC_MODE_HEAT,)
+
+    async def async_attribute_updated(self, record):
+        """Handle attribute update from device."""
+        if record.attr_name == "operation_preset":
+            if record.value == 0:
+                self._preset = PRESET_AWAY
+            if record.value == 1:
+                self._preset = PRESET_SCHEDULE
+            if record.value == 2:
+                self._preset = PRESET_NONE
+        await super().async_attribute_updated(record)
+
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+        """Set the preset mode."""
+        mfg_code = self._zha_device.manufacturer_code
+        if not enable:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 2}, manufacturer=mfg_code
+            )
+        if preset == PRESET_AWAY:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 0}, manufacturer=mfg_code
+            )
+        if preset == PRESET_SCHEDULE:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 1}, manufacturer=mfg_code
+            )
+
+        return False
