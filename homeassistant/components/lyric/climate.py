@@ -265,7 +265,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         device = self.device
-        
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
@@ -283,8 +282,9 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     heatSetpoint=target_temp_low,
                     mode=HVAC_MODES[device.changeableValues.heatCoolMode],
                 )
-            except LYRIC_EXCEPTIONS as exception:
-                _LOGGER.error(exception)
+                except LYRIC_EXCEPTIONS as exception:
+                    _LOGGER.error(exception)
+                    await self.coordinator.async_refresh()
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Set temperature: %s", temp)
@@ -301,9 +301,9 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         device,
                         heatSetpoint=temp
                     )
-            except LYRIC_EXCEPTIONS as exception:
-                _LOGGER.error(exception)
-            await self.coordinator.async_refresh()
+                    except LYRIC_EXCEPTIONS as exception:
+                        _LOGGER.error(exception)
+                        await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
@@ -348,7 +348,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
-        await self.coordinator.async_refresh()
+            await self.coordinator.async_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset (PermanentHold, HoldUntil, NoHold, VacationHold) mode."""
@@ -361,7 +361,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
-        await self.coordinator.async_refresh()
+            await self.coordinator.async_refresh()
 
     async def async_set_hold_time(self, time_period: str) -> None:
         """Set the time to hold until."""
@@ -375,4 +375,4 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
-        await self.coordinator.async_refresh()
+            await self.coordinator.async_refresh()
