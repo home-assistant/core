@@ -79,7 +79,7 @@ HVAC_MOCK = {
                     API_HUMIDITY: 39,
                     API_UNITS: 0,
                     API_ERRORS: [],
-                    API_AIR_DEMAND: 0,
+                    API_AIR_DEMAND: 1,
                     API_FLOOR_DEMAND: 0,
                 },
                 {
