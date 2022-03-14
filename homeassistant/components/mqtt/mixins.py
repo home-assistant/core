@@ -568,7 +568,6 @@ class MqttDiscoveryDeviceUpdateService:
         async def async_device_removed(event):
             """Handle the removal of a device."""
             nonlocal _device_removed
-            nonlocal _device_removed
             if _device_removed or not async_removed_from_device(
                 hass, event, device_id, config_entry_id
             ):
@@ -595,11 +594,24 @@ class MqttDiscoveryDeviceUpdateService:
             )
             del self
 
+        @callback
+        def _entry_unload(*_: Any) -> None:
+            """Handle the unload of the config entry."""
+            nonlocal self
+            # cleanup discovery
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
+            clear_discovery_hash(hass, discovery_hash)
+            _remove_discovery()
+            hass.async_create_task(self.async_tear_down())
+
         _remove_discovery = async_dispatcher_connect(
             hass,
             MQTT_DISCOVERY_UPDATED.format(discovery_hash),
             async_discovery_update,
         )
+        config_entry.async_on_unload(_entry_unload)
         if device_id is not None:
             self._remove_device_updated = hass.bus.async_listen(
                 EVENT_DEVICE_REGISTRY_UPDATED, async_device_removed
