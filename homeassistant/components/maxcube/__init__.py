@@ -1,4 +1,5 @@
 """Support for the MAX! Cube LAN Gateway."""
+from datetime import timedelta
 import logging
 from socket import timeout
 from threading import Lock
@@ -73,8 +74,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for gateway in gateways:
         data = {
             CONF_HOST: gateway[CONF_HOST],
-            CONF_PORT: gateway[CONF_PORT],
-            CONF_SCAN_INTERVAL: gateway[CONF_SCAN_INTERVAL].total_seconds(),
+            CONF_PORT: gateway.get(CONF_PORT, 62910),
+            CONF_SCAN_INTERVAL: gateway.get(
+                CONF_SCAN_INTERVAL, timedelta(seconds=300)
+            ).total_seconds(),
         }
 
         hass.async_create_task(

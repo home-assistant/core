@@ -33,7 +33,7 @@ class MaxCubeFlowHandler(config_entries.ConfigFlow):
             except Exception:  # pylint: disable=broad-except
                 return self.async_abort(reason="connection_error")
 
-            return self.async_create_entry(title=f"Cube@{host}:{port}", data=user_input)
+            return self.async_create_entry(title=f"{host}:{port}", data=user_input)
 
         return self.async_show_form(
             step_id="user",

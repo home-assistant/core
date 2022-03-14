@@ -1,4 +1,4 @@
-"""Tests for Wemo config flow."""
+"""Tests for maxcube config flow."""
 
 from datetime import datetime
 from socket import timeout
@@ -8,6 +8,7 @@ from homeassistant.components.maxcube import (
     DOMAIN,
     async_setup_entry,
     async_unload_entry,
+    setup as setupFn,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -36,7 +37,7 @@ async def test_wrong_host(hass: HomeAssistant) -> None:
     """Test wrong host that can't connect."""
 
     result = await hass.config_entries.flow.async_init(
-        "maxcube",
+        DOMAIN,
         context={"source": SOURCE_USER},
     )
 
@@ -53,7 +54,7 @@ async def test_mandatory_params_only(hass: HomeAssistant) -> None:
     """Test minimum config params."""
 
     result = await hass.config_entries.flow.async_init(
-        "maxcube",
+        DOMAIN,
         context={"source": SOURCE_USER},
     )
 
@@ -62,7 +63,7 @@ async def test_mandatory_params_only(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(result["flow_id"], config)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Cube@123.123.123.123:62910"
+    assert result["title"] == "123.123.123.123:62910"
     assert result["data"]["host"] == "123.123.123.123"
     # default values
     assert result["data"]["port"] == 62910
@@ -74,7 +75,7 @@ async def test_all_params(hass: HomeAssistant) -> None:
     """Test with all config params."""
 
     result = await hass.config_entries.flow.async_init(
-        "maxcube",
+        DOMAIN,
         context={"source": SOURCE_USER},
     )
 
@@ -83,7 +84,7 @@ async def test_all_params(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(result["flow_id"], config)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Cube@123.123.123.123:12345"
+    assert result["title"] == "123.123.123.123:12345"
     assert result["data"]["host"] == "123.123.123.123"
     assert result["data"]["port"] == 12345
     assert result["data"]["scan_interval"] == 11
@@ -97,12 +98,12 @@ async def test_step_import_mandatory_params(hass):
         "host": "11.22.33.44",
     }
     result = await hass.config_entries.flow.async_init(
-        "maxcube", context={"source": config_entries.SOURCE_IMPORT}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
     )
     await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Cube@11.22.33.44:62910"
+    assert result["title"] == "11.22.33.44:62910"
     assert result["data"]["host"] == "11.22.33.44"
     assert result["data"].get("port") is None
     assert result["data"].get("scan_interval") is None
@@ -114,12 +115,12 @@ async def test_step_import_all_params(hass):
 
     data = {"host": "11.22.33.44", "port": 9988, "scan_interval": 77}
     result = await hass.config_entries.flow.async_init(
-        "maxcube", context={"source": config_entries.SOURCE_IMPORT}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
     )
     await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Cube@11.22.33.44:9988"
+    assert result["title"] == "11.22.33.44:9988"
     assert result["data"]["host"] == "11.22.33.44"
     assert result["data"].get("port") == 9988
     assert result["data"].get("scan_interval") == 77
@@ -133,7 +134,7 @@ async def test_step_import_wrong_host(hass):
         "host": "wrong",
     }
     result = await hass.config_entries.flow.async_init(
-        "maxcube", context={"source": config_entries.SOURCE_IMPORT}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
     )
     await hass.async_block_till_done()
 
@@ -175,3 +176,11 @@ async def test_unload_entry(hass, hass_config):
     assert await async_unload_entry(hass, entry)
     # unload second time
     assert await async_unload_entry(hass, entry)
+
+
+@patch("homeassistant.components.maxcube.MaxCube", new=MaxCubeMocked)
+async def test_setup(hass, hass_config):
+    """Test setup."""
+
+    assert setupFn(hass, hass_config)
+    await hass.async_block_till_done()
