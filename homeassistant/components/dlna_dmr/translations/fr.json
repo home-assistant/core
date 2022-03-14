@@ -4,15 +4,15 @@
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "alternative_integration": "L'appareil est mieux pris en charge par une autre int\u00e9gration",
             "cannot_connect": "\u00c9chec de connexion",
-            "could_not_connect": "\u00c9chec de la connexion au p\u00e9riph\u00e9rique DLNA",
-            "discovery_error": "\u00c9chec de la d\u00e9couverte d'un p\u00e9riph\u00e9rique DLNA correspondant",
+            "could_not_connect": "\u00c9chec de la connexion \u00e0 l'appareil DLNA",
+            "discovery_error": "\u00c9chec de la d\u00e9couverte d'un appareil DLNA correspondant",
             "incomplete_config": "Il manque une variable requise dans la configuration",
             "non_unique_id": "Plusieurs appareils trouv\u00e9s avec le m\u00eame identifiant unique",
             "not_dmr": "L'appareil n'est pas un moteur de rendu multim\u00e9dia num\u00e9rique pris en charge"
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "could_not_connect": "\u00c9chec de la connexion au p\u00e9riph\u00e9rique DLNA",
+            "could_not_connect": "\u00c9chec de la connexion \u00e0 l'appareil DLNA",
             "not_dmr": "L'appareil n'est pas un moteur de rendu multim\u00e9dia num\u00e9rique pris en charge"
         },
         "flow_title": "{name}",
@@ -36,13 +36,13 @@
                     "url": "URL"
                 },
                 "description": "Choisissez un appareil \u00e0 configurer ou laissez vide pour saisir une URL",
-                "title": "P\u00e9riph\u00e9riques DLNA DMR d\u00e9couverts"
+                "title": "Appareils DLNA DMR d\u00e9couverts"
             }
         }
     },
     "options": {
         "error": {
-            "invalid_url": "URL invalide"
+            "invalid_url": "URL non valide"
         },
         "step": {
             "init": {

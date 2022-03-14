@@ -46,7 +46,7 @@
         },
         "trigger_type": {
             "command": "Commande re\u00e7ue\u00a0: {subtype}",
-            "status": "Statut re\u00e7u\u00a0: {subtype}"
+            "status": "\u00c9tat re\u00e7u\u00a0: {subtype}"
         }
     },
     "one": "Vide",

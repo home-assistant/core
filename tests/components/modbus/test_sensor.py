@@ -15,6 +15,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    MODBUS_DOMAIN,
     DataType,
 )
 from homeassistant.components.sensor import (
@@ -36,6 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
@@ -820,3 +822,15 @@ async def test_service_sensor_update(hass, mock_modbus, mock_ha):
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == "32"
+
+
+async def test_no_discovery_info_sensor(hass, caplog):
+    """Test setup without discovery info."""
+    assert SENSOR_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": MODBUS_DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert SENSOR_DOMAIN in hass.config.components
