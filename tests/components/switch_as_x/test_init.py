@@ -17,6 +17,7 @@ from tests.common import MockConfigEntry
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -114,6 +115,7 @@ async def test_entity_registry_events(hass: HomeAssistant, target_domain: str) -
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -180,6 +182,7 @@ async def test_device_registry_config_entry_1(
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -239,6 +242,7 @@ async def test_device_registry_config_entry_2(
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -282,6 +286,7 @@ async def test_config_entry_entity_id(
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -314,6 +319,7 @@ async def test_config_entry_uuid(hass: HomeAssistant, target_domain: Platform) -
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
