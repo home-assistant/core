@@ -1,7 +1,6 @@
 """Config flow for 1-Wire component."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -45,9 +44,6 @@ DATA_SCHEMA_MOUNTDIR = vol.Schema(
         vol.Required(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): str,
     }
 )
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input_owserver(
