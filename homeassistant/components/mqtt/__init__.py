@@ -135,6 +135,13 @@ DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_TLS_PROTOCOL = "auto"
 
+DEFAULT_VALUES = {
+    CONF_PORT: DEFAULT_PORT,
+    CONF_WILL_MESSAGE: DEFAULT_WILL,
+    CONF_BIRTH_MESSAGE: DEFAULT_BIRTH,
+    CONF_DISCOVERY: DEFAULT_DISCOVERY,
+}
+
 ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
@@ -190,7 +197,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             vol.Coerce(int), vol.Range(min=15)
         ),
         vol.Optional(CONF_BROKER): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CERTIFICATE): vol.Any("auto", cv.isfile),
@@ -207,9 +214,9 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
             cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
         ),
-        vol.Optional(CONF_WILL_MESSAGE, default=DEFAULT_WILL): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_BIRTH_MESSAGE, default=DEFAULT_BIRTH): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+        vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_DISCOVERY): cv.boolean,
         # discovery_prefix must be a valid publish topic because if no
         # state topic is specified, it will be created with the given prefix.
         vol.Optional(
@@ -613,6 +620,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 def _merge_config(entry, conf):
     """Merge configuration.yaml config with config entry."""
+    # Base config on default values
+    conf = {**DEFAULT_VALUES, **conf}
     return {**conf, **entry.data}
 
 
@@ -632,6 +641,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             override,
         )
 
+    # Merge the configuration values from configuration.yaml
     conf = _merge_config(entry, conf)
 
     hass.data[DATA_MQTT] = MQTT(
