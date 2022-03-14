@@ -221,9 +221,16 @@ async def test_dhcp_discovery_good(
             hostname="zentrios-Test",
         ),
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Fireplace 12345"
-    assert result["data"] == {"host": "1.1.1.1"}
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "dhcp_confirm"
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "dhcp_confirm"
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input={}
+    )
+    assert result3["title"] == "Fireplace 12345"
+    assert result3["data"] == {"host": "1.1.1.1"}
 
 
 async def test_dhcp_discovery_bad(

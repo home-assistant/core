@@ -7,6 +7,9 @@
         "cannot_connect": "Could not connect to a fireplace endpoint at url: http://{host}/poll\nVerify IP address and try again"
       },
       "step": {
+        "dhcp_confirm": {
+          "description": "Do you want to setup IntelliFire Fireplaces"
+        },  
         "manual_device_entry": {
           "title": "IntelliFire - Local Config",
           "description": "Enter the IP address of the IntelliFire unit on your local network.",

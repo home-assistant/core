@@ -7,6 +7,9 @@
           "host": "[%key:common::config_flow::data::host%]"
         }
       },
+      "dhcp_confirm": {
+        "description": "Do you want to setup IntelliFire Fireplaces"
+      },
       "pick_device": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

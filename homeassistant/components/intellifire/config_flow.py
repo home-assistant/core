@@ -41,6 +41,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Config Flow Handler."""
         self._config_context = {}
         self._not_configured_hosts: list[str] = []
+        self._discovered_hosts: list[
+            tuple(str, str)
+        ] = []  # will store tuples of ip/serial
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
@@ -132,7 +135,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle DHCP Discovery."""
 
+        # Run validation logic on ip
+        host = discovery_info.ip
+        self._async_abort_entries_match({CONF_HOST: host})
         try:
-            return await self._async_validate_and_create_entry(host=discovery_info.ip)
+            serial = await validate_host_input(host)
         except (ConnectionError, ClientConnectionError):
             return self.async_abort(reason="not_intellifire_device")
+
+        self._discovered_hosts.append((host, serial))
+        return await self.async_step_dhcp_confirm()
+
+    async def async_step_dhcp_confirm(self, user_input=None):
+        """Attempt to confirm."""
+
+        if user_input is None:
+            # Show the confirmation dialog
+            return self.async_show_form(step_id="dhcp_confirm")
+
+        print("USER INPUT: ", user_input)
+        # Add the hosts one by one
+        for host, serial in self._discovered_hosts:
+
+            await self.async_set_unique_id(serial)
+            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+            return self.async_create_entry(
+                title=f"Fireplace {serial}",
+                data={CONF_HOST: host},
+            )
