@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import LidarrEntity
-from .const import BYTE_SIZES, DOMAIN
+from .const import BYTE_SIZES, DEFAULT_NAME, DOMAIN
 from .coordinator import LidarrDataUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -85,8 +85,8 @@ class LidarrSensor(LidarrEntity, SensorEntity):
         """Create Lidarr entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"Lidarr {description.name}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}/{description.name}"
+        self._attr_name = f"{DEFAULT_NAME} {description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
     def extra_state_attributes(self) -> dict[str, StateType | datetime]:
