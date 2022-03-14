@@ -264,7 +264,66 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="tilt",
         ),
     ),
+    # Smart Lock
+    # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+    "ms": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.OPEN_INSIDE,
+            name="Unlock Inside of Door",
+            icon="mdi:home-export-outline",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.OPEN_CLOSE,
+            name="Locking and Unlocking Event",
+            icon="mdi:lock-pattern",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.DOOR_OPENED,
+            name="Door Opened",
+            device_class=BinarySensorDeviceClass.DOOR,
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.REVERSE_LOCK,
+            name="Double Locking Status",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.DOORBELL,
+            name="Doorbell",
+            device_class=BinarySensorDeviceClass.SOUND,
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.ANTI_LOCK_OUTSIDE,
+            name="Double Locking by Lifting Up",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.LOCK_MOTOR_STATE,
+            name="Open and Closed Status of Lock",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.HIJACK,
+            name="Duress Alert",
+            icon="mdi:lock-alert-outline",
+        ),
+    ),
 }
+
+# Lock (duplicate of 'ms')
+# https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+BINARY_SENSORS["bxx"] = BINARY_SENSORS["ms"]
+BINARY_SENSORS["gyms"] = BINARY_SENSORS["ms"]
+BINARY_SENSORS["jtmspro"] = BINARY_SENSORS["ms"]
+BINARY_SENSORS["hotelms"] = BINARY_SENSORS["ms"]
+BINARY_SENSORS["ms_category"] = BINARY_SENSORS["ms"]
+BINARY_SENSORS["jtmsbh"] = BINARY_SENSORS["ms"]
+BINARY_SENSORS["mk"] = BINARY_SENSORS["ms"]
+BINARY_SENSORS["videolock"] = BINARY_SENSORS["ms"]
+BINARY_SENSORS["photolock"] = BINARY_SENSORS["ms"]
 
 
 async def async_setup_entry(
