@@ -599,6 +599,22 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Finder
+    # Note: Not documented
+    "fdq": (
+        SwitchEntityDescription(
+            key=DPCode.CALLPHONE,
+            name="Callphone",
+            icon="mdi:phone",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.ALARM_SWITCH,
+            name="Alarm",
+            icon="mdi:alarm-light-outline",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)

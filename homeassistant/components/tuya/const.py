@@ -88,6 +88,7 @@ class TuyaDeviceClass(StrEnum):
     """Tuya specific device classes, used for translations."""
 
     AIR_QUALITY = "tuya__air_quality"
+    ALARM_VOLUME = "tuya__alarm_volume"
     CURTAIN_MODE = "tuya__curtain_mode"
     CURTAIN_MOTOR_MODE = "tuya__curtain_motor_mode"
     BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
@@ -106,6 +107,7 @@ class TuyaDeviceClass(StrEnum):
     RECORD_MODE = "tuya__record_mode"
     RELAY_STATUS = "tuya__relay_status"
     STATUS = "tuya__status"
+    SOUND_MODE = "tuya__sound_mode"
     VACUUM_CISTERN = "tuya__vacuum_cistern"
     VACUUM_COLLECTION = "tuya__vacuum_collection"
     VACUUM_MODE = "tuya__vacuum_mode"
@@ -171,6 +173,7 @@ class DPCode(StrEnum):
     BRIGHTNESS_MIN_1 = "brightness_min_1"
     BRIGHTNESS_MIN_2 = "brightness_min_2"
     BRIGHTNESS_MIN_3 = "brightness_min_3"
+    CALLPHONE = "callphone"
     C_F = "c_f"  # Temperature unit switching
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"
@@ -231,6 +234,7 @@ class DPCode(StrEnum):
     FEED_STATE = "feed_state"
     FILTER = "filter"
     FILTER_LIFE = "filter"
+    FINDERDEV = "finderdev"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
@@ -314,6 +318,7 @@ class DPCode(StrEnum):
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
     SMOKE_SENSOR_VALUE = "smoke_sensor_value"
     SOS = "sos"  # Emergency State
+    SOUND_MODE = "sound_mode"
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
     SPRAY_MODE = "spray_mode"  # Spraying mode
