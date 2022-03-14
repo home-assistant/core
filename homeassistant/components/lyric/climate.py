@@ -282,9 +282,9 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     heatSetpoint=target_temp_low,
                     mode=HVAC_MODES[device.changeableValues.heatCoolMode],
                 )
-                except LYRIC_EXCEPTIONS as exception:
-                    _LOGGER.error(exception)
-                    await self.coordinator.async_refresh()
+            except LYRIC_EXCEPTIONS as exception:
+                _LOGGER.error(exception)
+            await self.coordinator.async_refresh()
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Set temperature: %s", temp)
@@ -301,9 +301,9 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         device,
                         heatSetpoint=temp
                     )
-                    except LYRIC_EXCEPTIONS as exception:
-                        _LOGGER.error(exception)
-                        await self.coordinator.async_refresh()
+            except LYRIC_EXCEPTIONS as exception:
+                _LOGGER.error(exception)
+            await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
