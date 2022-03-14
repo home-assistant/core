@@ -89,6 +89,7 @@ class RegistryEntryHider(StrEnum):
     """What hid a registry entry."""
 
     INTEGRATION = "integration"
+    USER = "user"
 
 
 # DISABLED_* are deprecated, to be removed in 2022.3
