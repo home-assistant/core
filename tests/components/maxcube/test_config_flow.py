@@ -1,21 +1,31 @@
 """Tests for Wemo config flow."""
 
 from datetime import datetime
+from socket import timeout
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.maxcube import (
+    DOMAIN,
+    async_setup_entry,
+    async_unload_entry,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
-from tests.common import patch
+from tests.common import MockConfigEntry, patch
 
 
 class MaxCubeMocked:
     """Mock class for maxcube-api library."""
 
+    devices = []
+
     def __init__(self, host: str, port: int = 123, now=datetime.now):
         """Init. Fail with wrong host."""
         if host == "wrong":
             raise Exception("Some connect error")
+        if host == "timeouthost":
+            raise timeout()
 
     def disconnect(self):
         """Disconnect."""
@@ -128,3 +138,40 @@ async def test_step_import_wrong_host(hass):
     await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
+@patch("homeassistant.components.maxcube.MaxCube", new=MaxCubeMocked)
+async def test_setup_entry(hass: HomeAssistant, hass_config) -> None:
+    """Test setup."""
+
+    gateway = {"host": "timeouthost"}
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="112233",
+        data={**gateway, **hass_config},
+        options={},
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    assert not await async_setup_entry(hass, entry)
+
+
+@patch("homeassistant.components.maxcube.MaxCube", new=MaxCubeMocked)
+async def test_unload_entry(hass, hass_config):
+    """Test unload."""
+
+    gateway = {"host": "something"}
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="112233",
+        data={**gateway, **hass_config},
+        options={},
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_entry(hass, entry)
+    assert await async_unload_entry(hass, entry)
+    # unload second time
+    assert await async_unload_entry(hass, entry)
