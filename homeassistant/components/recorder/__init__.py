@@ -907,9 +907,9 @@ class Recorder(threading.Thread):
         try:
             if event.event_type == EVENT_STATE_CHANGED:
                 dbevent = Events.from_event(event, event_data="{}")
+                dbevent.event_data = None
             else:
                 dbevent = Events.from_event(event)
-            dbevent.created = event.time_fired
             self.event_session.add(dbevent)
         except (TypeError, ValueError):
             _LOGGER.warning("Event is not JSON serializable: %s", event)
@@ -928,7 +928,6 @@ class Recorder(threading.Thread):
                 if not has_new_state:
                     dbstate.state = None
                 dbstate.event = dbevent
-                dbstate.created = event.time_fired
                 self.event_session.add(dbstate)
                 if has_new_state:
                     self._old_states[dbstate.entity_id] = dbstate
