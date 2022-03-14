@@ -64,7 +64,7 @@ async def test_reload_on_title_change(hass: HomeAssistant) -> None:
     """Test the integration gets reloaded when the title is updated."""
     bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
     _, entry = await async_setup_integration(hass, wizlight=bulb)
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     await hass.async_block_till_done()
 
     with _patch_discovery(), _patch_wizlight(device=bulb):
