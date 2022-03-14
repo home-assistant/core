@@ -280,7 +280,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         exclude_t=exclude_t,
     )
     instance.async_initialize()
-    instance.async_start_executor()
     instance.start()
     _async_register_services(hass, instance)
     history.async_setup(hass)
