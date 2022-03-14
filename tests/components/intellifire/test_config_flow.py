@@ -91,7 +91,7 @@ async def test_manual_entry(
     assert result2["step_id"] == "manual_device_entry"
 
 
-async def test_mutli_discovery(
+async def test_multi_discovery(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_intellifire_config_flow: MagicMock,
