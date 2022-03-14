@@ -47,7 +47,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-""" Only LCC models support presets """
+# Only LCC models support presets
 SUPPORT_FLAGS_LCC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE
 SUPPORT_FLAGS_TCC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
 
