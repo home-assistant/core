@@ -83,4 +83,4 @@ class IntellifireBinarySensor(IntellifireEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Use this to get the correct value."""
-        return self.entity_description.value_fn(self.coordinator.api.data)
+        return self.entity_description.value_fn(self.coordinator.read_api.data)
