@@ -109,7 +109,7 @@ class DeviceFlow:
                 device_flow_info=self._device_flow_info
             )
 
-        async def _poll_attempt(now: datetime.datetime):
+        async def _poll_attempt(now: datetime.datetime) -> None:
             assert self._exchange_task_unsub
             _LOGGER.debug("Attempting OAuth code exchange")
             # Note: The callback is invoked with None when the device code has expired
