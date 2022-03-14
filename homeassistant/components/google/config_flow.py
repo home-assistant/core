@@ -106,16 +106,12 @@ class OAuth2FlowHandler(
         """Create an entry for the flow, or update existing entry."""
         existing_entries = self._async_current_entries()
         if existing_entries:
-            updated = False
-            for entry in existing_entries:
-                if updated:
-                    await self.hass.config_entries.async_remove(entry.entry_id)
-                    continue
-                updated = True
-                self.hass.config_entries.async_update_entry(
-                    entry, data=data, unique_id=DOMAIN
-                )
-                await self.hass.config_entries.async_reload(entry.entry_id)
+            assert len(existing_entries) == 1
+            entry = existing_entries[0]
+            self.hass.config_entries.async_update_entry(
+                entry, data=data, unique_id=DOMAIN
+            )
+            await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
