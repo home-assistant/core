@@ -132,8 +132,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Get configs
     host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    scan_interval = config[CONF_SCAN_INTERVAL]
+    port = config.get(CONF_PORT, 62910)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, 300)
 
     entry.add_update_listener(async_reload_entry)
 

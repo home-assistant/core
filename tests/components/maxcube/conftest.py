@@ -8,9 +8,10 @@ from maxcube.wallthermostat import MaxWallThermostat
 from maxcube.windowshutter import MaxWindowShutter
 import pytest
 
-from homeassistant.components.maxcube import DOMAIN
-from homeassistant.setup import async_setup_component
+from homeassistant.components.maxcube import DOMAIN, async_setup_entry
 from homeassistant.util.dt import now
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -98,7 +99,24 @@ def hass_config():
 
 
 @pytest.fixture
-async def cube(hass, hass_config, room, thermostat, wallthermostat, windowshutter):
+def config_entry(hass, hass_config):
+    """Define a config entry fixture."""
+    gateway = hass_config[DOMAIN]["gateways"][0]
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="112233",
+        data={**gateway, **hass_config},
+        options={},
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+async def cube(
+    hass, hass_config, room, thermostat, wallthermostat, windowshutter, config_entry
+):
     """Build and setup a cube mock with a single room and some devices."""
     with patch("homeassistant.components.maxcube.MaxCube") as mock:
         cube = mock.return_value
@@ -106,7 +124,7 @@ async def cube(hass, hass_config, room, thermostat, wallthermostat, windowshutte
         cube.devices = [thermostat, wallthermostat, windowshutter]
         cube.room_by_id.return_value = room
         cube.devices_by_room.return_value = [thermostat, wallthermostat, windowshutter]
-        assert await async_setup_component(hass, DOMAIN, hass_config)
+        assert await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
         gateway = hass_config[DOMAIN]["gateways"][0]
         mock.assert_called_with(gateway["host"], gateway.get("port", 62910), now=now)
