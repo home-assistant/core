@@ -475,6 +475,24 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         ),
         *LANGUAGE_SELECT,
     ),
+    # Smart Finder
+    # Note: Not documented
+    "fdq": (
+        SelectEntityDescription(
+            key=DPCode.ALARM_VOLUME,
+            name="Volume",
+            device_class=TuyaDeviceClass.ALARM_VOLUME,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:volume-high",
+        ),
+        SelectEntityDescription(
+            key=DPCode.SOUND_MODE,
+            name="Sound",
+            device_class=TuyaDeviceClass.SOUND_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:music-box-multiple-outline",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

@@ -1001,6 +1001,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Smart Finder
+    # Note: Not documented
+    "fdq": BATTERY_SENSORS,
 }
 
 # Socket (duplicate of `kg`)

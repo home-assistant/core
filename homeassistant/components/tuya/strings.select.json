@@ -244,6 +244,19 @@
         "low":"Low",
         "middle":"Middle",
         "high":"High"
+    },
+    "tuya__alarm_volume": {
+        "mute": "Mute",
+        "normal": "Normal",
+        "loud": "Loud"
+    },
+    "tuya__sound_mode": {
+        "ringtone_0": "Ringtone 1",
+        "ringtone_1": "Ringtone 2",
+        "ringtone_2": "Ringtone 3",
+        "ringtone_3": "Ringtone 4",
+        "ringtone_4": "Ringtone 5",
+        "ringtone_5": "Ringtone 6"
     }
   }
 }

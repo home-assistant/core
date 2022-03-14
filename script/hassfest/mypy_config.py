@@ -112,9 +112,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.onvif.models",
     "homeassistant.components.onvif.parsers",
     "homeassistant.components.onvif.sensor",
-    "homeassistant.components.ozw",
-    "homeassistant.components.ozw.climate",
-    "homeassistant.components.ozw.entity",
     "homeassistant.components.philips_js",
     "homeassistant.components.philips_js.config_flow",
     "homeassistant.components.philips_js.device_trigger",
@@ -247,6 +244,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
+    "enable_error_code": "ignore-without-code",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".

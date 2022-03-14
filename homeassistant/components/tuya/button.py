@@ -53,6 +53,15 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Finder
+    # Note: Not documented
+    "fdq": (
+        ButtonEntityDescription(
+            key=DPCode.FINDERDEV,
+            name="Finder",
+            icon="mdi:map-marker-radius-outline",
+        ),
+    ),
 }
 
 
