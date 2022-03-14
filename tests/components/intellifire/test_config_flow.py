@@ -51,21 +51,20 @@ async def test_single_discovery(
         "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69"],
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "192.168.1.69"}
-        )
-        await hass.async_block_till_done()
-        print("Result:", result)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.69"}
+    )
+    await hass.async_block_till_done()
+    print("Result:", result)
 
-        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == "Fireplace 12345"
-        assert result2["data"] == {CONF_HOST: "192.168.1.69"}
-        assert len(mock_setup_entry.mock_calls) == 1
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "Fireplace 12345"
+    assert result2["data"] == {CONF_HOST: "192.168.1.69"}
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_manual_entry(
@@ -83,13 +82,13 @@ async def test_manual_entry(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["step_id"] == "pick_device"
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: MANUAL_ENTRY_STRING}
-        )
+    assert result["step_id"] == "pick_device"
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: MANUAL_ENTRY_STRING}
+    )
 
-        await hass.async_block_till_done()
-        assert result2["step_id"] == "manual_device_entry"
+    await hass.async_block_till_done()
+    assert result2["step_id"] == "manual_device_entry"
 
 
 async def test_mutli_discovery(
@@ -102,20 +101,19 @@ async def test_mutli_discovery(
         "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["step_id"] == "pick_device"
+    assert result["step_id"] == "pick_device"
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: "192.168.1.33"}
-        )
-        await hass.async_block_till_done()
-        assert result["step_id"] == "pick_device"
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.33"}
+    )
+    await hass.async_block_till_done()
+    assert result["step_id"] == "pick_device"
 
-        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_multi_discovery_cannot_connect(
