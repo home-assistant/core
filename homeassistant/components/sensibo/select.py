@@ -58,7 +58,7 @@ async def async_setup_entry(
         SensiboSelect(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
         for description in SELECT_TYPES
-        if device_data["hvac_modes"] and description.key in device_data["full_features"]
+        if description.key in device_data["full_features"]
     )
 
 
