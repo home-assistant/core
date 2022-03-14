@@ -34,9 +34,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate the user input allows us to connect."""
         errors: dict[str, str] = {}
         response: UptimeRobotApiResponse | UptimeRobotApiError | None = None
-        uptime_robot_api = UptimeRobot(
-            data[CONF_API_KEY], async_get_clientsession(self.hass)
-        )
+        key: str = data[CONF_API_KEY]
+        if key.startswith("ur"):
+            LOGGER.error("The provided API key is 'read-only'")
+            errors["base"] = "read_only_key"
+            return errors, None
+        uptime_robot_api = UptimeRobot(key, async_get_clientsession(self.hass))
 
         try:
             response = await uptime_robot_api.async_get_account_details()
