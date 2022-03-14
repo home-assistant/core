@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -640,7 +642,8 @@ def _get_deconz_event_from_device(
 
 
 async def async_validate_trigger_config(
-    hass: HomeAssistant, config: dict
+    hass: HomeAssistant,
+    config: dict[str, Any],
 ) -> vol.Schema:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
