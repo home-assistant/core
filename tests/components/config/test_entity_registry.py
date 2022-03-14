@@ -4,7 +4,11 @@ import pytest
 from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
-from homeassistant.helpers.entity_registry import RegistryEntry, RegistryEntryDisabler
+from homeassistant.helpers.entity_registry import (
+    RegistryEntry,
+    RegistryEntryDisabler,
+    RegistryEntryHider,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -57,6 +61,7 @@ async def test_list_entities(hass, client):
             "area_id": None,
             "disabled_by": None,
             "entity_id": "test_domain.name",
+            "hidden_by": None,
             "name": "Hello World",
             "icon": None,
             "platform": "test_platform",
@@ -68,6 +73,7 @@ async def test_list_entities(hass, client):
             "area_id": None,
             "disabled_by": None,
             "entity_id": "test_domain.no_name",
+            "hidden_by": None,
             "name": None,
             "icon": None,
             "platform": "test_platform",
@@ -109,6 +115,7 @@ async def test_get_entity(hass, client):
         "disabled_by": None,
         "entity_category": None,
         "entity_id": "test_domain.name",
+        "hidden_by": None,
         "icon": None,
         "name": "Hello World",
         "original_device_class": None,
@@ -136,6 +143,7 @@ async def test_get_entity(hass, client):
         "disabled_by": None,
         "entity_category": None,
         "entity_id": "test_domain.no_name",
+        "hidden_by": None,
         "icon": None,
         "name": None,
         "original_device_class": None,
@@ -170,7 +178,7 @@ async def test_update_entity(hass, client):
     assert state.name == "before update"
     assert state.attributes[ATTR_ICON] == "icon:before update"
 
-    # UPDATE AREA, DEVICE_CLASS, ICON AND NAME
+    # UPDATE AREA, DEVICE_CLASS, HIDDEN_BY, ICON AND NAME
     await client.send_json(
         {
             "id": 6,
@@ -178,6 +186,7 @@ async def test_update_entity(hass, client):
             "entity_id": "test_domain.world",
             "area_id": "mock-area-id",
             "device_class": "custom_device_class",
+            "hidden_by": RegistryEntryHider.USER,
             "icon": "icon:after update",
             "name": "after update",
         }
@@ -195,6 +204,7 @@ async def test_update_entity(hass, client):
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
+            "hidden_by": RegistryEntryHider.USER,
             "icon": "icon:after update",
             "name": "after update",
             "original_device_class": None,
@@ -248,6 +258,7 @@ async def test_update_entity(hass, client):
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
+            "hidden_by": RegistryEntryHider.USER,
             "icon": "icon:after update",
             "name": "after update",
             "original_device_class": None,
@@ -306,6 +317,7 @@ async def test_update_entity_require_restart(hass, client):
             "entity_category": None,
             "entity_id": "test_domain.world",
             "icon": None,
+            "hidden_by": None,
             "name": None,
             "original_device_class": None,
             "original_icon": None,
@@ -409,6 +421,7 @@ async def test_update_entity_no_changes(hass, client):
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
+            "hidden_by": None,
             "icon": None,
             "name": "name of entity",
             "original_device_class": None,
@@ -492,6 +505,7 @@ async def test_update_entity_id(hass, client):
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.planet",
+            "hidden_by": None,
             "icon": None,
             "name": None,
             "original_device_class": None,
