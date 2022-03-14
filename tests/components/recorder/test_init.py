@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime, timedelta
 import sqlite3
 import threading
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
@@ -22,6 +22,7 @@ from homeassistant.components.recorder import (
     SERVICE_PURGE_ENTITIES,
     SQLITE_URL_PREFIX,
     Recorder,
+    get_instance,
     run_information,
     run_information_from_instance,
     run_information_with_session,
@@ -99,6 +100,30 @@ async def test_shutdown_before_startup_finishes(hass):
     assert run_info.run_id == 1
     assert run_info.start is not None
     assert run_info.end is not None
+
+
+async def test_shutdown_closes_connections(hass):
+    """Test shutdown closes connections."""
+
+    hass.state = CoreState.not_running
+
+    await async_init_recorder_component(hass)
+    instance = get_instance(hass)
+    await instance.async_db_ready
+    await hass.async_block_till_done()
+    pool = instance.engine.pool
+    pool.shutdown = Mock()
+
+    def _ensure_connected():
+        with session_scope(hass=hass) as session:
+            list(session.query(States))
+
+    await instance.async_add_executor_job(_ensure_connected)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert len(pool.shutdown.mock_calls) == 1
 
 
 async def test_state_gets_saved_when_set_before_start_event(
