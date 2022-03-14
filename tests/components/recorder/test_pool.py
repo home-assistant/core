@@ -49,3 +49,5 @@ def test_recorder_pool(caplog):
     new_thread.join()
     assert "Database access is slower in the default executor" not in caplog.text
     assert connections[6] == connections[7]
+
+    engine.pool.shutdown()
