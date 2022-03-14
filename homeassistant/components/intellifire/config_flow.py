@@ -16,7 +16,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_SERIAL, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -43,8 +43,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the Config Flow Handler."""
-        self._config_context = {}
         self._not_configured_hosts: list[str] = []
+        self._serial: str = ""
+        self._host: str = ""
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
@@ -63,36 +64,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Configured Hosts: %s", configured_hosts)
         LOGGER.debug("Not Configured Hosts: %s", self._not_configured_hosts)
 
-    async def validate_api_access_and_create(self, user_input: dict[str, Any]):
+    async def validate_api_access_and_create_or_update(
+        self, *, host: str, username: str, password: str, serial: str
+    ):
         """Validate username/password against api."""
+        ift_control = IntellifireControlAsync(fireplace_ip=host)
 
-        ift_control = IntellifireControlAsync(fireplace_ip=user_input[CONF_HOST])
-
+        LOGGER.info("Attempting login with: %s %s", username, password)
+        # This can throw an error which will be handled above
         try:
-            await ift_control.login(
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-            )
+            await ift_control.login(username=username, password=password)
             await ift_control.get_username()
         finally:
             await ift_control.close()
 
-        # Create stuff now
-        return self.async_create_entry(
-            title=f"Fireplace {user_input[CONF_SERIAL]}",
-            data={
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-            },
-        )
+        data = {CONF_HOST: host, CONF_PASSWORD: password, CONF_USERNAME: username}
 
-    async def async_step_api_token(
+        # Update or Create
+        existing_entry = await self.async_set_unique_id(DOMAIN)
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+        return self.async_create_entry(title=f"Fireplace {serial}", data=data)
+
+    async def async_step_api_config(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Configure API access."""
-        errors = {}
 
+        errors = {}
         control_schema = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): str,
@@ -115,52 +116,49 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if user_input[CONF_USERNAME] != "":
                 try:
-                    # Update config context & validate
-                    self._config_context[CONF_USERNAME] = user_input[CONF_USERNAME]
-                    self._config_context[CONF_PASSWORD] = user_input[CONF_PASSWORD]
-                    return await self.validate_api_access_and_create(
-                        self._config_context
+                    return await self.validate_api_access_and_create_or_update(
+                        host=self._host,
+                        username=user_input[CONF_USERNAME],
+                        password=user_input[CONF_PASSWORD],
+                        serial=self._serial,
                     )
+
                 except (ConnectionError, ClientConnectionError):
                     errors["base"] = "iftapi_connect"
+                    LOGGER.info("ERROR: iftapi_connect")
                 except LoginException:
                     errors["base"] = "api_error"
+                    LOGGER.info("ERROR: api_error")
 
         return self.async_show_form(
-            step_id="api_token", errors=errors, data_schema=control_schema
+            step_id="api_config", errors=errors, data_schema=control_schema
         )
-
-    async def _async_validate_api_and_create(
-        self, host: str, username: str, password: str, serial: str
-    ) -> FlowResult:
-        pass
 
     async def _async_validate_ip_and_continue(self, host: str) -> FlowResult:
         """Validate local config and continue."""
         self._async_abort_entries_match({CONF_HOST: host})
-        serial = await validate_host_input(host)
-        await self.async_set_unique_id(serial)
+        self._serial = await validate_host_input(host)
+        await self.async_set_unique_id(self._serial)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-
         # Store current data and jump to next stage
-        self._config_context = {CONF_HOST: host, CONF_SERIAL: serial}
+        self._host = host
 
-        return await self.async_step_api_token()
+        return await self.async_step_api_config()
 
     async def async_step_manual_device_entry(self, user_input=None):
         """Handle manual input of local IP configuration."""
         errors = {}
-        host = user_input.get(CONF_HOST) if user_input else None
+        self._host = user_input.get(CONF_HOST) if user_input else None
         if user_input is not None:
             try:
-                return await self._async_validate_ip_and_continue(host)
+                return await self._async_validate_ip_and_continue(self._host)
             except (ConnectionError, ClientConnectionError):
                 errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="manual_device_entry",
             errors=errors,
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
+            data_schema=vol.Schema({vol.Required(CONF_HOST, default=self._host): str}),
         )
 
     async def async_step_pick_device(
@@ -197,7 +195,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Launch fireplaces discovery
         await self._find_fireplaces()
-
+        LOGGER.debug("STEP: USER")
         if self._not_configured_hosts:
             LOGGER.debug("Running Step: pick_device")
             return await self.async_step_pick_device()
@@ -206,4 +204,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
-        return await self.async_step_api_token()
+
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        # populate the expected vars
+        self._serial = entry.unique_id
+        self._host = entry.data[CONF_HOST]
+
+        return await self.async_step_api_config()

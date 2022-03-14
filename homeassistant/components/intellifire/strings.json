@@ -7,6 +7,12 @@
           "host": "[%key:common::config_flow::data::host%]"
         }
       },
+      "api_config": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
       "pick_device": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -14,10 +20,14 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "api_error": "api_error",
+      "iftapi_connect": "iftapi_connect"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+
     }
   }
 }
