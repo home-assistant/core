@@ -279,7 +279,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.DOOR_OPENED,
-            name="Door Opened",
+            name="Door",
             device_class=BinarySensorDeviceClass.DOOR,
         ),
         TuyaBinarySensorEntityDescription(
@@ -303,12 +303,14 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.LOCK_MOTOR_STATE,
-            name="Open and Closed Status of Lock",
+            name="Status",
+            device_class=BinarySensorDeviceClass.LOCK,
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.HIJACK,
             name="Duress Alert",
             icon="mdi:lock-alert-outline",
+            device_class=BinarySensorDeviceClass.SAFETY,
         ),
     ),
 }
