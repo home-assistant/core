@@ -122,6 +122,13 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
     await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
 
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    if entry.title != coordinator.title:
+        await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
@@ -185,6 +192,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_sync_time()  # set at startup
     entry.async_on_unload(async_track_time_change(hass, _async_sync_time, 2, 40, 30))
 
+    # There must not be any awaits between here and the return
+    # to avoid a race condition where the add_update_listener is not
+    # in place in time for the check in async_update_entry_from_discovery
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 
