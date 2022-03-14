@@ -200,3 +200,98 @@ async def test_device_registry_config_entry_2(
     # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+
+
+@pytest.mark.parametrize("target_domain", (Platform.LIGHT, Platform.COVER))
+async def test_config_entry_entity_id(
+    hass: HomeAssistant, target_domain: Platform
+) -> None:
+    """Test light switch setup from config entry with entity id."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: "switch.abc",
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+    )
+
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert DOMAIN in hass.config.components
+
+    state = hass.states.get(f"{target_domain}.abc")
+    assert state
+    assert state.state == "unavailable"
+    # Name copied from config entry title
+    assert state.name == "ABC"
+
+    # Check the light is added to the entity registry
+    registry = er.async_get(hass)
+    entity_entry = registry.async_get(f"{target_domain}.abc")
+    assert entity_entry
+    assert entity_entry.unique_id == config_entry.entry_id
+
+
+@pytest.mark.parametrize("target_domain", (Platform.LIGHT, Platform.COVER))
+async def test_config_entry_uuid(hass: HomeAssistant, target_domain: Platform) -> None:
+    """Test light switch setup from config entry with entity registry id."""
+    registry = er.async_get(hass)
+    registry_entry = registry.async_get_or_create("switch", "test", "unique")
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: registry_entry.id,
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+    )
+
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{target_domain}.abc")
+
+
+@pytest.mark.parametrize("target_domain", (Platform.LIGHT, Platform.COVER))
+async def test_device(hass: HomeAssistant, target_domain: Platform) -> None:
+    """Test the entity is added to the wrapped entity's device."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    test_config_entry = MockConfigEntry()
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=test_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    switch_entity_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", device_id=device_entry.id
+    )
+
+    switch_as_x_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+    )
+
+    switch_as_x_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    assert entity_entry
+    assert entity_entry.device_id == switch_entity_entry.device_id
