@@ -173,7 +173,7 @@ async def test_picker_already_discovered(
     mock_setup_entry: AsyncMock,
     mock_intellifire_config_flow: MagicMock,
 ) -> None:
-    """Test single firedplace UDP discovery."""
+    """Test single fireplace UDP discovery."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
