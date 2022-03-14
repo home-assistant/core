@@ -12,6 +12,7 @@ from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledRespo
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.command import SamsungTVCommand
+from samsungtvws.event import MS_ERROR_EVENT
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -57,7 +58,7 @@ def mac_from_device_info(info: dict[str, Any]) -> str | None:
 
 async def async_get_device_info(
     hass: HomeAssistant,
-    bridge: SamsungTVWSBridge | SamsungTVLegacyBridge | None,
+    bridge: SamsungTVBridge | None,
     host: str,
 ) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
@@ -87,7 +88,7 @@ class SamsungTVBridge(ABC):
         host: str,
         port: int | None = None,
         token: str | None = None,
-    ) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
+    ) -> SamsungTVBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
             return SamsungTVLegacyBridge(hass, method, host, port)
@@ -114,7 +115,7 @@ class SamsungTVBridge(ABC):
         self._new_token_callback = func
 
     @abstractmethod
-    async def async_try_connect(self) -> str | None:
+    async def async_try_connect(self) -> str:
         """Try to connect to the TV."""
 
     @abstractmethod
@@ -460,7 +461,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 name=VALUE_CONF_NAME,
             )
             try:
-                await self._remote.start_listening()
+                await self._remote.start_listening(self._remote_event)
             except ConnectionClosedError as err:
                 # This is only happening when the auth was switched to DENY
                 # A removed auth will lead to socket timeout because waiting
@@ -497,6 +498,21 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self.token = self._remote.token
                     self._notify_new_token_callback()
         return self._remote
+
+    @staticmethod
+    def _remote_event(event: str, response: Any) -> None:
+        """Received event from remote websocket."""
+        if event == MS_ERROR_EVENT:
+            # { 'event': 'ms.error',
+            #   'data': {'message': 'unrecognized method value : ms.remote.control'}}
+            if (data := response.get("data")) and (
+                message := data.get("message")
+            ) == "unrecognized method value : ms.remote.control":
+                LOGGER.error(
+                    "Your TV seems to be unsupported by "
+                    "SamsungTVWSBridge and may need a PIN: '%s'",
+                    message,
+                )
 
     async def async_power_off(self) -> None:
         """Send power off command to remote."""

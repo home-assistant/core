@@ -743,7 +743,6 @@ homeassistant/components/panel_custom/* @home-assistant/frontend
 tests/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
 tests/components/panel_iframe/* @home-assistant/frontend
-homeassistant/components/pcal9535a/* @Shulyaka
 homeassistant/components/persistent_notification/* @home-assistant/core
 tests/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
@@ -850,8 +849,8 @@ tests/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 tests/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
-homeassistant/components/samsungtv/* @escoand @chemelli74 @epenet
-tests/components/samsungtv/* @escoand @chemelli74 @epenet
+homeassistant/components/samsungtv/* @chemelli74 @epenet
+tests/components/samsungtv/* @chemelli74 @epenet
 homeassistant/components/scene/* @home-assistant/core
 tests/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
@@ -980,6 +979,8 @@ homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switch/* @home-assistant/core
 tests/components/switch/* @home-assistant/core
+homeassistant/components/switch_as_x/* @home-assistant/core
+tests/components/switch_as_x/* @home-assistant/core
 homeassistant/components/switchbot/* @danielhiversen @RenierM26
 tests/components/switchbot/* @danielhiversen @RenierM26
 homeassistant/components/switcher_kis/* @tomerfi @thecode
@@ -1064,6 +1065,8 @@ homeassistant/components/updater/* @home-assistant/core
 tests/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23
 tests/components/upnp/* @StevenLooman @ehendrix23
+homeassistant/components/uptime/* @frenck
+tests/components/uptime/* @frenck
 homeassistant/components/uptimerobot/* @ludeeus @chemelli74
 tests/components/uptimerobot/* @ludeeus @chemelli74
 homeassistant/components/usb/* @bdraco

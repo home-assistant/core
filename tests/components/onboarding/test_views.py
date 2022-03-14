@@ -390,12 +390,16 @@ async def test_onboarding_core_sets_up_radio_browser(hass, hass_storage, hass_cl
 
     client = await hass_client()
 
-    resp = await client.post("/api/onboarding/core_config")
+    with patch(
+        "homeassistant.components.radio_browser.async_setup_entry", return_value=True
+    ) as mock_setup:
+        resp = await client.post("/api/onboarding/core_config")
 
     assert resp.status == 200
 
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries("radio_browser")) == 1
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_onboarding_core_sets_up_rpi_power(

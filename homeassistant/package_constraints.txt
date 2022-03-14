@@ -14,7 +14,7 @@ certifi>=2021.5.30
 ciso8601==2.2.0
 cryptography==35.0.0
 hass-nabucasa==0.54.0
-home-assistant-frontend==20220301.1
+home-assistant-frontend==20220312.0
 httpx==0.22.0
 ifaddr==0.1.7
 jinja2==3.0.3
@@ -27,7 +27,7 @@ pyudev==0.22.0
 pyyaml==6.0
 requests==2.27.1
 scapy==2.4.5
-sqlalchemy==1.4.27
+sqlalchemy==1.4.32
 typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.12.2

@@ -26,6 +26,7 @@ class MotionSensor:
 
     id: str
     alive: bool | None = None
+    motion: bool | None = None
     fw_ver: str | None = None
     fw_type: str | None = None
     is_main_sensor: bool | None = None
@@ -33,6 +34,7 @@ class MotionSensor:
     humidity: int | None = None
     temperature: float | None = None
     model: str | None = None
+    rssi: int | None = None
 
 
 @dataclass
@@ -91,6 +93,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             running = ac_states.get("on")
             fan_mode = ac_states.get("fanLevel")
             swing_mode = ac_states.get("swing")
+            horizontal_swing_mode = ac_states.get("horizontalSwing")
+            light_mode = ac_states.get("light")
             available = dev["connectionStatus"].get("isAlive", True)
             capabilities = dev["remoteCapabilities"]
             hvac_modes = list(capabilities["modes"])
@@ -99,6 +103,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             current_capabilities = capabilities["modes"][ac_states.get("mode")]
             fan_modes = current_capabilities.get("fanLevels")
             swing_modes = current_capabilities.get("swing")
+            horizontal_swing_modes = current_capabilities.get("horizontalSwing")
+            light_modes = current_capabilities.get("light")
             temperature_unit_key = dev.get("temperatureUnit") or ac_states.get(
                 "temperatureUnit"
             )
@@ -123,6 +129,10 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                     full_features.add("swing")
                 if "fanLevels" in capabilities["modes"][mode]:
                     full_features.add("fanLevel")
+                if "horizontalSwing" in capabilities["modes"][mode]:
+                    full_features.add("horizontalSwing")
+                if "light" in capabilities["modes"][mode]:
+                    full_features.add("light")
 
             state = hvac_mode if hvac_mode else "off"
 
@@ -139,21 +149,29 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 temperature = measurements.get("temperature")
                 humidity = measurements.get("humidity")
 
-            motion_sensors = [
-                MotionSensor(
-                    id=motionsensor["id"],
-                    alive=motionsensor["connectionStatus"].get("isAlive"),
-                    fw_ver=motionsensor.get("firmwareVersion"),
-                    fw_type=motionsensor.get("firmwareType"),
-                    is_main_sensor=motionsensor.get("isMainSensor"),
-                    battery_voltage=motionsensor["measurements"].get("batteryVoltage"),
-                    humidity=motionsensor["measurements"].get("humidity"),
-                    temperature=motionsensor["measurements"].get("temperature"),
-                    model=motionsensor.get("productModel"),
-                )
-                for motionsensor in dev["motionSensors"]
-                if dev["motionSensors"]
-            ]
+            motion_sensors: dict[str, Any] = {}
+            if dev["motionSensors"]:
+                for sensor in dev["motionSensors"]:
+                    measurement = sensor["measurements"]
+                    motion_sensors[sensor["id"]] = MotionSensor(
+                        id=sensor["id"],
+                        alive=sensor["connectionStatus"].get("isAlive"),
+                        motion=measurement.get("motion"),
+                        fw_ver=sensor.get("firmwareVersion"),
+                        fw_type=sensor.get("firmwareType"),
+                        is_main_sensor=sensor.get("isMainSensor"),
+                        battery_voltage=measurement.get("batteryVoltage"),
+                        humidity=measurement.get("humidity"),
+                        temperature=measurement.get("temperature"),
+                        model=sensor.get("productModel"),
+                        rssi=measurement.get("rssi"),
+                    )
+
+            # Add information for pure devices
+            pure_conf = dev["pureBoostConfig"]
+            pure_sensitivity = pure_conf.get("sensitivity") if pure_conf else None
+            pure_boost_enabled = pure_conf.get("enabled") if pure_conf else None
+            pm25 = dev["measurements"].get("pm25")
 
             device_data[unique_id] = {
                 "id": unique_id,
@@ -167,10 +185,14 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "on": running,
                 "fan_mode": fan_mode,
                 "swing_mode": swing_mode,
+                "horizontal_swing_mode": horizontal_swing_mode,
+                "light_mode": light_mode,
                 "available": available,
                 "hvac_modes": hvac_modes,
                 "fan_modes": fan_modes,
                 "swing_modes": swing_modes,
+                "horizontal_swing_modes": horizontal_swing_modes,
+                "light_modes": light_modes,
                 "temp_unit": temperature_unit_key,
                 "temp_list": temperatures_list,
                 "temp_step": temperature_step,
@@ -184,6 +206,9 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "calibration_hum": calibration_hum,
                 "full_capabilities": capabilities,
                 "motion_sensors": motion_sensors,
+                "pure_sensitivity": pure_sensitivity,
+                "pure_boost_enabled": pure_boost_enabled,
+                "pm25": pm25,
             }
 
         return SensiboData(raw=data, parsed=device_data)
