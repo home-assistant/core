@@ -18,7 +18,7 @@ async def test_no_discovery(
 ) -> None:
     """Test we should get the manual discovery form - because no discovered fireplaces."""
     with patch(
-        "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
+        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
