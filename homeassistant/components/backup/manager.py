@@ -1,6 +1,8 @@
 """Backup manager for the Backup integration."""
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Awaitable
 from dataclasses import asdict, dataclass
 import hashlib
 import json
@@ -45,6 +47,23 @@ class BackupManager:
         self.backing_up = False
         self.backups: dict[str, Backup] = {}
         self.loaded = False
+        self._backup_finish_callbacks: list[Awaitable] = []
+        self._backup_start_callbacks: list[Awaitable] = []
+
+    def register_backup_callback(
+        self,
+        *,
+        finish: Awaitable | None = None,
+        start: Awaitable | None = None,
+    ) -> None:
+        """Register callbacks to be called when a backup starts or finishes."""
+        if finish is not None:
+            LOGGER.debug("Registering backup finish callback for %s", finish)
+            self._backup_finish_callbacks.append(finish)
+
+        if start is not None:
+            LOGGER.debug("Registering backup start callback for %s", start)
+            self._backup_start_callbacks.append(start)
 
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
@@ -115,6 +134,14 @@ class BackupManager:
 
         try:
             self.backing_up = True
+            start_callback_results = await asyncio.gather(
+                *self._backup_start_callbacks,
+                return_exceptions=True,
+            )
+            for result in start_callback_results:
+                if isinstance(result, Exception):
+                    raise result
+
             backup_name = f"Core {HAVERSION}"
             date_str = dt.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
@@ -152,6 +179,13 @@ class BackupManager:
             return backup
         finally:
             self.backing_up = False
+            finish_callback_results = await asyncio.gather(
+                *self._backup_finish_callbacks,
+                return_exceptions=True,
+            )
+            for result in finish_callback_results:
+                if isinstance(result, Exception):
+                    raise result
 
     def _generate_backup_contents(
         self,

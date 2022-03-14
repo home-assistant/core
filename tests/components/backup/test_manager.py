@@ -1,6 +1,6 @@
 """Tests for the Backup integration."""
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -9,6 +9,53 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .common import TEST_BACKUP
+
+
+async def _mock_backup_generation(manager: BackupManager):
+    """Mock backup generator."""
+
+    def _mock_iterdir(path: Path) -> list[Path]:
+        if not path.name.endswith("testing_config"):
+            return []
+        return [
+            Path("test.txt"),
+            Path(".DS_Store"),
+            Path(".storage"),
+        ]
+
+    with patch("tarfile.open", MagicMock()) as mocked_tarfile, patch(
+        "pathlib.Path.iterdir", _mock_iterdir
+    ), patch("pathlib.Path.stat", MagicMock(st_size=123)), patch(
+        "pathlib.Path.is_file", lambda x: x.name != ".storage"
+    ), patch(
+        "pathlib.Path.is_dir",
+        lambda x: x.name == ".storage",
+    ), patch(
+        "pathlib.Path.exists",
+        lambda x: x != manager.backup_dir,
+    ), patch(
+        "pathlib.Path.is_symlink",
+        lambda _: False,
+    ), patch(
+        "pathlib.Path.mkdir",
+        MagicMock(),
+    ), patch(
+        "homeassistant.components.backup.manager.json_util.save_json"
+    ) as mocked_json_util, patch(
+        "homeassistant.components.backup.manager.HAVERSION",
+        "2025.1.0",
+    ):
+        await manager.generate_backup()
+
+        assert mocked_json_util.call_count == 1
+        assert mocked_json_util.call_args[0][1]["homeassistant"] == {
+            "version": "2025.1.0"
+        }
+
+        assert (
+            manager.backup_dir.as_posix()
+            in mocked_tarfile.call_args_list[0].kwargs["name"]
+        )
 
 
 async def test_constructor(hass: HomeAssistant) -> None:
@@ -112,48 +159,80 @@ async def test_generate_backup(
     manager = BackupManager(hass)
     manager.loaded = True
 
-    def _mock_iterdir(path: Path) -> list[Path]:
-        if not path.name.endswith("testing_config"):
-            return []
-        return [
-            Path("test.txt"),
-            Path(".DS_Store"),
-            Path(".storage"),
-        ]
-
-    with patch("tarfile.open", MagicMock()) as mocked_tarfile, patch(
-        "pathlib.Path.iterdir", _mock_iterdir
-    ), patch("pathlib.Path.stat", MagicMock(st_size=123)), patch(
-        "pathlib.Path.is_file", lambda x: x.name != ".storage"
-    ), patch(
-        "pathlib.Path.is_dir",
-        lambda x: x.name == ".storage",
-    ), patch(
-        "pathlib.Path.exists",
-        lambda x: x != manager.backup_dir,
-    ), patch(
-        "pathlib.Path.is_symlink",
-        lambda _: False,
-    ), patch(
-        "pathlib.Path.mkdir",
-        MagicMock(),
-    ), patch(
-        "homeassistant.components.backup.manager.json_util.save_json"
-    ) as mocked_json_util, patch(
-        "homeassistant.components.backup.manager.HAVERSION",
-        "2025.1.0",
-    ):
-        await manager.generate_backup()
-
-        assert mocked_json_util.call_count == 1
-        assert mocked_json_util.call_args[0][1]["homeassistant"] == {
-            "version": "2025.1.0"
-        }
-
-        assert (
-            manager.backup_dir.as_posix()
-            in mocked_tarfile.call_args_list[0].kwargs["name"]
-        )
+    await _mock_backup_generation(manager)
 
     assert "Generated new backup with slug " in caplog.text
     assert "Creating backup directory" in caplog.text
+
+
+async def test_finish_callback(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test finish callback."""
+
+    manager = BackupManager(hass)
+    manager.loaded = True
+
+    mock_finish_callback = AsyncMock()
+
+    manager.register_backup_callback(finish=mock_finish_callback())
+    await _mock_backup_generation(manager)
+    assert mock_finish_callback.call_count == 1
+    assert "Generated new backup with slug" in caplog.text
+
+
+async def test_start_callback(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test start callback."""
+
+    manager = BackupManager(hass)
+    manager.loaded = True
+
+    mock_start_callback = AsyncMock()
+
+    manager.register_backup_callback(start=mock_start_callback())
+    await _mock_backup_generation(manager)
+    assert mock_start_callback.call_count == 1
+    assert "Generated new backup with slug" in caplog.text
+
+
+async def test_exception_in_start_callback(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test exception in start callback."""
+
+    manager = BackupManager(hass)
+    manager.loaded = True
+
+    mock_start_callback = AsyncMock(side_effect=HomeAssistantError("test"))
+
+    manager.register_backup_callback(start=mock_start_callback())
+
+    with pytest.raises(HomeAssistantError):
+        await _mock_backup_generation(manager)
+
+    assert mock_start_callback.call_count == 1
+    assert "Generated new backup with slug" not in caplog.text
+
+
+async def test_exception_in_finish_callback(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test exception in finish callback."""
+    manager = BackupManager(hass)
+    manager.loaded = True
+
+    mock_finish_callback = AsyncMock(side_effect=HomeAssistantError("test"))
+
+    manager.register_backup_callback(finish=mock_finish_callback())
+
+    with pytest.raises(HomeAssistantError):
+        await _mock_backup_generation(manager)
+
+    assert mock_finish_callback.call_count == 1
+    assert "Generated new backup with slug" in caplog.text
