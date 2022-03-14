@@ -10,7 +10,7 @@ from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
-from websocket import WebSocketException
+from websocket import WebSocketException, WebSocketTimeoutException
 
 from homeassistant.const import (
     CONF_HOST,
@@ -318,8 +318,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def _get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
-        if self._app_list is None:
-            if remote := self._get_remote():
+        if self._app_list is None and (remote := self._get_remote()):
+            with contextlib.suppress(WebSocketTimeoutException):
                 raw_app_list: list[dict[str, str]] = remote.app_list()
                 self._app_list = {
                     app["name"]: app["appId"]
