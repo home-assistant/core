@@ -33,7 +33,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -280,7 +280,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         exclude_t=exclude_t,
     )
     instance.async_initialize()
-    instance.async_start_executor()
     instance.start()
     _async_register_services(hass, instance)
     history.async_setup(hass)
@@ -559,19 +558,15 @@ class Recorder(threading.Thread):
     def async_start_executor(self):
         """Start the executor."""
         if self._db_executor:
-            self._db_executor_shutdown()
-            self._db_executor.shutdown()
+            self._stop_executor()
         self._db_executor = DBInterruptibleThreadPoolExecutor(
             thread_name_prefix="DbWorker",
             max_workers=MAX_DB_EXECUTOR_WORKERS,
             shutdown_hook=self._shutdown_pool,
         )
-        self._db_executor_shutdown = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_stop_executor
-        )
 
     def _shutdown_pool(self):
-        """Close the pool connection in the current thread."""
+        """Close the dbpool connections in the current thread."""
         assert self.engine is not None
         pool = self.engine.pool
         if hasattr(pool, "shutdown"):
@@ -594,11 +589,11 @@ class Recorder(threading.Thread):
         """Add an executor job from within the event loop."""
         return self.hass.loop.run_in_executor(self._db_executor, target, *args)
 
-    @callback
-    def _async_stop_executor(self, event: Event) -> None:
+    def _stop_executor(self) -> None:
         """Stop the executor."""
         assert self._db_executor is not None
         self._db_executor.shutdown()
+        self._db_executor = None
 
     @callback
     def _async_check_queue(self, *_):
@@ -1253,6 +1248,7 @@ class Recorder(threading.Thread):
     def _shutdown(self):
         """Save end time for current run."""
         self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
+        self._stop_executor()
         self._end_session()
         self._close_connection()
 
