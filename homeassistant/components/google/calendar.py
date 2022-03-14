@@ -78,6 +78,7 @@ async def async_setup_entry(
         raise PlatformNotReady(str(err)) from err
 
 
+@callback
 def _async_setup_entities(
     hass: HomeAssistant,
     entry: ConfigEntry,
