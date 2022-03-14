@@ -60,7 +60,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
     SensiboMotionBinarySensorEntityDescription(
         key="is_main_sensor",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Is Main Sensor",
+        name="Main Sensor",
         icon="mdi:connection",
         value_fn=lambda data: data.is_main_sensor,
     ),
