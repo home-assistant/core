@@ -273,18 +273,16 @@ class OnewireOptionsFlowHandler(OptionsFlow):
             return await self._update_options()
 
         self.current_device, description = self.devices_to_configure.popitem()
-        data_schema: vol.Schema
-        if description.family == "28":
-            data_schema = vol.Schema(
-                {
-                    vol.Required(
-                        OPTION_ENTRY_SENSOR_PRECISION,
-                        default=self._get_current_setting(
-                            description.id, OPTION_ENTRY_SENSOR_PRECISION, "temperature"
-                        ),
-                    ): vol.In(PRECISION_MAPPING_FAMILY_28),
-                }
-            )
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    OPTION_ENTRY_SENSOR_PRECISION,
+                    default=self._get_current_setting(
+                        description.id, OPTION_ENTRY_SENSOR_PRECISION, "temperature"
+                    ),
+                ): vol.In(PRECISION_MAPPING_FAMILY_28),
+            }
+        )
 
         return self.async_show_form(
             step_id="configure_device",
