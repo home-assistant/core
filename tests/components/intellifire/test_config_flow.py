@@ -96,7 +96,7 @@ async def test_multi_discovery(
     mock_setup_entry: AsyncMock,
     mock_intellifire_config_flow: MagicMock,
 ) -> None:
-    """Test for multiple firepalce discovery - involing a pick_device step."""
+    """Test for multiple fireplace discovery - involving a pick_device step."""
     with patch(
         "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
