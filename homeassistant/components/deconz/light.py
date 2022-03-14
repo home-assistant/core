@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import ValuesView
-from typing import Any
+from typing import Any, cast
 
 from pydeconz.group import Group
 from pydeconz.light import (
@@ -220,11 +220,15 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         elif "IKEA" in self._device.manufacturer:
             data["transition_time"] = 0
 
-        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH))) is not None:
+        if (
+            alert := FLASH_TO_DECONZ.get(cast(str, kwargs.get(ATTR_FLASH)))
+        ) is not None:
             data["alert"] = alert
             del data["on"]
 
-        if (effect := EFFECT_TO_DECONZ.get(kwargs.get(ATTR_EFFECT))) is not None:
+        if (
+            effect := EFFECT_TO_DECONZ.get(cast(str, kwargs.get(ATTR_EFFECT)))
+        ) is not None:
             data["effect"] = effect
 
         await self._device.set_state(**data)
@@ -240,7 +244,9 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             data["brightness"] = 0
             data["transition_time"] = int(attr_transition * 10)
 
-        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH))) is not None:
+        if (
+            alert := FLASH_TO_DECONZ.get(cast(str, kwargs.get(ATTR_FLASH)))
+        ) is not None:
             data["alert"] = alert
             del data["on"]
 
