@@ -22,6 +22,7 @@ CONFIG_FLOW = {
                     {
                         "select": {
                             "options": [
+                                {"value": Platform.COVER, "label": "Cover"},
                                 {"value": Platform.LIGHT, "label": "Light"},
                             ]
                         }
