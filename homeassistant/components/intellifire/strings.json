@@ -1,7 +1,13 @@
 {
   "config": {
     "step": {
-      "user": {
+      "manual_device_entry": {
+        "description": "Local Configuration",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "pick_device": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
@@ -15,3 +21,4 @@
     }
   }
 }
+
