@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 import itertools
 import logging
 from typing import Any
@@ -11,15 +12,17 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FRIENDLY_NAME,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_START, CoreState, callback
+from homeassistant.core import CoreState, Event, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    Event,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
@@ -37,12 +40,32 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+TEMPLATE_ENTITY_AVAILABILITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_AVAILABILITY): cv.template,
+    }
+)
+
+TEMPLATE_ENTITY_ICON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ICON): cv.template,
+    }
+)
+
 TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
         vol.Optional(CONF_AVAILABILITY): cv.template,
         vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_PICTURE): cv.template,
+    }
+)
+
+TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY = vol.Schema(
+    {
+        vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
+            {cv.string: cv.template}
+        ),
     }
 )
 
@@ -65,12 +88,13 @@ LEGACY_FIELDS = {
     CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
     CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
     CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
+    CONF_FRIENDLY_NAME: CONF_NAME,
 }
 
 
 def rewrite_common_legacy_to_modern_conf(
     entity_cfg: dict[str, Any], extra_legacy_fields: dict[str, str] = None
-) -> list[dict]:
+) -> dict[str, Any]:
     """Rewrite legacy config."""
     entity_cfg = {**entity_cfg}
     if extra_legacy_fields is None:
@@ -86,6 +110,9 @@ def rewrite_common_legacy_to_modern_conf(
         if isinstance(val, str):
             val = Template(val)
         entity_cfg[to_key] = val
+
+    if CONF_NAME in entity_cfg and isinstance(entity_cfg[CONF_NAME], str):
+        entity_cfg[CONF_NAME] = Template(entity_cfg[CONF_NAME])
 
     return entity_cfg
 
@@ -149,10 +176,12 @@ class _TemplateAttribute:
             if self.none_on_template_error:
                 self._default_update(result)
             else:
+                assert self.on_update
                 self.on_update(result)
             return
 
         if not self.validator:
+            assert self.on_update
             self.on_update(result)
             return
 
@@ -170,9 +199,11 @@ class _TemplateAttribute:
                 self._entity.entity_id,
                 ex.msg,
             )
+            assert self.on_update
             self.on_update(None)
             return
 
+        assert self.on_update
         self.on_update(validated)
         return
 
@@ -187,28 +218,57 @@ class TemplateEntity(Entity):
 
     def __init__(
         self,
+        hass,
         *,
         availability_template=None,
         icon_template=None,
         entity_picture_template=None,
         attribute_templates=None,
         config=None,
+        fallback_name=None,
+        unique_id=None,
     ):
         """Template Entity."""
         self._template_attrs = {}
         self._async_update = None
         self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
+        self._attr_unique_id = unique_id
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template
             self._icon_template = icon_template
             self._entity_picture_template = entity_picture_template
+            self._friendly_name_template = None
         else:
             self._attribute_templates = config.get(CONF_ATTRIBUTES)
             self._availability_template = config.get(CONF_AVAILABILITY)
             self._icon_template = config.get(CONF_ICON)
             self._entity_picture_template = config.get(CONF_PICTURE)
+            self._friendly_name_template = config.get(CONF_NAME)
+
+        # Try to render the name as it can influence the entity ID
+        self._attr_name = fallback_name
+        if self._friendly_name_template:
+            self._friendly_name_template.hass = hass
+            with contextlib.suppress(TemplateError):
+                self._attr_name = self._friendly_name_template.async_render(
+                    parse_result=False
+                )
+
+        # Templates will not render while the entity is unavailable, try to render the
+        # icon and picture templates.
+        if self._entity_picture_template:
+            self._entity_picture_template.hass = hass
+            with contextlib.suppress(TemplateError):
+                self._attr_entity_picture = self._entity_picture_template.async_render(
+                    parse_result=False
+                )
+
+        if self._icon_template:
+            self._icon_template.hass = hass
+            with contextlib.suppress(TemplateError):
+                self._attr_icon = self._icon_template.async_render(parse_result=False)
 
     @callback
     def _update_available(self, result):
@@ -265,11 +325,11 @@ class TemplateEntity(Entity):
         """
         assert self.hass is not None, "hass cannot be None"
         template.hass = self.hass
-        attribute = _TemplateAttribute(
+        template_attribute = _TemplateAttribute(
             self, attribute, template, validator, on_update, none_on_template_error
         )
         self._template_attrs.setdefault(template, [])
-        self._template_attrs[template].append(attribute)
+        self._template_attrs[template].append(template_attribute)
 
     @callback
     def _handle_results(
@@ -306,7 +366,7 @@ class TemplateEntity(Entity):
         self.async_write_ha_state()
 
     async def _async_template_startup(self, *_) -> None:
-        template_var_tups = []
+        template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
         for template, attributes in self._template_attrs.items():
             template_var_tup = TrackTemplate(template, None)
@@ -353,6 +413,12 @@ class TemplateEntity(Entity):
             self.add_template_attribute(
                 "_attr_entity_picture", self._entity_picture_template
             )
+        if (
+            self._friendly_name_template is not None
+            and not self._friendly_name_template.is_static
+        ):
+            self.add_template_attribute("_attr_name", self._friendly_name_template)
+
         if self.hass.state == CoreState.running:
             await self._async_template_startup()
             return

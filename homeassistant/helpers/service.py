@@ -8,6 +8,7 @@ from functools import partial, wraps
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
+from typing_extensions import TypeGuard
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
@@ -20,7 +21,6 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_TEMPLATE,
     CONF_TARGET,
-    ENTITY_CATEGORIES,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
@@ -31,14 +31,6 @@ from homeassistant.exceptions import (
     Unauthorized,
     UnknownUser,
 )
-from homeassistant.helpers import (
-    area_registry,
-    config_validation as cv,
-    device_registry,
-    entity_registry,
-    template,
-)
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import (
     MAX_LOAD_CONCURRENTLY,
     Integration,
@@ -49,9 +41,18 @@ from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
+from . import (
+    area_registry,
+    config_validation as cv,
+    device_registry,
+    entity_registry,
+    template,
+)
+from .typing import ConfigType, TemplateVarsType
+
 if TYPE_CHECKING:
-    from homeassistant.helpers.entity import Entity
-    from homeassistant.helpers.entity_platform import EntityPlatform
+    from .entity import Entity
+    from .entity_platform import EntityPlatform
 
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
@@ -216,7 +217,10 @@ def async_prepare_call_from_config(
                 target.update(template.render_complex(conf, variables))
 
             if CONF_ENTITY_ID in target:
-                target[CONF_ENTITY_ID] = cv.comp_entity_ids(target[CONF_ENTITY_ID])
+                registry = entity_registry.async_get(hass)
+                target[CONF_ENTITY_ID] = entity_registry.async_validate_entity_ids(
+                    registry, cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
+                )
         except TemplateError as ex:
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"
@@ -318,7 +322,7 @@ async def async_extract_entity_ids(
     return referenced.referenced | referenced.indirectly_referenced
 
 
-def _has_match(ids: str | list | None) -> bool:
+def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
     """Check if ids can match anything."""
     return ids not in (None, ENTITY_MATCH_NONE)
 
@@ -366,7 +370,8 @@ def async_extract_referenced_entity_ids(
 
     for ent_entry in ent_reg.entities.values():
         # Do not add config or diagnostic entities referenced by areas or devices
-        if ent_entry.entity_category in ENTITY_CATEGORIES:
+
+        if ent_entry.entity_category is not None:
             continue
 
         if (
@@ -480,7 +485,7 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             if description is None:
                 domain_yaml = loaded[domain]
-                yaml_description = domain_yaml.get(service, {})  # type: ignore
+                yaml_description = domain_yaml.get(service, {})  # type: ignore[union-attr]
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
@@ -691,7 +696,7 @@ async def _handle_entity_call(
     entity.async_set_context(context)
 
     if isinstance(func, str):
-        result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore
+        result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
     else:
         result = hass.async_run_job(func, entity, data)
 
@@ -705,7 +710,7 @@ async def _handle_entity_call(
             func,
             entity.entity_id,
         )
-        await result  # type: ignore
+        await result
 
 
 @bind_hass
@@ -714,7 +719,7 @@ def async_register_admin_service(
     hass: HomeAssistant,
     domain: str,
     service: str,
-    service_func: Callable[[ServiceCall], Awaitable | None],
+    service_func: Callable[[ServiceCall], Awaitable[None] | None],
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""

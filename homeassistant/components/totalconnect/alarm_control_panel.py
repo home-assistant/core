@@ -10,6 +10,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -20,8 +21,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -32,7 +35,9 @@ SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
 SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
 
 
-async def async_setup_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
     alarms = []
 
@@ -57,13 +62,13 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
 
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_AWAY_INSTANT,
-        None,
+        {},
         "async_alarm_arm_away_instant",
     )
 
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_HOME_INSTANT,
-        None,
+        {},
         "async_alarm_arm_home_instant",
     )
 

@@ -1,15 +1,16 @@
 """Numeric integration of data coming from a source sensor over time."""
+from __future__ import annotations
+
 from decimal import Decimal, DecimalException
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
     PLATFORM_SCHEMA,
-    STATE_CLASS_TOTAL,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -23,10 +24,12 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -46,7 +49,7 @@ RIGHT_METHOD = "right"
 INTEGRATION_METHOD = [TRAPEZOIDAL_METHOD, LEFT_METHOD, RIGHT_METHOD]
 
 # SI Metric prefixes
-UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "M": 10 ** 6, "G": 10 ** 9, "T": 10 ** 12}
+UNIT_PREFIXES = {None: 1, "k": 10**3, "M": 10**6, "G": 10**9, "T": 10**12}
 
 # SI Time prefixes
 UNIT_TIME = {
@@ -78,7 +81,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the integration sensor."""
     integral = IntegrationSensor(
         config[CONF_SOURCE_SENSOR],
@@ -98,14 +106,14 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
 
     def __init__(
         self,
-        source_entity,
-        name,
-        round_digits,
-        unit_prefix,
-        unit_time,
-        unit_of_measurement,
-        integration_method,
-    ):
+        source_entity: str,
+        name: str | None,
+        round_digits: int,
+        unit_prefix: str | None,
+        unit_time: str,
+        unit_of_measurement: str | None,
+        integration_method: str,
+    ) -> None:
         """Initialize the integration sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
@@ -119,7 +127,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
-        self._attr_state_class = STATE_CLASS_TOTAL
+        self._attr_state_class = SensorStateClass.TOTAL
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -142,16 +150,27 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             old_state = event.data.get("old_state")
             new_state = event.data.get("new_state")
 
+            # We may want to update our state before an early return,
+            # based on the source sensor's unit_of_measurement
+            # or device_class.
+            update_state = False
+
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                self._unit_of_measurement = self._unit_template.format(
-                    "" if unit is None else unit
-                )
+                if unit is not None:
+                    self._unit_of_measurement = self._unit_template.format(unit)
+                    update_state = True
+
             if (
                 self.device_class is None
-                and new_state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+                and new_state.attributes.get(ATTR_DEVICE_CLASS)
+                == SensorDeviceClass.POWER
             ):
-                self._attr_device_class = DEVICE_CLASS_ENERGY
+                self._attr_device_class = SensorDeviceClass.ENERGY
+                update_state = True
+
+            if update_state:
+                self.async_write_ha_state()
 
             if (
                 old_state is None

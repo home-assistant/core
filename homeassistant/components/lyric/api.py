@@ -8,6 +8,18 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
+class OAuth2SessionLyric(config_entry_oauth2_flow.OAuth2Session):
+    """OAuth2Session for Lyric."""
+
+    async def force_refresh_token(self) -> None:
+        """Force a token refresh."""
+        new_token = await self.implementation.async_refresh_token(self.token)
+
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, data={**self.config_entry.data, "token": new_token}
+        )
+
+
 class ConfigEntryLyricClient(LyricClient):
     """Provide Honeywell Lyric authentication tied to an OAuth2 based config entry."""
 

@@ -8,6 +8,10 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 PRESET_MODE_AUTO = "auto"
 PRESET_MODE_SMART = "smart"
@@ -18,7 +22,12 @@ FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the demo fan platform."""
     async_add_entities(
         [
@@ -81,7 +90,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
@@ -101,11 +114,11 @@ class BaseDemoFan(FanEntity):
         self.hass = hass
         self._unique_id = unique_id
         self._supported_features = supported_features
-        self._percentage = None
+        self._percentage: int | None = None
         self._preset_modes = preset_modes
-        self._preset_mode = None
-        self._oscillating = None
-        self._direction = None
+        self._preset_mode: str | None = None
+        self._oscillating: bool | None = None
+        self._direction: str | None = None
         self._name = name
         if supported_features & SUPPORT_OSCILLATE:
             self._oscillating = False
@@ -128,12 +141,12 @@ class BaseDemoFan(FanEntity):
         return False
 
     @property
-    def current_direction(self) -> str:
+    def current_direction(self) -> str | None:
         """Fan direction."""
         return self._direction
 
     @property
-    def oscillating(self) -> bool:
+    def oscillating(self) -> bool | None:
         """Oscillating."""
         return self._oscillating
 
@@ -183,7 +196,6 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
 
     def turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,
@@ -244,7 +256,7 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode not in self.preset_modes:
+        if self.preset_modes is None or preset_mode not in self.preset_modes:
             raise ValueError(
                 "{preset_mode} is not a valid preset_mode: {self.preset_modes}"
             )
@@ -254,7 +266,6 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,

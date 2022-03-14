@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "version_source": "Origine della versione"
+                },
+                "description": "Seleziona l'origine da cui desideri tenere traccia delle versioni",
+                "title": "Seleziona il tipo di installazione"
+            },
+            "version_source": {
+                "data": {
+                    "beta": "Includi versioni beta",
+                    "board": "Quale scheda dovrebbe essere tracciata",
+                    "channel": "Quale canale dovrebbe essere tracciato",
+                    "image": "Quale immagine dovrebbe essere tracciata"
+                },
+                "description": "Configura il tracciamento della versione {version_source}",
+                "title": "Configura"
+            }
+        }
+    }
+}

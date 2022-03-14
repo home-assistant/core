@@ -16,7 +16,6 @@ from homeassistant.components.wled.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
-    ENTITY_CATEGORY_CONFIG,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -25,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
@@ -47,7 +47,7 @@ async def test_switch_state(
     entry = entity_registry.async_get("switch.wled_rgb_light_nightlight")
     assert entry
     assert entry.unique_id == "aabbccddeeff_nightlight"
-    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
     state = hass.states.get("switch.wled_rgb_light_sync_send")
     assert state
@@ -58,7 +58,7 @@ async def test_switch_state(
     entry = entity_registry.async_get("switch.wled_rgb_light_sync_send")
     assert entry
     assert entry.unique_id == "aabbccddeeff_sync_send"
-    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
     state = hass.states.get("switch.wled_rgb_light_sync_receive")
     assert state
@@ -69,7 +69,7 @@ async def test_switch_state(
     entry = entity_registry.async_get("switch.wled_rgb_light_sync_receive")
     assert entry
     assert entry.unique_id == "aabbccddeeff_sync_receive"
-    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
     state = hass.states.get("switch.wled_rgb_light_reverse")
     assert state
@@ -79,7 +79,7 @@ async def test_switch_state(
     entry = entity_registry.async_get("switch.wled_rgb_light_reverse")
     assert entry
     assert entry.unique_id == "aabbccddeeff_reverse_0"
-    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
 
 async def test_switch_change_state(

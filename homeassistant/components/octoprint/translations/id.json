@@ -21,7 +21,8 @@
                     "path": "Jalur Navigasi",
                     "port": "Nomor Port",
                     "ssl": "Gunakan SSL",
-                    "username": "Nama Pengguna"
+                    "username": "Nama Pengguna",
+                    "verify_ssl": "Verifikasi sertifikat SSL"
                 }
             }
         }

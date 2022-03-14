@@ -7,5 +7,6 @@
   ],
   "codeowners": [],
   "iot_class": "cloud_polling",
-  "config_flow": true
+  "config_flow": true,
+  "loggers": ["CO2Signal"]
 }

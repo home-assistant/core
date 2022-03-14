@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Please check the host and port and try again. Also ensure that you are running the latest FiveM server.",
+      "invalid_game_name": "The api of the game you are trying to connect to is not a FiveM game.",
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

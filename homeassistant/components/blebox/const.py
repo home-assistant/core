@@ -1,20 +1,20 @@
 """Constants for the BleBox devices integration."""
 
-from homeassistant.components.cover import (
+from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.const import (
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    CoverDeviceClass,
+    TEMP_CELSIUS,
 )
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.const import TEMP_CELSIUS
 
 DOMAIN = "blebox"
 PRODUCT = "product"
 
-DEFAULT_SETUP_TIMEOUT = 3
+DEFAULT_SETUP_TIMEOUT = 10
 
 # translation strings
 ADDRESS_ALREADY_CONFIGURED = "address_already_configured"

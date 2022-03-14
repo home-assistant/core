@@ -5,16 +5,15 @@ import logging
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
-from google_nest_sdm.exceptions import GoogleNestException
+from google_nest_sdm.exceptions import ApiException
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,7 +40,7 @@ async def async_setup_sdm_entry(
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     try:
         device_manager = await subscriber.async_get_device_manager()
-    except GoogleNestException as err:
+    except ApiException as err:
         _LOGGER.warning("Failed to get devices: %s", err)
         raise PlatformNotReady from err
 
@@ -57,8 +56,8 @@ async def async_setup_sdm_entry(
 class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
-    _attr_shoud_poll = False
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_should_poll = False
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, device: Device) -> None:
         """Initialize the sensor."""
@@ -77,7 +76,7 @@ class SensorBase(SensorEntity):
 class TemperatureSensor(SensorBase):
     """Representation of a Temperature Sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
@@ -98,7 +97,7 @@ class TemperatureSensor(SensorBase):
 class HumiditySensor(SensorBase):
     """Representation of a Humidity Sensor."""
 
-    _attr_device_class = DEVICE_CLASS_HUMIDITY
+    _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property

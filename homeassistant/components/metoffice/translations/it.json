@@ -14,7 +14,7 @@
                     "latitude": "Latitudine",
                     "longitude": "Logitudine"
                 },
-                "description": "La latitudine e la longitudine verranno utilizzate per trovare la stazione meteorologica pi\u00f9 vicina.",
+                "description": "La latitudine e la longitudine saranno utilizzate per trovare la stazione meteorologica pi\u00f9 vicina.",
                 "title": "Connettiti al Met Office del Regno Unito"
             }
         }

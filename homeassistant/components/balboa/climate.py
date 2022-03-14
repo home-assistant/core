@@ -18,6 +18,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -25,12 +26,18 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CLIMATE, CLIMATE_SUPPORTED_FANSTATES, CLIMATE_SUPPORTED_MODES, DOMAIN
 from .entity import BalboaEntity
 
+SET_TEMPERATURE_WAIT = 1
 
-async def async_setup_entry(hass, entry, async_add_entities):
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the spa climate device."""
     async_add_entities(
         [
@@ -92,8 +99,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
     @property
     def hvac_action(self) -> str:
         """Return the current operation mode."""
-        state = self._client.get_heatstate()
-        if state >= self._client.ON:
+        if self._client.get_heatstate() >= self._client.ON:
             return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
@@ -124,10 +130,10 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
         newtemp = kwargs[ATTR_TEMPERATURE]
         if newtemp > self._client.tmax[self._client.TEMPRANGE_LOW][scale]:
             await self._client.change_temprange(self._client.TEMPRANGE_HIGH)
-            await asyncio.sleep(1)
+            await asyncio.sleep(SET_TEMPERATURE_WAIT)
         if newtemp < self._client.tmin[self._client.TEMPRANGE_HIGH][scale]:
             await self._client.change_temprange(self._client.TEMPRANGE_LOW)
-            await asyncio.sleep(1)
+            await asyncio.sleep(SET_TEMPERATURE_WAIT)
         await self._client.send_temp_change(newtemp)
 
     async def async_set_preset_mode(self, preset_mode) -> None:

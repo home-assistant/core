@@ -1,4 +1,6 @@
 """Light/LED support for the Skybell HD Doorbell."""
+from __future__ import annotations
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -6,14 +8,22 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the platform for a Skybell device."""
-    skybell = hass.data.get(SKYBELL_DOMAIN)
+    skybell = hass.data[SKYBELL_DOMAIN]
 
     sensors = []
     for device in skybell.get_devices():

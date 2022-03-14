@@ -3,20 +3,18 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Container, Generator
+from collections.abc import Callable, Container, Generator
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, time as dt_time, timedelta
 import functools as ft
 import logging
 import re
 import sys
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from homeassistant.components import zone as zone_cmp
-from homeassistant.components.device_automation import (
-    async_get_device_automation_platform,
-)
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.device_automation import condition as device_condition
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_GPS_ACCURACY,
@@ -29,7 +27,6 @@ from homeassistant.const import (
     CONF_BELOW,
     CONF_CONDITION,
     CONF_DEVICE_ID,
-    CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_ID,
     CONF_STATE,
@@ -51,13 +48,12 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     TemplateError,
 )
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
+from . import config_validation as cv, entity_registry as er
+from .sun import get_astral_event_date
+from .template import Template
 from .trace import (
     TraceElement,
     trace_append_element,
@@ -68,8 +64,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
-
-# mypy: disallow-any-generics
+from .typing import ConfigType, TemplateVarsType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
@@ -152,19 +147,12 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
 
 async def async_from_config(
     hass: HomeAssistant,
-    config: ConfigType | Template,
+    config: ConfigType,
 ) -> ConditionCheckerType:
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
     """
-    if isinstance(config, Template):
-        # We got a condition template, wrap it in a configuration to pass along.
-        config = {
-            CONF_CONDITION: "template",
-            CONF_VALUE_TEMPLATE: config,
-        }
-
     condition = config.get(CONF_CONDITION)
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
         factory = getattr(sys.modules[__name__], fmt.format(condition), None)
@@ -693,8 +681,8 @@ def async_template_from_config(config: ConfigType) -> ConditionCheckerType:
 
 def time(
     hass: HomeAssistant,
-    before: dt_util.dt.time | str | None = None,
-    after: dt_util.dt.time | str | None = None,
+    before: dt_time | str | None = None,
+    after: dt_time | str | None = None,
     weekday: None | str | Container[str] = None,
 ) -> bool:
     """Test if local time condition matches.
@@ -708,19 +696,19 @@ def time(
     now_time = now.time()
 
     if after is None:
-        after = dt_util.dt.time(0)
+        after = dt_time(0)
     elif isinstance(after, str):
         if not (after_entity := hass.states.get(after)):
             raise ConditionErrorMessage("time", f"unknown 'after' entity {after}")
         if after_entity.domain == "input_datetime":
-            after = dt_util.dt.time(
+            after = dt_time(
                 after_entity.attributes.get("hour", 23),
                 after_entity.attributes.get("minute", 59),
                 after_entity.attributes.get("second", 59),
             )
         elif after_entity.attributes.get(
             ATTR_DEVICE_CLASS
-        ) == DEVICE_CLASS_TIMESTAMP and after_entity.state not in (
+        ) == SensorDeviceClass.TIMESTAMP and after_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
@@ -732,19 +720,19 @@ def time(
             return False
 
     if before is None:
-        before = dt_util.dt.time(23, 59, 59, 999999)
+        before = dt_time(23, 59, 59, 999999)
     elif isinstance(before, str):
         if not (before_entity := hass.states.get(before)):
             raise ConditionErrorMessage("time", f"unknown 'before' entity {before}")
         if before_entity.domain == "input_datetime":
-            before = dt_util.dt.time(
+            before = dt_time(
                 before_entity.attributes.get("hour", 23),
                 before_entity.attributes.get("minute", 59),
                 before_entity.attributes.get("second", 59),
             )
         elif before_entity.attributes.get(
             ATTR_DEVICE_CLASS
-        ) == DEVICE_CLASS_TIMESTAMP and before_entity.state not in (
+        ) == SensorDeviceClass.TIMESTAMP and before_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
@@ -880,15 +868,8 @@ async def async_device_from_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConditionCheckerType:
     """Test a device condition."""
-    platform = await async_get_device_automation_platform(
-        hass, config[CONF_DOMAIN], "condition"
-    )
-    return trace_condition_function(
-        cast(
-            ConditionCheckerType,
-            platform.async_condition_from_config(hass, config),  # type: ignore
-        )
-    )
+    checker = await device_condition.async_condition_from_config(hass, config)
+    return trace_condition_function(checker)
 
 
 async def async_trigger_from_config(
@@ -916,7 +897,7 @@ def numeric_state_validate_config(
 
     registry = er.async_get(hass)
     config = dict(config)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
     return config
@@ -927,19 +908,16 @@ def state_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType
 
     registry = er.async_get(hass)
     config = dict(config)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
     return config
 
 
 async def async_validate_condition_config(
-    hass: HomeAssistant, config: ConfigType | Template
-) -> ConfigType | Template:
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
-    if isinstance(config, Template):
-        return config
-
     condition = config[CONF_CONDITION]
     if condition in ("and", "not", "or"):
         conditions = []
@@ -947,28 +925,23 @@ async def async_validate_condition_config(
             sub_cond = await async_validate_condition_config(hass, sub_cond)
             conditions.append(sub_cond)
         config["conditions"] = conditions
+        return config
 
     if condition == "device":
-        config = cv.DEVICE_CONDITION_SCHEMA(config)
-        assert not isinstance(config, Template)
-        platform = await async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], "condition"
-        )
-        if hasattr(platform, "async_validate_condition_config"):
-            return await platform.async_validate_condition_config(hass, config)  # type: ignore
-        return cast(ConfigType, platform.CONDITION_SCHEMA(config))  # type: ignore
+        return await device_condition.async_validate_condition_config(hass, config)
 
     if condition in ("numeric_state", "state"):
-        validator = getattr(
-            sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)
+        validator = cast(
+            Callable[[HomeAssistant, ConfigType], ConfigType],
+            getattr(sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)),
         )
-        return validator(hass, config)  # type: ignore
+        return validator(hass, config)
 
     return config
 
 
 async def async_validate_conditions_config(
-    hass: HomeAssistant, conditions: list[ConfigType | Template]
+    hass: HomeAssistant, conditions: list[ConfigType]
 ) -> list[ConfigType | Template]:
     """Validate config."""
     return await asyncio.gather(

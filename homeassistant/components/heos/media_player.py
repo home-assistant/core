@@ -7,13 +7,18 @@ from operator import ior
 
 from pyheos import HeosError, const as heos_const
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     DOMAIN,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_URL,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
@@ -36,6 +41,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -56,6 +62,7 @@ BASE_SUPPORTED_FEATURES = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_GROUPING
+    | SUPPORT_BROWSE_MEDIA
 )
 
 PLAY_STATE_TO_STATE = {
@@ -76,8 +83,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Add media players for a config entry."""
     players = hass.data[HEOS_DOMAIN][DOMAIN]
     devices = [HeosMediaPlayer(player) for player in players.values()]
@@ -185,7 +192,14 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @log_command_error("play media")
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_URL
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
         if media_type in (MEDIA_TYPE_URL, MEDIA_TYPE_MUSIC):
+            media_id = async_process_play_media_url(self.hass, media_id)
+
             await self._player.play_url(media_id)
             return
 
@@ -419,3 +433,11 @@ class HeosMediaPlayer(MediaPlayerEntity):
     def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         return self._player.volume / 100
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )

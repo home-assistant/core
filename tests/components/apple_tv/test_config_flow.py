@@ -1,5 +1,6 @@
 """Test config flow."""
 
+from ipaddress import IPv4Address
 from unittest.mock import ANY, patch
 
 from pyatv import exceptions
@@ -9,7 +10,11 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.apple_tv import CONF_ADDRESS, config_flow
-from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
+from homeassistant.components.apple_tv.const import (
+    CONF_IDENTIFIERS,
+    CONF_START_OFF,
+    DOMAIN,
+)
 
 from .common import airplay_service, create_conf, mrp_service, raop_service
 
@@ -17,6 +22,7 @@ from tests.common import MockConfigEntry
 
 DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
     host="127.0.0.1",
+    addresses=["127.0.0.1"],
     hostname="mock_hostname",
     port=None,
     type="_touch-able._tcp.local.",
@@ -27,6 +33,7 @@ DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
 
 RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
     host="127.0.0.1",
+    addresses=["127.0.0.1"],
     hostname="mock_hostname",
     port=None,
     type="_raop._tcp.local.",
@@ -526,6 +533,7 @@ async def test_zeroconf_unsupported_service_aborts(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -544,6 +552,7 @@ async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.2",
+            addresses=["127.0.0.2"],
             hostname="mock_hostname",
             port=None,
             name="Kitchen",
@@ -558,6 +567,7 @@ async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             name="Kitchen",
@@ -629,7 +639,48 @@ async def test_zeroconf_ip_change(hass, mock_scan):
     unrelated_entry.add_to_hass(hass)
     entry.add_to_hass(hass)
     mock_scan.result = [
-        create_conf("127.0.0.1", "Device", mrp_service(), airplay_service())
+        create_conf(
+            IPv4Address("127.0.0.1"), "Device", mrp_service(), airplay_service()
+        )
+    ]
+
+    with patch(
+        "homeassistant.components.apple_tv.async_setup_entry", return_value=True
+    ) as mock_async_setup:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=DMAP_SERVICE,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_async_setup.mock_calls) == 2
+    assert entry.data[CONF_ADDRESS] == "127.0.0.1"
+    assert unrelated_entry.data[CONF_ADDRESS] == "127.0.0.2"
+
+
+async def test_zeroconf_ip_change_via_secondary_identifier(hass, mock_scan):
+    """Test that the config entry gets updated when the ip changes and reloads.
+
+    Instead of checking only the unique id, all the identifiers
+    in the config entry are checked
+    """
+    entry = MockConfigEntry(
+        domain="apple_tv",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={CONF_IDENTIFIERS: ["mrpid"], CONF_ADDRESS: "127.0.0.2"},
+    )
+    unrelated_entry = MockConfigEntry(
+        domain="apple_tv", unique_id="unrelated", data={CONF_ADDRESS: "127.0.0.2"}
+    )
+    unrelated_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
+    mock_scan.result = [
+        create_conf(
+            IPv4Address("127.0.0.1"), "Device", mrp_service(), airplay_service()
+        )
     ]
 
     with patch(
@@ -695,13 +746,16 @@ async def test_zeroconf_unexpected_error(hass, mock_scan):
 
 async def test_zeroconf_abort_if_other_in_progress(hass, mock_scan):
     """Test discovering unsupported zeroconf service."""
-    mock_scan.result = [create_conf("127.0.0.1", "Device", airplay_service())]
+    mock_scan.result = [
+        create_conf(IPv4Address("127.0.0.1"), "Device", airplay_service())
+    ]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -714,7 +768,9 @@ async def test_zeroconf_abort_if_other_in_progress(hass, mock_scan):
     assert result["step_id"] == "confirm"
 
     mock_scan.result = [
-        create_conf("127.0.0.1", "Device", mrp_service(), airplay_service())
+        create_conf(
+            IPv4Address("127.0.0.1"), "Device", mrp_service(), airplay_service()
+        )
     ]
 
     result2 = await hass.config_entries.flow.async_init(
@@ -722,6 +778,7 @@ async def test_zeroconf_abort_if_other_in_progress(hass, mock_scan):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -737,7 +794,9 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
     hass, mock_scan, pairing, mock_zeroconf
 ):
     """Test discovery after service been added to existing flow with missing device."""
-    mock_scan.result = [create_conf("127.0.0.1", "Device", airplay_service())]
+    mock_scan.result = [
+        create_conf(IPv4Address("127.0.0.1"), "Device", airplay_service())
+    ]
 
     # Find device with AirPlay service and set up flow for it
     result = await hass.config_entries.flow.async_init(
@@ -745,6 +804,7 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -754,7 +814,9 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
     )
 
     mock_scan.result = [
-        create_conf("127.0.0.1", "Device", mrp_service(), airplay_service())
+        create_conf(
+            IPv4Address("127.0.0.1"), "Device", mrp_service(), airplay_service()
+        )
     ]
 
     # Find the same device again, but now also with MRP service. The first flow should
@@ -764,6 +826,7 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -789,7 +852,9 @@ async def test_zeroconf_additional_protocol_resolve_failure(
     hass, mock_scan, pairing, mock_zeroconf
 ):
     """Test discovery with missing service."""
-    mock_scan.result = [create_conf("127.0.0.1", "Device", airplay_service())]
+    mock_scan.result = [
+        create_conf(IPv4Address("127.0.0.1"), "Device", airplay_service())
+    ]
 
     # Find device with AirPlay service and set up flow for it
     result = await hass.config_entries.flow.async_init(
@@ -797,6 +862,7 @@ async def test_zeroconf_additional_protocol_resolve_failure(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -806,7 +872,9 @@ async def test_zeroconf_additional_protocol_resolve_failure(
     )
 
     mock_scan.result = [
-        create_conf("127.0.0.1", "Device", mrp_service(), airplay_service())
+        create_conf(
+            IPv4Address("127.0.0.1"), "Device", mrp_service(), airplay_service()
+        )
     ]
 
     # Find the same device again, but now also with MRP service. The first flow should
@@ -816,6 +884,7 @@ async def test_zeroconf_additional_protocol_resolve_failure(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -824,7 +893,9 @@ async def test_zeroconf_additional_protocol_resolve_failure(
         ),
     )
 
-    mock_scan.result = [create_conf("127.0.0.1", "Device", airplay_service())]
+    mock_scan.result = [
+        create_conf(IPv4Address("127.0.0.1"), "Device", airplay_service())
+    ]
 
     # Number of services found during initial scan (1) will not match the updated count
     # (2), so it will trigger a re-scan to find all services. This will however fail
@@ -841,7 +912,9 @@ async def test_zeroconf_pair_additionally_found_protocols(
     hass, mock_scan, pairing, mock_zeroconf
 ):
     """Test discovered protocols are merged to original flow."""
-    mock_scan.result = [create_conf("127.0.0.1", "Device", airplay_service())]
+    mock_scan.result = [
+        create_conf(IPv4Address("127.0.0.1"), "Device", airplay_service())
+    ]
 
     # Find device with AirPlay service and set up flow for it
     result = await hass.config_entries.flow.async_init(
@@ -849,6 +922,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -860,7 +934,9 @@ async def test_zeroconf_pair_additionally_found_protocols(
     await hass.async_block_till_done()
 
     mock_scan.result = [
-        create_conf("127.0.0.1", "Device", raop_service(), airplay_service())
+        create_conf(
+            IPv4Address("127.0.0.1"), "Device", raop_service(), airplay_service()
+        )
     ]
 
     # Find the same device again, but now also with RAOP service. The first flow should
@@ -874,7 +950,11 @@ async def test_zeroconf_pair_additionally_found_protocols(
 
     mock_scan.result = [
         create_conf(
-            "127.0.0.1", "Device", raop_service(), mrp_service(), airplay_service()
+            IPv4Address("127.0.0.1"),
+            "Device",
+            raop_service(),
+            mrp_service(),
+            airplay_service(),
         )
     ]
 
@@ -885,6 +965,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",

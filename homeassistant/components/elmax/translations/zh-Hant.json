@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "invalid_pin": "\u6240\u63d0\u4f9b\u7684 PIN \u7121\u6548\u3002",
             "network_error": "\u767c\u751f\u7db2\u8def\u932f\u8aa4",
             "no_panel_online": "\u627e\u4e0d\u5230 Elmax \u63a7\u5236\u9762\u677f\u3002",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4",
             "unknown_error": "\u767c\u751f\u672a\u77e5\u932f\u8aa4"
         },
         "step": {

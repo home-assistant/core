@@ -9,14 +9,16 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LENGTH_CENTIMETERS,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import OpenGarageEntity
@@ -52,7 +54,9 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the OpenGarage sensors."""
     open_garage_data_coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(

@@ -12,15 +12,17 @@
                 "data": {
                     "host": "Host",
                     "individual_address": "Alamat individu untuk koneksi",
-                    "local_ip": "IP lokal (kosongkan jika tidak yakin)",
+                    "local_ip": "IP lokal Home Assistant (kosongkan jika tidak yakin)",
                     "port": "Port",
-                    "route_back": "Dirutekan Kembali/Mode NAT"
+                    "route_back": "Dirutekan Kembali/Mode NAT",
+                    "tunneling_type": "Jenis Tunnel KNX"
                 },
                 "description": "Masukkan informasi koneksi untuk perangkat tunneling Anda."
             },
             "routing": {
                 "data": {
                     "individual_address": "Alamat individu untuk koneksi routing",
+                    "local_ip": "IP lokal Home Assistant (kosongkan jika tidak yakin)",
                     "multicast_group": "Grup multicast yang digunakan untuk routing",
                     "multicast_port": "Port multicast yang digunakan untuk routing"
                 },
@@ -46,6 +48,7 @@
                 "data": {
                     "connection_type": "Jenis Koneksi KNX",
                     "individual_address": "Alamat individu default",
+                    "local_ip": "IP lokal Home Assistant (gunakan 0.0.0.0 untuk deteksi otomatis)",
                     "multicast_group": "Grup multicast yang digunakan untuk routing dan penemuan",
                     "multicast_port": "Port multicast yang digunakan untuk routing dan penemuan",
                     "rate_limit": "Jumlah maksimal telegram keluar per detik",
@@ -57,7 +60,8 @@
                     "host": "Host",
                     "local_ip": "IP lokal (kosongkan jika tidak yakin)",
                     "port": "Port",
-                    "route_back": "Dirutekan Kembali/Mode NAT"
+                    "route_back": "Dirutekan Kembali/Mode NAT",
+                    "tunneling_type": "Jenis Tunnel KNX"
                 }
             }
         }

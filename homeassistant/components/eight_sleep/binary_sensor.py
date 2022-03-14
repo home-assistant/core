@@ -6,7 +6,7 @@ import logging
 from pyeight.eight import EightSleep
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
@@ -29,7 +29,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the eight sleep binary sensor."""
     if discovery_info is None:
@@ -61,7 +61,7 @@ class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, side, sensor)
-        self._attr_device_class = DEVICE_CLASS_OCCUPANCY
+        self._attr_device_class = BinarySensorDeviceClass.OCCUPANCY
         assert self._usrobj
         _LOGGER.debug(
             "Presence Sensor: %s, Side: %s, User: %s",

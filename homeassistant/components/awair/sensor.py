@@ -5,7 +5,6 @@ from python_awair.air_data import AirData
 from python_awair.devices import AwairDevice
 import voluptuous as vol
 
-from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -19,8 +18,10 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AwairDataUpdateCoordinator, AwairResult
 from .const import (
     API_DUST,
     API_PM25,
@@ -43,7 +44,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Import Awair configuration from YAML."""
     LOGGER.warning(
         "Loading Awair via platform setup is deprecated; Please remove it from your configuration"
@@ -61,7 +67,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up Awair sensor entity based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []

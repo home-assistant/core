@@ -254,7 +254,7 @@ async def test_service_refresh_devices(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
 
 
 async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_mock):
@@ -317,7 +317,7 @@ async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_m
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     assert len(captured_events) == 0
 
 

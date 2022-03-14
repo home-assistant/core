@@ -1,8 +1,6 @@
 """Demo platform that has a couple of fake sensors."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -20,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import DOMAIN
 
@@ -29,7 +27,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Demo sensors."""
     async_add_entities(

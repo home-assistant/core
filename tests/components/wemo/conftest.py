@@ -14,6 +14,7 @@ MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 50000
 MOCK_NAME = "WemoDeviceName"
 MOCK_SERIAL_NUMBER = "WemoSerialNumber"
+MOCK_FIRMWARE_VERSION = "WeMo_WW_2.00.XXXXX.PVT-OWRT"
 
 
 @pytest.fixture(name="pywemo_model")
@@ -57,7 +58,9 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
     device.port = MOCK_PORT
     device.name = MOCK_NAME
     device.serialnumber = MOCK_SERIAL_NUMBER
-    device.model_name = pywemo_model
+    device.model_name = pywemo_model.replace("LongPress", "")
+    device.udn = f"uuid:{device.model_name}-1_0-{device.serialnumber}"
+    device.firmware_version = MOCK_FIRMWARE_VERSION
     device.get_state.return_value = 0  # Default to Off
     device.supports_long_press.return_value = cls.supports_long_press()
 

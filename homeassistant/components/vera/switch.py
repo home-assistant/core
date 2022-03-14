@@ -5,12 +5,9 @@ from typing import Any
 
 import pyvera as veraApi
 
-from homeassistant.components.switch import (
-    DOMAIN as PLATFORM_DOMAIN,
-    ENTITY_ID_FORMAT,
-    SwitchEntity,
-)
+from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
@@ -29,7 +26,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraSwitch(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.SWITCH]
         ],
         True,
     )

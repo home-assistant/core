@@ -958,5 +958,6 @@
 			"version": 1,
 			"isSecure": false
 		}
-	]
+	],
+	"isControllerNode": false
 }

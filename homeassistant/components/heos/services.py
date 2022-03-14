@@ -5,7 +5,7 @@ import logging
 from pyheos import CommandFailedError, Heos, HeosError, const
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -47,7 +47,7 @@ def remove(hass: HomeAssistant):
     hass.services.async_remove(DOMAIN, SERVICE_SIGN_OUT)
 
 
-async def _sign_in_handler(controller, service):
+async def _sign_in_handler(controller: Heos, service: ServiceCall) -> None:
     """Sign in to the HEOS account."""
     if controller.connection_state != const.STATE_CONNECTED:
         _LOGGER.error("Unable to sign in because HEOS is not connected")
@@ -62,7 +62,7 @@ async def _sign_in_handler(controller, service):
         _LOGGER.error("Unable to sign in: %s", err)
 
 
-async def _sign_out_handler(controller, service):
+async def _sign_out_handler(controller: Heos, service: ServiceCall) -> None:
     """Sign out of the HEOS account."""
     if controller.connection_state != const.STATE_CONNECTED:
         _LOGGER.error("Unable to sign out because HEOS is not connected")

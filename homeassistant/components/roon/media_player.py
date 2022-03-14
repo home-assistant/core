@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     STATE_IDLE,
@@ -29,13 +30,14 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
@@ -67,7 +69,11 @@ SERVICE_TRANSFER = "transfer"
 ATTR_TRANSFER = "transfer_id"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Roon MediaPlayer from Config Entry."""
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
     media_players = set()

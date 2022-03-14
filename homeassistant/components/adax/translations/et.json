@@ -19,8 +19,8 @@
             },
             "local": {
                 "data": {
-                    "wifi_pswd": "Wifi salas\u00f5na",
-                    "wifi_ssid": "Wifi ssid"
+                    "wifi_pswd": "Wi-Fi salas\u00f5na",
+                    "wifi_ssid": "Wi-Fi SSID"
                 },
                 "description": "L\u00e4htesta k\u00fctteseade, vajutades + ja OK kuni ekraanil kuvatakse \"Reset\". Seej\u00e4rel vajuta ja hoia kerisel nuppu OK kuni sinine led hakkab vilkuma enne nupu Edasta vajutamist. K\u00fctteseadme konfigureerimine v\u00f5ib v\u00f5tta aega m\u00f5ni minut."
             },

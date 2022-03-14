@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Nom d'h\u00f4te non valide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "Le nom d'h\u00f4te pour lequel la requ\u00eate DNS doit \u00eatre effectu\u00e9e.",
+                    "resolver": "R\u00e9solveur pour la recherche IPv4",
+                    "resolver_ipv6": "R\u00e9solveur pour la recherche IPv6"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Adresse IP non valide pour le r\u00e9solveur"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "R\u00e9solveur pour la recherche IPv4",
+                    "resolver_ipv6": "R\u00e9solveur pour la recherche IPv6"
+                }
+            }
+        }
+    }
+}

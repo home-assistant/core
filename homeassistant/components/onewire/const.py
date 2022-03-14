@@ -4,7 +4,6 @@ from __future__ import annotations
 from homeassistant.const import Platform
 
 CONF_MOUNT_DIR = "mount_dir"
-CONF_NAMES = "names"
 
 CONF_TYPE_OWSERVER = "OWServer"
 CONF_TYPE_SYSBUS = "SysBus"
@@ -29,6 +28,7 @@ DEVICE_SUPPORT_OWSERVER = {
     "26": (),
     "28": (),
     "29": (),
+    "30": (),
     "3A": (),
     "3B": (),
     "42": (),
@@ -37,6 +37,20 @@ DEVICE_SUPPORT_OWSERVER = {
 }
 DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
 
+DEVICE_SUPPORT_OPTIONS = ["28"]
+
+PRECISION_MAPPING_FAMILY_28 = {
+    "temperature": "Default",
+    "temperature9": "9 Bits",
+    "temperature10": "10 Bits",
+    "temperature11": "11 Bits",
+    "temperature12": "12 Bits",
+}
+
+OPTION_ENTRY_DEVICE_OPTIONS = "device_options"
+OPTION_ENTRY_SENSOR_PRECISION = "precision"
+INPUT_ENTRY_CLEAR_OPTIONS = "clear_device_options"
+INPUT_ENTRY_DEVICE_SELECTION = "device_selection"
 
 MANUFACTURER_MAXIM = "Maxim Integrated"
 MANUFACTURER_HOBBYBOARDS = "Hobby Boards"

@@ -8,11 +8,11 @@ import voluptuous as vol
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.config_entries import (
-    SOURCE_DISCOVERY,
     SOURCE_IGNORE,
     SOURCE_IMPORT,
+    SOURCE_INTEGRATION_DISCOVERY,
     ConfigEntry,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
@@ -39,7 +39,7 @@ from .const import (
     DIR_UP,
     DOMAIN,
     SERVICE_ALARM_SOUND,
-    SERVICE_ALARM_TRIGER,
+    SERVICE_ALARM_TRIGGER,
     SERVICE_DETECTION_SENSITIVITY,
     SERVICE_PTZ,
     SERVICE_WAKE_DEVICE,
@@ -151,7 +151,7 @@ async def async_setup_entry(
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": SOURCE_DISCOVERY},
+                    context={"source": SOURCE_INTEGRATION_DISCOVERY},
                     data={
                         ATTR_SERIAL: camera,
                         CONF_IP_ADDRESS: value["local_ip"],
@@ -198,7 +198,7 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
-        SERVICE_ALARM_TRIGER,
+        SERVICE_ALARM_TRIGGER,
         {
             vol.Required(ATTR_ENABLE): cv.positive_int,
         },
@@ -249,7 +249,7 @@ class EzvizCamera(EzvizEntity, Camera):
         self._rtsp_stream = camera_rtsp_stream
         self._local_rtsp_port = local_rtsp_port
         self._ffmpeg_arguments = ffmpeg_arguments
-        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._ffmpeg = get_ffmpeg_manager(hass)
         self._attr_unique_id = serial
         self._attr_name = self.data["name"]
 

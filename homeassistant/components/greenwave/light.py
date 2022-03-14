@@ -1,4 +1,6 @@
 """Support for Greenwave Reality (TCP Connected) lights."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import os
@@ -13,7 +15,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,13 +34,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Greenwave Reality Platform."""
     host = config.get(CONF_HOST)
-    tokenfile = hass.config.path(".greenwave")
+    tokenfilename = hass.config.path(".greenwave")
     if config.get(CONF_VERSION) == 3:
-        if os.path.exists(tokenfile):
-            with open(tokenfile, encoding="utf8") as tokenfile:
+        if os.path.exists(tokenfilename):
+            with open(tokenfilename, encoding="utf8") as tokenfile:
                 token = tokenfile.read()
         else:
             try:
@@ -43,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             except PermissionError:
                 _LOGGER.error("The Gateway Is Not In Sync Mode")
                 raise
-            with open(tokenfile, "w+", encoding="utf8") as tokenfile:
+            with open(tokenfilename, "w+", encoding="utf8") as tokenfile:
                 tokenfile.write(token)
     else:
         token = None

@@ -5,7 +5,7 @@ import asyncio
 import copy
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, Literal, TypeVar, cast
+from typing import Any, Final, Literal, cast
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -57,9 +57,6 @@ async def async_setup_platform(
     """Set up the energy sensors."""
     sensor_manager = SensorManager(await async_get_manager(hass), async_add_entities)
     await sensor_manager.async_start()
-
-
-T = TypeVar("T")
 
 
 @dataclass
@@ -151,17 +148,17 @@ class SensorManager:
                     self._process_sensor_data(
                         adapter,
                         # Opting out of the type complexity because can't get it to work
-                        energy_source,  # type: ignore
+                        energy_source,  # type: ignore[arg-type]
                         to_add,
                         to_remove,
                     )
                     continue
 
-                for flow in energy_source[adapter.flow_type]:  # type: ignore
+                for flow in energy_source[adapter.flow_type]:  # type: ignore[typeddict-item]
                     self._process_sensor_data(
                         adapter,
                         # Opting out of the type complexity because can't get it to work
-                        flow,  # type: ignore
+                        flow,  # type: ignore[arg-type]
                         to_add,
                         to_remove,
                     )

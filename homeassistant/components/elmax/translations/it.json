@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "Autenticazione non valida",
+            "invalid_auth": "Autenticazione non valida",
             "invalid_pin": "Il pin fornito non \u00e8 valido",
             "network_error": "Si \u00e8 verificato un errore di rete",
-            "no_panel_online": "Non \u00e8 stato trovato alcun pannello di controllo Elmax online.",
+            "no_panel_online": "Non \u00e8 stato trovato alcun pannello di controllo Elmax in linea.",
+            "unknown": "Errore imprevisto",
             "unknown_error": "Si \u00e8 verificato un errore imprevisto"
         },
         "step": {
@@ -17,7 +19,7 @@
                     "panel_name": "Nome del pannello",
                     "panel_pin": "Codice PIN"
                 },
-                "description": "Seleziona quale pannello vuoi controllare con questa integrazione. Si prega di notare che il pannello deve essere acceso per essere configurato.",
+                "description": "Seleziona quale pannello vuoi controllare con questa integrazione. Nota che il pannello deve essere acceso per essere configurato.",
                 "title": "Selezione del pannello"
             },
             "user": {
@@ -25,7 +27,7 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "Effettua il login al cloud di Elmax utilizzando le tue credenziali",
+                "description": "Esegui l'accesso al cloud di Elmax utilizzando le tue credenziali",
                 "title": "Accesso all'account"
             }
         }

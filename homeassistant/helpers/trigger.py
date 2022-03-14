@@ -11,8 +11,9 @@ import voluptuous as vol
 from homeassistant.const import CONF_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+
+from .typing import ConfigType, TemplateVarsType
 
 _PLATFORM_ALIASES = {
     "device_automation": ("device",),
@@ -82,7 +83,7 @@ async def async_initialize_triggers(
         triggers.append(platform.async_attach_trigger(hass, conf, action, info))
 
     attach_results = await asyncio.gather(*triggers, return_exceptions=True)
-    removes = []
+    removes: list[Callable[[], None]] = []
 
     for result in attach_results:
         if isinstance(result, HomeAssistantError):
@@ -102,7 +103,7 @@ async def async_initialize_triggers(
     log_cb(logging.INFO, "Initialized trigger")
 
     @callback
-    def remove_triggers():  # type: ignore
+    def remove_triggers() -> None:
         """Remove triggers."""
         for remove in removes:
             remove()

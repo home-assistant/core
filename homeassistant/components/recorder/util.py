@@ -66,7 +66,10 @@ RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
 
 @contextmanager
 def session_scope(
-    *, hass: HomeAssistant | None = None, session: Session | None = None
+    *,
+    hass: HomeAssistant | None = None,
+    session: Session | None = None,
+    exception_filter: Callable[[Exception], bool] | None = None,
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
@@ -81,11 +84,12 @@ def session_scope(
         if session.get_transaction():
             need_rollback = True
             session.commit()
-    except Exception as err:
+    except Exception as err:  # pylint: disable=broad-except
         _LOGGER.error("Error executing query: %s", err)
         if need_rollback:
             session.rollback()
-        raise
+        if not exception_filter or not exception_filter(err):
+            raise
     finally:
         session.close()
 
@@ -458,22 +462,21 @@ def perodic_db_cleanups(instance: Recorder):
 
 
 @contextmanager
-def write_lock_db(instance: Recorder):
+def write_lock_db_sqlite(instance: Recorder):
     """Lock database for writes."""
 
-    if instance.engine.dialect.name == "sqlite":
-        with instance.engine.connect() as connection:
-            # Execute sqlite to create a wal checkpoint
-            # This is optional but makes sure the backup is going to be minimal
-            connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE)"))
-            # Create write lock
-            _LOGGER.debug("Lock database")
-            connection.execute(text("BEGIN IMMEDIATE;"))
-            try:
-                yield
-            finally:
-                _LOGGER.debug("Unlock database")
-                connection.execute(text("END;"))
+    with instance.engine.connect() as connection:
+        # Execute sqlite to create a wal checkpoint
+        # This is optional but makes sure the backup is going to be minimal
+        connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE)"))
+        # Create write lock
+        _LOGGER.debug("Lock database")
+        connection.execute(text("BEGIN IMMEDIATE;"))
+        try:
+            yield
+        finally:
+            _LOGGER.debug("Unlock database")
+            connection.execute(text("END;"))
 
 
 def async_migration_in_progress(hass: HomeAssistant) -> bool:

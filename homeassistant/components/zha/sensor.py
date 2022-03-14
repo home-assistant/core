@@ -50,8 +50,9 @@ from homeassistant.helpers.typing import StateType
 from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
+    CHANNEL_BASIC,
+    CHANNEL_DEVICE_TEMPERATURE,
     CHANNEL_ELECTRICAL_MEASUREMENT,
-    CHANNEL_FAN,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
     CHANNEL_LEAF_WETNESS,
@@ -186,19 +187,24 @@ class Sensor(ZhaEntity, SensorEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names=CHANNEL_ANALOG_INPUT,
     manufacturers="LUMI",
     models={"lumi.plug", "lumi.plug.maus01", "lumi.plug.mmeu01"},
+    stop_on_match_group=CHANNEL_ANALOG_INPUT,
 )
-@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT, manufacturers="Digi")
+@MULTI_MATCH(
+    channel_names=CHANNEL_ANALOG_INPUT,
+    manufacturers="Digi",
+    stop_on_match_group=CHANNEL_ANALOG_INPUT,
+)
 class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
     SENSOR_ATTR = "present_value"
 
 
-@STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
+@MULTI_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
@@ -300,6 +306,7 @@ class ElectricalMeasurementApparentPower(
     """Apparent power measurement."""
 
     SENSOR_ATTR = "apparent_power"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
     _unit = POWER_VOLT_AMPERE
     _div_mul_prefix = "ac_power"
 
@@ -339,8 +346,10 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
         return False
 
 
-@STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
-@STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
+@MULTI_MATCH(
+    generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER, stop_on_match_group=CHANNEL_HUMIDITY
+)
+@MULTI_MATCH(channel_names=CHANNEL_HUMIDITY, stop_on_match_group=CHANNEL_HUMIDITY)
 class Humidity(Sensor):
     """Humidity sensor."""
 
@@ -351,7 +360,7 @@ class Humidity(Sensor):
     _unit = PERCENTAGE
 
 
-@STRICT_MATCH(channel_names=CHANNEL_SOIL_MOISTURE)
+@MULTI_MATCH(channel_names=CHANNEL_SOIL_MOISTURE)
 class SoilMoisture(Sensor):
     """Soil Moisture sensor."""
 
@@ -362,7 +371,7 @@ class SoilMoisture(Sensor):
     _unit = PERCENTAGE
 
 
-@STRICT_MATCH(channel_names=CHANNEL_LEAF_WETNESS)
+@MULTI_MATCH(channel_names=CHANNEL_LEAF_WETNESS)
 class LeafWetness(Sensor):
     """Leaf Wetness sensor."""
 
@@ -373,7 +382,7 @@ class LeafWetness(Sensor):
     _unit = PERCENTAGE
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)
+@MULTI_MATCH(channel_names=CHANNEL_ILLUMINANCE)
 class Illuminance(Sensor):
     """Illuminance Sensor."""
 
@@ -465,7 +474,7 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
         return round(cooked, 3)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_PRESSURE)
+@MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
 class Pressure(Sensor):
     """Pressure sensor."""
 
@@ -476,7 +485,7 @@ class Pressure(Sensor):
     _unit = PRESSURE_HPA
 
 
-@STRICT_MATCH(channel_names=CHANNEL_TEMPERATURE)
+@MULTI_MATCH(channel_names=CHANNEL_TEMPERATURE)
 class Temperature(Sensor):
     """Temperature Sensor."""
 
@@ -487,7 +496,19 @@ class Temperature(Sensor):
     _unit = TEMP_CELSIUS
 
 
-@STRICT_MATCH(channel_names="carbon_dioxide_concentration")
+@MULTI_MATCH(channel_names=CHANNEL_DEVICE_TEMPERATURE)
+class DeviceTemperature(Sensor):
+    """Device Temperature Sensor."""
+
+    SENSOR_ATTR = "current_temperature"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.TEMPERATURE
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _divisor = 100
+    _unit = TEMP_CELSIUS
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
+@MULTI_MATCH(channel_names="carbon_dioxide_concentration")
 class CarbonDioxideConcentration(Sensor):
     """Carbon Dioxide Concentration sensor."""
 
@@ -499,7 +520,7 @@ class CarbonDioxideConcentration(Sensor):
     _unit = CONCENTRATION_PARTS_PER_MILLION
 
 
-@STRICT_MATCH(channel_names="carbon_monoxide_concentration")
+@MULTI_MATCH(channel_names="carbon_monoxide_concentration")
 class CarbonMonoxideConcentration(Sensor):
     """Carbon Monoxide Concentration sensor."""
 
@@ -511,8 +532,8 @@ class CarbonMonoxideConcentration(Sensor):
     _unit = CONCENTRATION_PARTS_PER_MILLION
 
 
-@STRICT_MATCH(generic_ids="channel_0x042e")
-@STRICT_MATCH(channel_names="voc_level")
+@MULTI_MATCH(generic_ids="channel_0x042e", stop_on_match_group="voc_level")
+@MULTI_MATCH(channel_names="voc_level", stop_on_match_group="voc_level")
 class VOCLevel(Sensor):
     """VOC Level sensor."""
 
@@ -524,7 +545,11 @@ class VOCLevel(Sensor):
     _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
 
-@STRICT_MATCH(channel_names="voc_level", models="lumi.airmonitor.acn01")
+@MULTI_MATCH(
+    channel_names="voc_level",
+    models="lumi.airmonitor.acn01",
+    stop_on_match_group="voc_level",
+)
 class PPBVOCLevel(Sensor):
     """VOC Level sensor."""
 
@@ -536,7 +561,7 @@ class PPBVOCLevel(Sensor):
     _unit = CONCENTRATION_PARTS_PER_BILLION
 
 
-@STRICT_MATCH(channel_names="formaldehyde_concentration")
+@MULTI_MATCH(channel_names="formaldehyde_concentration")
 class FormaldehydeConcentration(Sensor):
     """Formaldehyde Concentration sensor."""
 
@@ -547,7 +572,7 @@ class FormaldehydeConcentration(Sensor):
     _unit = CONCENTRATION_PARTS_PER_MILLION
 
 
-@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT)
+@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, stop_on_match_group=CHANNEL_THERMOSTAT)
 class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     """Thermostat HVAC action sensor."""
 
@@ -580,66 +605,6 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
-        running_mode = self._channel.running_mode
-        if running_mode == self._channel.RunningMode.Heat:
-            return CURRENT_HVAC_HEAT
-        if running_mode == self._channel.RunningMode.Cool:
-            return CURRENT_HVAC_COOL
-
-        running_state = self._channel.running_state
-        if running_state and running_state & (
-            self._channel.RunningState.Fan_State_On
-            | self._channel.RunningState.Fan_2nd_Stage_On
-            | self._channel.RunningState.Fan_3rd_Stage_On
-        ):
-            return CURRENT_HVAC_FAN
-        if (
-            self._channel.system_mode != self._channel.SystemMode.Off
-            and running_mode == self._channel.SystemMode.Off
-        ):
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
-
-    @property
-    def _pi_demand_action(self) -> str | None:
-        """Return the current HVAC action based on pi_demands."""
-
-        heating_demand = self._channel.pi_heating_demand
-        if heating_demand is not None and heating_demand > 0:
-            return CURRENT_HVAC_HEAT
-        cooling_demand = self._channel.pi_cooling_demand
-        if cooling_demand is not None and cooling_demand > 0:
-            return CURRENT_HVAC_COOL
-
-        if self._channel.system_mode != self._channel.SystemMode.Off:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
-
-    @callback
-    def async_set_state(self, *args, **kwargs) -> None:
-        """Handle state update from channel."""
-        self.async_write_ha_state()
-
-
-@MULTI_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
-    aux_channels=CHANNEL_FAN,
-    manufacturers="Centralite",
-    models={"3157100", "3157100-E"},
-    stop_on_match=True,
-)
-@MULTI_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
-    manufacturers="Zen Within",
-    stop_on_match=True,
-)
-class ZenHVACAction(ThermostatHVACAction):
-    """Zen Within Thermostat HVAC Action."""
-
-    @property
-    def _rm_rs_action(self) -> str | None:
-        """Return the current HVAC action based on running mode and running state."""
-
         if (running_state := self._channel.running_state) is None:
             return None
 
@@ -665,6 +630,105 @@ class ZenHVACAction(ThermostatHVACAction):
         ):
             return CURRENT_HVAC_FAN
 
+        running_state = self._channel.running_state
+        if running_state and running_state & self._channel.RunningState.Idle:
+            return CURRENT_HVAC_IDLE
+
         if self._channel.system_mode != self._channel.SystemMode.Off:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
+
+    @property
+    def _pi_demand_action(self) -> str | None:
+        """Return the current HVAC action based on pi_demands."""
+
+        heating_demand = self._channel.pi_heating_demand
+        if heating_demand is not None and heating_demand > 0:
+            return CURRENT_HVAC_HEAT
+        cooling_demand = self._channel.pi_cooling_demand
+        if cooling_demand is not None and cooling_demand > 0:
+            return CURRENT_HVAC_COOL
+
+        if self._channel.system_mode != self._channel.SystemMode.Off:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
+
+    @callback
+    def async_set_state(self, *args, **kwargs) -> None:
+        """Handle state update from channel."""
+        self.async_write_ha_state()
+
+
+@MULTI_MATCH(
+    channel_names={CHANNEL_THERMOSTAT},
+    manufacturers="Sinope Technologies",
+    stop_on_match_group=CHANNEL_THERMOSTAT,
+)
+class SinopeHVACAction(ThermostatHVACAction):
+    """Sinope Thermostat HVAC action sensor."""
+
+    @property
+    def _rm_rs_action(self) -> str | None:
+        """Return the current HVAC action based on running mode and running state."""
+
+        running_mode = self._channel.running_mode
+        if running_mode == self._channel.RunningMode.Heat:
+            return CURRENT_HVAC_HEAT
+        if running_mode == self._channel.RunningMode.Cool:
+            return CURRENT_HVAC_COOL
+
+        running_state = self._channel.running_state
+        if running_state and running_state & (
+            self._channel.RunningState.Fan_State_On
+            | self._channel.RunningState.Fan_2nd_Stage_On
+            | self._channel.RunningState.Fan_3rd_Stage_On
+        ):
+            return CURRENT_HVAC_FAN
+        if (
+            self._channel.system_mode != self._channel.SystemMode.Off
+            and running_mode == self._channel.SystemMode.Off
+        ):
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
+
+
+@MULTI_MATCH(channel_names=CHANNEL_BASIC)
+class RSSISensor(Sensor, id_suffix="rssi"):
+    """RSSI sensor for a device."""
+
+    _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        key = f"{CHANNEL_BASIC}_{cls.unique_id_suffix}"
+        if ZHA_ENTITIES.prevent_entity_creation(Platform.SENSOR, zha_device.ieee, key):
+            return None
+        return cls(unique_id, zha_device, channels, **kwargs)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        return getattr(self._zha_device.device, self.unique_id_suffix)
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+
+@MULTI_MATCH(channel_names=CHANNEL_BASIC)
+class LQISensor(RSSISensor, id_suffix="lqi"):
+    """LQI sensor for a device."""

@@ -12,25 +12,21 @@ from aiohue.v2.controllers.sensors import (
     TemperatureController,
     ZigbeeConnectivityController,
 )
-from aiohue.v2.models.connectivity import ZigbeeConnectivity
 from aiohue.v2.models.device_power import DevicePower
 from aiohue.v2.models.light_level import LightLevel
 from aiohue.v2.models.temperature import Temperature
+from aiohue.v2.models.zigbee_connectivity import ZigbeeConnectivity
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    LIGHT_LUX,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
@@ -84,7 +80,7 @@ async def async_setup_entry(
 class HueSensorBase(HueBaseEntity, SensorEntity):
     """Representation of a Hue sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -144,7 +140,7 @@ class HueBatterySensor(HueSensorBase):
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self) -> int:
@@ -161,7 +157,7 @@ class HueZigbeeConnectivitySensor(HueSensorBase):
     """Representation of a Hue ZigbeeConnectivity sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     @property

@@ -4,8 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import DEGREE, ENTITY_CATEGORY_CONFIG, TIME_MINUTES
-from homeassistant.core import callback
+from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DEGREE, TIME_MINUTES
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE,
@@ -13,6 +18,8 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
+    FEATURE_FLAGS_AIRFRESH_A1,
+    FEATURE_FLAGS_AIRFRESH_T2017,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRPURIFIER_2S,
@@ -40,6 +47,8 @@ from .const import (
     FEATURE_SET_VOLUME,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_A1,
+    MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
@@ -106,7 +115,7 @@ NUMBER_TYPES = {
         step=10,
         available_with_device_off=False,
         method="async_set_motor_speed",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_FAVORITE_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_FAVORITE_LEVEL,
@@ -116,7 +125,7 @@ NUMBER_TYPES = {
         max_value=17,
         step=1,
         method="async_set_favorite_level",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_FAN_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_FAN_LEVEL,
@@ -126,7 +135,7 @@ NUMBER_TYPES = {
         max_value=3,
         step=1,
         method="async_set_fan_level",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_VOLUME: XiaomiMiioNumberDescription(
         key=ATTR_VOLUME,
@@ -136,7 +145,7 @@ NUMBER_TYPES = {
         max_value=100,
         step=1,
         method="async_set_volume",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_OSCILLATION_ANGLE: XiaomiMiioNumberDescription(
         key=ATTR_OSCILLATION_ANGLE,
@@ -147,7 +156,7 @@ NUMBER_TYPES = {
         max_value=120,
         step=1,
         method="async_set_oscillation_angle",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_DELAY_OFF_COUNTDOWN: XiaomiMiioNumberDescription(
         key=ATTR_DELAY_OFF_COUNTDOWN,
@@ -158,7 +167,7 @@ NUMBER_TYPES = {
         max_value=480,
         step=1,
         method="async_set_delay_off_countdown",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_LED_BRIGHTNESS: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS,
@@ -168,7 +177,7 @@ NUMBER_TYPES = {
         max_value=100,
         step=1,
         method="async_set_led_brightness",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_LED_BRIGHTNESS_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS_LEVEL,
@@ -178,7 +187,7 @@ NUMBER_TYPES = {
         max_value=8,
         step=1,
         method="async_set_led_brightness_level",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_FAVORITE_RPM: XiaomiMiioNumberDescription(
         key=ATTR_FAVORITE_RPM,
@@ -189,12 +198,14 @@ NUMBER_TYPES = {
         max_value=2200,
         step=10,
         method="async_set_favorite_rpm",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 
 MODEL_TO_FEATURES_MAP = {
+    MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
     MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
+    MODEL_AIRFRESH_T2017: FEATURE_FLAGS_AIRFRESH_T2017,
     MODEL_AIRHUMIDIFIER_CA1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
@@ -227,7 +238,11 @@ OSCILLATION_ANGLE_VALUES = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Selectors from a config entry."""
     entities = []
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
@@ -245,6 +260,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return
 
     for feature, description in NUMBER_TYPES.items():
+        if feature == FEATURE_SET_LED_BRIGHTNESS and model != MODEL_FAN_ZA5:
+            # Delete LED bightness entity created by mistake if it exists
+            entity_reg = er.async_get(hass)
+            entity_id = entity_reg.async_get_entity_id(
+                PLATFORM_DOMAIN, DOMAIN, f"{description.key}_{config_entry.unique_id}"
+            )
+            if entity_id:
+                entity_reg.async_remove(entity_id)
+            continue
         if feature & features:
             if (
                 description.key == ATTR_OSCILLATION_ANGLE

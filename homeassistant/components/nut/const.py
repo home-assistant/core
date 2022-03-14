@@ -26,8 +26,6 @@ DOMAIN = "nut"
 
 PLATFORMS = [Platform.SENSOR]
 
-UNDO_UPDATE_LISTENER = "undo_update_listener"
-
 DEFAULT_NAME = "NUT UPS"
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 3493

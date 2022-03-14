@@ -51,16 +51,16 @@
             "turn_on": "Allumer"
         },
         "trigger_type": {
-            "double_short_release": "Les deux \" {subtype} \" ont \u00e9t\u00e9 rel\u00e2ch\u00e9s",
-            "initial_press": "Bouton \" {subtype} \" appuy\u00e9 initialement",
-            "long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long",
+            "double_short_release": "Les deux \u00ab\u00a0{subtype}\u00a0\u00bb sont rel\u00e2ch\u00e9s",
+            "initial_press": "D\u00e9but de l'appui du bouton \u00ab\u00a0{subtype}\u00a0\u00bb",
+            "long_release": "Bouton \u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9 apr\u00e8s un appui long",
             "remote_button_long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long",
             "remote_button_short_press": "bouton \"{subtype}\" est press\u00e9",
             "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9",
             "remote_double_button_long_press": "Les deux \"{sous-type}\" ont \u00e9t\u00e9 rel\u00e2ch\u00e9s apr\u00e8s un appui long",
             "remote_double_button_short_press": "Les deux \" {subtype} \" ont \u00e9t\u00e9 rel\u00e2ch\u00e9s",
-            "repeat": "Bouton \" {subtype} \" maintenu enfonc\u00e9",
-            "short_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui court"
+            "repeat": "Bouton \u00ab\u00a0{subtype}\u00a0\u00bb maintenu enfonc\u00e9",
+            "short_release": "Bouton \u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9 apr\u00e8s un appui court"
         }
     },
     "options": {
@@ -69,7 +69,8 @@
                 "data": {
                     "allow_hue_groups": "Autoriser les groupes Hue",
                     "allow_hue_scenes": "Autoriser les sc\u00e8nes Hue",
-                    "allow_unreachable": "Autoriser les ampoules inaccessibles \u00e0 signaler correctement leur \u00e9tat"
+                    "allow_unreachable": "Autoriser les ampoules inaccessibles \u00e0 signaler correctement leur \u00e9tat",
+                    "ignore_availability": "Ignorer l'\u00e9tat de la connectivit\u00e9 pour les appareils donn\u00e9s"
                 }
             }
         }

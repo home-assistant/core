@@ -1,12 +1,13 @@
 """The iCloud component."""
+import logging
 
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .account import IcloudAccount
@@ -85,11 +86,21 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up iCloud from legacy config file."""
     if (conf := config.get(DOMAIN)) is None:
         return True
+
+    # Note: need to remember to cleanup device_tracker (remove async_setup_scanner)
+    _LOGGER.warning(
+        "Configuration of the iCloud integration in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
 
     for account_conf in conf:
         hass.async_create_task(
@@ -134,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    def play_sound(service: ServiceDataType) -> None:
+    def play_sound(service: ServiceCall) -> None:
         """Play sound on the device."""
         account = service.data[ATTR_ACCOUNT]
         device_name = service.data.get(ATTR_DEVICE_NAME)
@@ -143,7 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in _get_account(account).get_devices_with_name(device_name):
             device.play_sound()
 
-    def display_message(service: ServiceDataType) -> None:
+    def display_message(service: ServiceCall) -> None:
         """Display a message on the device."""
         account = service.data[ATTR_ACCOUNT]
         device_name = service.data.get(ATTR_DEVICE_NAME)
@@ -154,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in _get_account(account).get_devices_with_name(device_name):
             device.display_message(message, sound)
 
-    def lost_device(service: ServiceDataType) -> None:
+    def lost_device(service: ServiceCall) -> None:
         """Make the device in lost state."""
         account = service.data[ATTR_ACCOUNT]
         device_name = service.data.get(ATTR_DEVICE_NAME)
@@ -165,7 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in _get_account(account).get_devices_with_name(device_name):
             device.lost_device(number, message)
 
-    def update_account(service: ServiceDataType) -> None:
+    def update_account(service: ServiceCall) -> None:
         """Call the update function of an iCloud account."""
         if (account := service.data.get(ATTR_ACCOUNT)) is None:
             for account in hass.data[DOMAIN].values():

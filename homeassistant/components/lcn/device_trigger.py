@@ -16,8 +16,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
-from .const import KEY_ACTIONS, SENDKEYS
+from .const import DOMAIN, KEY_ACTIONS, SENDKEYS
 
 TRIGGER_TYPES = {"transmitter", "transponder", "fingerprint", "send_keys"}
 
@@ -57,9 +56,11 @@ async def async_get_triggers(
 ) -> list[dict[str, Any]]:
     """List device triggers for LCN devices."""
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(device_id)
+    if (device := device_registry.async_get(device_id)) is None:
+        return []
 
-    if device.model.startswith(("LCN host", "LCN group", "LCN resource")):  # type: ignore[union-attr]
+    identifier = next(iter(device.identifiers))
+    if (identifier[1].count("-") != 1) or device.model.startswith("LCN group"):  # type: ignore[union-attr]
         return []
 
     base_trigger = {

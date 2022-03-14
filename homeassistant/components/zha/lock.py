@@ -23,7 +23,7 @@ from .entity import ZhaEntity
 
 # The first state is Zigbee 'Not fully locked'
 STATE_LIST = [STATE_UNLOCKED, STATE_LOCKED, STATE_UNLOCKED]
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.LOCK)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.LOCK)
 
 VALUE_TO_STATE = dict(enumerate(STATE_LIST))
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: entity_platform.AddEntitiesCallback,
-):
+) -> None:
     """Set up the Zigbee Home Automation Door Lock from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.LOCK]
 
@@ -86,7 +86,7 @@ async def async_setup_entry(
     )
 
 
-@STRICT_MATCH(channel_names=CHANNEL_DOORLOCK)
+@MULTI_MATCH(channel_names=CHANNEL_DOORLOCK)
 class ZhaDoorLock(ZhaEntity, LockEntity):
     """Representation of a ZHA lock."""
 

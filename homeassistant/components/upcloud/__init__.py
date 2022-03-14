@@ -4,7 +4,7 @@ from __future__ import annotations
 import dataclasses
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import requests.exceptions
 import upcloud_api
@@ -21,16 +21,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL
+from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +57,7 @@ STATE_MAP = {"error": STATE_PROBLEM, "started": STATE_ON, "stopped": STATE_OFF}
 
 
 class UpCloudDataUpdateCoordinator(
-    DataUpdateCoordinator[Dict[str, upcloud_api.Server]]
+    DataUpdateCoordinator[dict[str, upcloud_api.Server]]
 ):
     """UpCloud data update coordinator."""
 
@@ -177,7 +179,7 @@ class UpCloudServerEntity(CoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, upcloud_api.Server]],
+        coordinator: UpCloudDataUpdateCoordinator,
         uuid: str,
     ) -> None:
         """Initialize the UpCloud server entity."""
@@ -235,3 +237,17 @@ class UpCloudServerEntity(CoordinatorEntity):
                 ATTR_MEMORY_AMOUNT,
             )
         }
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return info for device registry."""
+        assert self.coordinator.config_entry is not None
+        return DeviceInfo(
+            configuration_url="https://hub.upcloud.com",
+            default_model="Control Panel",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
+                (DOMAIN, f"{self.coordinator.config_entry.data[CONF_USERNAME]}@hub")
+            },
+            manufacturer="UpCloud Ltd",
+        )

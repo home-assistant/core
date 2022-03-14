@@ -1,11 +1,16 @@
 """Support for Streamlabs Water Monitor Usage."""
+from __future__ import annotations
 
 from datetime import timedelta
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.streamlabswater import DOMAIN as STREAMLABSWATER_DOMAIN
 from homeassistant.const import VOLUME_GALLONS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+
+from . import DOMAIN as STREAMLABSWATER_DOMAIN
 
 DEPENDENCIES = ["streamlabswater"]
 
@@ -17,7 +22,12 @@ NAME_MONTHLY_USAGE = "Monthly Water"
 NAME_YEARLY_USAGE = "Yearly Water"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up water usage sensors."""
     client = hass.data[STREAMLABSWATER_DOMAIN]["client"]
     location_id = hass.data[STREAMLABSWATER_DOMAIN]["location_id"]
