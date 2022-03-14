@@ -186,7 +186,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-# Subtrace one for the recorder thread
+# Pool size must accommodate Recorder thread + All db executors
 MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
 
 
@@ -565,10 +565,8 @@ class Recorder(threading.Thread):
 
     def _shutdown_pool(self):
         """Close the dbpool connections in the current thread."""
-        assert self.engine is not None
-        pool = self.engine.pool
-        if hasattr(pool, "shutdown"):
-            pool.shutdown()
+        if hasattr(self.engine.pool, "shutdown"):
+            self.engine.pool.shutdown()
 
     @callback
     def async_initialize(self):
