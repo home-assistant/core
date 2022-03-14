@@ -307,7 +307,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
-        _LOGGER.debug("HVAC mode from frontend: %s", hvac_mode)
+        _LOGGER.debug("HVAC mode: %s", hvac_mode)
         try:
             if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
                 # If the system is off, turn it to Heat first then to Auto, otherwise it turns to
