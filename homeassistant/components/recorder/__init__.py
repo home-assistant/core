@@ -58,6 +58,7 @@ from . import history, migration, purge, statistics, websocket_api
 from .const import (
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
+    DB_WORKER_PREFIX,
     DOMAIN,
     MAX_QUEUE_BACKLOG,
     SQLITE_URL_PREFIX,
@@ -559,7 +560,7 @@ class Recorder(threading.Thread):
         if self._db_executor:
             self._stop_executor()
         self._db_executor = DBInterruptibleThreadPoolExecutor(
-            thread_name_prefix="DbWorker",
+            thread_name_prefix=DB_WORKER_PREFIX,
             max_workers=MAX_DB_EXECUTOR_WORKERS,
             shutdown_hook=self._shutdown_pool,
         )
