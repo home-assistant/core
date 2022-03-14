@@ -16,6 +16,8 @@ from .const import DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
+MANUAL_ENTRY_STRING = "IP Address"  # Simplified so it does not have to be translated
+
 
 async def validate_host_input(host: str) -> str:
     """Validate the user input allows us to connect.
@@ -25,7 +27,7 @@ async def validate_host_input(host: str) -> str:
     api = IntellifireAsync(host)
     await api.poll()
     ret = api.data.serial
-    LOGGER.info("Found a fireplace: %s", ret)
+    LOGGER.debug("Found a fireplace: %s", ret)
     # Return the serial number which will be used to calculate a unique ID for the device/sensors
     return ret
 
@@ -33,79 +35,84 @@ async def validate_host_input(host: str) -> str:
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IntelliFire."""
 
-    VERSION = 3
+    VERSION = 1
 
     def __init__(self):
         """Initialize the Config Flow Handler."""
-        self._discovered_host: str = ""
         self._config_context = {}
-
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
-        """Handle DHCP Discovery."""
-        potential_host = discovery_info.ip
-        LOGGER.debug(discovery_info)
-        try:
-            serial = await validate_host_input(potential_host)
-        except (ConnectionError, ClientConnectionError):
-            return self.async_abort(reason="not_intellifire_device")
-
-        await self.async_set_unique_id(serial)
-        # check if found before
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: potential_host,
-            }
-        )
-
-        self._discovered_host = potential_host
-        return await self.async_step_user()
+        self._not_configured_hosts: list[str] = []
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
         fireplace_finder = AsyncUDPFireplaceFinder()
-        ips = await fireplace_finder.search_fireplace(timeout=1)
-        if ip := ips[0]:
-            self._discovered_host = ip
+        discovered_hosts = await fireplace_finder.search_fireplace(timeout=1)
+        configured_hosts = {
+            entry.data[CONF_HOST]
+            for entry in self._async_current_entries(include_ignore=False)
+            if CONF_HOST in entry.data  # CONF_HOST will be missing for ignored entries
+        }
 
-    async def async_step_local_config(self, user_input=None):
-        """Handle local ip configuration."""
-        local_schema = vol.Schema(
-            {vol.Required(CONF_HOST, default=self._discovered_host): str}
+        self._not_configured_hosts = [
+            ip for ip in discovered_hosts if ip not in configured_hosts
+        ]
+        LOGGER.debug("Discovered Hosts: %s", discovered_hosts)
+        LOGGER.debug("Configured Hosts: %s", configured_hosts)
+        LOGGER.debug("Not Configured Hosts: %s", self._not_configured_hosts)
+
+    async def _async_validate_and_create_entry(self, host: str) -> FlowResult:
+        """Validate and create the entry."""
+        self._async_abort_entries_match({CONF_HOST: host})
+        serial = await validate_host_input(host)
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        return self.async_create_entry(
+            title=f"Fireplace {serial}",
+            data={CONF_HOST: host},
         )
-        errors = {}
 
+    async def async_step_manual_device_entry(self, user_input=None):
+        """Handle manual input of local IP configuration."""
+        errors = {}
+        host = user_input.get(CONF_HOST) if user_input else None
         if user_input is not None:
             try:
-                serial = await validate_host_input(user_input[CONF_HOST])
-
-                await self.async_set_unique_id(serial)
-                # check if found before
-                self._abort_if_unique_id_configured(
-                    updates={
-                        CONF_HOST: self._discovered_host,
-                    }
-                )
-
-                self._config_context[CONF_HOST] = user_input[CONF_HOST]
-
-                return self.async_create_entry(
-                    title="Fireplace", data=self._config_context
-                )
-
+                return await self._async_validate_and_create_entry(host)
             except (ConnectionError, ClientConnectionError):
                 errors["base"] = "cannot_connect"
 
-                return self.async_show_form(
-                    step_id="local_config",
-                    errors=errors,
-                    description_placeholders={CONF_HOST: user_input[CONF_HOST]},
-                    data_schema=vol.Schema(
-                        {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
-                    ),
+        return self.async_show_form(
+            step_id="manual_device_entry",
+            errors=errors,
+            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
+        )
+
+    async def async_step_pick_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Pick which device to configure."""
+        errors = {}
+
+        if user_input is not None:
+            if user_input[CONF_HOST] == MANUAL_ENTRY_STRING:
+                return await self.async_step_manual_device_entry()
+
+            try:
+                return await self._async_validate_and_create_entry(
+                    user_input[CONF_HOST]
                 )
+            except (ConnectionError, ClientConnectionError):
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
-            step_id="local_config", errors=errors, data_schema=local_schema
+            step_id="pick_device",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): vol.In(
+                        self._not_configured_hosts + [MANUAL_ENTRY_STRING]
+                    )
+                }
+            ),
         )
 
     async def async_step_user(
@@ -113,8 +120,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Start the user flow."""
 
-        # If the integration was not triggered by DHCP attempt a quick local discovery
-        if self._discovered_host == "":
-            await self._find_fireplaces()
+        # Launch fireplaces discovery
+        await self._find_fireplaces()
 
-        return await self.async_step_local_config()
+        if self._not_configured_hosts:
+            LOGGER.debug("Running Step: pick_device")
+            return await self.async_step_pick_device()
+        LOGGER.debug("Running Step: manual_device_entry")
+        return await self.async_step_manual_device_entry()
+
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+        """Handle DHCP Discovery."""
+
+        try:
+            return await self._async_validate_and_create_entry(host=discovery_info.ip)
+        except (ConnectionError, ClientConnectionError):
+            return self.async_abort(reason="not_intellifire_device")
