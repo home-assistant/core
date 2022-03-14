@@ -26,10 +26,10 @@ async def validate_host_input(host: str) -> str:
     """
     api = IntellifireAsync(host)
     await api.poll()
-    ret = api.data.serial
-    LOGGER.debug("Found a fireplace: %s", ret)
+    serial = api.data.serial
+    LOGGER.debug("Found a fireplace: %s", serial)
     # Return the serial number which will be used to calculate a unique ID for the device/sensors
-    return ret
+    return serial
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
