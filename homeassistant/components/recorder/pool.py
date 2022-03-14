@@ -4,6 +4,8 @@ import threading
 
 from sqlalchemy.pool import NullPool, SingletonThreadPool
 
+from .const import DB_WORKER_PREFIX
+
 POOL_SIZE = 5
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +26,9 @@ class RecorderPool(SingletonThreadPool, NullPool):
     def recorder_or_dbworker(self) -> bool:
         """Check if the thread is a recorder or dbworker thread."""
         thread_name = threading.current_thread().name
-        return bool(thread_name == "Recorder" or thread_name.startswith("DbWorker"))
+        return bool(
+            thread_name == "Recorder" or thread_name.startswith(DB_WORKER_PREFIX)
+        )
 
     def _do_return_conn(self, conn):
         if self.recorder_or_dbworker:

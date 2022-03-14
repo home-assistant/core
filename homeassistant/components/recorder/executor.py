@@ -20,11 +20,12 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
     """A database instance that will not deadlock on shutdown."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Init the executor."""
+        """Init the executor with a shutdown hook support."""
         self._shutdown_hook: Callable[[], None] = kwargs.pop("shutdown_hook")
         super().__init__(*args, **kwargs)
 
     def _adjust_thread_count(self) -> None:
+        """Port from cpython 3.10 since the default does not support a shutdown hook."""
         # if idle threads are available, don't spin new threads
         if self._idle_semaphore.acquire(  # pylint: disable=consider-using-with
             timeout=0
