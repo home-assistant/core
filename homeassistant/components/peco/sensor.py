@@ -117,7 +117,7 @@ class PecoSensor(CoordinatorEntity[dict[str, float]], SensorEntity):
         self.hass = hass
         self._county = county
         self._attr_name = f"{county.capitalize()} {description.name}"
-        self._attr_unique_id = f"{self._county}_{description.key}"
+        self._attr_unique_id = f"{self._county}-{description.key}"
         self.entity_description = description
 
     @property
