@@ -25,8 +25,8 @@ DATA_SCHEMA = vol.Schema(
 async def _get_device_mac(
     hass: core.HomeAssistant, host: str, username: str, password: str, port: int
 ) -> str:
-    ialarm = IAlarmXR(host, username, password, port)
-    return await hass.async_add_executor_job(ialarm.get_mac)
+    ialarmxr = IAlarmXR(host, username, password, port)
+    return await hass.async_add_executor_job(ialarmxr.get_mac)
 
 
 class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

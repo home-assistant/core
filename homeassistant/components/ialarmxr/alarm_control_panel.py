@@ -26,39 +26,25 @@ async def async_setup_entry(
 class IAlarmXRPanel(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of an iAlarmXR device."""
 
+    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+    _attr_name = "iAlarmXR"
+    _attr_icon = "mdi:security"
+
     def __init__(self, coordinator: IAlarmXRDataUpdateCoordinator) -> None:
         """Initialize the alarm panel."""
         super().__init__(coordinator)
         self.coordinator: IAlarmXRDataUpdateCoordinator = coordinator
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+        self._attr_unique_id = coordinator.mac
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.mac)},
             manufacturer="Antifurto365 - Meian",
             name=self.name,
         )
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique id."""
-        return self.coordinator.mac
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return "iAlarmXR"
-
-    @property
     def state(self) -> str:
         """Return the state of the device."""
         return self.coordinator.state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def alarm_disarm(self, code=None) -> None:
         """Send disarm command."""

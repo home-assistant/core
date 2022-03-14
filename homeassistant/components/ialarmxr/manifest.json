@@ -2,7 +2,7 @@
   "domain": "ialarmxr",
   "name": "Antifurto365 iAlarmXR",
   "documentation": "https://www.home-assistant.io/integrations/ialarmxr",
-  "requirements": ["pyialarmxr==1.0.2"],
+  "requirements": ["pyialarmxr==1.0.3"],
   "codeowners": ["@bigmoby"],
   "config_flow": true,
   "iot_class": "local_polling",
