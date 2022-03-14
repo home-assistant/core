@@ -189,3 +189,20 @@ async def test_no_wifi_support(
     state = hass.states.get(f"sensor.wled_rgb_light_wifi_{key}")
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+async def test_no_current_measurement(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Test missing current information when no max power is defined."""
+    device = mock_wled.update.return_value
+    device.info.leds.max_power = 0
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wled_rgb_light_max_current") is None
+    assert hass.states.get("sensor.wled_rgb_light_estimated_current") is None

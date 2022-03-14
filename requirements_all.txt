@@ -286,7 +286,7 @@ amberelectric==1.0.4
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.9.4
+amcrest==1.9.7
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.63
@@ -1905,9 +1905,6 @@ python-mystrom==1.1.2
 # homeassistant.components.nest
 python-nest==4.2.0
 
-# homeassistant.components.ozw
-python-openzwave-mqtt[mqtt-client]==1.4.0
-
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
 
@@ -2069,7 +2066,7 @@ roombapy==1.6.5
 roonapi==0.0.38
 
 # homeassistant.components.rova
-rova==0.2.1
+rova==0.3.0
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0

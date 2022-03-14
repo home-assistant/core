@@ -23,8 +23,8 @@ pytest-socket==0.4.1
 pytest-test-groups==1.0.3
 pytest-sugar==0.9.4
 pytest-timeout==2.1.0
-pytest-xdist==2.4.0
-pytest==7.0.1
+pytest-xdist==2.5.0
+pytest==7.1.0
 requests_mock==1.9.2
 respx==0.19.0
 stdlib-list==0.7.0
