@@ -51,7 +51,6 @@ class OAuth2FlowHandler(
         """Handle external yaml configuration."""
         if not self._reauth and self._async_current_entries():
             return self.async_abort(reason="already_configured")
-        await self.async_set_unique_id(DOMAIN)
         return await super().async_step_user(user_input)
 
     async def async_step_auth(
@@ -108,9 +107,7 @@ class OAuth2FlowHandler(
         if existing_entries:
             assert len(existing_entries) == 1
             entry = existing_entries[0]
-            self.hass.config_entries.async_update_entry(
-                entry, data=data, unique_id=DOMAIN
-            )
+            self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self.flow_impl.name, data=data)
