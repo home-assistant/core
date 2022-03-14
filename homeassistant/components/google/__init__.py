@@ -195,7 +195,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     calendar_service = GoogleCalendarService(hass, session)
     hass.data[DOMAIN][DATA_SERVICE] = calendar_service
 
-    async_setup_services(hass, hass.data[DOMAIN][DATA_CONFIG], calendar_service)
+    await async_setup_services(hass, hass.data[DOMAIN][DATA_CONFIG], calendar_service)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -207,7 +207,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def async_setup_services(
+async def async_setup_services(
     hass: HomeAssistant,
     config: ConfigType,
     calendar_service: GoogleCalendarService,
@@ -215,7 +215,9 @@ def async_setup_services(
     """Set up the service listeners."""
 
     created_calendars = set()
-    calendars = load_config(hass.config.path(YAML_DEVICES))
+    calendars = await hass.async_add_executor_job(
+        load_config, hass.config.path(YAML_DEVICES)
+    )
 
     async def _found_calendar(call: ServiceCall) -> None:
         calendar = get_calendar_info(hass, call.data)
@@ -228,7 +230,9 @@ def async_setup_services(
         # Populate the yaml file with all discovered calendars
         if calendar_id not in calendars:
             calendars[calendar_id] = calendar
-            update_config(hass.config.path(YAML_DEVICES), calendar)
+            await hass.async_add_executor_job(
+                update_config, hass.config.path(YAML_DEVICES), calendar
+            )
         else:
             # Prefer entity/name information from yaml, overriding api
             calendar = calendars[calendar_id]
