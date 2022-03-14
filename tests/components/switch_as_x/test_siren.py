@@ -39,7 +39,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
 
 
 async def test_service_calls(hass: HomeAssistant) -> None:
-    """Test service calls affecting the wrapped Siren entity."""
+    """Test service calls affecting the switch as siren entity."""
     await async_setup_component(hass, "switch", {"switch": [{"platform": "demo"}]})
     config_entry = MockConfigEntry(
         data={},
