@@ -14,7 +14,12 @@ from homeassistant.components.flux_led.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    CONF_HOST,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -278,3 +283,30 @@ async def test_name_removed_when_it_matches_entry_title(hass: HomeAssistant) -> 
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
     assert CONF_NAME not in config_entry.data
+
+
+async def test_entry_is_reloaded_when_title_changes(hass: HomeAssistant) -> None:
+    """Test the entry gets reloaded when the title changes."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_REMOTE_ACCESS_HOST: "any",
+            CONF_REMOTE_ACCESS_ENABLED: True,
+            CONF_REMOTE_ACCESS_PORT: 1234,
+            CONF_HOST: IP_ADDRESS,
+        },
+        title=DEFAULT_ENTRY_TITLE,
+    )
+    config_entry.add_to_hass(hass)
+    with _patch_discovery(), _patch_wifibulb():
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+        hass.config_entries.async_update_entry(config_entry, title="Shop Light")
+        assert config_entry.title == "Shop Light"
+        await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("light.bulb_rgbcw_ddeeff").attributes[ATTR_FRIENDLY_NAME]
+        == "Shop Light"
+    )
