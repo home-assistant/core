@@ -41,7 +41,6 @@ from homeassistant.helpers.entityfilter import (
     generate_filter,
 )
 from homeassistant.helpers.event import (
-    async_track_time_change,
     async_track_time_interval,
     async_track_utc_time_change,
 )
@@ -684,13 +683,8 @@ class Recorder(threading.Thread):
     def async_nightly_tasks(self, now):
         """Trigger the purge."""
         if self.auto_purge:
-            # Purge will schedule the perodic cleanups
-            # after it completes to ensure it does not happen
-            # until after the database is vacuumed
-            purge_before = dt_util.utcnow() - timedelta(days=self.keep_days)
-            self.queue.put(PurgeTask(purge_before, repack=False, apply_filter=False))
-        else:
-            self.queue.put(PerodicCleanupTask())
+            raise ValueError
+        self.queue.put(PerodicCleanupTask())
 
     @callback
     def async_periodic_statistics(self, now):
@@ -721,8 +715,8 @@ class Recorder(threading.Thread):
             return
 
         # Run nightly tasks at 4:12am
-        async_track_time_change(
-            self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
+        async_track_utc_time_change(
+            self.hass, self.async_periodic_statistics, minute=range(0, 60, 1)
         )
 
         # Compile short term statistics every 5 minutes
