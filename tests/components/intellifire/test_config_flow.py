@@ -46,7 +46,7 @@ async def test_single_discovery(
     mock_setup_entry: AsyncMock,
     mock_intellifire_config_flow: MagicMock,
 ) -> None:
-    """Test single firedplace UDP discovery."""
+    """Test single fireplace UDP discovery."""
     with patch(
         "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69"],
