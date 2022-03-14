@@ -348,7 +348,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
-            await self.coordinator.async_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset (PermanentHold, HoldUntil, NoHold, VacationHold) mode."""
@@ -361,7 +361,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
-            await self.coordinator.async_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_set_hold_time(self, time_period: str) -> None:
         """Set the time to hold until."""
@@ -375,4 +375,4 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
-            await self.coordinator.async_refresh()
+        await self.coordinator.async_refresh()
