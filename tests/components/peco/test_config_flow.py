@@ -55,30 +55,3 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     # it should have errored, instead of returning an errors dict, since this error should never happen
-
-
-async def test_reauth(hass: HomeAssistant) -> None:
-    """Test the reauth form, should just return the user form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
-
-    with patch(
-        "homeassistant.components.peco.async_setup_entry",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "county": "PHILADELPHIA",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Philadelphia Outage Count"
-    assert result2["data"] == {
-        "county": "PHILADELPHIA",
-    }

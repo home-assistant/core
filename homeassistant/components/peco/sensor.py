@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    api = hass.data[DOMAIN][config_entry.entry_id]
     websession = async_get_clientsession(hass)
     conf: MappingProxyType[str, Any] = config_entry.data
 
