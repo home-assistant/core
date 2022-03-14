@@ -186,7 +186,7 @@ async def test_update_entity(hass, client):
             "entity_id": "test_domain.world",
             "area_id": "mock-area-id",
             "device_class": "custom_device_class",
-            "hidden_by": RegistryEntryHider.USER,
+            "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "name": "after update",
         }
@@ -204,7 +204,7 @@ async def test_update_entity(hass, client):
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
-            "hidden_by": RegistryEntryHider.USER,
+            "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "name": "after update",
             "original_device_class": None,
@@ -219,10 +219,25 @@ async def test_update_entity(hass, client):
     assert state.name == "after update"
     assert state.attributes[ATTR_ICON] == "icon:after update"
 
-    # UPDATE DISABLED_BY TO USER
+    # UPDATE HIDDEN_BY TO ILLEGAL VALUE
     await client.send_json(
         {
             "id": 7,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "hidden_by": "ivy",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+
+    assert registry.entities["test_domain.world"].hidden_by is RegistryEntryHider.USER
+
+    # UPDATE DISABLED_BY TO USER
+    await client.send_json(
+        {
+            "id": 8,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "disabled_by": RegistryEntryDisabler.USER,
@@ -230,6 +245,7 @@ async def test_update_entity(hass, client):
     )
 
     msg = await client.receive_json()
+    assert msg["success"]
 
     assert hass.states.get("test_domain.world") is None
     assert (
@@ -239,7 +255,7 @@ async def test_update_entity(hass, client):
     # UPDATE DISABLED_BY TO NONE
     await client.send_json(
         {
-            "id": 8,
+            "id": 9,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "disabled_by": None,
@@ -258,7 +274,7 @@ async def test_update_entity(hass, client):
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
-            "hidden_by": RegistryEntryHider.USER,
+            "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "name": "after update",
             "original_device_class": None,
