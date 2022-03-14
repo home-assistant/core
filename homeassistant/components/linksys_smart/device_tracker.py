@@ -68,8 +68,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             return False
         try:
             data = response.json()
-            result = data["responses"][0]
-            devices = result["output"]["devices"]
+            devices = data["output"]["devices"]
             for device in devices:
                 if not (macs := device["knownMACAddresses"]):
                     _LOGGER.warning("Skipping device without known MAC address")
@@ -95,16 +94,12 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
     def _make_request(self):
         # Weirdly enough, this doesn't seem to require authentication
-        data = [
-            {
-                "request": {"sinceRevision": 0},
-                "action": "http://linksys.com/jnap/devicelist/GetDevices",
-            }
-        ]
-        headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
+        headers = {
+            "X-JNAP-Action": "http://linksys.com/jnap/devicelist/GetDevices"
+        }
         return requests.post(
             f"http://{self.host}/JNAP/",
             timeout=DEFAULT_TIMEOUT,
             headers=headers,
-            json=data,
+            json={},
         )
