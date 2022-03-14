@@ -7,14 +7,14 @@ from unittest.mock import Mock, patch
 from amberelectric import ApiException
 from amberelectric.model.channel import Channel, ChannelType
 from amberelectric.model.current_interval import CurrentInterval
-from amberelectric.model.interval import SpikeStatus
+from amberelectric.model.interval import Descriptor, SpikeStatus
 from amberelectric.model.site import Site
 from dateutil import parser
 import pytest
 
 from homeassistant.components.amberelectric.coordinator import AmberUpdateCoordinator
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed, normalize_descriptor
 
 from tests.components.amberelectric.helpers import (
     CONTROLLED_LOAD_CHANNEL,
@@ -61,6 +61,18 @@ def mock_api_current_price() -> Generator:
 
     with patch("amberelectric.api.AmberApi.create", return_value=instance):
         yield instance
+
+
+def test_normalize_descriptor() -> None:
+    """Test normalizing descriptors works correctly."""
+    assert normalize_descriptor(None) is None
+    assert normalize_descriptor(Descriptor.NEGATIVE) == "negative"
+    assert normalize_descriptor(Descriptor.EXTREMELY_LOW) == "extremely_low"
+    assert normalize_descriptor(Descriptor.VERY_LOW) == "very_low"
+    assert normalize_descriptor(Descriptor.LOW) == "low"
+    assert normalize_descriptor(Descriptor.NEUTRAL) == "neutral"
+    assert normalize_descriptor(Descriptor.HIGH) == "high"
+    assert normalize_descriptor(Descriptor.SPIKE) == "spike"
 
 
 async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) -> None:
