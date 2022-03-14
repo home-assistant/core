@@ -28,7 +28,7 @@ async def validate_host_input(host: str) -> str:
     ret = api.data.serial
     LOGGER.debug("Found a fireplace: %s", ret)
     # Return the serial number which will be used to calculate a unique ID for the device/sensors
-    return ret
+    return serial
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
