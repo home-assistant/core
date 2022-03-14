@@ -146,29 +146,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         ent_reg = er.async_get(hass)
-        for entity in er.async_entries_for_config_entry(ent_reg, old_config_entry_id):
-            _LOGGER.debug("Removing %s", entity.entity_id)
-            ent_reg.async_remove(entity.entity_id)
+        for entity_entry in er.async_entries_for_config_entry(
+            ent_reg, old_config_entry_id
+        ):
+            _LOGGER.debug("Removing %s", entity_entry.entity_id)
+            ent_reg.async_remove(entity_entry.entity_id)
             # In case the API key has changed due to a V3 -> V4 change, we need to
             # generate the new entity's unique ID
-            new_unique_id = f"{entry.data[CONF_API_KEY]}_{'_'.join(entity.unique_id.split('_')[1:])}"
-            _LOGGER.debug("Re-creating %s for the new config entry", entity.entity_id)
+            new_unique_id = (
+                f"{entry.data[CONF_API_KEY]}_"
+                f"{'_'.join(entity_entry.unique_id.split('_')[1:])}"
+            )
+            _LOGGER.debug(
+                "Re-creating %s for the new config entry", entity_entry.entity_id
+            )
             # We will precreate the entity so that any customizations can be preserved
-            new_entity = ent_reg.async_get_or_create(
-                entity.domain,
+            new_entity_entry = ent_reg.async_get_or_create(
+                entity_entry.domain,
                 DOMAIN,
                 new_unique_id,
-                suggested_object_id=entity.entity_id.split(".")[1],
-                disabled_by=entity.disabled_by,
+                suggested_object_id=entity_entry.entity_id.split(".")[1],
+                disabled_by=entity_entry.disabled_by,
                 config_entry=entry,
-                original_name=entity.original_name,
-                original_icon=entity.original_icon,
+                original_name=entity_entry.original_name,
+                original_icon=entity_entry.original_icon,
             )
-            _LOGGER.debug("Re-created %s", new_entity.entity_id)
+            _LOGGER.debug("Re-created %s", new_entity_entry.entity_id)
             # If there are customizations on the old entity, apply them to the new one
-            if entity.name or entity.icon:
+            if entity_entry.name or entity_entry.icon:
                 ent_reg.async_update_entity(
-                    new_entity.entity_id, name=entity.name, icon=entity.icon
+                    new_entity_entry.entity_id,
+                    name=entity_entry.name,
+                    icon=entity_entry.icon,
                 )
 
         # We only have one device in the registry but we will do a loop just in case
