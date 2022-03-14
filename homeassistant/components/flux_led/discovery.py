@@ -24,7 +24,7 @@ from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -142,7 +142,9 @@ def async_update_entry_from_discovery(
         updates["data"] = {**entry.data, **data_updates}
         if title_matches_name:
             del updates["data"][CONF_NAME]
-    if updates:
+    # If the title has changed and the config entry is loaded, a listener is
+    # in place, and we should not reload
+    if updates and not ("title" in updates and entry.state is ConfigEntryState.LOADED):
         return hass.config_entries.async_update_entry(entry, **updates)
     return False
 
