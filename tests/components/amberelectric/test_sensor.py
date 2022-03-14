@@ -292,7 +292,6 @@ def test_general_price_descriptor_descriptor_sensor(
     """Test the General Price Descriptor sensor."""
     assert len(hass.states.async_all()) == 5
     price = hass.states.get("sensor.mock_title_general_price_descriptor")
-    print(hass.states)
     assert price
     assert price.state == "extremely_low"
 
