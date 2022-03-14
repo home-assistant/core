@@ -23,6 +23,7 @@ CONFIG_FLOW = {
                         "select": {
                             "options": [
                                 {"value": Platform.COVER, "label": "Cover"},
+                                {"value": Platform.FAN, "label": "Fan"},
                                 {"value": Platform.LIGHT, "label": "Light"},
                                 {"value": Platform.SIREN, "label": "Siren"},
                             ]
