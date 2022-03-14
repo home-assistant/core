@@ -799,7 +799,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.16.6
+plugwise==0.16.8
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1228,9 +1228,6 @@ python-miio==0.5.11
 
 # homeassistant.components.nest
 python-nest==4.2.0
-
-# homeassistant.components.ozw
-python-openzwave-mqtt[mqtt-client]==1.4.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0

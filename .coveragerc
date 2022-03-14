@@ -872,9 +872,6 @@ omit =
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/const.py
     homeassistant/components/ovo_energy/sensor.py
-    homeassistant/components/ozw/__init__.py
-    homeassistant/components/ozw/entity.py
-    homeassistant/components/ozw/services.py
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
@@ -1011,6 +1008,7 @@ omit =
     homeassistant/components/senseme/light.py
     homeassistant/components/senseme/switch.py
     homeassistant/components/sensibo/__init__.py
+    homeassistant/components/sensibo/binary_sensor.py
     homeassistant/components/sensibo/climate.py
     homeassistant/components/sensibo/coordinator.py
     homeassistant/components/sensibo/diagnostics.py
