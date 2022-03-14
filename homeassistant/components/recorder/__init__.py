@@ -12,9 +12,10 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any
+from typing import Any, TypeVar
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
@@ -61,6 +62,7 @@ from .const import (
     MAX_QUEUE_BACKLOG,
     SQLITE_URL_PREFIX,
 )
+from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
     Base,
     Events,
@@ -69,7 +71,7 @@ from .models import (
     StatisticsRuns,
     process_timestamp,
 )
-from .pool import RecorderPool
+from .pool import POOL_SIZE, RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -82,6 +84,9 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+T = TypeVar("T")
+
 
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
@@ -180,6 +185,16 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+# Subtrace one for the recorder thread
+MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
+
+
+@bind_hass
+def get_instance(hass: HomeAssistant) -> Recorder:
+    """Get the recorder instance."""
+    return hass.data[DATA_INSTANCE]
 
 
 @bind_hass
@@ -510,7 +525,7 @@ class Recorder(threading.Thread):
         self.async_db_ready: asyncio.Future = asyncio.Future()
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
-        self.engine: Any = None
+        self.engine: Engine | None = None
         self.run_info: Any = None
 
         self.entity_filter = entity_filter
@@ -530,12 +545,31 @@ class Recorder(threading.Thread):
         self._queue_watcher = None
         self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
+        self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
 
         self.enabled = True
 
     def set_enable(self, enable):
         """Enable or disable recording events and states."""
         self.enabled = enable
+
+    @callback
+    def async_start_executor(self):
+        """Start the executor."""
+        if self._db_executor:
+            self._stop_executor()
+        self._db_executor = DBInterruptibleThreadPoolExecutor(
+            thread_name_prefix="DbWorker",
+            max_workers=MAX_DB_EXECUTOR_WORKERS,
+            shutdown_hook=self._shutdown_pool,
+        )
+
+    def _shutdown_pool(self):
+        """Close the dbpool connections in the current thread."""
+        assert self.engine is not None
+        pool = self.engine.pool
+        if hasattr(pool, "shutdown"):
+            pool.shutdown()
 
     @callback
     def async_initialize(self):
@@ -546,6 +580,19 @@ class Recorder(threading.Thread):
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)
         )
+
+    @callback
+    def async_add_executor_job(
+        self, target: Callable[..., T], *args: Any
+    ) -> asyncio.Future[T]:
+        """Add an executor job from within the event loop."""
+        return self.hass.loop.run_in_executor(self._db_executor, target, *args)
+
+    def _stop_executor(self) -> None:
+        """Stop the executor."""
+        assert self._db_executor is not None
+        self._db_executor.shutdown()
+        self._db_executor = None
 
     @callback
     def _async_check_queue(self, *_):
@@ -673,6 +720,7 @@ class Recorder(threading.Thread):
     def async_connection_success(self):
         """Connect success tasks."""
         self.async_db_ready.set_result(True)
+        self.async_start_executor()
 
     @callback
     def _async_recorder_ready(self):
@@ -1200,6 +1248,7 @@ class Recorder(threading.Thread):
     def _shutdown(self):
         """Save end time for current run."""
         self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
+        self._stop_executor()
         self._end_session()
         self._close_connection()
 
