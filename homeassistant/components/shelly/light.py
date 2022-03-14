@@ -114,7 +114,7 @@ async def async_setup_rpc_entry(
 
     switch_ids = []
     for id_ in switch_key_ids:
-        if not is_rpc_channel_type_light(wrapper.device.config, str(id_)):
+        if not is_rpc_channel_type_light(wrapper.device.config, f"switch:{id_}"):
             continue
 
         switch_ids.append(id_)

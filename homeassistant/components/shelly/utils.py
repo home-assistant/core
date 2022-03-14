@@ -345,7 +345,9 @@ def is_block_channel_type_light(settings: dict[str, Any], channel: str) -> bool:
 def is_rpc_channel_type_light(config: dict[str, Any], channel: str) -> bool:
     """Return true if rpc channel consumption type is set to light."""
     con_types = config["sys"]["ui_data"].get("consumption_types")
-    return con_types is not None and con_types[int(channel)].lower().startswith("light")
+    return con_types is not None and con_types[
+        int(channel.split(":")[1])
+    ].lower().startswith("light")
 
 
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
