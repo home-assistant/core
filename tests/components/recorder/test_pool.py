@@ -13,13 +13,16 @@ def test_recorder_pool(caplog):
 
     engine = create_engine("sqlite://", poolclass=RecorderPool)
     get_session = sessionmaker(bind=engine)
-
+    shutdown = False
     connections = []
 
     def _get_connection_twice():
         session = get_session()
         connections.append(session.connection().connection.connection)
         session.close()
+
+        if shutdown:
+            engine.pool.shutdown()
 
         session = get_session()
         connections.append(session.connection().connection.connection)
@@ -50,4 +53,10 @@ def test_recorder_pool(caplog):
     assert "Database access is slower in the default executor" not in caplog.text
     assert connections[6] == connections[7]
 
-    engine.pool.shutdown()
+    shutdown = True
+    caplog.clear()
+    new_thread = threading.Thread(target=_get_connection_twice, name=DB_WORKER_PREFIX)
+    new_thread.start()
+    new_thread.join()
+    assert "Database access is slower in the default executor" not in caplog.text
+    assert connections[8] != connections[9]

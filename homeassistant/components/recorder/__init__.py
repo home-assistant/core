@@ -557,8 +557,6 @@ class Recorder(threading.Thread):
     @callback
     def async_start_executor(self):
         """Start the executor."""
-        if self._db_executor:
-            self._stop_executor()
         self._db_executor = DBInterruptibleThreadPoolExecutor(
             thread_name_prefix=DB_WORKER_PREFIX,
             max_workers=MAX_DB_EXECUTOR_WORKERS,
