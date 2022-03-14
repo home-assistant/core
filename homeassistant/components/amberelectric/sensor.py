@@ -106,7 +106,6 @@ class AmberPriceSensor(AmberSensor):
         data["renewables"] = round(interval.renewables)
         data["estimate"] = interval.estimate
         data["spike_status"] = interval.spike_status.value
-        data["descriptor"] = normalize_descriptor(interval.descriptor)
         data["channel_type"] = interval.channel_type.value
 
         if interval.range is not None:

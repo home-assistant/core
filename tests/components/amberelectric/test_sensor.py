@@ -116,7 +116,6 @@ async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) ->
     assert attributes["renewables"] == 51
     assert attributes["estimate"] is True
     assert attributes["spike_status"] == "none"
-    assert attributes["descriptor"] == "extremely_low"
     assert attributes["channel_type"] == "general"
     assert attributes["attribution"] == "Data provided by Amber Electric"
     assert attributes.get("range_min") is None
@@ -156,7 +155,6 @@ async def test_general_and_controlled_load_price_sensor(
     assert attributes["renewables"] == 51
     assert attributes["estimate"] is True
     assert attributes["spike_status"] == "none"
-    assert attributes["descriptor"] == "extremely_low"
     assert attributes["channel_type"] == "controlledLoad"
     assert attributes["attribution"] == "Data provided by Amber Electric"
 
@@ -180,7 +178,6 @@ async def test_general_and_feed_in_price_sensor(
     assert attributes["renewables"] == 51
     assert attributes["estimate"] is True
     assert attributes["spike_status"] == "none"
-    assert attributes["descriptor"] == "extremely_low"
     assert attributes["channel_type"] == "feedIn"
     assert attributes["attribution"] == "Data provided by Amber Electric"
 
