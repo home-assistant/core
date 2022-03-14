@@ -167,6 +167,18 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                         rssi=measurement.get("rssi"),
                     )
 
+            # Add information for pure devices
+            pure_conf = dev["pureBoostConfig"]
+            pure_sensitivity = pure_conf.get("sensitivity") if pure_conf else None
+            pure_boost_enabled = pure_conf.get("enabled") if pure_conf else None
+            pm25 = dev["measurements"].get("pm25")
+
+            # Binary sensors for main device
+            room_occupied = dev["roomIsOccupied"]
+            update_available = bool(
+                dev["firmwareVersion"] != dev["currentlyAvailableFirmwareVersion"]
+            )
+
             device_data[unique_id] = {
                 "id": unique_id,
                 "mac": mac,
@@ -200,6 +212,11 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "calibration_hum": calibration_hum,
                 "full_capabilities": capabilities,
                 "motion_sensors": motion_sensors,
+                "pure_sensitivity": pure_sensitivity,
+                "pure_boost_enabled": pure_boost_enabled,
+                "pm25": pm25,
+                "room_occupied": room_occupied,
+                "update_available": update_available,
             }
 
         return SensiboData(raw=data, parsed=device_data)
