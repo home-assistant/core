@@ -546,7 +546,6 @@ class Recorder(threading.Thread):
         self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
-        self._db_executor_shutdown = None
 
         self.enabled = True
 
