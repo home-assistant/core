@@ -674,19 +674,22 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
+    event_data: dict[str, int | str] = {}
+
     device_registry = dr.async_get(hass)
     device = device_registry.devices[config[CONF_DEVICE_ID]]
 
     deconz_event = _get_deconz_event_from_device(hass, device)
-    event_id = deconz_event.serial
+    if event_id := deconz_event.serial:
+        event_data[CONF_UNIQUE_ID] = event_id
 
     config_trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
-    trigger: dict[str, int] = REMOTES[cast(str, device.model)][config_trigger]
+    event_data |= REMOTES[cast(str, device.model)][config_trigger]
 
     raw_event_config = {
         event_trigger.CONF_PLATFORM: "event",
         event_trigger.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
-        event_trigger.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, **trigger},
+        event_trigger.CONF_EVENT_DATA: event_data,
     }
 
     event_config = event_trigger.TRIGGER_SCHEMA(raw_event_config)
