@@ -36,10 +36,6 @@ class OAuthError(Exception):
     """OAuth related error."""
 
 
-class TokenNotReady(Exception):
-    """Raised when the token exchange is not yet ready, and should be attempted again."""
-
-
 class DeviceAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """OAuth implementation for Device Auth."""
 
@@ -116,6 +112,7 @@ class DeviceFlow:
         async def _poll_attempt(now: datetime.datetime):
             assert self._exchange_task_unsub
             _LOGGER.debug("Attempting OAuth code exchange")
+            # Note: The callback is invoked with None when the device code has expired
             creds: Credentials | None = None
             if now < expiration_time:
                 try:
