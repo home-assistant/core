@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboBaseEntity
+from .entity import SensiboDeviceBaseEntity
 
 
 @dataclass
@@ -70,7 +70,7 @@ async def async_setup_entry(
     )
 
 
-class SensiboNumber(SensiboBaseEntity, NumberEntity):
+class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
     """Representation of a Sensibo numbers."""
 
     entity_description: SensiboNumberEntityDescription
