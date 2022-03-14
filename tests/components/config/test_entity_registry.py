@@ -240,7 +240,7 @@ async def test_update_entity(hass, client):
             "id": 8,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
-            "disabled_by": RegistryEntryDisabler.USER,
+            "disabled_by": "user",  # We exchange strings over the WS API, not enums
         }
     )
 
