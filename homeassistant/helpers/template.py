@@ -819,10 +819,6 @@ class TemplateStateBase(State):
         self._collect_state()
         return self._state.__eq__(other)
 
-    def __repr__(self) -> str:
-        """Representation of Template State."""
-        return f"<template TemplateState({self._state.__repr__()})>"
-
 
 class TemplateState(TemplateStateBase):
     """Class to represent a state object in a template."""
@@ -835,6 +831,10 @@ class TemplateState(TemplateStateBase):
         """Initialize template state."""
         super().__init__(hass, collect, state.entity_id)
         self._state = state
+
+    def __repr__(self) -> str:
+        """Representation of Template State."""
+        return f"<template TemplateState({self._state.__repr__()})>"
 
 
 class TemplateStateFromEntityId(TemplateStateBase):
@@ -851,6 +851,10 @@ class TemplateStateFromEntityId(TemplateStateBase):
         state = self._hass.states.get(self._entity_id)
         assert state
         return state
+
+    def __repr__(self) -> str:
+        """Representation of Template State."""
+        return f"<template TemplateStateFromEntityId({self._entity_id})>"
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
