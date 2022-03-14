@@ -15,7 +15,6 @@ import time
 from typing import Any, TypeVar
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
-from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
@@ -525,7 +524,7 @@ class Recorder(threading.Thread):
         self.async_db_ready: asyncio.Future = asyncio.Future()
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
-        self.engine: Engine | None = None
+        self.engine: Any = None
         self.run_info: Any = None
 
         self.entity_filter = entity_filter
