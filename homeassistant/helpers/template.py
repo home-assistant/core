@@ -717,22 +717,24 @@ class DomainStates:
         return f"<template DomainStates('{self._domain}')>"
 
 
-class TemplateState(State):
+class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_state", "_collect")
+    __slots__ = ("_hass", "_collect", "_entity_id")
+
+    _state: State
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
+    def __init__(self, hass: HomeAssistant, collect: bool, entity_id: str) -> None:
         """Initialize template state."""
         self._hass = hass
-        self._state = state
         self._collect = collect
+        self._entity_id = entity_id
 
     def _collect_state(self) -> None:
         if self._collect and _RENDER_INFO in self._hass.data:
-            self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
+            self._hass.data[_RENDER_INFO].entities.add(self._entity_id)
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
@@ -741,10 +743,10 @@ class TemplateState(State):
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
             if self._collect and _RENDER_INFO in self._hass.data:
-                self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
+                self._hass.data[_RENDER_INFO].entities.add(self._entity_id)
             return getattr(self._state, item)
         if item == "entity_id":
-            return self._state.entity_id
+            return self._entity_id
         if item == "state_with_unit":
             return self.state_with_unit
         raise KeyError
@@ -755,7 +757,7 @@ class TemplateState(State):
 
         Intentionally does not collect state
         """
-        return self._state.entity_id
+        return self._entity_id
 
     @property
     def state(self):
@@ -820,6 +822,35 @@ class TemplateState(State):
     def __repr__(self) -> str:
         """Representation of Template State."""
         return f"<template TemplateState({self._state.__repr__()})>"
+
+
+class TemplateState(TemplateStateBase):
+    """Class to represent a state object in a template."""
+
+    __slots__ = ("_state",)
+
+    # Inheritance is done so functions that check against State keep working
+    # pylint: disable=super-init-not-called
+    def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
+        """Initialize template state."""
+        super().__init__(hass, collect, state.entity_id)
+        self._state = state
+
+
+class TemplateStateFromEntityId(TemplateStateBase):
+    """Class to represent a state object in a template."""
+
+    def __init__(
+        self, hass: HomeAssistant, entity_id: str, collect: bool = True
+    ) -> None:
+        """Initialize template state."""
+        super().__init__(hass, collect, entity_id)
+
+    @property
+    def _state(self) -> State:  # type: ignore[override] # mypy issue 4125
+        state = self._hass.states.get(self._entity_id)
+        assert state
+        return state
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:

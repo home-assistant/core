@@ -632,7 +632,7 @@ async def test_sun_renders_once_per_sensor(hass, start_ha):
                 "platform": "template",
                 "sensors": {
                     "test_template_sensor": {
-                        "value_template": "{{ state_attr(entity_id, 'test') }}: {{ entity_id }}",
+                        "value_template": "{{ this.attributes.test }}: {{ this.entity_id }}",
                         "attribute_templates": {
                             "test": "It {{ states.sensor.test_state.state }}"
                         },
@@ -642,7 +642,7 @@ async def test_sun_renders_once_per_sensor(hass, start_ha):
         },
     ],
 )
-async def test_entity_id_variable(hass, start_ha):
+async def test_this_variable(hass, start_ha):
     """Test template."""
     assert hass.states.get(TEST_NAME).state == "It: " + TEST_NAME
 

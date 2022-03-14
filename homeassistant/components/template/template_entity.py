@@ -27,7 +27,11 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
-from homeassistant.helpers.template import Template, result_as_boolean
+from homeassistant.helpers.template import (
+    Template,
+    TemplateStateFromEntityId,
+    result_as_boolean,
+)
 
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
@@ -365,7 +369,7 @@ class TemplateEntity(Entity):
         template_var_tups = []
         has_availability_template = False
 
-        values = {ATTR_ENTITY_ID: self.entity_id}
+        values = {"this": TemplateStateFromEntityId(self.hass, self.entity_id)}
 
         for template, attributes in self._template_attrs.items():
             template_var_tup = TrackTemplate(template, values)
