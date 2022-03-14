@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -29,6 +27,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE, DeconzAlarmEvent, DeconzEvent
+from .gateway import DeconzGateway
 
 CONF_SUBTYPE = "subtype"
 
@@ -629,12 +628,11 @@ def _get_deconz_event_from_device(
     device: dr.DeviceEntry,
 ) -> DeconzAlarmEvent | DeconzEvent:
     """Resolve deconz event from device."""
-    for gateway in hass.data.get(DOMAIN, {}).values():
+    gateways: dict[str, DeconzGateway] = hass.data.get(DOMAIN, {})
+    for gateway in gateways.values():
         for deconz_event in gateway.events:
             if device.id == deconz_event.device_id:
-                if isinstance(deconz_event, DeconzAlarmEvent):
-                    return deconz_event
-                return cast(DeconzEvent, deconz_event)
+                return deconz_event
 
     raise InvalidDeviceAutomationConfig(
         f'No deconz_event tied to device "{device.name}" found'
@@ -683,8 +681,9 @@ async def async_attach_trigger(
     if event_id := deconz_event.serial:
         event_data[CONF_UNIQUE_ID] = event_id
 
-    config_trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
-    event_data |= REMOTES[cast(str, device.model)][config_trigger]
+    if device_model := device.model:
+        config_trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+        event_data |= REMOTES[device_model][config_trigger]
 
     raw_event_config = {
         event_trigger.CONF_PLATFORM: "event",
