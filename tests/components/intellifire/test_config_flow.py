@@ -8,7 +8,11 @@ from homeassistant.components.intellifire.config_flow import MANUAL_ENTRY_STRING
 from homeassistant.components.intellifire.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.intellifire.conftest import mock_api_connection_error
@@ -293,9 +297,15 @@ async def test_reauth_flow(
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "api_config"
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
-    )
+
+    with patch(
+        "homeassistant.config_entries.ConfigFlow.async_set_unique_id",
+        return_value=entry,
+    ):
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
+        )
     await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == RESULT_TYPE_ABORT
