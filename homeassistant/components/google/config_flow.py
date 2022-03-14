@@ -75,7 +75,7 @@ class OAuth2FlowHandler(
             self._device_flow = device_flow
 
             async def _exchange_finished(creds: Credentials | None) -> None:
-                self.external_data = {"creds": creds}
+                self.external_data = {"creds": creds}  # is None on timeout/expiration
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_configure(
                         flow_id=self.flow_id, user_input={}
