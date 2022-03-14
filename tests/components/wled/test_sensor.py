@@ -28,7 +28,7 @@ async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
-    enable_all_entities: AsyncMock,
+    entity_registry_enabled_by_default: AsyncMock,
 ) -> None:
     """Test the creation and values of the WLED sensors."""
     registry = er.async_get(hass)
