@@ -1,6 +1,5 @@
 """The climate tests for the Airzone platform."""
 
-import copy
 from unittest.mock import patch
 
 from aioairzone.common import OperationMode
@@ -10,7 +9,6 @@ from aioairzone.const import (
     API_ON,
     API_SET_POINT,
     API_SYSTEM_ID,
-    API_SYSTEMS,
     API_ZONE_ID,
 )
 
@@ -38,7 +36,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 
-from .util import HVAC_MOCK, async_init_integration
+from .util import async_init_integration
 
 
 async def test_airzone_create_climates(hass):
@@ -123,31 +121,21 @@ async def test_airzone_create_climates(hass):
 async def test_airzone_climate_set_hvac_mode(hass):
     """Test setting the target temperature."""
 
-    HVAC_MOCK_GET = copy.deepcopy(HVAC_MOCK)
-
     await async_init_integration(hass)
 
-    HVAC_MOCK_GET[API_SYSTEMS][0][API_DATA][0][API_ON] = 1
-    HVAC_MOCK_GET[API_SYSTEMS][0][API_DATA][0][API_MODE] = OperationMode.COOLING.value
-    HVAC_MOCK_PUT = {
+    HVAC_MOCK = {
         API_DATA: [
             {
                 API_SYSTEM_ID: 1,
-                API_ZONE_ID: 5,
+                API_ZONE_ID: 1,
                 API_MODE: OperationMode.COOLING.value,
                 API_ON: 1,
             }
         ]
     }
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
-        return_value=HVAC_MOCK_GET,
-    ), patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.put_hvac",
-        return_value=HVAC_MOCK_PUT,
-    ), patch(
-        "asyncio.sleep",
-        return_value=None,
+        "aioairzone.localapi_device.AirzoneLocalApi.http_request",
+        return_value=HVAC_MOCK,
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -162,25 +150,18 @@ async def test_airzone_climate_set_hvac_mode(hass):
         state = hass.states.get("climate.salon")
         assert state.state == HVAC_MODE_COOL
 
-    HVAC_MOCK_GET[API_SYSTEMS][0][API_DATA][0][API_ON] = 0
-    HVAC_MOCK_PUT = {
+    HVAC_MOCK_2 = {
         API_DATA: [
             {
                 API_SYSTEM_ID: 1,
-                API_ZONE_ID: 5,
+                API_ZONE_ID: 1,
                 API_ON: 0,
             }
         ]
     }
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
-        return_value=HVAC_MOCK_GET,
-    ), patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.put_hvac",
-        return_value=HVAC_MOCK_PUT,
-    ), patch(
-        "asyncio.sleep",
-        return_value=None,
+        "aioairzone.localapi_device.AirzoneLocalApi.http_request",
+        return_value=HVAC_MOCK_2,
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -199,7 +180,7 @@ async def test_airzone_climate_set_hvac_mode(hass):
 async def test_airzone_climate_set_temp(hass):
     """Test setting the target temperature."""
 
-    HVAC_MOCK_PUT = {
+    HVAC_MOCK = {
         API_DATA: [
             {
                 API_SYSTEM_ID: 1,
@@ -209,20 +190,11 @@ async def test_airzone_climate_set_temp(hass):
         ]
     }
 
-    HVAC_MOCK_GET = copy.deepcopy(HVAC_MOCK)
-    HVAC_MOCK_GET[API_SYSTEMS][0][API_DATA][4][API_SET_POINT] = 20.5
-
     await async_init_integration(hass)
 
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
-        return_value=HVAC_MOCK_GET,
-    ), patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.put_hvac",
-        return_value=HVAC_MOCK_PUT,
-    ), patch(
-        "asyncio.sleep",
-        return_value=None,
+        "aioairzone.localapi_device.AirzoneLocalApi.http_request",
+        return_value=HVAC_MOCK,
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,

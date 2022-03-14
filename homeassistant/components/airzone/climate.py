@@ -1,7 +1,6 @@
 """Support for the Airzone climate."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import cast
 
@@ -43,7 +42,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AirzoneEntity
 from .const import (
     API_TEMPERATURE_STEP,
-    API_UPDATE_DELAY_MIN_SECONDS,
     DOMAIN,
     HVAC_ACTION_LIB_TO_HASS,
     HVAC_MODE_HASS_TO_LIB,
@@ -96,10 +94,9 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         """Send HVAC parameters to API."""
         try:
             await self.coordinator.airzone.put_hvac(params)
+            self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
         except (AirzoneError, ClientConnectorError) as error:
             _LOGGER.error(error)
-        await asyncio.sleep(API_UPDATE_DELAY_MIN_SECONDS)
-        await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
