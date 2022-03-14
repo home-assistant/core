@@ -1,6 +1,7 @@
 """Support for MQTT discovery."""
 import asyncio
 from collections import deque
+from collections.abc import Awaitable
 import functools
 import json
 import logging
@@ -335,7 +336,9 @@ async def async_stop(hass: HomeAssistant) -> None:
             hass.data[INTEGRATION_UNSUBSCRIBE].pop(key)
 
 
-async def async_load_platform_helper(hass, platform, async_setup):
+async def async_load_platform_helper(
+    hass: HomeAssistant, platform: Platform, async_setup: Awaitable
+):
     """Set up platform for notify service creation dynamically through MQTT discovery."""
 
     async def async_discover(discovery_payload):
