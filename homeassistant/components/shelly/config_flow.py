@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from http import HTTPStatus
-import logging
 from typing import Any, Final
 
 import aiohttp
@@ -14,13 +13,13 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, DOMAIN
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, DOMAIN, LOGGER
 from .utils import (
     get_block_device_name,
     get_block_device_sleep_period,
@@ -30,8 +29,6 @@ from .utils import (
     get_model_name,
     get_rpc_device_name,
 )
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -63,7 +60,7 @@ async def validate_input(
             await rpc_device.shutdown()
             return {
                 "title": get_rpc_device_name(rpc_device),
-                "sleep_period": 0,
+                CONF_SLEEP_PERIOD: 0,
                 "model": rpc_device.model,
                 "gen": 2,
             }
@@ -78,7 +75,7 @@ async def validate_input(
         block_device.shutdown()
         return {
             "title": get_block_device_name(block_device),
-            "sleep_period": get_block_device_sleep_period(block_device.settings),
+            CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
             "model": block_device.model,
             "gen": 1,
         }
@@ -107,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except aioshelly.exceptions.FirmwareUnsupported:
                 return self.async_abort(reason="unsupported_firmware")
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(self.info["mac"])
@@ -123,14 +120,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 except HTTP_CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
                 except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Unexpected exception")
+                    LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
                     return self.async_create_entry(
                         title=device_info["title"],
                         data={
                             **user_input,
-                            "sleep_period": device_info["sleep_period"],
+                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                             "model": device_info["model"],
                             "gen": device_info["gen"],
                         },
@@ -158,7 +155,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
@@ -166,7 +163,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         **user_input,
                         CONF_HOST: self.host,
-                        "sleep_period": device_info["sleep_period"],
+                        CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                         "model": device_info["model"],
                         "gen": device_info["gen"],
                     },
@@ -186,23 +183,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
+        host = discovery_info.host
         try:
-            self.info = await self._async_get_info(discovery_info["host"])
+            self.info = await self._async_get_info(host)
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
         except aioshelly.exceptions.FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
         await self.async_set_unique_id(self.info["mac"])
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
-        self.host = discovery_info["host"]
+        self._abort_if_unique_id_configured({CONF_HOST: host})
+        self.host = host
 
-        self.context["title_placeholders"] = {
-            "name": discovery_info.get("name", "").split(".")[0]
-        }
+        self.context["title_placeholders"] = {"name": discovery_info.name.split(".")[0]}
 
         if get_info_auth(self.info):
             return await self.async_step_credentials()
@@ -224,7 +220,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=self.device_info["title"],
                 data={
                     "host": self.host,
-                    "sleep_period": self.device_info["sleep_period"],
+                    CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
                     "model": self.device_info["model"],
                     "gen": self.device_info["gen"],
                 },

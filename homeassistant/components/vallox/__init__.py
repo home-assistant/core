@@ -1,23 +1,27 @@
 """Support for Vallox ventilation units."""
 from __future__ import annotations
 
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import date
 import ipaddress
 import logging
-from typing import Any
+from typing import Any, NamedTuple
+from uuid import UUID
 
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
-from vallox_websocket_api.constants import vlxDevConstants
 from vallox_websocket_api.exceptions import ValloxApiException
+from vallox_websocket_api.vallox import (
+    get_next_filter_change_date as calculate_next_filter_change_date,
+    get_uuid as calculate_uuid,
+)
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DEFAULT_FAN_SPEED_AWAY,
@@ -28,35 +32,33 @@ from .const import (
     METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
-    SIGNAL_VALLOX_STATE_UPDATE,
-    STATE_PROXY_SCAN_INTERVAL,
-    STR_TO_VALLOX_PROFILE_SETTABLE,
+    STATE_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
-ATTR_PROFILE = "profile"
-ATTR_PROFILE_FAN_SPEED = "fan_speed"
+PLATFORMS: list[str] = [
+    Platform.SENSOR,
+    Platform.FAN,
+    Platform.BINARY_SENSOR,
+]
 
-SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
-    {
-        vol.Required(ATTR_PROFILE): vol.All(
-            cv.string, vol.In(STR_TO_VALLOX_PROFILE_SETTABLE)
-        )
-    }
-)
+ATTR_PROFILE_FAN_SPEED = "fan_speed"
 
 SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
     {
@@ -66,143 +68,164 @@ SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
     }
 )
 
-SERVICE_SET_PROFILE = "set_profile"
+
+class ServiceMethodDetails(NamedTuple):
+    """Details for SERVICE_TO_METHOD mapping."""
+
+    method: str
+    schema: vol.Schema
+
+
 SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
 SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
 SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_PROFILE: {
-        "method": "async_set_profile",
-        "schema": SERVICE_SCHEMA_SET_PROFILE,
-    },
-    SERVICE_SET_PROFILE_FAN_SPEED_HOME: {
-        "method": "async_set_profile_fan_speed_home",
-        "schema": SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    },
-    SERVICE_SET_PROFILE_FAN_SPEED_AWAY: {
-        "method": "async_set_profile_fan_speed_away",
-        "schema": SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    },
-    SERVICE_SET_PROFILE_FAN_SPEED_BOOST: {
-        "method": "async_set_profile_fan_speed_boost",
-        "schema": SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    },
+    SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
+        method="async_set_profile_fan_speed_home",
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
+    SERVICE_SET_PROFILE_FAN_SPEED_AWAY: ServiceMethodDetails(
+        method="async_set_profile_fan_speed_away",
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
+    SERVICE_SET_PROFILE_FAN_SPEED_BOOST: ServiceMethodDetails(
+        method="async_set_profile_fan_speed_boost",
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
 }
 
 
+@dataclass
+class ValloxState:
+    """Describes the current state of the unit."""
+
+    metric_cache: dict[str, Any] = field(default_factory=dict)
+    profile: VALLOX_PROFILE = VALLOX_PROFILE.NONE
+
+    def get_metric(self, metric_key: str) -> StateType:
+        """Return cached state value."""
+
+        if (value := self.metric_cache.get(metric_key)) is None:
+            return None
+
+        if not isinstance(value, (str, int, float)):
+            return None
+
+        return value
+
+    def get_uuid(self) -> UUID | None:
+        """Return cached UUID value."""
+        uuid = calculate_uuid(self.metric_cache)
+        if not isinstance(uuid, UUID):
+            raise ValueError
+        return uuid
+
+    def get_next_filter_change_date(self) -> date | None:
+        """Return the next filter change date."""
+        next_filter_change_date = calculate_next_filter_change_date(self.metric_cache)
+
+        if not isinstance(next_filter_change_date, date):
+            return None
+
+        return next_filter_change_date
+
+
+class ValloxDataUpdateCoordinator(DataUpdateCoordinator):
+    """The DataUpdateCoordinator for Vallox."""
+
+    data: ValloxState
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the client and boot the platforms."""
-    conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    name = conf.get(CONF_NAME)
+    """Set up the integration from configuration.yaml (DEPRECATED)."""
+    if DOMAIN not in config:
+        return True
 
-    client = Vallox(host)
-    state_proxy = ValloxStateProxy(hass, client)
-    service_handler = ValloxServiceHandler(client, state_proxy)
-
-    hass.data[DOMAIN] = {"client": client, "state_proxy": state_proxy, "name": name}
-
-    for vallox_service, method in SERVICE_TO_METHOD.items():
-        schema = method["schema"]
-        hass.services.async_register(
-            DOMAIN, vallox_service, service_handler.async_handle, schema=schema
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config[DOMAIN],
         )
-
-    # The vallox hardware expects quite strict timings for websocket requests. Timings that machines
-    # with less processing power, like Raspberries, cannot live up to during the busy start phase of
-    # Home Asssistant. Hence, async_add_entities() for fan and sensor in respective code will be
-    # called with update_before_add=False to intentionally delay the first request, increasing
-    # chance that it is issued only when the machine is less busy again.
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
-    hass.async_create_task(async_load_platform(hass, "fan", DOMAIN, {}, config))
-
-    async_track_time_interval(hass, state_proxy.async_update, STATE_PROXY_SCAN_INTERVAL)
+    )
 
     return True
 
 
-class ValloxStateProxy:
-    """Helper class to reduce websocket API calls."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the client and boot the platforms."""
+    host = entry.data[CONF_HOST]
+    name = entry.data[CONF_NAME]
 
-    def __init__(self, hass: HomeAssistant, client: Vallox) -> None:
-        """Initialize the proxy."""
-        self._hass = hass
-        self._client = client
-        self._metric_cache: dict[str, Any] = {}
-        self._profile = VALLOX_PROFILE.NONE
-        self._valid = False
+    client = Vallox(host)
 
-    def fetch_metric(self, metric_key: str) -> StateType:
-        """Return cached state value."""
-        _LOGGER.debug("Fetching metric key: %s", metric_key)
-
-        if not self._valid:
-            raise OSError("Device state out of sync.")
-
-        if metric_key not in vlxDevConstants.__dict__:
-            raise KeyError(f"Unknown metric key: {metric_key}")
-
-        if (value := self._metric_cache[metric_key]) is None:
-            return None
-
-        if not isinstance(value, (str, int, float)):
-            raise TypeError(
-                f"Return value of metric {metric_key} has unexpected type {type(value)}"
-            )
-
-        return value
-
-    def get_profile(self) -> VALLOX_PROFILE:
-        """Return cached profile value."""
-        _LOGGER.debug("Returning profile")
-
-        if not self._valid:
-            raise OSError("Device state out of sync.")
-
-        return self._profile
-
-    async def async_update(self, time: datetime | None = None) -> None:
+    async def async_update_data() -> ValloxState:
         """Fetch state update."""
         _LOGGER.debug("Updating Vallox state cache")
 
         try:
-            self._metric_cache = await self._client.fetch_metrics()
-            self._profile = await self._client.get_profile()
+            metric_cache = await client.fetch_metrics()
+            profile = await client.get_profile()
 
         except (OSError, ValloxApiException) as err:
-            self._valid = False
-            _LOGGER.error("Error during state cache update: %s", err)
-            return
+            raise UpdateFailed("Error during state cache update") from err
 
-        self._valid = True
-        async_dispatcher_send(self._hass, SIGNAL_VALLOX_STATE_UPDATE)
+        return ValloxState(metric_cache, profile)
+
+    coordinator = ValloxDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{name} DataUpdateCoordinator",
+        update_interval=STATE_SCAN_INTERVAL,
+        update_method=async_update_data,
+    )
+
+    await coordinator.async_config_entry_first_refresh()
+
+    service_handler = ValloxServiceHandler(client, coordinator)
+    for vallox_service, service_details in SERVICE_TO_METHOD.items():
+        hass.services.async_register(
+            DOMAIN,
+            vallox_service,
+            service_handler.async_handle,
+            schema=service_details.schema,
+        )
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "client": client,
+        "coordinator": coordinator,
+        "name": name,
+    }
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+        if hass.data[DOMAIN]:
+            return unload_ok
+
+        for service in SERVICE_TO_METHOD:
+            hass.services.async_remove(DOMAIN, service)
+
+    return unload_ok
 
 
 class ValloxServiceHandler:
     """Services implementation."""
 
-    def __init__(self, client: Vallox, state_proxy: ValloxStateProxy) -> None:
+    def __init__(
+        self, client: Vallox, coordinator: DataUpdateCoordinator[ValloxState]
+    ) -> None:
         """Initialize the proxy."""
         self._client = client
-        self._state_proxy = state_proxy
-
-    async def async_set_profile(self, profile: str = "Home") -> bool:
-        """Set the ventilation profile."""
-        _LOGGER.debug("Setting ventilation profile to: %s", profile)
-
-        _LOGGER.warning(
-            "Attention: The service 'vallox.set_profile' is superseded by the 'fan.set_preset_mode' service."
-            "It will be removed in the future, please migrate to 'fan.set_preset_mode' to prevent breakage"
-        )
-
-        try:
-            await self._client.set_profile(STR_TO_VALLOX_PROFILE_SETTABLE[profile])
-            return True
-
-        except (OSError, ValloxApiException) as err:
-            _LOGGER.error("Error setting ventilation profile: %s", err)
-            return False
+        self._coordinator = coordinator
 
     async def async_set_profile_fan_speed_home(
         self, fan_speed: int = DEFAULT_FAN_SPEED_HOME
@@ -254,19 +277,19 @@ class ValloxServiceHandler:
 
     async def async_handle(self, call: ServiceCall) -> None:
         """Dispatch a service call."""
-        method = SERVICE_TO_METHOD.get(call.service)
+        service_details = SERVICE_TO_METHOD.get(call.service)
         params = call.data.copy()
 
-        if method is None:
+        if service_details is None:
             return
 
-        if not hasattr(self, method["method"]):
-            _LOGGER.error("Service not implemented: %s", method["method"])
+        if not hasattr(self, service_details.method):
+            _LOGGER.error("Service not implemented: %s", service_details.method)
             return
 
-        result = await getattr(self, method["method"])(**params)
+        result = await getattr(self, service_details.method)(**params)
 
         # This state change affects other entities like sensors. Force an immediate update that can
         # be observed by all parties involved.
         if result:
-            await self._state_proxy.async_update()
+            await self._coordinator.async_request_refresh()

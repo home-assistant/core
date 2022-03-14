@@ -4,21 +4,22 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, cast
 
-from bimmer_connected.state import ChargingState, LockState
 from bimmer_connected.vehicle import ConnectedDriveVehicle
-from bimmer_connected.vehicle_status import ConditionBasedServiceReport, VehicleStatus
+from bimmer_connected.vehicle_status import (
+    ChargingState,
+    ConditionBasedServiceReport,
+    LockState,
+    VehicleStatus,
+)
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PLUG,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LENGTH_KILOMETERS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import UnitSystem
@@ -28,7 +29,7 @@ from . import (
     BMWConnectedDriveAccount,
     BMWConnectedDriveBaseEntity,
 )
-from .const import CONF_ACCOUNT, DATA_ENTRIES
+from .const import CONF_ACCOUNT, DATA_ENTRIES, UNIT_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ def _are_parking_lights_on(
 ) -> bool:
     # device class light: On means light detected, Off means no light
     extra_attributes["lights_parking"] = vehicle_state.parking_lights.value
-    return vehicle_state.are_parking_lights_on
+    return cast(bool, vehicle_state.are_parking_lights_on)
 
 
 def _are_problems_detected(
@@ -92,7 +93,7 @@ def _check_control_messages(
         extra_attributes["check_control_messages"] = cbs_list
     else:
         extra_attributes["check_control_messages"] = "OK"
-    return vehicle_state.has_check_control_messages
+    return cast(bool, vehicle_state.has_check_control_messages)
 
 
 def _is_vehicle_charging(
@@ -103,7 +104,7 @@ def _is_vehicle_charging(
     extra_attributes[
         "last_charging_end_result"
     ] = vehicle_state.last_charging_end_result
-    return vehicle_state.charging_status == ChargingState.CHARGING
+    return cast(bool, vehicle_state.charging_status == ChargingState.CHARGING)
 
 
 def _is_vehicle_plugged_in(
@@ -112,7 +113,7 @@ def _is_vehicle_plugged_in(
     # device class plug: On means device is plugged in,
     #                    Off means device is unplugged
     extra_attributes["connection_status"] = vehicle_state.connection_status
-    return vehicle_state.connection_status == "CONNECTED"
+    return cast(str, vehicle_state.connection_status) == "CONNECTED"
 
 
 def _format_cbs_report(
@@ -124,7 +125,12 @@ def _format_cbs_report(
     if report.due_date is not None:
         result[f"{service_type} date"] = report.due_date.strftime("%Y-%m-%d")
     if report.due_distance is not None:
-        distance = round(unit_system.length(report.due_distance, LENGTH_KILOMETERS))
+        distance = round(
+            unit_system.length(
+                report.due_distance[0],
+                UNIT_MAP.get(report.due_distance[1], report.due_distance[1]),
+            )
+        )
         result[f"{service_type} distance"] = f"{distance} {unit_system.length_unit}"
     return result
 
@@ -147,42 +153,42 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     BMWBinarySensorEntityDescription(
         key="lids",
         name="Doors",
-        device_class=DEVICE_CLASS_OPENING,
+        device_class=BinarySensorDeviceClass.OPENING,
         icon="mdi:car-door-lock",
         value_fn=_are_doors_closed,
     ),
     BMWBinarySensorEntityDescription(
         key="windows",
         name="Windows",
-        device_class=DEVICE_CLASS_OPENING,
+        device_class=BinarySensorDeviceClass.OPENING,
         icon="mdi:car-door",
         value_fn=_are_windows_closed,
     ),
     BMWBinarySensorEntityDescription(
         key="door_lock_state",
         name="Door lock state",
-        device_class="lock",
+        device_class=BinarySensorDeviceClass.LOCK,
         icon="mdi:car-key",
         value_fn=_are_doors_locked,
     ),
     BMWBinarySensorEntityDescription(
         key="lights_parking",
         name="Parking lights",
-        device_class="light",
+        device_class=BinarySensorDeviceClass.LIGHT,
         icon="mdi:car-parking-lights",
         value_fn=_are_parking_lights_on,
     ),
     BMWBinarySensorEntityDescription(
         key="condition_based_services",
         name="Condition based services",
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:wrench",
         value_fn=_are_problems_detected,
     ),
     BMWBinarySensorEntityDescription(
         key="check_control_messages",
         name="Control messages",
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:car-tire-alert",
         value_fn=_check_control_messages,
     ),
@@ -190,14 +196,14 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     BMWBinarySensorEntityDescription(
         key="charging_status",
         name="Charging status",
-        device_class="power",
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         icon="mdi:ev-station",
         value_fn=_is_vehicle_charging,
     ),
     BMWBinarySensorEntityDescription(
         key="connection_status",
         name="Connection status",
-        device_class=DEVICE_CLASS_PLUG,
+        device_class=BinarySensorDeviceClass.PLUG,
         icon="mdi:car-electric",
         value_fn=_is_vehicle_plugged_in,
     ),
@@ -245,7 +251,8 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
 
     def update(self) -> None:
         """Read new state data from the library."""
-        vehicle_state = self._vehicle.state
+        _LOGGER.debug("Updating binary sensors of %s", self._vehicle.name)
+        vehicle_state = self._vehicle.status
         result = self._attrs.copy()
 
         self._attr_is_on = self.entity_description.value_fn(

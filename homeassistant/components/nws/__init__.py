@@ -4,14 +4,16 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from pynws import SimpleNWS
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -28,7 +30,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
 FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
@@ -68,7 +70,7 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
             request_refresh_debouncer=request_refresh_debouncer,
         )
         self.failed_update_interval = failed_update_interval
-        self.last_update_success_time = None
+        self.last_update_success_time: datetime.datetime | None = None
 
     @callback
     def _schedule_refresh(self) -> None:
@@ -82,6 +84,9 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         # That way we obtain a constant update frequency,
         # as long as the update process takes less than a second
         if self.last_update_success:
+            if TYPE_CHECKING:
+                # the base class allows None, but this one doesn't
+                assert self.update_interval is not None
             update_interval = self.update_interval
             self.last_update_success_time = utcnow()
         else:
@@ -172,7 +177,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def device_info(latitude, longitude) -> DeviceInfo:
     """Return device registry information."""
     return DeviceInfo(
-        entry_type="service",
+        entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, base_unique_id(latitude, longitude))},
         manufacturer="National Weather Service",
         name=f"NWS: {latitude}, {longitude}",

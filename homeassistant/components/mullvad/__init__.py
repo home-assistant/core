@@ -6,19 +6,20 @@ import async_timeout
 from mullvad_api import MullvadAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 
 from .const import DOMAIN
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: dict) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Mullvad VPN integration."""
 
     async def async_get_mullvad_api_data():
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             api = await hass.async_add_executor_job(MullvadAPI)
             return api.data
 

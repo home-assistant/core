@@ -4,17 +4,17 @@ from homeassistant.components.rituals_perfume_genie.sensor import (
     FILL_SUFFIX,
     PERFUME_SUFFIX,
     WIFI_SUFFIX,
+    SensorDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity import EntityCategory
 
 from .common import (
     init_integration,
@@ -53,22 +53,24 @@ async def test_sensors_diffuser_v1_battery_cartridge(hass: HomeAssistant) -> Non
     state = hass.states.get("sensor.genie_battery")
     assert state
     assert state.state == str(diffuser.battery_percentage)
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_BATTERY
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.BATTERY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.genie_battery")
     assert entry
     assert entry.unique_id == f"{hublot}{BATTERY_SUFFIX}"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.genie_wifi")
     assert state
     assert state.state == str(diffuser.wifi_percentage)
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SIGNAL_STRENGTH
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.genie_wifi")
     assert entry
     assert entry.unique_id == f"{hublot}{WIFI_SUFFIX}"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
 async def test_sensors_diffuser_v2_no_battery_no_cartridge(hass: HomeAssistant) -> None:

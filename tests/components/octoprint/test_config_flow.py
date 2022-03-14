@@ -4,6 +4,7 @@ from unittest.mock import patch
 from pyoctoprintapi import ApiError, DiscoverySettings
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.octoprint.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -62,6 +63,7 @@ async def test_form(hass):
         "port": 81,
         "ssl": True,
         "path": "/",
+        "verify_ssl": True,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -106,6 +108,7 @@ async def test_form_cannot_connect(hass):
                 "name": "Printer",
                 "port": 81,
                 "ssl": True,
+                "verify_ssl": True,
                 "path": "/",
                 "api_key": "test-key",
             },
@@ -156,6 +159,7 @@ async def test_form_unknown_exception(hass):
                 "ssl": True,
                 "path": "/",
                 "api_key": "test-key",
+                "verify_ssl": True,
             },
         )
 
@@ -169,13 +173,15 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "host": "192.168.1.123",
-            "port": 80,
-            "hostname": "example.local.",
-            "uuid": "83747482",
-            "properties": {"uuid": "83747482", "path": "/foo/"},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            addresses=["192.168.1.123"],
+            hostname="example.local.",
+            name="mock_name",
+            port=80,
+            properties={"uuid": "83747482", "path": "/foo/"},
+            type="mock_type",
+        ),
     )
     assert result["type"] == "form"
     assert not result["errors"]
@@ -233,11 +239,15 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            "presentationURL": "http://192.168.1.123:80/discovery/device.xml",
-            "port": 80,
-            "UDN": "uuid:83747482",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            upnp={
+                "presentationURL": "http://192.168.1.123:80/discovery/device.xml",
+                "port": 80,
+                "UDN": "uuid:83747482",
+            },
+        ),
     )
     assert result["type"] == "form"
     assert not result["errors"]
@@ -485,13 +495,15 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "host": "192.168.1.123",
-            "port": 80,
-            "hostname": "example.local.",
-            "uuid": "83747482",
-            "properties": {"uuid": "83747482", "path": "/foo/"},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            addresses=["192.168.1.123"],
+            hostname="example.local.",
+            name="mock_name",
+            port=80,
+            properties={"uuid": "83747482", "path": "/foo/"},
+            type="mock_type",
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -509,11 +521,15 @@ async def test_duplicate_ssdp_ignored(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            "presentationURL": "http://192.168.1.123:80/discovery/device.xml",
-            "port": 80,
-            "UDN": "uuid:83747482",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            upnp={
+                "presentationURL": "http://192.168.1.123:80/discovery/device.xml",
+                "port": 80,
+                "UDN": "uuid:83747482",
+            },
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"

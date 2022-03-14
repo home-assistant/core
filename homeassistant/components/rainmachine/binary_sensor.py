@@ -7,8 +7,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineEntity
@@ -51,28 +51,28 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key=TYPE_FREEZE,
         name="Freeze Restrictions",
         icon="mdi:cancel",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_FREEZE_PROTECTION,
         name="Freeze Protection",
         icon="mdi:weather-snowy",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_HOT_DAYS,
         name="Extra Water on Hot Days",
         icon="mdi:thermometer-lines",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_HOURLY,
         name="Hourly Restrictions",
         icon="mdi:cancel",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
     ),
@@ -80,7 +80,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key=TYPE_MONTH,
         name="Month Restrictions",
         icon="mdi:cancel",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
     ),
@@ -88,7 +88,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key=TYPE_RAINDELAY,
         name="Rain Delay Restrictions",
         icon="mdi:cancel",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
     ),
@@ -96,7 +96,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key=TYPE_RAINSENSOR,
         name="Rain Sensor Restrictions",
         icon="mdi:cancel",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
     ),
@@ -104,7 +104,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key=TYPE_WEEKDAY,
         name="Weekday Restrictions",
         icon="mdi:cancel",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
     ),

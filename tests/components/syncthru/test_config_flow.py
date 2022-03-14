@@ -130,14 +130,18 @@ async def test_ssdp(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.2:5200/Printer.xml",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:Printer:1",
-            ssdp.ATTR_UPNP_MANUFACTURER: "Samsung Electronics",
-            ssdp.ATTR_UPNP_PRESENTATION_URL: url,
-            ssdp.ATTR_UPNP_SERIAL: "00000000",
-            ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.2:5200/Printer.xml",
+            upnp={
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:Printer:1",
+                ssdp.ATTR_UPNP_MANUFACTURER: "Samsung Electronics",
+                ssdp.ATTR_UPNP_PRESENTATION_URL: url,
+                ssdp.ATTR_UPNP_SERIAL: "00000000",
+                ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+            },
+        ),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

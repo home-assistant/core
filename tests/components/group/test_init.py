@@ -3,6 +3,8 @@
 from collections import OrderedDict
 from unittest.mock import patch
 
+import pytest
+
 import homeassistant.components.group as group
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -713,7 +715,7 @@ async def test_group_persons_and_device_trackers(hass):
 
 async def test_group_mixed_domains_on(hass):
     """Test group of mixed domains that is on."""
-    hass.states.async_set("lock.alexander_garage_exit_door", "locked")
+    hass.states.async_set("lock.alexander_garage_exit_door", "unlocked")
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "on")
     hass.states.async_set("cover.small_garage_door", "open")
 
@@ -738,7 +740,7 @@ async def test_group_mixed_domains_on(hass):
 
 async def test_group_mixed_domains_off(hass):
     """Test group of mixed domains that is off."""
-    hass.states.async_set("lock.alexander_garage_exit_door", "unlocked")
+    hass.states.async_set("lock.alexander_garage_exit_door", "locked")
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "off")
     hass.states.async_set("cover.small_garage_door", "closed")
 
@@ -761,11 +763,18 @@ async def test_group_mixed_domains_off(hass):
     assert hass.states.get("group.group_zero").state == "off"
 
 
-async def test_group_locks(hass):
+@pytest.mark.parametrize(
+    "states,group_state",
+    [
+        (("locked", "locked", "unlocked"), "unlocked"),
+        (("locked", "locked", "locked"), "locked"),
+    ],
+)
+async def test_group_locks(hass, states, group_state):
     """Test group of locks."""
-    hass.states.async_set("lock.one", "locked")
-    hass.states.async_set("lock.two", "locked")
-    hass.states.async_set("lock.three", "unlocked")
+    hass.states.async_set("lock.one", states[0])
+    hass.states.async_set("lock.two", states[1])
+    hass.states.async_set("lock.three", states[2])
 
     assert await async_setup_component(hass, "lock", {})
     assert await async_setup_component(
@@ -779,7 +788,7 @@ async def test_group_locks(hass):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("group.group_zero").state == "locked"
+    assert hass.states.get("group.group_zero").state == group_state
 
 
 async def test_group_sensors(hass):

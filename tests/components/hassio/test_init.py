@@ -59,7 +59,7 @@ def mock_all(aioclient_mock, request):
     )
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
     )
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
@@ -165,8 +165,8 @@ async def test_setup_api_panel(hass, aioclient_mock):
 
     assert panels.get("hassio").to_response() == {
         "component_name": "custom",
-        "icon": "hass:home-assistant",
-        "title": "Supervisor",
+        "icon": None,
+        "title": None,
         "url_path": "hassio",
         "require_admin": True,
         "config": {
@@ -397,12 +397,18 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     await hass.services.async_call(
         "hassio",
         "backup_partial",
-        {"addons": ["test"], "folders": ["ssl"], "password": "123456"},
+        {
+            "homeassistant": True,
+            "addons": ["test"],
+            "folders": ["ssl"],
+            "password": "123456",
+        },
     )
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 12
     assert aioclient_mock.mock_calls[-1][2] == {
+        "homeassistant": True,
         "addons": ["test"],
         "folders": ["ssl"],
         "password": "123456",
@@ -493,6 +499,7 @@ async def test_device_registry_calls(hass):
         "addons": [
             {
                 "name": "test",
+                "state": "started",
                 "slug": "test",
                 "installed": True,
                 "update_available": False,
@@ -503,6 +510,7 @@ async def test_device_registry_calls(hass):
             },
             {
                 "name": "test2",
+                "state": "started",
                 "slug": "test2",
                 "installed": True,
                 "update_available": False,
@@ -537,6 +545,7 @@ async def test_device_registry_calls(hass):
         "addons": [
             {
                 "name": "test2",
+                "state": "started",
                 "slug": "test2",
                 "installed": True,
                 "update_available": False,
@@ -568,6 +577,7 @@ async def test_device_registry_calls(hass):
             {
                 "name": "test2",
                 "slug": "test2",
+                "state": "started",
                 "installed": True,
                 "update_available": False,
                 "version": "1.0.0",
@@ -577,6 +587,7 @@ async def test_device_registry_calls(hass):
             {
                 "name": "test3",
                 "slug": "test3",
+                "state": "stopped",
                 "installed": True,
                 "update_available": False,
                 "version": "1.0.0",

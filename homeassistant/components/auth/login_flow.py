@@ -74,6 +74,9 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant import data_entry_flow
+from homeassistant.auth.models import Credentials
+from homeassistant.components import onboarding
+from homeassistant.components.http.auth import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import (
     log_invalid_auth,
     process_success_login,
@@ -81,6 +84,7 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.core import HomeAssistant
 
 from . import indieauth
 
@@ -102,7 +106,7 @@ class AuthProvidersView(HomeAssistantView):
     async def get(self, request):
         """Get available auth providers."""
         hass = request.app["hass"]
-        if not hass.components.onboarding.async_is_user_onboarded():
+        if not onboarding.async_is_user_onboarded(hass):
             return self.json_message(
                 message="Onboarding not finished",
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -138,17 +142,59 @@ def _prepare_result_json(result):
     return data
 
 
-class LoginFlowIndexView(HomeAssistantView):
-    """View to create a config flow."""
+class LoginFlowBaseView(HomeAssistantView):
+    """Base class for the login views."""
 
-    url = "/auth/login_flow"
-    name = "api:auth:login_flow"
     requires_auth = False
 
     def __init__(self, flow_mgr, store_result):
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
         self._store_result = store_result
+
+    async def _async_flow_result_to_response(self, request, client_id, result):
+        """Convert the flow result to a response."""
+        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            # @log_invalid_auth does not work here since it returns HTTP 200.
+            # We need to manually log failed login attempts.
+            if (
+                result["type"] == data_entry_flow.RESULT_TYPE_FORM
+                and (errors := result.get("errors"))
+                and errors.get("base")
+                in (
+                    "invalid_auth",
+                    "invalid_code",
+                )
+            ):
+                await process_wrong_login(request)
+            return self.json(_prepare_result_json(result))
+
+        result.pop("data")
+
+        hass: HomeAssistant = request.app["hass"]
+        result_obj: Credentials = result.pop("result")
+
+        # Result can be None if credential was never linked to a user before.
+        user = await hass.auth.async_get_user_by_credentials(result_obj)
+
+        if user is not None and (
+            user_access_error := async_user_not_allowed_do_auth(hass, user)
+        ):
+            return self.json_message(
+                f"Login blocked: {user_access_error}", HTTPStatus.FORBIDDEN
+            )
+
+        await process_success_login(request)
+        result["result"] = self._store_result(client_id, result_obj)
+
+        return self.json(result)
+
+
+class LoginFlowIndexView(LoginFlowBaseView):
+    """View to create a config flow."""
+
+    url = "/auth/login_flow"
+    name = "api:auth:login_flow"
 
     async def get(self, request):
         """Do not allow index of flows in progress."""
@@ -195,26 +241,16 @@ class LoginFlowIndexView(HomeAssistantView):
                 "Handler does not support init", HTTPStatus.BAD_REQUEST
             )
 
-        if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            await process_success_login(request)
-            result.pop("data")
-            result["result"] = self._store_result(data["client_id"], result["result"])
-            return self.json(result)
-
-        return self.json(_prepare_result_json(result))
+        return await self._async_flow_result_to_response(
+            request, data["client_id"], result
+        )
 
 
-class LoginFlowResourceView(HomeAssistantView):
+class LoginFlowResourceView(LoginFlowBaseView):
     """View to interact with the flow manager."""
 
     url = "/auth/login_flow/{flow_id}"
     name = "api:auth:login_flow:resource"
-    requires_auth = False
-
-    def __init__(self, flow_mgr, store_result):
-        """Initialize the login flow resource view."""
-        self._flow_mgr = flow_mgr
-        self._store_result = store_result
 
     async def get(self, request):
         """Do not allow getting status of a flow in progress."""
@@ -240,20 +276,7 @@ class LoginFlowResourceView(HomeAssistantView):
         except vol.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
 
-        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            # @log_invalid_auth does not work here since it returns HTTP 200
-            # need manually log failed login attempts
-            if result.get("errors") is not None and result["errors"].get("base") in (
-                "invalid_auth",
-                "invalid_code",
-            ):
-                await process_wrong_login(request)
-            return self.json(_prepare_result_json(result))
-
-        result.pop("data")
-        result["result"] = self._store_result(client_id, result["result"])
-
-        return self.json(result)
+        return await self._async_flow_result_to_response(request, client_id, result)
 
     async def delete(self, request, flow_id):
         """Cancel a flow in progress."""

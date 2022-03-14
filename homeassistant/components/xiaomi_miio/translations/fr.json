@@ -13,9 +13,10 @@
             "cloud_login_error": "Impossible de se connecter \u00e0 Xioami Miio Cloud, v\u00e9rifiez les informations d'identification.",
             "cloud_no_devices": "Aucun appareil trouv\u00e9 dans ce compte cloud Xiaomi Miio.",
             "no_device_selected": "Aucun appareil s\u00e9lectionn\u00e9, veuillez s\u00e9lectionner un appareil.",
-            "unknown_device": "Le mod\u00e8le d'appareil n'est pas connu, impossible de configurer l'appareil \u00e0 l'aide du flux de configuration."
+            "unknown_device": "Le mod\u00e8le d'appareil n'est pas connu, impossible de configurer l'appareil \u00e0 l'aide du flux de configuration.",
+            "wrong_token": "Erreur de somme de contr\u00f4le, jeton incorrect"
         },
-        "flow_title": "Xiaomi Miio: {name}",
+        "flow_title": "{name}",
         "step": {
             "cloud": {
                 "data": {

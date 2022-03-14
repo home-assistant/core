@@ -4,10 +4,12 @@ import math
 
 from homeassistant import core as ha
 from homeassistant.components import (
+    button,
     camera,
     cover,
     fan,
     group,
+    input_button,
     input_number,
     light,
     media_player,
@@ -71,7 +73,7 @@ from .errors import (
 from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
-HANDLERS = Registry()
+HANDLERS = Registry()  # type: ignore[var-annotated]
 
 
 @HANDLERS.register(("Alexa.Discovery", "Discover"))
@@ -210,20 +212,14 @@ async def async_api_adjust_brightness(hass, config, directive, context):
     entity = directive.entity
     brightness_delta = int(directive.payload["brightnessDelta"])
 
-    # read current state
-    try:
-        current = math.floor(
-            int(entity.attributes.get(light.ATTR_BRIGHTNESS)) / 255 * 100
-        )
-    except ZeroDivisionError:
-        current = 0
-
     # set brightness
-    brightness = max(0, brightness_delta + current)
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_BRIGHTNESS_PCT: brightness},
+        {
+            ATTR_ENTITY_ID: entity.entity_id,
+            light.ATTR_BRIGHTNESS_STEP_PCT: brightness_delta,
+        },
         blocking=False,
         context=context,
     )
@@ -313,9 +309,15 @@ async def async_api_activate(hass, config, directive, context):
     entity = directive.entity
     domain = entity.domain
 
+    service = SERVICE_TURN_ON
+    if domain == button.DOMAIN:
+        service = button.SERVICE_PRESS
+    elif domain == input_button.DOMAIN:
+        service = input_button.SERVICE_PRESS
+
     await hass.services.async_call(
         domain,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: entity.entity_id},
         blocking=False,
         context=context,

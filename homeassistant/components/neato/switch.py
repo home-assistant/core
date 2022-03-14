@@ -8,14 +8,15 @@ from typing import Any
 from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
 
-from homeassistant.components.neato import NeatoHub
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, ToggleEntity
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
+from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(dev, True)
 
 
-class NeatoConnectedSwitch(ToggleEntity):
+class NeatoConnectedSwitch(SwitchEntity):
     """Neato Connected Switches."""
 
     def __init__(self, neato: NeatoHub, robot: Robot, switch_type: str) -> None:
@@ -105,6 +106,11 @@ class NeatoConnectedSwitch(ToggleEntity):
         return bool(
             self.type == SWITCH_TYPE_SCHEDULE and self._schedule_state == STATE_ON
         )
+
+    @property
+    def entity_category(self) -> str:
+        """Device entity category."""
+        return EntityCategory.CONFIG
 
     @property
     def device_info(self) -> DeviceInfo:

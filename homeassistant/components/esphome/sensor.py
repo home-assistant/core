@@ -1,23 +1,23 @@
 """Support for esphome sensors."""
 from __future__ import annotations
 
+from datetime import datetime
 import math
 
 from aioesphomeapi import (
     SensorInfo,
     SensorState,
-    SensorStateClass,
+    SensorStateClass as EsphomeSensorStateClass,
     TextSensorInfo,
     TextSensorState,
 )
 from aioesphomeapi.model import LastResetType
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASSES,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -60,11 +60,13 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-_STATE_CLASSES: EsphomeEnumMapper[SensorStateClass, str | None] = EsphomeEnumMapper(
+_STATE_CLASSES: EsphomeEnumMapper[
+    EsphomeSensorStateClass, SensorStateClass | None
+] = EsphomeEnumMapper(
     {
-        SensorStateClass.NONE: None,
-        SensorStateClass.MEASUREMENT: STATE_CLASS_MEASUREMENT,
-        SensorStateClass.TOTAL_INCREASING: STATE_CLASS_TOTAL_INCREASING,
+        EsphomeSensorStateClass.NONE: None,
+        EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
+        EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
     }
 )
 
@@ -78,14 +80,14 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         return self._static_info.force_update
 
     @esphome_state_property
-    def native_value(self) -> str | None:
+    def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
         if self._state.missing_state:
             return None
-        if self.device_class == DEVICE_CLASS_TIMESTAMP:
-            return dt.utc_from_timestamp(self._state.state).isoformat()
+        if self.device_class == SensorDeviceClass.TIMESTAMP:
+            return dt.utc_from_timestamp(self._state.state)
         return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property
@@ -103,18 +105,18 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         return self._static_info.device_class
 
     @property
-    def state_class(self) -> str | None:
+    def state_class(self) -> SensorStateClass | None:
         """Return the state class of this entity."""
         if not self._static_info.state_class:
             return None
         state_class = self._static_info.state_class
         reset_type = self._static_info.last_reset_type
         if (
-            state_class == SensorStateClass.MEASUREMENT
+            state_class == EsphomeSensorStateClass.MEASUREMENT
             and reset_type == LastResetType.AUTO
         ):
             # Legacy, last_reset_type auto was the equivalent to the TOTAL_INCREASING state class
-            return STATE_CLASS_TOTAL_INCREASING
+            return SensorStateClass.TOTAL_INCREASING
         return _STATE_CLASSES.from_esphome(self._static_info.state_class)
 
 

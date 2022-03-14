@@ -8,8 +8,9 @@ from contextvars import ContextVar
 from functools import wraps
 from typing import Any, cast
 
-from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
+
+from .typing import TemplateVarsType
 
 
 class TraceElement:
@@ -216,7 +217,7 @@ def script_execution_set(reason: str) -> None:
 
 
 def script_execution_get() -> str | None:
-    """Return the current trace."""
+    """Return the stop reason."""
     if (data := script_execution_cv.get()) is None:
         return None
     return data.script_execution

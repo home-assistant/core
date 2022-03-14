@@ -10,10 +10,12 @@ import time
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -37,6 +39,7 @@ TOPIC_MATCHER = re.compile(
 SUPPORTED_COMPONENTS = [
     "alarm_control_panel",
     "binary_sensor",
+    "button",
     "camera",
     "climate",
     "cover",
@@ -46,8 +49,10 @@ SUPPORTED_COMPONENTS = [
     "humidifier",
     "light",
     "lock",
+    "notify",
     "number",
     "scene",
+    "siren",
     "select",
     "sensor",
     "switch",
@@ -96,9 +101,8 @@ async def async_start(  # noqa: C901
         payload = msg.payload
         topic = msg.topic
         topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
-        match = TOPIC_MATCHER.match(topic_trimmed)
 
-        if not match:
+        if not (match := TOPIC_MATCHER.match(topic_trimmed)):
             if topic_trimmed.endswith("config"):
                 _LOGGER.warning(
                     "Received message on illegal discovery topic '%s'", topic
@@ -141,7 +145,9 @@ async def async_start(  # noqa: C901
                     if value[-1] == TOPIC_BASE and key.endswith("topic"):
                         payload[key] = f"{value[:-1]}{base}"
             if payload.get(CONF_AVAILABILITY):
-                for availability_conf in payload[CONF_AVAILABILITY]:
+                for availability_conf in cv.ensure_list(payload[CONF_AVAILABILITY]):
+                    if not isinstance(availability_conf, dict):
+                        continue
                     if topic := availability_conf.get(CONF_TOPIC):
                         if topic[0] == TOPIC_BASE:
                             availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"
@@ -224,13 +230,21 @@ async def async_start(  # noqa: C901
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     if component == "device_automation":
                         # Local import to avoid circular dependencies
-                        # pylint: disable=import-outside-toplevel
+                        # pylint: disable-next=import-outside-toplevel
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
-                    elif component == "tag":
+                    elif component in "notify":
                         # Local import to avoid circular dependencies
                         # pylint: disable=import-outside-toplevel
+                        from . import notify
+
+                        await notify.async_setup_entry(
+                            hass, config_entry, AddEntitiesCallback
+                        )
+                    elif component in "tag":
+                        # Local import to avoid circular dependencies
+                        # pylint: disable-next=import-outside-toplevel
                         from . import tag
 
                         await tag.async_setup_entry(hass, config_entry)
@@ -285,14 +299,14 @@ async def async_start(  # noqa: C901
                 if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
                     return
 
-                data = {
-                    "topic": msg.topic,
-                    "payload": msg.payload,
-                    "qos": msg.qos,
-                    "retain": msg.retain,
-                    "subscribed_topic": msg.subscribed_topic,
-                    "timestamp": msg.timestamp,
-                }
+                data = mqtt.MqttServiceInfo(
+                    topic=msg.topic,
+                    payload=msg.payload,
+                    qos=msg.qos,
+                    retain=msg.retain,
+                    subscribed_topic=msg.subscribed_topic,
+                    timestamp=msg.timestamp,
+                )
                 result = await hass.config_entries.flow.async_init(
                     integration, context={"source": DOMAIN}, data=data
                 )

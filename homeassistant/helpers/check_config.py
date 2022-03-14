@@ -10,7 +10,7 @@ from typing import NamedTuple
 import voluptuous as vol
 
 from homeassistant import loader
-from homeassistant.config import (
+from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_CORE,
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
@@ -23,13 +23,14 @@ from homeassistant.config import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.requirements import (
     RequirementsNotFound,
     async_clear_install_history,
     async_get_integration_with_requirements,
 )
 import homeassistant.util.yaml.loader as yaml_loader
+
+from .typing import ConfigType
 
 
 class CheckConfigError(NamedTuple):
@@ -158,9 +159,7 @@ async def async_check_ha_config_file(  # noqa: C901
         ):
             try:
                 result[domain] = (
-                    await config_validator.async_validate_config(  # type: ignore
-                        hass, config
-                    )
+                    await config_validator.async_validate_config(hass, config)
                 )[domain]
                 continue
             except (vol.Invalid, HomeAssistantError) as ex:

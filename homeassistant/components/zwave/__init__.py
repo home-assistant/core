@@ -1,5 +1,8 @@
 """Support for Z-Wave."""
+# pylint: disable=import-error
 # pylint: disable=import-outside-toplevel
+from __future__ import annotations
+
 import asyncio
 import copy
 from importlib import import_module
@@ -15,8 +18,9 @@ from homeassistant.const import (
     ATTR_VIA_DEVICE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
@@ -34,6 +38,7 @@ from homeassistant.helpers.entity_registry import (
 )
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
 
@@ -56,7 +61,7 @@ from .const import (
     DOMAIN,
 )
 from .discovery_schemas import DISCOVERY_SCHEMAS
-from .migration import (  # noqa: F401 pylint: disable=unused-import
+from .migration import (  # noqa: F401
     async_add_migration_entity_value,
     async_get_migration_data,
     async_is_ozw_migrated,
@@ -98,14 +103,14 @@ DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
 PLATFORMS = [
-    "binary_sensor",
-    "climate",
-    "cover",
-    "fan",
-    "lock",
-    "light",
-    "sensor",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 RENAME_NODE_SCHEMA = vol.Schema(
@@ -315,7 +320,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Z-Wave components."""
     if DOMAIN not in config:
         return True
@@ -341,7 +346,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):  # noqa: C901
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> bool:
     """Set up Z-Wave from a config entry.
 
     Will automatically load components to support devices found on the network.
@@ -349,8 +356,6 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     from openzwave.group import ZWaveGroup
     from openzwave.network import ZWaveNetwork
     from openzwave.option import ZWaveOption
-
-    # pylint: enable=import-error
     from pydispatch import dispatcher
 
     if async_is_ozw_migrated(hass) or async_is_zwave_js_migrated(hass):
@@ -490,7 +495,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             await platform.async_add_entities([entity])
 
         if entity.unique_id:
-            hass.async_add_job(_add_node_to_component())
+            hass.create_task(_add_node_to_component())
             return
 
         @callback
@@ -578,49 +583,49 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
         weak=False,
     )
 
-    def add_node(service):
+    def add_node(service: ServiceCall) -> None:
         """Switch into inclusion mode."""
         _LOGGER.info("Z-Wave add_node have been initialized")
         network.controller.add_node()
 
-    def add_node_secure(service):
+    def add_node_secure(service: ServiceCall) -> None:
         """Switch into secure inclusion mode."""
         _LOGGER.info("Z-Wave add_node_secure have been initialized")
         network.controller.add_node(True)
 
-    def remove_node(service):
+    def remove_node(service: ServiceCall) -> None:
         """Switch into exclusion mode."""
         _LOGGER.info("Z-Wave remove_node have been initialized")
         network.controller.remove_node()
 
-    def cancel_command(service):
+    def cancel_command(service: ServiceCall) -> None:
         """Cancel a running controller command."""
         _LOGGER.info("Cancel running Z-Wave command")
         network.controller.cancel_command()
 
-    def heal_network(service):
+    def heal_network(service: ServiceCall) -> None:
         """Heal the network."""
         _LOGGER.info("Z-Wave heal running")
         network.heal()
 
-    def soft_reset(service):
+    def soft_reset(service: ServiceCall) -> None:
         """Soft reset the controller."""
         _LOGGER.info("Z-Wave soft_reset have been initialized")
         network.controller.soft_reset()
 
-    def test_network(service):
+    def test_network(service: ServiceCall) -> None:
         """Test the network by sending commands to all the nodes."""
         _LOGGER.info("Z-Wave test_network have been initialized")
         network.test()
 
-    def stop_network(_service_or_event):
+    def stop_network(_service_or_event: Event | ServiceCall) -> None:
         """Stop Z-Wave network."""
         _LOGGER.info("Stopping Z-Wave network")
         network.stop()
         if hass.state == CoreState.running:
             hass.bus.fire(const.EVENT_NETWORK_STOP)
 
-    async def rename_node(service):
+    async def rename_node(service: ServiceCall) -> None:
         """Rename a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
@@ -639,7 +644,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             entity = hass.data[DATA_DEVICES][key]
             await entity.value_renamed(update_ids)
 
-    async def rename_value(service):
+    async def rename_value(service: ServiceCall) -> None:
         """Rename a node value."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
@@ -655,7 +660,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
         entity = hass.data[DATA_DEVICES][value_key]
         await entity.value_renamed(update_ids)
 
-    def set_poll_intensity(service):
+    def set_poll_intensity(service: ServiceCall) -> None:
         """Set the polling intensity of a node value."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
@@ -682,19 +687,19 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
                 "Set polling intensity failed (Node %d Value %d)", node_id, value_id
             )
 
-    def remove_failed_node(service):
+    def remove_failed_node(service: ServiceCall) -> None:
         """Remove failed node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         _LOGGER.info("Trying to remove zwave node %d", node_id)
         network.controller.remove_failed_node(node_id)
 
-    def replace_failed_node(service):
+    def replace_failed_node(service: ServiceCall) -> None:
         """Replace failed node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         _LOGGER.info("Trying to replace zwave node %d", node_id)
         network.controller.replace_failed_node(node_id)
 
-    def set_config_parameter(service):
+    def set_config_parameter(service: ServiceCall) -> None:
         """Set a config parameter to a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
@@ -751,7 +756,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             selection,
         )
 
-    def refresh_node_value(service):
+    def refresh_node_value(service: ServiceCall) -> None:
         """Refresh the specified value from a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
@@ -759,7 +764,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
         node.values[value_id].refresh()
         _LOGGER.info("Node %s value %s refreshed", node_id, value_id)
 
-    def set_node_value(service):
+    def set_node_value(service: ServiceCall) -> None:
         """Set the specified value on a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
@@ -768,7 +773,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
         node.values[value_id].data = value
         _LOGGER.info("Node %s value %s set to %s", node_id, value_id, value)
 
-    def print_config_parameter(service):
+    def print_config_parameter(service: ServiceCall) -> None:
         """Print a config parameter from a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
@@ -780,13 +785,13 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             get_config_value(node, param),
         )
 
-    def print_node(service):
+    def print_node(service: ServiceCall) -> None:
         """Print all information about z-wave node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         nice_print_node(node)
 
-    def set_wakeup(service):
+    def set_wakeup(service: ServiceCall) -> None:
         """Set wake-up interval of a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
@@ -798,7 +803,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
         else:
             _LOGGER.info("Node %s is not wakeable", node_id)
 
-    def change_association(service):
+    def change_association(service: ServiceCall) -> None:
         """Change an association in the zwave network."""
         association_type = service.data.get(const.ATTR_ASSOCIATION)
         node_id = service.data.get(const.ATTR_NODE_ID)
@@ -828,18 +833,18 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
                 instance,
             )
 
-    async def async_refresh_entity(service):
+    async def async_refresh_entity(service: ServiceCall) -> None:
         """Refresh values that specific entity depends on."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         async_dispatcher_send(hass, SIGNAL_REFRESH_ENTITY_FORMAT.format(entity_id))
 
-    def refresh_node(service):
+    def refresh_node(service: ServiceCall) -> None:
         """Refresh all node info."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         node.refresh_info()
 
-    def reset_node_meters(service):
+    def reset_node_meters(service: ServiceCall) -> None:
         """Reset meter counters of a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         instance = service.data.get(const.ATTR_INSTANCE)
@@ -857,7 +862,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             "Node %s on instance %s does not have resettable meters", node_id, instance
         )
 
-    def heal_node(service):
+    def heal_node(service: ServiceCall) -> None:
         """Heal a node on the network."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         update_return_routes = service.data.get(const.ATTR_RETURN_ROUTES)
@@ -865,7 +870,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
         _LOGGER.info("Z-Wave node heal running for node %s", node_id)
         node.heal(update_return_routes)
 
-    def test_node(service):
+    def test_node(service: ServiceCall) -> None:
         """Send test messages to a node on the network."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         messages = service.data.get(const.ATTR_MESSAGES)
@@ -873,7 +878,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
         _LOGGER.info("Sending %s test-messages to node %s", messages, node_id)
         node.test(messages)
 
-    def start_zwave(_service_or_event):
+    def start_zwave(_service_or_event: ServiceCall | Event) -> None:
         """Startup Z-Wave network."""
         _LOGGER.info("Starting Z-Wave network")
         network.start()
@@ -1021,10 +1026,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
 
     hass.services.async_register(DOMAIN, const.SERVICE_START_NETWORK, start_zwave)
 
-    for entry_component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, entry_component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 

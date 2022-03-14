@@ -3,6 +3,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
+
 from .const import DOMAIN
 from .device import BroadlinkDevice
 from .heartbeat import BroadlinkHeartbeat
@@ -17,13 +21,13 @@ class BroadlinkData:
     heartbeat: BroadlinkHeartbeat | None = None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Broadlink integration."""
     hass.data[DOMAIN] = BroadlinkData()
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Broadlink device from a config entry."""
     data = hass.data[DOMAIN]
 
@@ -35,7 +39,7 @@ async def async_setup_entry(hass, entry):
     return await device.async_setup()
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     data = hass.data[DOMAIN]
 

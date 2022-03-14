@@ -23,7 +23,10 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import AUTH_INSTANCE_KEY, DOMAIN
 
@@ -61,11 +64,14 @@ SUPPORTED_SWING_MODES = [SWING_HORIZONTAL, SWING_OFF]
 SUPPORTED_TARGET_TEMPERATURE_STEP = 1
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
     auth: Auth = hass.data[DOMAIN][config_entry.entry_id][AUTH_INSTANCE_KEY]
-    said_list = auth.get_said_list()
-    if not said_list:
+    if not (said_list := auth.get_said_list()):
         _LOGGER.debug("No appliances found")
         return
 

@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "cannot_connect": "Gagal terhubung",
             "not_konn_panel": "Bukan perangkat Konnected.io yang dikenali",
             "unknown": "Kesalahan yang tidak diharapkan"
         },

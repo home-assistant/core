@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
 from aioshelly.const import MODEL_NAMES
@@ -12,7 +11,7 @@ from aioshelly.rpc_device import RpcDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import singleton
+from homeassistant.helpers import device_registry, singleton
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
@@ -21,6 +20,7 @@ from .const import (
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
     DOMAIN,
+    LOGGER,
     MAX_RPC_KEY_INSTANCES,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -28,8 +28,6 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
 )
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 
 async def async_remove_shelly_entity(
@@ -39,7 +37,7 @@ async def async_remove_shelly_entity(
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
     entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
     if entity_id:
-        _LOGGER.debug("Removing entity: %s", entity_id)
+        LOGGER.debug("Removing entity: %s", entity_id)
         entity_reg.async_remove(entity_id)
 
 
@@ -57,9 +55,7 @@ def get_block_device_name(device: BlockDevice) -> str:
 
 def get_rpc_device_name(device: RpcDevice) -> str:
     """Naming for device."""
-    # Gen2 does not support setting device name
-    # AP SSID name is used as a nicely formatted device name
-    return cast(str, device.config["wifi"]["ap"]["ssid"] or device.hostname)
+    return cast(str, device.config["sys"]["device"].get("name") or device.hostname)
 
 
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
@@ -127,15 +123,22 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     return f"{entity_name} channel {chr(int(block.channel)+base)}"
 
 
-def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
+def is_block_momentary_input(
+    settings: dict[str, Any], block: Block, include_detached: bool = False
+) -> bool:
     """Return true if block input button settings is set to a momentary type."""
+    momentary_types = ["momentary", "momentary_on_release"]
+
+    if include_detached:
+        momentary_types.append("detached")
+
     # Shelly Button type is fixed to momentary and no btn_type
     if settings["device"]["type"] in SHBTN_MODELS:
         return True
 
     if settings.get("mode") == "roller":
         button_type = settings["rollers"][0]["button_type"]
-        return button_type in ["momentary", "momentary_on_release"]
+        return button_type in momentary_types
 
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
     if button is None:
@@ -150,19 +153,18 @@ def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
         channel = min(int(block.channel or 0), len(button) - 1)
         button_type = button[channel].get("btn_type")
 
-    return button_type in ["momentary", "momentary_on_release"]
+    return button_type in momentary_types
 
 
-def get_device_uptime(uptime: float, last_uptime: str | None) -> str:
+def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
     delta_uptime = utcnow() - timedelta(seconds=uptime)
 
     if (
         not last_uptime
-        or abs((delta_uptime - datetime.fromisoformat(last_uptime)).total_seconds())
-        > UPTIME_DEVIATION
+        or abs((delta_uptime - last_uptime).total_seconds()) > UPTIME_DEVIATION
     ):
-        return delta_uptime.replace(microsecond=0).isoformat()
+        return delta_uptime
 
     return last_uptime
 
@@ -174,7 +176,7 @@ def get_block_input_triggers(
     if "inputEvent" not in block.sensor_ids or "inputEventCnt" not in block.sensor_ids:
         return []
 
-    if not is_block_momentary_input(device.settings, block):
+    if not is_block_momentary_input(device.settings, block, True):
         return []
 
     triggers = []
@@ -216,7 +218,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     else:
         port = DEFAULT_COAP_PORT
-    _LOGGER.info("Starting CoAP context with UDP port %s", port)
+    LOGGER.info("Starting CoAP context with UDP port %s", port)
     await context.initialize(port)
 
     @callback
@@ -260,7 +262,8 @@ def get_model_name(info: dict[str, Any]) -> str:
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
-    key = key.replace("input", "switch")
+    if device.config.get("switch:0"):
+        key = key.replace("input", "switch")
     device_name = get_rpc_device_name(device)
     entity_name: str | None = device.config[key].get("name", device_name)
 
@@ -349,3 +352,28 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
             triggers.append((trigger_type, subtype))
 
     return triggers
+
+
+@callback
+def device_update_info(
+    hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ConfigEntry
+) -> None:
+    """Update device registry info."""
+
+    LOGGER.debug("Updating device registry info for %s", entry.title)
+
+    assert entry.unique_id
+
+    dev_registry = device_registry.async_get(hass)
+    if device := dev_registry.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id)},
+        connections={
+            (
+                device_registry.CONNECTION_NETWORK_MAC,
+                device_registry.format_mac(entry.unique_id),
+            )
+        },
+    ):
+        dev_registry.async_update_device(
+            device.id, sw_version=shellydevice.firmware_version
+        )

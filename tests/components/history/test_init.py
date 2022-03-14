@@ -1010,7 +1010,12 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
     ]
 
     hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
@@ -1023,7 +1028,12 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
     ]
 
     await client.send_json(
@@ -1038,7 +1048,12 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
     ]
 
     await client.send_json(

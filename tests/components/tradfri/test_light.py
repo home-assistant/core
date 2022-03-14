@@ -8,11 +8,7 @@ from pytradfri.device import Device
 from pytradfri.device.light import Light
 from pytradfri.device.light_control import LightControl
 
-from homeassistant.components import tradfri
-
-from . import GATEWAY_ID
-
-from tests.common import MockConfigEntry
+from .common import setup_integration
 
 DEFAULT_TEST_FEATURES = {
     "can_set_dimmer": False,
@@ -100,24 +96,6 @@ async def generate_psk(self, code):
     return "mock"
 
 
-async def setup_integration(hass):
-    """Load the Tradfri platform with a mock gateway."""
-    entry = MockConfigEntry(
-        domain=tradfri.DOMAIN,
-        data={
-            "host": "mock-host",
-            "identity": "mock-identity",
-            "key": "mock-key",
-            "import_groups": True,
-            "gateway_id": GATEWAY_ID,
-        },
-    )
-
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-
 def mock_light(test_features=None, test_state=None, light_number=0):
     """Mock a tradfri light."""
     if test_features is None:
@@ -139,6 +117,7 @@ def mock_light(test_features=None, test_state=None, light_number=0):
         has_socket_control=False,
         has_blind_control=False,
         has_signal_repeater_control=False,
+        has_air_purifier_control=False,
     )
     _mock_light.name = f"tradfri_light_{light_number}"
 
@@ -338,6 +317,7 @@ def mock_group(test_state=None, group_number=0):
 
     _mock_group = Mock(member_ids=[], observe=Mock(), **state)
     _mock_group.name = f"tradfri_group_{group_number}"
+    _mock_group.id = group_number
     return _mock_group
 
 
@@ -348,11 +328,11 @@ async def test_group(hass, mock_gateway, mock_api_factory):
     mock_gateway.mock_groups.append(mock_group(state, 1))
     await setup_integration(hass)
 
-    group = hass.states.get("light.tradfri_group_0")
+    group = hass.states.get("light.tradfri_group_mock_gateway_id_0")
     assert group is not None
     assert group.state == "off"
 
-    group = hass.states.get("light.tradfri_group_1")
+    group = hass.states.get("light.tradfri_group_mock_gateway_id_1")
     assert group is not None
     assert group.state == "on"
     assert group.attributes["brightness"] == 100
@@ -370,18 +350,25 @@ async def test_group_turn_on(hass, mock_gateway, mock_api_factory):
 
     # Use the turn_off service call to change the light state.
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": "light.tradfri_group_0"}, blocking=True
-    )
-    await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.tradfri_group_1", "brightness": 100},
+        {"entity_id": "light.tradfri_group_mock_gateway_id_0"},
         blocking=True,
     )
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.tradfri_group_2", "brightness": 100, "transition": 1},
+        {"entity_id": "light.tradfri_group_mock_gateway_id_1", "brightness": 100},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": "light.tradfri_group_mock_gateway_id_2",
+            "brightness": 100,
+            "transition": 1,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -399,7 +386,10 @@ async def test_group_turn_off(hass, mock_gateway, mock_api_factory):
 
     # Use the turn_off service call to change the light state.
     await hass.services.async_call(
-        "light", "turn_off", {"entity_id": "light.tradfri_group_0"}, blocking=True
+        "light",
+        "turn_off",
+        {"entity_id": "light.tradfri_group_mock_gateway_id_0"},
+        blocking=True,
     )
     await hass.async_block_till_done()
 

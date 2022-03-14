@@ -18,9 +18,10 @@ import async_timeout
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.frame import warn_use
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
+
+from .frame import warn_use
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
@@ -103,9 +104,9 @@ def _async_create_clientsession(
     # If a package requires a different user agent, override it by passing a headers
     # dictionary to the request method.
     # pylint: disable=protected-access
-    clientsession._default_headers = MappingProxyType({USER_AGENT: SERVER_SOFTWARE})  # type: ignore
+    clientsession._default_headers = MappingProxyType({USER_AGENT: SERVER_SOFTWARE})  # type: ignore[assignment]
 
-    clientsession.close = warn_use(clientsession.close, WARN_CLOSE_MSG)  # type: ignore
+    clientsession.close = warn_use(clientsession.close, WARN_CLOSE_MSG)  # type: ignore[assignment]
 
     if auto_cleanup_method:
         auto_cleanup_method(hass, clientsession)
@@ -123,7 +124,7 @@ async def async_aiohttp_proxy_web(
 ) -> web.StreamResponse | None:
     """Stream websession request to aiohttp web response."""
     try:
-        with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(timeout):
             req = await web_coro
 
     except asyncio.CancelledError:
@@ -164,7 +165,7 @@ async def async_aiohttp_proxy_stream(
     # Suppressing something went wrong fetching data, closed connection
     with suppress(asyncio.TimeoutError, aiohttp.ClientError):
         while hass.is_running:
-            with async_timeout.timeout(timeout):
+            async with async_timeout.timeout(timeout):
                 data = await stream.read(buffer_size)
 
             if not data:

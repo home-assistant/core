@@ -1,18 +1,21 @@
 """Support for esphome devices."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 import functools
 import logging
 import math
-from typing import Any, Callable, Generic, NamedTuple, TypeVar, cast, overload
+from typing import Any, Generic, NamedTuple, TypeVar, cast, overload
 
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     APIIntEnum,
     APIVersion,
+    BadNameAPIError,
     DeviceInfo as EsphomeDeviceInfo,
+    EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
@@ -40,7 +43,7 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
@@ -106,13 +109,15 @@ class DomainData:
         return ret
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up the esphome component."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
     noise_psk = entry.data.get(CONF_NOISE_PSK)
-    device_id = None
+    device_id: str | None = None
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -179,11 +184,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return
 
             # Call native tag scan
-            if service_name == "tag_scanned":
+            if service_name == "tag_scanned" and device_id is not None:
+                # Importing tag via hass.components in case it is overridden
+                # in a custom_components (custom_components.tag)
+                tag = hass.components.tag
                 tag_id = service_data["tag_id"]
-                hass.async_create_task(
-                    hass.components.tag.async_scan_tag(tag_id, device_id)
-                )
+                hass.async_create_task(tag.async_scan_tag(tag_id, device_id))
                 return
 
             hass.bus.async_fire(service.service, service_data)
@@ -222,7 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             """Forward Home Assistant states updates to ESPHome."""
 
             # Only communicate changes to the state or attribute tracked
-            if (
+            if event.data.get("new_state") is None or (
                 event.data.get("old_state") is not None
                 and "new_state" in event.data
                 and (
@@ -264,7 +270,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
-            device_id = await _async_setup_device_registry(
+            if entry_data.device_info.name:
+                cli.expected_name = entry_data.device_info.name
+                reconnect_logic.name = entry_data.device_info.name
+            device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
             entry_data.async_update_device_state(hass)
@@ -294,6 +303,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Start reauth flow if appropriate connect error type."""
         if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
             entry.async_start_reauth(hass)
+        if isinstance(err, BadNameAPIError):
+            _LOGGER.warning(
+                "Name of device %s changed to %s, potentially due to IP reassignment",
+                cli.expected_name,
+                err.received_name,
+            )
 
     reconnect_logic = ReconnectLogic(
         client=cli,
@@ -310,6 +325,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await entry_data.async_update_static_infos(hass, entry, infos)
         await _setup_services(hass, entry_data, services)
 
+        if entry_data.device_info is not None and entry_data.device_info.name:
+            cli.expected_name = entry_data.device_info.name
+            reconnect_logic.name = entry_data.device_info.name
+
         await reconnect_logic.start()
         entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
 
@@ -317,21 +336,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_setup_device_registry(
+@callback
+def _async_setup_device_registry(
     hass: HomeAssistant, entry: ConfigEntry, device_info: EsphomeDeviceInfo
 ) -> str:
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
-    device_registry = await dr.async_get_registry(hass)
+
+    configuration_url = None
+    if device_info.webserver_port > 0:
+        configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+
+    manufacturer = "espressif"
+    model = device_info.model
+    hw_version = None
+    if device_info.project_name:
+        project_name = device_info.project_name.split(".")
+        manufacturer = project_name[0]
+        model = project_name[1]
+        hw_version = device_info.project_version
+
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
+        configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
         name=device_info.name,
-        manufacturer="espressif",
-        model=device_info.model,
+        manufacturer=manufacturer,
+        model=model,
         sw_version=sw_version,
+        hw_version=hw_version,
     )
     return device_entry.id
 
@@ -422,7 +458,7 @@ async def _register_service(
         }
 
     async def execute_service(call: ServiceCall) -> None:
-        await entry_data.client.execute_service(service, call.data)  # type: ignore[arg-type]
+        await entry_data.client.execute_service(service, call.data)
 
     hass.services.async_register(
         DOMAIN, service_name, execute_service, vol.Schema(schema)
@@ -448,8 +484,7 @@ async def _setup_services(
     for service in services:
         if service.key in old_services:
             # Already exists
-            matching = old_services.pop(service.key)
-            if matching != service:
+            if (matching := old_services.pop(service.key)) != service:
                 # Need to re-register
                 to_unregister.append(matching)
                 to_register.append(service)
@@ -640,6 +675,17 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
+ENTITY_CATEGORIES: EsphomeEnumMapper[
+    EsphomeEntityCategory, EntityCategory | None
+] = EsphomeEnumMapper(
+    {
+        EsphomeEntityCategory.NONE: None,
+        EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
+        EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
+    }
+)
+
+
 class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
@@ -755,9 +801,9 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
+        )
 
     @property
     def name(self) -> str:
@@ -781,3 +827,10 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return not self._static_info.disabled_by_default
+
+    @property
+    def entity_category(self) -> EntityCategory | None:
+        """Return the category of the entity, if any."""
+        if not self._static_info.entity_category:
+            return None
+        return ENTITY_CATEGORIES.from_esphome(self._static_info.entity_category)

@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8bbe\u5907\u5df2\u88ab\u914d\u7f6e"
+            "already_configured": "\u8bbe\u5907\u5df2\u7ecf\u914d\u7f6e\u8fc7\u4e86"
         },
         "error": {
-            "already_configured": "\u8bbe\u5907\u5df2\u88ab\u914d\u7f6e",
+            "already_configured": "\u8bbe\u5907\u5df2\u7ecf\u914d\u7f6e\u8fc7\u4e86",
             "could_not_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230 SolarEdge API",
-            "invalid_api_key": "\u65e0\u6548\u7684 API \u5bc6\u94a5",
+            "invalid_api_key": "API \u5bc6\u94a5\u65e0\u6548",
             "site_not_active": "\u672a\u6fc0\u6d3b"
         },
         "step": {

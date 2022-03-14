@@ -1,7 +1,6 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import datetime, timedelta
 import json
 import logging
@@ -41,7 +40,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 22
+SCHEMA_VERSION = 24
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +77,7 @@ DOUBLE_TYPE = (
 )
 
 
-class Events(Base):  # type: ignore
+class Events(Base):  # type: ignore[misc,valid-type]
     """Event history data."""
 
     __table_args__ = (
@@ -93,7 +92,6 @@ class Events(Base):  # type: ignore
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))
     time_fired = Column(DATETIME_TYPE, index=True)
-    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
@@ -142,7 +140,7 @@ class Events(Base):  # type: ignore
             return None
 
 
-class States(Base):  # type: ignore
+class States(Base):  # type: ignore[misc,valid-type]
     """State change history."""
 
     __table_args__ = (
@@ -162,7 +160,6 @@ class States(Base):  # type: ignore
     )
     last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
-    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
@@ -231,7 +228,7 @@ class StatisticResult(TypedDict):
     """
 
     meta: StatisticMetaData
-    stat: Iterable[StatisticData]
+    stat: StatisticData
 
 
 class StatisticDataBase(TypedDict):
@@ -277,32 +274,37 @@ class StatisticsBase:
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData):
         """Create object from a statistics."""
-        return cls(  # type: ignore
+        return cls(  # type: ignore[call-arg,misc]
             metadata_id=metadata_id,
             **stats,
         )
 
 
-class Statistics(Base, StatisticsBase):  # type: ignore
+class Statistics(Base, StatisticsBase):  # type: ignore[misc,valid-type]
     """Long term statistics."""
 
     duration = timedelta(hours=1)
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
-        Index("ix_statistics_statistic_id_start", "metadata_id", "start"),
+        Index("ix_statistics_statistic_id_start", "metadata_id", "start", unique=True),
     )
     __tablename__ = TABLE_STATISTICS
 
 
-class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
+class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore[misc,valid-type]
     """Short term statistics."""
 
     duration = timedelta(minutes=5)
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
-        Index("ix_statistics_short_term_statistic_id_start", "metadata_id", "start"),
+        Index(
+            "ix_statistics_short_term_statistic_id_start",
+            "metadata_id",
+            "start",
+            unique=True,
+        ),
     )
     __tablename__ = TABLE_STATISTICS_SHORT_TERM
 
@@ -310,13 +312,15 @@ class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
 class StatisticMetaData(TypedDict):
     """Statistic meta data class."""
 
-    statistic_id: str
-    unit_of_measurement: str | None
     has_mean: bool
     has_sum: bool
+    name: str | None
+    source: str
+    statistic_id: str
+    unit_of_measurement: str | None
 
 
-class StatisticsMeta(Base):  # type: ignore
+class StatisticsMeta(Base):  # type: ignore[misc,valid-type]
     """Statistics meta data."""
 
     __table_args__ = (
@@ -329,26 +333,15 @@ class StatisticsMeta(Base):  # type: ignore
     unit_of_measurement = Column(String(255))
     has_mean = Column(Boolean)
     has_sum = Column(Boolean)
+    name = Column(String(255))
 
     @staticmethod
-    def from_meta(
-        source: str,
-        statistic_id: str,
-        unit_of_measurement: str | None,
-        has_mean: bool,
-        has_sum: bool,
-    ) -> StatisticsMeta:
+    def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
         """Create object from meta data."""
-        return StatisticsMeta(
-            source=source,
-            statistic_id=statistic_id,
-            unit_of_measurement=unit_of_measurement,
-            has_mean=has_mean,
-            has_sum=has_sum,
-        )
+        return StatisticsMeta(**meta)
 
 
-class RecorderRuns(Base):  # type: ignore
+class RecorderRuns(Base):  # type: ignore[misc,valid-type]
     """Representation of recorder run."""
 
     __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
@@ -398,7 +391,7 @@ class RecorderRuns(Base):  # type: ignore
         return self
 
 
-class SchemaChanges(Base):  # type: ignore
+class SchemaChanges(Base):  # type: ignore[misc,valid-type]
     """Representation of schema version changes."""
 
     __tablename__ = TABLE_SCHEMA_CHANGES
@@ -416,7 +409,7 @@ class SchemaChanges(Base):  # type: ignore
         )
 
 
-class StatisticsRuns(Base):  # type: ignore
+class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
     """Representation of statistics run."""
 
     __tablename__ = TABLE_STATISTICS_RUNS
@@ -496,7 +489,7 @@ class LazyState(State):
         self._last_updated = None
         self._context = None
 
-    @property  # type: ignore
+    @property  # type: ignore[override]
     def attributes(self):
         """State attributes."""
         if not self._attributes:
@@ -513,7 +506,7 @@ class LazyState(State):
         """Set attributes."""
         self._attributes = value
 
-    @property  # type: ignore
+    @property  # type: ignore[override]
     def context(self):
         """State context."""
         if not self._context:
@@ -525,7 +518,7 @@ class LazyState(State):
         """Set context."""
         self._context = value
 
-    @property  # type: ignore
+    @property  # type: ignore[override]
     def last_changed(self):
         """Last changed datetime."""
         if not self._last_changed:
@@ -537,7 +530,7 @@ class LazyState(State):
         """Set last changed datetime."""
         self._last_changed = value
 
-    @property  # type: ignore
+    @property  # type: ignore[override]
     def last_updated(self):
         """Last updated datetime."""
         if not self._last_updated:

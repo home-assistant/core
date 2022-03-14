@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} aku on t\u00fchjenemas",
+            "is_co": "{entity_name} tuvastab vingugaasi",
             "is_cold": "{entity_name} on k\u00fclm",
             "is_connected": "{entity_name} on \u00fchendatud",
             "is_gas": "{entity_name} tuvastab gaasi(leket)",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} on niiske",
             "is_motion": "{entity_name} tuvastab liikumist",
             "is_moving": "{entity_name} liigub",
+            "is_no_co": "{entity_name} ei tuvasta vingugaasi",
             "is_no_gas": "{entity_name} ei tuvasta gaasi(leket)",
             "is_no_light": "{entity_name} ei tuvasta valgust",
             "is_no_motion": "{entity_name} ei tuvasta liikumist",
@@ -31,6 +33,7 @@
             "is_not_plugged_in": "{entity_name} on lahti \u00fchendatud",
             "is_not_powered": "{entity_name} ei ole voolu all",
             "is_not_present": "{entity_name} puudub",
+            "is_not_running": "{entity_name} ei t\u00f6\u00f6ta",
             "is_not_tampered": "{entity_name} ei tuvasta omavoli",
             "is_not_unsafe": "{entity_name} on turvaline",
             "is_occupied": "{entity_name} on h\u00f5ivatud",
@@ -41,6 +44,7 @@
             "is_powered": "{entity_name} on voolu all",
             "is_present": "{entity_name} on saadaval",
             "is_problem": "Olemil {entity_name} on probleem",
+            "is_running": "{entity_name} t\u00f6\u00f6tab",
             "is_smoke": "{entity_name} tuvastab suitsu",
             "is_sound": "{entity_name} tuvastab heli",
             "is_tampered": "{entity_name} tuvastab omavolilise muutmist",
@@ -50,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} aku hakkab t\u00fchjaks saama",
+            "co": "{entity_name} alustas vingugaasi tuvastamist",
             "cold": "{entity_name} muutus k\u00fclmaks",
             "connected": "{entity_name} on \u00fchendatud",
             "gas": "{entity_name} tuvastas gaasi(leket)",
@@ -61,6 +66,7 @@
             "moist": "{entity_name} muutus niiskeks",
             "motion": "{entity_name} tuvastas liikumist",
             "moving": "{entity_name} hakkas liikuma",
+            "no_co": "{entity_name} l\u00f5petas vingugaasi tuvastamise",
             "no_gas": "{entity_name} l\u00f5petas gaasi(lekke) tuvastamise",
             "no_light": "{entity_name} l\u00f5petas valguse tuvastamise",
             "no_motion": "{entity_name} l\u00f5petas liikumise tuvastamise",
@@ -81,6 +87,8 @@
             "not_plugged_in": "{entity_name} \u00fchendati vooluv\u00f5rgust v\u00e4lja",
             "not_powered": "{entity_name} pole toidet",
             "not_present": "{entity_name} puudub",
+            "not_running": "{entity_name} ei t\u00f6\u00f6ta enam",
+            "not_tampered": "{entity_name} l\u00f5petas omavolilise muutmise tuvastamise",
             "not_unsafe": "{entity_name} muutus turvaliseks",
             "occupied": "{entity_name} h\u00f5ivati",
             "opened": "{entity_name} avanes",
@@ -88,14 +96,30 @@
             "powered": "{entity_name} l\u00fcltus voolu alla",
             "present": "{entity_name} on saadaval",
             "problem": "{entity_name} avastas probleemi",
+            "running": "{entity_name} alustas t\u00f6\u00f6d",
             "smoke": "{entity_name} tuvastas suitsu",
             "sound": "{entity_name} tuvastas heli",
+            "tampered": "{entity_name} tuvastas omavolilist muutmist",
             "turned_off": "{entity_name} l\u00fclitus v\u00e4lja",
             "turned_on": "{entity_name} l\u00fclitus sisse",
             "unsafe": "{entity_name} on ebaturvaline",
             "update": "{entity_name} sai saadavaloleva uuenduse",
             "vibration": "{entity_name} registreeris vibratsiooni"
         }
+    },
+    "device_class": {
+        "co": "vingugaas",
+        "cold": "jahutus",
+        "gas": "gaas",
+        "heat": "k\u00fcte",
+        "moisture": "niiskus",
+        "motion": "liikumine",
+        "occupancy": "h\u00f5ivatus",
+        "power": "v\u00f5imsus",
+        "problem": "probleem",
+        "smoke": "suits",
+        "sound": "heli",
+        "vibration": "vibratsioon"
     },
     "state": {
         "_": {
@@ -109,6 +133,14 @@
         "battery_charging": {
             "off": "Ei lae",
             "on": "Laeb"
+        },
+        "carbon_monoxide": {
+            "off": "Korras",
+            "on": "Tuvastatud"
+        },
+        "co": {
+            "off": "Puudub",
+            "on": "Tuvastatud"
         },
         "cold": {
             "off": "Normaalne",
@@ -173,6 +205,10 @@
         "problem": {
             "off": "OK",
             "on": "Probleem"
+        },
+        "running": {
+            "off": "Ei t\u00f6\u00f6ta",
+            "on": "T\u00f6\u00f6tab"
         },
         "safety": {
             "off": "Ohutu",

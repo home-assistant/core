@@ -8,6 +8,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.sql.elements import TextClause
 
+from homeassistant.components import recorder
 from homeassistant.components.recorder import run_information_with_session, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
@@ -125,8 +126,8 @@ async def test_last_run_was_recently_clean(hass):
 @pytest.mark.parametrize(
     "mysql_version, db_supports_row_number",
     [
-        ("10.2.0", True),
-        ("10.1.0", False),
+        ("10.2.0-MariaDB", True),
+        ("10.1.0-MariaDB", False),
         ("5.8.0", True),
         ("5.7.0", False),
     ],
@@ -205,6 +206,253 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version, db_supports_row_num
     assert execute_args[1] == "PRAGMA foreign_keys=ON"
 
     assert instance_mock._db_supports_row_number == db_supports_row_number
+
+
+@pytest.mark.parametrize(
+    "mysql_version,message",
+    [
+        (
+            "10.2.0-MariaDB",
+            "Version 10.2.0 of MariaDB is not supported; minimum supported version is 10.3.0.",
+        ),
+        (
+            "5.7.26-0ubuntu0.18.04.1",
+            "Version 5.7.26 of MySQL is not supported; minimum supported version is 8.0.0.",
+        ),
+        (
+            "some_random_response",
+            "Version some_random_response of MySQL is not supported; minimum supported version is 8.0.0.",
+        ),
+    ],
+)
+def test_warn_outdated_mysql(caplog, mysql_version, message):
+    """Test setting up the connection for an outdated mysql version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+
+    assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    "mysql_version",
+    [
+        ("10.3.0"),
+        ("8.0.0"),
+    ],
+)
+def test_supported_mysql(caplog, mysql_version):
+    """Test setting up the connection for a supported mysql version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+
+    assert "minimum supported version" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "pgsql_version,message",
+    [
+        (
+            "11.12 (Debian 11.12-1.pgdg100+1)",
+            "Version 11.12 of PostgreSQL is not supported; minimum supported version is 12.0.",
+        ),
+        (
+            "9.2.10",
+            "Version 9.2.10 of PostgreSQL is not supported; minimum supported version is 12.0.",
+        ),
+        (
+            "unexpected",
+            "Version unexpected of PostgreSQL is not supported; minimum supported version is 12.0.",
+        ),
+    ],
+)
+def test_warn_outdated_pgsql(caplog, pgsql_version, message):
+    """Test setting up the connection for an outdated PostgreSQL version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SHOW server_version":
+            return [[pgsql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(
+        instance_mock, "postgresql", dbapi_connection, True
+    )
+
+    assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    "pgsql_version",
+    ["14.0 (Debian 14.0-1.pgdg110+1)"],
+)
+def test_supported_pgsql(caplog, pgsql_version):
+    """Test setting up the connection for a supported PostgreSQL version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SHOW server_version":
+            return [[pgsql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(
+        instance_mock, "postgresql", dbapi_connection, True
+    )
+
+    assert "minimum supported version" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "sqlite_version,message",
+    [
+        (
+            "3.30.0",
+            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+        ),
+        (
+            "2.0.0",
+            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+        ),
+        (
+            "dogs",
+            "Version dogs of SQLite is not supported; minimum supported version is 3.31.0.",
+        ),
+    ],
+)
+def test_warn_outdated_sqlite(caplog, sqlite_version, message):
+    """Test setting up the connection for an outdated sqlite version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT sqlite_version()":
+            return [[sqlite_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+
+    assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    "sqlite_version",
+    [
+        ("3.31.0"),
+        ("3.33.0"),
+    ],
+)
+def test_supported_sqlite(caplog, sqlite_version):
+    """Test setting up the connection for a supported sqlite version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT sqlite_version()":
+            return [[sqlite_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+
+    assert "minimum supported version" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "dialect,message",
+    [
+        ("mssql", "Database mssql is not supported"),
+        ("oracle", "Database oracle is not supported"),
+        ("some_db", "Database some_db is not supported"),
+    ],
+)
+def test_warn_unsupported_dialect(caplog, dialect, message):
+    """Test setting up the connection for an outdated sqlite version."""
+    instance_mock = MagicMock()
+    dbapi_connection = MagicMock()
+
+    util.setup_connection_for_dialect(instance_mock, dialect, dbapi_connection, True)
+
+    assert message in caplog.text
 
 
 def test_basic_sanity_check(hass_recorder):
@@ -309,3 +557,21 @@ def test_perodic_db_cleanups(hass_recorder):
     ][0]
     assert isinstance(text_obj, TextClause)
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
+
+
+async def test_write_lock_db(hass, tmp_path):
+    """Test database write lock."""
+    from sqlalchemy.exc import OperationalError
+
+    # Use file DB, in memory DB cannot do write locks.
+    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    await async_init_recorder_component(hass, config)
+    await hass.async_block_till_done()
+
+    instance = hass.data[DATA_INSTANCE]
+
+    with util.write_lock_db_sqlite(instance):
+        # Database should be locked now, try writing SQL command
+        with instance.engine.connect() as connection:
+            with pytest.raises(OperationalError):
+                connection.execute(text("DROP TABLE events;"))

@@ -8,12 +8,12 @@
             "discovery_error": "Sobiva DLNA -seadme leidmine nurjus",
             "incomplete_config": "Seadetes puudub n\u00f5utav muutuja",
             "non_unique_id": "Leiti mitu sama unikaalse ID-ga seadet",
-            "not_dmr": "Seade ei ole digitaalse meedia renderdaja"
+            "not_dmr": "Seade ei ole toetatud digitaalne meediumiedastusseade"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "could_not_connect": "DLNA seadmega \u00fchenduse loomine nurjus",
-            "not_dmr": "Seade ei ole digitaalse meedia renderdaja"
+            "not_dmr": "Seade ei ole toetatud digitaalne meediumiedastusseade"
         },
         "flow_title": "{name}",
         "step": {

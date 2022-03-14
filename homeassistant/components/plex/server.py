@@ -13,13 +13,7 @@ from requests import Session
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_VIDEO,
-)
+from homeassistant.components.media_player.const import MEDIA_TYPE_PLAYLIST
 from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
@@ -30,6 +24,7 @@ from .const import (
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
+    CONF_SERVER_IDENTIFIER,
     CONF_USE_EPISODE_ART,
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
@@ -47,13 +42,8 @@ from .const import (
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
-from .errors import (
-    MediaNotFound,
-    NoServersFound,
-    ServerNotSpecified,
-    ShouldUpdateConfigEntry,
-)
-from .media_search import lookup_movie, lookup_music, lookup_tv
+from .errors import NoServersFound, ServerNotSpecified, ShouldUpdateConfigEntry
+from .media_search import search_media
 from .models import PlexSession
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +74,7 @@ class PlexServer:
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-        self._server_id = known_server_id
+        self._server_id = known_server_id or server_config.get(CONF_SERVER_IDENTIFIER)
         self.options = options
         self.server_choice = None
         self._accounts = []
@@ -147,19 +137,20 @@ class PlexServer:
             all_servers = [
                 x for x in self.account.resources() if "server" in x.provides
             ]
-            servers = [x for x in all_servers if x.presence] or all_servers
-            available_servers = [(x.name, x.clientIdentifier) for x in servers]
+            available_servers = [
+                (x.name, x.clientIdentifier, x.sourceTitle) for x in all_servers
+            ]
 
-            if not available_servers:
+            if not all_servers:
                 raise NoServersFound
-            if not self._server_name and len(available_servers) > 1:
+            if not self._server_id and len(all_servers) > 1:
                 raise ServerNotSpecified(available_servers)
 
-            self.server_choice = (
-                self._server_name if self._server_name else available_servers[0][0]
-            )
-            self._plex_server = self.account.resource(self.server_choice).connect(
-                timeout=10
+            self.server_choice = self._server_id or available_servers[0][1]
+            self._plex_server = next(
+                x.connect(timeout=10)
+                for x in all_servers
+                if x.clientIdentifier == self.server_choice
             )
 
         def _connect_with_url():
@@ -465,7 +456,7 @@ class PlexServer:
                     _LOGGER.debug("Photo session detected, skipping: %s", session)
                     continue
 
-                session_username = session.usernames[0]
+                session_username = next(iter(session.usernames), None)
                 for player in session.players:
                     unique_id = f"{self.machine_identifier}:{player.machineIdentifier}"
                     if unique_id not in self.active_sessions:
@@ -608,6 +599,10 @@ class PlexServer:
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
 
+    def create_station_playqueue(self, key):
+        """Create playqueue on Plex server using a radio station key."""
+        return plexapi.playqueue.PlayQueue.fromStationKey(self._plex_server, key)
+
     def get_playqueue(self, playqueue_id):
         """Retrieve existing playqueue from Plex server."""
         return plexapi.playqueue.PlayQueue.get(self._plex_server, playqueue_id)
@@ -649,29 +644,13 @@ class PlexServer:
             _LOGGER.error("Must specify 'library_name' for this search")
             return None
         except NotFound:
-            _LOGGER.error("Library '%s' not found", library_name)
+            library_sections = [section.title for section in self.library.sections()]
+            _LOGGER.error(
+                "Library '%s' not found in %s", library_name, library_sections
+            )
             return None
 
-        try:
-            if media_type == MEDIA_TYPE_EPISODE:
-                return lookup_tv(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_MOVIE:
-                return lookup_movie(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_MUSIC:
-                return lookup_music(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_VIDEO:
-                # Legacy method for compatibility
-                try:
-                    video_name = kwargs["video_name"]
-                    return library_section.get(video_name)
-                except KeyError:
-                    _LOGGER.error("Must specify 'video_name' for this search")
-                    return None
-                except NotFound as err:
-                    raise MediaNotFound(f"Video {video_name}") from err
-        except MediaNotFound as failed_item:
-            _LOGGER.error("%s not found in %s", failed_item, library_name)
-            return None
+        return search_media(media_type, library_section, **kwargs)
 
     @property
     def sensor_attributes(self):

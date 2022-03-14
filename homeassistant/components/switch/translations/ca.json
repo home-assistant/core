@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Entitat d'interruptor"
+                },
+                "description": "Selecciona l'interruptor del llum."
+            }
+        }
+    },
     "device_automation": {
         "action_type": {
             "toggle": "Commuta {entity_name}",
@@ -10,14 +20,16 @@
             "is_on": "{entity_name} est\u00e0 enc\u00e8s"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} s'enc\u00e9n o s'apaga",
+            "toggled": "{entity_name} s'activa o es desactiva",
             "turned_off": "{entity_name} desactivat",
             "turned_on": "{entity_name} activat"
         }
     },
     "state": {
         "_": {
-            "off": "off",
-            "on": "on"
+            "off": "OFF",
+            "on": "ON"
         }
     },
     "title": "Interruptor"

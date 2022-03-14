@@ -103,7 +103,7 @@ async def test_location(
         measurements = airly.create_measurements_session_point(
             latitude=latitude, longitude=longitude
         )
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         await measurements.update()
 
     current = measurements.current

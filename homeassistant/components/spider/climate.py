@@ -7,13 +7,13 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-
-SUPPORT_FAN = ["Auto", "Low", "Medium", "High", "Boost 10", "Boost 20", "Boost 30"]
-
-SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
 
 HA_STATE_TO_SPIDER = {
     HVAC_MODE_COOL: "Cool",
@@ -24,7 +24,9 @@ HA_STATE_TO_SPIDER = {
 SPIDER_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_SPIDER.items()}
 
 
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Initialize a Spider thermostat."""
     api = hass.data[DOMAIN][config.entry_id]
 
@@ -43,16 +45,22 @@ class SpiderThermostat(ClimateEntity):
         """Initialize the thermostat."""
         self.api = api
         self.thermostat = thermostat
+        self.support_fan = thermostat.fan_speed_values
+        self.support_hvac = []
+        for operation_value in thermostat.operation_values:
+            if operation_value in SPIDER_STATE_TO_HA:
+                self.support_hvac.append(SPIDER_STATE_TO_HA[operation_value])
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.thermostat.id)},
-            "name": self.thermostat.name,
-            "manufacturer": self.thermostat.manufacturer,
-            "model": self.thermostat.model,
-        }
+        return DeviceInfo(
+            configuration_url="https://mijn.ithodaalderop.nl/",
+            identifiers={(DOMAIN, self.thermostat.id)},
+            manufacturer=self.thermostat.manufacturer,
+            model=self.thermostat.model,
+            name=self.thermostat.name,
+        )
 
     @property
     def supported_features(self):
@@ -109,7 +117,7 @@ class SpiderThermostat(ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return SUPPORT_HVAC
+        return self.support_hvac
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -134,7 +142,7 @@ class SpiderThermostat(ClimateEntity):
     @property
     def fan_modes(self):
         """List of available fan modes."""
-        return SUPPORT_FAN
+        return self.support_fan
 
     def update(self):
         """Get the latest data."""

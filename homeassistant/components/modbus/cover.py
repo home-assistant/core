@@ -45,7 +45,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus cover."""
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
 
     covers = []
@@ -100,8 +100,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             convert = {
                 STATE_CLOSED: self._state_closed,
                 STATE_CLOSING: self._state_closing,

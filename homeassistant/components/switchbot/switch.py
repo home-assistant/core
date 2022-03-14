@@ -8,8 +8,8 @@ from switchbot import Switchbot  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DEVICE_CLASS_SWITCH,
     PLATFORM_SCHEMA,
+    SwitchDeviceClass,
     SwitchEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -49,6 +49,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import yaml config and initiates config flow for Switchbot devices."""
+    _LOGGER.warning(
+        "Configuration of the Switchbot switch platform in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
 
     # Check if entry config exists and skips import if it does.
     if hass.config_entries.async_entries(DOMAIN):
@@ -99,7 +105,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     coordinator: SwitchbotDataUpdateCoordinator
-    _attr_device_class = DEVICE_CLASS_SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(
         self,
@@ -113,12 +119,12 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
         super().__init__(coordinator, idx, mac, name)
         self._attr_unique_id = idx
         self._device = device
+        self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
-        last_state = await self.async_get_last_state()
-        if not last_state:
+        if not (last_state := await self.async_get_last_state()):
             return
         self._attr_is_on = last_state.state == STATE_ON
         self._last_run_success = last_state.attributes["last_run_success"]
@@ -131,6 +137,9 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
             self._last_run_success = bool(
                 await self.hass.async_add_executor_job(self._device.turn_on)
             )
+            if self._last_run_success:
+                self._attr_is_on = True
+                self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
@@ -140,6 +149,9 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
             self._last_run_success = bool(
                 await self.hass.async_add_executor_job(self._device.turn_off)
             )
+            if self._last_run_success:
+                self._attr_is_on = False
+                self.async_write_ha_state()
 
     @property
     def assumed_state(self) -> bool:
@@ -149,8 +161,10 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
         return False
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
+        if not self.data["data"]["switchMode"]:
+            return self._attr_is_on
         return self.data["data"]["isOn"]
 
     @property

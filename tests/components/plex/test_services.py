@@ -2,7 +2,9 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import plexapi.audio
 from plexapi.exceptions import NotFound
+import plexapi.playqueue
 import pytest
 
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
@@ -14,7 +16,7 @@ from homeassistant.components.plex.const import (
     SERVICE_REFRESH_LIBRARY,
     SERVICE_SCAN_CLIENTS,
 )
-from homeassistant.components.plex.services import play_on_sonos
+from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.const import CONF_URL
 from homeassistant.exceptions import HomeAssistantError
 
@@ -110,32 +112,28 @@ async def test_scan_clients(hass, mock_plex_server):
     )
 
 
-async def test_sonos_play_media(
+async def test_lookup_media_for_other_integrations(
     hass,
     entry,
     setup_plex_server,
     requests_mock,
-    empty_payload,
     playqueue_1234,
     playqueue_created,
-    plextv_account,
-    sonos_resources,
 ):
-    """Test playback from a Sonos media_player.play_media call."""
-    media_content_id = (
-        '{"library_name": "Music", "artist_name": "Artist", "album_name": "Album"}'
-    )
-    sonos_speaker_name = "Zone A"
-
-    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
-    requests_mock.post("/playqueues", text=playqueue_created)
-    playback_mock = requests_mock.get(
-        "/player/playback/playMedia", status_code=HTTPStatus.OK
+    """Test media lookup for media_player.play_media calls from cast/sonos."""
+    CONTENT_ID = '{"library_name": "Music", "artist_name": "Artist"}'
+    CONTENT_ID_KEY = "100"
+    CONTENT_ID_BAD_MEDIA = '{"library_name": "Music", "artist_name": "Not an Artist"}'
+    CONTENT_ID_PLAYQUEUE = '{"playqueue_id": 1234}'
+    CONTENT_ID_BAD_PLAYQUEUE = '{"playqueue_id": 1235}'
+    CONTENT_ID_SERVER = '{"plex_server": "Plex Server 1", "library_name": "Music", "artist_name": "Artist"}'
+    CONTENT_ID_SHUFFLE = (
+        '{"library_name": "Music", "artist_name": "Artist", "shuffle": 1}'
     )
 
     # Test with no Plex integration available
     with pytest.raises(HomeAssistantError) as excinfo:
-        play_on_sonos(hass, MEDIA_TYPE_MUSIC, media_content_id, sonos_speaker_name)
+        lookup_plex_media(hass, MEDIA_TYPE_MUSIC, CONTENT_ID)
     assert "Plex integration not configured" in str(excinfo.value)
 
     with patch(
@@ -147,58 +145,45 @@ async def test_sonos_play_media(
 
         # Test with no Plex servers available
         with pytest.raises(HomeAssistantError) as excinfo:
-            play_on_sonos(hass, MEDIA_TYPE_MUSIC, media_content_id, sonos_speaker_name)
+            lookup_plex_media(hass, MEDIA_TYPE_MUSIC, CONTENT_ID)
         assert "No Plex servers available" in str(excinfo.value)
 
     # Complete setup of a Plex server
     await hass.config_entries.async_unload(entry.entry_id)
-    mock_plex_server = await setup_plex_server()
+    await setup_plex_server()
 
-    # Test with no speakers available
-    requests_mock.get("https://sonos.plex.tv/resources", text=empty_payload)
-    with pytest.raises(HomeAssistantError) as excinfo:
-        play_on_sonos(hass, MEDIA_TYPE_MUSIC, media_content_id, sonos_speaker_name)
-    assert f"Sonos speaker '{sonos_speaker_name}' is not associated with" in str(
-        excinfo.value
-    )
-    assert playback_mock.call_count == 0
+    # Test lookup success
+    result = lookup_plex_media(hass, MEDIA_TYPE_MUSIC, CONTENT_ID)
+    assert isinstance(result, plexapi.audio.Artist)
 
-    # Test with speakers available
-    requests_mock.get("https://sonos.plex.tv/resources", text=sonos_resources)
-    with patch.object(mock_plex_server.account, "_sonos_cache_timestamp", 0):
-        play_on_sonos(hass, MEDIA_TYPE_MUSIC, media_content_id, sonos_speaker_name)
-    assert playback_mock.call_count == 1
+    # Test media key payload
+    result = lookup_plex_media(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_KEY)
+    assert isinstance(result, plexapi.audio.Track)
 
-    # Test with speakers available and media key payload
-    play_on_sonos(hass, MEDIA_TYPE_MUSIC, "100", sonos_speaker_name)
-    assert playback_mock.call_count == 2
+    # Test with specified server
+    result = lookup_plex_media(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_SERVER)
+    assert isinstance(result, plexapi.audio.Artist)
 
-    # Test with speakers available and Plex server specified
-    content_id_with_server = '{"plex_server": "Plex Server 1", "library_name": "Music", "artist_name": "Artist", "album_name": "Album"}'
-    play_on_sonos(hass, MEDIA_TYPE_MUSIC, content_id_with_server, sonos_speaker_name)
-    assert playback_mock.call_count == 3
+    # Test with media not found
+    with patch("plexapi.library.LibrarySection.search", return_value=None):
+        with pytest.raises(HomeAssistantError) as excinfo:
+            lookup_plex_media(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_BAD_MEDIA)
+        assert "Plex media not found" in str(excinfo.value)
 
-    # Test with speakers available but media not found
-    content_id_bad_media = '{"library_name": "Music", "artist_name": "Not an Artist"}'
-    with pytest.raises(HomeAssistantError) as excinfo:
-        play_on_sonos(hass, MEDIA_TYPE_MUSIC, content_id_bad_media, sonos_speaker_name)
-    assert "Plex media not found" in str(excinfo.value)
-    assert playback_mock.call_count == 3
-
-    # Test with speakers available and playqueue
+    # Test with playqueue
     requests_mock.get("https://1.2.3.4:32400/playQueues/1234", text=playqueue_1234)
-    content_id_with_playqueue = '{"playqueue_id": 1234}'
-    play_on_sonos(hass, MEDIA_TYPE_MUSIC, content_id_with_playqueue, sonos_speaker_name)
-    assert playback_mock.call_count == 4
+    result = lookup_plex_media(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_PLAYQUEUE)
+    assert isinstance(result, plexapi.playqueue.PlayQueue)
 
-    # Test with speakers available and invalid playqueue
+    # Test with invalid playqueue
     requests_mock.get(
         "https://1.2.3.4:32400/playQueues/1235", status_code=HTTPStatus.NOT_FOUND
     )
-    content_id_with_playqueue = '{"playqueue_id": 1235}'
     with pytest.raises(HomeAssistantError) as excinfo:
-        play_on_sonos(
-            hass, MEDIA_TYPE_MUSIC, content_id_with_playqueue, sonos_speaker_name
-        )
+        lookup_plex_media(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_BAD_PLAYQUEUE)
     assert "PlayQueue '1235' could not be found" in str(excinfo.value)
-    assert playback_mock.call_count == 4
+
+    # Test playqueue is created with shuffle
+    requests_mock.post("/playqueues", text=playqueue_created)
+    result = lookup_plex_media(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_SHUFFLE)
+    assert isinstance(result, plexapi.playqueue.PlayQueue)

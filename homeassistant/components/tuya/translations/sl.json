@@ -1,4 +1,13 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "region": "Regija"
+                }
+            }
+        }
+    },
     "options": {
         "abort": {
             "cannot_connect": "Povezovanje ni uspelo."

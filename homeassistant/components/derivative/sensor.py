@@ -1,4 +1,7 @@
 """Numeric derivative of data coming from a source sensor over time."""
+from __future__ import annotations
+
+from datetime import timedelta
 from decimal import Decimal, DecimalException
 import logging
 
@@ -16,10 +19,12 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -71,7 +76,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the derivative sensor."""
     derivative = DerivativeSensor(
         source_entity=config[CONF_SOURCE],
@@ -103,7 +113,9 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
-        self._state_list = []  # List of tuples with (timestamp, sensor_value)
+        self._state_list = (
+            []
+        )  # List of tuples with (timestamp_start, timestamp_end, derivative)
 
         self._name = name if name is not None else f"{source_entity} derivative"
 
@@ -122,8 +134,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state is not None:
+        if (state := await self.async_get_last_state()) is not None:
             try:
                 self._state = Decimal(state.state)
             except SyntaxError as err:
@@ -141,39 +152,32 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             ):
                 return
 
-            now = new_state.last_updated
-            # Filter out the tuples that are older than (and outside of the) `time_window`
-            self._state_list = [
-                (timestamp, state)
-                for timestamp, state in self._state_list
-                if (now - timestamp).total_seconds() < self._time_window
-            ]
-            # It can happen that the list is now empty, in that case
-            # we use the old_state, because we cannot do anything better.
-            if len(self._state_list) == 0:
-                self._state_list.append((old_state.last_updated, old_state.state))
-            self._state_list.append((new_state.last_updated, new_state.state))
-
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
                 self._unit_of_measurement = self._unit_template.format(
                     "" if unit is None else unit
                 )
 
-            try:
-                # derivative of previous measures.
-                last_time, last_value = self._state_list[-1]
-                first_time, first_value = self._state_list[0]
+            # filter out all derivatives older than `time_window` from our window list
+            self._state_list = [
+                (time_start, time_end, state)
+                for time_start, time_end, state in self._state_list
+                if (new_state.last_updated - time_end).total_seconds()
+                < self._time_window
+            ]
 
-                elapsed_time = (last_time - first_time).total_seconds()
-                delta_value = Decimal(last_value) - Decimal(first_value)
-                derivative = (
+            try:
+                elapsed_time = (
+                    new_state.last_updated - old_state.last_updated
+                ).total_seconds()
+                delta_value = Decimal(new_state.state) - Decimal(old_state.state)
+                new_derivative = (
                     delta_value
                     / Decimal(elapsed_time)
                     / Decimal(self._unit_prefix)
                     * Decimal(self._unit_time)
                 )
-                assert isinstance(derivative, Decimal)
+
             except ValueError as err:
                 _LOGGER.warning("While calculating derivative: %s", err)
             except DecimalException as err:
@@ -182,9 +186,32 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 )
             except AssertionError as err:
                 _LOGGER.error("Could not calculate derivative: %s", err)
+
+            # add latest derivative to the window list
+            self._state_list.append(
+                (old_state.last_updated, new_state.last_updated, new_derivative)
+            )
+
+            def calculate_weight(start, end, now):
+                window_start = now - timedelta(seconds=self._time_window)
+                if start < window_start:
+                    weight = (end - window_start).total_seconds() / self._time_window
+                else:
+                    weight = (end - start).total_seconds() / self._time_window
+                return weight
+
+            # If outside of time window just report derivative (is the same as modeling it in the window),
+            # otherwise take the weighted average with the previous derivatives
+            if elapsed_time > self._time_window:
+                derivative = new_derivative
             else:
-                self._state = derivative
-                self.async_write_ha_state()
+                derivative = 0
+                for (start, end, value) in self._state_list:
+                    weight = calculate_weight(start, end, new_state.last_updated)
+                    derivative = derivative + (value * Decimal(weight))
+
+            self._state = derivative
+            self.async_write_ha_state()
 
         async_track_state_change_event(
             self.hass, [self._sensor_source_id], calc_derivative

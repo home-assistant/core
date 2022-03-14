@@ -25,7 +25,7 @@ from .conftest import (
     TEST_ST,
     TEST_UDN,
     TEST_USN,
-    MockDevice,
+    MockIgdDevice,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -66,12 +66,14 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: TEST_LOCATION,
-            ssdp.ATTR_SSDP_ST: TEST_ST,
-            ssdp.ATTR_SSDP_USN: TEST_USN,
-            # ssdp.ATTR_UPNP_UDN: TEST_UDN,  # Not provided.
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn=TEST_USN,
+            ssdp_st=TEST_ST,
+            ssdp_location=TEST_LOCATION,
+            upnp={
+                # ssdp.ATTR_UPNP_UDN: TEST_UDN,  # Not provided.
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "incomplete_discovery"
@@ -197,9 +199,11 @@ async def test_options_flow(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id) is True
     await hass.async_block_till_done()
-    mock_device: MockDevice = hass.data[DOMAIN][config_entry.entry_id].device
 
     # Reset.
+    mock_device: MockIgdDevice = hass.data[DOMAIN][
+        config_entry.entry_id
+    ].device._igd_device
     mock_device.traffic_times_polled = 0
     mock_device.status_times_polled = 0
 

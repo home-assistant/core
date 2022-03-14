@@ -11,8 +11,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import TradfriBaseDevice
-from .const import ATTR_MODEL, CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
+from .base_class import TradfriBaseEntity
+from .const import (
+    ATTR_MODEL,
+    CONF_GATEWAY_ID,
+    COORDINATOR,
+    COORDINATOR_LIST,
+    DOMAIN,
+    KEY_API,
+)
+from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -22,29 +30,42 @@ async def async_setup_entry(
 ) -> None:
     """Load Tradfri covers based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
-    api = tradfri_data[KEY_API]
-    devices = tradfri_data[DEVICES]
+    coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    api = coordinator_data[KEY_API]
 
-    covers = [dev for dev in devices if dev.has_blind_control]
-    if covers:
-        async_add_entities(TradfriCover(cover, api, gateway_id) for cover in covers)
+    async_add_entities(
+        TradfriCover(
+            device_coordinator,
+            api,
+            gateway_id,
+        )
+        for device_coordinator in coordinator_data[COORDINATOR_LIST]
+        if device_coordinator.device.has_blind_control
+    )
 
 
-class TradfriCover(TradfriBaseDevice, CoverEntity):
+class TradfriCover(TradfriBaseEntity, CoverEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(
         self,
-        device: Command,
+        device_coordinator: TradfriDeviceDataUpdateCoordinator,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
-        """Initialize a cover."""
-        super().__init__(device, api, gateway_id)
-        self._attr_unique_id = f"{gateway_id}-{device.id}"
+        """Initialize a switch."""
+        super().__init__(
+            device_coordinator=device_coordinator,
+            api=api,
+            gateway_id=gateway_id,
+        )
 
-        self._refresh(device)
+        self._device_control = self._device.blind_control
+        self._device_data = self._device_control.blinds[0]
+
+    def _refresh(self) -> None:
+        """Refresh the device."""
+        self._device_data = self.coordinator.data.blind_control.blinds[0]
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -89,12 +110,3 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
     def is_closed(self) -> bool:
         """Return if the cover is closed or not."""
         return self.current_cover_position == 0
-
-    def _refresh(self, device: Command) -> None:
-        """Refresh the cover data."""
-        super()._refresh(device)
-        self._device = device
-
-        # Caching of BlindControl and cover object
-        self._device_control = device.blind_control
-        self._device_data = device.blind_control.blinds[0]

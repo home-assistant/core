@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontroller nettstedet er allerede konfigurert",
+            "already_configured": "UniFi Network-nettstedet er allerede konfigurert",
             "configuration_updated": "Konfigurasjonen er oppdatert.",
             "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
@@ -21,7 +21,7 @@
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
-                "title": "Sett opp UniFi kontroller"
+                "title": "Sett opp UniFi Network"
             }
         }
     },
@@ -34,19 +34,19 @@
                     "poe_clients": "Tillat POE-kontroll av klienter"
                 },
                 "description": "Konfigurere klient-kontroller\n\nOpprette brytere for serienumre du \u00f8nsker \u00e5 kontrollere tilgang til nettverk for.",
-                "title": "UniFi-alternativ 2/3"
+                "title": "UniFi Network alternativer 2/3"
             },
             "device_tracker": {
                 "data": {
                     "detection_time": "Tid i sekunder fra sist sett til den ble ansett borte",
-                    "ignore_wired_bug": "Deaktiver UniFi kablet feillogikk",
+                    "ignore_wired_bug": "Deaktiver UniFi Network kablet feillogikk",
                     "ssid_filter": "Velg SSID-er for \u00e5 spore tr\u00e5dl\u00f8se klienter p\u00e5",
                     "track_clients": "Spor nettverksklienter",
                     "track_devices": "Spore nettverksenheter (Ubiquiti-enheter)",
                     "track_wired_clients": "Inkluder kablede nettverksklienter"
                 },
                 "description": "Konfigurere enhetssporing",
-                "title": "UniFi-alternativ 1/3"
+                "title": "UniFi-nettverksalternativer 1/3"
             },
             "init": {
                 "data": {
@@ -60,7 +60,7 @@
                     "track_clients": "Spor nettverksklienter",
                     "track_devices": "Spore nettverksenheter (Ubiquiti-enheter)"
                 },
-                "description": "Konfigurer UniFi-integrasjon"
+                "description": "Konfigurer UniFi Network-integrasjon"
             },
             "statistics_sensors": {
                 "data": {
@@ -68,7 +68,7 @@
                     "allow_uptime_sensors": "Oppetidssensorer for nettverksklienter"
                 },
                 "description": "Konfigurer statistikk sensorer",
-                "title": "UniFi-alternativ 3/3"
+                "title": "UniFi Network alternativer 3/3"
             }
         }
     }

@@ -4,11 +4,13 @@ from __future__ import annotations
 from types import MappingProxyType
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_STATE,
     ATTR_SW_VERSION,
     STATE_UNAVAILABLE,
 )
@@ -16,12 +18,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, ICON_FOR_EMPTY_VALUES
+from .const import (
+    ATTR_UNIQUE_ID,
+    DYNAMIC_ATTRIBUTES,
+    FIXED_ATTRIBUTES,
+    ICON_FOR_EMPTY_VALUES,
+)
 
 
 def get_no_data_icon(expected_entity: MappingProxyType):
     """Check icon attribute for inactive sensors."""
-    entity_id = expected_entity["entity_id"]
+    entity_id = expected_entity[ATTR_ENTITY_ID]
     return ICON_FOR_EMPTY_VALUES.get(entity_id, expected_entity.get(ATTR_ICON))
 
 
@@ -46,12 +53,12 @@ def check_entities(
 ) -> None:
     """Ensure that the expected_entities are correct."""
     for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
+        entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity["unique_id"]
+        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
-        assert state.state == expected_entity["result"]
+        assert state.state == expected_entity[ATTR_STATE]
         for attr in FIXED_ATTRIBUTES + DYNAMIC_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
 
@@ -64,10 +71,10 @@ def check_entities_no_data(
 ) -> None:
     """Ensure that the expected_entities are correct."""
     for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
+        entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity["unique_id"]
+        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
         assert state.state == expected_state
         for attr in FIXED_ATTRIBUTES:
@@ -83,10 +90,10 @@ def check_entities_unavailable(
 ) -> None:
     """Ensure that the expected_entities are correct."""
     for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
+        entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity["unique_id"]
+        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE
         for attr in FIXED_ATTRIBUTES:

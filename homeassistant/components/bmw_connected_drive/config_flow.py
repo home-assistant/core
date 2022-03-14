@@ -1,4 +1,8 @@
 """Config flow for BMW ConnectedDrive integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name
 import voluptuous as vol
@@ -6,9 +10,10 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
-from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_USE_LOCATION
+from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -19,7 +24,9 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -43,9 +50,11 @@ class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             unique_id = f"{user_input[CONF_REGION]}-{user_input[CONF_USERNAME]}"
 
@@ -65,13 +74,11 @@ class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        return await self.async_step_user(user_input)
-
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> BMWConnectedDriveOptionsFlow:
         """Return a BWM ConnectedDrive option flow."""
         return BMWConnectedDriveOptionsFlow(config_entry)
 
@@ -79,16 +86,20 @@ class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class BMWConnectedDriveOptionsFlow(config_entries.OptionsFlow):
     """Handle a option flow for BMW ConnectedDrive."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize BMW ConnectedDrive option flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         return await self.async_step_account_options()
 
-    async def async_step_account_options(self, user_input=None):
+    async def async_step_account_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -99,10 +110,6 @@ class BMWConnectedDriveOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_READ_ONLY,
                         default=self.config_entry.options.get(CONF_READ_ONLY, False),
-                    ): bool,
-                    vol.Optional(
-                        CONF_USE_LOCATION,
-                        default=self.config_entry.options.get(CONF_USE_LOCATION, False),
                     ): bool,
                 }
             ),

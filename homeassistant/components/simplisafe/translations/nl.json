@@ -32,11 +32,12 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Autorisatie Code",
                     "code": "Code (gebruikt in Home Assistant)",
                     "password": "Wachtwoord",
                     "username": "E-mail"
                 },
-                "description": "Met ingang van 2021 is SimpliSafe overgestapt op een nieuw authenticatiemechanisme via de webapp. Vanwege technische beperkingen is er een handmatige stap aan het einde van dit proces; zorg ervoor dat u de [documentatie](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) leest voordat u begint.\n\nWanneer u er klaar voor bent, klikt u op [hier]({url}) om de SimpliSafe web app te openen en uw inloggegevens in te voeren. Wanneer het proces is voltooid, gaat u hier terug en klikt u op Verzenden.",
+                "description": "SimpliSafe verifieert met Home Assistant via de SimpliSafe web app. Vanwege technische beperkingen is er een handmatige stap aan het einde van dit proces; zorg ervoor dat u de [documentatie]({docs_url}) leest voordat u begint.\n\n1. Klik op [hier]({url}) om de SimpliSafe web app te openen en voer uw referenties in.\n\n2. Wanneer het aanmeldingsproces is voltooid, gaat u hier terug en voert u de onderstaande autorisatiecode in.",
                 "title": "Vul uw gegevens in"
             }
         }

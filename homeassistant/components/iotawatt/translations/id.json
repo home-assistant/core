@@ -10,6 +10,12 @@
                 "data": {
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
+                },
+                "description": "Perangkat IoTawatt memerlukan otentikasi. Masukkan nama pengguna dan kata sandi dan klik tombol Kirim."
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
                 }
             }
         }

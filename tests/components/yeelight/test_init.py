@@ -7,8 +7,8 @@ import pytest
 from yeelight import BulbException, BulbType
 from yeelight.aio import KEY_CONNECTED
 
-from homeassistant.components.yeelight import (
-    CONF_MODEL,
+from homeassistant.components.yeelight.const import (
+    CONF_DETECTED_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     DOMAIN,
@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -240,7 +241,7 @@ async def test_setup_discovery_with_manually_configured_network_adapter_one_fail
     assert hass.states.get(ENTITY_BINARY_SENSOR) is None
     assert hass.states.get(ENTITY_LIGHT) is None
 
-    assert f"Failed to setup listener for {FAIL_TO_BIND_IP}" in caplog.text
+    assert f"Failed to setup listener for ('{FAIL_TO_BIND_IP}', 0)" in caplog.text
 
 
 async def test_setup_import(hass: HomeAssistant):
@@ -377,7 +378,35 @@ async def test_async_listen_error_late_discovery(hass, caplog):
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.options[CONF_MODEL] == MODEL
+    assert config_entry.data[CONF_DETECTED_MODEL] == MODEL
+
+
+async def test_fail_to_fetch_initial_state(hass, caplog):
+    """Test failing to fetch initial state results in a retry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, **CONFIG_ENTRY_DATA}
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    del mocked_bulb.last_properties["power"]
+    del mocked_bulb.last_properties["main_power"]
+
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    await hass.async_block_till_done()
+    assert "Could not fetch initial state; try power cycling the device" in caplog.text
+
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_unload_before_discovery(hass, caplog):
@@ -502,12 +531,14 @@ async def test_connection_dropped_resyncs_properties(hass: HomeAssistant):
         assert len(mocked_bulb.async_get_properties.mock_calls) == 1
         mocked_bulb._async_callback({KEY_CONNECTED: False})
         await hass.async_block_till_done()
+        assert hass.states.get("light.test_name").state == STATE_UNAVAILABLE
         assert len(mocked_bulb.async_get_properties.mock_calls) == 1
         mocked_bulb._async_callback({KEY_CONNECTED: True})
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=STATE_CHANGE_TIME)
         )
         await hass.async_block_till_done()
+        assert hass.states.get("light.test_name").state == STATE_ON
         assert len(mocked_bulb.async_get_properties.mock_calls) == 2
 
 
@@ -557,3 +588,25 @@ async def test_non_oserror_exception_on_first_update(
         await hass.async_block_till_done()
 
     assert hass.states.get("light.test_name").state != STATE_UNAVAILABLE
+
+
+async def test_async_setup_with_discovery_not_working(hass: HomeAssistant):
+    """Test we can setup even if discovery is broken."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1", CONF_ID: ID},
+        options={},
+        unique_id=ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.get("light.yeelight_color_0x15243f").state == STATE_ON

@@ -7,9 +7,11 @@ from micloud.micloudexception import MiCloudAccessDenied
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -134,9 +136,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_cloud()
-        return self.async_show_form(
-            step_id="reauth_confirm", data_schema=vol.Schema({})
-        )
+        return self.async_show_form(step_id="reauth_confirm")
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
@@ -154,15 +154,16 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         return await self.async_step_cloud()
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        name = discovery_info.get("name")
-        self.host = discovery_info.get("host")
-        self.mac = discovery_info.get("properties", {}).get("mac")
+        name = discovery_info.name
+        self.host = discovery_info.host
+        self.mac = discovery_info.properties.get("mac")
         if self.mac is None:
-            poch = discovery_info.get("properties", {}).get("poch", "")
-            result = search(r"mac=\w+", poch)
-            if result is not None:
+            poch = discovery_info.properties.get("poch", "")
+            if (result := search(r"mac=\w+", poch)) is not None:
                 self.mac = result.group(0).split("=")[1]
 
         if not name or not self.host or not self.mac:

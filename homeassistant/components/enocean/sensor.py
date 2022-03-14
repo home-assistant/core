@@ -5,25 +5,26 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ID,
     CONF_NAME,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     POWER_WATT,
     STATE_CLOSED,
     STATE_OPEN,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .device import EnOceanEntity
 
@@ -44,8 +45,8 @@ SENSOR_DESC_TEMPERATURE = SensorEntityDescription(
     name="Temperature",
     native_unit_of_measurement=TEMP_CELSIUS,
     icon="mdi:thermometer",
-    device_class=DEVICE_CLASS_TEMPERATURE,
-    state_class=STATE_CLASS_MEASUREMENT,
+    device_class=SensorDeviceClass.TEMPERATURE,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 SENSOR_DESC_HUMIDITY = SensorEntityDescription(
@@ -53,8 +54,8 @@ SENSOR_DESC_HUMIDITY = SensorEntityDescription(
     name="Humidity",
     native_unit_of_measurement=PERCENTAGE,
     icon="mdi:water-percent",
-    device_class=DEVICE_CLASS_HUMIDITY,
-    state_class=STATE_CLASS_MEASUREMENT,
+    device_class=SensorDeviceClass.HUMIDITY,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 SENSOR_DESC_POWER = SensorEntityDescription(
@@ -62,8 +63,8 @@ SENSOR_DESC_POWER = SensorEntityDescription(
     name="Power",
     native_unit_of_measurement=POWER_WATT,
     icon="mdi:power-plug",
-    device_class=DEVICE_CLASS_POWER,
-    state_class=STATE_CLASS_MEASUREMENT,
+    device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 SENSOR_DESC_WINDOWHANDLE = SensorEntityDescription(
@@ -86,7 +87,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an EnOcean sensor device."""
     dev_id = config[CONF_ID]
     dev_name = config[CONF_NAME]
@@ -139,8 +145,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         if self._attr_native_value is not None:
             return
 
-        state = await self.async_get_last_state()
-        if state is not None:
+        if (state := await self.async_get_last_state()) is not None:
             self._attr_native_value = state.state
 
     def value_changed(self, packet):
@@ -163,7 +168,7 @@ class EnOceanPowerSensor(EnOceanSensor):
             # this packet reports the current value
             raw_val = packet.parsed["MR"]["raw_value"]
             divisor = packet.parsed["DIV"]["raw_value"]
-            self._attr_native_value = raw_val / (10 ** divisor)
+            self._attr_native_value = raw_val / (10**divisor)
             self.schedule_update_ha_state()
 
 

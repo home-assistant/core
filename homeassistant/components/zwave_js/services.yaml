@@ -176,7 +176,7 @@ multicast_set_value:
   fields:
     broadcast:
       name: Broadcast?
-      description: Whether command should be broadcast to all devices on the networrk.
+      description: Whether command should be broadcast to all devices on the network.
       example: true
       required: false
       selector:

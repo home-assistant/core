@@ -67,12 +67,12 @@ async def init_integration(
             data={
                 "host": "1.1.1.1",
                 "api_key": "test-key",
-                "name": "Octoprint",
+                "name": "OctoPrint",
                 "port": 81,
                 "ssl": True,
                 "path": "/",
             },
-            title="Octoprint",
+            title="OctoPrint",
         )
         config_entry.add_to_hass(hass)
 

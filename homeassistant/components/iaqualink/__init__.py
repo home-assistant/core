@@ -6,16 +6,16 @@ from functools import wraps
 import logging
 
 import aiohttp.client_exceptions
-from iaqualink import (
+from iaqualink.client import AqualinkClient
+from iaqualink.device import (
     AqualinkBinarySensor,
-    AqualinkClient,
     AqualinkDevice,
     AqualinkLight,
-    AqualinkLoginException,
     AqualinkSensor,
     AqualinkThermostat,
     AqualinkToggle,
 )
+from iaqualink.exception import AqualinkServiceException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -25,7 +25,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -71,14 +71,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Aqualink component."""
-    conf = config.get(DOMAIN)
-
-    hass.data[DOMAIN] = {}
-
-    if conf is not None:
+    if (conf := config.get(DOMAIN)) is not None:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=conf,
             )
         )
 
@@ -89,6 +87,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aqualink from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
+
+    hass.data.setdefault(DOMAIN, {})
 
     # These will contain the initialized devices
     binary_sensors = hass.data[DOMAIN][BINARY_SENSOR_DOMAIN] = []
@@ -101,24 +101,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     aqualink = AqualinkClient(username, password, session)
     try:
         await aqualink.login()
-    except AqualinkLoginException as login_exception:
+    except AqualinkServiceException as login_exception:
         _LOGGER.error("Failed to login: %s", login_exception)
         return False
     except (
         asyncio.TimeoutError,
         aiohttp.client_exceptions.ClientConnectorError,
     ) as aio_exception:
-        _LOGGER.warning("Exception raised while attempting to login: %s", aio_exception)
-        raise ConfigEntryNotReady from aio_exception
+        raise ConfigEntryNotReady(
+            f"Error while attempting login: {aio_exception}"
+        ) from aio_exception
 
-    systems = await aqualink.get_systems()
+    try:
+        systems = await aqualink.get_systems()
+    except AqualinkServiceException as svc_exception:
+        raise ConfigEntryNotReady(
+            f"Error while attempting to retrieve systems list: {svc_exception}"
+        ) from svc_exception
+
     systems = list(systems.values())
     if not systems:
         _LOGGER.error("No systems detected or supported")
         return False
 
     # Only supporting the first system for now.
-    devices = await systems[0].get_devices()
+    try:
+        devices = await systems[0].get_devices()
+    except AqualinkServiceException as svc_exception:
+        raise ConfigEntryNotReady(
+            f"Error while attempting to retrieve devices list: {svc_exception}"
+        ) from svc_exception
 
     for dev in devices.values():
         if isinstance(dev, AqualinkThermostat):
@@ -135,31 +147,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     forward_setup = hass.config_entries.async_forward_entry_setup
     if binary_sensors:
         _LOGGER.debug("Got %s binary sensors: %s", len(binary_sensors), binary_sensors)
-        hass.async_create_task(forward_setup(entry, BINARY_SENSOR_DOMAIN))
+        hass.async_create_task(forward_setup(entry, Platform.BINARY_SENSOR))
     if climates:
         _LOGGER.debug("Got %s climates: %s", len(climates), climates)
-        hass.async_create_task(forward_setup(entry, CLIMATE_DOMAIN))
+        hass.async_create_task(forward_setup(entry, Platform.CLIMATE))
     if lights:
         _LOGGER.debug("Got %s lights: %s", len(lights), lights)
-        hass.async_create_task(forward_setup(entry, LIGHT_DOMAIN))
+        hass.async_create_task(forward_setup(entry, Platform.LIGHT))
     if sensors:
         _LOGGER.debug("Got %s sensors: %s", len(sensors), sensors)
-        hass.async_create_task(forward_setup(entry, SENSOR_DOMAIN))
+        hass.async_create_task(forward_setup(entry, Platform.SENSOR))
     if switches:
         _LOGGER.debug("Got %s switches: %s", len(switches), switches)
-        hass.async_create_task(forward_setup(entry, SWITCH_DOMAIN))
+        hass.async_create_task(forward_setup(entry, Platform.SWITCH))
 
     async def _async_systems_update(now):
         """Refresh internal state for all systems."""
-        prev = systems[0].last_run_success
+        prev = systems[0].online
 
-        await systems[0].update()
-        success = systems[0].last_run_success
-
-        if not success and prev:
-            _LOGGER.warning("Failed to refresh iAqualink state")
-        elif success and not prev:
-            _LOGGER.warning("Reconnected to iAqualink")
+        try:
+            await systems[0].update()
+        except AqualinkServiceException as svc_exception:
+            if prev is not None:
+                _LOGGER.warning("Failed to refresh iAqualink state: %s", svc_exception)
+        else:
+            cur = systems[0].online
+            if cur is True and prev is not True:
+                _LOGGER.warning("Reconnected to iAqualink")
 
         async_dispatcher_send(hass, DOMAIN)
 
@@ -174,7 +188,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         platform for platform in PLATFORMS if platform in hass.data[DOMAIN]
     ]
 
-    hass.data[DOMAIN].clear()
+    del hass.data[DOMAIN]
 
     return await hass.config_entries.async_unload_platforms(entry, platforms_to_unload)
 
@@ -228,12 +242,12 @@ class AqualinkEntity(Entity):
     @property
     def assumed_state(self) -> bool:
         """Return whether the state is based on actual reading from the device."""
-        return not self.dev.system.last_run_success
+        return self.dev.system.online in [False, None]
 
     @property
     def available(self) -> bool:
         """Return whether the device is available or not."""
-        return self.dev.system.online
+        return self.dev.system.online is True
 
     @property
     def device_info(self) -> DeviceInfo:

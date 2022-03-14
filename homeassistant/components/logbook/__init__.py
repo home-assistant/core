@@ -11,6 +11,7 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import literal
 import voluptuous as vol
 
+from homeassistant.components import frontend
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.history import sqlalchemy_filter_from_include_exclude_conf
 from homeassistant.components.http import HomeAssistantView
@@ -34,7 +35,13 @@ from homeassistant.const import (
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, callback, split_entity_id
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import InvalidEntityFormatError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -45,6 +52,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
@@ -63,7 +71,7 @@ GROUP_BY_MINUTES = 15
 EMPTY_JSON_OBJECT = "{}"
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 
-HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}."
+HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}._"
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
@@ -112,6 +120,7 @@ def log_entry(hass, name, message, domain=None, entity_id=None, context=None):
     hass.add_job(async_log_entry, hass, name, message, domain, entity_id, context)
 
 
+@callback
 @bind_hass
 def async_log_entry(hass, name, message, domain=None, entity_id=None, context=None):
     """Add an entry to the logbook."""
@@ -124,12 +133,12 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None, context=No
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data, context=context)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Logbook setup."""
     hass.data[DOMAIN] = {}
 
     @callback
-    def log_message(service):
+    def log_message(service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
         message = service.data[ATTR_MESSAGE]
         name = service.data[ATTR_NAME]
@@ -146,8 +155,8 @@ async def async_setup(hass, config):
         message = message.async_render(parse_result=False)
         async_log_entry(hass, name, message, domain, entity_id)
 
-    hass.components.frontend.async_register_built_in_panel(
-        "logbook", "logbook", "hass:format-list-bulleted-type"
+    frontend.async_register_built_in_panel(
+        hass, "logbook", "logbook", "hass:format-list-bulleted-type"
     )
 
     if conf := config.get(DOMAIN, {}):
@@ -193,9 +202,7 @@ class LogbookView(HomeAssistantView):
     async def get(self, request, datetime=None):
         """Retrieve logbook entries."""
         if datetime:
-            datetime = dt_util.parse_datetime(datetime)
-
-            if datetime is None:
+            if (datetime := dt_util.parse_datetime(datetime)) is None:
                 return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
         else:
             datetime = dt_util.start_of_local_day()
@@ -219,8 +226,7 @@ class LogbookView(HomeAssistantView):
             end_day = start_day + timedelta(days=period)
         else:
             start_day = datetime
-            end_day = dt_util.parse_datetime(end_time)
-            if end_day is None:
+            if (end_day := dt_util.parse_datetime(end_time)) is None:
                 return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
@@ -592,7 +598,7 @@ def _keep_event(hass, event, entities_filter):
     if domain is None:
         return False
 
-    return entities_filter is None or entities_filter(f"{domain}.")
+    return entities_filter is None or entities_filter(f"{domain}._")
 
 
 def _augment_data_with_context(

@@ -4,13 +4,11 @@ from __future__ import annotations
 import dataclasses
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import requests.exceptions
 import upcloud_api
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -19,19 +17,22 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_PROBLEM,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL
+from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,9 +48,8 @@ CONF_SERVERS = "servers"
 DATA_UPCLOUD = "data_upcloud"
 
 DEFAULT_COMPONENT_NAME = "UpCloud {}"
-DEFAULT_COMPONENT_DEVICE_CLASS = "power"
 
-CONFIG_ENTRY_DOMAINS = {BINARY_SENSOR_DOMAIN, SWITCH_DOMAIN}
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
 SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
 
@@ -57,7 +57,7 @@ STATE_MAP = {"error": STATE_PROBLEM, "started": STATE_ON, "stopped": STATE_OFF}
 
 
 class UpCloudDataUpdateCoordinator(
-    DataUpdateCoordinator[Dict[str, upcloud_api.Server]]
+    DataUpdateCoordinator[dict[str, upcloud_api.Server]]
 ):
     """UpCloud data update coordinator."""
 
@@ -158,7 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DATA_UPCLOUD].coordinators[entry.data[CONF_USERNAME]] = coordinator
 
     # Forward entry setup
-    hass.config_entries.async_setup_platforms(entry, CONFIG_ENTRY_DOMAINS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -166,7 +166,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, CONFIG_ENTRY_DOMAINS
+        config_entry, PLATFORMS
     )
 
     hass.data[DATA_UPCLOUD].coordinators.pop(config_entry.data[CONF_USERNAME])
@@ -177,11 +177,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class UpCloudServerEntity(CoordinatorEntity):
     """Entity class for UpCloud servers."""
 
-    _attr_device_class = DEFAULT_COMPONENT_DEVICE_CLASS
-
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, upcloud_api.Server]],
+        coordinator: UpCloudDataUpdateCoordinator,
         uuid: str,
     ) -> None:
         """Initialize the UpCloud server entity."""
@@ -239,3 +237,17 @@ class UpCloudServerEntity(CoordinatorEntity):
                 ATTR_MEMORY_AMOUNT,
             )
         }
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return info for device registry."""
+        assert self.coordinator.config_entry is not None
+        return DeviceInfo(
+            configuration_url="https://hub.upcloud.com",
+            default_model="Control Panel",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
+                (DOMAIN, f"{self.coordinator.config_entry.data[CONF_USERNAME]}@hub")
+            },
+            manufacturer="UpCloud Ltd",
+        )

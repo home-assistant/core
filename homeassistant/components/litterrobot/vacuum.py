@@ -1,6 +1,7 @@
 """Support for Litter-Robot "Vacuum"."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from pylitterbot.enums import LitterBoxStatus
@@ -29,6 +30,8 @@ from .const import DOMAIN
 from .entity import LitterRobotControlEntity
 from .hub import LitterRobotHub
 
+_LOGGER = logging.getLogger(__name__)
+
 SUPPORT_LITTERROBOT = (
     SUPPORT_START | SUPPORT_STATE | SUPPORT_STATUS | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 )
@@ -47,13 +50,12 @@ async def async_setup_entry(
     """Set up Litter-Robot cleaner using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    for robot in hub.account.robots:
-        entities.append(
+    async_add_entities(
+        [
             LitterRobotCleaner(robot=robot, entity_type=TYPE_LITTER_BOX, hub=hub)
-        )
-
-    async_add_entities(entities, True)
+            for robot in hub.account.robots
+        ]
+    )
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -122,6 +124,13 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
 
     async def async_reset_waste_drawer(self) -> None:
         """Reset the waste drawer level."""
+        # The Litter-Robot reset waste drawer service has been replaced by a
+        # dedicated button entity and marked as deprecated
+        _LOGGER.warning(
+            "The 'litterrobot.reset_waste_drawer' service is deprecated and "
+            "replaced by a dedicated reset waste drawer button entity; Please "
+            "use that entity to reset the waste drawer instead"
+        )
         await self.robot.reset_waste_drawer()
         self.coordinator.async_set_updated_data(True)
 
@@ -137,6 +146,13 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
 
     async def async_set_wait_time(self, minutes: int) -> None:
         """Set the wait time."""
+        # The Litter-Robot set wait time service has been replaced by a
+        # dedicated select entity and marked as deprecated
+        _LOGGER.warning(
+            "The 'litterrobot.set_wait_time' service is deprecated and "
+            "replaced by a dedicated set wait time select entity; Please "
+            "use that entity to set the wait time instead"
+        )
         await self.perform_action_and_refresh(self.robot.set_wait_time, minutes)
 
     @property
@@ -149,4 +165,5 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
             "power_status": self.robot.power_status,
             "status_code": self.robot.status_code,
             "last_seen": self.robot.last_seen,
+            "status": self.status,
         }

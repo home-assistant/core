@@ -8,6 +8,7 @@
             "is_playing": "{entity_name} wordt afgespeeld"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} veranderde van status",
             "idle": "{entity_name} wordt inactief",
             "paused": "{entity_name} is gepauzeerd",
             "playing": "{entity_name} begint te spelen",

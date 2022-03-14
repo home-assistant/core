@@ -1,5 +1,8 @@
 """Config flow for Universal Devices ISY994 integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 from aiohttp import CookieJar
@@ -10,8 +13,7 @@ from pyisy.connection import Connection
 import voluptuous as vol
 
 from homeassistant import config_entries, core, data_entry_flow, exceptions
-from homeassistant.components import ssdp
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp, ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -39,7 +41,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _data_schema(schema_input):
+def _data_schema(schema_input: dict[str, str]) -> vol.Schema:
     """Generate schema with defaults."""
     return vol.Schema(
         {
@@ -52,7 +54,9 @@ def _data_schema(schema_input):
     )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -66,7 +70,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         https = False
         port = host.port or HTTP_PORT
         session = aiohttp_client.async_create_clientsession(
-            hass, verify_ssl=None, cookie_jar=CookieJar(unsafe=True)
+            hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
         )
     elif host.scheme == SCHEME_HTTPS:
         https = True
@@ -89,7 +93,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     )
 
     try:
-        with async_timeout.timeout(30):
+        async with async_timeout.timeout(30):
             isy_conf_xml = await isy_conn.test_connection()
     except ISYInvalidAuthError as error:
         raise InvalidAuth from error
@@ -114,18 +118,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the isy994 config flow."""
-        self.discovered_conf = {}
+        self.discovered_conf: dict[str, str] = {}
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Handle the initial step."""
         errors = {}
-        info = None
+        info: dict[str, str] = {}
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
@@ -150,15 +158,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(
+        self, user_input: dict[str, Any]
+    ) -> data_entry_flow.FlowResult:
         """Handle import."""
         return await self.async_step_user(user_input)
 
-    async def _async_set_unique_id_or_update(self, isy_mac, ip_address, port) -> None:
+    async def _async_set_unique_id_or_update(
+        self, isy_mac: str, ip_address: str, port: int | None
+    ) -> None:
         """Abort and update the ip address on change."""
         existing_entry = await self.async_set_unique_id(isy_mac)
         if not existing_entry:
             return
+        if existing_entry.source == config_entries.SOURCE_IGNORE:
+            raise data_entry_flow.AbortFlow("already_configured")
         parsed_url = urlparse(existing_entry.data[CONF_HOST])
         if parsed_url.hostname != ip_address:
             new_netloc = ip_address
@@ -184,17 +198,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         raise data_entry_flow.AbortFlow("already_configured")
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle a discovered isy994 via dhcp."""
-        friendly_name = discovery_info[HOSTNAME]
-        url = f"http://{discovery_info[IP_ADDRESS]}"
-        mac = discovery_info[MAC_ADDRESS]
+        friendly_name = discovery_info.hostname
+        url = f"http://{discovery_info.ip}"
+        mac = discovery_info.macaddress
         isy_mac = (
             f"{mac[0:2]}:{mac[2:4]}:{mac[4:6]}:{mac[6:8]}:{mac[8:10]}:{mac[10:12]}"
         )
-        await self._async_set_unique_id_or_update(
-            isy_mac, discovery_info[IP_ADDRESS], None
-        )
+        await self._async_set_unique_id_or_update(isy_mac, discovery_info.ip, None)
 
         self.discovered_conf = {
             CONF_NAME: friendly_name,
@@ -204,12 +218,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle a discovered isy994."""
-        friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
-        url = discovery_info[ssdp.ATTR_SSDP_LOCATION]
+        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        url = discovery_info.ssdp_location
+        assert isinstance(url, str)
         parsed_url = urlparse(url)
-        mac = discovery_info[ssdp.ATTR_UPNP_UDN]
+        mac = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         if mac.startswith(UDN_UUID_PREFIX):
             mac = mac[len(UDN_UUID_PREFIX) :]
         if url.endswith(ISY_URL_POSTFIX):
@@ -221,6 +238,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         elif parsed_url.scheme == SCHEME_HTTPS:
             port = HTTPS_PORT
 
+        assert isinstance(parsed_url.hostname, str)
         await self._async_set_unique_id_or_update(mac, parsed_url.hostname, port)
 
         self.discovered_conf = {
@@ -239,7 +257,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

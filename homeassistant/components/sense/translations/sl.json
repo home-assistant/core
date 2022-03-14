@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "E-po\u0161tni naslov",
-                    "password": "Geslo"
+                    "password": "Geslo",
+                    "timeout": "Timeout"
                 },
                 "title": "Pove\u017eite se s svojim Sense Energy monitor-jem"
             }

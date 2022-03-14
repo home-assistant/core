@@ -1,6 +1,5 @@
 """The test for the data filter sensor platform."""
 from datetime import timedelta
-from os import path
 from unittest.mock import patch
 
 from pytest import fixture
@@ -17,8 +16,8 @@ from homeassistant.components.filter.sensor import (
 )
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -27,10 +26,15 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.core as ha
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, async_init_recorder_component
+from tests.common import (
+    assert_setup_component,
+    async_init_recorder_component,
+    get_fixture_path,
+)
 
 
 @fixture
@@ -184,11 +188,7 @@ async def test_source_state_none(hass, values):
     assert state.state == "0.0"
 
     # Force Template Reload
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "template/sensor_configuration.yaml",
-    )
+    yaml_path = get_fixture_path("sensor_configuration.yaml", "template")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "template",
@@ -257,6 +257,7 @@ async def test_setup(hass):
         "sensor": {
             "platform": "filter",
             "name": "test",
+            "unique_id": "uniqueid_sensor_test",
             "entity_id": "sensor.test_monitored",
             "filters": [
                 {"filter": "outlier", "window_size": 10, "radius": 4.0},
@@ -275,16 +276,22 @@ async def test_setup(hass):
             1,
             {
                 "icon": "mdi:test",
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-                ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
             },
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         assert state.attributes["icon"] == "mdi:test"
-        assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
-        assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
+        assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+        assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
         assert state.state == "1.0"
+
+        entity_reg = er.async_get(hass)
+        entity_id = entity_reg.async_get_entity_id(
+            "sensor", DOMAIN, "uniqueid_sensor_test"
+        )
+        assert entity_id == "sensor.test"
 
 
 async def test_invalid_state(hass):
@@ -317,6 +324,37 @@ async def test_invalid_state(hass):
 
         state = hass.states.get("sensor.test")
         assert state.state == STATE_UNAVAILABLE
+
+
+async def test_timestamp_state(hass):
+    """Test if filter state is a datetime."""
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {"filter": "time_throttle", "window_size": "00:02"},
+            ],
+        }
+    }
+
+    await async_init_recorder_component(hass)
+
+    with assert_setup_component(1, "sensor"):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+        hass.states.async_set(
+            "sensor.test_monitored",
+            "2022-02-01T23:04:05+00:00",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test")
+        assert state.state == "2022-02-01T23:04:05+00:00"
+        assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
 
 
 async def test_outlier(values):
@@ -478,11 +516,8 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "filter/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "filter")
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -496,7 +531,3 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.filtered_realistic_humidity")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

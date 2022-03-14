@@ -2,18 +2,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 
 from miio.airfresh import LedBrightness as AirfreshLedBrightness
 from miio.airhumidifier import LedBrightness as AirhumidifierLedBrightness
 from miio.airhumidifier_miot import LedBrightness as AirhumidifierMiotLedBrightness
 from miio.airpurifier import LedBrightness as AirpurifierLedBrightness
 from miio.airpurifier_miot import LedBrightness as AirpurifierMiotLedBrightness
-from miio.fan import LedBrightness as FanLedBrightness
+from miio.fan_common import LedBrightness as FanLedBrightness
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE,
@@ -64,12 +65,16 @@ SELECTOR_TYPES = {
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
         options=("bright", "dim", "off"),
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Selectors from a config entry."""
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         return
@@ -126,14 +131,6 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
         self._attr_options = list(description.options)
         self.entity_description = description
 
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
-
 
 class XiaomiAirHumidifierSelector(XiaomiSelector):
     """Representation of a Xiaomi Air Humidifier selector."""
@@ -153,7 +150,7 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
         )
         # Sometimes (quite rarely) the device returns None as the LED brightness so we
         # check that the value is not None before updating the state.
-        if led_brightness:
+        if led_brightness is not None:
             self._current_led_brightness = led_brightness
             self.async_write_ha_state()
 

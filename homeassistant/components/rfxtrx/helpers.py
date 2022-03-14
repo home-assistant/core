@@ -3,13 +3,12 @@
 
 from RFXtrx import get_device
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
 
 
 @callback
-def async_get_device_object(hass: HomeAssistantType, device_id):
+def async_get_device_object(hass: HomeAssistant, device_id):
     """Get a device for the given device registry id."""
     device_registry = dr.async_get(hass)
     registry_device = device_registry.async_get(device_id)

@@ -10,7 +10,8 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-import homeassistant.helpers.config_validation as cv
+
+from . import config_validation as cv
 
 
 class _BaseFlowManagerView(HomeAssistantView):
@@ -69,7 +70,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
         try:
             result = await self._flow_mgr.async_init(
-                handler,  # type: ignore
+                handler,  # type: ignore[arg-type]
                 context={
                     "source": config_entries.SOURCE_USER,
                     "show_advanced_options": data["show_advanced_options"],
@@ -110,8 +111,10 @@ class FlowManagerResourceView(_BaseFlowManagerView):
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
-        except vol.Invalid:
-            return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
+        except vol.Invalid as ex:
+            return self.json_message(
+                f"User input malformed: {ex}", HTTPStatus.BAD_REQUEST
+            )
 
         result = self._prepare_result_json(result)
 

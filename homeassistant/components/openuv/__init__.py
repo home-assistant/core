@@ -9,16 +9,16 @@ from pyopenuv.errors import OpenUvError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_SENSORS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -30,7 +30,6 @@ from homeassistant.helpers.service import verify_domain_control
 from .const import (
     CONF_FROM_WINDOW,
     CONF_TO_WINDOW,
-    DATA_CLIENT,
     DATA_PROTECTION_WINDOW,
     DATA_UV,
     DEFAULT_FROM_WINDOW,
@@ -46,34 +45,41 @@ NOTIFICATION_TITLE = "OpenUV Component Setup"
 
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenUV as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
+    websession = aiohttp_client.async_get_clientsession(hass)
+    openuv = OpenUV(
+        entry,
+        Client(
+            entry.data[CONF_API_KEY],
+            entry.data.get(CONF_LATITUDE, hass.config.latitude),
+            entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+            altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
+            session=websession,
+        ),
+    )
+
+    # We disable the client's request retry abilities here to avoid a lengthy (and
+    # blocking) startup:
+    openuv.client.disable_request_retries()
+
     try:
-        websession = aiohttp_client.async_get_clientsession(hass)
-        openuv = OpenUV(
-            entry,
-            Client(
-                entry.data[CONF_API_KEY],
-                entry.data.get(CONF_LATITUDE, hass.config.latitude),
-                entry.data.get(CONF_LONGITUDE, hass.config.longitude),
-                altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
-                session=websession,
-            ),
-        )
         await openuv.async_update()
-    except OpenUvError as err:
+    except HomeAssistantError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = openuv
+    # Once we've successfully authenticated, we re-enable client request retries:
+    openuv.client.enable_request_retries()
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = openuv
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @_verify_domain_control
@@ -141,7 +147,7 @@ class OpenUV:
         """Initialize."""
         self._entry = entry
         self.client = client
-        self.data: dict[str, Any] = {}
+        self.data: dict[str, Any] = {DATA_PROTECTION_WINDOW: {}, DATA_UV: {}}
 
     async def async_update_protection_data(self) -> None:
         """Update binary sensor (protection window) data."""
@@ -149,20 +155,24 @@ class OpenUV:
         high = self._entry.options.get(CONF_TO_WINDOW, DEFAULT_TO_WINDOW)
 
         try:
-            resp = await self.client.uv_protection_window(low=low, high=high)
-            self.data[DATA_PROTECTION_WINDOW] = resp["result"]
+            data = await self.client.uv_protection_window(low=low, high=high)
         except OpenUvError as err:
-            LOGGER.error("Error during protection data update: %s", err)
-            self.data[DATA_PROTECTION_WINDOW] = {}
+            raise HomeAssistantError(
+                f"Error during protection data update: {err}"
+            ) from err
+
+        self.data[DATA_PROTECTION_WINDOW] = data.get("result")
 
     async def async_update_uv_index_data(self) -> None:
         """Update sensor (uv index, etc) data."""
         try:
             data = await self.client.uv_index()
-            self.data[DATA_UV] = data
         except OpenUvError as err:
-            LOGGER.error("Error during uv index data update: %s", err)
-            self.data[DATA_UV] = {}
+            raise HomeAssistantError(
+                f"Error during UV index data update: {err}"
+            ) from err
+
+        self.data[DATA_UV] = data.get("result")
 
     async def async_update(self) -> None:
         """Update sensor/binary sensor data."""
@@ -175,7 +185,7 @@ class OpenUvEntity(Entity):
 
     def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
         self._attr_unique_id = (
             f"{openuv.client.latitude}_{openuv.client.longitude}_{description.key}"

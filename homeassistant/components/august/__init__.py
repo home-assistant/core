@@ -43,7 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await async_setup_august(hass, entry, august_gateway)
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
-    except (ClientResponseError, CannotConnect, asyncio.TimeoutError) as err:
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady("Timed out connecting to august api") from err
+    except (AugustApiAIOHTTPError, ClientResponseError, CannotConnect) as err:
         raise ConfigEntryNotReady from err
 
 
@@ -60,7 +62,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_setup_august(hass, config_entry, august_gateway):
+async def async_setup_august(
+    hass: HomeAssistant, config_entry: ConfigEntry, august_gateway: AugustGateway
+) -> bool:
     """Set up the August component."""
 
     if CONF_PASSWORD in config_entry.data:
@@ -71,6 +75,7 @@ async def async_setup_august(hass, config_entry, august_gateway):
         hass.config_entries.async_update_entry(config_entry, data=config_data)
 
     await august_gateway.async_authenticate()
+    await august_gateway.async_refresh_access_token_if_needed()
 
     hass.data.setdefault(DOMAIN, {})
     data = hass.data[DOMAIN][config_entry.entry_id] = {
@@ -102,11 +107,10 @@ class AugustData(AugustSubscriberMixin):
     async def async_setup(self):
         """Async setup of august device data and activities."""
         token = self._august_gateway.access_token
-        user_data, locks, doorbells = await asyncio.gather(
-            self._api.async_get_user(token),
-            self._api.async_get_operable_locks(token),
-            self._api.async_get_doorbells(token),
-        )
+        # This used to be a gather but it was less reliable with august's recent api changes.
+        user_data = await self._api.async_get_user(token)
+        locks = await self._api.async_get_operable_locks(token)
+        doorbells = await self._api.async_get_doorbells(token)
         if not doorbells:
             doorbells = []
         if not locks:
@@ -137,6 +141,36 @@ class AugustData(AugustSubscriberMixin):
         await self.activity_stream.async_setup()
         pubnub.subscribe(self.async_pubnub_message)
         self._pubnub_unsub = async_create_pubnub(user_data["UserID"], pubnub)
+
+        if self._locks_by_id:
+            # Do not prevent setup as the sync can timeout
+            # but it is not a fatal error as the lock
+            # will recover automatically when it comes back online.
+            asyncio.create_task(self._async_initial_sync())
+
+    async def _async_initial_sync(self):
+        """Attempt to request an initial sync."""
+        # We don't care if this fails because we only want to wake
+        # locks that are actually online anyways and they will be
+        # awake when they come back online
+        for result in await asyncio.gather(
+            *[
+                self.async_status_async(
+                    device_id, bool(detail.bridge and detail.bridge.hyper_bridge)
+                )
+                for device_id, detail in self._device_detail_by_id.items()
+                if device_id in self._locks_by_id
+            ],
+            return_exceptions=True,
+        ):
+            if isinstance(result, Exception) and not isinstance(
+                result, (asyncio.TimeoutError, ClientResponseError, CannotConnect)
+            ):
+                _LOGGER.warning(
+                    "Unexpected exception during initial sync: %s",
+                    result,
+                    exc_info=result,
+                )
 
     @callback
     def async_pubnub_message(self, device_id, date_time, message):
@@ -172,12 +206,28 @@ class AugustData(AugustSubscriberMixin):
         await self._async_refresh_device_detail_by_ids(self._subscriptions.keys())
 
     async def _async_refresh_device_detail_by_ids(self, device_ids_list):
-        await asyncio.gather(
-            *(
-                self._async_refresh_device_detail_by_id(device_id)
-                for device_id in device_ids_list
-            )
-        )
+        """Refresh each device in sequence.
+
+        This used to be a gather but it was less reliable with august's
+        recent api changes.
+
+        The august api has been timing out for some devices so
+        we want the ones that it isn't timing out for to keep working.
+        """
+        for device_id in device_ids_list:
+            try:
+                await self._async_refresh_device_detail_by_id(device_id)
+            except asyncio.TimeoutError:
+                _LOGGER.warning(
+                    "Timed out calling august api during refresh of device: %s",
+                    device_id,
+                )
+            except (ClientResponseError, CannotConnect) as err:
+                _LOGGER.warning(
+                    "Error from august api during refresh of device: %s",
+                    device_id,
+                    exc_info=err,
+                )
 
     async def _async_refresh_device_detail_by_id(self, device_id):
         if device_id in self._locks_by_id:
@@ -245,6 +295,26 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
+    async def async_status_async(self, device_id, hyper_bridge):
+        """Request status of the the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_status_async,
+            self._august_gateway.access_token,
+            device_id,
+            hyper_bridge,
+        )
+
+    async def async_lock_async(self, device_id, hyper_bridge):
+        """Lock the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_lock_async,
+            self._august_gateway.access_token,
+            device_id,
+            hyper_bridge,
+        )
+
     async def async_unlock(self, device_id):
         """Unlock the device."""
         return await self._async_call_api_op_requires_bridge(
@@ -252,6 +322,16 @@ class AugustData(AugustSubscriberMixin):
             self._api.async_unlock_return_activities,
             self._august_gateway.access_token,
             device_id,
+        )
+
+    async def async_unlock_async(self, device_id, hyper_bridge):
+        """Unlock the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_unlock_async,
+            self._august_gateway.access_token,
+            device_id,
+            hyper_bridge,
         )
 
     async def _async_call_api_op_requires_bridge(
@@ -272,19 +352,13 @@ class AugustData(AugustSubscriberMixin):
     def _remove_inoperative_doorbells(self):
         for doorbell in list(self.doorbells):
             device_id = doorbell.device_id
-            doorbell_is_operative = False
-            doorbell_detail = self._device_detail_by_id.get(device_id)
-            if doorbell_detail is None:
-                _LOGGER.info(
-                    "The doorbell %s could not be setup because the system could not fetch details about the doorbell",
-                    doorbell.device_name,
-                )
-            else:
-                doorbell_is_operative = True
-
-            if not doorbell_is_operative:
-                del self._doorbells_by_id[device_id]
-                del self._device_detail_by_id[device_id]
+            if self._device_detail_by_id.get(device_id):
+                continue
+            _LOGGER.info(
+                "The doorbell %s could not be setup because the system could not fetch details about the doorbell",
+                doorbell.device_name,
+            )
+            del self._doorbells_by_id[device_id]
 
     def _remove_inoperative_locks(self):
         # Remove non-operative locks as there must
@@ -292,7 +366,6 @@ class AugustData(AugustSubscriberMixin):
         # be usable
         for lock in list(self.locks):
             device_id = lock.device_id
-            lock_is_operative = False
             lock_detail = self._device_detail_by_id.get(device_id)
             if lock_detail is None:
                 _LOGGER.info(
@@ -304,14 +377,12 @@ class AugustData(AugustSubscriberMixin):
                     "The lock %s could not be setup because it does not have a bridge (Connect)",
                     lock.device_name,
                 )
+                del self._device_detail_by_id[device_id]
             # Bridge may come back online later so we still add the device since we will
             # have a pubnub subscription to tell use when it recovers
             else:
-                lock_is_operative = True
-
-            if not lock_is_operative:
-                del self._locks_by_id[device_id]
-                del self._device_detail_by_id[device_id]
+                continue
+            del self._locks_by_id[device_id]
 
 
 def _save_live_attrs(lock_detail):

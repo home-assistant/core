@@ -5,9 +5,8 @@ from typing import TypedDict
 
 from p1monitor import P1Monitor, Phases, Settings, SmartMeter
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -22,7 +21,7 @@ from .const import (
     SERVICE_SMARTMETER,
 )
 
-PLATFORMS = (SENSOR_DOMAIN,)
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -46,8 +45,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload P1 Monitor config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.p1monitor.close()
+        del hass.data[DOMAIN][entry.entry_id]
     return unload_ok
 
 

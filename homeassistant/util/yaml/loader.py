@@ -100,7 +100,7 @@ class SafeLineLoader(yaml.SafeLoader):
         """Annotate a node with the first line it was seen."""
         last_line: int = self.line
         node: yaml.nodes.Node = super().compose_node(parent, index)  # type: ignore[assignment]
-        node.__line__ = last_line + 1  # type: ignore
+        node.__line__ = last_line + 1  # type: ignore[attr-defined]
         return node
 
 
@@ -149,7 +149,7 @@ def _add_reference(
     ...
 
 
-def _add_reference(obj, loader: SafeLineLoader, node: yaml.nodes.Node):  # type: ignore
+def _add_reference(obj, loader: SafeLineLoader, node: yaml.nodes.Node):  # type: ignore[no-untyped-def]
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)

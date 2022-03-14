@@ -1,8 +1,8 @@
 """The DoorBird integration constants."""
-
+from homeassistant.const import Platform
 
 DOMAIN = "doorbird"
-PLATFORMS = ["switch", "camera"]
+PLATFORMS = [Platform.BUTTON, Platform.CAMERA]
 DOOR_STATION = "door_station"
 DOOR_STATION_INFO = "door_station_info"
 DOOR_STATION_EVENT_ENTITY_IDS = "door_station_event_entity_ids"

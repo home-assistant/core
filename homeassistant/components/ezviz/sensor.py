@@ -1,10 +1,13 @@
 """Support for Ezviz sensors."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_MOTION
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -19,7 +22,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "battery_level": SensorEntityDescription(
         key="battery_level",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
     ),
     "alarm_sound_mod": SensorEntityDescription(key="alarm_sound_mod"),
     "detection_sensibility": SensorEntityDescription(key="detection_sensibility"),
@@ -32,10 +35,9 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "supported_channels": SensorEntityDescription(key="supported_channels"),
     "local_ip": SensorEntityDescription(key="local_ip"),
     "wan_ip": SensorEntityDescription(key="wan_ip"),
-    "PIR_Status": SensorEntityDescription(
-        key="PIR_Status",
-        device_class=DEVICE_CLASS_MOTION,
-    ),
+    "PIR_Status": SensorEntityDescription(key="PIR_Status"),
+    "last_alarm_type_code": SensorEntityDescription(key="last_alarm_type_code"),
+    "last_alarm_type_name": SensorEntityDescription(key="last_alarm_type_name"),
 }
 
 

@@ -7,8 +7,7 @@ from vallox_websocket_api import PROFILE as VALLOX_PROFILE
 DOMAIN = "vallox"
 DEFAULT_NAME = "Vallox"
 
-SIGNAL_VALLOX_STATE_UPDATE = "vallox_state_update"
-STATE_PROXY_SCAN_INTERVAL = timedelta(seconds=60)
+STATE_SCAN_INTERVAL = timedelta(seconds=60)
 
 # Common metric keys and (default) values.
 METRIC_KEY_MODE = "A_CYC_MODE"
@@ -37,4 +36,11 @@ VALLOX_PROFILE_TO_STR_REPORTABLE = {
 
 STR_TO_VALLOX_PROFILE_SETTABLE = {
     value: key for (key, value) in VALLOX_PROFILE_TO_STR_SETTABLE.items()
+}
+
+VALLOX_CELL_STATE_TO_STR = {
+    0: "Heat Recovery",
+    1: "Cool Recovery",
+    2: "Bypass",
+    3: "Defrosting",
 }

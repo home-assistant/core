@@ -6,7 +6,7 @@ import logging
 from wiffi import WiffiTcpServer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, CONF_TIMEOUT
+from homeassistant.const import CONF_PORT, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import utcnow
 
@@ -29,7 +29,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -141,16 +141,15 @@ class WiffiEntity(Entity):
     def __init__(self, device, metric, options):
         """Initialize the base elements of a wiffi entity."""
         self._id = generate_unique_id(device, metric)
-        self._device_info = {
-            "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, device.mac_address)
-            },
-            "identifiers": {(DOMAIN, device.mac_address)},
-            "manufacturer": "stall.biz",
-            "name": f"{device.moduletype} {device.mac_address}",
-            "model": device.moduletype,
-            "sw_version": device.sw_version,
-        }
+        self._device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, device.mac_address)},
+            identifiers={(DOMAIN, device.mac_address)},
+            manufacturer="stall.biz",
+            model=device.moduletype,
+            name=f"{device.moduletype} {device.mac_address}",
+            sw_version=device.sw_version,
+            configuration_url=device.configuration_url,
+        )
         self._name = metric.description
         self._expiration_date = None
         self._value = None

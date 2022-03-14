@@ -1,6 +1,8 @@
 """Test the SSDP integration."""
+# pylint: disable=protected-access
+
 from datetime import datetime, timedelta
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
 
 from async_upnp_client.ssdp import udn_from_headers
@@ -23,7 +25,7 @@ from tests.common import async_fire_time_changed
 
 
 def _ssdp_headers(headers):
-    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime(2021, 1, 1, 12, 00))
+    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime.now())
     ssdp_headers["_udn"] = udn_from_headers(ssdp_headers)
     return ssdp_headers
 
@@ -62,18 +64,28 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
     assert mock_flow_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_SSDP
     }
-    assert mock_flow_init.mock_calls[0][2]["data"] == {
-        ssdp.ATTR_SSDP_ST: "mock-st",
-        ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
-        ssdp.ATTR_SSDP_USN: "uuid:mock-udn::mock-st",
-        ssdp.ATTR_SSDP_SERVER: "mock-server",
-        ssdp.ATTR_SSDP_EXT: "",
-        ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
-        ssdp.ATTR_SSDP_UDN: ANY,
-        "_timestamp": ANY,
-        ssdp.ATTR_HA_MATCHING_DOMAINS: {"mock-domain"},
-    }
+    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    assert mock_call_data.ssdp_st == "mock-st"
+    assert mock_call_data.ssdp_location == "http://1.1.1.1"
+    assert mock_call_data.ssdp_usn == "uuid:mock-udn::mock-st"
+    assert mock_call_data.ssdp_server == "mock-server"
+    assert mock_call_data.ssdp_ext == ""
+    assert mock_call_data.ssdp_udn == ANY
+    assert mock_call_data.ssdp_headers["_timestamp"] == ANY
+    assert mock_call_data.x_homeassistant_matching_domains == {"mock-domain"}
+    assert mock_call_data.upnp == {ssdp.ATTR_UPNP_UDN: "uuid:mock-udn"}
     assert "Failed to fetch ssdp data" not in caplog.text
+    # Compatibility with old dict access (to be removed after 2022.6)
+    assert mock_call_data[ssdp.ATTR_SSDP_ST] == "mock-st"
+    assert mock_call_data[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert mock_call_data[ssdp.ATTR_SSDP_USN] == "uuid:mock-udn::mock-st"
+    assert mock_call_data[ssdp.ATTR_SSDP_SERVER] == "mock-server"
+    assert mock_call_data[ssdp.ATTR_SSDP_EXT] == ""
+    assert mock_call_data[ssdp.ATTR_UPNP_UDN] == "uuid:mock-udn"
+    assert mock_call_data[ssdp.ATTR_SSDP_UDN] == ANY
+    assert mock_call_data["_timestamp"] == ANY
+    assert mock_call_data[ssdp.ATTR_HA_MATCHING_DOMAINS] == {"mock-domain"}
+    # End compatibility checks
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -347,22 +359,34 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
     await hass.async_block_till_done()
 
     discovery_info = await ssdp.async_get_discovery_info_by_udn(hass, "uuid:mock-udn")
-    assert discovery_info == [
-        {
-            ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
-            ssdp.ATTR_SSDP_NT: "mock-st",
-            ssdp.ATTR_SSDP_ST: "mock-st",  # Set by ssdp component, not in original advertisement.
-            ssdp.ATTR_SSDP_USN: "uuid:mock-udn::mock-st",
-            ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-            ssdp.ATTR_SSDP_UDN: ANY,
-            "nts": "ssdp:alive",
-            "_timestamp": ANY,
-        }
-    ]
+    discovery_info = discovery_info[0]
+    assert discovery_info.ssdp_location == "http://1.1.1.1"
+    assert discovery_info.ssdp_nt == "mock-st"
+    # Set by ssdp component, not in original advertisement.
+    assert discovery_info.ssdp_st == "mock-st"
+    assert discovery_info.ssdp_usn == "uuid:mock-udn::mock-st"
+    assert discovery_info.ssdp_udn == ANY
+    assert discovery_info.ssdp_headers["nts"] == "ssdp:alive"
+    assert discovery_info.ssdp_headers["_timestamp"] == ANY
+    assert discovery_info.upnp == {
+        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
+    }
+    # Compatibility with old dict access (to be removed after 2022.6)
+    assert discovery_info[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert discovery_info[ssdp.ATTR_SSDP_NT] == "mock-st"
+    # Set by ssdp component, not in original advertisement.
+    assert discovery_info[ssdp.ATTR_SSDP_ST] == "mock-st"
+    assert discovery_info[ssdp.ATTR_SSDP_USN] == "uuid:mock-udn::mock-st"
+    assert discovery_info[ssdp.ATTR_UPNP_UDN] == "uuid:mock-udn"
+    assert discovery_info[ssdp.ATTR_UPNP_DEVICE_TYPE] == "Paulus"
+    assert discovery_info[ssdp.ATTR_SSDP_UDN] == ANY
+    assert discovery_info["nts"] == "ssdp:alive"
+    assert discovery_info["_timestamp"] == ANY
+    # End compatibility checks
 
 
-@patch(  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+@patch(
     "homeassistant.components.ssdp.Scanner._async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
 )
@@ -452,29 +476,48 @@ async def test_scan_with_registered_callback(
     assert async_integration_match_all_not_present_callback1.call_count == 0
     assert async_match_any_callback1.call_count == 1
     assert async_not_matching_integration_callback1.call_count == 0
-    assert async_integration_callback.call_args[0] == (
-        {
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-            ssdp.ATTR_SSDP_EXT: "",
-            ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
-            ssdp.ATTR_SSDP_SERVER: "mock-server",
-            ssdp.ATTR_SSDP_ST: "mock-st",
-            ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::mock-st",
-            ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
-            "x-rincon-bootseq": "55",
-            ssdp.ATTR_SSDP_UDN: ANY,
-            "_timestamp": ANY,
-            ssdp.ATTR_HA_MATCHING_DOMAINS: set(),
-        },
-        ssdp.SsdpChange.ALIVE,
+    assert async_integration_callback.call_args[0][1] == ssdp.SsdpChange.ALIVE
+    mock_call_data: ssdp.SsdpServiceInfo = async_integration_callback.call_args[0][0]
+    assert mock_call_data.ssdp_ext == ""
+    assert mock_call_data.ssdp_location == "http://1.1.1.1"
+    assert mock_call_data.ssdp_server == "mock-server"
+    assert mock_call_data.ssdp_st == "mock-st"
+    assert (
+        mock_call_data.ssdp_usn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::mock-st"
     )
+    assert mock_call_data.ssdp_headers["x-rincon-bootseq"] == "55"
+    assert mock_call_data.ssdp_udn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+    assert mock_call_data.ssdp_headers["_timestamp"] == ANY
+    assert mock_call_data.x_homeassistant_matching_domains == set()
+    assert mock_call_data.upnp == {
+        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+    }
+    # Compatibility with old dict access (to be removed after 2022.6)
+    assert mock_call_data[ssdp.ATTR_UPNP_DEVICE_TYPE] == "Paulus"
+    assert mock_call_data[ssdp.ATTR_SSDP_EXT] == ""
+    assert mock_call_data[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert mock_call_data[ssdp.ATTR_SSDP_SERVER] == "mock-server"
+    assert mock_call_data[ssdp.ATTR_SSDP_ST] == "mock-st"
+    assert (
+        mock_call_data[ssdp.ATTR_SSDP_USN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::mock-st"
+    )
+    assert (
+        mock_call_data[ssdp.ATTR_UPNP_UDN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+    )
+    assert mock_call_data["x-rincon-bootseq"] == "55"
+    assert mock_call_data[ssdp.ATTR_SSDP_UDN] == ANY
+    assert mock_call_data["_timestamp"] == ANY
+    assert mock_call_data[ssdp.ATTR_HA_MATCHING_DOMAINS] == set()
+    # End of compatibility checks
     assert "Failed to callback info" in caplog.text
 
     async_integration_callback_from_cache = AsyncMock()
     await ssdp.async_register_callback(
         hass, async_integration_callback_from_cache, {"st": "mock-st"}
     )
-
     assert async_integration_callback_from_cache.call_count == 1
 
 
@@ -510,51 +553,109 @@ async def test_getting_existing_headers(
     await ssdp_listener._on_search(mock_ssdp_search_response)
 
     discovery_info_by_st = await ssdp.async_get_discovery_info_by_st(hass, "mock-st")
-    assert discovery_info_by_st == [
-        {
-            ssdp.ATTR_SSDP_EXT: "",
-            ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
-            ssdp.ATTR_SSDP_SERVER: "mock-server",
-            ssdp.ATTR_SSDP_ST: "mock-st",
-            ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
-            ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-            ssdp.ATTR_SSDP_UDN: ANY,
-            "_timestamp": ANY,
-        }
-    ]
+    discovery_info_by_st = discovery_info_by_st[0]
+    assert discovery_info_by_st.ssdp_ext == ""
+    assert discovery_info_by_st.ssdp_location == "http://1.1.1.1"
+    assert discovery_info_by_st.ssdp_server == "mock-server"
+    assert discovery_info_by_st.ssdp_st == "mock-st"
+    assert (
+        discovery_info_by_st.ssdp_usn
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+    )
+    assert discovery_info_by_st.ssdp_udn == ANY
+    assert discovery_info_by_st.ssdp_headers["_timestamp"] == ANY
+    assert discovery_info_by_st.upnp == {
+        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+    }
+    # Compatibility with old dict access (to be removed after 2022.6)
+    assert discovery_info_by_st[ssdp.ATTR_SSDP_EXT] == ""
+    assert discovery_info_by_st[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert discovery_info_by_st[ssdp.ATTR_SSDP_SERVER] == "mock-server"
+    assert discovery_info_by_st[ssdp.ATTR_SSDP_ST] == "mock-st"
+    assert (
+        discovery_info_by_st[ssdp.ATTR_SSDP_USN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+    )
+    assert (
+        discovery_info_by_st[ssdp.ATTR_UPNP_UDN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+    )
+    assert discovery_info_by_st[ssdp.ATTR_UPNP_DEVICE_TYPE] == "Paulus"
+    assert discovery_info_by_st[ssdp.ATTR_SSDP_UDN] == ANY
+    assert discovery_info_by_st["_timestamp"] == ANY
+    # End of compatibility checks
 
     discovery_info_by_udn = await ssdp.async_get_discovery_info_by_udn(
         hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
     )
-    assert discovery_info_by_udn == [
-        {
-            ssdp.ATTR_SSDP_EXT: "",
-            ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
-            ssdp.ATTR_SSDP_SERVER: "mock-server",
-            ssdp.ATTR_SSDP_ST: "mock-st",
-            ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
-            ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-            ssdp.ATTR_SSDP_UDN: ANY,
-            "_timestamp": ANY,
-        }
-    ]
+    discovery_info_by_udn = discovery_info_by_udn[0]
+    assert discovery_info_by_udn.ssdp_ext == ""
+    assert discovery_info_by_udn.ssdp_location == "http://1.1.1.1"
+    assert discovery_info_by_udn.ssdp_server == "mock-server"
+    assert discovery_info_by_udn.ssdp_st == "mock-st"
+    assert (
+        discovery_info_by_udn.ssdp_usn
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+    )
+    assert discovery_info_by_udn.ssdp_udn == ANY
+    assert discovery_info_by_udn.ssdp_headers["_timestamp"] == ANY
+    assert discovery_info_by_udn.upnp == {
+        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+    }
+    # Compatibility with old dict access (to be removed after 2022.6)
+    assert discovery_info_by_udn[ssdp.ATTR_SSDP_EXT] == ""
+    assert discovery_info_by_udn[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert discovery_info_by_udn[ssdp.ATTR_SSDP_SERVER] == "mock-server"
+    assert discovery_info_by_udn[ssdp.ATTR_SSDP_ST] == "mock-st"
+    assert (
+        discovery_info_by_udn[ssdp.ATTR_SSDP_USN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+    )
+    assert (
+        discovery_info_by_udn[ssdp.ATTR_UPNP_UDN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+    )
+    assert discovery_info_by_udn[ssdp.ATTR_UPNP_DEVICE_TYPE] == "Paulus"
+    assert discovery_info_by_udn[ssdp.ATTR_SSDP_UDN] == ANY
+    assert discovery_info_by_udn["_timestamp"] == ANY
+    # End of compatibility checks
 
     discovery_info_by_udn_st = await ssdp.async_get_discovery_info_by_udn_st(
         hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL", "mock-st"
     )
-    assert discovery_info_by_udn_st == {
-        ssdp.ATTR_SSDP_EXT: "",
-        ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
-        ssdp.ATTR_SSDP_SERVER: "mock-server",
-        ssdp.ATTR_SSDP_ST: "mock-st",
-        ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
-        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+    assert discovery_info_by_udn_st.ssdp_ext == ""
+    assert discovery_info_by_udn_st.ssdp_location == "http://1.1.1.1"
+    assert discovery_info_by_udn_st.ssdp_server == "mock-server"
+    assert discovery_info_by_udn_st.ssdp_st == "mock-st"
+    assert (
+        discovery_info_by_udn_st.ssdp_usn
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+    )
+    assert discovery_info_by_udn_st.ssdp_udn == ANY
+    assert discovery_info_by_udn_st.ssdp_headers["_timestamp"] == ANY
+    assert discovery_info_by_udn_st.upnp == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_SSDP_UDN: ANY,
-        "_timestamp": ANY,
+        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
+    # Compatibility with old dict access (to be removed after 2022.6)
+    assert discovery_info_by_udn_st[ssdp.ATTR_SSDP_EXT] == ""
+    assert discovery_info_by_udn_st[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert discovery_info_by_udn_st[ssdp.ATTR_SSDP_SERVER] == "mock-server"
+    assert discovery_info_by_udn_st[ssdp.ATTR_SSDP_ST] == "mock-st"
+    assert (
+        discovery_info_by_udn_st[ssdp.ATTR_SSDP_USN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+    )
+    assert (
+        discovery_info_by_udn_st[ssdp.ATTR_UPNP_UDN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+    )
+    assert discovery_info_by_udn_st[ssdp.ATTR_UPNP_DEVICE_TYPE] == "Paulus"
+    assert discovery_info_by_udn_st[ssdp.ATTR_SSDP_UDN] == ANY
+    assert discovery_info_by_udn_st["_timestamp"] == ANY
+    # End of compatibility checks
 
     assert (
         await ssdp.async_get_discovery_info_by_udn_st(hass, "wrong", "mock-st") is None
@@ -610,7 +711,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_async_detect_interfaces_setting_empty_route(
     mock_get_adapters, mock_get_ssdp, hass
 ):
@@ -618,8 +719,8 @@ async def test_async_detect_interfaces_setting_empty_route(
     await init_ssdp_component(hass)
 
     ssdp_listeners = hass.data[ssdp.DOMAIN]._ssdp_listeners
-    source_ips = {ssdp_listener.source_ip for ssdp_listener in ssdp_listeners}
-    assert source_ips == {IPv6Address("2001:db8::"), IPv4Address("192.168.1.5")}
+    sources = {ssdp_listener.source for ssdp_listener in ssdp_listeners}
+    assert sources == {("2001:db8::%1", 0, 0, 1), ("192.168.1.5", 0)}
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -636,14 +737,14 @@ async def test_async_detect_interfaces_setting_empty_route(
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_bind_failure_skips_adapter(
     mock_get_adapters, mock_get_ssdp, hass, caplog
 ):
     """Test that an adapter with a bind failure is skipped."""
 
     async def _async_start(self):
-        if self.source_ip == IPv6Address("2001:db8::"):
+        if self.source == ("2001:db8::%1", 0, 0, 1):
             raise OSError
 
     SsdpListener.async_start = _async_start
@@ -652,10 +753,8 @@ async def test_bind_failure_skips_adapter(
     assert "Failed to setup listener for" in caplog.text
 
     ssdp_listeners = hass.data[ssdp.DOMAIN]._ssdp_listeners
-    source_ips = {ssdp_listener.source_ip for ssdp_listener in ssdp_listeners}
-    assert source_ips == {
-        IPv4Address("192.168.1.5")
-    }  # Note no SsdpListener for IPv6 address.
+    sources = {ssdp_listener.source for ssdp_listener in ssdp_listeners}
+    assert sources == {("192.168.1.5", 0)}  # Note no SsdpListener for IPv6 address.
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -672,7 +771,7 @@ async def test_bind_failure_skips_adapter(
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_ipv4_does_additional_search_for_sonos(
     mock_get_adapters, mock_get_ssdp, hass
 ):
@@ -692,3 +791,61 @@ async def test_ipv4_does_additional_search_for_sonos(
         ),
     )
     assert ssdp_listener.async_search.call_args[1] == {}
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_service_info_compatibility(hass, caplog):
+    """Test compatibility with old-style dict.
+
+    To be removed in 2022.6
+    """
+    discovery_info = ssdp.SsdpServiceInfo(
+        ssdp_st="mock-st",
+        ssdp_location="http://1.1.1.1",
+        ssdp_usn="uuid:mock-udn::mock-st",
+        ssdp_server="mock-server",
+        ssdp_ext="",
+        ssdp_headers=_ssdp_headers(
+            {
+                "st": "mock-st",
+                "location": "http://1.1.1.1",
+                "usn": "uuid:mock-udn::mock-st",
+                "server": "mock-server",
+                "ext": "",
+            }
+        ),
+        upnp={ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC"},
+    )
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info["ssdp_st"] == "mock-st"
+    assert "Detected integration that accessed discovery_info['ssdp_st']" in caplog.text
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info.get("ssdp_location") == "http://1.1.1.1"
+    assert (
+        "Detected integration that accessed discovery_info.get('ssdp_location')"
+        in caplog.text
+    )
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert "ssdp_usn" in discovery_info
+    assert (
+        "Detected integration that accessed discovery_info.__contains__('ssdp_usn')"
+        in caplog.text
+    )
+
+    # Root item
+    assert discovery_info["ssdp_usn"] == "uuid:mock-udn::mock-st"
+    assert discovery_info.get("ssdp_usn") == "uuid:mock-udn::mock-st"
+    assert "ssdp_usn" in discovery_info
+
+    # SSDP header
+    assert discovery_info["st"] == "mock-st"
+    assert discovery_info.get("st") == "mock-st"
+    assert "st" in discovery_info
+
+    # UPnP item
+    assert discovery_info[ssdp.ATTR_UPNP_DEVICE_TYPE] == "ABC"
+    assert discovery_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) == "ABC"
+    assert ssdp.ATTR_UPNP_DEVICE_TYPE in discovery_info

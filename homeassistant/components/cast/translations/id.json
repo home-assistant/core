@@ -25,12 +25,18 @@
         },
         "step": {
             "advanced_options": {
+                "data": {
+                    "ignore_cec": "Abaikan CEC",
+                    "uuid": "UUID yang diizinkan"
+                },
+                "description": "UUID yang Diizinkan - Daftar UUID perangkat Cast yang dipisahkan koma untuk ditambahkan ke Home Assistant. Gunakan hanya jika Anda tidak ingin menambahkan semua perangkat cast yang tersedia.\nAbaikan CEC - Daftar Chromecast yang dipisahkan koma yang harus mengabaikan data CEC untuk menentukan input aktif. Daftar ini akan diteruskan ke pychromecast.IGNORE_CEC.",
                 "title": "Konfigurasi Google Cast tingkat lanjut"
             },
             "basic_options": {
                 "data": {
                     "known_hosts": "Host yang dikenal"
                 },
+                "description": "Host yang Dikenal - Daftar nama host atau alamat IP perangkat cast, dipisahkan dengan tanda koma, gunakan jika penemuan mDNS tidak berfungsi.",
                 "title": "Konfigurasi Google Cast"
             }
         }

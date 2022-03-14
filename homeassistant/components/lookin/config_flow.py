@@ -9,10 +9,10 @@ from aiolookin import Device, LookInHttpProtocol, NoUsableService
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -28,11 +28,11 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Start a discovery flow from zeroconf."""
-        uid: str = discovery_info["hostname"][: -len(".local.")]
-        host: str = discovery_info["host"]
+        uid: str = discovery_info.hostname[: -len(".local.")]
+        host: str = discovery_info.host
         await self.async_set_unique_id(uid.upper())
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
@@ -84,7 +84,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _validate_device(self, host: str) -> Device:
         """Validate we can connect to the device."""
         session = async_get_clientsession(self.hass)
-        lookin_protocol = LookInHttpProtocol(host, session)
+        lookin_protocol = LookInHttpProtocol(f"http://{host}", session)
         return await lookin_protocol.get_info()
 
     async def async_step_discovery_confirm(

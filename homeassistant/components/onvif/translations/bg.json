@@ -7,7 +7,7 @@
             "auth": {
                 "data": {
                     "password": "\u041f\u0430\u0440\u043e\u043b\u0430",
-                    "username": "Username"
+                    "username": "\u041f\u043e\u0442\u0440\u0435\u0431\u0438\u0442\u0435\u043b\u0441\u043a\u043e \u0438\u043c\u0435"
                 }
             },
             "configure": {
@@ -22,6 +22,7 @@
             "manual_input": {
                 "data": {
                     "host": "\u0425\u043e\u0441\u0442",
+                    "name": "\u0418\u043c\u0435",
                     "port": "\u041f\u043e\u0440\u0442"
                 }
             }

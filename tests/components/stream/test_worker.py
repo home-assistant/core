@@ -23,7 +23,7 @@ from unittest.mock import patch
 import av
 import pytest
 
-from homeassistant.components.stream import Stream, create_stream
+from homeassistant.components.stream import KeyFrameConverter, Stream, create_stream
 from homeassistant.components.stream.const import (
     ATTR_SETTINGS,
     CONF_LL_HLS,
@@ -37,10 +37,16 @@ from homeassistant.components.stream.const import (
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from homeassistant.components.stream.core import StreamSettings
-from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
+from homeassistant.components.stream.worker import (
+    StreamEndedError,
+    StreamState,
+    StreamWorkerError,
+    stream_worker,
+)
 from homeassistant.setup import async_setup_component
 
-from tests.components.stream.common import generate_h264_video
+from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
+from tests.components.stream.common import generate_h264_video, generate_h265_video
 from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
 STREAM_SOURCE = "some-stream-source"
@@ -91,6 +97,17 @@ class FakeAvInputStream:
             name = "aac"
 
         self.codec = FakeCodec()
+
+        class FakeCodecContext:
+            name = "h264"
+            extradata = None
+
+        self.codec_context = FakeCodecContext()
+
+    @property
+    def type(self):
+        """Return packet type."""
+        return "video" if self.name == VIDEO_STREAM_FORMAT else "audio"
 
     def __str__(self) -> str:
         """Return a stream name for debugging."""
@@ -190,6 +207,7 @@ class FakePyAvBuffer:
         class FakeAvOutputStream:
             def __init__(self, capture_packets):
                 self.capture_packets = capture_packets
+                self.type = "ignored-type"
 
             def close(self):
                 return
@@ -200,6 +218,9 @@ class FakePyAvBuffer:
 
             def __str__(self) -> str:
                 return f"FakeAvOutputStream<{template.name}>"
+
+            def name(self) -> str:
+                return "avc1"
 
         if template.name == AUDIO_STREAM_FORMAT:
             return FakeAvOutputStream(self.audio_packets)
@@ -247,6 +268,14 @@ class MockPyAv:
         return self.container
 
 
+def run_worker(hass, stream, stream_source):
+    """Run the stream worker under test."""
+    stream_state = StreamState(hass, stream.outputs)
+    stream_worker(
+        stream_source, {}, stream_state, KeyFrameConverter(hass), threading.Event()
+    )
+
+
 async def async_decode_stream(hass, packets, py_av=None):
     """Start a stream worker that decodes incoming stream packets into output segments."""
     stream = Stream(hass, STREAM_SOURCE, {})
@@ -260,9 +289,15 @@ async def async_decode_stream(hass, packets, py_av=None):
         "homeassistant.components.stream.core.StreamOutput.put",
         side_effect=py_av.capture_buffer.capture_output_segment,
     ):
-        segment_buffer = SegmentBuffer(hass, stream.outputs)
-        stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
-        await hass.async_block_till_done()
+        try:
+            run_worker(hass, stream, STREAM_SOURCE)
+        except StreamEndedError:
+            # Tests only use a limited number of packets, then the worker exits as expected. In
+            # production, stream ending would be unexpected.
+            pass
+        finally:
+            # Wait for all packets to be flushed even when exceptions are thrown
+            await hass.async_block_till_done()
 
     return py_av.capture_buffer
 
@@ -271,10 +306,9 @@ async def test_stream_open_fails(hass):
     """Test failure on stream open."""
     stream = Stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
-    with patch("av.open") as av_open:
+    with patch("av.open") as av_open, pytest.raises(StreamWorkerError):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        segment_buffer = SegmentBuffer(hass, stream.outputs)
-        stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
+        run_worker(hass, stream, STREAM_SOURCE)
         await hass.async_block_till_done()
         av_open.assert_called_once()
 
@@ -368,7 +402,10 @@ async def test_packet_overflow(hass):
     # Packet is so far out of order, exceeds max gap and looks like overflow
     packets[OUT_OF_ORDER_PACKET_INDEX].dts = -9000000
 
-    decoded_stream = await async_decode_stream(hass, packets)
+    py_av = MockPyAv()
+    with pytest.raises(StreamWorkerError, match=r"Timestamp overflow detected"):
+        await async_decode_stream(hass, packets, py_av=py_av)
+    decoded_stream = py_av.capture_buffer
     segments = decoded_stream.segments
     complete_segments = decoded_stream.complete_segments
     # Check number of segments
@@ -422,7 +459,10 @@ async def test_too_many_initial_bad_packets_fails(hass):
     for i in range(0, num_bad_packets):
         packets[i].dts = None
 
-    decoded_stream = await async_decode_stream(hass, packets)
+    py_av = MockPyAv()
+    with pytest.raises(StreamWorkerError, match=r"No dts"):
+        await async_decode_stream(hass, packets, py_av=py_av)
+    decoded_stream = py_av.capture_buffer
     segments = decoded_stream.segments
     assert len(segments) == 0
     assert len(decoded_stream.video_packets) == 0
@@ -463,7 +503,10 @@ async def test_too_many_bad_packets(hass):
     for i in range(bad_packet_start, bad_packet_start + num_bad_packets):
         packets[i].dts = None
 
-    decoded_stream = await async_decode_stream(hass, packets)
+    py_av = MockPyAv()
+    with pytest.raises(StreamWorkerError, match=r"No dts"):
+        await async_decode_stream(hass, packets, py_av=py_av)
+    decoded_stream = py_av.capture_buffer
     complete_segments = decoded_stream.complete_segments
     assert len(complete_segments) == int((bad_packet_start - 1) * SEGMENTS_PER_PACKET)
     assert len(decoded_stream.video_packets) == bad_packet_start
@@ -474,9 +517,11 @@ async def test_no_video_stream(hass):
     """Test no video stream in the container means no resulting output."""
     py_av = MockPyAv(video=False)
 
-    decoded_stream = await async_decode_stream(
-        hass, PacketSequence(TEST_SEQUENCE_LENGTH), py_av=py_av
-    )
+    with pytest.raises(StreamWorkerError, match=r"Stream has no video"):
+        await async_decode_stream(
+            hass, PacketSequence(TEST_SEQUENCE_LENGTH), py_av=py_av
+        )
+    decoded_stream = py_av.capture_buffer
     # Note: This failure scenario does not output an end of stream
     segments = decoded_stream.segments
     assert len(segments) == 0
@@ -613,6 +658,9 @@ async def test_stream_stopped_while_decoding(hass):
         worker_wake.set()
         stream.stop()
 
+    # Stream is still considered available when the worker was still active and asked to stop
+    assert stream.available
+
 
 async def test_update_stream_source(hass):
     """Tests that the worker is re-invoked when the stream source is updated."""
@@ -621,8 +669,8 @@ async def test_update_stream_source(hass):
 
     stream = Stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
-    # Note that keepalive is not set here.  The stream is "restarted" even though
-    # it is not stopping due to failure.
+    # Note that retries are disabled by default in tests, however the stream is "restarted" when
+    # the stream source is updated.
 
     py_av = MockPyAv()
     py_av.container.packets = PacketSequence(TEST_SEQUENCE_LENGTH)
@@ -643,6 +691,7 @@ async def test_update_stream_source(hass):
         stream.start()
         assert worker_open.wait(TIMEOUT)
         assert last_stream_source == STREAM_SOURCE
+        assert stream.available
 
         # Update the stream source, then the test wakes up the worker and assert
         # that it re-opens the new stream (the test again waits on thread_started)
@@ -652,6 +701,7 @@ async def test_update_stream_source(hass):
         assert worker_open.wait(TIMEOUT)
         assert last_stream_source == STREAM_SOURCE + "-updated-source"
         worker_wake.set()
+        assert stream.available
 
         # Cleanup
         stream.stop()
@@ -661,19 +711,24 @@ async def test_worker_log(hass, caplog):
     """Test that the worker logs the url without username and password."""
     stream = Stream(hass, "https://abcd:efgh@foo.bar", {})
     stream.add_provider(HLS_PROVIDER)
-    with patch("av.open") as av_open:
+
+    with patch("av.open") as av_open, pytest.raises(StreamWorkerError) as err:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        segment_buffer = SegmentBuffer(hass, stream.outputs)
-        stream_worker(
-            "https://abcd:efgh@foo.bar", {}, segment_buffer, threading.Event()
-        )
+        run_worker(hass, stream, "https://abcd:efgh@foo.bar")
         await hass.async_block_till_done()
+    assert (
+        str(err.value)
+        == "Error opening stream (ERRORTYPE_-2, error) https://****:****@foo.bar"
+    )
     assert "https://abcd:efgh@foo.bar" not in caplog.text
-    assert "https://****:****@foo.bar" in caplog.text
 
 
 async def test_durations(hass, record_worker_sync):
     """Test that the duration metadata matches the media."""
+
+    # Use a target part duration which has a slight mismatch
+    # with the incoming frame rate to better expose problems.
+    target_part_duration = TEST_PART_DURATION - 0.01
     await async_setup_component(
         hass,
         "stream",
@@ -681,13 +736,13 @@ async def test_durations(hass, record_worker_sync):
             "stream": {
                 CONF_LL_HLS: True,
                 CONF_SEGMENT_DURATION: SEGMENT_DURATION,
-                CONF_PART_DURATION: TEST_PART_DURATION,
+                CONF_PART_DURATION: target_part_duration,
             }
         },
     )
 
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    source = generate_h264_video(duration=SEGMENT_DURATION + 1)
+    stream = create_stream(hass, source, {}, stream_label="camera")
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -699,16 +754,37 @@ async def test_durations(hass, record_worker_sync):
     # check that the Part duration metadata matches the durations in the media
     running_metadata_duration = 0
     for segment in complete_segments:
-        for part in segment.parts:
+        av_segment = av.open(io.BytesIO(segment.init + segment.get_data()))
+        av_segment.close()
+        for part_num, part in enumerate(segment.parts):
             av_part = av.open(io.BytesIO(segment.init + part.data))
             running_metadata_duration += part.duration
-            # av_part.duration will just return the largest dts in av_part.
-            # When we normalize by av.time_base this should equal the running duration
+            # av_part.duration actually returns the dts of the first packet of the next
+            # av_part. When we normalize this by av.time_base we get the running
+            # duration of the media.
+            # The metadata duration may differ slightly from the media duration.
+            # The worker has some flexibility of where to set each metadata boundary,
+            # and when the media's duration is slightly too long or too short, the
+            # metadata duration may be adjusted up or down.
+            # We check here that the divergence between the metadata duration and the
+            # media duration is not too large (2 frames seems reasonable here).
+            assert math.isclose(
+                (av_part.duration - av_part.start_time) / av.time_base,
+                part.duration,
+                abs_tol=2 / av_part.streams.video[0].rate + 1e-6,
+            )
+            # Also check that the sum of the durations so far matches the last dts
+            # in the media.
             assert math.isclose(
                 running_metadata_duration,
                 av_part.duration / av.time_base,
                 abs_tol=1e-6,
             )
+            # And check that the metadata duration is between 0.85x and 1.0x of
+            # the part target duration
+            if not (part.has_keyframe or part_num == len(segment.parts) - 1):
+                assert part.duration > 0.85 * target_part_duration - 1e-6
+            assert part.duration < target_part_duration + 1e-6
             av_part.close()
     # check that the Part durations are consistent with the Segment durations
     for segment in complete_segments:
@@ -723,7 +799,7 @@ async def test_durations(hass, record_worker_sync):
     stream.stop()
 
 
-async def test_has_keyframe(hass, record_worker_sync):
+async def test_has_keyframe(hass, record_worker_sync, h264_video):
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(
         hass,
@@ -739,8 +815,7 @@ async def test_has_keyframe(hass, record_worker_sync):
         },
     )
 
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {}, stream_label="camera")
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -760,5 +835,66 @@ async def test_has_keyframe(hass, record_worker_sync):
             assert part.has_keyframe == media_has_keyframe
 
     await record_worker_sync.join()
+
+    stream.stop()
+
+
+async def test_h265_video_is_hvc1(hass, record_worker_sync):
+    """Test that a h265 video gets muxed as hvc1."""
+    await async_setup_component(
+        hass,
+        "stream",
+        {
+            "stream": {
+                CONF_LL_HLS: True,
+                CONF_SEGMENT_DURATION: SEGMENT_DURATION,
+                CONF_PART_DURATION: TEST_PART_DURATION,
+            }
+        },
+    )
+
+    source = generate_h265_video()
+    stream = create_stream(hass, source, {}, stream_label="camera")
+
+    # use record_worker_sync to grab output segments
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path")
+
+    complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    assert len(complete_segments) >= 1
+
+    segment = complete_segments[0]
+    part = segment.parts[0]
+    av_part = av.open(io.BytesIO(segment.init + part.data))
+    assert av_part.streams.video[0].codec_tag == "hvc1"
+    av_part.close()
+
+    await record_worker_sync.join()
+
+    stream.stop()
+
+
+async def test_get_image(hass, record_worker_sync):
+    """Test that the has_keyframe metadata matches the media."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    source = generate_h264_video()
+
+    # Since libjpeg-turbo is not installed on the CI runner, we use a mock
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton"
+    ) as mock_turbo_jpeg_singleton:
+        mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
+        stream = create_stream(hass, source, {})
+
+    # use record_worker_sync to grab output segments
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path")
+
+    assert stream._keyframe_converter._image is None
+
+    await record_worker_sync.join()
+
+    assert await stream.async_get_image() == EMPTY_8_6_JPEG
 
     stream.stop()

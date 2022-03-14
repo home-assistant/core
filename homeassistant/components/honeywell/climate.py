@@ -5,9 +5,8 @@ import datetime
 from typing import Any
 
 import somecomfort
-import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -31,25 +30,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_PASSWORD,
-    CONF_REGION,
-    CONF_USERNAME,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
-    CONF_DEV_ID,
     CONF_HEAT_AWAY_TEMPERATURE,
-    CONF_LOC_ID,
-    DEFAULT_COOL_AWAY_TEMPERATURE,
-    DEFAULT_HEAT_AWAY_TEMPERATURE,
     DOMAIN,
 )
 
@@ -57,24 +43,7 @@ ATTR_FAN_ACTION = "fan_action"
 
 ATTR_PERMANENT_HOLD = "permanent_hold"
 
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_REGION),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(
-                CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE
-            ): vol.Coerce(int),
-            vol.Optional(
-                CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
-            ): vol.Coerce(int),
-            vol.Optional(CONF_REGION): cv.string,
-            vol.Optional(CONF_DEV_ID): cv.string,
-            vol.Optional(CONF_LOC_ID): cv.string,
-        }
-    ),
-)
+PRESET_HOLD = "Hold"
 
 HVAC_MODE_TO_HW_MODE = {
     "SwitchOffAllowed": {HVAC_MODE_OFF: "off"},
@@ -120,29 +89,9 @@ async def async_setup_entry(hass, config, async_add_entities, discovery_info=Non
     async_add_entities(
         [
             HoneywellUSThermostat(data, device, cool_away_temp, heat_away_temp)
-            for device in data.devices
+            for device in data.devices.values()
         ]
     )
-
-
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Honeywell climate platform.
-
-    Honeywell uses config flow for configuration now. If an entry exists in
-    configuration.yaml, the import flow will attempt to import it and create
-    a config entry.
-    """
-
-    if config["platform"] == "honeywell":
-        _LOGGER.warning(
-            "Loading honeywell via platform config is deprecated; The configuration"
-            " has been migrated to a config entry and can be safely removed"
-        )
-        # No config entry exists and configuration.yaml config exists, trigger the import flow.
-        if not hass.config_entries.async_entries(DOMAIN):
-            await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
 
 
 class HoneywellUSThermostat(ClimateEntity):
@@ -161,7 +110,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._attr_temperature_unit = (
             TEMP_CELSIUS if device.temperature_unit == "C" else TEMP_FAHRENHEIT
         )
-        self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY]
+        self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_HOLD]
         self._attr_is_aux_heat = device.system_mode == "emheat"
 
         # not all honeywell HVACs support all modes
@@ -268,7 +217,12 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        return PRESET_AWAY if self._away else None
+        if self._away:
+            return PRESET_AWAY
+        if self._is_permanent_hold():
+            return PRESET_HOLD
+
+        return None
 
     @property
     def fan_mode(self) -> str | None:
@@ -288,7 +242,7 @@ class HoneywellUSThermostat(ClimateEntity):
             # Get current mode
             mode = self._device.system_mode
             # Set hold if this is not the case
-            if getattr(self._device, f"hold_{mode}") is False:
+            if getattr(self._device, f"hold_{mode}", None) is False:
                 # Get next period key
                 next_period_key = f"{mode.capitalize()}NextPeriod"
                 # Get next period raw value
@@ -353,8 +307,26 @@ class HoneywellUSThermostat(ClimateEntity):
                 "Temperature %.1f out of range", getattr(self, f"_{mode}_away_temp")
             )
 
+    def _turn_hold_mode_on(self) -> None:
+        """Turn permanent hold on."""
+        try:
+            # Get current mode
+            mode = self._device.system_mode
+        except somecomfort.SomeComfortError:
+            _LOGGER.error("Can not get system mode")
+            return
+        # Check that we got a valid mode back
+        if mode in HW_MODE_TO_HVAC_MODE:
+            try:
+                # Set permanent hold
+                setattr(self._device, f"hold_{mode}", True)
+            except somecomfort.SomeComfortError:
+                _LOGGER.error("Couldn't set permanent hold")
+        else:
+            _LOGGER.error("Invalid system mode returned: %s", mode)
+
     def _turn_away_mode_off(self) -> None:
-        """Turn away off."""
+        """Turn away/hold off."""
         self._away = False
         try:
             # Disabling all hold modes
@@ -367,6 +339,9 @@ class HoneywellUSThermostat(ClimateEntity):
         """Set new preset mode."""
         if preset_mode == PRESET_AWAY:
             self._turn_away_mode_on()
+        elif preset_mode == PRESET_HOLD:
+            self._away = False
+            self._turn_hold_mode_on()
         else:
             self._turn_away_mode_off()
 

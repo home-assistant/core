@@ -9,7 +9,7 @@
         },
         "step": {
             "link": {
-                "description": "Musisz autoryzowa\u0107 Home Assistant w Roon. Po klikni\u0119ciu przycisku \"Prze\u015blij\", przejd\u017a do aplikacji Roon Core, otw\u00f3rz \"Ustawienia\" i w\u0142\u0105cz Home Assistant w karcie \"Rozszerzenia\" (Extensions).",
+                "description": "Musisz autoryzowa\u0107 Home Assistant w Roon. Po klikni\u0119ciu przycisku \"Zatwierd\u017a\", przejd\u017a do aplikacji Roon Core, otw\u00f3rz \"Ustawienia\" i w\u0142\u0105cz Home Assistant w karcie \"Rozszerzenia\" (Extensions).",
                 "title": "Autoryzuj Home Assistant w Roon"
             },
             "user": {

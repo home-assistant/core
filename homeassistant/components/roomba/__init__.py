@@ -6,6 +6,7 @@ import async_timeout
 from roombapy import RoombaConnectionError, RoombaFactory
 
 from homeassistant import exceptions
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DELAY,
     CONF_HOST,
@@ -13,6 +14,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 
 from .const import (
     BLID,
@@ -27,7 +29,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     # Set up roomba platforms with config entry
 
@@ -80,7 +82,7 @@ async def async_connect_or_timeout(hass, roomba):
     """Connect to vacuum."""
     try:
         name = None
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             _LOGGER.debug("Initialize connection to vacuum")
             await hass.async_add_executor_job(roomba.connect)
             while not roomba.roomba_connected or name is None:
@@ -104,17 +106,17 @@ async def async_connect_or_timeout(hass, roomba):
 async def async_disconnect_or_timeout(hass, roomba):
     """Disconnect to vacuum."""
     _LOGGER.debug("Disconnect vacuum")
-    with async_timeout.timeout(3):
+    async with async_timeout.timeout(3):
         await hass.async_add_executor_job(roomba.disconnect)
     return True
 
 
-async def async_update_options(hass, config_entry):
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS

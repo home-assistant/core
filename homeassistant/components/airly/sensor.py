@@ -6,27 +6,22 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -55,6 +50,7 @@ from .const import (
     MANUFACTURER,
     SUFFIX_LIMIT,
     SUFFIX_PERCENT,
+    URL,
 )
 
 PARALLEL_UPDATES = 1
@@ -70,52 +66,52 @@ class AirlySensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CAQI,
-        device_class=DEVICE_CLASS_AQI,
+        device_class=SensorDeviceClass.AQI,
         name=ATTR_API_CAQI,
         native_unit_of_measurement="CAQI",
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM1,
-        device_class=DEVICE_CLASS_PM1,
+        device_class=SensorDeviceClass.PM1,
         name=ATTR_API_PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM25,
-        device_class=DEVICE_CLASS_PM25,
+        device_class=SensorDeviceClass.PM25,
         name="PM2.5",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM10,
-        device_class=DEVICE_CLASS_PM10,
+        device_class=SensorDeviceClass.PM10,
         name=ATTR_API_PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_HUMIDITY,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         name=ATTR_API_HUMIDITY.capitalize(),
         native_unit_of_measurement=PERCENTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: round(value, 1),
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PRESSURE,
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
         name=ATTR_API_PRESSURE.capitalize(),
         native_unit_of_measurement=PRESSURE_HPA,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_TEMPERATURE,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name=ATTR_API_TEMPERATURE.capitalize(),
         native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: round(value, 1),
     ),
 )
@@ -153,10 +149,13 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{coordinator.latitude}-{coordinator.longitude}")},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
+            configuration_url=URL.format(
+                latitude=coordinator.latitude, longitude=coordinator.longitude
+            ),
         )
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = (

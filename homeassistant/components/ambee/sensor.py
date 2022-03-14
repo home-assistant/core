@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -16,7 +17,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, ENTRY_TYPE_SERVICE, SENSORS, SERVICES
+from .const import DOMAIN, SENSORS, SERVICES
 
 
 async def async_setup_entry(
@@ -59,7 +60,7 @@ class AmbeeSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{entry_id}_{service_key}_{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            entry_type=ENTRY_TYPE_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{entry_id}_{service_key}")},
             manufacturer="Ambee",
             name=service,

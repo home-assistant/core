@@ -10,7 +10,6 @@ from pybotvac.robot import Robot
 from urllib3.response import HTTPResponse
 
 from homeassistant.components.camera import Camera
-from homeassistant.components.neato import NeatoHub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -23,6 +22,7 @@ from .const import (
     NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
 )
+from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 

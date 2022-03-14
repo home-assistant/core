@@ -38,5 +38,15 @@
                 "description": "Sisesta oma kasutajanimi ja salas\u00f5na:"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Kuva j\u00e4lgitav asukoht kaardil"
+                },
+                "title": "WattTime seadistamine"
+            }
+        }
     }
 }

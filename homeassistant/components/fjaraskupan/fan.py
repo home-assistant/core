@@ -17,6 +17,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -35,10 +36,12 @@ ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 PRESET_MODE_NORMAL = "normal"
 PRESET_MODE_AFTER_COOKING_MANUAL = "after_cooking_manual"
 PRESET_MODE_AFTER_COOKING_AUTO = "after_cooking_auto"
+PRESET_MODE_PERIODIC_VENTILATION = "periodic_ventilation"
 PRESET_MODES = [
     PRESET_MODE_NORMAL,
     PRESET_MODE_AFTER_COOKING_AUTO,
     PRESET_MODE_AFTER_COOKING_MANUAL,
+    PRESET_MODE_PERIODIC_VENTILATION,
 ]
 
 PRESET_TO_COMMAND = {
@@ -46,6 +49,10 @@ PRESET_TO_COMMAND = {
     PRESET_MODE_AFTER_COOKING_AUTO: COMMAND_AFTERCOOKINGTIMERAUTO,
     PRESET_MODE_NORMAL: COMMAND_AFTERCOOKINGTIMEROFF,
 }
+
+
+class UnsupportedPreset(HomeAssistantError):
+    """The preset is unsupported."""
 
 
 async def async_setup_entry(
@@ -93,7 +100,6 @@ class Fan(CoordinatorEntity[State], FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,
@@ -112,7 +118,10 @@ class Fan(CoordinatorEntity[State], FanEntity):
 
         async with self._device:
             if preset_mode != self._preset_mode:
-                await self._device.send_command(PRESET_TO_COMMAND[preset_mode])
+                if command := PRESET_TO_COMMAND.get(preset_mode):
+                    await self._device.send_command(command)
+                else:
+                    raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
 
             if preset_mode == PRESET_MODE_NORMAL:
                 await self._device.send_fan_speed(int(new_speed))
@@ -125,8 +134,11 @@ class Fan(CoordinatorEntity[State], FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        await self._device.send_command(PRESET_TO_COMMAND[preset_mode])
-        self.coordinator.async_set_updated_data(self._device.state)
+        if command := PRESET_TO_COMMAND.get(preset_mode):
+            await self._device.send_command(command)
+            self.coordinator.async_set_updated_data(self._device.state)
+        else:
+            raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
@@ -181,6 +193,8 @@ class Fan(CoordinatorEntity[State], FanEntity):
                 self._preset_mode = PRESET_MODE_AFTER_COOKING_MANUAL
             else:
                 self._preset_mode = PRESET_MODE_AFTER_COOKING_AUTO
+        elif data.periodic_venting_on:
+            self._preset_mode = PRESET_MODE_PERIODIC_VENTILATION
         else:
             self._preset_mode = PRESET_MODE_NORMAL
 

@@ -55,9 +55,6 @@ async def async_setup_entry(
     """Set up the Netatmo camera platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    await data_handler.register_data_class(
-        CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
-    )
     data_class = data_handler.data.get(CAMERA_DATA_CLASS_NAME)
 
     if not data_class or not data_class.raw_data:
@@ -152,7 +149,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         await super().async_added_to_hass()
 
         for event_type in (EVENT_TYPE_LIGHT_MODE, EVENT_TYPE_OFF, EVENT_TYPE_ON):
-            self._listeners.append(
+            self.data_handler.config_entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
                     f"signal-{DOMAIN}-webhook-{event_type}",
@@ -172,13 +169,13 @@ class NetatmoCamera(NetatmoBase, Camera):
 
         if data["home_id"] == self._home_id and data["camera_id"] == self._id:
             if data[WEBHOOK_PUSH_TYPE] in ("NACamera-off", "NACamera-disconnection"):
-                self.is_streaming = False
+                self._attr_is_streaming = False
                 self._status = "off"
             elif data[WEBHOOK_PUSH_TYPE] in (
                 "NACamera-on",
                 WEBHOOK_NACAMERA_CONNECTION,
             ):
-                self.is_streaming = True
+                self._attr_is_streaming = True
                 self._status = "on"
             elif data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE:
                 self._light_state = data["sub_type"]
@@ -273,7 +270,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._sd_status = camera.get("sd_status")
         self._alim_status = camera.get("alim_status")
         self._is_local = camera.get("is_local")
-        self.is_streaming = bool(self._status == "on")
+        self._attr_is_streaming = bool(self._status == "on")
 
         if self._model == "NACamera":  # Smart Indoor Camera
             self.hass.data[DOMAIN][DATA_EVENTS][self._id] = self.process_events(

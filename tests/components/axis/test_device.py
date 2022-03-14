@@ -8,7 +8,7 @@ from axis.event_stream import OPERATION_INITIALIZED
 import pytest
 import respx
 
-from homeassistant.components import axis
+from homeassistant.components import axis, zeroconf
 from homeassistant.components.axis.const import (
     CONF_EVENTS,
     CONF_MODEL,
@@ -383,12 +383,15 @@ async def test_update_address(hass):
         mock_default_vapix_requests(respx, "2.3.4.5")
         await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,
-            data={
-                "host": "2.3.4.5",
-                "port": 80,
-                "name": "name",
-                "properties": {"macaddress": MAC},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="2.3.4.5",
+                addresses=["2.3.4.5"],
+                hostname="mock_hostname",
+                name="name",
+                port=80,
+                properties={"macaddress": MAC},
+                type="mock_type",
+            ),
             context={"source": SOURCE_ZEROCONF},
         )
         await hass.async_block_till_done()

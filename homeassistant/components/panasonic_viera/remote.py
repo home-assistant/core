@@ -1,6 +1,12 @@
 """Remote control support for Panasonic Viera TV."""
+from __future__ import annotations
+
 from homeassistant.components.remote import RemoteEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -14,7 +20,11 @@ from .const import (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Panasonic Viera TV Remote from a config entry."""
 
     config = config_entry.data
@@ -44,18 +54,16 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
         return self._device_info[ATTR_UDN]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         if self._device_info is None:
             return None
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
-            "manufacturer": self._device_info.get(
-                ATTR_MANUFACTURER, DEFAULT_MANUFACTURER
-            ),
-            "model": self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_info[ATTR_UDN])},
+            manufacturer=self._device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+            model=self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
+            name=self._name,
+        )
 
     @property
     def name(self):

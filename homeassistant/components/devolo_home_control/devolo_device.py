@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from urllib.parse import urlparse
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
@@ -33,6 +34,7 @@ class DevoloDeviceEntity(Entity):
         self._attr_should_poll = False
         self._attr_unique_id = element_uid
         self._attr_device_info = DeviceInfo(
+            configuration_url=f"https://{urlparse(device_instance.href).netloc}",
             identifiers={(DOMAIN, self._device_instance.uid)},
             manufacturer=device_instance.brand,
             model=device_instance.name,

@@ -144,7 +144,7 @@ async def test_create_and_setup(hass, mock_panel):
         "sensors": [{"pin": "1"}, {"pin": "2"}, {"pin": "5"}],
         "actuators": [{"trigger": 0, "pin": "8"}, {"trigger": 1, "pin": "9"}],
         "dht_sensors": [{"poll_interval": 3, "pin": "6"}],
-        "ds18b20_sensors": [{"pin": "7"}],
+        "ds18b20_sensors": [{"poll_interval": 3, "pin": "7"}],
         "auth_token": "11223344556677889900",
         "blink": True,
         "discovery": True,
@@ -240,7 +240,7 @@ async def test_create_and_setup_pro(hass, mock_panel):
             ],
             "sensors": [
                 {"zone": "3", "type": "dht", "poll_interval": 5},
-                {"zone": "7", "type": "ds18b20", "name": "temper"},
+                {"zone": "7", "type": "ds18b20", "poll_interval": 1, "name": "temper"},
             ],
             "switches": [
                 {"zone": "4"},
@@ -302,7 +302,7 @@ async def test_create_and_setup_pro(hass, mock_panel):
             {"trigger": 1, "zone": "alarm1"},
         ],
         "dht_sensors": [{"poll_interval": 5, "zone": "3"}],
-        "ds18b20_sensors": [{"zone": "7"}],
+        "ds18b20_sensors": [{"poll_interval": 1, "zone": "7"}],
         "auth_token": "11223344556677889900",
         "blink": True,
         "discovery": True,
@@ -344,7 +344,7 @@ async def test_create_and_setup_pro(hass, mock_panel):
                 "type": "dht",
                 "zone": "3",
             },
-            {"name": "temper", "poll_interval": 3, "type": "ds18b20", "zone": "7"},
+            {"name": "temper", "poll_interval": 1, "type": "ds18b20", "zone": "7"},
         ],
         "switches": [
             {
@@ -492,7 +492,7 @@ async def test_default_options(hass, mock_panel):
         "sensors": [{"pin": "1"}, {"pin": "2"}, {"pin": "5"}],
         "actuators": [{"trigger": 0, "pin": "8"}, {"trigger": 1, "pin": "9"}],
         "dht_sensors": [{"poll_interval": 3, "pin": "6"}],
-        "ds18b20_sensors": [{"pin": "7"}],
+        "ds18b20_sensors": [{"poll_interval": 3, "pin": "7"}],
         "auth_token": "11223344556677889900",
         "blink": True,
         "discovery": True,

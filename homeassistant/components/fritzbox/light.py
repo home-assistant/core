@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyfritzhome.fritzhomedevice import FritzhomeDevice
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -16,7 +14,6 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import color
 
 from . import FritzBoxEntity
@@ -26,6 +23,7 @@ from .const import (
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
+from .coordinator import FritzboxDataUpdateCoordinator
 
 SUPPORTED_COLOR_MODES = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
 
@@ -64,7 +62,7 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
+        coordinator: FritzboxDataUpdateCoordinator,
         ain: str,
         supported_colors: dict,
         supported_color_temps: list[str],

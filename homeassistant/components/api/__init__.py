@@ -19,7 +19,6 @@ from homeassistant.const import (
     URL_API,
     URL_API_COMPONENTS,
     URL_API_CONFIG,
-    URL_API_DISCOVERY_INFO,
     URL_API_ERROR_LOG,
     URL_API_EVENTS,
     URL_API_SERVICES,
@@ -28,10 +27,12 @@ from homeassistant.const import (
     URL_API_TEMPLATE,
 )
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,12 +50,11 @@ STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the API with the HTTP interface."""
     hass.http.register_view(APIStatusView)
     hass.http.register_view(APIEventStream)
     hass.http.register_view(APIConfigView)
-    hass.http.register_view(APIDiscoveryView)
     hass.http.register_view(APIStatesView)
     hass.http.register_view(APIEntityStateView)
     hass.http.register_view(APIEventListenersView)
@@ -131,7 +131,7 @@ class APIEventStream(HomeAssistantView):
 
             while True:
                 try:
-                    with async_timeout.timeout(STREAM_PING_INTERVAL):
+                    async with async_timeout.timeout(STREAM_PING_INTERVAL):
                         payload = await to_write.get()
 
                     if payload is stop_obj:
@@ -163,33 +163,6 @@ class APIConfigView(HomeAssistantView):
     def get(self, request):
         """Get current configuration."""
         return self.json(request.app["hass"].config.as_dict())
-
-
-class APIDiscoveryView(HomeAssistantView):
-    """
-    View to provide Discovery information.
-
-    DEPRECATED: To be removed in 2022.1
-    """
-
-    requires_auth = False
-    url = URL_API_DISCOVERY_INFO
-    name = "api:discovery"
-
-    async def get(self, request):
-        """Get discovery information."""
-        return self.json(
-            {
-                ATTR_UUID: "",
-                ATTR_BASE_URL: "",
-                ATTR_EXTERNAL_URL: "",
-                ATTR_INTERNAL_URL: "",
-                ATTR_LOCATION_NAME: "",
-                ATTR_INSTALLATION_TYPE: "",
-                ATTR_REQUIRES_API_PASSWORD: True,
-                ATTR_VERSION: "",
-            }
-        )
 
 
 class APIStatesView(HomeAssistantView):

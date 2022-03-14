@@ -1,48 +1,19 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
 from __future__ import annotations
 
-from phone_modem import DEFAULT_PORT, PhoneModem
-import voluptuous as vol
+import logging
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-)
+from phone_modem import PhoneModem
+
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP, STATE_IDLE
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers import entity_platform
 
-from .const import CID, DATA_KEY_API, DEFAULT_NAME, DOMAIN, ICON, SERVICE_REJECT_CALL
+from .const import CID, DATA_KEY_API, DOMAIN, ICON, SERVICE_REJECT_CALL
 
-# Deprecated in Home Assistant 2021.10
-PLATFORM_SCHEMA = cv.deprecated(
-    vol.All(
-        PLATFORM_SCHEMA.extend(
-            {
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_DEVICE, default=DEFAULT_PORT): cv.string,
-            }
-        )
-    )
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Modem Caller ID component."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -73,7 +44,6 @@ async def async_setup_entry(
     )
 
     platform = entity_platform.async_get_current_platform()
-
     platform.async_register_entity_service(SERVICE_REJECT_CALL, {}, "async_reject_call")
 
 
@@ -118,4 +88,9 @@ class ModemCalleridSensor(SensorEntity):
 
     async def async_reject_call(self) -> None:
         """Reject Incoming Call."""
+        _LOGGER.warning(
+            "Calling reject_call service is deprecated and will be removed after 2022.4; "
+            "A new button entity is now available with the same function "
+            "and replaces the existing service"
+        )
         await self.api.reject_call(self.device)

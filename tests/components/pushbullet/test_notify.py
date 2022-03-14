@@ -18,7 +18,7 @@ def mock_pushbullet():
     with patch.object(
         PushBullet,
         "_get_data",
-        return_value=json.loads(load_fixture("pushbullet_devices.json")),
+        return_value=json.loads(load_fixture("devices.json", "pushbullet")),
     ):
         yield
 

@@ -4,14 +4,15 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, TypedDict
-import uuid
 
 import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .util import uuid as uuid_util
 
 RESULT_TYPE_FORM = "form"
 RESULT_TYPE_CREATE_ENTRY = "create_entry"
@@ -23,6 +24,11 @@ RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
+
+
+@dataclass
+class BaseServiceInfo:
+    """Base class for discovery ServiceInfo."""
 
 
 class FlowError(HomeAssistantError):
@@ -63,7 +69,7 @@ class FlowResult(TypedDict, total=False):
     title: str
     data: Mapping[str, Any]
     step_id: str
-    data_schema: vol.Schema
+    data_schema: vol.Schema | None
     extra: str
     required: bool
     errors: dict[str, str] | None
@@ -217,7 +223,7 @@ class FlowManager(abc.ABC):
             raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
-        flow.flow_id = uuid.uuid4().hex
+        flow.flow_id = uuid_util.random_uuid_hex()
         flow.context = context
         flow.init_data = data
         self._async_add_flow_progress(flow)
@@ -290,8 +296,7 @@ class FlowManager(abc.ABC):
     @callback
     def _async_remove_flow_progress(self, flow_id: str) -> None:
         """Remove a flow from in progress."""
-        flow = self._progress.pop(flow_id, None)
-        if flow is None:
+        if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
         handler = flow.handler
         self._handler_progress_index[handler].remove(flow.flow_id)
@@ -302,7 +307,7 @@ class FlowManager(abc.ABC):
         self,
         flow: Any,
         step_id: str,
-        user_input: dict | None,
+        user_input: dict | BaseServiceInfo | None,
         step_done: asyncio.Future | None = None,
     ) -> FlowResult:
         """Handle a step of a flow."""
@@ -373,11 +378,11 @@ class FlowHandler:
 
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    flow_id: str = None  # type: ignore
-    hass: HomeAssistant = None  # type: ignore
-    handler: str = None  # type: ignore
+    flow_id: str = None  # type: ignore[assignment]
+    hass: HomeAssistant = None  # type: ignore[assignment]
+    handler: str = None  # type: ignore[assignment]
     # Ensure the attribute has a subscriptable, but immutable, default value.
-    context: dict[str, Any] = MappingProxyType({})  # type: ignore
+    context: dict[str, Any] = MappingProxyType({})  # type: ignore[assignment]
 
     # Set by _async_create_flow callback
     init_step = "init"
@@ -403,7 +408,7 @@ class FlowHandler:
         self,
         *,
         step_id: str,
-        data_schema: vol.Schema = None,
+        data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
         description_placeholders: dict[str, Any] | None = None,
         last_step: bool | None = None,

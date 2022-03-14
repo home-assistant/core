@@ -1,7 +1,7 @@
 """Config flow for motionEye integration."""
 from __future__ import annotations
 
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from motioneye_client.client import (
     MotionEyeClientConnectionError,
@@ -10,6 +10,7 @@ from motioneye_client.client import (
 )
 import voluptuous as vol
 
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -26,6 +27,7 @@ from . import create_motioneye_client
 from .const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
+    CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     CONF_WEBHOOK_SET,
@@ -92,7 +94,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return _get_form(
-                cast(Dict[str, Any], reauth_entry.data) if reauth_entry else {}
+                cast(dict[str, Any], reauth_entry.data) if reauth_entry else {}
             )
 
         if self._hassio_discovery:
@@ -161,9 +163,9 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a reauthentication flow."""
         return await self.async_step_user(config_data)
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle Supervisor discovery."""
-        self._hassio_discovery = discovery_info
+        self._hassio_discovery = discovery_info.config
         await self._async_handle_discovery_without_unique_id()
 
         return await self.async_step_hassio_confirm()
@@ -217,5 +219,18 @@ class MotionEyeOptionsFlow(OptionsFlow):
                 ),
             ): bool,
         }
+
+        if self.show_advanced_options:
+            # The input URL is not validated as being a URL, to allow for the possibility
+            # the template input won't be a valid URL until after it's rendered
+            stream_kwargs = {}
+            if CONF_STREAM_URL_TEMPLATE in self._config_entry.options:
+                stream_kwargs["description"] = {
+                    "suggested_value": self._config_entry.options[
+                        CONF_STREAM_URL_TEMPLATE
+                    ]
+                }
+
+            schema[vol.Optional(CONF_STREAM_URL_TEMPLATE, **stream_kwargs)] = str
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))

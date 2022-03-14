@@ -19,8 +19,8 @@
             "docked": "Aparcat",
             "error": "Error",
             "idle": "Inactiu",
-            "off": "off",
-            "on": "on",
+            "off": "OFF",
+            "on": "ON",
             "paused": "Pausat/ada",
             "returning": "Retornant a base"
         }

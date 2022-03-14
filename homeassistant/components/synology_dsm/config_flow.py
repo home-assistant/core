@@ -39,10 +39,12 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_DEVICE_TOKEN,
+    CONF_SNAPSHOT_QUALITY,
     CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SNAPSHOT_QUALITY,
     DEFAULT_TIMEOUT,
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
@@ -237,14 +239,14 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_form(step)
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered synology_dsm."""
-        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
+        parsed_url = urlparse(discovery_info.ssdp_location)
         friendly_name = (
-            discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
+            discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
         )
 
-        discovered_mac = discovery_info[ssdp.ATTR_UPNP_SERIAL].upper()
+        discovered_mac = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL].upper()
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
 
@@ -265,7 +267,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             and existing_entry.data[CONF_HOST] != parsed_url.hostname
             and not fqdn_with_ssl_verification
         ):
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Update host from '%s' to '%s' for NAS '%s' via SSDP discovery",
                 existing_entry.data[CONF_HOST],
                 parsed_url.hostname,
@@ -357,18 +359,24 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Optional(
+                vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
                 ): cv.positive_int,
-                vol.Optional(
+                vol.Required(
                     CONF_TIMEOUT,
                     default=self.config_entry.options.get(
                         CONF_TIMEOUT, DEFAULT_TIMEOUT
                     ),
                 ): cv.positive_int,
+                vol.Required(
+                    CONF_SNAPSHOT_QUALITY,
+                    default=self.config_entry.options.get(
+                        CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=2)),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

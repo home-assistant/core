@@ -1,4 +1,6 @@
 """Component that will help set the OpenALPR local for ALPR processing."""
+from __future__ import annotations
+
 import asyncio
 import io
 import re
@@ -7,17 +9,21 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
-    ATTR_ENTITY_ID,
     CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import CONF_REGION
-from homeassistant.core import callback, split_entity_id
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_REGION,
+    CONF_SOURCE,
+)
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import run_callback_threadsafe
 
 RE_ALPR_PLATE = re.compile(r"^plate\d*:")
@@ -56,7 +62,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the OpenALPR local platform."""
     command = [config[CONF_ALPR_BIN], "-c", config[CONF_REGION], "-"]
     confidence = config[CONF_CONFIDENCE]

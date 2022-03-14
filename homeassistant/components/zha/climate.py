@@ -7,9 +7,10 @@ at https://home-assistant.io/components/zha.climate/
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import enum
 import functools
 from random import randint
+
+from zigpy.zcl.clusters.hvac import Fan as F, Thermostat as T
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -21,7 +22,6 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
-    DOMAIN,
     FAN_AUTO,
     FAN_ON,
     HVAC_MODE_COOL,
@@ -40,9 +40,16 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -51,9 +58,9 @@ from .core.const import (
     CHANNEL_FAN,
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     PRESET_COMPLEX,
     PRESET_SCHEDULE,
+    PRESET_TEMP_MANUAL,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -73,30 +80,9 @@ ATTR_UNOCCP_HEAT_SETPT = "unoccupied_heating_setpoint"
 ATTR_UNOCCP_COOL_SETPT = "unoccupied_cooling_setpoint"
 
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.CLIMATE)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.CLIMATE)
 RUNNING_MODE = {0x00: HVAC_MODE_OFF, 0x03: HVAC_MODE_COOL, 0x04: HVAC_MODE_HEAT}
-
-
-class ThermostatFanMode(enum.IntEnum):
-    """Fan channel enum for thermostat Fans."""
-
-    OFF = 0x00
-    ON = 0x04
-    AUTO = 0x05
-
-
-class RunningState(enum.IntFlag):
-    """ZCL Running state enum."""
-
-    HEAT = 0x0001
-    COOL = 0x0002
-    FAN = 0x0004
-    HEAT_STAGE_2 = 0x0008
-    COOL_STAGE_2 = 0x0010
-    FAN_STAGE_2 = 0x0020
-    FAN_STAGE_3 = 0x0040
-
 
 SEQ_OF_OPERATION = {
     0x00: (HVAC_MODE_OFF, HVAC_MODE_COOL),  # cooling only
@@ -111,48 +97,37 @@ SEQ_OF_OPERATION = {
     0x07: (HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF),  # centralite specific
 }
 
-
-class SystemMode(enum.IntEnum):
-    """ZCL System Mode attribute enum."""
-
-    OFF = 0x00
-    HEAT_COOL = 0x01
-    COOL = 0x03
-    HEAT = 0x04
-    AUX_HEAT = 0x05
-    PRE_COOL = 0x06
-    FAN_ONLY = 0x07
-    DRY = 0x08
-    SLEEP = 0x09
-
-
 HVAC_MODE_2_SYSTEM = {
-    HVAC_MODE_OFF: SystemMode.OFF,
-    HVAC_MODE_HEAT_COOL: SystemMode.HEAT_COOL,
-    HVAC_MODE_COOL: SystemMode.COOL,
-    HVAC_MODE_HEAT: SystemMode.HEAT,
-    HVAC_MODE_FAN_ONLY: SystemMode.FAN_ONLY,
-    HVAC_MODE_DRY: SystemMode.DRY,
+    HVAC_MODE_OFF: T.SystemMode.Off,
+    HVAC_MODE_HEAT_COOL: T.SystemMode.Auto,
+    HVAC_MODE_COOL: T.SystemMode.Cool,
+    HVAC_MODE_HEAT: T.SystemMode.Heat,
+    HVAC_MODE_FAN_ONLY: T.SystemMode.Fan_only,
+    HVAC_MODE_DRY: T.SystemMode.Dry,
 }
 
 SYSTEM_MODE_2_HVAC = {
-    SystemMode.OFF: HVAC_MODE_OFF,
-    SystemMode.HEAT_COOL: HVAC_MODE_HEAT_COOL,
-    SystemMode.COOL: HVAC_MODE_COOL,
-    SystemMode.HEAT: HVAC_MODE_HEAT,
-    SystemMode.AUX_HEAT: HVAC_MODE_HEAT,
-    SystemMode.PRE_COOL: HVAC_MODE_COOL,  # this is 'precooling'. is it the same?
-    SystemMode.FAN_ONLY: HVAC_MODE_FAN_ONLY,
-    SystemMode.DRY: HVAC_MODE_DRY,
-    SystemMode.SLEEP: HVAC_MODE_OFF,
+    T.SystemMode.Off: HVAC_MODE_OFF,
+    T.SystemMode.Auto: HVAC_MODE_HEAT_COOL,
+    T.SystemMode.Cool: HVAC_MODE_COOL,
+    T.SystemMode.Heat: HVAC_MODE_HEAT,
+    T.SystemMode.Emergency_Heating: HVAC_MODE_HEAT,
+    T.SystemMode.Pre_cooling: HVAC_MODE_COOL,  # this is 'precooling'. is it the same?
+    T.SystemMode.Fan_only: HVAC_MODE_FAN_ONLY,
+    T.SystemMode.Dry: HVAC_MODE_DRY,
+    T.SystemMode.Sleep: HVAC_MODE_OFF,
 }
 
 ZCL_TEMP = 100
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.CLIMATE]
     unsub = async_dispatcher_connect(
         hass,
         SIGNAL_ADD_ENTITIES,
@@ -160,10 +135,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
-@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    aux_channels=CHANNEL_FAN,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
+)
 class Thermostat(ZhaEntity, ClimateEntity):
     """Representation of a ZHA Thermostat device."""
 
@@ -206,11 +185,11 @@ class Thermostat(ZhaEntity, ClimateEntity):
 
         unoccupied_cooling_setpoint = self._thrm.unoccupied_cooling_setpoint
         if unoccupied_cooling_setpoint is not None:
-            data[ATTR_UNOCCP_HEAT_SETPT] = unoccupied_cooling_setpoint
+            data[ATTR_UNOCCP_COOL_SETPT] = unoccupied_cooling_setpoint
 
         unoccupied_heating_setpoint = self._thrm.unoccupied_heating_setpoint
         if unoccupied_heating_setpoint is not None:
-            data[ATTR_UNOCCP_COOL_SETPT] = unoccupied_heating_setpoint
+            data[ATTR_UNOCCP_HEAT_SETPT] = unoccupied_heating_setpoint
         return data
 
     @property
@@ -220,7 +199,9 @@ class Thermostat(ZhaEntity, ClimateEntity):
             return FAN_AUTO
 
         if self._thrm.running_state & (
-            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
+            T.RunningState.Fan_State_On
+            | T.RunningState.Fan_2nd_Stage_On
+            | T.RunningState.Fan_3rd_Stage_On
         ):
             return FAN_ON
         return FAN_AUTO
@@ -246,18 +227,25 @@ class Thermostat(ZhaEntity, ClimateEntity):
     def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
-        running_mode = self._thrm.running_mode
-        if running_mode == SystemMode.HEAT:
+        if (running_state := self._thrm.running_state) is None:
+            return None
+        if running_state & (
+            T.RunningState.Heat_State_On | T.RunningState.Heat_2nd_Stage_On
+        ):
             return CURRENT_HVAC_HEAT
-        if running_mode == SystemMode.COOL:
+        if running_state & (
+            T.RunningState.Cool_State_On | T.RunningState.Cool_2nd_Stage_On
+        ):
             return CURRENT_HVAC_COOL
-
-        running_state = self._thrm.running_state
-        if running_state and running_state & (
-            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
+        if running_state & (
+            T.RunningState.Fan_State_On
+            | T.RunningState.Fan_2nd_Stage_On
+            | T.RunningState.Fan_3rd_Stage_On
         ):
             return CURRENT_HVAC_FAN
-        if self.hvac_mode != HVAC_MODE_OFF and running_mode == SystemMode.OFF:
+        if running_state & T.RunningState.Idle:
+            return CURRENT_HVAC_IDLE
+        if self.hvac_mode != HVAC_MODE_OFF:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
 
@@ -405,8 +393,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
             # occupancy attribute is an unreportable attribute, but if we get
             # an attribute update for an "occupied" setpoint, there's a chance
             # occupancy has changed
-            occupancy = await self._thrm.get_occupancy()
-            if occupancy is True:
+            if await self._thrm.get_occupancy() is True:
                 self._preset = PRESET_NONE
 
         self.debug("Attribute '%s' = %s update", record.attr_name, record.value)
@@ -419,9 +406,9 @@ class Thermostat(ZhaEntity, ClimateEntity):
             return
 
         if fan_mode == FAN_ON:
-            mode = ThermostatFanMode.ON
+            mode = F.FanMode.On
         else:
-            mode = ThermostatFanMode.AUTO
+            mode = F.FanMode.Auto
 
         await self._fan.async_set_speed(mode)
 
@@ -444,14 +431,10 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self.debug("preset mode '%s' is not supported", preset_mode)
             return
 
-        if (
-            self.preset_mode
-            not in (
-                preset_mode,
-                PRESET_NONE,
-            )
-            and not await self.async_preset_handler(self.preset_mode, enable=False)
-        ):
+        if self.preset_mode not in (
+            preset_mode,
+            PRESET_NONE,
+        ) and not await self.async_preset_handler(self.preset_mode, enable=False):
             self.debug("Couldn't turn off '%s' preset", self.preset_mode)
             return
 
@@ -518,7 +501,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
 @MULTI_MATCH(
     channel_names={CHANNEL_THERMOSTAT, "sinope_manufacturer_specific"},
     manufacturers="Sinope Technologies",
-    stop_on_match=True,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class SinopeTechnologiesThermostat(Thermostat):
     """Sinope Technologies Thermostat."""
@@ -532,6 +515,27 @@ class SinopeTechnologiesThermostat(Thermostat):
         self._presets = [PRESET_AWAY, PRESET_NONE]
         self._supported_flags |= SUPPORT_PRESET_MODE
         self._manufacturer_ch = self.cluster_channels["sinope_manufacturer_specific"]
+
+    @property
+    def _rm_rs_action(self) -> str | None:
+        """Return the current HVAC action based on running mode and running state."""
+
+        running_mode = self._thrm.running_mode
+        if running_mode == T.SystemMode.Heat:
+            return CURRENT_HVAC_HEAT
+        if running_mode == T.SystemMode.Cool:
+            return CURRENT_HVAC_COOL
+
+        running_state = self._thrm.running_state
+        if running_state and running_state & (
+            T.RunningState.Fan_State_On
+            | T.RunningState.Fan_2nd_Stage_On
+            | T.RunningState.Fan_3rd_Stage_On
+        ):
+            return CURRENT_HVAC_FAN
+        if self.hvac_mode != HVAC_MODE_OFF and running_mode == T.SystemMode.Off:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
 
     @callback
     def _async_update_time(self, timestamp=None) -> None:
@@ -571,37 +575,18 @@ class SinopeTechnologiesThermostat(Thermostat):
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Zen Within",
-    stop_on_match=True,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class ZenWithinThermostat(Thermostat):
     """Zen Within Thermostat implementation."""
-
-    @property
-    def _rm_rs_action(self) -> str | None:
-        """Return the current HVAC action based on running mode and running state."""
-
-        if (running_state := self._thrm.running_state) is None:
-            return None
-        if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
-            return CURRENT_HVAC_HEAT
-        if running_state & (RunningState.COOL | RunningState.COOL_STAGE_2):
-            return CURRENT_HVAC_COOL
-        if running_state & (
-            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
-        ):
-            return CURRENT_HVAC_FAN
-
-        if self.hvac_mode != HVAC_MODE_OFF:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
 
 
 @MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Centralite",
-    models="3157100",
-    stop_on_match=True,
+    models={"3157100", "3157100-E"},
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class CentralitePearl(ZenWithinThermostat):
     """Centralite Pearl Thermostat implementation."""
@@ -613,11 +598,13 @@ class CentralitePearl(ZenWithinThermostat):
         "_TZE200_ckud7u2l",
         "_TZE200_ywdxldoj",
         "_TZE200_cwnjrr72",
-        "_TZE200_b6wax7g0",
+        "_TZE200_2atgpdho",
+        "_TZE200_pvvbommb",
+        "_TZE200_4eeyebrt",
         "_TYST11_ckud7u2l",
         "_TYST11_ywdxldoj",
         "_TYST11_cwnjrr72",
-        "_TYST11_b6wax7g0",
+        "_TYST11_2atgpdho",
     },
 )
 class MoesThermostat(Thermostat):
@@ -693,4 +680,159 @@ class MoesThermostat(Thermostat):
                 {"operation_preset": 6}, manufacturer=mfg_code
             )
 
+        return False
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers={
+        "_TZE200_b6wax7g0",
+    },
+)
+class BecaThermostat(Thermostat):
+    """Beca Thermostat implementation."""
+
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Initialize ZHA Thermostat instance."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._presets = [
+            PRESET_NONE,
+            PRESET_AWAY,
+            PRESET_SCHEDULE,
+            PRESET_ECO,
+            PRESET_BOOST,
+            PRESET_TEMP_MANUAL,
+        ]
+        self._supported_flags |= SUPPORT_PRESET_MODE
+
+    @property
+    def hvac_modes(self) -> tuple[str, ...]:
+        """Return only the heat mode, because the device can't be turned off."""
+        return (HVAC_MODE_HEAT,)
+
+    async def async_attribute_updated(self, record):
+        """Handle attribute update from device."""
+        if record.attr_name == "operation_preset":
+            if record.value == 0:
+                self._preset = PRESET_AWAY
+            if record.value == 1:
+                self._preset = PRESET_SCHEDULE
+            if record.value == 2:
+                self._preset = PRESET_NONE
+            if record.value == 4:
+                self._preset = PRESET_ECO
+            if record.value == 5:
+                self._preset = PRESET_BOOST
+            if record.value == 7:
+                self._preset = PRESET_TEMP_MANUAL
+        await super().async_attribute_updated(record)
+
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+        """Set the preset mode."""
+        mfg_code = self._zha_device.manufacturer_code
+        if not enable:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 2}, manufacturer=mfg_code
+            )
+        if preset == PRESET_AWAY:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 0}, manufacturer=mfg_code
+            )
+        if preset == PRESET_SCHEDULE:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 1}, manufacturer=mfg_code
+            )
+        if preset == PRESET_ECO:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 4}, manufacturer=mfg_code
+            )
+        if preset == PRESET_BOOST:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 5}, manufacturer=mfg_code
+            )
+        if preset == PRESET_TEMP_MANUAL:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 7}, manufacturer=mfg_code
+            )
+
+        return False
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers="Stelpro",
+    models={"SORB"},
+    stop_on_match_group=CHANNEL_THERMOSTAT,
+)
+class StelproFanHeater(Thermostat):
+    """Stelpro Fan Heater implementation."""
+
+    @property
+    def hvac_modes(self) -> tuple[str, ...]:
+        """Return only the heat mode, because the device can't be turned off."""
+        return (HVAC_MODE_HEAT,)
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers={
+        "_TZE200_hue3yfsn",
+    },
+)
+class ZONNSMARTThermostat(Thermostat):
+    """
+    ZONNSMART Thermostat implementation.
+
+    Notice that this device uses two holiday presets (2: HolidayMode,
+    3: HolidayModeTemp), but only one of them can be set.
+    """
+
+    PRESET_HOLIDAY = "holiday"
+    PRESET_FROST = "frost protect"
+
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Initialize ZHA Thermostat instance."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._presets = [
+            PRESET_NONE,
+            self.PRESET_HOLIDAY,
+            PRESET_SCHEDULE,
+            self.PRESET_FROST,
+        ]
+        self._supported_flags |= SUPPORT_PRESET_MODE
+
+    async def async_attribute_updated(self, record):
+        """Handle attribute update from device."""
+        if record.attr_name == "operation_preset":
+            if record.value == 0:
+                self._preset = PRESET_SCHEDULE
+            if record.value == 1:
+                self._preset = PRESET_NONE
+            if record.value == 2:
+                self._preset = self.PRESET_HOLIDAY
+            if record.value == 3:
+                self._preset = self.PRESET_HOLIDAY
+            if record.value == 4:
+                self._preset = self.PRESET_FROST
+        await super().async_attribute_updated(record)
+
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+        """Set the preset mode."""
+        mfg_code = self._zha_device.manufacturer_code
+        if not enable:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 1}, manufacturer=mfg_code
+            )
+        if preset == PRESET_SCHEDULE:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 0}, manufacturer=mfg_code
+            )
+        if preset == self.PRESET_HOLIDAY:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 3}, manufacturer=mfg_code
+            )
+        if preset == self.PRESET_FROST:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 4}, manufacturer=mfg_code
+            )
         return False

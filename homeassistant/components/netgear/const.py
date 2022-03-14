@@ -1,17 +1,23 @@
 """Netgear component constants."""
 from datetime import timedelta
 
+from homeassistant.const import Platform
+
 DOMAIN = "netgear"
 
-PLATFORMS = ["device_tracker", "sensor"]
+PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
 
 CONF_CONSIDER_HOME = "consider_home"
+
+KEY_ROUTER = "router"
+KEY_COORDINATOR = "coordinator"
+KEY_COORDINATOR_TRAFFIC = "coordinator_traffic"
 
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 DEFAULT_NAME = "Netgear router"
 
-# update method V2 models
-MODELS_V2 = [
+# models using port 80 instead of 5000
+MODELS_PORT_80 = [
     "Orbi",
     "RBK",
     "RBR",
@@ -29,7 +35,29 @@ MODELS_V2 = [
     "SXR",
     "SXS",
 ]
-ORBI_PORT = 80
+PORT_80 = 80
+MODELS_PORT_5555 = [
+    "R7000",
+]
+PORT_5555 = 5555
+# update method V2 models
+MODELS_V2 = [
+    "Orbi",
+    "RBK",
+    "RBR",
+    "RBS",
+    "RBW",
+    "LBK",
+    "LBR",
+    "CBK",
+    "CBR",
+    "SRC",
+    "SRK",
+    "SRS",
+    "SXK",
+    "SXR",
+    "SXS",
+]
 
 # Icons
 DEVICE_ICONS = {

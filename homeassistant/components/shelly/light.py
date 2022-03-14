@@ -1,12 +1,9 @@
 """Light for Shelly."""
 from __future__ import annotations
 
-import asyncio
-import logging
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from aioshelly.block_device import Block
-import async_timeout
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -35,15 +32,16 @@ from homeassistant.util.color import (
 
 from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import (
-    AIOSHELLY_DEVICE_TIMEOUT_SEC,
     BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
+    DUAL_MODE_LIGHT_MODELS,
     FIRMWARE_PATTERN,
     KELVIN_MAX_VALUE,
     KELVIN_MIN_VALUE_COLOR,
     KELVIN_MIN_VALUE_WHITE,
     LIGHT_TRANSITION_MIN_FIRMWARE_DATE,
+    LOGGER,
     MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
     RGBW_MODELS,
@@ -60,7 +58,9 @@ from .utils import (
     is_rpc_channel_type_light,
 )
 
-_LOGGER: Final = logging.getLogger(__name__)
+MIRED_MAX_VALUE_WHITE = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_WHITE)
+MIRED_MIN_VALUE = color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
+MIRED_MAX_VALUE_COLOR = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_COLOR)
 
 
 async def async_setup_entry(
@@ -132,34 +132,37 @@ async def async_setup_rpc_entry(
 class BlockShellyLight(ShellyBlockEntity, LightEntity):
     """Entity that controls a light on block based Shelly devices."""
 
+    _attr_supported_color_modes: set[str]
+
     def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
-        self.mode_result: dict[str, Any] | None = None
-        self._supported_color_modes: set[str] = set()
-        self._supported_features: int = 0
+        self._attr_supported_color_modes = set()
+        self._attr_min_mireds = MIRED_MIN_VALUE
         self._min_kelvin: int = KELVIN_MIN_VALUE_WHITE
+        self._attr_max_mireds = MIRED_MAX_VALUE_WHITE
         self._max_kelvin: int = KELVIN_MAX_VALUE
 
         if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
+            self._attr_max_mireds = MIRED_MAX_VALUE_COLOR
             self._min_kelvin = KELVIN_MIN_VALUE_COLOR
             if wrapper.model in RGBW_MODELS:
-                self._supported_color_modes.add(COLOR_MODE_RGBW)
+                self._attr_supported_color_modes.add(COLOR_MODE_RGBW)
             else:
-                self._supported_color_modes.add(COLOR_MODE_RGB)
+                self._attr_supported_color_modes.add(COLOR_MODE_RGB)
 
         if hasattr(block, "colorTemp"):
-            self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
 
-        if not self._supported_color_modes:
+        if not self._attr_supported_color_modes:
             if hasattr(block, "brightness") or hasattr(block, "gain"):
-                self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+                self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
             else:
-                self._supported_color_modes.add(COLOR_MODE_ONOFF)
+                self._attr_supported_color_modes.add(COLOR_MODE_ONOFF)
 
         if hasattr(block, "effect"):
-            self._supported_features |= SUPPORT_EFFECT
+            self._attr_supported_features |= SUPPORT_EFFECT
 
         if wrapper.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
             match = FIRMWARE_PATTERN.search(wrapper.device.settings.get("fw", ""))
@@ -167,12 +170,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 match is not None
                 and int(match[0]) >= LIGHT_TRANSITION_MIN_FIRMWARE_DATE
             ):
-                self._supported_features |= SUPPORT_TRANSITION
-
-    @property
-    def supported_features(self) -> int:
-        """Supported features."""
-        return self._supported_features
+                self._attr_supported_features |= SUPPORT_TRANSITION
 
     @property
     def is_on(self) -> bool:
@@ -185,8 +183,8 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def mode(self) -> str:
         """Return the color mode of the light."""
-        if self.mode_result:
-            return cast(str, self.mode_result["mode"])
+        if self.control_result and self.control_result.get("mode"):
+            return cast(str, self.control_result["mode"])
 
         if hasattr(self.block, "mode"):
             return cast(str, self.block.mode)
@@ -268,21 +266,6 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         return int(color_temperature_kelvin_to_mired(color_temp))
 
     @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return int(color_temperature_kelvin_to_mired(self._max_kelvin))
-
-    @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return int(color_temperature_kelvin_to_mired(self._min_kelvin))
-
-    @property
-    def supported_color_modes(self) -> set | None:
-        """Flag supported color modes."""
-        return self._supported_color_modes
-
-    @property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         if not self.supported_features & SUPPORT_EFFECT:
@@ -317,7 +300,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             return
 
         set_mode = None
-        supported_color_modes = self._supported_color_modes
+        supported_color_modes = self._attr_supported_color_modes
         params: dict[str, Any] = {"turn": "on"}
 
         if ATTR_TRANSITION in kwargs:
@@ -351,7 +334,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 ATTR_RGBW_COLOR
             ]
 
-        if ATTR_EFFECT in kwargs:
+        if ATTR_EFFECT in kwargs and ATTR_COLOR_TEMP not in kwargs:
             # Color effect change - used only in color mode, switch device mode to color
             set_mode = "color"
             if self.wrapper.model == "SHBLB-1":
@@ -363,15 +346,20 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                     k for k, v in effect_dict.items() if v == kwargs[ATTR_EFFECT]
                 ][0]
             else:
-                _LOGGER.error(
+                LOGGER.error(
                     "Effect '%s' not supported by device %s",
                     kwargs[ATTR_EFFECT],
                     self.wrapper.model,
                 )
 
-        if await self.set_light_mode(set_mode):
-            self.control_result = await self.set_state(**params)
+        if (
+            set_mode
+            and set_mode != self.mode
+            and self.wrapper.model in DUAL_MODE_LIGHT_MODELS
+        ):
+            params["mode"] = set_mode
 
+        self.control_result = await self.set_state(**params)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -387,32 +375,10 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 
         self.async_write_ha_state()
 
-    async def set_light_mode(self, set_mode: str | None) -> bool:
-        """Change device mode color/white if mode has changed."""
-        if set_mode is None or self.mode == set_mode:
-            return True
-
-        _LOGGER.debug("Setting light mode for entity %s, mode: %s", self.name, set_mode)
-        try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                self.mode_result = await self.wrapper.device.switch_light_mode(set_mode)
-        except (asyncio.TimeoutError, OSError) as err:
-            _LOGGER.error(
-                "Setting light mode for entity %s failed, state: %s, error: %s",
-                self.name,
-                set_mode,
-                repr(err),
-            )
-            self.wrapper.last_update_success = False
-            return False
-
-        return True
-
     @callback
     def _update_callback(self) -> None:
         """When device updates, clear control & mode result that overrides state."""
         self.control_result = None
-        self.mode_result = None
         super()._update_callback()
 
 

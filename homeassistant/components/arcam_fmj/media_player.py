@@ -4,7 +4,6 @@ import logging
 from arcam.fmj import SourceCodes
 from arcam.fmj.state import State
 
-from homeassistant import config_entries
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -21,9 +20,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .config_flow import get_entry_client
 from .const import (
@@ -39,9 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
-    async_add_entities,
-):
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the configuration entry."""
 
     client = get_entry_client(hass, config_entry)
@@ -57,8 +58,6 @@ async def async_setup_entry(
         ],
         True,
     )
-
-    return True
 
 
 class ArcamFmj(MediaPlayerEntity):
@@ -255,8 +254,7 @@ class ArcamFmj(MediaPlayerEntity):
     @property
     def source(self):
         """Return the current input source."""
-        value = self._state.get_source()
-        if value is None:
+        if (value := self._state.get_source()) is None:
             return None
         return value.name
 
@@ -268,32 +266,28 @@ class ArcamFmj(MediaPlayerEntity):
     @property
     def sound_mode(self):
         """Name of the current sound mode."""
-        value = self._state.get_decode_mode()
-        if value is None:
+        if (value := self._state.get_decode_mode()) is None:
             return None
         return value.name
 
     @property
     def sound_mode_list(self):
         """List of available sound modes."""
-        values = self._state.get_decode_modes()
-        if values is None:
+        if (values := self._state.get_decode_modes()) is None:
             return None
         return [x.name for x in values]
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        value = self._state.get_mute()
-        if value is None:
+        if (value := self._state.get_mute()) is None:
             return None
         return value
 
     @property
     def volume_level(self):
         """Volume level of device."""
-        value = self._state.get_volume()
-        if value is None:
+        if (value := self._state.get_volume()) is None:
             return None
         return value / 99.0
 
@@ -314,8 +308,7 @@ class ArcamFmj(MediaPlayerEntity):
         """Content type of current playing media."""
         source = self._state.get_source()
         if source in (SourceCodes.DAB, SourceCodes.FM):
-            preset = self._state.get_tuner_preset()
-            if preset:
+            if preset := self._state.get_tuner_preset():
                 value = f"preset:{preset}"
             else:
                 value = None
@@ -339,8 +332,7 @@ class ArcamFmj(MediaPlayerEntity):
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        source = self._state.get_source()
-        if source == SourceCodes.DAB:
+        if self._state.get_source() == SourceCodes.DAB:
             value = self._state.get_dls_pdt()
         else:
             value = None
@@ -349,8 +341,7 @@ class ArcamFmj(MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        source = self._state.get_source()
-        if source is None:
+        if (source := self._state.get_source()) is None:
             return None
 
         if channel := self.media_channel:

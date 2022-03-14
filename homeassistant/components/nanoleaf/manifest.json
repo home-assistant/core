@@ -3,11 +3,11 @@
   "name": "Nanoleaf",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nanoleaf",
-  "requirements": ["aionanoleaf==0.0.3"],
+  "requirements": ["aionanoleaf==0.2.0"],
   "zeroconf": ["_nanoleafms._tcp.local.", "_nanoleafapi._tcp.local."],
   "homekit" : {
     "models": [
-      "NL*"
+      "NL29", "NL42", "NL47", "NL48", "NL52", "NL59"
     ]
   },
   "ssdp": [
@@ -25,5 +25,6 @@
     }
   ],
   "codeowners": ["@milanmeu"],
-  "iot_class": "local_polling"
+  "iot_class": "local_push",
+  "loggers": ["aionanoleaf"]
 }

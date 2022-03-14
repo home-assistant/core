@@ -10,7 +10,7 @@
         "flow_title": "Samsnung TV:{model}",
         "step": {
             "confirm": {
-                "description": "W\u00ebllt dir de Samsung TV {model} ariichten?. Falls dir Home Assistant nach ni domat verbonnen hutt misst den TV eng Meldung mat enger Authentifiz\u00e9ierung uweisen. Manuell Konfiguratioun fir d\u00ebse TV g\u00ebtt iwwerschriwwen.",
+                "description": "W\u00ebllt dir de Samsung TV {device} ariichten?. Falls dir Home Assistant nach ni domat verbonnen hutt misst den TV eng Meldung mat enger Authentifiz\u00e9ierung uweisen. Manuell Konfiguratioun fir d\u00ebse TV g\u00ebtt iwwerschriwwen.",
                 "title": "Samsnung TV"
             },
             "user": {

@@ -1,17 +1,23 @@
 """Demo platform that offers a fake Number entity."""
 from __future__ import annotations
 
-from typing import Literal
-
-from homeassistant.components.number import NumberEntity
-from homeassistant.components.number.const import MODE_AUTO, MODE_BOX, MODE_SLIDER
+from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the demo Number entity."""
     async_add_entities(
         [
@@ -21,7 +27,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 42.0,
                 "mdi:volume-high",
                 False,
-                mode=MODE_SLIDER,
+                mode=NumberMode.SLIDER,
             ),
             DemoNumber(
                 "pwm1",
@@ -32,7 +38,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 0.0,
                 1.0,
                 0.01,
-                MODE_BOX,
+                NumberMode.BOX,
             ),
             DemoNumber(
                 "large_range",
@@ -58,7 +64,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
@@ -78,7 +88,7 @@ class DemoNumber(NumberEntity):
         min_value: float | None = None,
         max_value: float | None = None,
         step: float | None = None,
-        mode: Literal["auto", "box", "slider"] = MODE_AUTO,
+        mode: NumberMode = NumberMode.AUTO,
     ) -> None:
         """Initialize the Demo Number entity."""
         self._attr_assumed_state = assumed
@@ -95,13 +105,10 @@ class DemoNumber(NumberEntity):
         if step is not None:
             self._attr_step = step
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
+                (DOMAIN, unique_id)
             },
             name=self.name,
         )

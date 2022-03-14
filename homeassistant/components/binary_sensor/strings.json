@@ -4,6 +4,8 @@
     "condition_type": {
       "is_bat_low": "{entity_name} battery is low",
       "is_not_bat_low": "{entity_name} battery is normal",
+      "is_co": "{entity_name} is detecting carbon monoxide",
+      "is_no_co": "{entity_name} is not detecting carbon monoxide",
       "is_cold": "{entity_name} is cold",
       "is_not_cold": "{entity_name} is not cold",
       "is_connected": "{entity_name} is connected",
@@ -32,6 +34,8 @@
       "is_not_present": "{entity_name} is not present",
       "is_problem": "{entity_name} is detecting problem",
       "is_no_problem": "{entity_name} is not detecting problem",
+      "is_running": "{entity_name} is running",
+      "is_not_running": "{entity_name} is not running",
       "is_unsafe": "{entity_name} is unsafe",
       "is_not_unsafe": "{entity_name} is safe",
       "is_smoke": "{entity_name} is detecting smoke",
@@ -52,6 +56,8 @@
     "trigger_type": {
       "bat_low": "{entity_name} battery low",
       "not_bat_low": "{entity_name} battery normal",
+      "co": "{entity_name} started detecting carbon monoxide",
+      "no_co": "{entity_name} stopped detecting carbon monoxide",
       "cold": "{entity_name} became cold",
       "not_cold": "{entity_name} became not cold",
       "connected": "{entity_name} connected",
@@ -80,14 +86,16 @@
       "not_present": "{entity_name} not present",
       "problem": "{entity_name} started detecting problem",
       "no_problem": "{entity_name} stopped detecting problem",
+      "running": "{entity_name} started running",
+      "not_running": "{entity_name} is no longer running",
       "unsafe": "{entity_name} became unsafe",
       "not_unsafe": "{entity_name} became safe",
       "smoke": "{entity_name} started detecting smoke",
       "no_smoke": "{entity_name} stopped detecting smoke",
       "sound": "{entity_name} started detecting sound",
       "no_sound": "{entity_name} stopped detecting sound",
-      "is_tampered": "{entity_name} started detecting tampering",
-      "is_not_tampered": "{entity_name} stopped detecting tampering",
+      "tampered": "{entity_name} started detecting tampering",
+      "not_tampered": "{entity_name} stopped detecting tampering",
       "update": "{entity_name} got an update available",
       "no_update": "{entity_name} became up-to-date",
       "vibration": "{entity_name} started detecting vibration",
@@ -106,6 +114,10 @@
     "battery_charging": {
       "off": "Not charging",
       "on": "Charging"
+    },
+    "carbon_monoxide": {
+      "off": "[%key:component::binary_sensor::state::gas::off%]",
+      "on": "[%key:component::binary_sensor::state::gas::on%]"
     },
     "cold": {
       "off": "[%key:component::binary_sensor::state::battery::off%]",
@@ -171,6 +183,10 @@
       "off": "OK",
       "on": "Problem"
     },
+    "running": {
+      "off": "Not running",
+      "on": "Running"
+    },
     "safety": {
       "off": "Safe",
       "on": "Unsafe"
@@ -199,5 +215,19 @@
       "off": "[%key:common::state::off%]",
       "on": "[%key:common::state::on%]"
     }
+  },
+  "device_class": {
+    "co": "carbon_monoxide",
+    "cold": "cold",
+    "gas": "gas",
+    "heat": "heat",
+    "moisture": "moisture",
+    "motion": "motion",
+    "occupancy": "occupancy",
+    "power": "power",
+    "problem": "problem",
+    "smoke": "smoke",
+    "sound": "sound",
+    "vibration": "vibration"
   }
 }

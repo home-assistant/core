@@ -82,6 +82,26 @@ class BondDevice:
         """Return True if this device supports any of the direction related commands."""
         return self._has_any_action({Action.SET_DIRECTION})
 
+    def supports_open(self) -> bool:
+        """Return True if this device supports opening."""
+        return self._has_any_action({Action.OPEN})
+
+    def supports_close(self) -> bool:
+        """Return True if this device supports closing."""
+        return self._has_any_action({Action.CLOSE})
+
+    def supports_tilt_open(self) -> bool:
+        """Return True if this device supports tilt opening."""
+        return self._has_any_action({Action.TILT_OPEN})
+
+    def supports_tilt_close(self) -> bool:
+        """Return True if this device supports tilt closing."""
+        return self._has_any_action({Action.TILT_CLOSE})
+
+    def supports_hold(self) -> bool:
+        """Return True if this device supports hold aka stop."""
+        return self._has_any_action({Action.HOLD})
+
     def supports_light(self) -> bool:
         """Return True if this device supports any of the light related commands."""
         return self._has_any_action({Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF})
@@ -104,9 +124,10 @@ class BondDevice:
 class BondHub:
     """Hub device representing Bond Bridge."""
 
-    def __init__(self, bond: Bond) -> None:
+    def __init__(self, bond: Bond, host: str) -> None:
         """Initialize Bond Hub."""
         self.bond: Bond = bond
+        self.host = host
         self._bridge: dict[str, Any] = {}
         self._version: dict[str, Any] = {}
         self._devices: list[BondDevice] = []
@@ -185,6 +206,11 @@ class BondHub:
     def fw_ver(self) -> str | None:
         """Return this hub firmware version."""
         return self._version.get("fw_ver")
+
+    @property
+    def mcu_ver(self) -> str | None:
+        """Return this hub hardware version."""
+        return self._version.get("mcu_ver")
 
     @property
     def devices(self) -> list[BondDevice]:

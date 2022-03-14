@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "device_key": "Klucz urz\u0105dzenia",
                     "host": "Nazwa hosta lub adres IP",
                     "port": "Port",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"

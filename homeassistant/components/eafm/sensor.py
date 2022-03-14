@@ -1,4 +1,4 @@
-"""Support for guages from flood monitoring API."""
+"""Support for gauges from flood monitoring API."""
 from datetime import timedelta
 import logging
 
@@ -6,9 +6,13 @@ from aioeafm import get_station
 import async_timeout
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_METERS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -32,7 +36,11 @@ def get_measures(station_data):
     return station_data["measures"]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up UK Flood Monitoring Sensors."""
     station_key = config_entry.data["station"]
     session = async_get_clientsession(hass=hass)
@@ -40,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     measurements = set()
 
     async def async_update_data():
-        # DataUpdateCoordinator will handle aiohttp ClientErrors and timouts
+        # DataUpdateCoordinator will handle aiohttp ClientErrors and timeouts
         async with async_timeout.timeout(30):
             data = await get_station(session, station_key)
 
@@ -123,7 +131,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
     def device_info(self):
         """Return the device info."""
         return DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, "measure-id", self.station_id)},
             manufacturer="https://environment.data.gov.uk/",
             model=self.parameter_name,

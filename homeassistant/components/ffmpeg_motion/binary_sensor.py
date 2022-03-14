@@ -1,22 +1,26 @@
 """Provides a binary sensor which is a collection of ffmpeg tools."""
+from __future__ import annotations
+
 import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.components.ffmpeg import (
     CONF_EXTRA_ARGUMENTS,
     CONF_INITIAL_STATE,
     CONF_INPUT,
-    DATA_FFMPEG,
     FFmpegBase,
+    get_ffmpeg_manager,
 )
 from homeassistant.const import CONF_NAME, CONF_REPEAT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_RESET = "reset"
 CONF_CHANGES = "changes"
@@ -47,9 +51,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the FFmpeg binary motion sensor."""
-    manager = hass.data[DATA_FFMPEG]
+    manager = get_ffmpeg_manager(hass)
     entity = FFmpegMotion(hass, manager, config)
     async_add_entities([entity])
 
@@ -115,4 +124,4 @@ class FFmpegMotion(FFmpegBinarySensor):
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return DEVICE_CLASS_MOTION
+        return BinarySensorDeviceClass.MOTION

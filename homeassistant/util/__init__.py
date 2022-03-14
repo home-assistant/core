@@ -2,26 +2,21 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable, KeysView
+from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
-import enum
-from functools import lru_cache, wraps
+from functools import wraps
 import random
 import re
-import socket
 import string
 import threading
-from types import MappingProxyType
 from typing import Any, TypeVar
 
 import slugify as unicode_slug
 
-from ..helpers.deprecation import deprecated_function
 from .dt import as_local, utcnow
 
 T = TypeVar("T")
 U = TypeVar("U")  # pylint: disable=invalid-name
-ENUM_T = TypeVar("ENUM_T", bound=enum.Enum)  # pylint: disable=invalid-name
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
@@ -47,38 +42,6 @@ def raise_if_invalid_path(path: str) -> None:
         raise ValueError(f"{path} is not a safe path")
 
 
-@deprecated_function(replacement="raise_if_invalid_filename")
-def sanitize_filename(filename: str) -> str:
-    """Check if a filename is safe.
-
-    Only to be used to compare to original filename to check if changed.
-    If result changed, the given path is not safe and should not be used,
-    raise an error.
-
-    DEPRECATED.
-    """
-    # Backwards compatible fix for misuse of method
-    if RE_SANITIZE_FILENAME.sub("", filename) != filename:
-        return ""
-    return filename
-
-
-@deprecated_function(replacement="raise_if_invalid_path")
-def sanitize_path(path: str) -> str:
-    """Check if a path is safe.
-
-    Only to be used to compare to original path to check if changed.
-    If result changed, the given path is not safe and should not be used,
-    raise an error.
-
-    DEPRECATED.
-    """
-    # Backwards compatible fix for misuse of method
-    if RE_SANITIZE_PATH.sub("", path) != path:
-        return ""
-    return path
-
-
 def slugify(text: str | None, *, separator: str = "_") -> str:
     """Slugify a given text."""
     if text == "" or text is None:
@@ -89,7 +52,7 @@ def slugify(text: str | None, *, separator: str = "_") -> str:
 
 def repr_helper(inp: Any) -> str:
     """Help creating a more readable string representation of objects."""
-    if isinstance(inp, (dict, MappingProxyType)):
+    if isinstance(inp, Mapping):
         return ", ".join(
             f"{repr_helper(key)}={repr_helper(item)}" for key, item in inp.items()
         )
@@ -129,26 +92,6 @@ def ensure_unique_string(
     return test_string
 
 
-# Taken from: http://stackoverflow.com/a/11735897
-@lru_cache(maxsize=None)
-def get_local_ip() -> str:
-    """Try to determine the local IP address of the machine."""
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-        # Use Google Public DNS server to determine own IP
-        sock.connect(("8.8.8.8", 80))
-
-        return sock.getsockname()[0]  # type: ignore
-    except OSError:
-        try:
-            return socket.gethostbyname(socket.gethostname())
-        except socket.gaierror:
-            return "127.0.0.1"
-    finally:
-        sock.close()
-
-
 # Taken from http://stackoverflow.com/a/23728630
 def get_random_string(length: int = 10) -> str:
     """Return a random string with letters and digits."""
@@ -156,34 +99,6 @@ def get_random_string(length: int = 10) -> str:
     source_chars = string.ascii_letters + string.digits
 
     return "".join(generator.choice(source_chars) for _ in range(length))
-
-
-class OrderedEnum(enum.Enum):
-    """Taken from Python 3.4.0 docs."""
-
-    def __ge__(self, other: ENUM_T) -> bool:
-        """Return the greater than element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value >= other.value)
-        return NotImplemented
-
-    def __gt__(self, other: ENUM_T) -> bool:
-        """Return the greater element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value > other.value)
-        return NotImplemented
-
-    def __le__(self, other: ENUM_T) -> bool:
-        """Return the lower than element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value <= other.value)
-        return NotImplemented
-
-    def __lt__(self, other: ENUM_T) -> bool:
-        """Return the lower element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value < other.value)
-        return NotImplemented
 
 
 class Throttle:
@@ -222,7 +137,7 @@ class Throttle:
 
         else:
 
-            def throttled_value() -> None:  # type: ignore
+            def throttled_value() -> None:  # type: ignore[misc]
                 """Stand-in function for when real func is being throttled."""
                 return None
 
@@ -276,7 +191,7 @@ class Throttle:
                 if force or utcnow() - throttle[1] > self.min_time:
                     result = method(*args, **kwargs)
                     throttle[1] = utcnow()
-                    return result  # type: ignore
+                    return result  # type: ignore[no-any-return]
 
                 return throttled_value()
             finally:

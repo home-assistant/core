@@ -25,21 +25,22 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.util import (
     accessory_friendly_name,
+    async_dismiss_setup_message,
     async_find_next_available_port,
     async_port_is_available,
+    async_show_setup_message,
     cleanup_name_for_homekit,
+    coerce_int,
     convert_to_float,
     density_to_air_quality,
-    dismiss_setup_message,
-    format_sw_version,
-    show_setup_message,
+    format_version,
     state_needs_accessory_mode,
     temperature_to_homekit,
     temperature_to_states,
     validate_entity_config as vec,
     validate_media_player_features,
 )
-from homeassistant.components.persistent_notification import create, dismiss
+from homeassistant.components.persistent_notification import async_create, async_dismiss
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
@@ -231,7 +232,7 @@ def test_density_to_air_quality():
     assert density_to_air_quality(300) == 5
 
 
-async def test_show_setup_msg(hass, hk_driver, mock_get_source_ip):
+async def test_async_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 
@@ -239,10 +240,11 @@ async def test_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     assert entry
 
     with patch(
-        "homeassistant.components.persistent_notification.create", side_effect=create
+        "homeassistant.components.persistent_notification.async_create",
+        side_effect=async_create,
     ) as mock_create:
-        await hass.async_add_executor_job(
-            show_setup_message, hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
+        async_show_setup_message(
+            hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
         )
         await hass.async_block_till_done()
     assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR_SECRET]
@@ -253,12 +255,13 @@ async def test_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     assert pincode.decode() in mock_create.mock_calls[0][1][1]
 
 
-async def test_dismiss_setup_msg(hass):
+async def test_async_dismiss_setup_msg(hass):
     """Test dismiss setup message."""
     with patch(
-        "homeassistant.components.persistent_notification.dismiss", side_effect=dismiss
+        "homeassistant.components.persistent_notification.async_dismiss",
+        side_effect=async_dismiss,
     ) as mock_dismiss:
-        await hass.async_add_executor_job(dismiss_setup_message, hass, "entry_id")
+        async_dismiss_setup_message(hass, "entry_id")
         await hass.async_block_till_done()
 
     assert len(mock_dismiss.mock_calls) == 1
@@ -341,13 +344,27 @@ async def test_port_is_available_skips_existing_entries(hass):
         async_find_next_available_port(hass, 65530)
 
 
-async def test_format_sw_version():
-    """Test format_sw_version method."""
-    assert format_sw_version("soho+3.6.8+soho-release-rt120+10") == "3.6.8"
-    assert format_sw_version("undefined-undefined-1.6.8") == "1.6.8"
-    assert format_sw_version("56.0-76060") == "56.0.76060"
-    assert format_sw_version(3.6) == "3.6"
-    assert format_sw_version("unknown") is None
+async def test_format_version():
+    """Test format_version method."""
+    assert format_version("soho+3.6.8+soho-release-rt120+10") == "3.6.8"
+    assert format_version("undefined-undefined-1.6.8") == "1.6.8"
+    assert format_version("56.0-76060") == "56.0.76060"
+    assert format_version(3.6) == "3.6"
+    assert format_version("AK001-ZJ100") == "1.100"
+    assert format_version("HF-LPB100-") == "100"
+    assert format_version("AK001-ZJ2149") == "1.2149"
+    assert format_version("13216407885") == "4294967295"  # max value
+    assert format_version("000132 16407885") == "132.16407885"
+    assert format_version("0.1") == "0.1"
+    assert format_version("0") is None
+    assert format_version("unknown") is None
+
+
+async def test_coerce_int():
+    """Test coerce_int method."""
+    assert coerce_int("1") == 1
+    assert coerce_int("") == 0
+    assert coerce_int(0) == 0
 
 
 async def test_accessory_friendly_name():

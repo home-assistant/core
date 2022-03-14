@@ -162,8 +162,7 @@ class LockEntity(Entity):
         """Return the state attributes."""
         state_attr = {}
         for prop, attr in PROP_TO_ATTR.items():
-            value = getattr(self, prop)
-            if value is not None:
+            if (value := getattr(self, prop)) is not None:
                 state_attr[attr] = value
         return state_attr
 
@@ -180,15 +179,3 @@ class LockEntity(Entity):
         if (locked := self.is_locked) is None:
             return None
         return STATE_LOCKED if locked else STATE_UNLOCKED
-
-
-class LockDevice(LockEntity):
-    """Representation of a lock (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "LockDevice is deprecated, modify %s to extend LockEntity",
-            cls.__name__,
-        )

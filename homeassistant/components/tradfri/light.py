@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import Any, cast
 
 from pytradfri.command import Command
+from pytradfri.group import Group
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -19,9 +20,10 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
-from .base_class import TradfriBaseClass, TradfriBaseDevice
+from .base_class import TradfriBaseEntity
 from .const import (
     ATTR_DIMMER,
     ATTR_HUE,
@@ -29,12 +31,17 @@ from .const import (
     ATTR_TRANSITION_TIME,
     CONF_GATEWAY_ID,
     CONF_IMPORT_GROUPS,
-    DEVICES,
+    COORDINATOR,
+    COORDINATOR_LIST,
     DOMAIN,
-    GROUPS,
+    GROUPS_LIST,
     KEY_API,
     SUPPORTED_GROUP_FEATURES,
     SUPPORTED_LIGHT_FEATURES,
+)
+from .coordinator import (
+    TradfriDeviceDataUpdateCoordinator,
+    TradfriGroupDataUpdateCoordinator,
 )
 
 
@@ -45,56 +52,66 @@ async def async_setup_entry(
 ) -> None:
     """Load Tradfri lights based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
-    api = tradfri_data[KEY_API]
-    devices = tradfri_data[DEVICES]
+    coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    api = coordinator_data[KEY_API]
 
-    lights = [dev for dev in devices if dev.has_light_control]
-    if lights:
-        async_add_entities(TradfriLight(light, api, gateway_id) for light in lights)
+    entities: list = [
+        TradfriLight(
+            device_coordinator,
+            api,
+            gateway_id,
+        )
+        for device_coordinator in coordinator_data[COORDINATOR_LIST]
+        if device_coordinator.device.has_light_control
+    ]
 
-    if config_entry.data[CONF_IMPORT_GROUPS] and (groups := tradfri_data[GROUPS]):
-        async_add_entities(TradfriGroup(group, api, gateway_id) for group in groups)
+    if config_entry.data[CONF_IMPORT_GROUPS] and (
+        group_coordinators := coordinator_data[GROUPS_LIST]
+    ):
+        entities.extend(
+            [
+                TradfriGroup(group_coordinator, api, gateway_id)
+                for group_coordinator in group_coordinators
+            ]
+        )
+
+    async_add_entities(entities)
 
 
-class TradfriGroup(TradfriBaseClass, LightEntity):
+class TradfriGroup(CoordinatorEntity, LightEntity):
     """The platform class for light groups required by hass."""
 
     _attr_supported_features = SUPPORTED_GROUP_FEATURES
 
     def __init__(
         self,
-        device: Command,
+        group_coordinator: TradfriGroupDataUpdateCoordinator,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a Group."""
-        super().__init__(device, api, gateway_id)
+        super().__init__(coordinator=group_coordinator)
 
-        self._attr_unique_id = f"group-{gateway_id}-{device.id}"
-        self._attr_should_poll = True
-        self._refresh(device)
+        self._group: Group = self.coordinator.data
 
-    async def async_update(self) -> None:
-        """Fetch new state data for the group.
-
-        This method is required for groups to update properly.
-        """
-        await self._api(self._device.update())
+        self._api = api
+        self._attr_unique_id = f"group-{gateway_id}-{self._group.id}"
 
     @property
     def is_on(self) -> bool:
         """Return true if group lights are on."""
-        return cast(bool, self._device.state)
+        return cast(bool, self._group.state)
 
     @property
     def brightness(self) -> int | None:
         """Return the brightness of the group lights."""
-        return cast(int, self._device.dimmer)
+        return cast(int, self._group.dimmer)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the group lights to turn off."""
-        await self._api(self._device.set_state(0))
+        await self._api(self._group.set_state(0))
+
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the group lights to turn on, or dim."""
@@ -106,39 +123,52 @@ class TradfriGroup(TradfriBaseClass, LightEntity):
             if kwargs[ATTR_BRIGHTNESS] == 255:
                 kwargs[ATTR_BRIGHTNESS] = 254
 
-            await self._api(self._device.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys))
+            await self._api(self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys))
         else:
-            await self._api(self._device.set_state(1))
+            await self._api(self._group.set_state(1))
+
+        await self.coordinator.async_request_refresh()
 
 
-class TradfriLight(TradfriBaseDevice, LightEntity):
+class TradfriLight(TradfriBaseEntity, LightEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(
         self,
-        device: Command,
+        device_coordinator: TradfriDeviceDataUpdateCoordinator,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a Light."""
-        super().__init__(device, api, gateway_id)
-        self._attr_unique_id = f"light-{gateway_id}-{device.id}"
+        super().__init__(
+            device_coordinator=device_coordinator,
+            api=api,
+            gateway_id=gateway_id,
+        )
+
+        self._device_control = self._device.light_control
+        self._device_data = self._device_control.lights[0]
+
+        self._attr_unique_id = f"light-{gateway_id}-{self._device_id}"
         self._hs_color = None
 
         # Calculate supported features
         _features = SUPPORTED_LIGHT_FEATURES
-        if device.light_control.can_set_dimmer:
+        if self._device.light_control.can_set_dimmer:
             _features |= SUPPORT_BRIGHTNESS
-        if device.light_control.can_set_color:
+        if self._device.light_control.can_set_color:
             _features |= SUPPORT_COLOR | SUPPORT_COLOR_TEMP
-        if device.light_control.can_set_temp:
+        if self._device.light_control.can_set_temp:
             _features |= SUPPORT_COLOR_TEMP
         self._attr_supported_features = _features
 
-        self._refresh(device)
         if self._device_control:
             self._attr_min_mireds = self._device_control.min_mireds
             self._attr_max_mireds = self._device_control.max_mireds
+
+    def _refresh(self) -> None:
+        """Refresh the device."""
+        self._device_data = self.coordinator.data.light_control.lights[0]
 
     @property
     def is_on(self) -> bool:
@@ -269,11 +299,3 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
                 await self._api(temp_command)
             if command is not None:
                 await self._api(command)
-
-    def _refresh(self, device: Command) -> None:
-        """Refresh the light data."""
-        super()._refresh(device)
-
-        # Caching of LightControl and light object
-        self._device_control = device.light_control
-        self._device_data = device.light_control.lights[0]

@@ -6,6 +6,7 @@ import fnmatch
 import logging
 import os
 import sys
+from typing import TYPE_CHECKING, Any
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -16,8 +17,10 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
 
@@ -25,9 +28,38 @@ from .const import DOMAIN
 from .models import USBDevice
 from .utils import usb_device_from_port
 
+if TYPE_CHECKING:
+    from pyudev import Device
+
 _LOGGER = logging.getLogger(__name__)
 
 REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
+
+
+@dataclasses.dataclass
+class UsbServiceInfo(BaseServiceInfo):
+    """Prepared info from usb entries."""
+
+    device: str
+    vid: str
+    pid: str
+    serial_number: str | None
+    manufacturer: str | None
+    description: str | None
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        report(
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
+        return getattr(self, name)
 
 
 def human_readable_device_name(
@@ -134,12 +166,14 @@ class USBDiscovery:
             monitor, callback=self._device_discovered, name="usb-observer"
         )
         observer.start()
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, lambda event: observer.stop()
-        )
+
+        def _stop_observer(event: Event) -> None:
+            observer.stop()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_observer)
         self.observer_active = True
 
-    def _device_discovered(self, device):
+    def _device_discovered(self, device: Device) -> None:
         """Call when the observer discovers a new usb tty device."""
         if device.action != "add":
             return
@@ -193,7 +227,14 @@ class USBDiscovery:
                 self.hass,
                 matcher["domain"],
                 {"source": config_entries.SOURCE_USB},
-                dataclasses.asdict(device),
+                UsbServiceInfo(
+                    device=device.device,
+                    vid=device.vid,
+                    pid=device.pid,
+                    serial_number=device.serial_number,
+                    manufacturer=device.manufacturer,
+                    description=device.description,
+                ),
             )
 
     @callback

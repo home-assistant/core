@@ -23,7 +23,10 @@ from .const import (
     CONF_UUID,
     CONF_WEATHER_AREAS,
     DOMAIN,
+    NETATMO_SCOPES,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class NetatmoFlowHandler(
@@ -49,30 +52,42 @@ class NetatmoFlowHandler(
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        scopes = [
-            "access_camera",
-            "access_presence",
-            "read_camera",
-            "read_homecoach",
-            "read_presence",
-            "read_smokedetector",
-            "read_station",
-            "read_thermostat",
-            "write_camera",
-            "write_presence",
-            "write_thermostat",
-        ]
-
-        return {"scope": " ".join(scopes)}
+        return {"scope": " ".join(NETATMO_SCOPES)}
 
     async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         """Handle a flow start."""
         await self.async_set_unique_id(DOMAIN)
 
-        if self._async_current_entries():
+        if (
+            self.source != config_entries.SOURCE_REAUTH
+            and self._async_current_entries()
+        ):
             return self.async_abort(reason="single_instance_allowed")
 
         return await super().async_step_user(user_input)
+
+    async def async_step_reauth(self, user_input: dict | None = None) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+
+        return await self.async_step_user()
+
+    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
+        """Create an oauth config entry or update existing entry for reauth."""
+        existing_entry = await self.async_set_unique_id(DOMAIN)
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        return await super().async_oauth_create_entry(data)
 
 
 class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):

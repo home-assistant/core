@@ -1,28 +1,12 @@
 """Constants for the ISY994 Platform."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_COLD,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_SOUND,
-    DEVICE_CLASS_VIBRATION,
-    DOMAIN as BINARY_SENSOR,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
-    DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_MEDIUM,
@@ -37,12 +21,6 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_BOOST,
 )
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.fan import DOMAIN as FAN
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.lock import DOMAIN as LOCK
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CURRENCY_CENT,
@@ -109,6 +87,7 @@ from homeassistant.const import (
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     VOLUME_GALLONS,
     VOLUME_LITERS,
+    Platform,
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -133,14 +112,29 @@ DEFAULT_VAR_SENSOR_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
-PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+PROGRAM_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LOCK,
+    Platform.SWITCH,
+]
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 
 # ISY Scenes are more like Switches than Home Assistant Scenes
 # (they can turn off, and report their state)
-ISY_GROUP_PLATFORM = SWITCH
+ISY_GROUP_PLATFORM = Platform.SWITCH
 
 ISY994_ISY = "isy"
 ISY994_NODES = "isy994_nodes"
@@ -210,8 +204,8 @@ UOM_PERCENTAGE = "51"
 # responses, not using them for Home Assistant states
 # Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
 # Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
-NODE_FILTERS = {
-    BINARY_SENSOR: {
+NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
+    Platform.BINARY_SENSOR: {
         FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: [],
         FILTER_NODE_DEF_ID: [
@@ -231,7 +225,7 @@ NODE_FILTERS = {
         ],  # Does a startswith() match; include the dot
         FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
     },
-    SENSOR: {
+    Platform.SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
         # (Remember that range() is non-inclusive of the stop value)
         FILTER_UOM: (
@@ -255,28 +249,28 @@ NODE_FILTERS = {
         FILTER_INSTEON_TYPE: ["0.16.", "0.17.", "0.18.", "9.0.", "9.7."],
         FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 186)))),
     },
-    LOCK: {
+    Platform.LOCK: {
         FILTER_UOM: ["11"],
         FILTER_STATES: ["locked", "unlocked"],
         FILTER_NODE_DEF_ID: ["DoorLock"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_LOCK, "4.64."],
         FILTER_ZWAVE_CAT: ["111"],
     },
-    FAN: {
+    Platform.FAN: {
         FILTER_UOM: [],
         FILTER_STATES: ["off", "low", "med", "high"],
         FILTER_NODE_DEF_ID: ["FanLincMotor"],
         FILTER_INSTEON_TYPE: ["1.46."],
         FILTER_ZWAVE_CAT: [],
     },
-    COVER: {
+    Platform.COVER: {
         FILTER_UOM: [UOM_BARRIER],
         FILTER_STATES: ["open", "closed", "closing", "opening", "stopped"],
         FILTER_NODE_DEF_ID: ["DimmerMotorSwitch_ADV"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_COVER],
         FILTER_ZWAVE_CAT: [],
     },
-    LIGHT: {
+    Platform.LIGHT: {
         FILTER_UOM: ["51"],
         FILTER_STATES: ["on", "off", "%"],
         FILTER_NODE_DEF_ID: [
@@ -293,7 +287,7 @@ NODE_FILTERS = {
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_DIMMABLE],
         FILTER_ZWAVE_CAT: ["109", "119"],
     },
-    SWITCH: {
+    Platform.SWITCH: {
         FILTER_UOM: ["78"],
         FILTER_STATES: ["on", "off"],
         FILTER_NODE_DEF_ID: [
@@ -323,7 +317,7 @@ NODE_FILTERS = {
         ],
         FILTER_ZWAVE_CAT: ["121", "122", "123", "137", "141", "147"],
     },
-    CLIMATE: {
+    Platform.CLIMATE: {
         FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: ["heating", "cooling", "idle", "fan_only", "off"],
         FILTER_NODE_DEF_ID: ["TempLinc", "Thermostat"],
@@ -643,8 +637,8 @@ HA_HVAC_TO_ISY = {
 HA_FAN_TO_ISY = {FAN_ON: "on", FAN_AUTO: "auto"}
 
 BINARY_SENSOR_DEVICE_TYPES_ISY = {
-    DEVICE_CLASS_MOISTURE: ["16.8.", "16.13.", "16.14."],
-    DEVICE_CLASS_OPENING: [
+    BinarySensorDeviceClass.MOISTURE: ["16.8.", "16.13.", "16.14."],
+    BinarySensorDeviceClass.OPENING: [
         "16.9.",
         "16.6.",
         "16.7.",
@@ -653,22 +647,22 @@ BINARY_SENSOR_DEVICE_TYPES_ISY = {
         "16.20.",
         "16.21.",
     ],
-    DEVICE_CLASS_MOTION: ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
+    BinarySensorDeviceClass.MOTION: ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
 }
 
 BINARY_SENSOR_DEVICE_TYPES_ZWAVE = {
-    DEVICE_CLASS_SAFETY: ["137", "172", "176", "177", "178"],
-    DEVICE_CLASS_SMOKE: ["138", "156"],
-    DEVICE_CLASS_PROBLEM: ["148", "149", "157", "158", "164", "174", "175"],
-    DEVICE_CLASS_GAS: ["150", "151"],
-    DEVICE_CLASS_SOUND: ["153"],
-    DEVICE_CLASS_COLD: ["152", "168"],
-    DEVICE_CLASS_HEAT: ["154", "166", "167"],
-    DEVICE_CLASS_MOISTURE: ["159", "169"],
-    DEVICE_CLASS_DOOR: ["160"],
-    DEVICE_CLASS_BATTERY: ["162"],
-    DEVICE_CLASS_MOTION: ["155"],
-    DEVICE_CLASS_VIBRATION: ["173"],
+    BinarySensorDeviceClass.SAFETY: ["137", "172", "176", "177", "178"],
+    BinarySensorDeviceClass.SMOKE: ["138", "156"],
+    BinarySensorDeviceClass.PROBLEM: ["148", "149", "157", "158", "164", "174", "175"],
+    BinarySensorDeviceClass.GAS: ["150", "151"],
+    BinarySensorDeviceClass.SOUND: ["153"],
+    BinarySensorDeviceClass.COLD: ["152", "168"],
+    BinarySensorDeviceClass.HEAT: ["154", "166", "167"],
+    BinarySensorDeviceClass.MOISTURE: ["159", "169"],
+    BinarySensorDeviceClass.DOOR: ["160"],
+    BinarySensorDeviceClass.BATTERY: ["162"],
+    BinarySensorDeviceClass.MOTION: ["155"],
+    BinarySensorDeviceClass.VIBRATION: ["173"],
 }
 
 

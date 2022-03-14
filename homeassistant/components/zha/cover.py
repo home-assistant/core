@@ -10,14 +10,20 @@ from zigpy.zcl.foundation import Status
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    DEVICE_CLASS_DAMPER,
-    DEVICE_CLASS_SHADE,
-    DOMAIN,
+    CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
@@ -26,7 +32,6 @@ from .core.const import (
     CHANNEL_ON_OFF,
     CHANNEL_SHADE,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
@@ -37,12 +42,16 @@ from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.COVER)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Zigbee Home Automation cover from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.COVER]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -51,10 +60,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_COVER)
+@MULTI_MATCH(channel_names=CHANNEL_COVER)
 class ZhaCover(ZhaEntity, CoverEntity):
     """Representation of a ZHA cover."""
 
@@ -173,11 +182,11 @@ class ZhaCover(ZhaEntity, CoverEntity):
                 self._state = None
 
 
-@STRICT_MATCH(channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF, CHANNEL_SHADE})
+@MULTI_MATCH(channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF, CHANNEL_SHADE})
 class Shade(ZhaEntity, CoverEntity):
     """ZHA Shade."""
 
-    _attr_device_class = DEVICE_CLASS_SHADE
+    _attr_device_class = CoverDeviceClass.SHADE
 
     def __init__(
         self,
@@ -280,13 +289,13 @@ class Shade(ZhaEntity, CoverEntity):
             return
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF}, manufacturers="Keen Home Inc"
 )
 class KeenVent(Shade):
     """Keen vent cover."""
 
-    _attr_device_class = DEVICE_CLASS_DAMPER
+    _attr_device_class = CoverDeviceClass.DAMPER
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""

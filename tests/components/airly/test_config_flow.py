@@ -48,7 +48,7 @@ async def test_invalid_api_key(hass, aioclient_mock):
 
 async def test_invalid_location(hass, aioclient_mock):
     """Test that errors are shown when location is invalid."""
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("no_station.json", "airly"))
 
     aioclient_mock.get(
         API_NEAREST_URL,
@@ -64,7 +64,7 @@ async def test_invalid_location(hass, aioclient_mock):
 
 async def test_duplicate_error(hass, aioclient_mock):
     """Test that errors are shown when duplicates are added."""
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
     MockConfigEntry(domain=DOMAIN, unique_id="123-456", data=CONFIG).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -77,7 +77,7 @@ async def test_duplicate_error(hass, aioclient_mock):
 
 async def test_create_entry(hass, aioclient_mock):
     """Test that the user step works."""
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
@@ -95,9 +95,11 @@ async def test_create_entry(hass, aioclient_mock):
 async def test_create_entry_with_nearest_method(hass, aioclient_mock):
     """Test that the user step works with nearest method."""
 
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("no_station.json", "airly"))
 
-    aioclient_mock.get(API_NEAREST_URL, text=load_fixture("airly_valid_station.json"))
+    aioclient_mock.get(
+        API_NEAREST_URL, text=load_fixture("valid_station.json", "airly")
+    )
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(

@@ -41,7 +41,7 @@ UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
 class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    _unique_id_suffix: str | None = None
+    unique_id_suffix: str | None = None
 
     def __init__(self, unique_id: str, zha_device: ZhaDeviceType, **kwargs) -> None:
         """Init ZHA entity."""
@@ -49,8 +49,8 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._force_update: bool = False
         self._should_poll: bool = False
         self._unique_id: str = unique_id
-        if self._unique_id_suffix:
-            self._unique_id += f"-{self._unique_id_suffix}"
+        if self.unique_id_suffix:
+            self._unique_id += f"-{self.unique_id_suffix}"
         self._state: Any = None
         self._extra_state_attributes: dict[str, Any] = {}
         self._zha_device: ZhaDeviceType = zha_device
@@ -154,7 +154,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         """
         super().__init_subclass__(**kwargs)
         if id_suffix:
-            cls._unique_id_suffix = id_suffix
+            cls.unique_id_suffix = id_suffix
 
     def __init__(
         self,
@@ -166,11 +166,10 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
         ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
-        ch_names = [ch.cluster.ep_attribute for ch in channels]
-        ch_names = ", ".join(sorted(ch_names))
+        ch_names = ", ".join(sorted(ch.name for ch in channels))
         self._name: str = f"{zha_device.name} {ieeetail} {ch_names}"
-        if self._unique_id_suffix:
-            self._name += f" {self._unique_id_suffix}"
+        if self.unique_id_suffix:
+            self._name += f" {self.unique_id_suffix}"
         self.cluster_channels: dict[str, ChannelType] = {}
         for channel in channels:
             self.cluster_channels[channel.name] = channel
@@ -206,8 +205,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 
         if not self.zha_device.is_mains_powered:
             # mains powered devices will get real time state
-            last_state = await self.async_get_last_state()
-            if last_state:
+            if last_state := await self.async_get_last_state():
                 self.async_restore_last_state(last_state)
 
         self.async_accept_signal(

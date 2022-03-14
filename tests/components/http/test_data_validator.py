@@ -13,6 +13,7 @@ async def get_client(aiohttp_client, validator):
     """Generate a client that hits a view decorated with validator."""
     app = web.Application()
     app["hass"] = Mock(is_stopping=False)
+    app["allow_configured_cors"] = lambda _: None
 
     class TestView(HomeAssistantView):
         url = "/"
