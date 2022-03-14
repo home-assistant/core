@@ -74,3 +74,7 @@ class SABnzbdConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=USER_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_import(self, import_data):
+        """Import sabnzbd config from configuration.yaml."""
+        return await self.async_step_user(import_data)

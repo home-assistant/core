@@ -1,19 +1,12 @@
 """Support for monitoring an SABnzbd NZB client."""
-from datetime import timedelta
 import logging
 
 from pysabnzbd import SabnzbdApiException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    DATA_GIGABYTES,
-    DATA_MEGABYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -34,20 +27,6 @@ from .sab import get_client
 
 PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
-
-SENSOR_TYPES = {
-    "current_status": ["Status", None, "status"],
-    "speed": ["Speed", DATA_RATE_MEGABYTES_PER_SECOND, "kbpersec"],
-    "queue_size": ["Queue", DATA_MEGABYTES, "mb"],
-    "queue_remaining": ["Left", DATA_MEGABYTES, "mbleft"],
-    "disk_size": ["Disk", DATA_GIGABYTES, "diskspacetotal1"],
-    "disk_free": ["Disk Free", DATA_GIGABYTES, "diskspace1"],
-    "queue_count": ["Queue Count", None, "noofslots_total"],
-    "day_size": ["Daily Total", DATA_GIGABYTES, "day_size"],
-    "week_size": ["Weekly Total", DATA_GIGABYTES, "week_size"],
-    "month_size": ["Monthly Total", DATA_GIGABYTES, "month_size"],
-    "total_size": ["Total", DATA_GIGABYTES, "total_size"],
-}
 
 SPEED_LIMIT_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string}

@@ -5,7 +5,7 @@ from pysabnzbd import SabnzbdApiException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.sabnzbd import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -84,3 +84,26 @@ async def test_integration_already_exists(hass):
 
         assert result["type"] == "abort"
         assert result["reason"] == "single_instance_allowed"
+
+
+async def test_import_flow(hass) -> None:
+    """Test the import configuration flow."""
+    with patch(
+        "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
+        return_value=True,
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=VALID_CONFIG,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "Sabnzbd"
+        assert result["data"][CONF_NAME] == "Sabnzbd"
+        assert result["data"][CONF_API_KEY] == "edc3eee7330e4fdda04489e3fbc283d0"
+        assert result["data"][CONF_HOST] == "localhost"
+        assert result["data"][CONF_PORT] == 8080
+        assert result["data"][CONF_PATH] == ""
+        assert result["data"][CONF_SSL] is False

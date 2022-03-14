@@ -1,17 +1,99 @@
 """Support for monitoring an SABnzbd NZB client."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from dataclasses import dataclass
 
-from . import DOMAIN, SENSOR_TYPES, SIGNAL_SABNZBD_UPDATED, SabnzbdApiData
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DOMAIN, SIGNAL_SABNZBD_UPDATED, SabnzbdApiData
 from ...config_entries import ConfigEntry
+from ...const import DATA_GIGABYTES, DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND
 from ...core import HomeAssistant
 from ...helpers.entity_platform import AddEntitiesCallback
 from .const import KEY_API, KEY_NAME
+
+
+@dataclass
+class SabnzbdRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    field_name: str
+
+
+@dataclass
+class SabnzbdSensorEntityDescription(SensorEntityDescription, SabnzbdRequiredKeysMixin):
+    """Describes Sabnzbd sensor entity."""
+
+
+SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
+    SabnzbdSensorEntityDescription(
+        key="current_status",
+        name="Status",
+        field_name="status",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="speed",
+        name="Speed",
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        field_name="kbpersec",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="queue_size",
+        name="Queue",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        field_name="mb",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="queue_remaining",
+        name="Left",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        field_name="mbleft",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="disk_size",
+        name="Disk",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="diskspacetotal1",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="disk_free",
+        name="Disk Free",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="diskspace1",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="queue_count",
+        name="Queue Count",
+        field_name="noofslots_total",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="day_size",
+        name="Daily Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="day_size",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="week_size",
+        name="Weekly Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="week_size",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="month_size",
+        name="Monthly Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="month_size",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="total_size",
+        name="Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="total_size",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 
 async def async_setup_entry(
@@ -26,7 +108,7 @@ async def async_setup_entry(
     sab_api_data = SabnzbdApiData(sab_api)
 
     async_add_entities(
-        [SabnzbdSensor(sensor, sab_api_data, client_name) for sensor in SENSOR_TYPES]
+        [SabnzbdSensor(sab_api_data, client_name, sensor) for sensor in SENSOR_TYPES]
     )
 
 
