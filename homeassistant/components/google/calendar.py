@@ -83,7 +83,7 @@ def _async_setup_entities(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     disc_info: dict[str, Any],
-):
+) -> None:
     calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     entities = []
     for data in disc_info[CONF_ENTITIES]:
