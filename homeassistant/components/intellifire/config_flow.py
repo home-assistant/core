@@ -54,9 +54,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._not_configured_hosts = [
             ip for ip in discovered_hosts if ip not in configured_hosts
         ]
-        LOGGER.debug("Discovered Hosts: %s", str(discovered_hosts))
-        LOGGER.debug("Configured Hosts: %s", str(configured_hosts))
-        LOGGER.debug("Not Configured Hosts: %s", str(self._not_configured_hosts))
+        LOGGER.debug("Discovered Hosts: %s", discovered_hosts)
+        LOGGER.debug("Configured Hosts: %s", configured_hosts)
+        LOGGER.debug("Not Configured Hosts: %s", self._not_configured_hosts)
 
     async def _async_validate_and_create_entry(self, host: str) -> FlowResult:
         """Validate and create the entry."""
