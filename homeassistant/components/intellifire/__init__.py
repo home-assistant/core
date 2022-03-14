@@ -71,21 +71,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         config_entry.version = 2
         new = {**config_entry.data}
-        new[CONF_USERNAME] = "reauth_required"
-        new[CONF_PASSWORD] = "not_set"
+        new[CONF_USERNAME] = ""
+        new[CONF_PASSWORD] = ""
         hass.config_entries.async_update_entry(config_entry, data=new)
 
     LOGGER.info("Migration to version %s successful", config_entry.version)
     return True
-
-    # print("MIGRATION:", new)
-    # if config_entry.version == 1:
-
-    #     new = {**config_entry.data}
-    #     print("MIGRATION:", new)
-    #     return await self.async_step_reauth()
-
-    #     config_entry.version = 2
-    #     hass.config_entries.async_update_entry(config_entry, data=new)
-
-    # return True

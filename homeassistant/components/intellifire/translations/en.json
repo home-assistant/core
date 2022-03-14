@@ -1,12 +1,23 @@
 {
     "config": {
       "abort": {
-        "already_configured": "Device is already configured"
+        "already_configured": "Device is already configured",
+        "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
       },
       "error": {
+        "api_error": "api_error",
+        "iftapi_connect": "iftapi_connect",
         "cannot_connect": "Could not connect to a fireplace endpoint at url: http://{host}/poll\nVerify IP address and try again"
       },
       "step": {
+        "api_config": {
+          "title": "IntelliFire - API Configuration",
+          "description": "IntelliFire will need to reach out to [iftapi.net](https://iftapi.net/webaccess/login.html) in order to obtain an API key. Once it has obtained this API key, the rest of its interactions will occur compeltely within the local network. If the API key were to expire it would again need to reach out to https://iftapi.net/webaccess/login.html\n\nUsername and password are the same information used in your IntelliFire Android/iOS application. ",
+          "data": {
+            "password": "Password",
+            "username": "Username (email)"
+          }
+        },
         "manual_device_entry": {
           "title": "IntelliFire - Local Config",
           "description": "Enter the IP address of the IntelliFire unit on your local network.",
