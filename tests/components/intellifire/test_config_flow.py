@@ -48,7 +48,7 @@ async def test_single_discovery(
 ) -> None:
     """Test single firedplace UDP discovery."""
     with patch(
-        "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
+        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69"],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -74,7 +74,7 @@ async def test_manual_entry(
 ) -> None:
     """Test for multiple firepalce discovery - involing a pick_device step."""
     with patch(
-        "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
+        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
     ):
 
@@ -98,7 +98,7 @@ async def test_mutli_discovery(
 ) -> None:
     """Test for multiple firepalce discovery - involing a pick_device step."""
     with patch(
-        "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
+        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -123,7 +123,7 @@ async def test_multi_discovery_cannot_connect(
 ) -> None:
     """Test for multiple firepalce discovery - involing a pick_device step."""
     with patch(
-        "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
+        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
     ):
 
@@ -185,7 +185,7 @@ async def test_picker_already_discovered(
     )
     entry.add_to_hass(hass)
     with patch(
-        "intellifire4py.udp.AsyncUDPFireplaceFinder.search_fireplace",
+        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.3"],
     ):
         result = await hass.config_entries.flow.async_init(
