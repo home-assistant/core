@@ -735,8 +735,6 @@ homeassistant/components/overkiz/* @imicknl @vlebourl @tetienne
 tests/components/overkiz/* @imicknl @vlebourl @tetienne
 homeassistant/components/ovo_energy/* @timmo001
 tests/components/ovo_energy/* @timmo001
-homeassistant/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
-tests/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
 homeassistant/components/p1_monitor/* @klaasnicolaas
 tests/components/p1_monitor/* @klaasnicolaas
 homeassistant/components/panel_custom/* @home-assistant/frontend
