@@ -125,19 +125,17 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
             play_item = await media_source.async_resolve_media(self.hass, media_id)
-            media_id = play_item.url
+            media_id = async_process_play_media_url(self.hass, play_item.url)
 
         if media_type != MEDIA_TYPE_MUSIC:
-            raise ValueError("Only music media type is supported")
-
-        media_id = async_process_play_media_url(self.hass, media_id)
+            raise HomeAssistantError("Only music media type is supported")
 
         _LOGGER.debug("Playing Media %s for %s Speaker", media_id, self.device.name)
         await self.async_media_stop()
         try:
             await self.device.play_audio(media_id, blocking=False)
         except StreamError as err:
-            raise HomeAssistantError from err
+            raise HomeAssistantError(err) from err
         else:
             # update state after starting player
             self._async_updated_event()
