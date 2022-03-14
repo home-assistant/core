@@ -34,7 +34,7 @@ def purge_old_data(
         purge_before.isoformat(sep=" ", timespec="seconds"),
     )
 
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
         event_ids = _select_event_ids_to_purge(session, purge_before)
         state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
@@ -267,7 +267,7 @@ def _purge_filtered_states(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
     )
     _purge_state_ids(instance, session, set(state_ids))
-    _purge_event_ids(session, event_ids)  # type: ignore  # type of event_ids already narrowed to 'list[int]'
+    _purge_event_ids(session, event_ids)  # type: ignore[arg-type]  # type of event_ids already narrowed to 'list[int]'
 
 
 def _purge_filtered_events(
@@ -295,7 +295,7 @@ def _purge_filtered_events(
 @retryable_database_job("purge")
 def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) -> bool:
     """Purge states and events of specified entities."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         selected_entity_ids: list[str] = [
             entity_id
             for (entity_id,) in session.query(distinct(States.entity_id)).all()

@@ -431,14 +431,10 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self.debug("preset mode '%s' is not supported", preset_mode)
             return
 
-        if (
-            self.preset_mode
-            not in (
-                preset_mode,
-                PRESET_NONE,
-            )
-            and not await self.async_preset_handler(self.preset_mode, enable=False)
-        ):
+        if self.preset_mode not in (
+            preset_mode,
+            PRESET_NONE,
+        ) and not await self.async_preset_handler(self.preset_mode, enable=False):
             self.debug("Couldn't turn off '%s' preset", self.preset_mode)
             return
 
@@ -759,4 +755,84 @@ class BecaThermostat(Thermostat):
                 {"operation_preset": 7}, manufacturer=mfg_code
             )
 
+        return False
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers="Stelpro",
+    models={"SORB"},
+    stop_on_match_group=CHANNEL_THERMOSTAT,
+)
+class StelproFanHeater(Thermostat):
+    """Stelpro Fan Heater implementation."""
+
+    @property
+    def hvac_modes(self) -> tuple[str, ...]:
+        """Return only the heat mode, because the device can't be turned off."""
+        return (HVAC_MODE_HEAT,)
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers={
+        "_TZE200_hue3yfsn",
+    },
+)
+class ZONNSMARTThermostat(Thermostat):
+    """
+    ZONNSMART Thermostat implementation.
+
+    Notice that this device uses two holiday presets (2: HolidayMode,
+    3: HolidayModeTemp), but only one of them can be set.
+    """
+
+    PRESET_HOLIDAY = "holiday"
+    PRESET_FROST = "frost protect"
+
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Initialize ZHA Thermostat instance."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._presets = [
+            PRESET_NONE,
+            self.PRESET_HOLIDAY,
+            PRESET_SCHEDULE,
+            self.PRESET_FROST,
+        ]
+        self._supported_flags |= SUPPORT_PRESET_MODE
+
+    async def async_attribute_updated(self, record):
+        """Handle attribute update from device."""
+        if record.attr_name == "operation_preset":
+            if record.value == 0:
+                self._preset = PRESET_SCHEDULE
+            if record.value == 1:
+                self._preset = PRESET_NONE
+            if record.value == 2:
+                self._preset = self.PRESET_HOLIDAY
+            if record.value == 3:
+                self._preset = self.PRESET_HOLIDAY
+            if record.value == 4:
+                self._preset = self.PRESET_FROST
+        await super().async_attribute_updated(record)
+
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+        """Set the preset mode."""
+        mfg_code = self._zha_device.manufacturer_code
+        if not enable:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 1}, manufacturer=mfg_code
+            )
+        if preset == PRESET_SCHEDULE:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 0}, manufacturer=mfg_code
+            )
+        if preset == self.PRESET_HOLIDAY:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 3}, manufacturer=mfg_code
+            )
+        if preset == self.PRESET_FROST:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 4}, manufacturer=mfg_code
+            )
         return False

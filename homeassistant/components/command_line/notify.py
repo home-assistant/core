@@ -1,4 +1,6 @@
 """Support for command line notification services."""
+from __future__ import annotations
+
 import logging
 import subprocess
 
@@ -6,7 +8,9 @@ import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import CONF_COMMAND, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
@@ -22,10 +26,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> CommandLineNotificationService:
     """Get the Command Line notification service."""
-    command = config[CONF_COMMAND]
-    timeout = config[CONF_COMMAND_TIMEOUT]
+    command: str = config[CONF_COMMAND]
+    timeout: int = config[CONF_COMMAND_TIMEOUT]
 
     return CommandLineNotificationService(command, timeout)
 
@@ -33,12 +41,12 @@ def get_service(hass, config, discovery_info=None):
 class CommandLineNotificationService(BaseNotificationService):
     """Implement the notification service for the Command Line service."""
 
-    def __init__(self, command, timeout):
+    def __init__(self, command: str, timeout: int) -> None:
         """Initialize the service."""
         self.command = command
         self._timeout = timeout
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message="", **kwargs) -> None:
         """Send a message to a command line."""
         with subprocess.Popen(
             self.command,

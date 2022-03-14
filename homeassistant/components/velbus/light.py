@@ -22,7 +22,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VelbusEntity
@@ -96,6 +96,7 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
 
     _channel: VelbusButton
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_supported_features = SUPPORT_FLASH
 
     def __init__(self, channel: VelbusChannel) -> None:

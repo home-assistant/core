@@ -17,10 +17,10 @@
             },
             "user": {
                 "data": {
-                    "admin_password": "Admin Mot de passe",
-                    "admin_username": "Admin Nom d'utilisateur",
-                    "surveillance_password": "Surveillance Mot de passe",
-                    "surveillance_username": "Surveillance Nom d'utilisateur",
+                    "admin_password": "Mot de passe Admin",
+                    "admin_username": "Nom d'utilisateur Admin",
+                    "surveillance_password": "Mot de passe Surveillance",
+                    "surveillance_username": "Nom d'utilisateur Surveillance",
                     "url": "URL"
                 }
             }

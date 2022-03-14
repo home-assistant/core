@@ -5,7 +5,7 @@
             "cannot_connect": "\u00c9chec de connexion"
         },
         "error": {
-            "api_password": "Authentification invalide, utilisez la cl\u00e9 API ou le mot de passe.",
+            "api_password": "Authentification invalide, utilisez soit la cl\u00e9 d'API soit le mot de passe.",
             "cannot_connect": "\u00c9chec de connexion",
             "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"

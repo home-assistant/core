@@ -3,7 +3,7 @@
   "name": "Alert",
   "documentation": "https://www.home-assistant.io/integrations/alert",
   "after_dependencies": ["notify"],
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal",
   "iot_class": "local_push"
 }

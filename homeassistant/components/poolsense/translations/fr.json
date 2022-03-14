@@ -9,10 +9,10 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe"
                 },
-                "description": "Voulez-vous commencer la configuration ?",
+                "description": "Voulez-vous commencer la configuration\u00a0?",
                 "title": "PoolSense"
             }
         }

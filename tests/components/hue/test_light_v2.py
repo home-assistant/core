@@ -97,8 +97,12 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     assert mock_bridge_v2.mock_requests[0]["json"]["color_temperature"]["mirek"] == 300
 
     # Now generate update event by emitting the json we've sent as incoming event
-    mock_bridge_v2.mock_requests[0]["json"]["color_temperature"].pop("mirek_valid")
-    mock_bridge_v2.api.emit_event("update", mock_bridge_v2.mock_requests[0]["json"])
+    event = {
+        "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",
+        "type": "light",
+        **mock_bridge_v2.mock_requests[0]["json"],
+    }
+    mock_bridge_v2.api.emit_event("update", event)
     await hass.async_block_till_done()
 
     # the light should now be on
@@ -186,7 +190,12 @@ async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_da
     assert mock_bridge_v2.mock_requests[0]["json"]["on"]["on"] is False
 
     # Now generate update event by emitting the json we've sent as incoming event
-    mock_bridge_v2.api.emit_event("update", mock_bridge_v2.mock_requests[0]["json"])
+    event = {
+        "id": "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+        "type": "light",
+        **mock_bridge_v2.mock_requests[0]["json"],
+    }
+    mock_bridge_v2.api.emit_event("update", event)
     await hass.async_block_till_done()
 
     # the light should now be off
@@ -377,10 +386,20 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
         )
 
     # Now generate update events by emitting the json we've sent as incoming events
-    for index in range(0, 3):
-        mock_bridge_v2.api.emit_event(
-            "update", mock_bridge_v2.mock_requests[index]["json"]
-        )
+    for index, light_id in enumerate(
+        [
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "b3fe71ef-d0ef-48de-9355-d9e604377df0",
+            "8015b17f-8336-415b-966a-b364bd082397",
+        ]
+    ):
+        event = {
+            "id": light_id,
+            "type": "light",
+            **mock_bridge_v2.mock_requests[index]["json"],
+        }
+        mock_bridge_v2.api.emit_event("update", event)
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     # the light should now be on and have the properties we've set
@@ -406,6 +425,12 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert mock_bridge_v2.mock_requests[0]["json"]["on"]["on"] is False
 
     # Now generate update event by emitting the json we've sent as incoming event
+    event = {
+        "id": "f2416154-9607-43ab-a684-4453108a200e",
+        "type": "grouped_light",
+        **mock_bridge_v2.mock_requests[0]["json"],
+    }
+    mock_bridge_v2.api.emit_event("update", event)
     mock_bridge_v2.api.emit_event("update", mock_bridge_v2.mock_requests[0]["json"])
     await hass.async_block_till_done()
 

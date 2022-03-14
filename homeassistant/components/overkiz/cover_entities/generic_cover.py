@@ -64,7 +64,7 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         if command := self.executor.select_command(*COMMANDS_SET_TILT_POSITION):
             await self.executor.async_execute_command(
                 command,
-                100 - kwargs.get(ATTR_TILT_POSITION, 0),
+                100 - kwargs[ATTR_TILT_POSITION],
             )
 
     @property

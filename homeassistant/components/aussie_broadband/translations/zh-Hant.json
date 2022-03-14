@@ -18,6 +18,13 @@
                 "description": "\u66f4\u65b0 {username} \u5bc6\u78bc",
                 "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "\u66f4\u65b0 {username} \u5bc6\u78bc",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
             "service": {
                 "data": {
                     "services": "\u670d\u52d9"

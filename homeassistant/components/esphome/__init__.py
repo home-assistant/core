@@ -117,7 +117,7 @@ async def async_setup_entry(  # noqa: C901
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
     noise_psk = entry.data.get(CONF_NOISE_PSK)
-    device_id = None
+    device_id: str | None = None
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -184,11 +184,12 @@ async def async_setup_entry(  # noqa: C901
                 return
 
             # Call native tag scan
-            if service_name == "tag_scanned":
+            if service_name == "tag_scanned" and device_id is not None:
+                # Importing tag via hass.components in case it is overridden
+                # in a custom_components (custom_components.tag)
+                tag = hass.components.tag
                 tag_id = service_data["tag_id"]
-                hass.async_create_task(
-                    hass.components.tag.async_scan_tag(tag_id, device_id)
-                )
+                hass.async_create_task(tag.async_scan_tag(tag_id, device_id))
                 return
 
             hass.bus.async_fire(service.service, service_data)
@@ -457,7 +458,7 @@ async def _register_service(
         }
 
     async def execute_service(call: ServiceCall) -> None:
-        await entry_data.client.execute_service(service, call.data)  # type: ignore[arg-type]
+        await entry_data.client.execute_service(service, call.data)
 
     hass.services.async_register(
         DOMAIN, service_name, execute_service, vol.Schema(schema)

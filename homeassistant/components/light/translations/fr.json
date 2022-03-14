@@ -13,6 +13,7 @@
             "is_on": "{entity_name} est allum\u00e9"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} activ\u00e9 ou d\u00e9sactiv\u00e9",
             "toggled": "{entity_name} activ\u00e9 ou d\u00e9sactiv\u00e9",
             "turned_off": "{entity_name} est d\u00e9sactiv\u00e9",
             "turned_on": "{entity_name} activ\u00e9"
@@ -20,8 +21,8 @@
     },
     "state": {
         "_": {
-            "off": "Inactif",
-            "on": "Actif"
+            "off": "D\u00e9sactiv\u00e9",
+            "on": "Activ\u00e9"
         }
     },
     "title": "Lumi\u00e8re"

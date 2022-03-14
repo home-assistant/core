@@ -14,9 +14,16 @@ from zwave_js_server.model.value import (
     get_value_id,
 )
 
+from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_TYPE, __version__ as HA_VERSION
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_TYPE,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -30,6 +37,7 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
     DOMAIN,
+    LOGGER,
 )
 
 
@@ -55,9 +63,14 @@ def update_data_collection_preference(
 
 
 @callback
-def get_unique_id(home_id: str, value_id: str) -> str:
-    """Get unique ID from home ID and value ID."""
-    return f"{home_id}.{value_id}"
+def get_valueless_base_unique_id(client: ZwaveClient, node: ZwaveNode) -> str:
+    """Return the base unique ID for an entity that is not based on a value."""
+    return f"{client.driver.controller.home_id}.{node.node_id}"
+
+
+def get_unique_id(client: ZwaveClient, value_id: str) -> str:
+    """Get unique ID from client and value ID."""
+    return f"{client.driver.controller.home_id}.{value_id}"
 
 
 @callback
@@ -216,6 +229,40 @@ def async_get_nodes_from_area_id(
     return nodes
 
 
+@callback
+def async_get_nodes_from_targets(
+    hass: HomeAssistant,
+    val: dict[str, Any],
+    ent_reg: er.EntityRegistry | None = None,
+    dev_reg: dr.DeviceRegistry | None = None,
+) -> set[ZwaveNode]:
+    """
+    Get nodes for all targets.
+
+    Supports entity_id with group expansion, area_id, and device_id.
+    """
+    nodes: set[ZwaveNode] = set()
+    # Convert all entity IDs to nodes
+    for entity_id in expand_entity_ids(hass, val.get(ATTR_ENTITY_ID, [])):
+        try:
+            nodes.add(async_get_node_from_entity_id(hass, entity_id, ent_reg, dev_reg))
+        except ValueError as err:
+            LOGGER.warning(err.args[0])
+
+    # Convert all area IDs to nodes
+    for area_id in val.get(ATTR_AREA_ID, []):
+        nodes.update(async_get_nodes_from_area_id(hass, area_id, ent_reg, dev_reg))
+
+    # Convert all device IDs to nodes
+    for device_id in val.get(ATTR_DEVICE_ID, []):
+        try:
+            nodes.add(async_get_node_from_device_id(hass, device_id, dev_reg))
+        except ValueError as err:
+            LOGGER.warning(err.args[0])
+
+    return nodes
+
+
 def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveValue:
     """Get a Z-Wave JS Value from a config."""
     endpoint = None
@@ -297,8 +344,7 @@ def async_is_device_config_entry_not_loaded(
 ) -> bool:
     """Return whether device's config entries are not loaded."""
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get(device_id)
-    if device is None:
+    if (device := dev_reg.async_get(device_id)) is None:
         raise ValueError(f"Device {device_id} not found")
     return any(
         (entry := hass.config_entries.async_get_entry(entry_id))

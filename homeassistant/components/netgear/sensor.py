@@ -1,30 +1,35 @@
 """Support for Netgear routers."""
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import DATA_MEGABYTES, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
-from .router import NetgearDeviceEntity, NetgearRouter
+from .const import DOMAIN, KEY_COORDINATOR, KEY_COORDINATOR_TRAFFIC, KEY_ROUTER
+from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
 
 SENSOR_TYPES = {
     "type": SensorEntityDescription(
         key="type",
         name="link type",
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:lan",
     ),
     "link_rate": SensorEntityDescription(
         key="link_rate",
         name="link rate",
         native_unit_of_measurement="Mbps",
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:speedometer",
     ),
     "signal": SensorEntityDescription(
         key="signal",
@@ -37,13 +42,163 @@ SENSOR_TYPES = {
         key="ssid",
         name="ssid",
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:wifi-marker",
     ),
     "conn_ap_mac": SensorEntityDescription(
         key="conn_ap_mac",
         name="access point mac",
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:router-network",
     ),
 }
+
+
+@dataclass
+class NetgearSensorEntityDescription(SensorEntityDescription):
+    """Class describing Netgear sensor entities."""
+
+    value: Callable = lambda data: data
+    index: int = 0
+
+
+SENSOR_TRAFFIC_TYPES = [
+    NetgearSensorEntityDescription(
+        key="NewTodayUpload",
+        name="Upload today",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+    ),
+    NetgearSensorEntityDescription(
+        key="NewTodayDownload",
+        name="Download today",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+    ),
+    NetgearSensorEntityDescription(
+        key="NewYesterdayUpload",
+        name="Upload yesterday",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+    ),
+    NetgearSensorEntityDescription(
+        key="NewYesterdayDownload",
+        name="Download yesterday",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+    ),
+    NetgearSensorEntityDescription(
+        key="NewWeekUpload",
+        name="Upload week",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+        index=0,
+        value=lambda data: data[0] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewWeekUpload",
+        name="Upload week average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+        index=1,
+        value=lambda data: data[1] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewWeekDownload",
+        name="Download week",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+        index=0,
+        value=lambda data: data[0] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewWeekDownload",
+        name="Download week average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+        index=1,
+        value=lambda data: data[1] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewMonthUpload",
+        name="Upload month",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+        index=0,
+        value=lambda data: data[0] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewMonthUpload",
+        name="Upload month average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+        index=1,
+        value=lambda data: data[1] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewMonthDownload",
+        name="Download month",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+        index=0,
+        value=lambda data: data[0] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewMonthDownload",
+        name="Download month average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+        index=1,
+        value=lambda data: data[1] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewLastMonthUpload",
+        name="Upload last month",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+        index=0,
+        value=lambda data: data[0] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewLastMonthUpload",
+        name="Upload last month average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+        index=1,
+        value=lambda data: data[1] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewLastMonthDownload",
+        name="Download last month",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+        index=0,
+        value=lambda data: data[0] if data is not None else None,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewLastMonthDownload",
+        name="Download last month average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+        index=1,
+        value=lambda data: data[1] if data is not None else None,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -52,8 +207,20 @@ async def async_setup_entry(
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
-    tracked = set()
+    coordinator_traffic = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_TRAFFIC]
 
+    # Router entities
+    router_entities = []
+
+    for description in SENSOR_TRAFFIC_TYPES:
+        router_entities.append(
+            NetgearRouterSensorEntity(coordinator_traffic, router, description)
+        )
+
+    async_add_entities(router_entities)
+
+    # Entities per network device
+    tracked = set()
     sensors = ["type", "link_rate", "signal"]
     if router.method_version == 2:
         sensors.extend(["ssid", "conn_ap_mac"])
@@ -119,3 +286,37 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         self._active = self._device["active"]
         if self._device.get(self._attribute) is not None:
             self._state = self._device[self._attribute]
+
+
+class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
+    """Representation of a device connected to a Netgear router."""
+
+    _attr_entity_registry_enabled_default = False
+    entity_description: NetgearSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        router: NetgearRouter,
+        entity_description: NetgearSensorEntityDescription,
+    ) -> None:
+        """Initialize a Netgear device."""
+        super().__init__(coordinator, router)
+        self.entity_description = entity_description
+        self._name = f"{router.device_name} {entity_description.name}"
+        self._unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
+
+        self._value = None
+        self.async_update_device()
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._value
+
+    @callback
+    def async_update_device(self) -> None:
+        """Update the Netgear device."""
+        if self.coordinator.data is not None:
+            data = self.coordinator.data.get(self.entity_description.key)
+            self._value = self.entity_description.value(data)

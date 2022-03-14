@@ -1,6 +1,8 @@
 """Test Z-Wave lights."""
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant.components import zwave
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,6 +19,9 @@ from homeassistant.components.light import (
 from homeassistant.components.zwave import const, light
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 class MockLightValues(MockEntityValues):

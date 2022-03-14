@@ -18,6 +18,13 @@
                 "description": "Actualitza la contrasenya de {username}",
                 "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya"
+                },
+                "description": "Actualitza la contrasenya de {username}",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
+            },
             "service": {
                 "data": {
                     "services": "Serveis"
