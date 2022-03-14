@@ -78,6 +78,14 @@ def websocket_get_entity(hass, connection, msg):
                 er.RegistryEntryDisabler.USER.value,
             ),
         ),
+        # We only allow setting hidden_by user via API.
+        vol.Optional("hidden_by"): vol.Any(
+            None,
+            vol.All(
+                vol.Coerce(er.RegistryEntryHider),
+                er.RegistryEntryHider.USER.value,
+            ),
+        ),
     }
 )
 @callback
@@ -96,7 +104,7 @@ def websocket_update_entity(hass, connection, msg):
 
     changes = {}
 
-    for key in ("area_id", "device_class", "disabled_by", "icon", "name"):
+    for key in ("area_id", "device_class", "disabled_by", "hidden_by", "icon", "name"):
         if key in msg:
             changes[key] = msg[key]
 
@@ -113,6 +121,7 @@ def websocket_update_entity(hass, connection, msg):
             return
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
+        # Don't allow enabling an entity of a disabled device
         entity = registry.entities[msg["entity_id"]]
         if entity.device_id:
             device_registry = dr.async_get(hass)
@@ -135,6 +144,7 @@ def websocket_update_entity(hass, connection, msg):
         return
     result = {"entity_entry": _entry_ext_dict(entry)}
     if "disabled_by" in changes and changes["disabled_by"] is None:
+        # Enabling an entity requires a config entry reload, or HA restart
         config_entry = hass.config_entries.async_get_entry(entry.config_entry_id)
         if config_entry and not config_entry.supports_unload:
             result["require_restart"] = True
@@ -178,6 +188,7 @@ def _entry_dict(entry):
         "disabled_by": entry.disabled_by,
         "entity_category": entry.entity_category,
         "entity_id": entry.entity_id,
+        "hidden_by": entry.hidden_by,
         "icon": entry.icon,
         "name": entry.name,
         "platform": entry.platform,
