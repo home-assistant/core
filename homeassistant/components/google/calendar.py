@@ -58,7 +58,7 @@ async def async_setup_entry(
     """Set up the google calendar platform."""
 
     @callback
-    def async_discover(discovery_info: dict[str, Any]):
+    def async_discover(discovery_info: dict[str, Any]) -> None:
         _async_setup_entities(
             hass,
             entry,
