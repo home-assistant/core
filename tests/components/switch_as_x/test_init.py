@@ -12,7 +12,13 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "target_domain", (Platform.LIGHT, Platform.COVER, Platform.SIREN)
+    "target_domain",
+    (
+        Platform.COVER,
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SIREN,
+    ),
 )
 async def test_config_entry_unregistered_uuid(
     hass: HomeAssistant, target_domain: str
@@ -38,7 +44,14 @@ async def test_config_entry_unregistered_uuid(
     assert len(hass.states.async_all()) == 0
 
 
-@pytest.mark.parametrize("target_domain", (Platform.LIGHT, Platform.SIREN))
+@pytest.mark.parametrize(
+    "target_domain",
+    (
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SIREN,
+    ),
+)
 async def test_entity_registry_events(hass: HomeAssistant, target_domain: str) -> None:
     """Test entity registry events are tracked."""
     registry = er.async_get(hass)
@@ -96,7 +109,13 @@ async def test_entity_registry_events(hass: HomeAssistant, target_domain: str) -
 
 
 @pytest.mark.parametrize(
-    "target_domain", (Platform.LIGHT, Platform.COVER, Platform.SIREN)
+    "target_domain",
+    (
+        Platform.COVER,
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SIREN,
+    ),
 )
 async def test_device_registry_config_entry_1(
     hass: HomeAssistant, target_domain: str
@@ -156,7 +175,13 @@ async def test_device_registry_config_entry_1(
 
 
 @pytest.mark.parametrize(
-    "target_domain", (Platform.LIGHT, Platform.COVER, Platform.SIREN)
+    "target_domain",
+    (
+        Platform.COVER,
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SIREN,
+    ),
 )
 async def test_device_registry_config_entry_2(
     hass: HomeAssistant, target_domain: str
@@ -209,7 +234,13 @@ async def test_device_registry_config_entry_2(
 
 
 @pytest.mark.parametrize(
-    "target_domain", (Platform.LIGHT, Platform.COVER, Platform.SIREN)
+    "target_domain",
+    (
+        Platform.COVER,
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SIREN,
+    ),
 )
 async def test_config_entry_entity_id(
     hass: HomeAssistant, target_domain: Platform
@@ -246,7 +277,13 @@ async def test_config_entry_entity_id(
 
 
 @pytest.mark.parametrize(
-    "target_domain", (Platform.LIGHT, Platform.COVER, Platform.SIREN)
+    "target_domain",
+    (
+        Platform.COVER,
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SIREN,
+    ),
 )
 async def test_config_entry_uuid(hass: HomeAssistant, target_domain: Platform) -> None:
     """Test light switch setup from config entry with entity registry id."""
@@ -272,7 +309,13 @@ async def test_config_entry_uuid(hass: HomeAssistant, target_domain: Platform) -
 
 
 @pytest.mark.parametrize(
-    "target_domain", (Platform.LIGHT, Platform.COVER, Platform.SIREN)
+    "target_domain",
+    (
+        Platform.COVER,
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SIREN,
+    ),
 )
 async def test_device(hass: HomeAssistant, target_domain: Platform) -> None:
     """Test the entity is added to the wrapped entity's device."""
