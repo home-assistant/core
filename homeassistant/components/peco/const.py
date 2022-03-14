@@ -2,7 +2,7 @@
 import logging
 
 DOMAIN = "peco"
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 COUNTY_LIST = [
     "BUCKS",
     "CHESTER",

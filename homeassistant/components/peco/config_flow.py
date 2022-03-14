@@ -40,15 +40,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # take the county name and make it all lowercase except for the first letter
         # this is to make it easier to read in the UI
-        county_name = county.lower()
-        county_name = county_name[0].upper() + county_name[1:]
+        county_name = county.title()
 
         return self.async_create_entry(
             title=county_name + " Outage Count", data=user_input
         )
-
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle re-auth step."""
-        return await self.async_step_user(user_input)

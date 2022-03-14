@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -21,7 +22,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 PARALLEL_UPDATES: Final = 0
 SENSOR_LIST = (
@@ -43,7 +44,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    websession = hass.data[DOMAIN][config_entry.entry_id]["websession"]
+    websession = async_get_clientsession(hass)
     conf: MappingProxyType[str, Any] = config_entry.data
 
     async def async_update_data() -> dict[str, float]:
@@ -81,7 +82,7 @@ async def async_setup_entry(
 
     coordinator = DataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         name="PECO Outage Count",
         update_method=async_update_data,
         update_interval=timedelta(minutes=SCAN_INTERVAL),
@@ -91,11 +92,8 @@ async def async_setup_entry(
 
     county = conf["county"]
 
-    sensors = []
-    for sensor in SENSOR_LIST:
-        sensors.append(PecoSensor(hass, sensor, county, coordinator))
     async_add_entities(
-        sensors,
+        [PecoSensor(hass, sensor, county, coordinator) for sensor in SENSOR_LIST],
         True,
     )
     return
@@ -120,10 +118,9 @@ class PecoSensor(CoordinatorEntity[dict[str, float]], SensorEntity):
         self._county = county
         self._attr_name = f"{county.capitalize()} {description.name}"
         self._attr_unique_id = f"{self._county}_{description.key}"
-        self._key = description.key
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
+        self.entity_description = description
 
     @property
     def native_value(self) -> float:
         """Return the value of the sensor."""
-        return self.coordinator.data[self._key]
+        return self.coordinator.data[self.entity_description.key]
