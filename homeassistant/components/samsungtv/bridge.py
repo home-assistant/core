@@ -376,7 +376,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     return RESULT_SUCCESS
             except ConnectionClosedError as err:
                 LOGGER.info(
-                    "Working but unsupported config: %s, error: %s; this may "
+                    "Working but unsupported config: %s, error: '%s'; this may "
                     "be an indication that access to the TV has been denied. Please "
                     "check the Device Connection Manager on your TV",
                     config,
