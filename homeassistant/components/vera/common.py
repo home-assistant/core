@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import datetime
 from typing import NamedTuple
 
 import pyvera as pv
 
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.event import call_later
 
 from .const import DOMAIN
@@ -18,19 +19,19 @@ class ControllerData(NamedTuple):
     """Controller data."""
 
     controller: pv.VeraController
-    devices: defaultdict[str, list[pv.VeraDevice]]
+    devices: defaultdict[Platform, list[pv.VeraDevice]]
     scenes: list[pv.VeraScene]
     config_entry: ConfigEntry
 
 
-def get_configured_platforms(controller_data: ControllerData) -> set[str]:
+def get_configured_platforms(controller_data: ControllerData) -> set[Platform]:
     """Get configured platforms for a controller."""
-    platforms = []
+    platforms: list[Platform] = []
     for platform in controller_data.devices:
         platforms.append(platform)
 
     if controller_data.scenes:
-        platforms.append(SCENE_DOMAIN)
+        platforms.append(Platform.SCENE)
 
     return set(platforms)
 
@@ -56,7 +57,7 @@ class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
         """Initialize the object."""
         super().__init__()
         self._hass = hass
-        self._cancel_poll = None
+        self._cancel_poll: CALLBACK_TYPE | None = None
 
     def start(self) -> None:
         """Start polling for data."""
@@ -72,7 +73,7 @@ class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
     def _schedule_poll(self, delay: float) -> None:
         self._cancel_poll = call_later(self._hass, delay, self._run_poll_server)
 
-    def _run_poll_server(self, now) -> None:
+    def _run_poll_server(self, now: datetime) -> None:
         delay = 1
 
         # Long poll for changes. The downstream API instructs the endpoint to wait a

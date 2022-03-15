@@ -9,10 +9,14 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.light import DOMAIN, FLASH_LONG, FLASH_SHORT
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    FLASH_LONG,
+    FLASH_SHORT,
+)
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.components.zha.light import FLASH_EFFECTS
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -187,7 +191,7 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     on_off_cluster = zigpy_device.endpoints[1].on_off
     on_off_cluster.PLUGGED_ATTR_READS = {"on_off": 0}
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = await find_entity_id(Platform.LIGHT, zha_device, hass)
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [zha_device])
@@ -245,7 +249,7 @@ async def test_light(
     # create zigpy devices
     zigpy_device = zigpy_device_mock(device)
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = await find_entity_id(Platform.LIGHT, zha_device, hass)
 
     assert entity_id is not None
 
@@ -327,7 +331,7 @@ async def async_test_on_off_from_hass(hass, cluster, entity_id):
     # turn on via UI
     cluster.request.reset_mock()
     await hass.services.async_call(
-        DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
+        LIGHT_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
     )
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
@@ -344,7 +348,7 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
     # turn off via UI
     cluster.request.reset_mock()
     await hass.services.async_call(
-        DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
+        LIGHT_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
     )
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
@@ -362,7 +366,7 @@ async def async_test_level_on_off_from_hass(
     level_cluster.request.reset_mock()
     # turn on via UI
     await hass.services.async_call(
-        DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
+        LIGHT_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
     )
     assert on_off_cluster.request.call_count == 1
     assert on_off_cluster.request.await_count == 1
@@ -375,7 +379,10 @@ async def async_test_level_on_off_from_hass(
     level_cluster.request.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, "turn_on", {"entity_id": entity_id, "transition": 10}, blocking=True
+        LIGHT_DOMAIN,
+        "turn_on",
+        {"entity_id": entity_id, "transition": 10},
+        blocking=True,
     )
     assert on_off_cluster.request.call_count == 1
     assert on_off_cluster.request.await_count == 1
@@ -399,7 +406,10 @@ async def async_test_level_on_off_from_hass(
     level_cluster.request.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, "turn_on", {"entity_id": entity_id, "brightness": 10}, blocking=True
+        LIGHT_DOMAIN,
+        "turn_on",
+        {"entity_id": entity_id, "brightness": 10},
+        blocking=True,
     )
     # the onoff cluster is now not used when brightness is present by default
     assert on_off_cluster.request.call_count == 0
@@ -442,7 +452,10 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
     # turn on via UI
     cluster.request.reset_mock()
     await hass.services.async_call(
-        DOMAIN, "turn_on", {"entity_id": entity_id, "flash": flash}, blocking=True
+        LIGHT_DOMAIN,
+        "turn_on",
+        {"entity_id": entity_id, "flash": flash},
+        blocking=True,
     )
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
@@ -505,9 +518,9 @@ async def test_zha_group_light_entity(
         assert member.group == zha_group
         assert member.endpoint is not None
 
-    device_1_entity_id = await find_entity_id(DOMAIN, device_light_1, hass)
-    device_2_entity_id = await find_entity_id(DOMAIN, device_light_2, hass)
-    device_3_entity_id = await find_entity_id(DOMAIN, device_light_3, hass)
+    device_1_entity_id = await find_entity_id(Platform.LIGHT, device_light_1, hass)
+    device_2_entity_id = await find_entity_id(Platform.LIGHT, device_light_2, hass)
+    device_3_entity_id = await find_entity_id(Platform.LIGHT, device_light_3, hass)
 
     assert (
         device_1_entity_id != device_2_entity_id
@@ -515,7 +528,7 @@ async def test_zha_group_light_entity(
     )
     assert device_2_entity_id != device_3_entity_id
 
-    group_entity_id = async_find_group_entity_id(hass, DOMAIN, zha_group)
+    group_entity_id = async_find_group_entity_id(hass, Platform.LIGHT, zha_group)
     assert hass.states.get(group_entity_id) is not None
 
     assert device_1_entity_id in zha_group.member_entity_ids

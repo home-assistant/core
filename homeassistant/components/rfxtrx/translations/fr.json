@@ -39,6 +39,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Envoyer la commande\u00a0: {subtype}",
+            "send_status": "Envoyer la mise \u00e0 jour du statut\u00a0: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Commande re\u00e7ue\u00a0: {subtype}",
+            "status": "Statut re\u00e7u\u00a0: {subtype}"
+        }
+    },
     "one": "Vide",
     "options": {
         "error": {

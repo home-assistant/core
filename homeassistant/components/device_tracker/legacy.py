@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
-from datetime import timedelta
+from datetime import datetime, timedelta
 import hashlib
 from types import ModuleType
 from typing import Any, Final, final
@@ -236,24 +236,24 @@ class DeviceTrackerPlatform:
         with async_start_setup(hass, [full_name]):
             try:
                 scanner = None
-                setup = None
+                setup: bool | None = None
                 if hasattr(self.platform, "async_get_scanner"):
-                    scanner = await self.platform.async_get_scanner(  # type: ignore[attr-defined]
+                    scanner = await self.platform.async_get_scanner(
                         hass, {DOMAIN: self.config}
                     )
                 elif hasattr(self.platform, "get_scanner"):
                     scanner = await hass.async_add_executor_job(
-                        self.platform.get_scanner,  # type: ignore[attr-defined]
+                        self.platform.get_scanner,
                         hass,
                         {DOMAIN: self.config},
                     )
                 elif hasattr(self.platform, "async_setup_scanner"):
-                    setup = await self.platform.async_setup_scanner(  # type: ignore[attr-defined]
+                    setup = await self.platform.async_setup_scanner(
                         hass, self.config, tracker.async_see, discovery_info
                     )
                 elif hasattr(self.platform, "setup_scanner"):
                     setup = await hass.async_add_executor_job(
-                        self.platform.setup_scanner,  # type: ignore[attr-defined]
+                        self.platform.setup_scanner,
                         hass,
                         self.config,
                         tracker.see,
@@ -267,7 +267,7 @@ class DeviceTrackerPlatform:
                         hass, self.config, scanner, tracker.async_see, self.type
                     )
 
-                if setup is None and scanner is None:
+                if not setup and scanner is None:
                     LOGGER.error(
                         "Error setting up platform %s %s", self.type, self.name
                     )
@@ -291,6 +291,7 @@ async def async_extract_config(
         *(
             async_create_platform_type(hass, config, p_type, p_config)
             for p_type, p_config in config_per_platform(config, DOMAIN)
+            if p_type is not None
         )
     ):
         if platform is None:
@@ -337,7 +338,7 @@ def async_setup_scanner_platform(
     # Initial scan of each mac we also tell about host name for config
     seen: Any = set()
 
-    async def async_device_tracker_scan(now: dt_util.dt.datetime | None) -> None:
+    async def async_device_tracker_scan(now: datetime | None) -> None:
         """Handle interval matches."""
         if update_lock.locked():
             LOGGER.warning(
@@ -578,7 +579,7 @@ class DeviceTracker:
             )
 
     @callback
-    def async_update_stale(self, now: dt_util.dt.datetime) -> None:
+    def async_update_stale(self, now: datetime) -> None:
         """Update stale devices.
 
         This method must be run in the event loop.
@@ -616,7 +617,7 @@ class Device(RestoreEntity):
     location_name: str | None = None
     gps: GPSType | None = None
     gps_accuracy: int = 0
-    last_seen: dt_util.dt.datetime | None = None
+    last_seen: datetime | None = None
     battery: int | None = None
     attributes: dict | None = None
 
@@ -744,7 +745,7 @@ class Device(RestoreEntity):
 
         await self.async_update()
 
-    def stale(self, now: dt_util.dt.datetime | None = None) -> bool:
+    def stale(self, now: datetime | None = None) -> bool:
         """Return if device state is stale.
 
         Async friendly.

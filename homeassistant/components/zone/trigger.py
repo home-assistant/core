@@ -1,4 +1,6 @@
 """Offer zone automation rules."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -24,6 +26,8 @@ from homeassistant.helpers.typing import ConfigType
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
 DEFAULT_EVENT = EVENT_ENTER
+
+_LOGGER = logging.getLogger(__name__)
 
 _EVENT_DESCRIPTION = {EVENT_ENTER: "entering", EVENT_LEAVE: "leaving"}
 
@@ -75,7 +79,14 @@ async def async_attach_trigger(
         ):
             return
 
-        zone_state = hass.states.get(zone_entity_id)
+        if not (zone_state := hass.states.get(zone_entity_id)):
+            _LOGGER.warning(
+                "Automation '%s' is referencing non-existing zone '%s' in a zone trigger",
+                automation_info["name"],
+                zone_entity_id,
+            )
+            return
+
         from_match = condition.zone(hass, zone_state, from_s) if from_s else False
         to_match = condition.zone(hass, zone_state, to_s) if to_s else False
 

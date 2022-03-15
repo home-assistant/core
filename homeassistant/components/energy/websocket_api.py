@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import functools
 from itertools import chain
 from types import ModuleType
-from typing import Any, Awaitable, Callable, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -274,16 +275,14 @@ async def ws_get_fossil_energy_consumption(
     ) -> dict[datetime, float]:
         """Combine multiple statistics, returns a dict indexed by start time."""
         result: defaultdict[datetime, float] = defaultdict(float)
-        seen: defaultdict[datetime, set[str]] = defaultdict(set)
 
         for statistics_id, stat in stats.items():
             if statistics_id not in statistic_ids:
                 continue
             for period in stat:
-                if period["sum"] is None or statistics_id in seen[period["start"]]:
+                if period["sum"] is None:
                     continue
                 result[period["start"]] += period["sum"]
-                seen[period["start"]].add(statistics_id)
 
         return {key: result[key] for key in sorted(result)}
 

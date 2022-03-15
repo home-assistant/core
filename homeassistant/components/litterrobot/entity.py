@@ -9,9 +9,8 @@ from typing import Any
 from pylitterbot import Robot
 from pylitterbot.exceptions import InvalidCommandException
 
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
-from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
@@ -61,7 +60,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
     def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
         """Init a Litter-Robot control entity."""
         super().__init__(robot=robot, entity_type=entity_type, hub=hub)
-        self._refresh_callback = None
+        self._refresh_callback: CALLBACK_TYPE | None = None
 
     async def perform_action_and_refresh(
         self, action: MethodType, *args: Any, **kwargs: Any
@@ -100,8 +99,11 @@ class LitterRobotControlEntity(LitterRobotEntity):
             self._refresh_callback = None
 
     @staticmethod
-    def parse_time_at_default_timezone(time_str: str) -> time | None:
+    def parse_time_at_default_timezone(time_str: str | None) -> time | None:
         """Parse a time string and add default timezone."""
+        if time_str is None:
+            return None
+
         if (parsed_time := dt_util.parse_time(time_str)) is None:
             return None
 
@@ -119,7 +121,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
 class LitterRobotConfigEntity(LitterRobotControlEntity):
     """A Litter-Robot entity that can control configuration of the unit."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
         """Init a Litter-Robot control entity."""
@@ -128,7 +130,7 @@ class LitterRobotConfigEntity(LitterRobotControlEntity):
 
     async def perform_action_and_assume_state(
         self, action: MethodType, assumed_state: Any
-    ) -> bool:
+    ) -> None:
         """Perform an action and assume the state passed in if call is successful."""
         if await self.perform_action_and_refresh(action, assumed_state):
             self._assumed_state = assumed_state

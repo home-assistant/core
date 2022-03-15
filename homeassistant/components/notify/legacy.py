@@ -58,12 +58,12 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
             notify_service = None
             try:
                 if hasattr(platform, "async_get_service"):
-                    notify_service = await platform.async_get_service(  # type: ignore
+                    notify_service = await platform.async_get_service(
                         hass, p_config, discovery_info
                     )
                 elif hasattr(platform, "get_service"):
                     notify_service = await hass.async_add_executor_job(
-                        platform.get_service, hass, p_config, discovery_info  # type: ignore
+                        platform.get_service, hass, p_config, discovery_info
                     )
                 else:
                     raise HomeAssistantError("Invalid notify platform.")
@@ -102,6 +102,7 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
     setup_tasks = [
         asyncio.create_task(async_setup_platform(integration_name, p_config))
         for integration_name, p_config in config_per_platform(config, DOMAIN)
+        if integration_name is not None
     ]
 
     if setup_tasks:
@@ -177,7 +178,7 @@ class BaseNotificationService:
 
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    hass: HomeAssistant = None  # type: ignore
+    hass: HomeAssistant = None  # type: ignore[assignment]
 
     # Name => target
     registered_targets: dict[str, str]
@@ -245,7 +246,7 @@ class BaseNotificationService:
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
-            for name, target in self.targets.items():  # type: ignore
+            for name, target in self.targets.items():  # type: ignore[attr-defined]
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:
                     stale_targets.remove(target_name)

@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import Literal, final
 
 import voluptuous as vol
 
@@ -18,7 +18,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,9 @@ class BinarySensorDeviceClass(StrEnum):
 
     # On means charging, Off means not charging
     BATTERY_CHARGING = "battery_charging"
+
+    # On means carbon monoxide detected, Off means no carbon monoxide (clear)
+    CO = "carbon_monoxide"
 
     # On means cold, Off means normal
     COLD = "cold"
@@ -120,6 +123,7 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass))
 DEVICE_CLASSES = [cls.value for cls in BinarySensorDeviceClass]
 DEVICE_CLASS_BATTERY = BinarySensorDeviceClass.BATTERY.value
 DEVICE_CLASS_BATTERY_CHARGING = BinarySensorDeviceClass.BATTERY_CHARGING.value
+DEVICE_CLASS_CO = BinarySensorDeviceClass.CO.value
 DEVICE_CLASS_COLD = BinarySensorDeviceClass.COLD.value
 DEVICE_CLASS_CONNECTIVITY = BinarySensorDeviceClass.CONNECTIVITY.value
 DEVICE_CLASS_DOOR = BinarySensorDeviceClass.DOOR.value
@@ -200,18 +204,8 @@ class BinarySensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> StateType:
+    def state(self) -> Literal["on", "off"] | None:
         """Return the state of the binary sensor."""
-        return STATE_ON if self.is_on else STATE_OFF
-
-
-class BinarySensorDevice(BinarySensorEntity):
-    """Represent a binary sensor (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "BinarySensorDevice is deprecated, modify %s to extend BinarySensorEntity",
-            cls.__name__,
-        )
+        if (is_on := self.is_on) is None:
+            return None
+        return STATE_ON if is_on else STATE_OFF

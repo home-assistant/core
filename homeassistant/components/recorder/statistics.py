@@ -3,19 +3,22 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable
+import contextlib
 import dataclasses
 from datetime import datetime, timedelta
 from itertools import chain, groupby
+import json
 import logging
+import os
 import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal
 
 from sqlalchemy import bindparam, func
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, StatementError
 from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
-from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import literal_column, true
 
 from homeassistant.const import (
     PRESSURE_PA,
@@ -26,13 +29,15 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
-from .const import DATA_INSTANCE, DOMAIN
+from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE
 from .models import (
     StatisticData,
     StatisticMetaData,
@@ -262,6 +267,135 @@ def _update_or_add_metadata(
     return metadata_id
 
 
+def _find_duplicates(
+    session: scoped_session, table: type[Statistics | StatisticsShortTerm]
+) -> tuple[list[int], list[dict]]:
+    """Find duplicated statistics."""
+    subquery = (
+        session.query(
+            table.start,
+            table.metadata_id,
+            literal_column("1").label("is_duplicate"),
+        )
+        .group_by(table.metadata_id, table.start)
+        .having(func.count() > 1)
+        .subquery()
+    )
+    query = (
+        session.query(table)
+        .outerjoin(
+            subquery,
+            (subquery.c.metadata_id == table.metadata_id)
+            & (subquery.c.start == table.start),
+        )
+        .filter(subquery.c.is_duplicate == 1)
+        .order_by(table.metadata_id, table.start, table.id.desc())
+        .limit(1000 * MAX_ROWS_TO_PURGE)
+    )
+    duplicates = execute(query)
+    original_as_dict = {}
+    start = None
+    metadata_id = None
+    duplicate_ids: list[int] = []
+    non_identical_duplicates_as_dict: list[dict] = []
+
+    if not duplicates:
+        return (duplicate_ids, non_identical_duplicates_as_dict)
+
+    def columns_to_dict(duplicate: type[Statistics | StatisticsShortTerm]) -> dict:
+        """Convert a SQLAlchemy row to dict."""
+        dict_ = {}
+        for key in duplicate.__mapper__.c.keys():
+            dict_[key] = getattr(duplicate, key)
+        return dict_
+
+    def compare_statistic_rows(row1: dict, row2: dict) -> bool:
+        """Compare two statistics rows, ignoring id and created."""
+        ignore_keys = ["id", "created"]
+        keys1 = set(row1).difference(ignore_keys)
+        keys2 = set(row2).difference(ignore_keys)
+        return keys1 == keys2 and all(row1[k] == row2[k] for k in keys1)
+
+    for duplicate in duplicates:
+        if start != duplicate.start or metadata_id != duplicate.metadata_id:
+            original_as_dict = columns_to_dict(duplicate)
+            start = duplicate.start
+            metadata_id = duplicate.metadata_id
+            continue
+        duplicate_as_dict = columns_to_dict(duplicate)
+        duplicate_ids.append(duplicate.id)
+        if not compare_statistic_rows(original_as_dict, duplicate_as_dict):
+            non_identical_duplicates_as_dict.append(
+                {"duplicate": duplicate_as_dict, "original": original_as_dict}
+            )
+
+    return (duplicate_ids, non_identical_duplicates_as_dict)
+
+
+def _delete_duplicates_from_table(
+    session: scoped_session, table: type[Statistics | StatisticsShortTerm]
+) -> tuple[int, list[dict]]:
+    """Identify and delete duplicated statistics from a specified table."""
+    all_non_identical_duplicates: list[dict] = []
+    total_deleted_rows = 0
+    while True:
+        duplicate_ids, non_identical_duplicates = _find_duplicates(session, table)
+        if not duplicate_ids:
+            break
+        all_non_identical_duplicates.extend(non_identical_duplicates)
+        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+            deleted_rows = (
+                session.query(table)
+                .filter(table.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .delete(synchronize_session=False)
+            )
+            total_deleted_rows += deleted_rows
+    return (total_deleted_rows, all_non_identical_duplicates)
+
+
+def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
+    """Identify and delete duplicated statistics.
+
+    A backup will be made of duplicated statistics before it is deleted.
+    """
+    deleted_statistics_rows, non_identical_duplicates = _delete_duplicates_from_table(
+        session, Statistics
+    )
+    if deleted_statistics_rows:
+        _LOGGER.info("Deleted %s duplicated statistics rows", deleted_statistics_rows)
+
+    if non_identical_duplicates:
+        isotime = dt_util.utcnow().isoformat()
+        backup_file_name = f"deleted_statistics.{isotime}.json"
+        backup_path = instance.hass.config.path(STORAGE_DIR, backup_file_name)
+
+        os.makedirs(os.path.dirname(backup_path), exist_ok=True)
+        with open(backup_path, "w", encoding="utf8") as backup_file:
+            json.dump(
+                non_identical_duplicates,
+                backup_file,
+                indent=4,
+                sort_keys=True,
+                cls=JSONEncoder,
+            )
+        _LOGGER.warning(
+            "Deleted %s non identical duplicated %s rows, a backup of the deleted rows "
+            "has been saved to %s",
+            len(non_identical_duplicates),
+            Statistics.__tablename__,
+            backup_path,
+        )
+
+    deleted_short_term_statistics_rows, _ = _delete_duplicates_from_table(
+        session, StatisticsShortTerm
+    )
+    if deleted_short_term_statistics_rows:
+        _LOGGER.warning(
+            "Deleted duplicated short term statistic rows, please report at "
+            'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+'
+        )
+
+
 def compile_hourly_statistics(
     instance: Recorder, session: scoped_session, start: datetime
 ) -> None:
@@ -354,7 +488,7 @@ def compile_hourly_statistics(
         )
 
         if stats:
-            for metadata_id, group in groupby(stats, lambda stat: stat["metadata_id"]):  # type: ignore
+            for metadata_id, group in groupby(stats, lambda stat: stat["metadata_id"]):  # type: ignore[no-any-return]
                 (
                     metadata_id,
                     last_reset,
@@ -393,7 +527,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     end = start + timedelta(minutes=5)
 
     # Return if we already have 5-minute statistics for the requested period
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         if session.query(StatisticsRuns).filter_by(start=start).first():
             _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
             return True
@@ -411,7 +545,10 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
         platform_stats.extend(platform_stat)
 
     # Insert collected statistics in the database
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(
+        session=instance.get_session(),  # type: ignore[misc]
+        exception_filter=_filter_unique_constraint_integrity_error(instance),
+    ) as session:
         for stats in platform_stats:
             metadata_id = _update_or_add_metadata(instance.hass, session, stats["meta"])
             _insert_statistics(
@@ -563,7 +700,7 @@ def _configured_unit(unit: str, units: UnitSystem) -> str:
 
 def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
     """Clear statistics for a list of statistic_ids."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id.in_(statistic_ids)
         ).delete(synchronize_session=False)
@@ -573,7 +710,7 @@ def update_statistics_metadata(
     instance: Recorder, statistic_id: str, unit_of_measurement: str | None
 ) -> None:
     """Update statistics metadata for a statistic_id."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id == statistic_id
         ).update({StatisticsMeta.unit_of_measurement: unit_of_measurement})
@@ -910,7 +1047,7 @@ def _statistics_at_time(
     table: type[Statistics | StatisticsShortTerm],
     start_time: datetime,
 ) -> list | None:
-    """Return last known statics, earlier than start_time, for the metadata_ids."""
+    """Return last known statistics, earlier than start_time, for the metadata_ids."""
     # Fetch metadata for the given (or all) statistic_ids
     if table == StatisticsShortTerm:
         base_query = QUERY_STATISTICS_SHORT_TERM
@@ -956,7 +1093,7 @@ def _sorted_statistics_to_dict(
 
     def no_conversion(val: Any, _: Any) -> float | None:
         """Return x."""
-        return val  # type: ignore
+        return val  # type: ignore[no-any-return]
 
     # Set all statistic IDs to empty lists in result set to maintain the order
     if statistic_ids is not None:
@@ -964,7 +1101,7 @@ def _sorted_statistics_to_dict(
             result[stat_id] = []
 
     # Identify metadata IDs for which no data was available at the requested start time
-    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore
+    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore[no-any-return]
         first_start_time = process_timestamp(next(group).start)
         if start_time and first_start_time > start_time:
             need_stat_at_start_time.add(meta_id)
@@ -978,12 +1115,12 @@ def _sorted_statistics_to_dict(
                 stats_at_start_time[stat.metadata_id] = (stat,)
 
     # Append all statistic entries, and optionally do unit conversion
-    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore
+    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore[no-any-return]
         unit = metadata[meta_id]["unit_of_measurement"]
         statistic_id = metadata[meta_id]["statistic_id"]
         convert: Callable[[Any, Any], float | None]
         if convert_units:
-            convert = UNIT_CONVERSIONS.get(unit, lambda x, units: x)  # type: ignore
+            convert = UNIT_CONVERSIONS.get(unit, lambda x, units: x)  # type: ignore[arg-type,no-any-return]
         else:
             convert = no_conversion
         ent_results = result[meta_id]
@@ -1066,6 +1203,43 @@ def async_add_external_statistics(
     hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
 
 
+def _filter_unique_constraint_integrity_error(
+    instance: Recorder,
+) -> Callable[[Exception], bool]:
+    def _filter_unique_constraint_integrity_error(err: Exception) -> bool:
+        """Handle unique constraint integrity errors."""
+        if not isinstance(err, StatementError):
+            return False
+
+        ignore = False
+        if (
+            instance.engine.dialect.name == "sqlite"
+            and "UNIQUE constraint failed" in str(err)
+        ):
+            ignore = True
+        if (
+            instance.engine.dialect.name == "postgresql"
+            and hasattr(err.orig, "pgcode")
+            and err.orig.pgcode == "23505"
+        ):
+            ignore = True
+        if instance.engine.dialect.name == "mysql" and hasattr(err.orig, "args"):
+            with contextlib.suppress(TypeError):
+                if err.orig.args[0] == 1062:
+                    ignore = True
+
+        if ignore:
+            _LOGGER.warning(
+                "Blocked attempt to insert duplicated statistic rows, please report at "
+                'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+',
+                exc_info=err,
+            )
+
+        return ignore
+
+    return _filter_unique_constraint_integrity_error
+
+
 @retryable_database_job("statistics")
 def add_external_statistics(
     instance: Recorder,
@@ -1073,7 +1247,11 @@ def add_external_statistics(
     statistics: Iterable[StatisticData],
 ) -> bool:
     """Process an add_statistics job."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+
+    with session_scope(
+        session=instance.get_session(),  # type: ignore[misc]
+        exception_filter=_filter_unique_constraint_integrity_error(instance),
+    ) as session:
         metadata_id = _update_or_add_metadata(instance.hass, session, metadata)
         for stat in statistics:
             if stat_id := _statistics_exists(

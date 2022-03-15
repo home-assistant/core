@@ -16,6 +16,7 @@ on:
 jobs:
   init:
     name: Initialize wheels builder
+    if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     outputs:
       architectures: ${{ steps.info.outputs.architectures }}
@@ -42,22 +43,27 @@ jobs:
             echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
             echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
             echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
+            # GRPC on armv7 needs -lexecinfo (issue #56669) since home assistant installs
+            # execinfo-dev when building wheels. The setuptools build setup does not have an option for
+            # adding a single LDFLAG so copy all relevant linux flags here (as of 1.43.0)
+            echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc -lexecinfo"
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2.3.1
         with:
           name: env_file
           path: ./.env_file
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2.3.1
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
 
   core:
     name: Build wheels with ${{ matrix.tag }} (${{ matrix.arch }}) for core
+    if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
@@ -81,7 +87,7 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2021.07.0
+        uses: home-assistant/wheels@2022.01.2
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
@@ -98,6 +104,7 @@ jobs:
 
   integrations:
     name: Build wheels with ${{ matrix.tag }} (${{ matrix.arch }}) for integrations
+    if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
@@ -147,10 +154,11 @@ jobs:
             sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
             sed -i "s|# bme680|bme680|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
+            sed -i "s|# homeassistant-pyozw|homeassistant-pyozw|g" ${requirement_file}
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2021.07.0
+        uses: home-assistant/wheels@2022.01.2
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
@@ -160,7 +168,7 @@ jobs:
           env-file: true
           apk: "build-base;cmake;git;linux-headers;libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;cargo"
           pip: "Cython;numpy;scikit-build"
-          skip-binary: aiohttp
+          skip-binary: aiohttp,grpcio
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: 'requirements_diff.txt'
           requirements: "requirements_all.txt"

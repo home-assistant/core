@@ -529,7 +529,7 @@ async def test_domains_gets_domains_excludes_ignore_and_disabled(manager):
     ).add_to_manager(manager)
     MockConfigEntry(domain="test3").add_to_manager(manager)
     MockConfigEntry(
-        domain="disabled", disabled_by=config_entries.DISABLED_USER
+        domain="disabled", disabled_by=config_entries.ConfigEntryDisabler.USER
     ).add_to_manager(manager)
     assert manager.async_domains() == ["test", "test2", "test3"]
     assert manager.async_domains(include_ignore=False) == ["test", "test2", "test3"]
@@ -886,7 +886,7 @@ async def test_setup_raise_not_ready(hass, caplog):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
         await entry.async_setup(hass)
 
     assert len(mock_call.mock_calls) == 1
@@ -921,7 +921,7 @@ async def test_setup_raise_not_ready_from_exception(hass, caplog):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
         await entry.async_setup(hass)
 
     assert len(mock_call.mock_calls) == 1
@@ -939,7 +939,7 @@ async def test_setup_retrying_during_unload(hass):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
         await entry.async_setup(hass)
 
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
@@ -1323,7 +1323,7 @@ async def test_entry_disable_succeed(hass, manager):
 
     # Disable
     assert await manager.async_set_disabled_by(
-        entry.entry_id, config_entries.DISABLED_USER
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     assert len(async_unload_entry.mock_calls) == 1
     assert len(async_setup.mock_calls) == 0
@@ -1358,7 +1358,7 @@ async def test_entry_disable_without_reload_support(hass, manager):
 
     # Disable
     assert not await manager.async_set_disabled_by(
-        entry.entry_id, config_entries.DISABLED_USER
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     assert len(async_setup.mock_calls) == 0
     assert len(async_setup_entry.mock_calls) == 0
@@ -1374,7 +1374,9 @@ async def test_entry_disable_without_reload_support(hass, manager):
 
 async def test_entry_enable_without_reload_support(hass, manager):
     """Test that we can disable an entry without reload support."""
-    entry = MockConfigEntry(domain="comp", disabled_by=config_entries.DISABLED_USER)
+    entry = MockConfigEntry(
+        domain="comp", disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
@@ -1398,7 +1400,7 @@ async def test_entry_enable_without_reload_support(hass, manager):
 
     # Disable
     assert not await manager.async_set_disabled_by(
-        entry.entry_id, config_entries.DISABLED_USER
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     assert len(async_setup.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
@@ -1433,7 +1435,9 @@ async def test_reload_entry_entity_registry_ignores_no_entry(hass):
 
     # Test we ignore entities without config entry
     entry = registry.async_get_or_create("light", "hue", "123")
-    registry.async_update_entity(entry.entity_id, disabled_by=er.DISABLED_USER)
+    registry.async_update_entity(
+        entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
     await hass.async_block_till_done()
     assert not handler.changed
     assert handler._remove_call_later is None
@@ -1472,7 +1476,9 @@ async def test_reload_entry_entity_registry_works(hass):
     assert handler._remove_call_later is None
 
     # Disable entity, we should not do anything, only act when enabled.
-    registry.async_update_entity(entity_entry.entity_id, disabled_by=er.DISABLED_USER)
+    registry.async_update_entity(
+        entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
     await hass.async_block_till_done()
     assert not handler.changed
     assert handler._remove_call_later is None
@@ -2733,6 +2739,7 @@ async def test_setup_raise_auth_failed(hass, caplog):
     assert len(flows) == 1
     assert flows[0]["context"]["entry_id"] == entry.entry_id
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+    assert flows[0]["context"]["title_placeholders"] == {"name": "test_title"}
 
     caplog.clear()
     entry.state = config_entries.ConfigEntryState.NOT_LOADED
@@ -2886,12 +2893,23 @@ async def test_setup_retrying_during_shutdown(hass):
     [
         ({}, "already_configured"),
         ({"host": "3.3.3.3"}, "no_match"),
+        ({"vendor": "no_match"}, "no_match"),
         ({"host": "3.4.5.6"}, "already_configured"),
         ({"host": "3.4.5.6", "ip": "3.4.5.6"}, "no_match"),
         ({"host": "3.4.5.6", "ip": "1.2.3.4"}, "already_configured"),
         ({"host": "3.4.5.6", "ip": "1.2.3.4", "port": 23}, "already_configured"),
+        (
+            {"host": "9.9.9.9", "ip": "6.6.6.6", "port": 12, "vendor": "zoo"},
+            "already_configured",
+        ),
+        ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
+        ({"vendor": "data"}, "no_match"),
+        (
+            {"vendor": "options"},
+            "already_configured",
+        ),  # ensure options takes precedence over data
     ],
 )
 async def test__async_abort_entries_match(hass, manager, matchers, reason):
@@ -2909,6 +2927,16 @@ async def test__async_abort_entries_match(hass, manager, matchers, reason):
         domain="comp",
         source=config_entries.SOURCE_IGNORE,
         data={"ip": "7.7.7.7", "host": "4.5.6.7", "port": 23},
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp",
+        data={"ip": "6.6.6.6", "host": "9.9.9.9", "port": 12},
+        options={"vendor": "zoo"},
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
     ).add_to_hass(hass)
 
     mock_setup_entry = AsyncMock(return_value=True)
@@ -2966,3 +2994,21 @@ async def test_loading_old_data(hass, hass_storage):
     assert entry.title == "Mock title"
     assert entry.data == {"my": "data"}
     assert entry.pref_disable_new_entities is True
+
+
+async def test_deprecated_disabled_by_str_ctor(hass, caplog):
+    """Test deprecated str disabled_by constructor enumizes and logs a warning."""
+    entry = MockConfigEntry(disabled_by=config_entries.ConfigEntryDisabler.USER.value)
+    assert entry.disabled_by is config_entries.ConfigEntryDisabler.USER
+    assert " str for config entry disabled_by. This is deprecated " in caplog.text
+
+
+async def test_deprecated_disabled_by_str_set(hass, manager, caplog):
+    """Test deprecated str set disabled_by enumizes and logs a warning."""
+    entry = MockConfigEntry()
+    entry.add_to_manager(manager)
+    assert await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER.value
+    )
+    assert entry.disabled_by is config_entries.ConfigEntryDisabler.USER
+    assert " str for config entry disabled_by. This is deprecated " in caplog.text

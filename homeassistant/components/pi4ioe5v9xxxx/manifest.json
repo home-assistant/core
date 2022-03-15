@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/pi4ioe5v9xxxx",
   "requirements": ["pi4ioe5v9xxxx==0.0.2"],
   "codeowners": ["@antonverburg"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pi4ioe5v9xxxx", "smbus2"]
 }

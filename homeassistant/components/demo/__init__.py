@@ -3,17 +3,21 @@ import asyncio
 import datetime
 from random import random
 
-from homeassistant import bootstrap, config_entries
+from homeassistant import config_entries, setup
+from homeassistant.components import persistent_notification
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
     SOUND_PRESSURE_DB,
 )
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 DOMAIN = "demo"
@@ -51,7 +55,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
 ]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the demo environment."""
     if DOMAIN not in config:
         return True
@@ -79,11 +83,11 @@ async def async_setup(hass, config):
     if not hass.config.longitude:
         hass.config.longitude = 117.22743
 
-    tasks = [bootstrap.async_setup_component(hass, "sun", config)]
+    tasks = [setup.async_setup_component(hass, "sun", config)]
 
     # Set up input select
     tasks.append(
-        bootstrap.async_setup_component(
+        setup.async_setup_component(
             hass,
             "input_select",
             {
@@ -104,7 +108,7 @@ async def async_setup(hass, config):
 
     # Set up input boolean
     tasks.append(
-        bootstrap.async_setup_component(
+        setup.async_setup_component(
             hass,
             "input_boolean",
             {
@@ -119,9 +123,25 @@ async def async_setup(hass, config):
         )
     )
 
+    # Set up input button
+    tasks.append(
+        setup.async_setup_component(
+            hass,
+            "input_button",
+            {
+                "input_button": {
+                    "bell": {
+                        "icon": "mdi:bell-ring-outline",
+                        "name": "Ring bell",
+                    }
+                }
+            },
+        )
+    )
+
     # Set up input number
     tasks.append(
-        bootstrap.async_setup_component(
+        setup.async_setup_component(
             hass,
             "input_number",
             {
@@ -144,8 +164,10 @@ async def async_setup(hass, config):
         return False
 
     # Set up example persistent notification
-    hass.components.persistent_notification.async_create(
-        "This is an example of a persistent notification.", title="Example Notification"
+    persistent_notification.async_create(
+        hass,
+        "This is an example of a persistent notification.",
+        title="Example Notification",
     )
 
     async def demo_start_listener(_event):
@@ -233,7 +255,7 @@ async def _insert_statistics(hass):
     async_add_external_statistics(hass, metadata, statistics)
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     # Set up demo platforms with config entry
     for platform in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
@@ -258,7 +280,7 @@ async def finish_setup(hass, config):
         lights = sorted(hass.states.async_entity_ids("light"))
 
     # Set up scripts
-    await bootstrap.async_setup_component(
+    await setup.async_setup_component(
         hass,
         "script",
         {
@@ -287,7 +309,7 @@ async def finish_setup(hass, config):
     )
 
     # Set up scenes
-    await bootstrap.async_setup_component(
+    await setup.async_setup_component(
         hass,
         "scene",
         {

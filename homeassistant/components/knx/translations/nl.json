@@ -12,14 +12,17 @@
                 "data": {
                     "host": "Host",
                     "individual_address": "Individueel adres voor de verbinding",
+                    "local_ip": "Lokaal IP van Home Assistant (leeg laten voor automatische detectie)",
                     "port": "Poort",
-                    "route_back": "Route Back / NAT Mode"
+                    "route_back": "Route Back / NAT Mode",
+                    "tunneling_type": "KNX Tunneling Type"
                 },
                 "description": "Voer de verbindingsinformatie van uw tunneling-apparaat in."
             },
             "routing": {
                 "data": {
                     "individual_address": "Individueel adres voor de routing verbinding",
+                    "local_ip": "Lokaal IP van Home Assistant (leeg laten voor automatische detectie)",
                     "multicast_group": "De multicast groep gebruikt voor de routing",
                     "multicast_port": "De multicast-poort gebruikt voor de routing"
                 },
@@ -45,6 +48,7 @@
                 "data": {
                     "connection_type": "KNX-verbindingstype",
                     "individual_address": "Standaard individueel adres",
+                    "local_ip": "Lokaal IP van Home Assistant (gebruik 0.0.0.0 voor automatische detectie)",
                     "multicast_group": "Multicast groep gebruikt voor routing en ontdekking",
                     "multicast_port": "Multicast poort gebruikt voor routing en ontdekking",
                     "rate_limit": "Maximaal aantal uitgaande telegrammen per seconde",
@@ -54,8 +58,10 @@
             "tunnel": {
                 "data": {
                     "host": "Host",
+                    "local_ip": "Lokaal IP (laat leeg indien niet zeker)",
                     "port": "Poort",
-                    "route_back": "Route Back / NAT Mode"
+                    "route_back": "Route Back / NAT Mode",
+                    "tunneling_type": "KNX Tunneling Type"
                 }
             }
         }

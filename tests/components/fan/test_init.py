@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.fan import FanEntity, NotValidPresetModeError
+from homeassistant.components.fan import FanEntity
 
 
 class BaseFan(FanEntity):
@@ -16,8 +16,8 @@ def test_fanentity():
     """Test fan entity methods."""
     fan = BaseFan()
     assert fan.state == "off"
-    assert len(fan.speed_list) == 0
-    assert len(fan.preset_modes) == 0
+    assert len(fan.speed_list) == 4  # legacy compat off,low,medium,high
+    assert fan.preset_modes is None
     assert fan.supported_features == 0
     assert fan.percentage_step == 1
     assert fan.speed_count == 100
@@ -26,10 +26,10 @@ def test_fanentity():
     with pytest.raises(NotImplementedError):
         fan.oscillate(True)
     with pytest.raises(NotImplementedError):
-        fan.set_speed("slow")
+        fan.set_speed("low")
     with pytest.raises(NotImplementedError):
         fan.set_percentage(0)
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(NotImplementedError):
         fan.set_preset_mode("auto")
     with pytest.raises(NotImplementedError):
         fan.turn_on()
@@ -42,8 +42,8 @@ async def test_async_fanentity(hass):
     fan = BaseFan()
     fan.hass = hass
     assert fan.state == "off"
-    assert len(fan.speed_list) == 0
-    assert len(fan.preset_modes) == 0
+    assert len(fan.speed_list) == 4  # legacy compat off,low,medium,high
+    assert fan.preset_modes is None
     assert fan.supported_features == 0
     assert fan.percentage_step == 1
     assert fan.speed_count == 100
@@ -52,10 +52,10 @@ async def test_async_fanentity(hass):
     with pytest.raises(NotImplementedError):
         await fan.async_oscillate(True)
     with pytest.raises(NotImplementedError):
-        await fan.async_set_speed("slow")
+        await fan.async_set_speed("low")
     with pytest.raises(NotImplementedError):
         await fan.async_set_percentage(0)
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(NotImplementedError):
         await fan.async_set_preset_mode("auto")
     with pytest.raises(NotImplementedError):
         await fan.async_turn_on()

@@ -9,7 +9,7 @@
             "user": {
                 "data": {
                     "show_on_map": "Montrer sur la carte",
-                    "station_id": "ID capteur Luftdaten"
+                    "station_id": "ID du capteur"
                 },
                 "title": "D\u00e9finir Luftdaten"
             }

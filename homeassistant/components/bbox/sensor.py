@@ -10,17 +10,20 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     DATA_RATE_MEGABITS_PER_SECOND,
-    DEVICE_CLASS_TIMESTAMP,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
@@ -49,14 +52,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="current_down_bandwidth",
         name="Currently Used Download Bandwidth",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="current_up_bandwidth",
         name="Currently Used Upload Bandwidth",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
@@ -86,7 +89,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Bbox sensor."""
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
@@ -95,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         bbox_data.update()
     except requests.exceptions.HTTPError as error:
         _LOGGER.error(error)
-        return False
+        return
 
     name = config[CONF_NAME]
 
@@ -120,7 +128,7 @@ class BboxUptimeSensor(SensorEntity):
     """Bbox uptime sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, bbox_data, name, description: SensorEntityDescription):
         """Initialize the sensor."""

@@ -2,28 +2,52 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import time as time_sys
 from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.core import split_entity_id
 from homeassistant.util import decorator
 
-SELECTORS = decorator.Registry()
+from . import config_validation as cv
+
+SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 
 
-def validate_selector(config: Any) -> dict:
-    """Validate a selector."""
+def _get_selector_class(config: Any) -> type[Selector]:
+    """Get selector class type."""
     if not isinstance(config, dict):
         raise vol.Invalid("Expected a dictionary")
 
     if len(config) != 1:
         raise vol.Invalid(f"Only one type can be specified. Found {', '.join(config)}")
 
-    selector_type = list(config)[0]
+    selector_type: str = list(config)[0]
 
     if (selector_class := SELECTORS.get(selector_type)) is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
+
+    return selector_class
+
+
+def selector(config: Any) -> Selector:
+    """Instantiate a selector."""
+    selector_class = _get_selector_class(config)
+    selector_type = list(config)[0]
+
+    # Selectors can be empty
+    if config[selector_type] is None:
+        return selector_class({selector_type: {}})
+
+    return selector_class(config)
+
+
+def validate_selector(config: Any) -> dict:
+    """Validate a selector."""
+    selector_class = _get_selector_class(config)
+    selector_type = list(config)[0]
 
     # Selectors can be empty
     if config[selector_type] is None:
@@ -38,11 +62,23 @@ class Selector:
     """Base class for selectors."""
 
     CONFIG_SCHEMA: Callable
+    config: Any
+    selector_type: str
+
+    def __init__(self, config: Any) -> None:
+        """Instantiate a selector."""
+        self.config = self.CONFIG_SCHEMA(config[self.selector_type])
+
+    def serialize(self) -> Any:
+        """Serialize Selector for voluptuous_serialize."""
+        return {"selector": {self.selector_type: self.config}}
 
 
 @SELECTORS.register("entity")
 class EntitySelector(Selector):
     """Selector of a single entity."""
+
+    selector_type = "entity"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -55,10 +91,29 @@ class EntitySelector(Selector):
         }
     )
 
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        try:
+            entity_id = cv.entity_id(data)
+            domain = split_entity_id(entity_id)[0]
+        except vol.Invalid:
+            # Not a valid entity_id, maybe it's an entity entry id
+            return cv.entity_id_or_uuid(cv.string(data))
+        else:
+            if "domain" in self.config and domain != self.config["domain"]:
+                raise vol.Invalid(
+                    f"Entity {entity_id} belongs to domain {domain}, "
+                    f"expected {self.config['domain']}"
+                )
+
+            return entity_id
+
 
 @SELECTORS.register("device")
 class DeviceSelector(Selector):
     """Selector of a single device."""
+
+    selector_type = "device"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -73,34 +128,34 @@ class DeviceSelector(Selector):
         }
     )
 
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        return cv.string(data)
+
 
 @SELECTORS.register("area")
 class AreaSelector(Selector):
     """Selector of a single area."""
 
+    selector_type = "area"
+
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): vol.Schema(
-                {
-                    vol.Optional("domain"): str,
-                    vol.Optional("device_class"): str,
-                    vol.Optional("integration"): str,
-                }
-            ),
-            vol.Optional("device"): vol.Schema(
-                {
-                    vol.Optional("integration"): str,
-                    vol.Optional("manufacturer"): str,
-                    vol.Optional("model"): str,
-                }
-            ),
+            vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
+            vol.Optional("device"): DeviceSelector.CONFIG_SCHEMA,
         }
     )
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        return cv.string(data)
 
 
 @SELECTORS.register("number")
 class NumberSelector(Selector):
     """Selector of a numeric value."""
+
+    selector_type = "number"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -114,80 +169,131 @@ class NumberSelector(Selector):
         }
     )
 
+    def __call__(self, data: Any) -> float:
+        """Validate the passed selection."""
+        value: float = vol.Coerce(float)(data)
+
+        if not self.config["min"] <= value <= self.config["max"]:
+            raise vol.Invalid(f"Value {value} is too small or too large")
+
+        return value
+
 
 @SELECTORS.register("addon")
 class AddonSelector(Selector):
     """Selector of a add-on."""
 
+    selector_type = "addon"
+
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        return cv.string(data)
 
 
 @SELECTORS.register("boolean")
 class BooleanSelector(Selector):
     """Selector of a boolean value."""
 
+    selector_type = "boolean"
+
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> bool:
+        """Validate the passed selection."""
+        value: bool = vol.Coerce(bool)(data)
+        return value
 
 
 @SELECTORS.register("time")
 class TimeSelector(Selector):
     """Selector of a time value."""
 
+    selector_type = "time"
+
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> time_sys:
+        """Validate the passed selection."""
+        return cv.time(data)
 
 
 @SELECTORS.register("target")
 class TargetSelector(Selector):
     """Selector of a target value (area ID, device ID, entity ID etc).
 
-    Value should follow cv.ENTITY_SERVICE_FIELDS format.
+    Value should follow cv.TARGET_SERVICE_FIELDS format.
     """
+
+    selector_type = "target"
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): vol.Schema(
-                {
-                    vol.Optional("domain"): str,
-                    vol.Optional("device_class"): str,
-                    vol.Optional("integration"): str,
-                }
-            ),
-            vol.Optional("device"): vol.Schema(
-                {
-                    vol.Optional("integration"): str,
-                    vol.Optional("manufacturer"): str,
-                    vol.Optional("model"): str,
-                }
-            ),
+            vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
+            vol.Optional("device"): DeviceSelector.CONFIG_SCHEMA,
         }
     )
+
+    TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS)
+
+    def __call__(self, data: Any) -> dict[str, list[str]]:
+        """Validate the passed selection."""
+        target: dict[str, list[str]] = self.TARGET_SELECTION_SCHEMA(data)
+        return target
 
 
 @SELECTORS.register("action")
 class ActionSelector(Selector):
     """Selector of an action sequence (script syntax)."""
 
+    selector_type = "action"
+
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return data
 
 
 @SELECTORS.register("object")
 class ObjectSelector(Selector):
     """Selector for an arbitrary object."""
 
+    selector_type = "object"
+
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return data
 
 
 @SELECTORS.register("text")
 class StringSelector(Selector):
     """Selector for a multi-line text string."""
 
+    selector_type = "text"
+
     CONFIG_SCHEMA = vol.Schema({vol.Optional("multiline", default=False): bool})
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        text = cv.string(data)
+        return text
 
 
 @SELECTORS.register("select")
 class SelectSelector(Selector):
     """Selector for an single-choice input select."""
 
+    selector_type = "select"
+
     CONFIG_SCHEMA = vol.Schema(
         {vol.Required("options"): vol.All([str], vol.Length(min=1))}
     )
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        selected_option = vol.In(self.config["options"])(cv.string(data))
+        return selected_option

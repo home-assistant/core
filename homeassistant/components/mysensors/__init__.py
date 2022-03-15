@@ -10,13 +10,12 @@ from mysensors import BaseAsyncGateway
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_OPTIMISTIC
+from homeassistant.const import CONF_OPTIMISTIC, Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
@@ -209,7 +208,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Allow loading device tracker platform via discovery
     # until refactor to config entry is done.
 
-    for platform in (DEVICE_TRACKER_DOMAIN, NOTIFY_DOMAIN):
+    for platform in (Platform.DEVICE_TRACKER, Platform.NOTIFY):
         load_discovery_platform = partial(
             async_load_platform,
             hass,
@@ -266,10 +265,27 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a MySensors config entry from a device."""
+    gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][
+        config_entry.entry_id
+    ]
+    device_id = next(
+        device_id for domain, device_id in device_entry.identifiers if domain == DOMAIN
+    )
+    node_id = int(device_id.partition("-")[2])
+    gateway.sensors.pop(node_id, None)
+    gateway.tasks.persistence.need_save = True
+
+    return True
+
+
 @callback
 def setup_mysensors_platform(
     hass: HomeAssistant,
-    domain: str,  # hass platform name
+    domain: Platform,  # hass platform name
     discovery_info: DiscoveryInfo,
     device_class: type[MySensorsDevice] | dict[SensorType, type[MySensorsDevice]],
     device_args: (

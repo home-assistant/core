@@ -1,0 +1,10 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "fingerprint": "kode sidik jari diterima",
+            "send_keys": "kode dikirim diterima",
+            "transmitter": "kode pemancar diterima",
+            "transponder": "kode transponder diterima"
+        }
+    }
+}

@@ -7,11 +7,25 @@
             "cannot_connect": "No se pudo conectar"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n IP"
+                },
+                "description": "Direcci\u00f3n IP local del dispositivo."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Seleccione el tipo de conexi\u00f3n",
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "description": "Seleccione el tipo de conexi\u00f3n. Local requiere calentadores de generaci\u00f3n 3"
             }
         }
     }

@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from pyefergy import Efergy, exceptions
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -14,7 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import ATTRIBUTION, DATA_KEY_API, DEFAULT_NAME, DOMAIN
 
-PLATFORMS = [SENSOR_DOMAIN]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

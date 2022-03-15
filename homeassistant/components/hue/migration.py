@@ -8,16 +8,10 @@ from aiohue.v2.models.device import DeviceArchetypes
 from aiohue.v2.models.resource import ResourceTypes
 
 from homeassistant import core
-from homeassistant.components.binary_sensor import DEVICE_CLASS_MOTION
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_USERNAME,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry as devices_for_config_entries,
@@ -45,8 +39,7 @@ async def check_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
         data[CONF_API_KEY] = data.pop(CONF_USERNAME)
         hass.config_entries.async_update_entry(entry, data=data)
 
-    conf_api_version = entry.data.get(CONF_API_VERSION, 1)
-    if conf_api_version == 1:
+    if (conf_api_version := entry.data.get(CONF_API_VERSION, 1)) == 1:
         # a bridge might have upgraded firmware since last run so
         # we discover its capabilities at every startup
         websession = aiohttp_client.async_get_clientsession(hass)
@@ -82,7 +75,6 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
     """Perform migration of devices and entities to V2 Id's."""
     host = entry.data[CONF_HOST]
     api_key = entry.data[CONF_API_KEY]
-    websession = aiohttp_client.async_get_clientsession(hass)
     dev_reg = async_get_device_registry(hass)
     ent_reg = async_get_entity_registry(hass)
     LOGGER.info("Start of migration of devices and entities to support API schema 2")
@@ -99,13 +91,13 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
             dev_ids[normalized_mac] = hass_dev.id
 
     # initialize bridge connection just for the migration
-    async with HueBridgeV2(host, api_key, websession) as api:
+    async with HueBridgeV2(host, api_key) as api:
 
         sensor_class_mapping = {
-            DEVICE_CLASS_BATTERY: ResourceTypes.DEVICE_POWER,
-            DEVICE_CLASS_MOTION: ResourceTypes.MOTION,
-            DEVICE_CLASS_ILLUMINANCE: ResourceTypes.LIGHT_LEVEL,
-            DEVICE_CLASS_TEMPERATURE: ResourceTypes.TEMPERATURE,
+            SensorDeviceClass.BATTERY.value: ResourceTypes.DEVICE_POWER,
+            BinarySensorDeviceClass.MOTION.value: ResourceTypes.MOTION,
+            SensorDeviceClass.ILLUMINANCE.value: ResourceTypes.LIGHT_LEVEL,
+            SensorDeviceClass.TEMPERATURE.value: ResourceTypes.TEMPERATURE,
         }
 
         # migrate entities attached to a device

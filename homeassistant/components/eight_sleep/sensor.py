@@ -10,7 +10,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_SENSORS,
@@ -56,7 +56,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, list[tuple[str, str]]] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the eight sleep sensors."""
     if discovery_info is None:
@@ -106,6 +106,7 @@ class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, side, sensor)
         self._attr_native_unit_of_measurement = PERCENTAGE
+        assert self._usrobj
 
         _LOGGER.debug(
             "Heat Sensor: %s, Side: %s, User: %s",
@@ -117,11 +118,13 @@ class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return the state of the sensor."""
+        assert self._usrobj
         return self._usrobj.heating_level
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device state attributes."""
+        assert self._usrobj
         return {
             ATTR_TARGET_HEAT: self._usrobj.target_heating_level,
             ATTR_ACTIVE_HEAT: self._usrobj.now_heating,
@@ -167,6 +170,9 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
+        if not self._usrobj:
+            return None
+
         if "current" in self._sensor:
             if "fitness" in self._sensor:
                 return self._usrobj.current_sleep_fitness_score
@@ -215,12 +221,12 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device state attributes."""
         attr = None
-        if "current" in self._sensor:
+        if "current" in self._sensor and self._usrobj:
             if "fitness" in self._sensor:
                 attr = self._usrobj.current_fitness_values
             else:
                 attr = self._usrobj.current_values
-        elif "last" in self._sensor:
+        elif "last" in self._sensor and self._usrobj:
             attr = self._usrobj.last_values
 
         if attr is None:

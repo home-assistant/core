@@ -11,8 +11,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .hue_api import (
     HueAllGroupsStateView,
@@ -103,7 +105,7 @@ CONFIG_SCHEMA = vol.Schema(
 ATTR_EMULATED_HUE_NAME = "emulated_hue_name"
 
 
-async def async_setup(hass, yaml_config):
+async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     """Activate the emulated_hue component."""
     local_ip = await async_get_source_ip(hass)
     config = Config(hass, yaml_config.get(DOMAIN, {}), local_ip)

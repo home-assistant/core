@@ -7,7 +7,7 @@ from poolsense import PoolSense
 from poolsense.exceptions import PoolSenseError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import EntityDescription
@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import ATTRIBUTION, DOMAIN
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class PoolSenseEntity(CoordinatorEntity):
     """Implements a common class elements representing the PoolSense component."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(self, coordinator, email, description: EntityDescription):
         """Initialize poolsense sensor."""

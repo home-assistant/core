@@ -1,4 +1,6 @@
 """Collection of useful functions for the HomeKit component."""
+from __future__ import annotations
+
 import io
 import ipaddress
 import logging
@@ -10,12 +12,17 @@ import socket
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, media_player, sensor
+from homeassistant.components import (
+    binary_sensor,
+    media_player,
+    persistent_notification,
+    sensor,
+)
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_TV,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerDeviceClass,
 )
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, SUPPORT_ACTIVITY
 from homeassistant.const import (
@@ -76,6 +83,7 @@ from .const import (
     FEATURE_TOGGLE_MUTE,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
+    MAX_NAME_LENGTH,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -88,6 +96,12 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
+VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
+MAX_VERSION_PART = 2**32 - 1
+
 
 MAX_PORT = 65535
 VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
@@ -334,14 +348,12 @@ def async_show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.async_create(
-        message, "HomeKit Pairing", entry_id
-    )
+    persistent_notification.async_create(hass, message, "HomeKit Pairing", entry_id)
 
 
 def async_dismiss_setup_message(hass, entry_id):
     """Dismiss persistent notification and remove QR code."""
-    hass.components.persistent_notification.async_dismiss(entry_id)
+    persistent_notification.async_dismiss(hass, entry_id)
 
 
 def convert_to_float(state):
@@ -352,14 +364,24 @@ def convert_to_float(state):
         return None
 
 
-def cleanup_name_for_homekit(name):
+def coerce_int(state: str) -> int:
+    """Return int."""
+    try:
+        return int(state)
+    except (ValueError, TypeError):
+        return 0
+
+
+def cleanup_name_for_homekit(name: str | None) -> str:
     """Ensure the name of the device will not crash homekit."""
     #
     # This is not a security measure.
     #
     # UNICODE_EMOJI is also not allowed but that
     # likely isn't a problem
-    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)
+    if name is None:
+        return "None"  # None crashes apple watches
+    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
 
 
 def temperature_to_homekit(temperature, unit):
@@ -407,12 +429,23 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
     )
 
 
-def format_sw_version(version):
+def _format_version_part(version_part: str) -> str:
+    return str(max(0, min(MAX_VERSION_PART, coerce_int(version_part))))
+
+
+def format_version(version):
     """Extract the version string in a format homekit can consume."""
-    match = re.search(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?", str(version).replace("-", "."))
-    if match:
-        return match.group(0)
-    return None
+    split_ver = str(version).replace("-", ".").replace(" ", ".")
+    num_only = NUMBERS_ONLY_RE.sub("", split_ver)
+    if (match := VERSION_RE.search(num_only)) is None:
+        return None
+    value = ".".join(map(_format_version_part, match.group(0).split(".")))
+    return None if _is_zero_but_true(value) else value
+
+
+def _is_zero_but_true(value):
+    """Zero but true values can crash apple watches."""
+    return convert_to_float(value) == 0
 
 
 def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str):
@@ -502,7 +535,7 @@ def state_needs_accessory_mode(state):
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
-        and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
+        and state.attributes.get(ATTR_DEVICE_CLASS) == MediaPlayerDeviceClass.TV
         or state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY
     )

@@ -1,9 +1,9 @@
 """Common utilities for VeSync Component."""
 import logging
 
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import Entity, ToggleEntity
 
-from .const import VS_FANS, VS_LIGHTS, VS_SWITCHES
+from .const import DOMAIN, VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,6 +14,7 @@ async def async_process_devices(hass, manager):
     devices[VS_SWITCHES] = []
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
+    devices[VS_SENSORS] = []
 
     await hass.async_add_executor_job(manager.update)
 
@@ -27,6 +28,8 @@ async def async_process_devices(hass, manager):
 
     if manager.outlets:
         devices[VS_SWITCHES].extend(manager.outlets)
+        # Expose outlets' power & energy usage as separate sensors
+        devices[VS_SENSORS].extend(manager.outlets)
         _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
 
     if manager.switches:
@@ -40,39 +43,66 @@ async def async_process_devices(hass, manager):
     return devices
 
 
-class VeSyncDevice(ToggleEntity):
-    """Base class for VeSync Device Representations."""
+class VeSyncBaseEntity(Entity):
+    """Base class for VeSync Entity Representations."""
 
     def __init__(self, device):
         """Initialize the VeSync device."""
         self.device = device
 
     @property
-    def unique_id(self):
+    def base_unique_id(self):
         """Return the ID of this device."""
         if isinstance(self.device.sub_device_no, int):
             return f"{self.device.cid}{str(self.device.sub_device_no)}"
         return self.device.cid
 
     @property
-    def name(self):
+    def unique_id(self):
+        """Return the ID of this device."""
+        # The unique_id property may be overridden in subclasses, such as in sensors. Maintaining base_unique_id allows
+        # us to group related entities under a single device.
+        return self.base_unique_id
+
+    @property
+    def base_name(self):
         """Return the name of the device."""
         return self.device.device_name
 
     @property
-    def is_on(self):
-        """Return True if device is on."""
-        return self.device.device_status == "on"
+    def name(self):
+        """Return the name of the entity (may be overridden)."""
+        return self.base_name
 
     @property
     def available(self) -> bool:
         """Return True if device is available."""
         return self.device.connection_status == "online"
 
-    def turn_off(self, **kwargs):
-        """Turn the device off."""
-        self.device.turn_off()
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self.base_unique_id)},
+            "name": self.base_name,
+            "model": self.device.device_type,
+            "default_manufacturer": "VeSync",
+            "sw_version": self.device.current_firm_version,
+        }
 
     def update(self):
         """Update vesync device."""
         self.device.update()
+
+
+class VeSyncDevice(VeSyncBaseEntity, ToggleEntity):
+    """Base class for VeSync Device Representations."""
+
+    @property
+    def is_on(self):
+        """Return True if device is on."""
+        return self.device.device_status == "on"
+
+    def turn_off(self, **kwargs):
+        """Turn the device off."""
+        self.device.turn_off()

@@ -1,17 +1,33 @@
 """Test MQTT fans."""
+import copy
 from unittest.mock import patch
 
 import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import fan
-from homeassistant.components.fan import NotValidPresetModeError
-from homeassistant.components.mqtt.fan import MQTT_FAN_ATTRIBUTES_BLOCKED
+from homeassistant.components.fan import (
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
+    NotValidPresetModeError,
+)
+from homeassistant.components.mqtt.fan import (
+    CONF_OSCILLATION_COMMAND_TOPIC,
+    CONF_OSCILLATION_STATE_TOPIC,
+    CONF_PERCENTAGE_COMMAND_TOPIC,
+    CONF_PERCENTAGE_STATE_TOPIC,
+    CONF_PRESET_MODE_COMMAND_TOPIC,
+    CONF_PRESET_MODE_STATE_TOPIC,
+    MQTT_FAN_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
 
@@ -25,6 +41,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -32,6 +49,9 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -101,7 +121,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "StAtE_On")
@@ -175,6 +195,10 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
     assert state.attributes.get(fan.ATTR_SPEED) is None
+
+    async_fire_mqtt_message(hass, "state-topic", "None")
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_controlling_state_via_topic_with_different_speed_range(
@@ -267,7 +291,7 @@ async def test_controlling_state_via_topic_no_percentage_topics(
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", "smart")
@@ -331,12 +355,16 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"ON"}')
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "state-topic", '{"val": null}')
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"OFF"}')
     state = hass.states.get("fan.test")
@@ -431,7 +459,7 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(
@@ -509,7 +537,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -730,7 +758,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock, c
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -865,7 +893,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -1004,7 +1032,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_preset_mode(hass, "fan.test", "medium")
@@ -1068,7 +1096,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -1267,6 +1295,42 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("state_topic", "ON", None, "on"),
+        (CONF_PRESET_MODE_STATE_TOPIC, "auto", ATTR_PRESET_MODE, "auto"),
+        (CONF_PERCENTAGE_STATE_TOPIC, "60", ATTR_PERCENTAGE, 60),
+        (
+            CONF_OSCILLATION_STATE_TOPIC,
+            "oscillate_on",
+            ATTR_OSCILLATING,
+            True,
+        ),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    config = copy.deepcopy(DEFAULT_CONFIG[fan.DOMAIN])
+    config[ATTR_PRESET_MODES] = ["eco", "auto"]
+    config[CONF_PRESET_MODE_COMMAND_TOPIC] = "fan/some_preset_mode_command_topic"
+    config[CONF_PERCENTAGE_COMMAND_TOPIC] = "fan/some_percentage_command_topic"
+    config[CONF_OSCILLATION_COMMAND_TOPIC] = "fan/some_oscillation_command_topic"
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        fan.DOMAIN,
+        config,
+        topic,
+        value,
+        attribute,
+        attribute_value,
+    )
+
+
 async def test_attributes(hass, mqtt_mock, caplog):
     """Test attributes."""
     assert await async_setup_component(
@@ -1290,7 +1354,7 @@ async def test_attributes(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     await common.async_turn_on(hass, "fan.test")
     state = hass.states.get("fan.test")
@@ -1661,5 +1725,89 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG, fan.SERVICE_TURN_ON
     )
+
+
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload,template",
+    [
+        (
+            fan.SERVICE_TURN_ON,
+            "command_topic",
+            None,
+            "ON",
+            None,
+        ),
+        (
+            fan.SERVICE_TURN_OFF,
+            "command_topic",
+            None,
+            "OFF",
+            None,
+        ),
+        (
+            fan.SERVICE_SET_PRESET_MODE,
+            "preset_mode_command_topic",
+            {fan.ATTR_PRESET_MODE: "eco"},
+            "eco",
+            "preset_mode_command_template",
+        ),
+        (
+            fan.SERVICE_SET_PERCENTAGE,
+            "percentage_command_topic",
+            {fan.ATTR_PERCENTAGE: "45"},
+            45,
+            "percentage_command_template",
+        ),
+        (
+            fan.SERVICE_OSCILLATE,
+            "oscillation_command_topic",
+            {fan.ATTR_OSCILLATING: "on"},
+            "oscillate_on",
+            "oscillation_command_template",
+        ),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass,
+    mqtt_mock,
+    caplog,
+    service,
+    topic,
+    parameters,
+    payload,
+    template,
+):
+    """Test publishing MQTT payload with different encoding."""
+    domain = fan.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[domain])
+    if topic == "preset_mode_command_topic":
+        config["preset_modes"] = ["auto", "eco"]
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
+    )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = fan.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = fan.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)

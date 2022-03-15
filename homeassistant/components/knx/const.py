@@ -34,6 +34,7 @@ CONF_KNX_CONNECTION_TYPE: Final = "connection_type"
 CONF_KNX_AUTOMATIC: Final = "automatic"
 CONF_KNX_ROUTING: Final = "routing"
 CONF_KNX_TUNNELING: Final = "tunneling"
+CONF_KNX_TUNNELING_TCP: Final = "tunneling_tcp"
 CONF_PAYLOAD: Final = "payload"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
 CONF_RESET_AFTER: Final = "reset_after"
@@ -42,7 +43,10 @@ CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
 CONF_KNX_INITIAL_CONNECTION_TYPES: Final = [CONF_KNX_TUNNELING, CONF_KNX_ROUTING]
 
+# yaml config merged with config entry data
 DATA_KNX_CONFIG: Final = "knx_config"
+# original hass yaml config
+DATA_HASS_CONFIG: Final = "knx_hass_config"
 
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"

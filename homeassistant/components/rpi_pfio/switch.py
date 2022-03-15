@@ -1,11 +1,15 @@
 """Support for switches using the PiFace Digital I/O module on a RPi."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components import rpi_pfio
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import ATTR_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_INVERT_LOGIC = "invert_logic"
 
@@ -25,10 +29,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the PiFace Digital Output devices."""
     switches = []
-    ports = config.get(CONF_PORTS)
+    ports = config[CONF_PORTS]
     for port, port_entity in ports.items():
         name = port_entity.get(ATTR_NAME)
         invert_logic = port_entity[ATTR_INVERT_LOGIC]
@@ -37,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class RPiPFIOSwitch(ToggleEntity):
+class RPiPFIOSwitch(SwitchEntity):
     """Representation of a PiFace Digital Output."""
 
     def __init__(self, port, name, invert_logic):

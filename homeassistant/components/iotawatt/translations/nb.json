@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "data": {
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

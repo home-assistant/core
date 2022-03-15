@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
+            "not_steamist_device": "Nie jest to urz\u0105dzenie streamist"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "{name} ({ipaddress})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name} ({ipaddress})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Urz\u0105dzenie"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Je\u015bli nie podasz IP lub nazwy hosta, zostanie u\u017cyte wykrywanie do odnalezienia urz\u0105dze\u0144."
+            }
+        }
+    }
+}

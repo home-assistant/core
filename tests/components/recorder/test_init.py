@@ -3,6 +3,7 @@
 import asyncio
 from datetime import datetime, timedelta
 import sqlite3
+import threading
 from unittest.mock import patch
 
 import pytest
@@ -261,7 +262,7 @@ def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
         hass.states.set(entity_id, "fail", attributes)
         wait_recording_done(hass)
 
-    assert "SQLAlchemyError error processing event" in caplog.text
+    assert "SQLAlchemyError error processing task" in caplog.text
 
     caplog.clear()
     hass.states.set(entity_id, state, attributes)
@@ -273,7 +274,7 @@ def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
 
     assert "Error executing query" not in caplog.text
     assert "Error saving events" not in caplog.text
-    assert "SQLAlchemyError error processing event" not in caplog.text
+    assert "SQLAlchemyError error processing task" not in caplog.text
 
 
 async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
@@ -531,7 +532,7 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
     entity_id = "lock.mine"
     hass.states.set(entity_id, STATE_LOCKED)
     hass.states.set(entity_id, STATE_UNLOCKED)
-    hass.states.async_remove(entity_id)
+    hass.states.remove(entity_id)
 
     wait_recording_done(hass)
 
@@ -1204,12 +1205,34 @@ async def test_database_lock_timeout(hass):
     """Test locking database timeout when recorder stopped."""
     await async_init_recorder_component(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
 
     instance: Recorder = hass.data[DATA_INSTANCE]
+
+    class BlockQueue(recorder.RecorderTask):
+        event: threading.Event = threading.Event()
+
+        def run(self, instance: Recorder) -> None:
+            self.event.wait()
+
+    block_task = BlockQueue()
+    instance.queue.put(block_task)
     with patch.object(recorder, "DB_LOCK_TIMEOUT", 0.1):
         try:
             with pytest.raises(TimeoutError):
                 await instance.lock_database()
         finally:
             instance.unlock_database()
+            block_task.event.set()
+
+
+async def test_database_lock_without_instance(hass):
+    """Test database lock doesn't fail if instance is not initialized."""
+    await async_init_recorder_component(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    with patch.object(instance, "engine", None):
+        try:
+            assert await instance.lock_database()
+        finally:
+            assert instance.unlock_database()

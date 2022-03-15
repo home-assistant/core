@@ -2,6 +2,7 @@
 from pi1wire import InvalidCRCException, UnsupportResponseException
 from pyownet.protocol import Error as ProtocolError
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.onewire.const import (
     DOMAIN,
     MANUFACTURER_EDS,
@@ -91,7 +92,7 @@ MOCK_OWPROXY_DEVICES = {
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-                ATTR_ENTITY_ID: "sensor.my_ds18b20_temperature",
+                ATTR_ENTITY_ID: "sensor.10_111111111111_temperature",
                 ATTR_INJECT_READS: b"    25.123",
                 ATTR_STATE: "25.1",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -617,6 +618,59 @@ MOCK_OWPROXY_DEVICES = {
             },
         ],
     },
+    "30.111111111111": {
+        ATTR_INJECT_READS: [
+            b"DS2760",  # read device type
+        ],
+        ATTR_DEVICE_INFO: {
+            ATTR_IDENTIFIERS: {(DOMAIN, "30.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
+            ATTR_MODEL: "DS2760",
+            ATTR_NAME: "30.111111111111",
+        },
+        Platform.SENSOR: [
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_ENTITY_ID: "sensor.30_111111111111_temperature",
+                ATTR_INJECT_READS: b"    26.984",
+                ATTR_STATE: "27.0",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "/30.111111111111/temperature",
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_DEVICE_FILE: "/30.111111111111/typeK/temperature",
+                ATTR_ENTITY_ID: "sensor.30_111111111111_thermocouple_temperature",
+                ATTR_INJECT_READS: b"    173.7563",
+                ATTR_STATE: "173.8",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "/30.111111111111/typeX/temperature",
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
+                ATTR_ENTITY_ID: "sensor.30_111111111111_voltage",
+                ATTR_INJECT_READS: b"     2.97",
+                ATTR_STATE: "3.0",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "/30.111111111111/volt",
+                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
+                ATTR_ENTITY_ID: "sensor.30_111111111111_vis",
+                ATTR_INJECT_READS: b"    0.12",
+                ATTR_STATE: "0.1",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "/30.111111111111/vis",
+                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            },
+        ],
+    },
     "3A.111111111111": {
         ATTR_INJECT_READS: [
             b"DS2413",  # read device type
@@ -796,6 +850,155 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: PRESSURE_CBAR,
             },
         ],
+        Platform.SWITCH: [
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_0_enable",
+                ATTR_INJECT_READS: b"1",
+                ATTR_STATE: STATE_ON,
+                ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_leaf.0",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_1_enable",
+                ATTR_INJECT_READS: b"1",
+                ATTR_STATE: STATE_ON,
+                ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_leaf.1",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_2_enable",
+                ATTR_INJECT_READS: b"0",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_leaf.2",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_3_enable",
+                ATTR_INJECT_READS: b"0",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_leaf.3",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_0_enable",
+                ATTR_INJECT_READS: b"1",
+                ATTR_STATE: STATE_ON,
+                ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_moisture.0",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_1_enable",
+                ATTR_INJECT_READS: b"1",
+                ATTR_STATE: STATE_ON,
+                ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_moisture.1",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_2_enable",
+                ATTR_INJECT_READS: b"0",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_moisture.2",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_3_enable",
+                ATTR_INJECT_READS: b"0",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_moisture.3",
+            },
+        ],
+    },
+    "EF.111111111113": {
+        ATTR_INJECT_READS: [
+            b"HB_HUB",  # read type
+        ],
+        ATTR_DEVICE_INFO: {
+            ATTR_IDENTIFIERS: {(DOMAIN, "EF.111111111113")},
+            ATTR_MANUFACTURER: MANUFACTURER_HOBBYBOARDS,
+            ATTR_MODEL: "HB_HUB",
+            ATTR_NAME: "EF.111111111113",
+        },
+        Platform.BINARY_SENSOR: [
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
+                ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
+                ATTR_ENTITY_ID: "binary_sensor.ef_111111111113_hub_short_on_branch_0",
+                ATTR_INJECT_READS: b"1",
+                ATTR_STATE: STATE_ON,
+                ATTR_UNIQUE_ID: "/EF.111111111113/hub/short.0",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
+                ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
+                ATTR_ENTITY_ID: "binary_sensor.ef_111111111113_hub_short_on_branch_1",
+                ATTR_INJECT_READS: b"0",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "/EF.111111111113/hub/short.1",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
+                ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
+                ATTR_ENTITY_ID: "binary_sensor.ef_111111111113_hub_short_on_branch_2",
+                ATTR_INJECT_READS: b"1",
+                ATTR_STATE: STATE_ON,
+                ATTR_UNIQUE_ID: "/EF.111111111113/hub/short.2",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
+                ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
+                ATTR_ENTITY_ID: "binary_sensor.ef_111111111113_hub_short_on_branch_3",
+                ATTR_INJECT_READS: b"0",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "/EF.111111111113/hub/short.3",
+            },
+        ],
+        Platform.SWITCH: [
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_0_enable",
+                ATTR_INJECT_READS: b"1",
+                ATTR_STATE: STATE_ON,
+                ATTR_UNIQUE_ID: "/EF.111111111113/hub/branch.0",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_1_enable",
+                ATTR_INJECT_READS: b"0",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "/EF.111111111113/hub/branch.1",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_2_enable",
+                ATTR_INJECT_READS: b"1",
+                ATTR_STATE: STATE_ON,
+                ATTR_UNIQUE_ID: "/EF.111111111113/hub/branch.2",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
+                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_3_enable",
+                ATTR_INJECT_READS: b"0",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "/EF.111111111113/hub/branch.3",
+            },
+        ],
     },
     "7E.111111111111": {
         ATTR_INJECT_READS: [
@@ -895,7 +1098,7 @@ MOCK_SYSBUS_DEVICES = {
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-                ATTR_ENTITY_ID: "sensor.my_ds18b20_temperature",
+                ATTR_ENTITY_ID: "sensor.10_111111111111_temperature",
                 ATTR_INJECT_READS: 25.123,
                 ATTR_STATE: "25.1",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,

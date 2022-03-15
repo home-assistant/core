@@ -7,7 +7,8 @@ import logging
 from mill import Mill
 from mill_local import Mill as MillLocal
 
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -17,7 +18,7 @@ from .const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate", "sensor"]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 
 class MillDataUpdateCoordinator(DataUpdateCoordinator):
@@ -42,7 +43,7 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Mill heater."""
     hass.data.setdefault(DOMAIN, {LOCAL: {}, CLOUD: {}})
 
@@ -79,6 +80,6 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

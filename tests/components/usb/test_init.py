@@ -779,6 +779,7 @@ def test_human_readable_device_name():
     assert "8A2A" in name
 
 
+@pytest.mark.usefixtures("mock_integration_frame")
 async def test_service_info_compatibility(hass, caplog):
     """Test compatibility with old-style dict.
 
@@ -794,10 +795,6 @@ async def test_service_info_compatibility(hass, caplog):
     )
 
     # Ensure first call get logged
-    assert discovery_info["vid"] == 12345
-    assert "Detected code that accessed discovery_info['vid']" in caplog.text
-
-    # Ensure second call doesn't get logged
-    caplog.clear()
-    assert discovery_info["vid"] == 12345
-    assert "Detected code that accessed discovery_info['vid']" not in caplog.text
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info["vid"] == 12345
+    assert "Detected integration that accessed discovery_info['vid']" in caplog.text

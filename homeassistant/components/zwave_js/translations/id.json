@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "Kunci S2 Tidak Diautentikasi",
                     "usb_path": "Jalur Perangkat USB"
                 },
+                "description": "Add-on akan menghasilkan kunci keamanan jika bidang tersebut dibiarkan kosong.",
                 "title": "Masukkan konfigurasi add-on Z-Wave JS"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "Kunci S2 Tidak Diautentikasi",
                     "usb_path": "Jalur Perangkat USB"
                 },
+                "description": "Add-on akan menghasilkan kunci keamanan jika bidang tersebut dibiarkan kosong.",
                 "title": "Masukkan konfigurasi add-on Z-Wave JS"
             },
             "install_addon": {

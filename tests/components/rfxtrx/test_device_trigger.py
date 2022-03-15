@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
@@ -93,7 +94,9 @@ async def test_get_triggers(hass, device_reg, event: EventTestData, expected):
         for expect in expected
     ]
 
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     triggers = [value for value in triggers if value["domain"] == "rfxtrx"]
     assert_lists_same(triggers, expected_triggers)
 

@@ -1,4 +1,5 @@
 """Support for APCUPSd sensors."""
+# pylint: disable=import-error
 from __future__ import annotations
 
 import logging
@@ -8,12 +9,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import (
     CONF_RESOURCES,
-    DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     FREQUENCY_HERTZ,
@@ -24,7 +25,10 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
@@ -155,7 +159,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="itemp",
         name="Internal Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="lastxfer",
@@ -409,7 +413,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the APCUPSd sensors."""
     apcups_data = hass.data[DOMAIN]
     resources = config[CONF_RESOURCES]

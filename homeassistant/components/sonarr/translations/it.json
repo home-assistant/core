@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "L'integrazione di Sonarr deve essere nuovamente autenticata manualmente con l'API Sonarr ospitata su: {host}",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {
@@ -22,7 +22,7 @@
                     "host": "Host",
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 }
             }
         }

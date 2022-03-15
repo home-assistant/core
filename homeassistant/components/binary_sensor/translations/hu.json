@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} akkufesz\u00fclts\u00e9g alacsony",
+            "is_co": "{entity_name} sz\u00e9n-monoxidot \u00e9rz\u00e9kel.",
             "is_cold": "{entity_name} hideg",
             "is_connected": "{entity_name} csatlakoztatva van",
             "is_gas": "{entity_name} g\u00e1zt \u00e9rz\u00e9kel",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} nedves",
             "is_motion": "{entity_name} mozg\u00e1st \u00e9rz\u00e9kel",
             "is_moving": "{entity_name} mozog",
+            "is_no_co": "{entity_name} nem \u00e9rz\u00e9kel sz\u00e9n-monoxidot",
             "is_no_gas": "{entity_name} nem \u00e9rz\u00e9kel g\u00e1zt",
             "is_no_light": "{entity_name} nem \u00e9rz\u00e9kel f\u00e9nyt",
             "is_no_motion": "{entity_name} nem \u00e9rz\u00e9kel mozg\u00e1st",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} akkufesz\u00fclts\u00e9g alacsony",
+            "co": "{entity_name} elkezdett sz\u00e9n-monoxidot \u00e9rz\u00e9kelni",
             "cold": "{entity_name} hideg lett",
             "connected": "{entity_name} csatlakozik",
             "gas": "{entity_name} g\u00e1zt \u00e9rz\u00e9kel",
@@ -63,6 +66,7 @@
             "moist": "{entity_name} nedves lett",
             "motion": "{entity_name} mozg\u00e1st \u00e9rz\u00e9kel",
             "moving": "{entity_name} mozog",
+            "no_co": "{entity_name} m\u00e1r nem \u00e9rz\u00e9kel sz\u00e9n-monoxidot",
             "no_gas": "{entity_name} m\u00e1r nem \u00e9rz\u00e9kel g\u00e1zt",
             "no_light": "{entity_name} m\u00e1r nem \u00e9rz\u00e9kel f\u00e9nyt",
             "no_motion": "{entity_name} m\u00e1r nem \u00e9rz\u00e9kel mozg\u00e1st",
@@ -84,6 +88,7 @@
             "not_powered": "{entity_name} m\u00e1r nincs fesz\u00fcts\u00e9g alatt",
             "not_present": "{entity_name} m\u00e1r nincs jelen",
             "not_running": "{entity_name} m\u00e1r nem fut",
+            "not_tampered": "{entity_name} nem \u00e9szlel t\u00f6bb\u00e9 a manipul\u00e1l\u00e1st",
             "not_unsafe": "{entity_name} biztons\u00e1gos lett",
             "occupied": "{entity_name} foglalt lett",
             "opened": "{entity_name} ki lett nyitva",
@@ -94,6 +99,7 @@
             "running": "{entity_name} elindult",
             "smoke": "{entity_name} f\u00fcst\u00f6t \u00e9rz\u00e9kel",
             "sound": "{entity_name} hangot \u00e9rz\u00e9kel",
+            "tampered": "{entity_name} manipul\u00e1l\u00e1st \u00e9szlelt",
             "turned_off": "{entity_name} ki lett kapcsolva",
             "turned_on": "{entity_name} be lett kapcsolva",
             "unsafe": "{entity_name} m\u00e1r nem biztons\u00e1gos",
@@ -102,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "sz\u00e9n-monoxid",
         "cold": "h\u0171t\u00e9s",
         "gas": "g\u00e1z",
         "heat": "f\u0171t\u00e9s",
@@ -121,11 +128,19 @@
         },
         "battery": {
             "off": "Norm\u00e1l",
-            "on": "Alacsony"
+            "on": "Lemer\u00fclve"
         },
         "battery_charging": {
             "off": "Nem t\u00f6lt\u0151dik",
             "on": "T\u00f6lt\u0151dik"
+        },
+        "carbon_monoxide": {
+            "off": "Norm\u00e1l",
+            "on": "\u00c9szlelve"
+        },
+        "co": {
+            "off": "Tiszta",
+            "on": "\u00c9rz\u00e9kelve"
         },
         "cold": {
             "off": "Norm\u00e1l",
@@ -156,8 +171,8 @@
             "on": "F\u00e9ny \u00e9szlelve"
         },
         "lock": {
-            "off": "Bez\u00e1rva",
-            "on": "Kinyitva"
+            "off": "Z\u00e1rva",
+            "on": "Nyitva"
         },
         "moisture": {
             "off": "Sz\u00e1raz",
@@ -172,8 +187,8 @@
             "on": "Mozg\u00e1sban"
         },
         "occupancy": {
-            "off": "Norm\u00e1l",
-            "on": "\u00c9szlelve"
+            "off": "Szabad",
+            "on": "Foglalt"
         },
         "opening": {
             "off": "Z\u00e1rva",
@@ -185,7 +200,7 @@
         },
         "presence": {
             "off": "T\u00e1vol",
-            "on": "Otthon"
+            "on": "Jelen"
         },
         "problem": {
             "off": "OK",
@@ -197,7 +212,7 @@
         },
         "safety": {
             "off": "Biztons\u00e1gos",
-            "on": "Nem biztons\u00e1gos"
+            "on": "Figyelmeztet\u00e9s"
         },
         "smoke": {
             "off": "Norm\u00e1l",

@@ -18,7 +18,7 @@
             "user": {
                 "data": {
                     "base_path": "Yaz\u0131c\u0131n\u0131n yolu",
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "port": "Port",
                     "ssl": "SSL sertifikas\u0131 kullan\u0131r",
                     "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"

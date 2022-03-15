@@ -1501,6 +1501,61 @@ async def test_condition_basic(hass, caplog):
     )
 
 
+async def test_shorthand_template_condition(hass, caplog):
+    """Test if we can use shorthand template conditions in a script."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    alias = "condition step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "alias": alias,
+                "condition": "{{ states.test.entity.state == 'hello' }}",
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert f"Test condition {alias}: True" in caplog.text
+    caplog.clear()
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"entities": ["test.entity"], "result": True}}],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
+    )
+
+    hass.states.async_set("test.entity", "goodbye")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert f"Test condition {alias}: False" in caplog.text
+    assert len(events) == 3
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [
+                {
+                    "error_type": script._StopScript,
+                    "result": {"entities": ["test.entity"], "result": False},
+                }
+            ],
+        },
+        expected_script_execution="aborted",
+    )
+
+
 async def test_condition_validation(hass, caplog):
     """Test if we can use conditions which validate late in a script."""
     registry = er.async_get(hass)
@@ -1683,6 +1738,44 @@ async def test_repeat_count(hass, caplog, count):
                 }
                 for index in range(first_index, last_index)
             ],
+        }
+    )
+
+
+async def test_repeat_count_0(hass, caplog):
+    """Test repeat action w/ count option."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    count = 0
+
+    alias = "condition step"
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "alias": alias,
+            "repeat": {
+                "count": count,
+                "sequence": {
+                    "event": event,
+                    "event_data_template": {
+                        "first": "{{ repeat.first }}",
+                        "index": "{{ repeat.index }}",
+                        "last": "{{ repeat.last }}",
+                    },
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == count
+    assert caplog.text.count(f"Repeating {alias}") == count
+    assert_action_trace(
+        {
+            "0": [{}],
         }
     )
 
@@ -3628,7 +3721,7 @@ async def test_platform_async_validate_action_config(hass):
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test"}
     platform = AsyncMock()
     with patch(
-        "homeassistant.helpers.script.device_automation.async_get_device_automation_platform",
+        "homeassistant.components.device_automation.action.async_get_device_automation_platform",
         return_value=platform,
     ):
         platform.async_validate_action_config.return_value = config

@@ -3,10 +3,8 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 
@@ -25,7 +23,7 @@ from .const import (
 )
 from .router import KeeneticRouter
 
-PLATFORMS = [BINARY_SENSOR_DOMAIN, DEVICE_TRACKER_DOMAIN]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -80,24 +78,25 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         for entity_entry in list(ent_reg.entities.values()):
             if (
                 entity_entry.config_entry_id == config_entry.entry_id
-                and entity_entry.domain == DEVICE_TRACKER_DOMAIN
+                and entity_entry.domain == Platform.DEVICE_TRACKER
             ):
                 mac = entity_entry.unique_id.partition("_")[0]
                 if mac not in keep_devices:
                     _LOGGER.debug("Removing entity %s", entity_entry.entity_id)
 
                     ent_reg.async_remove(entity_entry.entity_id)
-                    dev_reg.async_update_device(
-                        entity_entry.device_id,
-                        remove_config_entry_id=config_entry.entry_id,
-                    )
+                    if entity_entry.device_id:
+                        dev_reg.async_update_device(
+                            entity_entry.device_id,
+                            remove_config_entry_id=config_entry.entry_id,
+                        )
 
         _LOGGER.debug("Finished cleaning device_tracker entities")
 
     return unload_ok
 
 
-async def update_listener(hass, entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

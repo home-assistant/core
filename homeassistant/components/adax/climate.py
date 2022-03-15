@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from adax import Adax
+from adax_local import Adax as AdaxLocal
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -14,7 +15,10 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_IP_ADDRESS,
     CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_UNIQUE_ID,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
@@ -23,7 +27,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ACCOUNT_ID, DOMAIN
+from .const import ACCOUNT_ID, CONNECTION_TYPE, DOMAIN, LOCAL
 
 
 async def async_setup_entry(
@@ -32,6 +36,17 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Adax thermostat with config flow."""
+    if entry.data.get(CONNECTION_TYPE) == LOCAL:
+        adax_data_handler = AdaxLocal(
+            entry.data[CONF_IP_ADDRESS],
+            entry.data[CONF_TOKEN],
+            websession=async_get_clientsession(hass, verify_ssl=False),
+        )
+        async_add_entities(
+            [LocalAdaxDevice(adax_data_handler, entry.data[CONF_UNIQUE_ID])], True
+        )
+        return
+
     adax_data_handler = Adax(
         entry.data[ACCOUNT_ID],
         entry.data[CONF_PASSWORD],
@@ -107,3 +122,37 @@ class AdaxDevice(ClimateEntity):
                 self._attr_hvac_mode = HVAC_MODE_OFF
                 self._attr_icon = "mdi:radiator-off"
             return
+
+
+class LocalAdaxDevice(ClimateEntity):
+    """Representation of a heater."""
+
+    _attr_hvac_modes = [HVAC_MODE_HEAT]
+    _attr_hvac_mode = HVAC_MODE_HEAT
+    _attr_max_temp = 35
+    _attr_min_temp = 5
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_temperature_unit = TEMP_CELSIUS
+
+    def __init__(self, adax_data_handler, unique_id):
+        """Initialize the heater."""
+        self._adax_data_handler = adax_data_handler
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Adax",
+        )
+
+    async def async_set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+        await self._adax_data_handler.set_target_temperature(temperature)
+
+    async def async_update(self) -> None:
+        """Get the latest data."""
+        data = await self._adax_data_handler.get_status()
+        self._attr_target_temperature = data["target_temperature"]
+        self._attr_current_temperature = data["current_temperature"]
+        self._attr_available = self._attr_current_temperature is not None

@@ -1,12 +1,11 @@
 """The lookin integration climate platform."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from datetime import timedelta
 import logging
 from typing import Any, Final, cast
 
-from aiolookin import Climate, MeteoSensor, SensorID
+from aiolookin import Climate, MeteoSensor
+from aiolookin.models import UDPCommandType, UDPEvent
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -28,12 +27,17 @@ from homeassistant.components.climate.const import (
     SWING_OFF,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, TYPE_TO_PLATFORM
+from .coordinator import LookinDataUpdateCoordinator
 from .entity import LookinCoordinatorEntity
 from .models import LookinData
 
@@ -76,30 +80,10 @@ async def async_setup_entry(
     entities = []
 
     for remote in lookin_data.devices:
-        if remote["Type"] != "EF":
+        if TYPE_TO_PLATFORM.get(remote["Type"]) != Platform.CLIMATE:
             continue
         uuid = remote["UUID"]
-
-        def _wrap_async_update(
-            uuid: str,
-        ) -> Callable[[], Coroutine[None, Any, Climate]]:
-            """Create a function to capture the uuid cell variable."""
-
-            async def _async_update() -> Climate:
-                return await lookin_data.lookin_protocol.get_conditioner(uuid)
-
-            return _async_update
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            name=f"{config_entry.title} {uuid}",
-            update_method=_wrap_async_update(uuid),
-            update_interval=timedelta(
-                seconds=60
-            ),  # Updates are pushed (fallback is polling)
-        )
-        await coordinator.async_refresh()
+        coordinator = lookin_data.device_coordinators[uuid]
         device: Climate = coordinator.data
         entities.append(
             ConditionerEntity(
@@ -116,6 +100,7 @@ async def async_setup_entry(
 class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
+    _attr_current_humidity: float | None = None  # type: ignore[assignment]
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_supported_features: int = SUPPORT_FLAGS
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
@@ -130,7 +115,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         uuid: str,
         device: Climate,
         lookin_data: LookinData,
-        coordinator: DataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator,
     ) -> None:
         """Init the ConditionerEntity."""
         super().__init__(coordinator, uuid, device, lookin_data)
@@ -167,8 +152,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
             # an educated guess.
             #
             meteo_data: MeteoSensor = self._meteo_coordinator.data
-            current_temp = meteo_data.temperature
-            if not current_temp:
+            if not (current_temp := meteo_data.temperature):
                 self._climate.hvac_mode = lookin_index.index(HVAC_MODE_AUTO)
             elif current_temp >= self._climate.temp_celsius:
                 self._climate.hvac_mode = lookin_index.index(HVAC_MODE_COOL)
@@ -198,6 +182,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     def _async_update_from_data(self) -> None:
         """Update attrs from data."""
         meteo_data: MeteoSensor = self._meteo_coordinator.data
+
         self._attr_current_temperature = meteo_data.temperature
         self._attr_current_humidity = int(meteo_data.humidity)
         self._attr_target_temperature = self._climate.temp_celsius
@@ -206,26 +191,40 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         self._attr_hvac_mode = LOOKIN_HVAC_MODE_IDX_TO_HASS[self._climate.hvac_mode]
 
     @callback
+    def _async_update_meteo_from_value(self, event: UDPEvent) -> None:
+        """Update temperature and humidity from UDP event."""
+        self._attr_current_temperature = float(int(event.value[:4], 16)) / 10
+        self._attr_current_humidity = float(int(event.value[-4:], 16)) / 10
+
+    @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_from_data()
         super()._handle_coordinator_update()
 
     @callback
-    def _async_push_update(self, msg: dict[str, str]) -> None:
+    def _async_push_update(self, event: UDPEvent) -> None:
         """Process an update pushed via UDP."""
-        LOGGER.debug("Processing push message for %s: %s", self.entity_id, msg)
-        self._climate.update_from_status(msg["value"])
+        LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
+        self._climate.update_from_status(event.value)
         self.coordinator.async_set_updated_data(self._climate)
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         self.async_on_remove(
-            self._lookin_udp_subs.subscribe_sensor(
-                self._lookin_device.id, SensorID.IR, self._uuid, self._async_push_update
+            self._lookin_udp_subs.subscribe_event(
+                self._lookin_device.id,
+                UDPCommandType.ir,
+                self._uuid,
+                self._async_push_update,
             )
         )
         self.async_on_remove(
-            self._meteo_coordinator.async_add_listener(self._handle_coordinator_update)
+            self._lookin_udp_subs.subscribe_event(
+                self._lookin_device.id,
+                UDPCommandType.meteo,
+                None,
+                self._async_update_meteo_from_value,
+            )
         )
         return await super().async_added_to_hass()

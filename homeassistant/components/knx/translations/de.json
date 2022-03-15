@@ -12,14 +12,17 @@
                 "data": {
                     "host": "Host",
                     "individual_address": "Individuelle Adresse f\u00fcr die Verbindung",
+                    "local_ip": "Lokale IP des Home Assistant (f\u00fcr automatische Erkennung leer lassen)",
                     "port": "Port",
-                    "route_back": "Route Back / NAT-Modus"
+                    "route_back": "Route Back / NAT-Modus",
+                    "tunneling_type": "KNX Tunneling Typ"
                 },
                 "description": "Bitte gib die Verbindungsinformationen deines Tunnelger\u00e4ts ein."
             },
             "routing": {
                 "data": {
                     "individual_address": "Individuelle Adresse f\u00fcr die Routingverbindung",
+                    "local_ip": "Lokale IP des Home Assistant (f\u00fcr automatische Erkennung leer lassen)",
                     "multicast_group": "Die f\u00fcr das Routing verwendete Multicast-Gruppe",
                     "multicast_port": "Der f\u00fcr das Routing verwendete Multicast-Port"
                 },
@@ -45,6 +48,7 @@
                 "data": {
                     "connection_type": "KNX-Verbindungstyp",
                     "individual_address": "Individuelle Standardadresse",
+                    "local_ip": "Lokale IP des Home Assistant (verwende 0.0.0.0 f\u00fcr automatische Erkennung)",
                     "multicast_group": "Multicast-Gruppe f\u00fcr Routing und Discovery verwenden",
                     "multicast_port": "Multicast-Port f\u00fcr Routing und Discovery verwenden",
                     "rate_limit": "Maximal ausgehende Telegrams pro Sekunde",
@@ -54,8 +58,10 @@
             "tunnel": {
                 "data": {
                     "host": "Host",
+                    "local_ip": "Lokale IP (leer lassen, wenn unsicher)",
                     "port": "Port",
-                    "route_back": "Route Back / NAT-Modus"
+                    "route_back": "Route Back / NAT-Modus",
+                    "tunneling_type": "KNX Tunneling Typ"
                 }
             }
         }

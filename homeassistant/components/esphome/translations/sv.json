@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP \u00e4r redan konfigurerad"
+            "already_configured": "ESP \u00e4r redan konfigurerad",
+            "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {
             "connection_error": "Kan inte ansluta till ESP. Se till att din YAML-fil inneh\u00e5ller en 'api:' line.",

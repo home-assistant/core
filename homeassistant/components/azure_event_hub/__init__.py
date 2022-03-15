@@ -3,31 +3,29 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime
 import json
 import logging
-import time
 from typing import Any
 
 from azure.eventhub import EventData, EventDataBatch
-from azure.eventhub.aio import EventHubProducerClient, EventHubSharedKeyCredential
+from azure.eventhub.aio import EventHubProducerClient
 from azure.eventhub.exceptions import EventHubError
 import voluptuous as vol
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
-    MATCH_ALL,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import MATCH_ALL
+from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.dt import utcnow
 
+from .client import AzureEventHubClient
 from .const import (
-    ADDITIONAL_ARGS,
     CONF_EVENT_HUB_CON_STRING,
     CONF_EVENT_HUB_INSTANCE_NAME,
     CONF_EVENT_HUB_NAMESPACE,
@@ -36,7 +34,11 @@ from .const import (
     CONF_FILTER,
     CONF_MAX_DELAY,
     CONF_SEND_INTERVAL,
+    DATA_FILTER,
+    DATA_HUB,
+    DEFAULT_MAX_DELAY,
     DOMAIN,
+    FILTER_STATES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,18 +47,15 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
-                vol.Exclusive(CONF_EVENT_HUB_CON_STRING, "setup_methods"): cv.string,
-                vol.Exclusive(CONF_EVENT_HUB_NAMESPACE, "setup_methods"): cv.string,
+                vol.Optional(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
+                vol.Optional(CONF_EVENT_HUB_CON_STRING): cv.string,
+                vol.Optional(CONF_EVENT_HUB_NAMESPACE): cv.string,
                 vol.Optional(CONF_EVENT_HUB_SAS_POLICY): cv.string,
                 vol.Optional(CONF_EVENT_HUB_SAS_KEY): cv.string,
-                vol.Optional(CONF_SEND_INTERVAL, default=5): cv.positive_int,
-                vol.Optional(CONF_MAX_DELAY, default=30): cv.positive_int,
+                vol.Optional(CONF_SEND_INTERVAL): cv.positive_int,
+                vol.Optional(CONF_MAX_DELAY): cv.positive_int,
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
             },
-            cv.has_at_least_one_key(
-                CONF_EVENT_HUB_CON_STRING, CONF_EVENT_HUB_NAMESPACE
-            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -64,35 +63,60 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
-    """Activate Azure EH component."""
-    config = yaml_config[DOMAIN]
-    if config.get(CONF_EVENT_HUB_CON_STRING):
-        client_args = {
-            "conn_str": config[CONF_EVENT_HUB_CON_STRING],
-            "eventhub_name": config[CONF_EVENT_HUB_INSTANCE_NAME],
-        }
-        conn_str_client = True
-    else:
-        client_args = {
-            "fully_qualified_namespace": f"{config[CONF_EVENT_HUB_NAMESPACE]}.servicebus.windows.net",
-            "eventhub_name": config[CONF_EVENT_HUB_INSTANCE_NAME],
-            "credential": EventHubSharedKeyCredential(
-                policy=config[CONF_EVENT_HUB_SAS_POLICY],
-                key=config[CONF_EVENT_HUB_SAS_KEY],
-            ),
-        }
-        conn_str_client = False
+    """Activate Azure EH component from yaml.
 
-    instance = hass.data[DOMAIN] = AzureEventHub(
-        hass,
-        client_args,
-        conn_str_client,
-        config[CONF_FILTER],
-        config[CONF_SEND_INTERVAL],
-        config[CONF_MAX_DELAY],
+    Adds an empty filter to hass data.
+    Tries to get a filter from yaml, if present set to hass data.
+    If config is empty after getting the filter, return, otherwise emit
+    deprecated warning and pass the rest to the config flow.
+    """
+    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
+    if DOMAIN not in yaml_config:
+        return True
+    hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN].pop(CONF_FILTER)
+
+    if not yaml_config[DOMAIN]:
+        return True
+    _LOGGER.warning(
+        "Loading Azure Event Hub completely via yaml config is deprecated; Only the \
+        Filter can be set in yaml, the rest is done through a config flow and has \
+        been imported, all other keys but filter can be deleted from configuration.yaml"
     )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=yaml_config[DOMAIN]
+        )
+    )
+    return True
 
-    hass.async_create_task(instance.async_start())
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Do the setup based on the config entry and the filter from yaml."""
+    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
+    hub = AzureEventHub(
+        hass,
+        entry,
+        hass.data[DOMAIN][DATA_FILTER],
+    )
+    try:
+        await hub.async_test_connection()
+    except EventHubError as err:
+        raise ConfigEntryNotReady("Could not connect to Azure Event Hub") from err
+    hass.data[DOMAIN][DATA_HUB] = hub
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
+    await hub.async_start()
+    return True
+
+
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update listener for options."""
+    hass.data[DOMAIN][DATA_HUB].update_options(entry.options)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    hub = hass.data[DOMAIN].pop(DATA_HUB)
+    await hub.async_stop()
     return True
 
 
@@ -102,129 +126,128 @@ class AzureEventHub:
     def __init__(
         self,
         hass: HomeAssistant,
-        client_args: dict[str, Any],
-        conn_str_client: bool,
+        entry: ConfigEntry,
         entities_filter: vol.Schema,
-        send_interval: int,
-        max_delay: int,
     ) -> None:
         """Initialize the listener."""
         self.hass = hass
-        self.queue: asyncio.PriorityQueue[  # pylint: disable=unsubscriptable-object
-            tuple[int, tuple[float, Event | None]]
-        ] = asyncio.PriorityQueue()
-        self._client_args = client_args
-        self._conn_str_client = conn_str_client
+        self._entry = entry
         self._entities_filter = entities_filter
-        self._send_interval = send_interval
-        self._max_delay = max_delay + send_interval
+
+        self._client = AzureEventHubClient.from_input(**self._entry.data)
+        self._send_interval = self._entry.options[CONF_SEND_INTERVAL]
+        self._max_delay = self._entry.options.get(CONF_MAX_DELAY, DEFAULT_MAX_DELAY)
+
+        self._shutdown = False
+        self._queue: asyncio.PriorityQueue[
+            tuple[int, tuple[datetime, State | None]]
+        ] = asyncio.PriorityQueue()
         self._listener_remover: Callable[[], None] | None = None
         self._next_send_remover: Callable[[], None] | None = None
-        self.shutdown = False
 
     async def async_start(self) -> None:
-        """Start the recorder, suppress logging and register the callbacks and do the first send after five seconds, to capture the startup events."""
-        # suppress the INFO and below logging on the underlying packages, they are very verbose, even at INFO
+        """Start the hub.
+
+        This suppresses logging and register the listener and
+        schedules the first send.
+
+        Suppress the INFO and below logging on the underlying packages,
+        they are very verbose, even at INFO.
+        """
         logging.getLogger("uamqp").setLevel(logging.WARNING)
         logging.getLogger("azure.eventhub").setLevel(logging.WARNING)
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
         self._listener_remover = self.hass.bus.async_listen(
             MATCH_ALL, self.async_listen
         )
-        # schedule the first send after 10 seconds to capture startup events, after that each send will schedule the next after the interval.
-        self._next_send_remover = async_call_later(self.hass, 10, self.async_send)
+        self._schedule_next_send()
 
-    async def async_shutdown(self, _: Event) -> None:
-        """Shut down the AEH by queueing None and calling send."""
+    async def async_stop(self) -> None:
+        """Shut down the AEH by queueing None, calling send, join queue."""
         if self._next_send_remover:
             self._next_send_remover()
         if self._listener_remover:
             self._listener_remover()
-        await self.queue.put((3, (time.monotonic(), None)))
+        await self._queue.put((3, (utcnow(), None)))
         await self.async_send(None)
+        await self._queue.join()
 
-    async def async_listen(self, event: Event) -> None:
-        """Listen for new messages on the bus and queue them for AEH."""
-        await self.queue.put((2, (time.monotonic(), event)))
+    def update_options(self, new_options: dict[str, Any]) -> None:
+        """Update options."""
+        self._send_interval = new_options[CONF_SEND_INTERVAL]
 
-    async def async_send(self, _) -> None:
-        """Write preprocessed events to eventhub, with retry."""
-        async with self._get_client() as client:
-            while not self.queue.empty():
-                data_batch, dequeue_count = await self.fill_batch(client)
-                _LOGGER.debug(
-                    "Sending %d event(s), out of %d events in the queue",
-                    len(data_batch),
-                    dequeue_count,
-                )
-                if data_batch:
-                    try:
-                        await client.send_batch(data_batch)
-                    except EventHubError as exc:
-                        _LOGGER.error("Error in sending events to Event Hub: %s", exc)
-                    finally:
-                        for _ in range(dequeue_count):
-                            self.queue.task_done()
+    async def async_test_connection(self) -> None:
+        """Test the connection to the event hub."""
+        await self._client.test_connection()
 
-        if not self.shutdown:
+    def _schedule_next_send(self) -> None:
+        """Schedule the next send."""
+        if not self._shutdown:
             self._next_send_remover = async_call_later(
                 self.hass, self._send_interval, self.async_send
             )
 
-    async def fill_batch(self, client) -> tuple[EventDataBatch, int]:
-        """Return a batch of events formatted for writing.
+    async def async_listen(self, event: Event) -> None:
+        """Listen for new messages on the bus and queue them for AEH."""
+        if state := event.data.get("new_state"):
+            await self._queue.put((2, (event.time_fired, state)))
 
-        Uses get_nowait instead of await get, because the functions batches and doesn't wait for each single event, the send function is called.
+    async def async_send(self, _) -> None:
+        """Write preprocessed events to eventhub, with retry."""
+        async with self._client.client as client:
+            while not self._queue.empty():
+                if event_batch := await self.fill_batch(client):
+                    _LOGGER.debug("Sending %d event(s)", len(event_batch))
+                    try:
+                        await client.send_batch(event_batch)
+                    except EventHubError as exc:
+                        _LOGGER.error("Error in sending events to Event Hub: %s", exc)
+        self._schedule_next_send()
 
-        Throws ValueError on add to batch when the EventDataBatch object reaches max_size. Put the item back in the queue and the next batch will include it.
+    async def fill_batch(self, client: EventHubProducerClient) -> EventDataBatch:
+        """Return a batch of events formatted for sending to Event Hub.
+
+        Uses get_nowait instead of await get, because the functions batches and
+        doesn't wait for each single event.
+
+        Throws ValueError on add to batch when the EventDataBatch object reaches
+        max_size. Put the item back in the queue and the next batch will include
+        it.
         """
         event_batch = await client.create_batch()
-        dequeue_count = 0
         dropped = 0
-        while not self.shutdown:
+        while not self._shutdown:
             try:
-                _, (timestamp, event) = self.queue.get_nowait()
+                _, event = self._queue.get_nowait()
             except asyncio.QueueEmpty:
                 break
-            dequeue_count += 1
-            if not event:
-                self.shutdown = True
-                break
-            event_data = self._event_to_filtered_event_data(event)
+            event_data, dropped = self._parse_event(*event, dropped)
             if not event_data:
                 continue
-            if time.monotonic() - timestamp <= self._max_delay:
-                try:
-                    event_batch.add(event_data)
-                except ValueError:
-                    self.queue.put_nowait((1, (timestamp, event)))
-                    break
-            else:
-                dropped += 1
+            try:
+                event_batch.add(event_data)
+            except ValueError:
+                self._queue.put_nowait((1, event))
+                break
 
         if dropped:
             _LOGGER.warning(
-                "Dropped %d old events, consider increasing the max_delay", dropped
+                "Dropped %d old events, consider filtering messages", dropped
             )
+        return event_batch
 
-        return event_batch, dequeue_count
-
-    def _event_to_filtered_event_data(self, event: Event) -> EventData | None:
-        """Filter event states and create EventData object."""
-        state = event.data.get("new_state")
-        if (
-            state is None
-            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
-            or not self._entities_filter(state.entity_id)
-        ):
-            return None
-        return EventData(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
-
-    def _get_client(self) -> EventHubProducerClient:
-        """Get a Event Producer Client."""
-        if self._conn_str_client:
-            return EventHubProducerClient.from_connection_string(
-                **self._client_args, **ADDITIONAL_ARGS
-            )
-        return EventHubProducerClient(**self._client_args, **ADDITIONAL_ARGS)
+    def _parse_event(
+        self, time_fired: datetime, state: State | None, dropped: int
+    ) -> tuple[EventData | None, int]:
+        """Parse event by checking if it needs to be sent, and format it."""
+        self._queue.task_done()
+        if not state:
+            self._shutdown = True
+            return None, dropped
+        if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):
+            return None, dropped
+        if (utcnow() - time_fired).seconds > self._max_delay + self._send_interval:
+            return None, dropped + 1
+        return (
+            EventData(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8")),
+            dropped,
+        )

@@ -1246,5 +1246,6 @@
             "isSecure": true
         }
     ],
-    "interviewStage": "Complete"
+    "interviewStage": "Complete",
+    "isControllerNode": false
 }

@@ -22,7 +22,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar"
+                    "host": "Sunucu"
                 },
                 "description": "Kurulumdan \u00f6nce pille \u00e7al\u0131\u015fan cihazlar uyand\u0131r\u0131lmal\u0131d\u0131r, art\u0131k \u00fczerindeki bir d\u00fc\u011fmeyi kullanarak cihaz\u0131 uyand\u0131rabilirsiniz."
             }

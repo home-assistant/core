@@ -12,5 +12,6 @@
   "codeowners": [
     "@wonderslug"
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["aiomodernforms"]
 }

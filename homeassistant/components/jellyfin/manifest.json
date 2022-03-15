@@ -9,5 +9,6 @@
   "iot_class": "local_polling",
   "codeowners": [
     "@j-stienstra"
-  ]
+  ],
+  "loggers": ["jellyfin_apiclient_python"]
 }

@@ -19,7 +19,7 @@ from .helpers import GoogleEntity, RequestData, async_get_entities
 
 EXECUTE_LIMIT = 2  # Wait 2 seconds for execute to finish
 
-HANDLERS = Registry()
+HANDLERS = Registry()  # type: ignore[var-annotated]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -83,6 +83,8 @@ async def async_devices_sync(hass, data, payload):
     )
 
     agent_user_id = data.config.get_agent_user_id(data.context)
+    await data.config.async_connect_agent_user(agent_user_id)
+
     entities = async_get_entities(hass, data.config)
     results = await asyncio.gather(
         *(
@@ -102,8 +104,6 @@ async def async_devices_sync(hass, data, payload):
             devices.append(result)
 
     response = {"agentUserId": agent_user_id, "devices": devices}
-
-    await data.config.async_connect_agent_user(agent_user_id)
 
     _LOGGER.debug("Syncing entities response: %s", response)
 
@@ -281,7 +281,7 @@ async def async_devices_identify(hass, data: RequestData, payload):
 async def async_devices_reachable(hass, data: RequestData, payload):
     """Handle action.devices.REACHABLE_DEVICES request.
 
-    https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
+    https://developers.google.com/assistant/smarthome/develop/local#implement_the_reachable_devices_handler_hub_integrations_only
     """
     google_ids = {dev["id"] for dev in (data.devices or [])}
 
@@ -292,6 +292,15 @@ async def async_devices_reachable(hass, data: RequestData, payload):
             if entity.entity_id in google_ids and entity.should_expose_local()
         ]
     }
+
+
+@HANDLERS.register("action.devices.PROXY_SELECTED")
+async def async_devices_proxy_selected(hass, data: RequestData, payload):
+    """Handle action.devices.PROXY_SELECTED request.
+
+    When selected for local SDK.
+    """
+    return {}
 
 
 def turned_off_response(message):

@@ -97,6 +97,24 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:MediaRenderer:3"
         }
     ],
+    "dlna_dms": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "st": "urn:schemas-upnp-org:device:MediaServer:1"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:2",
+            "st": "urn:schemas-upnp-org:device:MediaServer:2"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:3",
+            "st": "urn:schemas-upnp-org:device:MediaServer:3"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:4",
+            "st": "urn:schemas-upnp-org:device:MediaServer:4"
+        }
+    ],
     "fritz": [
         {
             "st": "urn:schemas-upnp-org:device:fritzbox:1"
@@ -228,14 +246,30 @@ SSDP = {
     ],
     "unifi": [
         {
-            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine"
         },
         {
-            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
+        }
+    ],
+    "unifiprotect": [
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
         }
     ],
     "upnp": [
@@ -244,6 +278,11 @@ SSDP = {
         },
         {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
+        }
+    ],
+    "webostv": [
+        {
+            "st": "urn:lge-com:service:webos-second-screen:1"
         }
     ],
     "wemo": [

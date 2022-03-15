@@ -1,12 +1,17 @@
 """Support for Aurora Forecast sensor."""
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AuroraEntity
 from .const import COORDINATOR, DOMAIN
 
 
-async def async_setup_entry(hass, entry, async_add_entries):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entries: AddEntitiesCallback
+) -> None:
     """Set up the sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
 

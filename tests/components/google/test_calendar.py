@@ -1,5 +1,10 @@
 """The tests for the google calendar platform."""
+
+from __future__ import annotations
+
 import copy
+from http import HTTPStatus
+from typing import Any
 from unittest.mock import Mock, patch
 
 import httplib2
@@ -11,6 +16,7 @@ from homeassistant.components.google import (
     CONF_CLIENT_SECRET,
     CONF_DEVICE_ID,
     CONF_ENTITIES,
+    CONF_IGNORE_AVAILABILITY,
     CONF_NAME,
     CONF_TRACK,
     DEVICE_SCHEMA,
@@ -22,6 +28,8 @@ from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+
+from .conftest import TEST_CALENDAR
 
 from tests.common import async_mock_service
 
@@ -69,6 +77,7 @@ def get_calendar_info(calendar):
                     CONF_TRACK: calendar["track"],
                     CONF_NAME: calendar["summary"],
                     CONF_DEVICE_ID: slugify(calendar["summary"]),
+                    CONF_IGNORE_AVAILABILITY: calendar.get("ignore_availability", True),
                 }
             ],
         }
@@ -93,12 +102,6 @@ def mock_google_setup(hass, test_calendar):
 
     with patch_google_auth, patch_google_load, patch_google_services:
         yield
-
-
-@pytest.fixture(autouse=True)
-def mock_http(hass):
-    """Mock the http component."""
-    hass.http = Mock()
 
 
 @pytest.fixture(autouse=True)
@@ -314,3 +317,145 @@ async def test_update_error(hass, google_service):
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
     assert state.state == "off"
+
+
+async def test_calendars_api(hass, hass_client, google_service):
+    """Test the Rest API returns the calendar."""
+    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    response = await client.get("/api/calendars")
+    assert response.status == HTTPStatus.OK
+    data = await response.json()
+    assert data == [
+        {
+            "entity_id": TEST_ENTITY,
+            "name": TEST_ENTITY_NAME,
+        }
+    ]
+
+
+async def test_http_event_api_failure(hass, hass_client, google_service):
+    """Test the Rest API response during a calendar failure."""
+    google_service.return_value.get = Mock(
+        side_effect=httplib2.ServerNotFoundError("unit test")
+    )
+
+    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
+    await hass.async_block_till_done()
+
+    start = dt_util.now().isoformat()
+    end = (dt_util.now() + dt_util.dt.timedelta(minutes=60)).isoformat()
+
+    client = await hass_client()
+    response = await client.get(f"/api/calendars/{TEST_ENTITY}?start={start}&end={end}")
+    assert response.status == HTTPStatus.OK
+    # A failure to talk to the server results in an empty list of events
+    events = await response.json()
+    assert events == []
+
+
+async def test_http_api_event(hass, hass_client, google_service, mock_events_list):
+    """Test querying the API and fetching events from the server."""
+    now = dt_util.now()
+
+    mock_events_list(
+        {
+            "items": [
+                {
+                    "summary": "Event title",
+                    "start": {"dateTime": now.isoformat()},
+                    "end": {
+                        "dateTime": (now + dt_util.dt.timedelta(minutes=5)).isoformat()
+                    },
+                }
+            ],
+        }
+    )
+    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
+    await hass.async_block_till_done()
+
+    start = (now - dt_util.dt.timedelta(minutes=60)).isoformat()
+    end = (now + dt_util.dt.timedelta(minutes=60)).isoformat()
+
+    client = await hass_client()
+    response = await client.get(f"/api/calendars/{TEST_ENTITY}?start={start}&end={end}")
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 1
+    assert "summary" in events[0]
+    assert events[0]["summary"] == "Event title"
+
+
+def create_ignore_avail_calendar() -> dict[str, Any]:
+    """Create a calendar with ignore_availability set."""
+    calendar = TEST_CALENDAR.copy()
+    calendar["ignore_availability"] = False
+    return calendar
+
+
+@pytest.mark.parametrize("test_calendar", [create_ignore_avail_calendar()])
+async def test_opaque_event(hass, hass_client, google_service, mock_events_list):
+    """Test querying the API and fetching events from the server."""
+    now = dt_util.now()
+
+    mock_events_list(
+        {
+            "items": [
+                {
+                    "summary": "Event title",
+                    "transparency": "opaque",
+                    "start": {"dateTime": now.isoformat()},
+                    "end": {
+                        "dateTime": (now + dt_util.dt.timedelta(minutes=5)).isoformat()
+                    },
+                }
+            ],
+        }
+    )
+    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
+    await hass.async_block_till_done()
+
+    start = (now - dt_util.dt.timedelta(minutes=60)).isoformat()
+    end = (now + dt_util.dt.timedelta(minutes=60)).isoformat()
+
+    client = await hass_client()
+    response = await client.get(f"/api/calendars/{TEST_ENTITY}?start={start}&end={end}")
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 1
+    assert "summary" in events[0]
+    assert events[0]["summary"] == "Event title"
+
+
+@pytest.mark.parametrize("test_calendar", [create_ignore_avail_calendar()])
+async def test_transparent_event(hass, hass_client, google_service, mock_events_list):
+    """Test querying the API and fetching events from the server."""
+    now = dt_util.now()
+
+    mock_events_list(
+        {
+            "items": [
+                {
+                    "summary": "Event title",
+                    "transparency": "transparent",
+                    "start": {"dateTime": now.isoformat()},
+                    "end": {
+                        "dateTime": (now + dt_util.dt.timedelta(minutes=5)).isoformat()
+                    },
+                }
+            ],
+        }
+    )
+    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
+    await hass.async_block_till_done()
+
+    start = (now - dt_util.dt.timedelta(minutes=60)).isoformat()
+    end = (now + dt_util.dt.timedelta(minutes=60)).isoformat()
+
+    client = await hass_client()
+    response = await client.get(f"/api/calendars/{TEST_ENTITY}?start={start}&end={end}")
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert events == []

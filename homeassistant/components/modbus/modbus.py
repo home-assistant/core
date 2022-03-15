@@ -29,11 +29,11 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import Event, async_call_later
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -358,7 +358,7 @@ class ModbusHub:
             return True
 
     def _pymodbus_call(
-        self, unit: int, address: int, value: int | list[int], use_call: str
+        self, unit: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusResponse:
         """Call sync. pymodbus."""
         kwargs = {"unit": unit} if unit else {}

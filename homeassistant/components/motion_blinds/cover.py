@@ -1,5 +1,4 @@
 """Support for Motion Blinds using their WLAN API."""
-
 import logging
 
 from motionblinds import BlindType
@@ -8,16 +7,14 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHADE,
-    DEVICE_CLASS_SHUTTER,
+    CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -35,29 +32,30 @@ _LOGGER = logging.getLogger(__name__)
 
 
 POSITION_DEVICE_MAP = {
-    BlindType.RollerBlind: DEVICE_CLASS_SHADE,
-    BlindType.RomanBlind: DEVICE_CLASS_SHADE,
-    BlindType.HoneycombBlind: DEVICE_CLASS_SHADE,
-    BlindType.DimmingBlind: DEVICE_CLASS_SHADE,
-    BlindType.DayNightBlind: DEVICE_CLASS_SHADE,
-    BlindType.RollerShutter: DEVICE_CLASS_SHUTTER,
-    BlindType.Switch: DEVICE_CLASS_SHUTTER,
-    BlindType.RollerGate: DEVICE_CLASS_GATE,
-    BlindType.Awning: DEVICE_CLASS_AWNING,
-    BlindType.Curtain: DEVICE_CLASS_CURTAIN,
-    BlindType.CurtainLeft: DEVICE_CLASS_CURTAIN,
-    BlindType.CurtainRight: DEVICE_CLASS_CURTAIN,
+    BlindType.RollerBlind: CoverDeviceClass.SHADE,
+    BlindType.RomanBlind: CoverDeviceClass.SHADE,
+    BlindType.HoneycombBlind: CoverDeviceClass.SHADE,
+    BlindType.DimmingBlind: CoverDeviceClass.SHADE,
+    BlindType.DayNightBlind: CoverDeviceClass.SHADE,
+    BlindType.RollerShutter: CoverDeviceClass.SHUTTER,
+    BlindType.Switch: CoverDeviceClass.SHUTTER,
+    BlindType.RollerGate: CoverDeviceClass.GATE,
+    BlindType.Awning: CoverDeviceClass.AWNING,
+    BlindType.Curtain: CoverDeviceClass.CURTAIN,
+    BlindType.CurtainLeft: CoverDeviceClass.CURTAIN,
+    BlindType.CurtainRight: CoverDeviceClass.CURTAIN,
 }
 
 TILT_DEVICE_MAP = {
-    BlindType.VenetianBlind: DEVICE_CLASS_BLIND,
-    BlindType.ShangriLaBlind: DEVICE_CLASS_BLIND,
-    BlindType.DoubleRoller: DEVICE_CLASS_SHADE,
-    BlindType.VerticalBlind: DEVICE_CLASS_BLIND,
+    BlindType.VenetianBlind: CoverDeviceClass.BLIND,
+    BlindType.ShangriLaBlind: CoverDeviceClass.BLIND,
+    BlindType.DoubleRoller: CoverDeviceClass.SHADE,
+    BlindType.VerticalBlind: CoverDeviceClass.BLIND,
+    BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
 }
 
 TDBU_DEVICE_MAP = {
-    BlindType.TopDownBottomUp: DEVICE_CLASS_SHADE,
+    BlindType.TopDownBottomUp: CoverDeviceClass.SHADE,
 }
 
 
@@ -67,7 +65,11 @@ SET_ABSOLUTE_POSITION_SCHEMA = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Motion Blind from a config entry."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
@@ -144,7 +146,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             manufacturer=MANUFACTURER,
             model=blind.blind_type,
             name=f"{blind.blind_type}-{blind.mac[12:]}",
-            via_device=(DOMAIN, config_entry.unique_id),
+            via_device=(DOMAIN, blind._gateway.mac),
+            hw_version=blind.wireless_name,
         )
 
     @property

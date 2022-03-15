@@ -2,11 +2,17 @@
 from lightwave.lightwave import LWLink
 import voluptuous as vol
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_SWITCHES
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_LIGHTS,
+    CONF_NAME,
+    CONF_SWITCHES,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 CONF_SERIAL = "serial"
 CONF_PROXY_IP = "proxy_ip"
@@ -57,8 +63,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = (Platform.CLIMATE, Platform.SENSOR)
 
-async def async_setup(hass, config):
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Try to start embedded Lightwave broker."""
     host = config[DOMAIN][CONF_HOST]
     lwlink = LWLink(host)
@@ -66,12 +74,12 @@ async def async_setup(hass, config):
 
     if lights := config[DOMAIN][CONF_LIGHTS]:
         hass.async_create_task(
-            async_load_platform(hass, "light", DOMAIN, lights, config)
+            async_load_platform(hass, Platform.LIGHT, DOMAIN, lights, config)
         )
 
     if switches := config[DOMAIN][CONF_SWITCHES]:
         hass.async_create_task(
-            async_load_platform(hass, "switch", DOMAIN, switches, config)
+            async_load_platform(hass, Platform.SWITCH, DOMAIN, switches, config)
         )
 
     if trv := config[DOMAIN][CONF_TRV]:
@@ -80,8 +88,7 @@ async def async_setup(hass, config):
         proxy_port = trv[CONF_PROXY_PORT]
         lwlink.set_trv_proxy(proxy_ip, proxy_port)
 
-        platforms = [CLIMATE_DOMAIN, SENSOR_DOMAIN]
-        for platform in platforms:
+        for platform in PLATFORMS:
             hass.async_create_task(
                 async_load_platform(hass, platform, DOMAIN, trvs, config)
             )

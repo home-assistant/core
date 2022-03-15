@@ -14,7 +14,7 @@ import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
 from homeassistant.const import ATTR_COMMAND, ATTR_NAME
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -956,7 +956,7 @@ def async_load_api(hass):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     application_controller = zha_gateway.application_controller
 
-    async def permit(service):
+    async def permit(service: ServiceCall) -> None:
         """Allow devices to join this network."""
         duration = service.data[ATTR_DURATION]
         ieee = service.data.get(ATTR_IEEE)
@@ -987,7 +987,7 @@ def async_load_api(hass):
         DOMAIN, SERVICE_PERMIT, permit, schema=SERVICE_SCHEMAS[SERVICE_PERMIT]
     )
 
-    async def remove(service):
+    async def remove(service: ServiceCall) -> None:
         """Remove a node from the network."""
         ieee = service.data[ATTR_IEEE]
         zha_gateway: ZhaGatewayType = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
@@ -1005,7 +1005,7 @@ def async_load_api(hass):
         DOMAIN, SERVICE_REMOVE, remove, schema=SERVICE_SCHEMAS[IEEE_SERVICE]
     )
 
-    async def set_zigbee_cluster_attributes(service):
+    async def set_zigbee_cluster_attributes(service: ServiceCall) -> None:
         """Set zigbee attribute for cluster on zha entity."""
         ieee = service.data.get(ATTR_IEEE)
         endpoint_id = service.data.get(ATTR_ENDPOINT_ID)
@@ -1095,14 +1095,7 @@ def async_load_api(hass):
         schema=SERVICE_SCHEMAS[SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE],
     )
 
-    hass.helpers.service.async_register_admin_service(
-        DOMAIN,
-        SERVICE_GET_ZIGBEE_CLUSTER_ATTRIBUTE,
-        get_zigbee_cluster_attributes,
-        schema=SERVICE_SCHEMAS[SERVICE_GET_ZIGBEE_CLUSTER_ATTRIBUTE],
-    )
-
-    async def issue_zigbee_cluster_command(service):
+    async def issue_zigbee_cluster_command(service: ServiceCall) -> None:
         """Issue command on zigbee cluster on zha entity."""
         ieee = service.data.get(ATTR_IEEE)
         endpoint_id = service.data.get(ATTR_ENDPOINT_ID)
@@ -1153,7 +1146,7 @@ def async_load_api(hass):
         schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND],
     )
 
-    async def issue_zigbee_group_command(service):
+    async def issue_zigbee_group_command(service: ServiceCall) -> None:
         """Issue command on zigbee cluster on a zigbee group."""
         group_id = service.data.get(ATTR_GROUP)
         cluster_id = service.data.get(ATTR_CLUSTER_ID)
@@ -1199,7 +1192,7 @@ def async_load_api(hass):
         }
         return cluster_channels.get(CHANNEL_IAS_WD)
 
-    async def warning_device_squawk(service):
+    async def warning_device_squawk(service: ServiceCall) -> None:
         """Issue the squawk command for an IAS warning device."""
         ieee = service.data[ATTR_IEEE]
         mode = service.data.get(ATTR_WARNING_DEVICE_MODE)
@@ -1238,7 +1231,7 @@ def async_load_api(hass):
         schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_SQUAWK],
     )
 
-    async def warning_device_warn(service):
+    async def warning_device_warn(service: ServiceCall) -> None:
         """Issue the warning command for an IAS warning device."""
         ieee = service.data[ATTR_IEEE]
         mode = service.data.get(ATTR_WARNING_DEVICE_MODE)

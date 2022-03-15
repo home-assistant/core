@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -17,11 +18,12 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,13 +42,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=SENSOR_TEMPERATURE,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key=SENSOR_CO2,
         name="CO2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        device_class=DEVICE_CLASS_CO2,
+        device_class=SensorDeviceClass.CO2,
     ),
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
@@ -61,8 +63,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the available CO2 sensors."""
+    _LOGGER.warning(
+        "The MH-Z19 CO2 Sensor integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
 
     try:
         co2sensor.read_mh_z19(config.get(CONF_SERIAL_DEVICE))
@@ -72,7 +85,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             config.get(CONF_SERIAL_DEVICE),
             err,
         )
-        return False
+        return
 
     data = MHZClient(co2sensor, config.get(CONF_SERIAL_DEVICE))
     name = config[CONF_NAME]

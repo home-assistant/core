@@ -1,4 +1,8 @@
 """Fixtures for Freedompro integration tests."""
+from __future__ import annotations
+
+from copy import deepcopy
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -71,3 +75,8 @@ async def init_integration_no_state(hass) -> MockConfigEntry:
         await hass.async_block_till_done()
 
     return entry
+
+
+def get_states_response_for_uid(uid: str) -> list[dict[str, Any]]:
+    """Return a deepcopy of the device state list for specific uid."""
+    return deepcopy([resp for resp in DEVICES_STATE if resp["uid"] == uid])

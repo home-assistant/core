@@ -8,7 +8,7 @@
         "error": {
             "invalid_auth": "Authentification invalide"
         },
-        "flow_title": "Moniteur d'appels AVM FRITZ! Box: {name}",
+        "flow_title": "{name}",
         "step": {
             "phonebook": {
                 "data": {

@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "Lutron Cas\u00e9ta {name} ( {host} )",
+        "flow_title": "{name} ( {host} )",
         "step": {
             "import_failed": {
                 "description": "Impossible de configurer la passerelle (h\u00f4te: {host} ) import\u00e9 \u00e0 partir de configuration.yaml.",

@@ -432,5 +432,6 @@
                 "1.1"
             ]
         }
-    ]
+    ],
+    "isControllerNode": false
 }

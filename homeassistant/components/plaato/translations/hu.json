@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "cloud_not_connected": "Nincs csatlakoztatva a Home Assistant Cloudhoz.",
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
             "webhook_not_internet_accessible": "A Home Assistant p\u00e9ld\u00e1ny\u00e1nak el\u00e9rhet\u0151nek kell lennie az internet fel\u0151l a webhook \u00fczenetek fogad\u00e1s\u00e1hoz."
         },

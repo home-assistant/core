@@ -26,7 +26,7 @@ MOCK_VERSION_NIGHTLY = "1970.1.0.dev19700101"
 
 
 async def test_no_send(hass, caplog, aioclient_mock):
-    """Test send when no prefrences are defined."""
+    """Test send when no preferences are defined."""
     analytics = Analytics(hass)
     with patch(
         "homeassistant.components.hassio.is_hassio",
@@ -102,7 +102,7 @@ async def test_failed_to_send_raises(hass, caplog, aioclient_mock):
 
 
 async def test_send_base(hass, caplog, aioclient_mock):
-    """Test send base prefrences are defined."""
+    """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
 
@@ -123,7 +123,7 @@ async def test_send_base(hass, caplog, aioclient_mock):
 
 
 async def test_send_base_with_supervisor(hass, caplog, aioclient_mock):
-    """Test send base prefrences are defined."""
+    """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
 
     analytics = Analytics(hass)
@@ -170,7 +170,7 @@ async def test_send_base_with_supervisor(hass, caplog, aioclient_mock):
 
 
 async def test_send_usage(hass, caplog, aioclient_mock):
-    """Test send usage prefrences are defined."""
+    """Test send usage preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
@@ -187,7 +187,7 @@ async def test_send_usage(hass, caplog, aioclient_mock):
 
 
 async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
-    """Test send usage with supervisor prefrences are defined."""
+    """Test send usage with supervisor preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
 
     analytics = Analytics(hass)
@@ -240,7 +240,7 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
 
 
 async def test_send_statistics(hass, caplog, aioclient_mock):
-    """Test send statistics prefrences are defined."""
+    """Test send statistics preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
@@ -258,7 +258,7 @@ async def test_send_statistics(hass, caplog, aioclient_mock):
 
 
 async def test_send_statistics_one_integration_fails(hass, caplog, aioclient_mock):
-    """Test send statistics prefrences are defined."""
+    """Test send statistics preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
@@ -280,7 +280,7 @@ async def test_send_statistics_one_integration_fails(hass, caplog, aioclient_moc
 async def test_send_statistics_async_get_integration_unknown_exception(
     hass, caplog, aioclient_mock
 ):
-    """Test send statistics prefrences are defined."""
+    """Test send statistics preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
@@ -296,7 +296,7 @@ async def test_send_statistics_async_get_integration_unknown_exception(
 
 
 async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
-    """Test send statistics prefrences are defined."""
+    """Test send statistics preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
@@ -427,7 +427,7 @@ async def test_nightly_endpoint(hass, aioclient_mock):
 
 
 async def test_send_with_no_energy(hass, aioclient_mock):
-    """Test send base prefrences are defined."""
+    """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
 
@@ -448,7 +448,7 @@ async def test_send_with_no_energy(hass, aioclient_mock):
 
 
 async def test_send_with_no_energy_config(hass, aioclient_mock):
-    """Test send base prefrences are defined."""
+    """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
 
@@ -472,7 +472,7 @@ async def test_send_with_no_energy_config(hass, aioclient_mock):
 
 
 async def test_send_with_energy_config(hass, aioclient_mock):
-    """Test send base prefrences are defined."""
+    """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
 

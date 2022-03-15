@@ -194,10 +194,14 @@ class Store:
         await self._async_handle_write_data()
 
     @callback
-    def async_delay_save(self, data_func: Callable[[], dict], delay: float = 0) -> None:
+    def async_delay_save(
+        self,
+        data_func: Callable[[], dict | list],
+        delay: float = 0,
+    ) -> None:
         """Save data with an optional delay."""
         # pylint: disable-next=import-outside-toplevel
-        from homeassistant.helpers.event import async_call_later
+        from .event import async_call_later
 
         self._data = {
             "version": self.version,
@@ -277,8 +281,7 @@ class Store:
 
     def _write_data(self, path: str, data: dict) -> None:
         """Write the data."""
-        if not os.path.isdir(os.path.dirname(path)):
-            os.makedirs(os.path.dirname(path))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
 
         _LOGGER.debug("Writing data for %s to %s", self.key, path)
         json_util.save_json(

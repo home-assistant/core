@@ -1,13 +1,8 @@
 """Growatt Sensor definitions for the Inverter type."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import STATE_CLASS_TOTAL
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -24,7 +19,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Energy today",
         api_key="powerToday",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -32,16 +27,16 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Lifetime energy output",
         api_key="powerTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         precision=1,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=SensorStateClass.TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="inverter_voltage_input_1",
         name="Input 1 voltage",
         api_key="vpv1",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -49,7 +44,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 1 Amperage",
         api_key="ipv1",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -57,7 +52,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 1 Wattage",
         api_key="ppv1",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -65,7 +60,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 2 voltage",
         api_key="vpv2",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -73,7 +68,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 2 Amperage",
         api_key="ipv2",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -81,7 +76,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 2 Wattage",
         api_key="ppv2",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -89,7 +84,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 3 voltage",
         api_key="vpv3",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -97,7 +92,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 3 Amperage",
         api_key="ipv3",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -105,7 +100,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 3 Wattage",
         api_key="ppv3",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -113,7 +108,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Internal wattage",
         api_key="ppv",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -121,7 +116,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Reactive voltage",
         api_key="vacr",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -129,7 +124,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Reactive amperage",
         api_key="iacr",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -144,7 +139,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Output power",
         api_key="pac",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -152,7 +147,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Reactive wattage",
         api_key="pacr",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -160,7 +155,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Intelligent Power Management temperature",
         api_key="ipmTemperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -168,7 +163,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Temperature",
         api_key="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         precision=1,
     ),
 )

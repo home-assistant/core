@@ -1,10 +1,11 @@
 """Support for controlling GPIO pins of a Orange Pi."""
-
 import logging
 
 from OPi import GPIO
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from .const import PIN_MODES
 
@@ -13,8 +14,14 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "orangepi_gpio"
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Orange Pi GPIO component."""
+    _LOGGER.warning(
+        "The Orange Pi GPIO integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
 
     def cleanup_gpio(event):
         """Stuff to do before stopping."""

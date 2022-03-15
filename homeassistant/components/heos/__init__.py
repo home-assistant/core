@@ -8,9 +8,8 @@ import logging
 from pyheos import Heos, HeosError, const as heos_const
 import voluptuous as vol
 
-from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -35,7 +34,7 @@ from .const import (
     SIGNAL_HEOS_UPDATED,
 )
 
-PLATFORMS = [MEDIA_PLAYER_DOMAIN]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -130,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_CONTROLLER_MANAGER: controller_manager,
         DATA_GROUP_MANAGER: group_manager,
         DATA_SOURCE_MANAGER: source_manager,
-        MEDIA_PLAYER_DOMAIN: players,
+        Platform.MEDIA_PLAYER: players,
         # Maps player_id to entity_id. Populated by the individual HeosMediaPlayer entities.
         DATA_ENTITY_ID_MAP: {},
     }
@@ -228,7 +227,7 @@ class ControllerManager:
                 )
             # update entity registry
             entity_id = self._entity_registry.async_get_entity_id(
-                MEDIA_PLAYER_DOMAIN, DOMAIN, str(old_id)
+                Platform.MEDIA_PLAYER, DOMAIN, str(old_id)
             )
             if entity_id:
                 self._entity_registry.async_update_entity(
@@ -332,8 +331,7 @@ class GroupManager:
             heos_const.EVENT_CONNECTED,
             SIGNAL_HEOS_PLAYER_ADDED,
         ):
-            groups = await self.async_get_group_membership()
-            if groups:
+            if groups := await self.async_get_group_membership():
                 self._group_membership = groups
                 _LOGGER.debug("Groups updated due to change event")
                 # Let players know to update
@@ -355,7 +353,7 @@ class GroupManager:
             # Avoid calling async_update_groups when `DATA_ENTITY_ID_MAP` has not been
             # fully populated yet. This may only happen during early startup.
             if (
-                len(self._hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN])
+                len(self._hass.data[DOMAIN][Platform.MEDIA_PLAYER])
                 <= len(self._hass.data[DOMAIN][DATA_ENTITY_ID_MAP])
                 and not self._initialized
             ):

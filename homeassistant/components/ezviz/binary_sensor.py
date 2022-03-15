@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_UPDATE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -20,7 +19,7 @@ PARALLEL_UPDATES = 1
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "Motion_Trigger": BinarySensorEntityDescription(
         key="Motion_Trigger",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
     ),
     "alarm_schedules_enabled": BinarySensorEntityDescription(
         key="alarm_schedules_enabled"
@@ -28,7 +27,7 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "encrypted": BinarySensorEntityDescription(key="encrypted"),
     "upgrade_available": BinarySensorEntityDescription(
         key="upgrade_available",
-        device_class=DEVICE_CLASS_UPDATE,
+        device_class=BinarySensorDeviceClass.UPDATE,
     ),
 }
 

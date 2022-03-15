@@ -1,5 +1,7 @@
 """The dhcp integration."""
+from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 import fnmatch
@@ -24,6 +26,7 @@ from homeassistant.components.device_tracker.const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    CONNECTED_DEVICE_REGISTERED,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SOURCE_TYPE_ROUTER,
 )
@@ -35,7 +38,13 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceRegistry,
+    async_get,
+    format_mac,
+)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
@@ -54,8 +63,10 @@ MESSAGE_TYPE = "message-type"
 HOSTNAME: Final = "hostname"
 MAC_ADDRESS: Final = "macaddress"
 IP_ADDRESS: Final = "ip"
+REGISTERED_DEVICES: Final = "registered_devices"
 DHCP_REQUEST = 3
 SCAN_INTERVAL = timedelta(minutes=60)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,22 +79,18 @@ class DhcpServiceInfo(BaseServiceInfo):
     hostname: str
     macaddress: str
 
-    # Used to prevent log flooding. To be removed in 2022.6
-    _warning_logged: bool = False
-
     def __getitem__(self, name: str) -> Any:
         """
         Enable method for compatibility reason.
 
         Deprecated, and will be removed in version 2022.6.
         """
-        if not self._warning_logged:
-            report(
-                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={DOMAIN},
-                error_if_core=False,
-            )
-            self._warning_logged = True
+        report(
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
         return getattr(self, name)
 
     def get(self, name: str, default: Any = None) -> Any:
@@ -92,13 +99,12 @@ class DhcpServiceInfo(BaseServiceInfo):
 
         Deprecated, and will be removed in version 2022.6.
         """
-        if not self._warning_logged:
-            report(
-                f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={DOMAIN},
-                error_if_core=False,
-            )
-            self._warning_logged = True
+        report(
+            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
         if hasattr(self, name):
             return getattr(self, name)
         return default
@@ -106,16 +112,23 @@ class DhcpServiceInfo(BaseServiceInfo):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the dhcp component."""
+    watchers: list[WatcherBase] = []
+    address_data: dict[str, dict[str, str]] = {}
+    integration_matchers = await async_get_dhcp(hass)
+
+    # For the passive classes we need to start listening
+    # for state changes and connect the dispatchers before
+    # everything else starts up or we will miss events
+    for passive_cls in (DeviceTrackerRegisteredWatcher, DeviceTrackerWatcher):
+        passive_watcher = passive_cls(hass, address_data, integration_matchers)
+        await passive_watcher.async_start()
+        watchers.append(passive_watcher)
 
     async def _initialize(_):
-        address_data = {}
-        integration_matchers = await async_get_dhcp(hass)
-        watchers = []
-
-        for cls in (DHCPWatcher, DeviceTrackerWatcher, NetworkWatcher):
-            watcher = cls(hass, address_data, integration_matchers)
-            await watcher.async_start()
-            watchers.append(watcher)
+        for active_cls in (DHCPWatcher, NetworkWatcher):
+            active_watcher = active_cls(hass, address_data, integration_matchers)
+            await active_watcher.async_start()
+            watchers.append(active_watcher)
 
         async def _async_stop(*_):
             for watcher in watchers:
@@ -138,7 +151,15 @@ class WatcherBase:
         self._integration_matchers = integration_matchers
         self._address_data = address_data
 
-    def process_client(self, ip_address, hostname, mac_address):
+    @abstractmethod
+    async def async_stop(self):
+        """Stop the watcher."""
+
+    @abstractmethod
+    async def async_start(self):
+        """Start the watcher."""
+
+    def process_client(self, ip_address: str, hostname: str, mac_address: str) -> None:
         """Process a client."""
         return run_callback_threadsafe(
             self.hass.loop,
@@ -149,7 +170,9 @@ class WatcherBase:
         ).result()
 
     @callback
-    def async_process_client(self, ip_address, hostname, mac_address):
+    def async_process_client(
+        self, ip_address: str, hostname: str, mac_address: str
+    ) -> None:
         """Process a client."""
         made_ip_address = make_ip_address(ip_address)
 
@@ -184,7 +207,21 @@ class WatcherBase:
             lowercase_hostname,
         )
 
+        matched_domains = set()
+        device_domains = set()
+
+        dev_reg: DeviceRegistry = async_get(self.hass)
+        if device := dev_reg.async_get_device(
+            identifiers=set(), connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
+        ):
+            for entry_id in device.config_entries:
+                if entry := self.hass.config_entries.async_get_entry(entry_id):
+                    device_domains.add(entry.domain)
+
         for entry in self._integration_matchers:
+            if entry.get(REGISTERED_DEVICES) and not entry["domain"] in device_domains:
+                continue
+
             if MAC_ADDRESS in entry and not fnmatch.fnmatch(
                 uppercase_mac, entry[MAC_ADDRESS]
             ):
@@ -196,9 +233,12 @@ class WatcherBase:
                 continue
 
             _LOGGER.debug("Matched %s against %s", data, entry)
+            matched_domains.add(entry["domain"])
+
+        for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
-                entry["domain"],
+                domain,
                 {"source": config_entries.SOURCE_DHCP},
                 DhcpServiceInfo(
                     ip=ip_address,
@@ -277,7 +317,7 @@ class DeviceTrackerWatcher(WatcherBase):
     @callback
     def _async_process_device_event(self, event: Event):
         """Process a device tracker state change event."""
-        self._async_process_device_state(event.data.get("new_state"))
+        self._async_process_device_state(event.data["new_state"])
 
     @callback
     def _async_process_device_state(self, state: State):
@@ -293,6 +333,39 @@ class DeviceTrackerWatcher(WatcherBase):
         ip_address = attributes.get(ATTR_IP)
         hostname = attributes.get(ATTR_HOST_NAME, "")
         mac_address = attributes.get(ATTR_MAC)
+
+        if ip_address is None or mac_address is None:
+            return
+
+        self.async_process_client(ip_address, hostname, _format_mac(mac_address))
+
+
+class DeviceTrackerRegisteredWatcher(WatcherBase):
+    """Class to watch data from device tracker registrations."""
+
+    def __init__(self, hass, address_data, integration_matchers):
+        """Initialize class."""
+        super().__init__(hass, address_data, integration_matchers)
+        self._unsub = None
+
+    async def async_stop(self):
+        """Stop watching for device tracker registrations."""
+        if self._unsub:
+            self._unsub()
+            self._unsub = None
+
+    async def async_start(self):
+        """Stop watching for device tracker registrations."""
+        self._unsub = async_dispatcher_connect(
+            self.hass, CONNECTED_DEVICE_REGISTERED, self._async_process_device_data
+        )
+
+    @callback
+    def _async_process_device_data(self, data: dict[str, str | None]) -> None:
+        """Process a device tracker state."""
+        ip_address = data[ATTR_IP]
+        hostname = data[ATTR_HOST_NAME] or ""
+        mac_address = data[ATTR_MAC]
 
         if ip_address is None or mac_address is None:
             return

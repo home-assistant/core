@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} pili zay\u0131f",
+            "is_co": "{entity_name} karbon monoksit alg\u0131l\u0131yor",
             "is_cold": "{entity_name} so\u011fuk",
             "is_connected": "{entity_name} ba\u011fl\u0131",
             "is_gas": "{entity_name} gaz alg\u0131l\u0131yor",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} nemli",
             "is_motion": "{entity_name} hareket alg\u0131l\u0131yor",
             "is_moving": "{entity_name} ta\u015f\u0131n\u0131yor",
+            "is_no_co": "{entity_name} karbon monoksit alg\u0131lam\u0131yor",
             "is_no_gas": "{entity_name} gaz alg\u0131lam\u0131yor",
             "is_no_light": "{entity_name} \u0131\u015f\u0131\u011f\u0131 alg\u0131lam\u0131yor",
             "is_no_motion": "{entity_name} hareketi alg\u0131lam\u0131yor",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} pil seviyesi d\u00fc\u015f\u00fck",
+            "co": "{entity_name} karbon monoksit alg\u0131lamaya ba\u015flad\u0131",
             "cold": "{entity_name} so\u011fudu",
             "connected": "{entity_name} ba\u011fland\u0131",
             "gas": "{entity_name} gaz alg\u0131lamaya ba\u015flad\u0131",
@@ -63,6 +66,7 @@
             "moist": "{entity_name} nemli oldu",
             "motion": "{entity_name} hareket alg\u0131lamaya ba\u015flad\u0131",
             "moving": "{entity_name} ta\u015f\u0131nmaya ba\u015flad\u0131",
+            "no_co": "{entity_name} karbon monoksit alg\u0131lamay\u0131 durdurdu",
             "no_gas": "{entity_name} gaz alg\u0131lamay\u0131 durdurdu",
             "no_light": "{entity_name} \u0131\u015f\u0131\u011f\u0131 alg\u0131lamay\u0131 durdurdu",
             "no_motion": "{entity_name} hareket alg\u0131lamay\u0131 durdurdu",
@@ -84,6 +88,7 @@
             "not_powered": "{entity_name} desteklenmiyor",
             "not_present": "{entity_name} mevcut de\u011fil",
             "not_running": "{entity_name} art\u0131k \u00e7al\u0131\u015fm\u0131yor",
+            "not_tampered": "{entity_name} kurcalamay\u0131 alg\u0131lamay\u0131 durdurdu",
             "not_unsafe": "{entity_name} g\u00fcvenli hale geldi",
             "occupied": "{entity_name} i\u015fgal edildi",
             "opened": "{entity_name} a\u00e7\u0131ld\u0131",
@@ -94,6 +99,7 @@
             "running": "{entity_name} \u00e7al\u0131\u015fmaya ba\u015flad\u0131",
             "smoke": "{entity_name} duman alg\u0131lamaya ba\u015flad\u0131",
             "sound": "{entity_name} sesi alg\u0131lamaya ba\u015flad\u0131",
+            "tampered": "{entity_name} , kurcalamay\u0131 alg\u0131lamaya ba\u015flad\u0131",
             "turned_off": "{entity_name} kapat\u0131ld\u0131",
             "turned_on": "{entity_name} a\u00e7\u0131ld\u0131",
             "unsafe": "{entity_name} g\u00fcvensiz hale geldi",
@@ -102,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "karbonmonoksit",
         "cold": "so\u011fuk",
         "gas": "gaz",
         "heat": "s\u0131cakl\u0131k",
@@ -127,6 +134,10 @@
             "off": "\u015earj olmuyor",
             "on": "\u015earj Oluyor"
         },
+        "co": {
+            "off": "Temiz",
+            "on": "Alg\u0131land\u0131"
+        },
         "cold": {
             "off": "Normal",
             "on": "So\u011fuk"
@@ -136,11 +147,11 @@
             "on": "Ba\u011fland\u0131"
         },
         "door": {
-            "off": "Kapand\u0131",
+            "off": "Kapal\u0131",
             "on": "A\u00e7\u0131k"
         },
         "garage_door": {
-            "off": "Kapand\u0131",
+            "off": "Kapal\u0131",
             "on": "A\u00e7\u0131k"
         },
         "gas": {
@@ -176,7 +187,7 @@
             "on": "Alg\u0131land\u0131"
         },
         "opening": {
-            "off": "Kapand\u0131",
+            "off": "Kapal\u0131",
             "on": "A\u00e7\u0131k"
         },
         "plug": {
@@ -216,7 +227,7 @@
             "on": "Alg\u0131land\u0131"
         },
         "window": {
-            "off": "Kapand\u0131",
+            "off": "Kapal\u0131",
             "on": "A\u00e7\u0131k"
         }
     },

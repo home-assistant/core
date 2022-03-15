@@ -11,9 +11,8 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_APPTOKEN, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,16 +54,6 @@ class EfergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_API_KEY] == import_config[CONF_APPTOKEN]:
-                _part = import_config[CONF_APPTOKEN][0:4]
-                _msg = f"Efergy yaml config with partial key {_part} has been imported. Please remove it"
-                _LOGGER.warning(_msg)
-                return self.async_abort(reason="already_configured")
-        return await self.async_step_user({CONF_API_KEY: import_config[CONF_APPTOKEN]})
 
     async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
