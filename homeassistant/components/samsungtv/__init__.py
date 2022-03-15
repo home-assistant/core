@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import partial
-import socket
 from typing import Any
 from urllib.parse import urlparse
 
@@ -87,12 +86,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     for entry_config in config[DOMAIN]:
-        ip_address = await hass.async_add_executor_job(
-            socket.gethostbyname, entry_config[CONF_HOST]
-        )
-        hass.data[DOMAIN][ip_address] = {
-            CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)
-        }
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,

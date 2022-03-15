@@ -235,7 +235,15 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # We need to import even if we cannot validate
         # since the TV may be off at startup
         await self._async_set_name_host_from_input(user_input)
-        self._async_abort_entries_match({CONF_HOST: self._host})
+        entry, _ = self._async_get_existing_matching_entry()
+        if entry:
+            if not all(entry.data.get(k) == v for k, v in user_input.items()):
+                LOGGER.debug("Updating config entry from YAML: %s", user_input)
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, **user_input}
+                )
+            raise data_entry_flow.AbortFlow("already_configured")
+
         port = user_input.get(CONF_PORT)
         if port in WEBSOCKET_PORTS:
             user_input[CONF_METHOD] = METHOD_WEBSOCKET

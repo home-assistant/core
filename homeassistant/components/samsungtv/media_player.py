@@ -100,10 +100,8 @@ async def async_setup_entry(
     """Set up the Samsung TV from a config entry."""
     bridge = hass.data[DOMAIN][entry.entry_id]
 
-    host = entry.data[CONF_HOST]
     on_script = None
-    data = hass.data[DOMAIN]
-    if turn_on_action := data.get(host, {}).get(CONF_ON_ACTION):
+    if turn_on_action := entry.data.get(CONF_ON_ACTION):
         on_script = Script(
             hass, turn_on_action, entry.data.get(CONF_NAME, DEFAULT_NAME), DOMAIN
         )
