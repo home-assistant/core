@@ -153,4 +153,6 @@ class TwitchSensor(SensorEntity):
             self._attr_entity_picture = stream["thumbnail_url"]
         else:
             self._attr_native_value = STATE_OFFLINE
+            self._attr_extra_state_attributes[ATTR_GAME] = None
+            self._attr_extra_state_attributes[ATTR_TITLE] = None
             self._attr_entity_picture = channel["offline_image_url"]
