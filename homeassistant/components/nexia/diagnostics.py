@@ -11,7 +11,7 @@ from .const import CONF_BRAND, DOMAIN
 from .coordinator import NexiaDataUpdateCoordinator
 
 TO_REDACT = {
-    "HouseID",
+    "dealer_contact_info",
 }
 
 
