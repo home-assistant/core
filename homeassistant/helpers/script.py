@@ -110,6 +110,7 @@ ATTR_MAX = "max"
 
 DATA_SCRIPTS = "helpers.script"
 DATA_SCRIPT_BREAKPOINTS = "helpers.script_breakpoints"
+DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED = "helpers.script_not_allowed"
 RUN_ID_ANY = "*"
 NODE_ANY = "*"
 
@@ -883,6 +884,7 @@ class _QueuedScriptRun(_ScriptRun):
 
 async def _async_stop_scripts_after_shutdown(hass, point_in_time):
     """Stop running Script objects started after shutdown."""
+    hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
         script for script in hass.data[DATA_SCRIPTS] if script["instance"].is_running
     ]
@@ -1192,6 +1194,12 @@ class Script:
             )
             context = Context()
 
+        # Prevent spawning new script runs when Home Assistant is shutting down
+        if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
+            self._log("Home Assistant is shutting down, starting script blocked")
+            return
+
+        # Prevent spawning new script runs if not allowed by script mode
         if self.is_running:
             if self.script_mode == SCRIPT_MODE_SINGLE:
                 if self._max_exceeded != "SILENT":

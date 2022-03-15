@@ -3276,6 +3276,26 @@ async def test_shutdown_after(hass, caplog):
     assert_action_trace(expected_trace)
 
 
+async def test_start_script_after_shutdown(hass, caplog):
+    """Test starting scripts after shutdown is blocked."""
+    delay_alias = "delay step"
+    sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 120}, "alias": delay_alias})
+    script_obj = script.Script(hass, sequence, "test script", "test_domain")
+
+    # Trigger 1st stage script shutdown
+    hass.state = CoreState.stopping
+    hass.bus.async_fire("homeassistant_stop")
+    await hass.async_block_till_done()
+    # Trigger 2nd stage script shutdown
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    # Attempt to spawn additional script run
+    await script_obj.async_run(context=Context())
+    assert not script_obj.is_running
+    assert "Home Assistant is shutting down, starting script blocked" in caplog.text
+
+
 async def test_update_logger(hass, caplog):
     """Test updating logger."""
     sequence = cv.SCRIPT_SCHEMA({"event": "test_event"})
