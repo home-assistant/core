@@ -112,3 +112,32 @@ TMRW_ATTR_PRESSURE_SURFACE_LEVEL = "pressureSurfaceLevel"
 TMRW_ATTR_SOLAR_GHI = "solarGHI"
 TMRW_ATTR_CLOUD_BASE = "cloudBase"
 TMRW_ATTR_CLOUD_CEILING = "cloudCeiling"
+
+MANUAL_MIGRATION_MESSAGE = (
+    "As part of [ClimaCell's rebranding to Tomorrow.io](https://www.tomorrow.io/blog/my-last-day-as-ceo-of-climacell/) "
+    "we will migrate your existing ClimaCell config entry (or config "
+    "entries) to the new Tomorrow.io integration, but because **the "
+    " V3 API is now deprecated**, you will need to get a new V4 API "
+    "key from [Tomorrow.io](https://app.tomorrow.io/development/keys)."
+    " Once that is done, visit the "
+    "[Integrations Configuration](/config/integrations) page and "
+    "click Configure on the Tomorrow.io card(s) to submit the new "
+    "key. Once your key has been validated, your config entry will "
+    "automatically be migrated. The new integration is a drop in "
+    "replacement and your existing entities will be migrated over, "
+    "just note that the location of the integration card on the "
+    "[Integrations Configuration](/config/integrations) page has changed "
+    "since the integration name has changed."
+)
+
+AUTO_MIGRATION_MESSAGE = (
+    "As part of [ClimaCell's rebranding to Tomorrow.io](https://www.tomorrow.io/blog/my-last-day-as-ceo-of-climacell/) "
+    "we have automatically migrated your existing ClimaCell config entry "
+    "(or as many of your ClimaCell config entries as we could) to the new "
+    "Tomorrow.io integration. There is nothing you need to do since the "
+    "new integration is a drop in replacement and your existing entities "
+    "have been migrated over, just note that the location of the "
+    "integration card on the "
+    "[Integrations Configuration](/config/integrations) page has changed "
+    "since the integration name has changed."
+)
