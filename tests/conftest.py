@@ -778,13 +778,28 @@ def enable_statistics():
 
 
 @pytest.fixture
-def hass_recorder(enable_statistics, hass_storage):
+def enable_nightly_purge():
+    """Fixture to control enabling of recorder's nightly purge job.
+
+    To enable nightly purgin, tests can be marked with:
+    @pytest.mark.parametrize("enable_nightly_purge", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     with patch(
         "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         side_effect=stats,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        side_effect=nightly,
         autospec=True,
     ):
 
