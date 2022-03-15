@@ -22,6 +22,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
+    CONF_ON_ACTION,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
@@ -79,13 +80,17 @@ from tests.common import MockConfigEntry
 RESULT_ALREADY_CONFIGURED = "already_configured"
 RESULT_ALREADY_IN_PROGRESS = "already_in_progress"
 
-MOCK_IMPORT_DATA = {
+MOCK_IMPORT_DATA_WITHOUT_NAME = {
     CONF_HOST: "fake_host",
+}
+MOCK_IMPORT_DATA = {
+    **MOCK_IMPORT_DATA_WITHOUT_NAME,
     CONF_NAME: "fake",
     CONF_PORT: 55000,
 }
-MOCK_IMPORT_DATA_WITHOUT_NAME = {
-    CONF_HOST: "fake_host",
+MOCK_IMPORT_DATA_WITH_ON_ACTION = {
+    **MOCK_IMPORT_DATA,
+    CONF_ON_ACTION: [{"delay": "00:00:01"}],
 }
 MOCK_IMPORT_WSDATA = {
     CONF_HOST: "fake_host",
@@ -913,6 +918,65 @@ async def test_import_legacy(hass: HomeAssistant) -> None:
     assert len(entries) == 1
     assert entries[0].data[CONF_METHOD] == METHOD_LEGACY
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
+
+
+@pytest.mark.usefixtures("remote")
+async def test_import_legacy_update(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """
+    Test importing from yaml with hostname.
+
+    CONF_ON_ACTION should be updated.
+    """
+    # Import basic data (same as above)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "fake_host",
+            CONF_MANUFACTURER: "Samsung",
+            CONF_METHOD: "legacy",
+            CONF_NAME: "fake",
+            CONF_PORT: 55000,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert CONF_ON_ACTION not in entries[0].data
+
+    # Import updated data
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=MOCK_IMPORT_DATA_WITH_ON_ACTION,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert len(entries) == 1
+    assert entries[0].data == {
+        CONF_HOST: "fake_host",
+        CONF_MANUFACTURER: "Samsung",
+        CONF_METHOD: "legacy",
+        CONF_NAME: "fake",
+        CONF_PORT: 55000,
+        CONF_ON_ACTION: [{"delay": "00:00:01"}],
+    }
+    assert "Updating config entry from YAML:" in caplog.text
+
+    # Import identical updated data
+    caplog.clear()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=MOCK_IMPORT_DATA_WITH_ON_ACTION,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert "Updating config entry from YAML:" not in caplog.text
 
 
 @pytest.mark.usefixtures("remote", "remotews", "rest_api_failing")
