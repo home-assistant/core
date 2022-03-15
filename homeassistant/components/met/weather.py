@@ -40,15 +40,12 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    T,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.speed import convert as convert_speed
 
+from . import MetDataUpdateCoordinator, MetWeatherData
 from .const import (
     ATTR_FORECAST_PRECIPITATION,
     ATTR_MAP,
@@ -109,7 +106,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: MetDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
             MetWeather(
@@ -122,20 +119,24 @@ async def async_setup_entry(
     )
 
 
-def format_condition(condition: str) -> str:
+def format_condition(condition: str | None) -> str | None:
     """Return condition from dict CONDITIONS_MAP."""
+    if condition is None:
+        return None
     for key, value in CONDITIONS_MAP.items():
         if condition in value:
             return key
     return condition
 
 
-class MetWeather(CoordinatorEntity, WeatherEntity):
+class MetWeather(CoordinatorEntity[MetWeatherData], WeatherEntity):
     """Implementation of a Met.no weather condition."""
+
+    coordinator: MetDataUpdateCoordinator
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[T],
+        coordinator: MetDataUpdateCoordinator,
         config: MappingProxyType[str, Any],
         is_metric: bool,
         hourly: bool,
