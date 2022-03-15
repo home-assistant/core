@@ -1,5 +1,5 @@
 """Test the Fibaro config flow."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, patch
 
 from fiblary3.common.exceptions import HTTPException
 import pytest
@@ -18,47 +18,25 @@ TEST_PASSWORD = "password"
 
 @pytest.fixture(name="fibaro_client", autouse=True)
 def fibaro_client_fixture():
-    """Mock fibaro client."""
-    login_obj_get = MagicMock()
-    login_obj_get.status = True
-    login_obj = MagicMock()
-    login_obj.get.return_value = login_obj_get
+    """Mock common methods and attributes of fibaro client."""
+    info_mock = Mock()
+    info_mock.get.return_value = Mock(serialNumber=TEST_SERIALNUMBER, hcName=TEST_NAME)
 
-    info_obj_get = MagicMock()
-    info_obj_get.serialNumber = TEST_SERIALNUMBER
-    info_obj_get.hcName = TEST_NAME
-    info_obj = MagicMock()
-    info_obj.get.return_value = info_obj_get
-
-    array_obj = MagicMock()
-    array_obj.get.return_value = []
+    array_mock = Mock()
+    array_mock.list.return_value = []
 
     with patch("fiblary3.client.v4.client.Client.__init__", return_value=None,), patch(
-        "fiblary3.client.v4.client.Client.login",
-        login_obj,
+        "fiblary3.client.v4.client.Client.info",
+        info_mock,
         create=True,
-    ), patch("fiblary3.client.v4.client.Client.info", info_obj, create=True,), patch(
-        "fiblary3.client.v4.client.Client.rooms",
-        return_value=array_obj,
-        create=True,
-    ), patch(
+    ), patch("fiblary3.client.v4.client.Client.rooms", array_mock, create=True,), patch(
         "fiblary3.client.v4.client.Client.devices",
-        return_value=array_obj,
+        array_mock,
         create=True,
     ), patch(
         "fiblary3.client.v4.client.Client.scenes",
-        return_value=array_obj,
+        array_mock,
         create=True,
-    ):
-        yield
-
-
-@pytest.fixture(name="fibaro_async_setup", autouse=True)
-def fibaro_async_setup_fixture():
-    """Mock fibaro setup."""
-    with patch(
-        "homeassistant.components.fibaro.async_setup_entry",
-        return_value=True,
     ):
         yield
 
@@ -73,23 +51,26 @@ async def test_config_flow_user_initiated_success(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
+    login_mock = Mock()
+    login_mock.get.return_value = Mock(status=True)
+    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: TEST_URL,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+
+        assert result["type"] == "create_entry"
+        assert result["title"] == TEST_NAME
+        assert result["data"] == {
             CONF_URL: TEST_URL,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-        },
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
-    assert result["data"] == {
-        CONF_URL: TEST_URL,
-        CONF_USERNAME: TEST_USERNAME,
-        CONF_PASSWORD: TEST_PASSWORD,
-        CONF_IMPORT_PLUGINS: False,
-    }
+            CONF_IMPORT_PLUGINS: False,
+        }
 
 
 async def test_config_flow_user_initiated_connect_failure(hass):
@@ -102,10 +83,9 @@ async def test_config_flow_user_initiated_connect_failure(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.fibaro.FibaroController.connect",
-        return_value=False,
-    ):
+    login_mock = Mock()
+    login_mock.get.return_value = Mock(status=False)
+    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -130,10 +110,9 @@ async def test_config_flow_user_initiated_auth_failure(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.fibaro.FibaroController.connect",
-        side_effect=HTTPException(details="Forbidden"),
-    ):
+    login_mock = Mock()
+    login_mock.get.side_effect = HTTPException(details="Forbidden")
+    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -158,10 +137,9 @@ async def test_config_flow_user_initiated_unknown_failure_1(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.fibaro.FibaroController.connect",
-        side_effect=HTTPException(details="Any"),
-    ):
+    login_mock = Mock()
+    login_mock.get.side_effect = HTTPException(details="Any")
+    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -186,42 +164,41 @@ async def test_config_flow_user_initiated_unknown_failure_2(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.fibaro.FibaroController.connect",
-        side_effect=Exception(),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_URL: TEST_URL,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
 
-        assert result["type"] == "form"
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "unknown"}
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_config_flow_import(hass):
     """Test for importing config from configuration.yaml."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
+    login_mock = Mock()
+    login_mock.get.return_value = Mock(status=True)
+    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_URL: TEST_URL,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+                CONF_IMPORT_PLUGINS: False,
+            },
+        )
+
+        assert result["type"] == "create_entry"
+        assert result["title"] == TEST_NAME
+        assert result["data"] == {
             CONF_URL: TEST_URL,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_IMPORT_PLUGINS: False,
-        },
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
-    assert result["data"] == {
-        CONF_URL: TEST_URL,
-        CONF_USERNAME: TEST_USERNAME,
-        CONF_PASSWORD: TEST_PASSWORD,
-        CONF_IMPORT_PLUGINS: False,
-    }
+        }
