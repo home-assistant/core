@@ -1,7 +1,7 @@
 """Config flow for WS66i 6-Zone Amplifier integration."""
 import logging
 
-from pyws66i import get_ws66i
+from pyws66i import WS66i, get_ws66i
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -49,12 +49,12 @@ def _sources_from_config(data):
     }
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: core.HomeAssistant, input_data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    ws66i = get_ws66i(data[CONF_IP_ADDRESS])
+    ws66i: WS66i = get_ws66i(input_data[CONF_IP_ADDRESS])
     await hass.async_add_executor_job(ws66i.open)
     # No exception. run a simple test to make sure we opened correct port
     # Test on FIRST_ZONE because this zone will always be valid
@@ -67,7 +67,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     ws66i.close()
 
     # Return info that you want to store in the config entry.
-    return {CONF_IP_ADDRESS: data[CONF_IP_ADDRESS]}
+    return {CONF_IP_ADDRESS: input_data[CONF_IP_ADDRESS]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

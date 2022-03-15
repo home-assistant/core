@@ -121,7 +121,7 @@ async def test_setup_success(hass):
         assert hass.states.get(ZONE_1_ID) is not None
 
 
-async def _setup_ws66i(hass, ws66i):
+async def _setup_ws66i(hass, ws66i) -> MockConfigEntry:
     with patch(
         "homeassistant.components.ws66i.get_ws66i",
         new=lambda *a: ws66i,
@@ -131,8 +131,10 @@ async def _setup_ws66i(hass, ws66i):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+        return config_entry
 
-async def _setup_ws66i_with_options(hass, ws66i):
+
+async def _setup_ws66i_with_options(hass, ws66i) -> MockConfigEntry:
     with patch(
         "homeassistant.components.ws66i.get_ws66i",
         new=lambda *a: ws66i,
@@ -143,6 +145,8 @@ async def _setup_ws66i_with_options(hass, ws66i):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+        return config_entry
 
 
 async def _call_media_player_service(hass, name, data):
@@ -180,7 +184,7 @@ async def test_cannot_connect_2(hass):
 
 async def test_service_calls_with_entity_id(hass):
     """Test snapshot save/restore service calls."""
-    await _setup_ws66i_with_options(hass, MockWs66i())
+    config_entry = await _setup_ws66i_with_options(hass, MockWs66i())
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -189,6 +193,11 @@ async def test_service_calls_with_entity_id(hass):
     await _call_media_player_service(
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
     )
+
+    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = ws66i_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
     # Saving existing values
     await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": ZONE_1_ID})
@@ -200,6 +209,9 @@ async def test_service_calls_with_entity_id(hass):
     await _call_media_player_service(
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
     )
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
     # Restoring other media player to its previous state
     # The zone should not be restored
@@ -224,7 +236,7 @@ async def test_service_calls_with_entity_id(hass):
 
 async def test_service_calls_with_all_entities(hass):
     """Test snapshot save/restore service calls with entity id all."""
-    await _setup_ws66i_with_options(hass, MockWs66i())
+    _ = await _setup_ws66i_with_options(hass, MockWs66i())
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -233,6 +245,12 @@ async def test_service_calls_with_all_entities(hass):
     await _call_media_player_service(
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
     )
+
+    # This code is not needed for some reason
+    # ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
+    # coordinator = ws66i_data.coordinator
+    # await coordinator.async_refresh()
+    # await hass.async_block_till_done()
 
     # Saving existing values
     await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
@@ -244,6 +262,9 @@ async def test_service_calls_with_all_entities(hass):
     await _call_media_player_service(
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
     )
+
+    # await coordinator.async_refresh()
+    # await hass.async_block_till_done()
 
     # Restoring media player to its previous state
     await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": "all"})
@@ -257,7 +278,7 @@ async def test_service_calls_with_all_entities(hass):
 
 async def test_service_calls_without_relevant_entities(hass):
     """Test snapshot save/restore service calls with bad entity id."""
-    await _setup_ws66i_with_options(hass, MockWs66i())
+    config_entry = await _setup_ws66i_with_options(hass, MockWs66i())
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -266,6 +287,11 @@ async def test_service_calls_without_relevant_entities(hass):
     await _call_media_player_service(
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
     )
+
+    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = ws66i_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
     # Saving existing values
     await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
@@ -277,6 +303,9 @@ async def test_service_calls_without_relevant_entities(hass):
     await _call_media_player_service(
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
     )
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
     # Restoring media player to its previous state
     await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": "light.demo"})
@@ -302,7 +331,7 @@ async def test_restore_without_snapshot(hass):
 async def test_update(hass):
     """Test updating values from ws66i."""
     ws66i = MockWs66i()
-    await _setup_ws66i_with_options(hass, ws66i)
+    config_entry = await _setup_ws66i_with_options(hass, ws66i)
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -315,7 +344,9 @@ async def test_update(hass):
     ws66i.set_source(11, 3)
     ws66i.set_volume(11, 38)
 
-    await async_update_entity(hass, ZONE_1_ID)
+    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = ws66i_data.coordinator
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get(ZONE_1_ID)
@@ -328,7 +359,7 @@ async def test_update(hass):
 async def test_failed_update(hass):
     """Test updating failure from ws66i."""
     ws66i = MockWs66i()
-    await _setup_ws66i_with_options(hass, ws66i)
+    config_entry = await _setup_ws66i_with_options(hass, ws66i)
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -341,8 +372,11 @@ async def test_failed_update(hass):
     ws66i.set_source(11, 3)
     ws66i.set_volume(11, 38)
 
+    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = ws66i_data.coordinator
+
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        await async_update_entity(hass, ZONE_1_ID)
+        await coordinator.async_refresh()
         await hass.async_block_till_done()
 
     assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
@@ -454,7 +488,10 @@ async def test_mute_volume(hass):
 async def test_volume_up_down(hass):
     """Test increasing volume by one."""
     ws66i = MockWs66i()
-    await _setup_ws66i(hass, ws66i)
+    config_entry = await _setup_ws66i(hass, ws66i)
+
+    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = ws66i_data.coordinator
 
     await _call_media_player_service(
         hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
@@ -464,18 +501,27 @@ async def test_volume_up_down(hass):
     await _call_media_player_service(
         hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
     )
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
     # should not go below zero
     assert ws66i.zones[11].volume == 0
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
     assert ws66i.zones[11].volume == 1
 
     await _call_media_player_service(
         hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
     )
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
     assert ws66i.zones[11].volume == 38
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
     # should not go above 38
     assert ws66i.zones[11].volume == 38
 
@@ -497,22 +543,6 @@ async def test_first_run_with_available_zones(hass):
 
 
 async def test_first_run_with_failing_zones(hass):
-    """Test first run with failed zones."""
-    ws66i = MockWs66i()
-
-    with patch.object(MockWs66i, "zone_status", return_value=None):
-        await _setup_ws66i(hass, ws66i)
-
-    registry = er.async_get(hass)
-
-    entry = registry.async_get(ZONE_1_ID)
-    assert not entry.disabled
-
-    entry = registry.async_get(ZONE_7_ID)
-    assert entry is None
-
-
-async def test_not_first_run_with_failing_zone(hass):
     """Test first run with failed zones."""
     ws66i = MockWs66i()
 

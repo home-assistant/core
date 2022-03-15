@@ -1,8 +1,8 @@
 """Support for interfacing with WS66i 6 zone home audio controller."""
-from datetime import timedelta
 import logging
 
-from homeassistant import core
+from pyws66i import WS66i, ZoneStatus
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
@@ -12,10 +12,19 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers.entity_platform import async_get_current_platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SOURCES, DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT, WS66I_OBJECT
+from .const import DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
+from .coordinator import Ws66iDataUpdateCoordinator
+from .models import Ws66iData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,57 +39,27 @@ SUPPORT_WS66I = (
     | SUPPORT_SELECT_SOURCE
 )
 
-SCAN_INTERVAL = timedelta(seconds=30)
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the WS66i 6-zone amplifier platform from a config entry."""
+    ws66i_data: Ws66iData = hass.data[DOMAIN][config_entry.entry_id]
+    entities = []
 
-@core.callback
-def _get_sources_from_dict(data):
-    sources_config = data[CONF_SOURCES]
-
-    # Dict index to custom name
-    source_id_name = {int(index): name for index, name in sources_config.items()}
-
-    # Dict custom name to index
-    source_name_id = {v: k for k, v in source_id_name.items()}
-
-    # List of custom names
-    source_names = sorted(source_name_id.keys(), key=lambda v: source_name_id[v])
-
-    return [source_id_name, source_name_id, source_names]
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the WS66i 6-zone amplifier platform."""
-    ws66i = hass.data[DOMAIN][config_entry.entry_id][WS66I_OBJECT]
-    sources = _get_sources_from_dict(config_entry.options)
-
-    # Build the entities that control each of the zones.
-    # Zones 11 - 16 are the master amp
-    # Zones 21,31 - 26,36 are the daisy-chained amps
-    async def _async_generate_entities(ws66i, sources) -> list:
-        """Generate zone entities by searching for presence of zones."""
-        entities = []
-        for amp_num in range(1, 4):
-
-            if amp_num > 1:
-                # Don't add entities that aren't present
-                status = await hass.async_add_executor_job(
-                    ws66i.zone_status, (amp_num * 10 + 1)
-                )
-                if status is None:
-                    break
-
-            for zone_num in range(1, 7):
-                zone_id = (amp_num * 10) + zone_num
-                entities.append(
-                    Ws66iZone(ws66i, sources, config_entry.entry_id, zone_id)
-                )
-
-        _LOGGER.info("Detected %d amp(s)", amp_num - 1)
-        return entities
-
-    # Generate a list of entities to add to HA
-    entities = await _async_generate_entities(ws66i, sources)
+    for idx, zone_id in enumerate(ws66i_data.zones):
+        entities.append(
+            Ws66iZone(
+                device=ws66i_data.device,
+                ws66i_data=ws66i_data,
+                entry_id=config_entry.entry_id,
+                zone_id=zone_id,
+                idx=idx,
+                coordinator=ws66i_data.coordinator,
+            )
+        )
 
     # Add them to HA
     async_add_entities(entities)
@@ -101,62 +80,73 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class Ws66iZone(MediaPlayerEntity):
+class Ws66iZone(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a WS66i amplifier zone."""
 
-    def __init__(self, ws66i, sources, entry_id, zone_id):
-        """Initialize new zone."""
-        self._ws66i = ws66i
-        self._zone_id = zone_id
-        # dict source_id -> source name
-        self._source_id_name = sources[0]
-        # dict source name -> source_id
-        self._source_name_id = sources[1]
-        # ordered list of all source names
-        self._attr_source_list = sources[2]
+    def __init__(
+        self,
+        device: WS66i,
+        ws66i_data: Ws66iData,
+        entry_id: str,
+        zone_id: int,
+        idx: int,
+        coordinator: Ws66iDataUpdateCoordinator,
+    ) -> None:
+        """Initialize a zone entity."""
+        super().__init__(coordinator)
+        self._ws66i: WS66i = device
+        self._ws66i_data: Ws66iData = ws66i_data
+        self._zone_id: int = zone_id
+        self._zone_id_idx: int = idx
+        self._coordinator = coordinator
+        self._snapshot = None
+        self._volume = None
+        self._attr_source_list = ws66i_data.sources.name_list
         self._attr_unique_id = f"{entry_id}_{self._zone_id}"
         self._attr_name = f"Zone {self._zone_id}"
         self._attr_supported_features = SUPPORT_WS66I
-        self._attr_available = True
-        self._attr_should_poll = True
         self._attr_is_volume_muted = None
         self._attr_source = None
         self._attr_state = None
         self._attr_media_title = None
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Soundavo",
-            "model": "WS66i 6-Zone Amplifier",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(self.unique_id))},
+            name=self.name,
+            manufacturer="Soundavo",
+            model="WS66i 6-Zone Amplifier",
+        )
 
-        self._snapshot = None
-        self._volume = None
+        # Check if coordinator has data for this zone, and update values
+        data: list[ZoneStatus] = self.coordinator.data
+        if data is not None:
+            self._update_zone(data[self._zone_id_idx])
 
-    def update(self):
-        """Retrieve latest state."""
-        new_state = self._ws66i.zone_status(self._zone_id)
-        if not new_state:
-            # End-user should turn on Amp and reload integration
-            _LOGGER.warning(
-                "Zone %d not detected. Check WS66i power and reload integration",
-                self._zone_id,
-            )
-            self._attr_available = False
-            self._attr_should_poll = False
-            return
-
-        # successfully retrieved zone state
-        self._attr_state = STATE_ON if new_state.power else STATE_OFF
-        self._volume = new_state.volume
-        self._attr_is_volume_muted = new_state.mute
-        idx = new_state.source
-        if idx in self._source_id_name:
-            self._attr_source = self._source_id_name[idx]
-            self._attr_media_title = self._source_id_name[idx]
+    @callback
+    def _update_zone(self, zone_status: ZoneStatus) -> None:
+        """Update internal fields from a ZoneStatus."""
+        self._attr_state = STATE_ON if zone_status.power else STATE_OFF
+        self._volume = zone_status.volume
+        self._attr_is_volume_muted = zone_status.mute
+        idx = zone_status.source
+        if idx in self._ws66i_data.sources.id_name:
+            self._attr_source = self._ws66i_data.sources.id_name[idx]
+            self._attr_media_title = self._ws66i_data.sources.id_name[idx]
         else:
             self._attr_source = None
             self._attr_media_title = None
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # This will be called for each of my entities after the coordinator
+        # finishes executing _async_update_data()
+
+        # Grab the zone status that this entity represents
+        zone_status: ZoneStatus = self.coordinator.data[self._zone_id_idx]
+        self._update_zone(zone_status)
+
+        # Parent will notify HA that our fields were updated
+        super()._handle_coordinator_update()
 
     @property
     def volume_level(self):
@@ -177,35 +167,42 @@ class Ws66iZone(MediaPlayerEntity):
 
     def select_source(self, source):
         """Set input source."""
-        if source not in self._source_name_id:
+        if source not in self._ws66i_data.sources.name_id:
             return
-        idx = self._source_name_id[source]
+        idx = self._ws66i_data.sources.name_id[source]
         self._ws66i.set_source(self._zone_id, idx)
+        self.schedule_update_ha_state(True)
 
     def turn_on(self):
         """Turn the media player on."""
         self._ws66i.set_power(self._zone_id, True)
+        self.schedule_update_ha_state(True)
 
     def turn_off(self):
         """Turn the media player off."""
         self._ws66i.set_power(self._zone_id, False)
+        self.schedule_update_ha_state(True)
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         self._ws66i.set_mute(self._zone_id, mute)
+        self.schedule_update_ha_state(True)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._ws66i.set_volume(self._zone_id, int(volume * 38))
+        self.schedule_update_ha_state(True)
 
     def volume_up(self):
         """Volume up the media player."""
         if self._volume is None:
             return
         self._ws66i.set_volume(self._zone_id, min(self._volume + 1, 38))
+        self.schedule_update_ha_state(True)
 
     def volume_down(self):
         """Volume down media player."""
         if self._volume is None:
             return
         self._ws66i.set_volume(self._zone_id, max(self._volume - 1, 0))
+        self.schedule_update_ha_state(True)

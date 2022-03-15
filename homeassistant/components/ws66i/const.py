@@ -22,5 +22,3 @@ INIT_OPTIONS_DEFAULT = {
 
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
-
-WS66I_OBJECT = "ws66i_object"
