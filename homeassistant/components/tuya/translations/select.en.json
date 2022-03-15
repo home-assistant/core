@@ -1,5 +1,10 @@
 {
     "state": {
+        "tuya__alarm_volume": {
+            "loud": "Loud",
+            "mute": "Mute",
+            "normal": "Normal"
+        },
         "tuya__basic_anti_flickr": {
             "0": "Disabled",
             "1": "50 Hz",
@@ -70,6 +75,20 @@
             "0": "Low power mode",
             "1": "Continuous working mode"
         },
+        "tuya__language": {
+            "chinese_simplified": "Chinese Simplified",
+            "chinese_traditional": "Chinese Traditional",
+            "english": "English",
+            "french": "French",
+            "german": "German",
+            "italian": "Italian",
+            "japanese": "Japanese",
+            "korean": "Korean",
+            "latin": "Latin",
+            "portuguese": "Portuguese",
+            "russian": "Russian",
+            "spanish": "Spanish"
+        },
         "tuya__led_type": {
             "halogen": "Halogen",
             "incandescent": "Incandescent",
@@ -79,6 +98,108 @@
             "none": "Off",
             "pos": "Indicate switch location",
             "relay": "Indicate switch on/off state"
+        },
+        "tuya__lock_alarm_volume": {
+            "loud": "Loud",
+            "mute": "Mute",
+            "normal": "Normal"
+        },
+        "tuya__lock_basic_nightvision": {
+            "0": "Level 1",
+            "1": "Level 2",
+            "2": "Level 3"
+        },
+        "tuya__lock_door_unclosed_trigger": {
+            "10s": "10 seconds",
+            "15s": "15 seconds",
+            "20s": "20 seconds",
+            "25s": "25 seconds",
+            "5s": "5 seconds"
+        },
+        "tuya__lock_doorbell_song": {
+            "ding_0": "Song 1",
+            "ding_1": "Song 2",
+            "ding_2": "Song 3",
+            "ding_3": "Song 4",
+            "ding_4": "Song 5",
+            "ding_5": "Song 6",
+            "ding_6": "Song 7",
+            "ding_7": "Song 8",
+            "ding_8": "Song 9",
+            "ding_9": "Song 10"
+        },
+        "tuya__lock_low_power_threshold": {
+            "10_percent": "10%",
+            "15_percent": "15%",
+            "20_percent": "20%",
+            "5_percent": "5%"
+        },
+        "tuya__lock_motor_direction": {
+            "anti_clockwise": "Anti Clockwise",
+            "clockwise": "Clockwise"
+        },
+        "tuya__lock_motor_torque": {
+            "torque_high": "High",
+            "torque_low": "Low",
+            "torque_middle": "Middle"
+        },
+        "tuya__lock_open_speed_state": {
+            "high": "High",
+            "low": "Low",
+            "middle": "Middle"
+        },
+        "tuya__lock_photo_mode": {
+            "close": "Close",
+            "power_save": "Power Save",
+            "security": "Security",
+            "standard": "Standard"
+        },
+        "tuya__lock_ringtone": {
+            "sound_1": "Sound 1",
+            "sound_2": "Sound 2",
+            "sound_3": "Sound 3",
+            "sound_4": "Sound 4",
+            "sound_5": "Sound 5",
+            "sound_6": "Sound 6"
+        },
+        "tuya__lock_sound_mode": {
+            "ringtone_0": "Ringtone 1",
+            "ringtone_1": "Ringtone 2",
+            "ringtone_2": "Ringtone 3",
+            "ringtone_3": "Ringtone 4",
+            "ringtone_4": "Ringtone 5",
+            "ringtone_5": "Ringtone 6"
+        },
+        "tuya__lock_stay_alarm_mode": {
+            "close": "Close",
+            "custom": "Custom",
+            "high": "High",
+            "normal": "Normal"
+        },
+        "tuya__lock_stay_capture_mode": {
+            "mode_1": "Mode 1",
+            "mode_2": "Mode 2"
+        },
+        "tuya__lock_stay_trigger_distance": {
+            "away_from": "Away From",
+            "close_to": "Close To",
+            "middle": "Middle"
+        },
+        "tuya__lock_unlock_switch": {
+            "card_face": "Card and Face",
+            "combination": "Combination",
+            "finger_card": "Finger and Card",
+            "finger_face": "Finger and Face",
+            "finger_password": "Finger and Password",
+            "password_card": "Password and Card",
+            "password_face": "Password and Face",
+            "single_unlock": "Single Unlock"
+        },
+        "tuya__lock_volume": {
+            "high": "High",
+            "low": "Low",
+            "mute": "Mute",
+            "normal": "Normal"
         },
         "tuya__motion_sensitivity": {
             "0": "Low sensitivity",
@@ -96,6 +217,14 @@
             "on": "On",
             "power_off": "Off",
             "power_on": "On"
+        },
+        "tuya__sound_mode": {
+            "ringtone_0": "Ringtone 1",
+            "ringtone_1": "Ringtone 2",
+            "ringtone_2": "Ringtone 3",
+            "ringtone_3": "Ringtone 4",
+            "ringtone_4": "Ringtone 5",
+            "ringtone_5": "Ringtone 6"
         },
         "tuya__vacuum_cistern": {
             "closed": "Closed",
