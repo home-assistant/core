@@ -10,7 +10,17 @@ from homeassistant.core import HomeAssistant
 from . import AugustData
 from .const import DOMAIN
 
-TO_REDACT = {"password"}
+TO_REDACT = {
+    "HouseID",
+    "OfflineKeys",
+    "invitations",
+    "key",
+    "pins",
+    "pubsubChannel",
+    "remoteOperateSecret",
+    "users",
+    "zWaveDSK",
+}
 
 
 async def async_get_config_entry_diagnostics(
