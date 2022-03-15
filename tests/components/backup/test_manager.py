@@ -1,20 +1,20 @@
 """Tests for the Backup integration."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
 from homeassistant.components.backup import BackupManager
+from homeassistant.components.backup.manager import BackupPlatformProtocol
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_BACKUP
 
-from tests.common import mock_platform
+from tests.common import MockPlatform, mock_platform
 
 
 async def _mock_backup_generation(manager: BackupManager):
@@ -66,22 +66,11 @@ async def _mock_backup_generation(manager: BackupManager):
 
 async def _setup_mock_domain(
     hass: HomeAssistant,
-    async_pre_backup: Callable[[HomeAssistant], Awaitable[None]] | None = None,
-    async_post_backup: Callable[[HomeAssistant], Awaitable[None]] | None = None,
+    platform: BackupPlatformProtocol | None = None,
 ) -> None:
     """Set up a mock domain."""
-
-    mock_platform(
-        hass,
-        "some_domain.backup",
-        Mock(
-            async_pre_backup=async_pre_backup,
-            async_post_backup=async_post_backup,
-        ),
-    )
-
+    mock_platform(hass, "some_domain.backup", platform or MockPlatform())
     assert await async_setup_component(hass, "some_domain", {})
-    await hass.async_block_till_done()
 
 
 async def test_constructor(hass: HomeAssistant) -> None:
@@ -204,8 +193,10 @@ async def test_loading_platforms(
 
     await _setup_mock_domain(
         hass,
-        async_post_backup=AsyncMock(),
-        async_pre_backup=AsyncMock(),
+        Mock(
+            async_pre_backup=AsyncMock(),
+            async_post_backup=AsyncMock(),
+        ),
     )
     await manager.load_platforms()
 
@@ -248,8 +239,10 @@ async def test_exception_plaform_pre(hass: HomeAssistant) -> None:
 
     await _setup_mock_domain(
         hass,
-        async_pre_backup=_mock_step,
-        async_post_backup=AsyncMock(),
+        Mock(
+            async_pre_backup=_mock_step,
+            async_post_backup=AsyncMock(),
+        ),
     )
 
     with pytest.raises(HomeAssistantError):
@@ -266,8 +259,10 @@ async def test_exception_plaform_post(hass: HomeAssistant) -> None:
 
     await _setup_mock_domain(
         hass,
-        async_pre_backup=AsyncMock(),
-        async_post_backup=_mock_step,
+        Mock(
+            async_pre_backup=AsyncMock(),
+            async_post_backup=_mock_step,
+        ),
     )
 
     with pytest.raises(HomeAssistantError):

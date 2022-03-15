@@ -67,9 +67,8 @@ class BackupManager:
         platform: BackupPlatformProtocol,
     ) -> None:
         """Add a platform to the backup manager."""
-        if (
-            platform.__getattribute__("async_pre_backup") is None
-            or platform.__getattribute__("async_post_backup") is None
+        if not hasattr(platform, "async_pre_backup") or not hasattr(
+            platform, "async_post_backup"
         ):
             LOGGER.warning(
                 "%s does not implement required functions for the backup platform",
