@@ -63,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         self._not_configured_hosts = [
-            DiscoveredHostInfo(ip)
+            DiscoveredHostInfo(ip, None)
             for ip in discovered_hosts
             if ip not in configured_hosts
         ]
