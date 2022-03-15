@@ -49,6 +49,7 @@ components: &components
   - homeassistant/components/alexa/*
   - homeassistant/components/auth/*
   - homeassistant/components/automation/*
+  - homeassistant/components/backup/*
   - homeassistant/components/cloud/*
   - homeassistant/components/config/*
   - homeassistant/components/configurator/*

@@ -671,7 +671,7 @@ freesms==0.2.0
 fritzconnection==1.8.0
 
 # homeassistant.components.google_translate
-gTTS==2.2.3
+gTTS==2.2.4
 
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==3.0.0
@@ -874,7 +874,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.9.9
+intellifire4py==1.0.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -1139,7 +1139,7 @@ openevsewifi==1.1.0
 openhomedevice==2.0.1
 
 # homeassistant.components.opensensemap
-opensensemap-api==0.1.5
+opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
 openwebifpy==3.2.7
@@ -2319,7 +2319,7 @@ ttls==1.4.3
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.5.0
+twentemilieu==0.6.0
 
 # homeassistant.components.twilio
 twilio==6.32.0

@@ -587,6 +587,15 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self.token = remote.token
                     LOGGER.debug("Working config: %s", config)
                     return RESULT_SUCCESS
+            except ConnectionClosedError as err:
+                LOGGER.info(
+                    "Working but unsupported config: %s, error: '%s'; this may "
+                    "be an indication that access to the TV has been denied. Please "
+                    "check the Device Connection Manager on your TV",
+                    config,
+                    err,
+                )
+                result = RESULT_NOT_SUPPORTED
             except WebSocketException as err:
                 LOGGER.debug(
                     "Working but unsupported config: %s, error: %s", config, err

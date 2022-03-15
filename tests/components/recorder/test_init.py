@@ -625,6 +625,7 @@ def run_tasks_at_time(hass, test_time):
     hass.data[DATA_INSTANCE].block_till_done()
 
 
+@pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge(hass_recorder):
     """Test periodic purge scheduling."""
     hass = hass_recorder()
@@ -682,6 +683,7 @@ def test_auto_purge(hass_recorder):
     dt_util.set_default_time_zone(original_tz)
 
 
+@pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_disabled(hass_recorder):
     """Test periodic db cleanup still run when auto purge is disabled."""
     hass = hass_recorder({CONF_AUTO_PURGE: False})

@@ -126,6 +126,7 @@ FLOWS = [
     "goalzero",
     "gogogate2",
     "goodwe",
+    "google",
     "google_travel_time",
     "gpslogger",
     "gree",
