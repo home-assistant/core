@@ -57,7 +57,7 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
     # Note: Not documented
     "fdq": (
         ButtonEntityDescription(
-            key=DPCode.FINDERDEV,
+            key=DPCode.FINDDEV,
             name="Finder",
             icon="mdi:map-marker-radius-outline",
         ),

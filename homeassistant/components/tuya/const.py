@@ -271,7 +271,7 @@ class DPCode(StrEnum):
     FEED_STATE = "feed_state"
     FILTER = "filter"
     FILTER_LIFE = "filter"
-    FINDERDEV = "finderdev"
+    FINDDEV = "FINDDEV"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
