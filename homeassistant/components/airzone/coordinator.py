@@ -23,7 +23,7 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, airzone: AirzoneLocalApi) -> None:
         """Initialize."""
-        self.airzone: AirzoneLocalApi = airzone
+        self.airzone = airzone
 
         super().__init__(
             hass,

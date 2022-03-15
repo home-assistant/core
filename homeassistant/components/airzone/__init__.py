@@ -1,6 +1,8 @@
 """The Airzone integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from aioairzone.common import ConnectionOptions
 from aioairzone.const import AZD_ID, AZD_NAME, AZD_SYSTEM, AZD_ZONES
 from aioairzone.localapi_device import AirzoneLocalApi
@@ -26,7 +28,7 @@ class AirzoneEntity(CoordinatorEntity):
         coordinator: AirzoneUpdateCoordinator,
         entry: ConfigEntry,
         system_zone_id: str,
-        zone_data: dict,
+        zone_data: dict[str, Any],
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -36,7 +38,6 @@ class AirzoneEntity(CoordinatorEntity):
             "manufacturer": MANUFACTURER,
             "name": f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
         }
-        self.airzone: AirzoneLocalApi = coordinator.airzone
         self.system_id = zone_data[AZD_SYSTEM]
         self.system_zone_id = system_zone_id
         self.zone_id = zone_data[AZD_ID]

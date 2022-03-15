@@ -1,7 +1,7 @@
 """Support for the Airzone sensors."""
 from __future__ import annotations
 
-from typing import Final
+from typing import Any, Final
 
 from aioairzone.const import AZD_HUMIDITY, AZD_NAME, AZD_TEMP, AZD_TEMP_UNIT, AZD_ZONES
 
@@ -74,7 +74,7 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
         description: SensorEntityDescription,
         entry: ConfigEntry,
         system_zone_id: str,
-        zone_data: dict,
+        zone_data: dict[str, Any],
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
