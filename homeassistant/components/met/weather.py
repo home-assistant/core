@@ -119,10 +119,8 @@ async def async_setup_entry(
     )
 
 
-def format_condition(condition: str | None) -> str | None:
+def format_condition(condition: str) -> str:
     """Return condition from dict CONDITIONS_MAP."""
-    if condition is None:
-        return None
     for key, value in CONDITIONS_MAP.items():
         if condition in value:
             return key
@@ -188,6 +186,8 @@ class MetWeather(CoordinatorEntity[MetWeatherData], WeatherEntity):
     def condition(self) -> str | None:
         """Return the current condition."""
         condition = self.coordinator.data.current_weather_data.get("condition")
+        if condition is None:
+            return None
         return format_condition(condition)
 
     @property
