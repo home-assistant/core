@@ -27,16 +27,25 @@ CONFIG_WITH_OAUTH = {
 USER_OBJECT = {
     "id": 123,
     "display_name": "channel123",
+    "profile_image_url": "logo1.png",
     "offline_image_url": "logo.png",
     "view_count": 42,
 }
+USER_OBJECT1 = {
+    "id": 456,
+    "display_name": "channel123",
+    "profile_image_url": "logo1.png",
+    "offline_image_url": "logo.png",
+    "view_count": 96,
+}
 STREAM_OBJECT_ONLINE = {
+    "user_id": 123,
     "game_name": "Good Game",
     "title": "Title",
     "thumbnail_url": "stream-medium.png",
 }
 
-FOLLOWERS_OBJECT = [{"followed_at": "2020-01-20T21:22:42"}] * 24
+FOLLOWERS_OBJECT = [{"to_id": 456, "followed_at": "2020-01-20T21:22:42"}] * 24
 OAUTH_USER_ID = {"id": 987}
 SUB_ACTIVE = {"is_gift": False}
 FOLLOW_ACTIVE = {"followed_at": "2020-01-20T21:22:42"}
@@ -122,11 +131,11 @@ async def test_oauth_without_sub_and_follow(hass):
     twitch_mock.get_streams.return_value = make_data([])
     twitch_mock.get_users.side_effect = [
         make_data([USER_OBJECT]),
-        make_data([USER_OBJECT]),
-        make_data([OAUTH_USER_ID]),
+        make_data([USER_OBJECT1]),
+        make_data([USER_OBJECT1]),
     ]
     twitch_mock.get_users_follows.side_effect = [
-        make_data(FOLLOWERS_OBJECT),
+        make_data([]),
         make_data([]),
     ]
     twitch_mock.has_required_auth.return_value = True
@@ -151,11 +160,11 @@ async def test_oauth_with_sub(hass):
     twitch_mock.get_streams.return_value = make_data([])
     twitch_mock.get_users.side_effect = [
         make_data([USER_OBJECT]),
-        make_data([USER_OBJECT]),
-        make_data([OAUTH_USER_ID]),
+        make_data([USER_OBJECT1]),
+        make_data([USER_OBJECT1]),
     ]
     twitch_mock.get_users_follows.side_effect = [
-        make_data(FOLLOWERS_OBJECT),
+        make_data([]),
         make_data([]),
     ]
     twitch_mock.has_required_auth.return_value = True
@@ -183,8 +192,8 @@ async def test_oauth_with_follow(hass):
     twitch_mock.get_streams.return_value = make_data([])
     twitch_mock.get_users.side_effect = [
         make_data([USER_OBJECT]),
-        make_data([USER_OBJECT]),
-        make_data([OAUTH_USER_ID]),
+        make_data([USER_OBJECT1]),
+        make_data([USER_OBJECT1]),
     ]
     twitch_mock.get_users_follows.side_effect = [
         make_data(FOLLOWERS_OBJECT),
