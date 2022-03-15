@@ -1226,9 +1226,6 @@ python-miio==0.5.11
 # homeassistant.components.nest
 python-nest==4.2.0
 
-# homeassistant.components.ozw
-python-openzwave-mqtt[mqtt-client]==1.4.0
-
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
 
@@ -1471,7 +1468,7 @@ ttls==1.4.3
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.5.0
+twentemilieu==0.6.0
 
 # homeassistant.components.twilio
 twilio==6.32.0

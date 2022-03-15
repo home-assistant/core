@@ -1,4 +1,6 @@
 """Tests for the Switch as X."""
+from __future__ import annotations
+
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +19,7 @@ from tests.common import MockConfigEntry
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -114,6 +117,7 @@ async def test_entity_registry_events(hass: HomeAssistant, target_domain: str) -
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -180,6 +184,7 @@ async def test_device_registry_config_entry_1(
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -239,6 +244,7 @@ async def test_device_registry_config_entry_2(
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -282,6 +288,7 @@ async def test_config_entry_entity_id(
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -314,6 +321,7 @@ async def test_config_entry_uuid(hass: HomeAssistant, target_domain: Platform) -
         Platform.COVER,
         Platform.FAN,
         Platform.LIGHT,
+        Platform.LOCK,
         Platform.SIREN,
     ),
 )
@@ -350,3 +358,81 @@ async def test_device(hass: HomeAssistant, target_domain: Platform) -> None:
     entity_entry = entity_registry.async_get(f"{target_domain}.abc")
     assert entity_entry
     assert entity_entry.device_id == switch_entity_entry.device_id
+
+
+@pytest.mark.parametrize("target_domain", (Platform.LIGHT,))
+async def test_setup_and_remove_config_entry(
+    hass: HomeAssistant,
+    target_domain: Platform,
+) -> None:
+    """Test removing a config entry."""
+    registry = er.async_get(hass)
+
+    # Setup the config entry
+    switch_as_x_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: "switch.test",
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+    )
+    switch_as_x_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the state and entity registry entry are present
+    assert hass.states.get(f"{target_domain}.abc") is not None
+    assert registry.async_get(f"{target_domain}.abc") is not None
+
+    # Remove the config entry
+    assert await hass.config_entries.async_remove(switch_as_x_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the state and entity registry entry are removed
+    assert hass.states.get(f"{target_domain}.my_min_max") is None
+    assert registry.async_get(f"{target_domain}.my_min_max") is None
+
+
+@pytest.mark.parametrize(
+    "hidden_by_before,hidden_by_after",
+    (
+        (er.RegistryEntryHider.USER.value, er.RegistryEntryHider.USER.value),
+        (er.RegistryEntryHider.INTEGRATION.value, None),
+    ),
+)
+@pytest.mark.parametrize("target_domain", (Platform.LIGHT,))
+async def test_reset_hidden_by(
+    hass: HomeAssistant,
+    target_domain: Platform,
+    hidden_by_before: er.RegistryEntryHider | None,
+    hidden_by_after: er.RegistryEntryHider,
+) -> None:
+    """Test removing a config entry resets hidden by."""
+    registry = er.async_get(hass)
+
+    switch_entity_entry = registry.async_get_or_create("switch", "test", "unique")
+    registry.async_update_entity(
+        switch_entity_entry.entity_id, hidden_by=hidden_by_before
+    )
+
+    # Add the config entry
+    switch_as_x_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+    )
+    switch_as_x_config_entry.add_to_hass(hass)
+
+    # Remove the config entry
+    assert await hass.config_entries.async_remove(switch_as_x_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check hidden by is reset
+    switch_entity_entry = registry.async_get(switch_entity_entry.entity_id)
+    assert switch_entity_entry.hidden_by == hidden_by_after
