@@ -25,7 +25,7 @@ class DiscoveredHostInfo:
     """Host info for discovery."""
 
     ip: str
-    serial: str
+    serial: str = ""
 
 
 async def validate_host_input(host: str) -> str:
