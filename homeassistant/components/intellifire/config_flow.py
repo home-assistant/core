@@ -24,10 +24,8 @@ MANUAL_ENTRY_STRING = "IP Address"  # Simplified so it does not have to be trans
 class DiscoveredHostInfo:
     """Host info for discovery."""
 
-    def __init__(self, ip: str, serial: str = "") -> None:
-        """Initialize a host info."""
-        self.ip: str = ip
-        self.serial: str = serial
+    ip: str
+    serial: str
 
 
 async def validate_host_input(host: str) -> str:
