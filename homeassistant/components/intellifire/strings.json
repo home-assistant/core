@@ -9,7 +9,7 @@
         }
       },
       "dhcp_confirm": {
-        "description": "Setup {host}"
+        "description": "Do you want to setup {host}?"
       },
       "pick_device": {
         "data": {
