@@ -670,7 +670,7 @@ freesms==0.2.0
 fritzconnection==1.8.0
 
 # homeassistant.components.google_translate
-gTTS==2.2.3
+gTTS==2.2.4
 
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==3.0.0
