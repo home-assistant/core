@@ -13,10 +13,12 @@ from .const import DOMAIN
 TO_REDACT = {
     "HouseID",
     "OfflineKeys",
+    "installUserID",
     "invitations",
     "key",
     "pins",
     "pubsubChannel",
+    "recentImage",
     "remoteOperateSecret",
     "users",
     "zWaveDSK",
@@ -30,10 +32,6 @@ async def async_get_config_entry_diagnostics(
     data: AugustData = hass.data[DOMAIN][entry.entry_id]
 
     return {
-        "entry": {
-            "title": entry.title,
-            "data": dict(entry.data),
-        },
         "locks": {
             lock.device_id: async_redact_data(
                 data.get_device_detail(lock.device_id).raw, TO_REDACT
