@@ -20,6 +20,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -270,13 +271,15 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        if self._fan_off:
-            await self.info.node.async_set_value(self._fan_off, False)
+        if not self._fan_off:
+            raise HomeAssistantError("Unhandled action turn_on")
+        await self.info.node.async_set_value(self._fan_off, False)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self._fan_off:
-            await self.info.node.async_set_value(self._fan_off, True)
+        if not self._fan_off:
+            raise HomeAssistantError("Unhandled action turn_off")
+        await self.info.node.async_set_value(self._fan_off, True)
 
     @property
     def is_on(self) -> bool | None:
@@ -297,12 +300,10 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         """Set new preset mode."""
 
         try:
-            new_state = int(
-                next(
-                    state
-                    for state, label in self._fan_mode.metadata.states.items()
-                    if label == preset_mode
-                )
+            new_state = next(
+                int(state)
+                for state, label in self._fan_mode.metadata.states.items()
+                if label == preset_mode
             )
         except StopIteration:
             raise ValueError(f"Received an invalid fan mode: {preset_mode}") from None

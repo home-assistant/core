@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 
 
@@ -614,12 +615,13 @@ async def test_thermostat_fan_without_off(
     assert state.state == STATE_UNKNOWN
 
     # Test turning off
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
     assert len(client.async_send_command.call_args_list) == 0
     assert state.state == STATE_UNKNOWN
@@ -627,12 +629,13 @@ async def test_thermostat_fan_without_off(
     client.async_send_command.reset_mock()
 
     # Test turning on
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
     assert len(client.async_send_command.call_args_list) == 0
     assert state.state == STATE_UNKNOWN
