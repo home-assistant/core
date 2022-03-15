@@ -202,7 +202,7 @@ class DPCode(StrEnum):
     BRIGHTNESS_MIN_1 = "brightness_min_1"
     BRIGHTNESS_MIN_2 = "brightness_min_2"
     BRIGHTNESS_MIN_3 = "brightness_min_3"
-    CALL_PHONE = "callphone"
+    CALLPHONE = "callphone"
     CLOSED_OPENED = "closed_opened"
     C_F = "c_f"  # Temperature unit switching
     CH2O_STATE = "ch2o_state"
@@ -374,10 +374,9 @@ class DPCode(StrEnum):
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
     SMOKE_SENSOR_VALUE = "smoke_sensor_value"
-    SOUND_MODE = "sound_mode"
     SOS = "sos"  # Emergency State
-    SOUND_MODE = "sound_mode"
     SOS_STATE = "sos_state"  # Emergency mode
+    SOUND_MODE = "sound_mode"
     SPECIAL_CONTROL = "special_control"
     SPECIAL_FUNCTION = "special_function"
     SPEED = "speed"  # Speed level
