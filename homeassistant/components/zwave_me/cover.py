@@ -1,9 +1,10 @@
 """Representation of a cover."""
 from homeassistant.components.cover import (
-    CoverEntity,
+    ATTR_POSITION,
+    SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    SUPPORT_CLOSE,
+    CoverEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -46,17 +47,19 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         """Open cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=99")
 
-    def set_cover_position(self, value: float) -> None:
+    def set_cover_position(self, **kwargs) -> None:
         """Update the current value."""
-        self.controller.zwave_api.send_command(
-            self.device.id, f"exact?level={str(round(value))}"
-        )
+        position = kwargs[ATTR_POSITION]
+        if position:
+            self.controller.zwave_api.send_command(
+                self.device.id, f"exact?level={str(round(position))}"
+            )
 
     @property
-    def current_cover_position(self) -> int | None:
+    def current_cover_position(self) -> int:
         """Return current position of cover.
 
-        None is unknown, 0 is closed, 100 is fully open.
+        0 is closed, 100 is fully open.
         """
         return self.device.level
 
