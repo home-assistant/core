@@ -523,7 +523,7 @@ class FlowHandler:
         self,
         *,
         step_id: str,
-        options: list[str] | dict[str, str],
+        menu_options: list[str] | dict[str, str],
         description_placeholders: dict | None = None,
     ) -> FlowResult:
         """Show a navigation menu to the user.
@@ -535,8 +535,8 @@ class FlowHandler:
             "flow_id": self.flow_id,
             "handler": self.handler,
             "step_id": step_id,
-            "data_schema": vol.Schema({"next_step_id": vol.In(options)}),
-            "menu_options": options,
+            "data_schema": vol.Schema({"next_step_id": vol.In(menu_options)}),
+            "menu_options": menu_options,
             "description_placeholders": description_placeholders,
         }
 
