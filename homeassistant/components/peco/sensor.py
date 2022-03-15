@@ -49,23 +49,14 @@ async def async_setup_entry(
 
     async def async_update_data() -> dict[str, float]:
         """Fetch data from API."""
-        if conf["county"] == "TOTAL":
-            try:
-                data = cast(dict[str, float], await api.get_outage_totals(websession))
-            except HttpError as err:
-                raise UpdateFailed(f"Error fetching data: {err}") from err
-            except BadJSONError as err:
-                raise UpdateFailed(f"Error parsing data: {err}") from err
-            except asyncio.TimeoutError as err:
-                raise UpdateFailed(f"Timeout fetching data: {err}") from err
-            if data["percent_customers_out"] < 5:
-                percent_out = data["customers_out"] / data["customers_served"] * 100
-                data["percent_customers_out"] = percent_out
-            return data
         try:
-            county_data = cast(
-                dict[str, float],
-                await api.get_outage_count(conf["county"], websession),
+            data = (
+                cast(dict[str, float], await api.get_outage_totals(websession))
+                if conf["county"] == "TOTAL"
+                else cast(
+                    dict[str, float],
+                    await api.get_outage_count(conf["county"], websession),
+                )
             )
         except HttpError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
@@ -73,12 +64,12 @@ async def async_setup_entry(
             raise UpdateFailed(f"Error parsing data: {err}") from err
         except asyncio.TimeoutError as err:
             raise UpdateFailed(f"Timeout fetching data: {err}") from err
-        if county_data["percent_customers_out"] < 5:
-            percent_out = (
-                county_data["customers_out"] / county_data["customers_served"] * 100
+        if data["percent_customers_out"] < 5:
+            percent_out = round(
+                data["customers_out"] / data["customers_served"] * 100, 3
             )
-            county_data["percent_customers_out"] = percent_out
-        return county_data
+            data["percent_customers_out"] = percent_out
+        return data
 
     coordinator = DataUpdateCoordinator(
         hass,

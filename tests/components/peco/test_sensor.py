@@ -66,7 +66,7 @@ async def test_sensor_available(
         if sensor == "total_customers_out":
             assert sensor_entity.state == "123"
         elif sensor == "total_percent_customers_out":
-            assert sensor_entity.state == "15.5893536121673"
+            assert sensor_entity.state == "15.589"
         elif sensor == "total_outage_count":
             assert sensor_entity.state == "456"
         elif sensor == "total_customers_served":
@@ -125,7 +125,7 @@ async def test_sensor_available(
         if sensor == "bucks_customers_out":
             assert sensor_entity.state == "123"
         elif sensor == "bucks_percent_customers_out":
-            assert sensor_entity.state == "15.5893536121673"
+            assert sensor_entity.state == "15.589"
         elif sensor == "bucks_outage_count":
             assert sensor_entity.state == "456"
         elif sensor == "bucks_customers_served":
