@@ -1,8 +1,12 @@
 """Support for KDE Connect binary sensors."""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
 from typing import cast
 
 from pykdeconnect.client import KdeConnectClient
 from pykdeconnect.devices import KdeConnectDevice
+from pykdeconnect.plugin import Plugin
 from pykdeconnect.plugin_registry import PluginRegistry
 from pykdeconnect.plugins.battery import BatteryReceiverPlugin
 
@@ -18,24 +22,33 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KdeConnectEntity, KdeConnectPluginEntity
 from .const import DATA_KEY_CLIENT, DATA_KEY_DEVICES, DOMAIN
+from .helpers import raise_typeerror
+
+
+@dataclass
+class KdeConnectBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a KDE Connect binary sensor."""
+
+    # KDE Connect plugin to load
+    plugin_type: type[Plugin] = field(
+        default_factory=raise_typeerror("Missing positional argument plugin_type")
+    )
+
 
 BINARY_SENSOR_TYPES = [
-    BinarySensorEntityDescription(
+    KdeConnectBinarySensorEntityDescription(
         key="battery_charging",
         name="Battery Charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        plugin_type=BatteryReceiverPlugin,
     ),
-    BinarySensorEntityDescription(
+    KdeConnectBinarySensorEntityDescription(
         key="battery_low",
         name="Battery Low",
         device_class=BinarySensorDeviceClass.BATTERY,
+        plugin_type=BatteryReceiverPlugin,
     ),
 ]
-
-BINARY_SENSOR_PLUGINS = {
-    "battery_charging": BatteryReceiverPlugin,
-    "battery_low": BatteryReceiverPlugin,
-}
 
 
 async def async_setup_entry(
@@ -49,9 +62,7 @@ async def async_setup_entry(
     entities: list[BinarySensorEntity] = [
         KdeConnectPluginBinarySensor(device, plugin_registry, description)
         for description in BINARY_SENSOR_TYPES
-        if plugin_registry.is_plugin_compatible(
-            device, BINARY_SENSOR_PLUGINS[description.key]
-        )
+        if plugin_registry.is_plugin_compatible(device, description.plugin_type)
     ]
     entities.append(KdeConnectConnectedSensor(device))
 
@@ -67,12 +78,10 @@ class KdeConnectPluginBinarySensor(KdeConnectPluginEntity, BinarySensorEntity):
         self,
         device: KdeConnectDevice,
         plugin_registry: PluginRegistry,
-        description: BinarySensorEntityDescription,
+        description: KdeConnectBinarySensorEntityDescription,
     ) -> None:
         """Initialize the battery charging sensor."""
-        super().__init__(
-            device, plugin_registry, BINARY_SENSOR_PLUGINS[description.key]
-        )
+        super().__init__(device, plugin_registry, description.plugin_type)
         self.entity_description = description
         self._attr_name = f"{device.device_name} {description.name}"
         self._attr_unique_id = f"{device.device_id}/{description.key}"

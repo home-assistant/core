@@ -1,8 +1,13 @@
 """Helper functions for KDE Connect."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
+from typing import Any
 
 from pykdeconnect.client import KdeConnectClient
 from pykdeconnect.devices import KdeConnectDevice
+from pykdeconnect.plugin import Plugin
 from pykdeconnect.plugin_registry import PluginRegistry
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -55,3 +60,30 @@ async def ensure_running(hass: HomeAssistant) -> None:
             hass.data[DOMAIN][DATA_KEY_STORAGE] = storage
             hass.data[DOMAIN][DATA_KEY_CLIENT] = client
             hass.data[DOMAIN][DATA_KEY_DEVICES] = {}
+
+
+def raise_typeerror(msg: str) -> Callable[[], Any]:
+    """Return a function that raises a TypeError with the given message.
+
+    For use as a dataclass default_factory
+    """
+
+    def _raise() -> Any:
+        raise TypeError(msg)
+
+    return _raise
+
+
+def is_plugin_compatible(
+    plugin_registry: PluginRegistry,
+    device: KdeConnectDevice,
+    plugin_class: type[Plugin] | None,
+) -> bool:
+    """Check if a plugin is compatible with a device.
+
+    Returns True if plugin_class is None
+    """
+    if plugin_class is None:
+        return True
+
+    return plugin_registry.is_plugin_compatible(device, plugin_class)

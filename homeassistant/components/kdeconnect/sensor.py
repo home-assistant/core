@@ -1,8 +1,13 @@
 """Support for KDE Connect sensors."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import Any, cast
 
 from pykdeconnect.client import KdeConnectClient
 from pykdeconnect.devices import KdeConnectDevice
+from pykdeconnect.plugin import Plugin
 from pykdeconnect.plugin_registry import PluginRegistry
 from pykdeconnect.plugins.battery import BatteryReceiverPlugin
 
@@ -15,23 +20,36 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import KdeConnectPluginEntity
 from .const import DATA_KEY_CLIENT, DATA_KEY_DEVICES, DOMAIN
+from .helpers import is_plugin_compatible, raise_typeerror
+
+
+@dataclass
+class KdeConnectSensorEntityDescription(SensorEntityDescription):
+    """Describes a KDE Connect binary sensor."""
+
+    # KDE Connect plugin to load
+    plugin_type: type[Plugin] = field(
+        default_factory=raise_typeerror("Missing positional argument plugin_type")
+    )
+
+    # Function converting string back to state.
+    sensor_restore_type: Callable[[str], StateType] = str
+
 
 SENSOR_TYPES = [
-    SensorEntityDescription(
+    KdeConnectSensorEntityDescription(
         key="battery_charge",
         name="Battery Charge",
         native_unit_of_measurement="%",
         device_class=SensorDeviceClass.BATTERY,
+        plugin_type=BatteryReceiverPlugin,
+        sensor_restore_type=int,
     )
 ]
-
-
-SENSOR_PLUGINS = {"battery_charge": BatteryReceiverPlugin}
-
-SENSOR_RESTORE_TYPES = {"battery_charge": int}
 
 
 async def async_setup_entry(
@@ -45,13 +63,13 @@ async def async_setup_entry(
     entities = [
         KdeConnectSensor(device, plugin_registry, description)
         for description in SENSOR_TYPES
-        if plugin_registry.is_plugin_compatible(device, SENSOR_PLUGINS[description.key])
+        if is_plugin_compatible(plugin_registry, device, description.plugin_type)
     ]
 
     async_add_entities(entities)
 
 
-class KdeConnectSensor(KdeConnectPluginEntity[BatteryReceiverPlugin], SensorEntity):
+class KdeConnectSensor(KdeConnectPluginEntity, SensorEntity):
     """A sensor reading the battery charge from a KDE Connect device."""
 
     _attr_should_poll = False
@@ -60,11 +78,12 @@ class KdeConnectSensor(KdeConnectPluginEntity[BatteryReceiverPlugin], SensorEnti
         self,
         device: KdeConnectDevice,
         plugin_registry: PluginRegistry,
-        description: SensorEntityDescription,
+        description: KdeConnectSensorEntityDescription,
     ) -> None:
         """Initialize the battery charge sensor."""
-        super().__init__(device, plugin_registry, SENSOR_PLUGINS[description.key])
+        super().__init__(device, plugin_registry, description.plugin_type)
         self.entity_description = description
+        self.restore_type = description.sensor_restore_type
         self._attr_name = f"{device.device_name} {description.name}"
         self._attr_unique_id = f"{device.device_id}/{description.key}"
 
@@ -88,6 +107,4 @@ class KdeConnectSensor(KdeConnectPluginEntity[BatteryReceiverPlugin], SensorEnti
     def restore_state(self, state: State) -> None:
         """Restore the state of the device on restart."""
         if state.state != STATE_UNKNOWN:
-            self._attr_native_value = SENSOR_RESTORE_TYPES[self.entity_description.key](
-                state.state
-            )
+            self._attr_native_value = self.restore_type(state.state)
