@@ -7,7 +7,6 @@ from typing import Any
 
 from pykdeconnect.client import KdeConnectClient
 from pykdeconnect.devices import KdeConnectDevice
-from pykdeconnect.plugin import Plugin
 from pykdeconnect.plugin_registry import PluginRegistry
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -72,18 +71,3 @@ def raise_typeerror(msg: str) -> Callable[[], Any]:
         raise TypeError(msg)
 
     return _raise
-
-
-def is_plugin_compatible(
-    plugin_registry: PluginRegistry,
-    device: KdeConnectDevice,
-    plugin_class: type[Plugin] | None,
-) -> bool:
-    """Check if a plugin is compatible with a device.
-
-    Returns True if plugin_class is None
-    """
-    if plugin_class is None:
-        return True
-
-    return plugin_registry.is_plugin_compatible(device, plugin_class)
