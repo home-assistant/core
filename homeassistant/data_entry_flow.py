@@ -82,6 +82,7 @@ class FlowResult(TypedDict, total=False):
     context: dict[str, Any]
     result: Any
     last_step: bool | None
+    options: Mapping[str, Any]
     menu_options: list[str] | Mapping[str, Any]
 
 
