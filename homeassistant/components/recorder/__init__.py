@@ -191,7 +191,6 @@ CONFIG_SCHEMA = vol.Schema(
 MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
 
 
-@bind_hass
 def get_instance(hass: HomeAssistant) -> Recorder:
     """Get the recorder instance."""
     return hass.data[DATA_INSTANCE]
