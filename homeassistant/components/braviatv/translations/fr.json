@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_host": "Nom d'h\u00f4te ou adresse IP invalide",
+            "invalid_host": "Nom d'h\u00f4te ou adresse IP non valide",
             "unsupported_model": "Votre mod\u00e8le de t\u00e9l\u00e9viseur n'est pas pris en charge."
         },
         "step": {

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
@@ -17,6 +17,7 @@ from .exception import SonosUpdateError
 if TYPE_CHECKING:
     from .entity import SonosEntity
     from .household_coordinator import SonosHouseholdCoordinator
+    from .media import SonosMedia
     from .speaker import SonosSpeaker
 
 UID_PREFIX = "RINCON_"
@@ -24,9 +25,29 @@ UID_POSTFIX = "01400"
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar("_T", bound="SonosSpeaker | SonosEntity | SonosHouseholdCoordinator")
+_T = TypeVar(
+    "_T", bound="SonosSpeaker | SonosMedia | SonosEntity | SonosHouseholdCoordinator"
+)
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+
+@overload
+def soco_error(
+    errorcodes: None = ...,
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R]
+]:
+    ...
+
+
+@overload
+def soco_error(
+    errorcodes: list[str],
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
+]:
+    ...
 
 
 def soco_error(
