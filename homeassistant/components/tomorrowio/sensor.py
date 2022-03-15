@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pytomorrowio.const import (
@@ -14,22 +13,17 @@ from pytomorrowio.const import (
     PrimaryPollutantType,
 )
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_NAME,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_NITROGEN_DIOXIDE,
-    DEVICE_CLASS_OZONE,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SULPHUR_DIOXIDE,
-    DEVICE_CLASS_TEMPERATURE,
     IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_KILOMETERS,
@@ -80,8 +74,6 @@ from .const import (
     TMRW_ATTR_WIND_GUST,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class TomorrowioSensorEntityDescription(SensorEntityDescription):
@@ -102,7 +94,7 @@ SENSOR_TYPES = (
         unit_metric=TEMP_CELSIUS,
         metric_conversion=lambda val: temp_convert(val, TEMP_FAHRENHEIT, TEMP_CELSIUS),
         is_metric_check=True,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_DEW_POINT,
@@ -111,7 +103,7 @@ SENSOR_TYPES = (
         unit_metric=TEMP_CELSIUS,
         metric_conversion=lambda val: temp_convert(val, TEMP_FAHRENHEIT, TEMP_CELSIUS),
         is_metric_check=True,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
@@ -121,7 +113,7 @@ SENSOR_TYPES = (
             val, PRESSURE_INHG, PRESSURE_HPA
         ),
         is_metric_check=True,
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_SOLAR_GHI,
@@ -179,7 +171,7 @@ SENSOR_TYPES = (
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=2.03,
         is_metric_check=True,
-        device_class=DEVICE_CLASS_OZONE,
+        device_class=SensorDeviceClass.OZONE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PARTICULATE_MATTER_25,
@@ -187,7 +179,7 @@ SENSOR_TYPES = (
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=3.2808399 ** 3,
         is_metric_check=True,
-        device_class=DEVICE_CLASS_PM25,
+        device_class=SensorDeviceClass.PM25,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PARTICULATE_MATTER_10,
@@ -195,7 +187,7 @@ SENSOR_TYPES = (
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=3.2808399 ** 3,
         is_metric_check=True,
-        device_class=DEVICE_CLASS_PM10,
+        device_class=SensorDeviceClass.PM10,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_NITROGEN_DIOXIDE,
@@ -203,14 +195,14 @@ SENSOR_TYPES = (
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=1.95,
         is_metric_check=True,
-        device_class=DEVICE_CLASS_NITROGEN_DIOXIDE,
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CARBON_MONOXIDE,
         name="Carbon Monoxide",
         unit_imperial=CONCENTRATION_PARTS_PER_MILLION,
         unit_metric=CONCENTRATION_PARTS_PER_MILLION,
-        device_class=DEVICE_CLASS_CO,
+        device_class=SensorDeviceClass.CO,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_SULPHUR_DIOXIDE,
@@ -218,12 +210,12 @@ SENSOR_TYPES = (
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=2.71,
         is_metric_check=True,
-        device_class=DEVICE_CLASS_SULPHUR_DIOXIDE,
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_EPA_AQI,
         name="US EPA Air Quality Index",
-        device_class=DEVICE_CLASS_AQI,
+        device_class=SensorDeviceClass.AQI,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_EPA_PRIMARY_POLLUTANT,
@@ -240,7 +232,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CHINA_AQI,
         name="China MEP Air Quality Index",
-        device_class=DEVICE_CLASS_AQI,
+        device_class=SensorDeviceClass.AQI,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CHINA_PRIMARY_POLLUTANT,
