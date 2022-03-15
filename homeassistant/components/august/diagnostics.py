@@ -25,11 +25,11 @@ async def async_get_config_entry_diagnostics(
             "data": dict(entry.data),
         },
         "locks": {
-            async_redact_data(data.get_device_detail(device_id), TO_REDACT)
-            for device_id in data.locks
+            async_redact_data(data.get_device_detail(lock.device_id).raw, TO_REDACT)
+            for lock in data.locks
         },
-        "dorbells": {
-            async_redact_data(data.get_device_detail(device_id), TO_REDACT)
-            for device_id in data.doorbells
+        "doorbells": {
+            async_redact_data(data.get_device_detail(doorbell.device_id).raw, TO_REDACT)
+            for doorbell in data.doorbells
         },
     }
