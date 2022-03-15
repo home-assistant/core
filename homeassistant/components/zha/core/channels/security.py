@@ -12,7 +12,7 @@ from zigpy.exceptions import ZigbeeException
 from zigpy.zcl.clusters import security
 from zigpy.zcl.clusters.security import IasAce as AceCluster
 
-from homeassistant.core import CALLABLE_T, callback
+from homeassistant.core import callback
 
 from .. import registries, typing as zha_typing
 from ..const import (
@@ -23,6 +23,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
+from ..typing import CALLABLE_T
 from .base import ChannelStatus, ZigbeeChannel
 
 IAS_ACE_ARM = 0x0000  # ("arm", (t.enum8, t.CharacterString, t.uint8_t), False),
