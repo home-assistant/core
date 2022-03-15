@@ -370,7 +370,7 @@ def async_extract_referenced_entity_ids(
 
     for ent_entry in ent_reg.entities.values():
         # Do not add entities which are hidden or which are config or diagnostic entities
-        if ent_entry.entity_category is not None:  # or ent_entry.hidden_by is not None:
+        if ent_entry.entity_category is not None or ent_entry.hidden_by is not None:
             continue
 
         if (
