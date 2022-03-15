@@ -899,8 +899,11 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote")
-async def test_import_legacy(hass: HomeAssistant) -> None:
+async def test_import_legacy(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test importing from yaml with hostname."""
+    # Import basic data
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
@@ -916,37 +919,16 @@ async def test_import_legacy(hass: HomeAssistant) -> None:
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data[CONF_METHOD] == METHOD_LEGACY
-    assert entries[0].data[CONF_PORT] == LEGACY_PORT
-
-
-@pytest.mark.usefixtures("remote")
-async def test_import_legacy_update(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """
-    Test importing from yaml with hostname.
-
-    CONF_ON_ACTION should be updated.
-    """
-    # Import basic data (same as above)
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "fake_host",
-            CONF_MANUFACTURER: "Samsung",
-            CONF_METHOD: "legacy",
-            CONF_NAME: "fake",
-            CONF_PORT: 55000,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert CONF_ON_ACTION not in entries[0].data
+    assert entries[0].data == {
+        CONF_HOST: "fake_host",
+        CONF_MANUFACTURER: "Samsung",
+        CONF_METHOD: "legacy",
+        CONF_NAME: "fake",
+        CONF_PORT: 55000,
+    }
 
     # Import updated data
+    assert CONF_ON_ACTION not in entries[0].data
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
