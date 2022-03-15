@@ -857,7 +857,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "ms": (
         TuyaSensorEntityDescription(
             key=DPCode.ALARM_LOCK,
-            name="Alert",
+            name="Last Alert",
             device_class=TuyaDeviceClass.LOCK_ALARM,
             icon="mdi:information-outline",
         ),
