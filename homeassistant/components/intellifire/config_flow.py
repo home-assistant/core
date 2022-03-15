@@ -158,9 +158,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._discovered_hosts.append(DiscoveredHostInfo(ip=host, serial=serial))
 
-        # placeholders = {CONF_HOST: host}
-
-        # self.context["title_placeholders"] = {CONF_HOST: host, "serial" : serial}
+        placeholders = {CONF_HOST: host, "serial": serial}
+        self.context["title_placeholders"] = placeholders
 
         return await self.async_step_dhcp_confirm()
 
