@@ -25,12 +25,12 @@ from .subscriber import AugustSubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-API_CACHED_ATTRS = (
+API_CACHED_ATTRS = {
     "door_state",
     "door_state_datetime",
     "lock_status",
     "lock_status_datetime",
-)
+}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
