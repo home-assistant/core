@@ -1246,7 +1246,7 @@ class Script:
             and id(self) in script_stack
         ):
             script_execution_set("disallowed_recursion_detected")
-            _LOGGER.warning("Disallowed recursion detected")
+            self._log("Disallowed recursion detected", level=logging.WARNING)
             return
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
