@@ -75,6 +75,9 @@ advantage_air==0.3.1
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
 
+# homeassistant.components.geo_json_events
+aio_geojson_generic_client==0.1
+
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.13
 
@@ -461,7 +464,6 @@ gTTS==2.2.3
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==3.0.0
 
-# homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.6
 
