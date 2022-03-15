@@ -33,3 +33,9 @@ class DecoraWifiConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title="Leviton Decora WiFi", data=user_input)
+
+    async def async_step_import(
+        self, import_data: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Import entry from configuration.yaml."""
+        return await self.async_step_user(import_data)
