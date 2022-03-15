@@ -2368,7 +2368,7 @@ venstarcolortouch==0.15
 vilfo-api-client==0.3.2
 
 # homeassistant.components.volkszaehler
-volkszaehler==0.2.1
+volkszaehler==0.3.2
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.0
