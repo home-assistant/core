@@ -28,7 +28,7 @@ class DeconzNumberDescriptionMixin:
 
     suffix: str
     update_key: str
-    value_fn: Callable[[PydeconzSensor], bool | None]
+    value_fn: Callable[[PydeconzSensor], float | None]
 
 
 @dataclass
@@ -40,7 +40,7 @@ ENTITY_DESCRIPTIONS = {
     Presence: [
         DeconzNumberDescription(
             key="delay",
-            value_fn=lambda device: device.delay,
+            value_fn=lambda device: device.delay,  # type: ignore[no-any-return]
             suffix="Delay",
             update_key=PRESENCE_DELAY,
             max_value=65535,
