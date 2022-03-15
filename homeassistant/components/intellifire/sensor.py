@@ -118,7 +118,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         key="errors",
         name="Errors",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: ", ".join([x.name for x in data.error_codes]),
+        value_fn=lambda data: data.error_codes_string,
     ),
     IntellifireSensorEntityDescription(
         key="ecm_latency",
