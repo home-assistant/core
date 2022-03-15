@@ -1,6 +1,7 @@
 """Backup manager for the Backup integration."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import asdict, dataclass
 import hashlib
 import json
@@ -8,16 +9,17 @@ from pathlib import Path
 import tarfile
 from tarfile import TarError
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Any, Protocol
 
 from securetar import SecureTarFile, atomic_contents_add
 
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import integration_platform
 from homeassistant.util import dt, json as json_util
 
-from .const import EXCLUDE_FROM_BACKUP, LOGGER
+from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 
 
 @dataclass
@@ -35,6 +37,16 @@ class Backup:
         return {**asdict(self), "path": self.path.as_posix()}
 
 
+class BackupPlatformProtocol(Protocol):
+    """Define the format that backup platforms can have."""
+
+    async def async_pre_backup(self, hass: HomeAssistant) -> None:
+        """Perform operations before a backup starts."""
+
+    async def async_post_backup(self, hass: HomeAssistant) -> None:
+        """Perform operations after a backup finishes."""
+
+
 class BackupManager:
     """Backup manager for the Backup integration."""
 
@@ -44,14 +56,42 @@ class BackupManager:
         self.backup_dir = Path(hass.config.path("backups"))
         self.backing_up = False
         self.backups: dict[str, Backup] = {}
-        self.loaded = False
+        self.platforms: dict[str, BackupPlatformProtocol] = {}
+        self.loaded_backups = False
+        self.loaded_platforms = False
+
+    async def _add_platform(
+        self,
+        hass: HomeAssistant,
+        integration_domain: str,
+        platform: BackupPlatformProtocol,
+    ) -> None:
+        """Add a platform to the backup manager."""
+        if (
+            platform.__getattribute__("async_pre_backup") is None
+            or platform.__getattribute__("async_post_backup") is None
+        ):
+            LOGGER.warning(
+                "%s does not implement required functions for the backup platform",
+                integration_domain,
+            )
+            return
+        self.platforms[integration_domain] = platform
 
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
         backups = await self.hass.async_add_executor_job(self._read_backups)
         LOGGER.debug("Loaded %s backups", len(backups))
         self.backups = backups
-        self.loaded = True
+        self.loaded_backups = True
+
+    async def load_platforms(self) -> None:
+        """Load backup platforms."""
+        await integration_platform.async_process_integration_platforms(
+            self.hass, DOMAIN, self._add_platform
+        )
+        LOGGER.debug("Loaded %s platforms", len(self.platforms))
+        self.loaded_platforms = True
 
     def _read_backups(self) -> dict[str, Backup]:
         """Read backups from disk."""
@@ -75,14 +115,14 @@ class BackupManager:
 
     async def get_backups(self) -> dict[str, Backup]:
         """Return backups."""
-        if not self.loaded:
+        if not self.loaded_backups:
             await self.load_backups()
 
         return self.backups
 
     async def get_backup(self, slug: str) -> Backup | None:
         """Return a backup."""
-        if not self.loaded:
+        if not self.loaded_backups:
             await self.load_backups()
 
         if not (backup := self.backups.get(slug)):
@@ -113,8 +153,22 @@ class BackupManager:
         if self.backing_up:
             raise HomeAssistantError("Backup already in progress")
 
+        if not self.loaded_platforms:
+            await self.load_platforms()
+
         try:
             self.backing_up = True
+            pre_backup_results = await asyncio.gather(
+                *(
+                    platform.async_pre_backup(self.hass)
+                    for platform in self.platforms.values()
+                ),
+                return_exceptions=True,
+            )
+            for result in pre_backup_results:
+                if isinstance(result, Exception):
+                    raise result
+
             backup_name = f"Core {HAVERSION}"
             date_str = dt.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
@@ -146,12 +200,22 @@ class BackupManager:
                 path=tar_file_path,
                 size=round(tar_file_path.stat().st_size / 1_048_576, 2),
             )
-            if self.loaded:
+            if self.loaded_backups:
                 self.backups[slug] = backup
             LOGGER.debug("Generated new backup with slug %s", slug)
             return backup
         finally:
             self.backing_up = False
+            post_backup_results = await asyncio.gather(
+                *(
+                    platform.async_post_backup(self.hass)
+                    for platform in self.platforms.values()
+                ),
+                return_exceptions=True,
+            )
+            for result in post_backup_results:
+                if isinstance(result, Exception):
+                    raise result
 
     def _generate_backup_contents(
         self,
