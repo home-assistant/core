@@ -4,18 +4,17 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.NEW_DOMAIN import async_setup_entry
 from homeassistant.components.NEW_DOMAIN.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
-from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("platform", ("sensor",))
 async def test_config_flow(hass: HomeAssistant, platform) -> None:
     """Test the config flow."""
     input_sensor_entity_id = "sensor.input"
-    registry = er.async_get(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -24,7 +23,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.NEW_DOMAIN.async_setup_entry", wraps=async_setup_entry
+        "homeassistant.components.NEW_DOMAIN.async_setup_entry"
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -49,23 +48,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     }
     assert config_entry.title == "My NEW_DOMAIN"
 
-    # Check the entity is registered in the entity registry
-    assert registry.async_get(f"{platform}.my_NEW_DOMAIN") is not None
-
-    # Check the platform is setup correctly
-    state = hass.states.get(f"{platform}.my_NEW_DOMAIN")
-    # TODO Check the state of the entity has changed as expected
-    assert state.state == "unknown"
-    assert state.attributes == {}
-
-    # Remove the config entry
-    assert await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Check the state and entity registry entry are removed
-    assert hass.states.get(f"{platform}.my_min_max") is None
-    assert registry.async_get(f"{platform}.my_min_max") is None
-
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
@@ -84,31 +66,19 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     input_sensor_1_entity_id = "sensor.input1"
     input_sensor_2_entity_id = "sensor.input2"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
             "entity_id": input_sensor_1_entity_id,
             "name": "My NEW_DOMAIN",
         },
+        title="My NEW_DOMAIN",
     )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    state = hass.states.get(f"{platform}.my_NEW_DOMAIN")
-    assert state.state == "unknown"
-    assert state.attributes == {}
-
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.data == {}
-    assert config_entry.options == {
-        "entity_id": input_sensor_1_entity_id,
-        "name": "My NEW_DOMAIN",
-    }
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == RESULT_TYPE_FORM

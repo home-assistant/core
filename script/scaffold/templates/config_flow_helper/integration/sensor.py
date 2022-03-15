@@ -29,3 +29,10 @@ async def async_setup_entry(
 
 class NEW_DOMAINSensorEntity(SensorEntity):
     """NEW_DOMAIN Sensor."""
+
+    def __init__(self, unique_id: str, name: str, wrapped_entity_id: str) -> None:
+        """Initialize NEW_DOMAIN Sensor."""
+        super().__init__()
+        self._wrapped_entity_id = wrapped_entity_id
+        self._attr_name = name
+        self._attr_unique_id = unique_id
