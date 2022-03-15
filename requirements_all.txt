@@ -1138,7 +1138,7 @@ openevsewifi==1.1.0
 openhomedevice==2.0.1
 
 # homeassistant.components.opensensemap
-opensensemap-api==0.1.5
+opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
 openwebifpy==3.2.7
