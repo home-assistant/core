@@ -3,40 +3,33 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any, Protocol, TypeVar, overload
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
 from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import SONOS_SPEAKER_ACTIVITY
 from .exception import SonosUpdateError
+
+if TYPE_CHECKING:
+    from .entity import SonosEntity
+    from .household_coordinator import SonosHouseholdCoordinator
+    from .media import SonosMedia
+    from .speaker import SonosSpeaker
 
 UID_PREFIX = "RINCON_"
 UID_POSTFIX = "01400"
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar("_T", bound="_SonosEntityProtocol")
+_T = TypeVar(
+    "_T", bound="SonosSpeaker | SonosMedia | SonosEntity | SonosHouseholdCoordinator"
+)
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
-
-
-class _SonosEntityProtocol(Protocol):
-    """Protocol class for Sonos entities, used for error decororator.
-
-    Only include attributes / methods which ALL instances should have!
-    """
-
-    hass: HomeAssistant
-
-    @property
-    def soco(self) -> SoCo:
-        """Return the SoCo instance."""
-        raise NotImplementedError
 
 
 @overload
@@ -89,7 +82,7 @@ def soco_error(
                 message = f"Error calling {function} on {target}: {err}"
                 raise SonosUpdateError(message) from err
 
-            dispatch_soco = args_soco or self.soco
+            dispatch_soco = args_soco or self.soco  # type: ignore[union-attr]
             dispatcher_send(
                 self.hass,
                 f"{SONOS_SPEAKER_ACTIVITY}-{dispatch_soco.uid}",
