@@ -95,19 +95,18 @@ class ReliableClient:
 
     def __init__(self, host: str, port: int) -> None:
         """Create a client. Does not connect yet."""
-        self.host = host
-        self.port = port
-        self.timeout_seconds = 5.0
-        self.background_task: asyncio.Task | None = None
+        self._host = host
+        self._port = port
+        self._background_task: asyncio.Task | None = None
         self._observe_task: asyncio.Task | None = None
-        self.commmand_queue: asyncio.Queue = asyncio.Queue()
+        self._commmand_queue: asyncio.Queue = asyncio.Queue()
         # dict key is a unique id that can later be used to remove the observer.
-        self.unavailable_callbacks = dict[int, Callable[[], None]]()
+        self._unavailable_callbacks = dict[int, Callable[[], None]]()
         self._status_callbacks = dict[int, Callable[[Status], None]]()
         self._last_status_at: datetime = datetime.now(timezone.utc)
         # The purifier sends a status update whenever something changes, which most commonly is the measured
         # pm25 value. When turned on, this usually happens every few seconds to every few 10s of seconds, depending
-        # on how the amount of particles in the air.
+        # on how the amount of particles in the air changes.
         # When turned off, the updates usually only happen every 3 minutes.
         # 5 minutes should be enough to not time out when the purifier is turned off.
         self._status_timeout = timedelta(minutes=5)
@@ -120,10 +119,10 @@ class ReliableClient:
         If the client has been started before, nothing happens.
         """
 
-        if self.background_task is not None:
+        if self._background_task is not None:
             return
 
-        self.background_task = asyncio.create_task(self._connection_loop())
+        self._background_task = asyncio.create_task(self._connection_loop())
 
     def stop(self):
         """Stop the client and close all open connections."""
@@ -135,11 +134,11 @@ class ReliableClient:
             _LOGGER.debug("connecting")
 
             # Notify all observers that the device is currently unavailable
-            for callback in self.unavailable_callbacks.values():
+            for callback in self._unavailable_callbacks.values():
                 callback()
 
             try:
-                client_create = CoAPClient.create(host=self.host, port=self.port)
+                client_create = CoAPClient.create(host=self._host, port=self._port)
                 client = await asyncio.wait_for(client_create, timeout=10.0)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
@@ -214,12 +213,12 @@ class ReliableClient:
 
     async def _command_loop(self, client: CoAPClient):
         # Empty command queue, so piled up commands don't all time out.
-        while not self.commmand_queue.empty():
-            _, result_future = await self.commmand_queue.get()
+        while not self._commmand_queue.empty():
+            _, result_future = await self._commmand_queue.get()
             result_future.set_result(None)
 
         while True:
-            params, result_future = await self.commmand_queue.get()
+            params, result_future = await self._commmand_queue.get()
             try:
                 args, kwargs = params
                 _LOGGER.debug(
@@ -250,7 +249,7 @@ class ReliableClient:
             kwargs = {}
 
         result_future = asyncio.get_event_loop().create_future()
-        await self.commmand_queue.put(((args, kwargs), result_future))
+        await self._commmand_queue.put(((args, kwargs), result_future))
         return await result_future
 
     async def turn_on(self):
@@ -290,9 +289,9 @@ class ReliableClient:
     def observe_unavailable(self, id_: int, callback: Callable[[], None]) -> None:
         """Register the given callable to be called when the client is disconnected from the purifier."""
         _LOGGER.debug("observing unavailable")
-        self.unavailable_callbacks[id_] = callback
+        self._unavailable_callbacks[id_] = callback
 
     def stop_observing_unavailable(self, id_: int) -> None:
         """Unregister the callable previously registered with the given id from unavailable updates."""
         _LOGGER.debug("stopped observing unavailable")
-        del self.unavailable_callbacks[id_]
+        del self._unavailable_callbacks[id_]
