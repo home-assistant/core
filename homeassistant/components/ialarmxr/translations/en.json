@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "ialarmxr_generic_exception": "iAlarmXR generic error, please read the logs",
             "unknown": "Unexpected error"
         },
         "step": {

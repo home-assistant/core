@@ -1,7 +1,8 @@
 """Config flow for Antifurto365 iAlarmXR integration."""
 import logging
+from logging import Logger
 
-from pyialarmxr import IAlarmXR
+from pyialarmxr import IAlarmXR, IAlarmXRGenericException
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -10,7 +11,7 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Logger = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -53,6 +54,12 @@ class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             mac = await _get_device_mac(self.hass, host, username, password, port)
         except ConnectionError:
             errors["base"] = "cannot_connect"
+        except IAlarmXRGenericException as ialarmxr_exception:
+            _LOGGER.error(
+                "IAlarmXRGenericException with message: [ %s ]",
+                ialarmxr_exception.message,
+            )
+            errors["base"] = "ialarmxr_generic_exception"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
