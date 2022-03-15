@@ -559,7 +559,7 @@ ais-dom-frontend==20220301.1
 # homeassistant-pyozw==0.1.10
 
 # homeassistant.components.home_connect
-homeconnect==0.6.3
+homeconnect==0.7.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.2
@@ -1018,7 +1018,7 @@ pyiqvia==2021.11.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.1
+pyisy==3.0.5
 
 # homeassistant.components.kira
 pykira==0.1.1
