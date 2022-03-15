@@ -29,6 +29,8 @@ async def test_sensors(
     entity_registry_enabled_by_default: AsyncMock,
 ) -> None:
     """Test the creation and values of the sensors."""
+    registry = er.async_get(hass)
+
     sensors = {
         "commands": "sonarr_commands",
         "diskspace": "sonarr_disk_space",
