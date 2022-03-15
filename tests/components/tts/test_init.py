@@ -722,6 +722,7 @@ def test_valid_base_url(value):
         "http:example.com",
         "http:/example.com",
         "http//example.com",
+        "example.com",
     ),
 )
 def test_invalid_base_url(value):
