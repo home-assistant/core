@@ -23,13 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
-from .bridge import (
-    SamsungTVBridge,
-    SamsungTVLegacyBridge,
-    SamsungTVWSBridge,
-    async_get_device_info,
-    mac_from_device_info,
-)
+from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -77,7 +71,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._title: str = ""
         self._id: int | None = None
-        self._bridge: SamsungTVLegacyBridge | SamsungTVWSBridge | None = None
+        self._bridge: SamsungTVBridge | None = None
         self._device_info: dict[str, Any] | None = None
 
     def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:

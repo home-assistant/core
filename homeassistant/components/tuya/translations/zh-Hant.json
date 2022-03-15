@@ -32,7 +32,7 @@
                     "password": "\u5bc6\u78bc",
                     "platform": "\u5e33\u6236\u8a3b\u518a\u6240\u5728\u4f4d\u7f6e",
                     "region": "\u5340\u57df",
-                    "tuya_project_type": "Tuya \u96f2\u5c08\u6848\u985e\u578b",
+                    "tuya_project_type": "Tuya \u96f2\u5c08\u6848\u985e\u5225",
                     "username": "\u5e33\u865f"
                 },
                 "description": "\u8f38\u5165 Tuya \u6191\u8b49",
@@ -45,8 +45,8 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "error": {
-            "dev_multi_type": "\u591a\u91cd\u9078\u64c7\u8a2d\u88dd\u7f6e\u4ee5\u8a2d\u5b9a\u4f7f\u7528\u76f8\u540c\u985e\u578b",
-            "dev_not_config": "\u88dd\u7f6e\u985e\u578b\u7121\u6cd5\u8a2d\u5b9a",
+            "dev_multi_type": "\u591a\u91cd\u9078\u64c7\u8a2d\u88dd\u7f6e\u4ee5\u8a2d\u5b9a\u4f7f\u7528\u76f8\u540c\u985e\u5225",
+            "dev_not_config": "\u88dd\u7f6e\u985e\u5225\u7121\u6cd5\u8a2d\u5b9a",
             "dev_not_found": "\u627e\u4e0d\u5230\u88dd\u7f6e"
         },
         "step": {

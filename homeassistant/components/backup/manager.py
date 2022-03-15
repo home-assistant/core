@@ -8,6 +8,7 @@ from pathlib import Path
 import tarfile
 from tarfile import TarError
 from tempfile import TemporaryDirectory
+from typing import Any
 
 from securetar import SecureTarFile, atomic_contents_add
 
@@ -47,29 +48,30 @@ class BackupManager:
 
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
-        backups = {}
-
-        def _read_backups() -> None:
-            for backup_path in self.backup_dir.glob("*.tar"):
-                try:
-                    with tarfile.open(backup_path, "r:") as backup_file:
-                        if data_file := backup_file.extractfile("./backup.json"):
-                            data = json.loads(data_file.read())
-                            backup = Backup(
-                                slug=data["slug"],
-                                name=data["name"],
-                                date=data["date"],
-                                path=backup_path,
-                                size=round(backup_path.stat().st_size / 1_048_576, 2),
-                            )
-                            backups[backup.slug] = backup
-                except (OSError, TarError, json.JSONDecodeError) as err:
-                    LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
-
-        await self.hass.async_add_executor_job(_read_backups)
+        backups = await self.hass.async_add_executor_job(self._read_backups)
         LOGGER.debug("Loaded %s backups", len(backups))
         self.backups = backups
         self.loaded = True
+
+    def _read_backups(self) -> dict[str, Backup]:
+        """Read backups from disk."""
+        backups: dict[str, Backup] = {}
+        for backup_path in self.backup_dir.glob("*.tar"):
+            try:
+                with tarfile.open(backup_path, "r:") as backup_file:
+                    if data_file := backup_file.extractfile("./backup.json"):
+                        data = json.loads(data_file.read())
+                        backup = Backup(
+                            slug=data["slug"],
+                            name=data["name"],
+                            date=data["date"],
+                            path=backup_path,
+                            size=round(backup_path.stat().st_size / 1_048_576, 2),
+                        )
+                        backups[backup.slug] = backup
+            except (OSError, TarError, json.JSONDecodeError) as err:
+                LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
+        return backups
 
     async def get_backups(self) -> dict[str, Backup]:
         """Return backups."""
@@ -126,33 +128,17 @@ class BackupManager:
                 "homeassistant": {"version": HAVERSION},
                 "compressed": True,
             }
-            tar_file_path = Path(self.backup_dir, f"{slug}.tar")
+            tar_file_path = Path(self.backup_dir, f"{backup_data['slug']}.tar")
 
             if not self.backup_dir.exists():
                 LOGGER.debug("Creating backup directory")
                 self.hass.async_add_executor_job(self.backup_dir.mkdir)
 
-            def _create_backup() -> None:
-                with TemporaryDirectory() as tmp_dir:
-                    tmp_dir_path = Path(tmp_dir)
-                    json_util.save_json(
-                        tmp_dir_path.joinpath("./backup.json").as_posix(),
-                        backup_data,
-                    )
-                    with SecureTarFile(tar_file_path, "w", gzip=False) as tar_file:
-                        with SecureTarFile(
-                            tmp_dir_path.joinpath("./homeassistant.tar.gz").as_posix(),
-                            "w",
-                        ) as core_tar:
-                            atomic_contents_add(
-                                tar_file=core_tar,
-                                origin_path=Path(self.hass.config.path()),
-                                excludes=EXCLUDE_FROM_BACKUP,
-                                arcname="data",
-                            )
-                        tar_file.add(tmp_dir_path, arcname=".")
-
-            await self.hass.async_add_executor_job(_create_backup)
+            await self.hass.async_add_executor_job(
+                self._generate_backup_contents,
+                tar_file_path,
+                backup_data,
+            )
             backup = Backup(
                 slug=slug,
                 name=backup_name,
@@ -166,6 +152,32 @@ class BackupManager:
             return backup
         finally:
             self.backing_up = False
+
+    def _generate_backup_contents(
+        self,
+        tar_file_path: Path,
+        backup_data: dict[str, Any],
+    ) -> None:
+        """Generate backup contents."""
+        with TemporaryDirectory() as tmp_dir, SecureTarFile(
+            tar_file_path, "w", gzip=False
+        ) as tar_file:
+            tmp_dir_path = Path(tmp_dir)
+            json_util.save_json(
+                tmp_dir_path.joinpath("./backup.json").as_posix(),
+                backup_data,
+            )
+            with SecureTarFile(
+                tmp_dir_path.joinpath("./homeassistant.tar.gz").as_posix(),
+                "w",
+            ) as core_tar:
+                atomic_contents_add(
+                    tar_file=core_tar,
+                    origin_path=Path(self.hass.config.path()),
+                    excludes=EXCLUDE_FROM_BACKUP,
+                    arcname="data",
+                )
+            tar_file.add(tmp_dir_path, arcname=".")
 
 
 def _generate_slug(date: str, name: str) -> str:

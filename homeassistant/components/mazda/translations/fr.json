@@ -7,13 +7,13 @@
         "error": {
             "account_locked": "Compte bloqu\u00e9. Veuillez r\u00e9essayer plus tard.",
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe",
                     "region": "R\u00e9gion"
                 },

@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "target_domain": "Tipo"
+                }
+            }
+        }
+    }
+}

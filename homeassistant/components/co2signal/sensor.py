@@ -98,7 +98,7 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
     @property
     def native_value(self) -> StateType:
         """Return sensor state."""
-        if (value := self.coordinator.data["data"][self._description.key]) is None:  # type: ignore[misc]
+        if (value := self.coordinator.data["data"][self._description.key]) is None:  # type: ignore[literal-required]
             return None
         return round(value, 2)
 

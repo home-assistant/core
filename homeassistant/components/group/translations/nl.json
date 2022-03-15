@@ -1,63 +1,112 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Alle entiteiten",
+                    "entities": "Leden",
+                    "name": "Naam"
+                },
+                "description": "Als \"alle entiteiten\" is ingeschakeld, is de groep alleen ingeschakeld als alle leden zijn ingeschakeld. Als \"all entities\" is uitgeschakeld, is de groep ingeschakeld als een lid is ingeschakeld.",
+                "title": "Nieuwe groep"
+            },
             "cover": {
                 "data": {
-                    "entities": "Groep leden",
-                    "name": "Groep naam"
+                    "entities": "Leden",
+                    "name": "Naam",
+                    "title": "Nieuwe groep"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "cover_options": {
                 "data": {
-                    "entities": "Groep leden"
+                    "entities": "Groepsleden"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "fan": {
                 "data": {
-                    "entities": "Groep leden",
-                    "name": "Groep naam"
+                    "entities": "Leden",
+                    "name": "Naam",
+                    "title": "Nieuwe groep"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "fan_options": {
                 "data": {
-                    "entities": "Groep leden"
+                    "entities": "Groepsleden"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "init": {
                 "data": {
-                    "group_type": "Groep type"
+                    "group_type": "Groepstype"
                 },
-                "description": "Selecteer groep type"
+                "description": "Selecteer groepstype"
             },
             "light": {
                 "data": {
-                    "entities": "Groep leden",
-                    "name": "Groep naam"
+                    "entities": "Leden",
+                    "name": "Naam",
+                    "title": "Nieuwe groep"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "light_options": {
                 "data": {
-                    "entities": "Groep leden"
+                    "entities": "Groepsleden"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "media_player": {
                 "data": {
-                    "entities": "Groep leden\n",
-                    "name": "Groep naam"
+                    "entities": "Leden",
+                    "name": "Naam",
+                    "title": "Nieuwe groep"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
             },
             "media_player_options": {
                 "data": {
-                    "entities": "Groep leden"
+                    "entities": "Groepsleden"
                 },
-                "description": "Selecteer groep opties"
+                "description": "Selecteer groepsopties"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Groepstype"
+                },
+                "title": "Nieuwe groep"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "Alle entiteiten",
+                    "entities": "Leden"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Leden"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Leden"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Leden"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Leden"
+                }
             }
         }
     },
