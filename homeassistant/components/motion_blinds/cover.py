@@ -1,7 +1,7 @@
 """Support for Motion Blinds using their WLAN API."""
 import logging
 
-from motionblinds import BlindType
+from motionblinds import DEVICE_TYPES_WIFI, BlindType
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -12,7 +12,11 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_platform,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -24,6 +28,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_GATEWAY,
+    KEY_VERSION,
     MANUFACTURER,
     SERVICE_SET_ABSOLUTE_POSITION,
 )
@@ -74,26 +79,40 @@ async def async_setup_entry(
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    sw_version = hass.data[DOMAIN][config_entry.entry_id][KEY_VERSION]
 
     for blind in motion_gateway.device_list.values():
         if blind.type in POSITION_DEVICE_MAP:
             entities.append(
                 MotionPositionDevice(
-                    coordinator, blind, POSITION_DEVICE_MAP[blind.type], config_entry
+                    coordinator,
+                    blind,
+                    POSITION_DEVICE_MAP[blind.type],
+                    config_entry,
+                    sw_version,
                 )
             )
 
         elif blind.type in TILT_DEVICE_MAP:
             entities.append(
                 MotionTiltDevice(
-                    coordinator, blind, TILT_DEVICE_MAP[blind.type], config_entry
+                    coordinator,
+                    blind,
+                    TILT_DEVICE_MAP[blind.type],
+                    config_entry,
+                    sw_version,
                 )
             )
 
         elif blind.type in TDBU_DEVICE_MAP:
             entities.append(
                 MotionTDBUDevice(
-                    coordinator, blind, TDBU_DEVICE_MAP[blind.type], config_entry, "Top"
+                    coordinator,
+                    blind,
+                    TDBU_DEVICE_MAP[blind.type],
+                    config_entry,
+                    sw_version,
+                    "Top",
                 )
             )
             entities.append(
@@ -102,6 +121,7 @@ async def async_setup_entry(
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
                     config_entry,
+                    sw_version,
                     "Bottom",
                 )
             )
@@ -111,12 +131,25 @@ async def async_setup_entry(
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
                     config_entry,
+                    sw_version,
                     "Combined",
                 )
             )
 
         else:
-            _LOGGER.warning("Blind type '%s' not yet supported", blind.blind_type)
+            _LOGGER.warning(
+                "Blind type '%s' not yet supported, " "assuming RollerBlind",
+                blind.blind_type,
+            )
+            entities.append(
+                MotionPositionDevice(
+                    coordinator,
+                    blind,
+                    POSITION_DEVICE_MAP[BlindType.RollerBlind],
+                    config_entry,
+                    sw_version,
+                )
+            )
 
     async_add_entities(entities)
 
@@ -131,22 +164,34 @@ async def async_setup_entry(
 class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     """Representation of a Motion Blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, config_entry):
+    def __init__(self, coordinator, blind, device_class, config_entry, sw_version):
         """Initialize the blind."""
         super().__init__(coordinator)
 
         self._blind = blind
         self._config_entry = config_entry
 
+        if blind.device_type in DEVICE_TYPES_WIFI:
+            via_device = ()
+            connections = {(dr.CONNECTION_NETWORK_MAC, blind.mac)}
+            name = blind.blind_type
+        else:
+            via_device = (DOMAIN, blind._gateway.mac)
+            connections = {}
+            name = f"{blind.blind_type}-{blind.mac[12:]}"
+            sw_version = None
+
         self._attr_device_class = device_class
-        self._attr_name = f"{blind.blind_type}-{blind.mac[12:]}"
+        self._attr_name = name
         self._attr_unique_id = blind.mac
         self._attr_device_info = DeviceInfo(
+            connections=connections,
             identifiers={(DOMAIN, blind.mac)},
             manufacturer=MANUFACTURER,
             model=blind.blind_type,
-            name=f"{blind.blind_type}-{blind.mac[12:]}",
-            via_device=(DOMAIN, blind._gateway.mac),
+            name=name,
+            via_device=via_device,
+            sw_version=sw_version,
             hw_version=blind.wireless_name,
         )
 
@@ -247,9 +292,11 @@ class MotionTiltDevice(MotionPositionDevice):
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, config_entry, motor):
+    def __init__(
+        self, coordinator, blind, device_class, config_entry, sw_version, motor
+    ):
         """Initialize the blind."""
-        super().__init__(coordinator, blind, device_class, config_entry)
+        super().__init__(coordinator, blind, device_class, config_entry, sw_version)
         self._motor = motor
         self._motor_key = motor[0]
         self._attr_name = f"{blind.blind_type}-{motor}-{blind.mac[12:]}"

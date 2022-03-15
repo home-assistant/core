@@ -191,7 +191,6 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
     def turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,

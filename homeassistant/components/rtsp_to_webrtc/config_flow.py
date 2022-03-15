@@ -97,7 +97,6 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="hassio_confirm",
                 description_placeholders={"addon": self._hassio_discovery["addon"]},
-                data_schema=vol.Schema({}),
                 errors=errors,
             )
 

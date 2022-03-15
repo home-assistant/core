@@ -14,9 +14,16 @@ from zwave_js_server.model.value import (
     get_value_id,
 )
 
+from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_TYPE, __version__ as HA_VERSION
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_TYPE,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -30,6 +37,7 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
     DOMAIN,
+    LOGGER,
 )
 
 
@@ -217,6 +225,40 @@ def async_get_nodes_from_area_id(
             None,
         ):
             nodes.add(async_get_node_from_device_id(hass, device.id, dev_reg))
+
+    return nodes
+
+
+@callback
+def async_get_nodes_from_targets(
+    hass: HomeAssistant,
+    val: dict[str, Any],
+    ent_reg: er.EntityRegistry | None = None,
+    dev_reg: dr.DeviceRegistry | None = None,
+) -> set[ZwaveNode]:
+    """
+    Get nodes for all targets.
+
+    Supports entity_id with group expansion, area_id, and device_id.
+    """
+    nodes: set[ZwaveNode] = set()
+    # Convert all entity IDs to nodes
+    for entity_id in expand_entity_ids(hass, val.get(ATTR_ENTITY_ID, [])):
+        try:
+            nodes.add(async_get_node_from_entity_id(hass, entity_id, ent_reg, dev_reg))
+        except ValueError as err:
+            LOGGER.warning(err.args[0])
+
+    # Convert all area IDs to nodes
+    for area_id in val.get(ATTR_AREA_ID, []):
+        nodes.update(async_get_nodes_from_area_id(hass, area_id, ent_reg, dev_reg))
+
+    # Convert all device IDs to nodes
+    for device_id in val.get(ATTR_DEVICE_ID, []):
+        try:
+            nodes.add(async_get_node_from_device_id(hass, device_id, dev_reg))
+        except ValueError as err:
+            LOGGER.warning(err.args[0])
 
     return nodes
 

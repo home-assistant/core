@@ -1,246 +1,72 @@
 """The tests for the Google Calendar component."""
+from __future__ import annotations
+
 from collections.abc import Awaitable, Callable
 import datetime
 from typing import Any
-from unittest.mock import Mock, call, mock_open, patch
+from unittest.mock import Mock, call, patch
 
-from oauth2client.client import (
-    FlowExchangeError,
-    OAuth2Credentials,
-    OAuth2DeviceCodeError,
-)
 import pytest
-import yaml
 
-from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, STATE_OFF
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.components.google import (
+    DOMAIN,
+    SERVICE_ADD_EVENT,
+    SERVICE_SCAN_CALENDARS,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_OFF
+from homeassistant.core import HomeAssistant, State
 from homeassistant.util.dt import utcnow
 
-from .conftest import CALENDAR_ID, ApiResult, YieldFixture
+from .conftest import (
+    CALENDAR_ID,
+    TEST_API_ENTITY,
+    TEST_API_ENTITY_NAME,
+    TEST_YAML_ENTITY,
+    TEST_YAML_ENTITY_NAME,
+    ApiResult,
+    ComponentSetup,
+)
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry
 
 # Typing helpers
-ComponentSetup = Callable[[], Awaitable[bool]]
 HassApi = Callable[[], Awaitable[dict[str, Any]]]
 
-CODE_CHECK_INTERVAL = 1
-CODE_CHECK_ALARM_TIMEDELTA = datetime.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
+
+def assert_state(actual: State | None, expected: State | None) -> None:
+    """Assert that the two states are equal."""
+    if actual is None:
+        assert actual == expected
+        return
+    assert actual.entity_id == expected.entity_id
+    assert actual.state == expected.state
+    assert actual.attributes == expected.attributes
 
 
 @pytest.fixture
-async def code_expiration_delta() -> datetime.timedelta:
-    """Fixture for code expiration time, defaulting to the future."""
-    return datetime.timedelta(minutes=3)
+def setup_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Fixture to initialize the config entry."""
+    config_entry.add_to_hass(hass)
 
 
-@pytest.fixture
-async def mock_code_flow(
-    code_expiration_delta: datetime.timedelta,
-) -> YieldFixture[Mock]:
-    """Fixture for initiating OAuth flow."""
-    with patch(
-        "oauth2client.client.OAuth2WebServerFlow.step1_get_device_and_user_codes",
-    ) as mock_flow:
-        mock_flow.return_value.user_code_expiry = utcnow() + code_expiration_delta
-        mock_flow.return_value.interval = CODE_CHECK_INTERVAL
-        yield mock_flow
-
-
-@pytest.fixture
-async def mock_exchange(creds: OAuth2Credentials) -> YieldFixture[Mock]:
-    """Fixture for mocking out the exchange for credentials."""
-    with patch(
-        "oauth2client.client.OAuth2WebServerFlow.step2_exchange", return_value=creds
-    ) as mock:
-        yield mock
-
-
-@pytest.fixture
-async def calendars_config() -> list[dict[str, Any]]:
-    """Fixture for tests to override default calendar configuration."""
-    return [
-        {
-            "cal_id": CALENDAR_ID,
-            "entities": [
-                {
-                    "device_id": "backyard_light",
-                    "name": "Backyard Light",
-                    "search": "#Backyard",
-                    "track": True,
-                }
-            ],
-        }
-    ]
-
-
-@pytest.fixture
-async def mock_calendars_yaml(
-    hass: HomeAssistant,
-    calendars_config: list[dict[str, Any]],
-) -> None:
-    """Fixture that prepares the calendars.yaml file."""
-    mocked_open_function = mock_open(read_data=yaml.dump(calendars_config))
-    with patch("homeassistant.components.google.open", mocked_open_function):
-        yield
-
-
-@pytest.fixture
-async def mock_notification() -> YieldFixture[Mock]:
-    """Fixture for capturing persistent notifications."""
-    with patch("homeassistant.components.persistent_notification.create") as mock:
-        yield mock
-
-
-@pytest.fixture
-async def config() -> dict[str, Any]:
-    """Fixture for overriding component config."""
-    return {DOMAIN: {CONF_CLIENT_ID: "client-id", CONF_CLIENT_SECRET: "client-ecret"}}
-
-
-@pytest.fixture
-async def component_setup(
-    hass: HomeAssistant, config: dict[str, Any]
-) -> ComponentSetup:
-    """Fixture for setting up the integration."""
-
-    async def _setup_func() -> bool:
-        result = await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-        return result
-
-    return _setup_func
-
-
-async def fire_alarm(hass, point_in_time):
-    """Fire an alarm and wait for callbacks to run."""
-    with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
-        async_fire_time_changed(hass, point_in_time)
-        await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize("config", [{}])
-async def test_setup_config_empty(
+async def test_unload_entry(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
-    mock_notification: Mock,
-):
-    """Test setup component with an empty configuruation."""
-    assert await component_setup()
-
-    mock_notification.assert_not_called()
-
-    assert not hass.states.get("calendar.backyard_light")
-
-
-async def test_init_success(
-    hass: HomeAssistant,
-    mock_code_flow: Mock,
-    mock_exchange: Mock,
-    mock_notification: Mock,
-    mock_calendars_yaml: None,
-    component_setup: ComponentSetup,
+    setup_config_entry: MockConfigEntry,
 ) -> None:
-    """Test successful creds setup."""
-    assert await component_setup()
+    """Test load and unload of a ConfigEntry."""
+    await component_setup()
 
-    # Run one tick to invoke the credential exchange check
-    now = utcnow()
-    await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("calendar.backyard_light")
-    assert state
-    assert state.name == "Backyard Light"
-    assert state.state == STATE_OFF
-
-    mock_notification.assert_called()
-    assert "We are all setup now" in mock_notification.call_args[0][1]
-
-
-async def test_code_error(
-    hass: HomeAssistant,
-    mock_code_flow: Mock,
-    component_setup: ComponentSetup,
-    mock_notification: Mock,
-) -> None:
-    """Test loading the integration with no existing credentials."""
-
-    with patch(
-        "oauth2client.client.OAuth2WebServerFlow.step1_get_device_and_user_codes",
-        side_effect=OAuth2DeviceCodeError("Test Failure"),
-    ):
-        assert await component_setup()
-
-    assert not hass.states.get("calendar.backyard_light")
-
-    mock_notification.assert_called()
-    assert "Error: Test Failure" in mock_notification.call_args[0][1]
-
-
-@pytest.mark.parametrize("code_expiration_delta", [datetime.timedelta(minutes=-5)])
-async def test_expired_after_exchange(
-    hass: HomeAssistant,
-    mock_code_flow: Mock,
-    component_setup: ComponentSetup,
-    mock_notification: Mock,
-) -> None:
-    """Test loading the integration with no existing credentials."""
-
-    assert await component_setup()
-
-    now = utcnow()
-    await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
-
-    assert not hass.states.get("calendar.backyard_light")
-
-    mock_notification.assert_called()
-    assert (
-        "Authentication code expired, please restart Home-Assistant and try again"
-        in mock_notification.call_args[0][1]
-    )
-
-
-async def test_exchange_error(
-    hass: HomeAssistant,
-    mock_code_flow: Mock,
-    component_setup: ComponentSetup,
-    mock_notification: Mock,
-) -> None:
-    """Test an error while exchanging the code for credentials."""
-
-    with patch(
-        "oauth2client.client.OAuth2WebServerFlow.step2_exchange",
-        side_effect=FlowExchangeError(),
-    ):
-        assert await component_setup()
-
-        now = utcnow()
-        await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
-
-    assert not hass.states.get("calendar.backyard_light")
-
-    mock_notification.assert_called()
-    assert "In order to authorize Home-Assistant" in mock_notification.call_args[0][1]
-
-
-async def test_existing_token(
-    hass: HomeAssistant,
-    mock_token_read: None,
-    component_setup: ComponentSetup,
-    mock_calendars_yaml: None,
-    mock_notification: Mock,
-) -> None:
-    """Test setup with an existing token file."""
-    assert await component_setup()
-
-    state = hass.states.get("calendar.backyard_light")
-    assert state
-    assert state.name == "Backyard Light"
-    assert state.state == STATE_OFF
-
-    mock_notification.assert_not_called()
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -249,95 +75,185 @@ async def test_existing_token(
 async def test_existing_token_missing_scope(
     hass: HomeAssistant,
     token_scopes: list[str],
-    mock_token_read: None,
     component_setup: ComponentSetup,
-    mock_calendars_yaml: None,
-    mock_notification: Mock,
-    mock_code_flow: Mock,
-    mock_exchange: Mock,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test setup where existing token does not have sufficient scopes."""
+    config_entry.add_to_hass(hass)
     assert await component_setup()
 
-    # Run one tick to invoke the credential exchange check
-    now = utcnow()
-    await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
-    assert len(mock_exchange.mock_calls) == 1
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
 
-    state = hass.states.get("calendar.backyard_light")
-    assert state
-    assert state.name == "Backyard Light"
-    assert state.state == STATE_OFF
-
-    # No notifications on success
-    mock_notification.assert_called()
-    assert "We are all setup now" in mock_notification.call_args[0][1]
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 @pytest.mark.parametrize("calendars_config", [[{"cal_id": "invalid-schema"}]])
 async def test_calendar_yaml_missing_required_fields(
     hass: HomeAssistant,
-    mock_token_read: None,
     component_setup: ComponentSetup,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
-    mock_notification: Mock,
+    setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with a missing schema fields, ignores the error and continues."""
     assert await component_setup()
 
-    assert not hass.states.get("calendar.backyard_light")
-
-    mock_notification.assert_not_called()
+    assert not hass.states.get(TEST_YAML_ENTITY)
 
 
 @pytest.mark.parametrize("calendars_config", [[{"missing-cal_id": "invalid-schema"}]])
 async def test_invalid_calendar_yaml(
     hass: HomeAssistant,
-    mock_token_read: None,
     component_setup: ComponentSetup,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
-    mock_notification: Mock,
+    setup_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup with missing entity id fields fails to setup the integration."""
-
+    """Test setup with missing entity id fields fails to setup the config entry."""
     # Integration fails to setup
-    assert not await component_setup()
+    assert await component_setup()
 
-    assert not hass.states.get("calendar.backyard_light")
+    # XXX No config entries
 
-    mock_notification.assert_not_called()
+    assert not hass.states.get(TEST_YAML_ENTITY)
 
 
-async def test_found_calendar_from_api(
+async def test_calendar_yaml_error(
     hass: HomeAssistant,
-    mock_token_read: None,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
-    test_calendar: dict[str, Any],
+    test_api_calendar: dict[str, Any],
+    setup_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup with yaml file not found."""
+    mock_calendars_list({"items": [test_api_calendar]})
+
+    with patch("homeassistant.components.google.open", side_effect=FileNotFoundError()):
+        assert await component_setup()
+
+    assert not hass.states.get(TEST_YAML_ENTITY)
+    assert hass.states.get(TEST_API_ENTITY)
+
+
+@pytest.mark.parametrize(
+    "google_config_track_new,calendars_config,expected_state",
+    [
+        (
+            None,
+            [],
+            State(
+                TEST_API_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_API_ENTITY_NAME,
+                },
+            ),
+        ),
+        (
+            True,
+            [],
+            State(
+                TEST_API_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_API_ENTITY_NAME,
+                },
+            ),
+        ),
+        (False, [], None),
+    ],
+    ids=["default", "True", "False"],
+)
+async def test_track_new(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_calendars_yaml: None,
+    expected_state: State,
+    setup_config_entry: MockConfigEntry,
+) -> None:
+    """Test behavior of configuration.yaml settings for tracking new calendars not in the config."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    assert await component_setup()
+
+    state = hass.states.get(TEST_API_ENTITY)
+    assert_state(state, expected_state)
+
+
+@pytest.mark.parametrize("calendars_config", [[]])
+async def test_found_calendar_from_api(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_yaml: None,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test finding a calendar from the API."""
 
-    mock_calendars_list({"items": [test_calendar]})
+    mock_calendars_list({"items": [test_api_calendar]})
+    assert await component_setup()
 
-    mocked_open_function = mock_open(read_data=yaml.dump([]))
-    with patch("homeassistant.components.google.open", mocked_open_function):
-        assert await component_setup()
-
-    state = hass.states.get("calendar.we_are_we_are_a_test_calendar")
+    state = hass.states.get(TEST_API_ENTITY)
     assert state
-    assert state.name == "We are, we are, a... Test Calendar"
+    assert state.name == TEST_API_ENTITY_NAME
     assert state.state == STATE_OFF
+
+    # No yaml config loaded that overwrites the entity name
+    assert not hass.states.get(TEST_YAML_ENTITY)
+
+
+@pytest.mark.parametrize(
+    "calendars_config_track,expected_state",
+    [
+        (
+            True,
+            State(
+                TEST_YAML_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_YAML_ENTITY_NAME,
+                },
+            ),
+        ),
+        (False, None),
+    ],
+)
+async def test_calendar_config_track_new(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_yaml: None,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    calendars_config_track: bool,
+    expected_state: State,
+    setup_config_entry: MockConfigEntry,
+) -> None:
+    """Test calendar config that overrides whether or not a calendar is tracked."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    assert await component_setup()
+
+    state = hass.states.get(TEST_YAML_ENTITY)
+    assert_state(state, expected_state)
 
 
 async def test_add_event(
     hass: HomeAssistant,
-    mock_token_read: None,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
-    test_calendar: dict[str, Any],
+    test_api_calendar: dict[str, Any],
     mock_insert_event: Mock,
+    setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test service call that adds an event."""
 
@@ -378,30 +294,19 @@ async def test_add_event(
             datetime.timedelta(days=7),
             datetime.timedelta(days=8),
         ),
-        (
-            {
-                "start_date": datetime.date.today().isoformat(),
-                "end_date": (
-                    datetime.date.today() + datetime.timedelta(days=2)
-                ).isoformat(),
-            },
-            datetime.timedelta(days=0),
-            datetime.timedelta(days=2),
-        ),
     ],
-    ids=["in_days", "in_weeks", "explit_date"],
+    ids=["in_days", "in_weeks"],
 )
-async def test_add_event_date_ranges(
+async def test_add_event_date_in_x(
     hass: HomeAssistant,
-    mock_token_read: None,
-    calendars_config: list[dict[str, Any]],
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
-    test_calendar: dict[str, Any],
+    test_api_calendar: dict[str, Any],
     mock_insert_event: Mock,
     date_fields: dict[str, Any],
     start_timedelta: datetime.timedelta,
     end_timedelta: datetime.timedelta,
+    setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test service call that adds an event with various time ranges."""
 
@@ -433,3 +338,134 @@ async def test_add_event_date_ranges(
             "end": {"date": end_date.date().isoformat()},
         },
     )
+
+
+async def test_add_event_date(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    mock_insert_event: Mock,
+    setup_config_entry: MockConfigEntry,
+) -> None:
+    """Test service call that sets a date range."""
+
+    assert await component_setup()
+
+    now = utcnow()
+    today = now.date()
+    end_date = today + datetime.timedelta(days=2)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_EVENT,
+        {
+            "calendar_id": CALENDAR_ID,
+            "summary": "Summary",
+            "description": "Description",
+            "start_date": today.isoformat(),
+            "end_date": end_date.isoformat(),
+        },
+        blocking=True,
+    )
+    mock_insert_event.assert_called()
+
+    assert mock_insert_event.mock_calls[0] == call(
+        calendarId=CALENDAR_ID,
+        body={
+            "summary": "Summary",
+            "description": "Description",
+            "start": {"date": today.isoformat()},
+            "end": {"date": end_date.isoformat()},
+        },
+    )
+
+
+async def test_add_event_date_time(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_insert_event: Mock,
+    setup_config_entry: MockConfigEntry,
+) -> None:
+    """Test service call that adds an event with a date time range."""
+
+    assert await component_setup()
+
+    start_datetime = datetime.datetime.now()
+    delta = datetime.timedelta(days=3, hours=3)
+    end_datetime = start_datetime + delta
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_EVENT,
+        {
+            "calendar_id": CALENDAR_ID,
+            "summary": "Summary",
+            "description": "Description",
+            "start_date_time": start_datetime.isoformat(),
+            "end_date_time": end_datetime.isoformat(),
+        },
+        blocking=True,
+    )
+    mock_insert_event.assert_called()
+
+    assert mock_insert_event.mock_calls[0] == call(
+        calendarId=CALENDAR_ID,
+        body={
+            "summary": "Summary",
+            "description": "Description",
+            "start": {
+                "dateTime": start_datetime.isoformat(timespec="seconds"),
+                "timeZone": "CST",
+            },
+            "end": {
+                "dateTime": end_datetime.isoformat(timespec="seconds"),
+                "timeZone": "CST",
+            },
+        },
+    )
+
+
+async def test_scan_calendars(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    setup_config_entry: MockConfigEntry,
+) -> None:
+    """Test finding a calendar from the API."""
+
+    assert await component_setup()
+
+    calendar_1 = {
+        "id": "calendar-id-1",
+        "summary": "Calendar 1",
+    }
+    calendar_2 = {
+        "id": "calendar-id-2",
+        "summary": "Calendar 2",
+    }
+
+    mock_calendars_list({"items": [calendar_1]})
+    await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, {}, blocking=True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.calendar_1")
+    assert state
+    assert state.name == "Calendar 1"
+    assert state.state == STATE_OFF
+    assert not hass.states.get("calendar.calendar_2")
+
+    mock_calendars_list({"items": [calendar_1, calendar_2]})
+    await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, {}, blocking=True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.calendar_1")
+    assert state
+    assert state.name == "Calendar 1"
+    assert state.state == STATE_OFF
+    state = hass.states.get("calendar.calendar_2")
+    assert state
+    assert state.name == "Calendar 2"
+    assert state.state == STATE_OFF

@@ -43,6 +43,7 @@ async def async_setup_entry(
 class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     """Class for UPnP/IGD binary sensors."""
 
+    entity_description: UpnpBinarySensorEntityDescription
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(

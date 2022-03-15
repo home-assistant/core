@@ -56,8 +56,7 @@ async def test_anna_as_smt_climate_sensor_entities(
 async def test_anna_climate_sensor_entities(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:
-    """Test creation of climate related sensor entities as single master thermostat."""
-    mock_smile_anna.single_master_thermostat.return_value = False
+    """Test creation of climate related sensor entities."""
     state = hass.states.get("sensor.opentherm_outdoor_temperature")
     assert state
     assert float(state.state) == 3.0

@@ -129,6 +129,7 @@ omit =
     homeassistant/components/bosch_shc/cover.py
     homeassistant/components/bosch_shc/entity.py
     homeassistant/components/bosch_shc/sensor.py
+    homeassistant/components/bosch_shc/switch.py
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
@@ -705,7 +706,6 @@ omit =
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mjpeg/util.py
     homeassistant/components/mochad/*
-    homeassistant/components/modbus/climate.py
     homeassistant/components/modem_callerid/button.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/moehlenhoff_alpha2/__init__.py
@@ -736,7 +736,6 @@ omit =
     homeassistant/components/mysensors/handler.py
     homeassistant/components/mysensors/helpers.py
     homeassistant/components/mysensors/light.py
-    homeassistant/components/mysensors/notify.py
     homeassistant/components/mysensors/switch.py
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
@@ -873,13 +872,9 @@ omit =
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/const.py
     homeassistant/components/ovo_energy/sensor.py
-    homeassistant/components/ozw/__init__.py
-    homeassistant/components/ozw/entity.py
-    homeassistant/components/ozw/services.py
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
-    homeassistant/components/pcal9535a/*
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/diagnostics.py
@@ -961,6 +956,7 @@ omit =
     homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
+    homeassistant/components/rfxtrx/diagnostics.py
     homeassistant/components/ridwell/__init__.py
     homeassistant/components/ridwell/sensor.py
     homeassistant/components/ridwell/switch.py
@@ -983,7 +979,6 @@ omit =
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
     homeassistant/components/rpi_gpio/*
-    homeassistant/components/rpi_pfio/*
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
@@ -1013,10 +1008,14 @@ omit =
     homeassistant/components/senseme/light.py
     homeassistant/components/senseme/switch.py
     homeassistant/components/sensibo/__init__.py
+    homeassistant/components/sensibo/binary_sensor.py
     homeassistant/components/sensibo/climate.py
     homeassistant/components/sensibo/coordinator.py
     homeassistant/components/sensibo/diagnostics.py
+    homeassistant/components/sensibo/entity.py
     homeassistant/components/sensibo/number.py
+    homeassistant/components/sensibo/select.py
+    homeassistant/components/sensibo/sensor.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py
@@ -1477,6 +1476,7 @@ omit =
     homeassistant/components/zwave_me/lock.py
     homeassistant/components/zwave_me/number.py
     homeassistant/components/zwave_me/sensor.py
+    homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
 
 [report]

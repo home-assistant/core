@@ -13,7 +13,7 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import Any, Union, cast
+from typing import TYPE_CHECKING, Any, Union, cast
 import uuid
 
 import attr
@@ -108,6 +108,11 @@ from .models import (
 )
 from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 
+if TYPE_CHECKING:
+    # Only import for paho-mqtt type checking here, imports are done locally
+    # because integrations should be able to optionally rely on MQTT.
+    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+
 _LOGGER = logging.getLogger(__name__)
 
 _SENTINEL = object()
@@ -124,6 +129,13 @@ DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_TLS_PROTOCOL = "auto"
+
+DEFAULT_VALUES = {
+    CONF_PORT: DEFAULT_PORT,
+    CONF_WILL_MESSAGE: DEFAULT_WILL,
+    CONF_BIRTH_MESSAGE: DEFAULT_BIRTH,
+    CONF_DISCOVERY: DEFAULT_DISCOVERY,
+}
 
 ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
@@ -148,6 +160,7 @@ PLATFORMS = [
     Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SCENE,
@@ -180,7 +193,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             vol.Coerce(int), vol.Range(min=15)
         ),
         vol.Optional(CONF_BROKER): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CERTIFICATE): vol.Any("auto", cv.isfile),
@@ -197,9 +210,9 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
             cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
         ),
-        vol.Optional(CONF_WILL_MESSAGE, default=DEFAULT_WILL): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_BIRTH_MESSAGE, default=DEFAULT_BIRTH): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+        vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_DISCOVERY): cv.boolean,
         # discovery_prefix must be a valid publish topic because if no
         # state topic is specified, it will be created with the given prefix.
         vol.Optional(
@@ -602,6 +615,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 def _merge_config(entry, conf):
     """Merge configuration.yaml config with config entry."""
+    # Base config on default values
+    conf = {**DEFAULT_VALUES, **conf}
     return {**conf, **entry.data}
 
 
@@ -615,12 +630,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         override = {k: entry.data[k] for k in shared_keys}
         if CONF_PASSWORD in override:
             override[CONF_PASSWORD] = "********"
-        _LOGGER.info(
-            "Data in your configuration entry is going to override your "
-            "configuration.yaml: %s",
+        _LOGGER.warning(
+            "Deprecated configuration settings found in configuration.yaml. "
+            "These settings from your configuration entry will override: %s",
             override,
         )
 
+    # Merge the configuration values from configuration.yaml
     conf = _merge_config(entry, conf)
 
     hass.data[DATA_MQTT] = MQTT(
@@ -753,23 +769,23 @@ class Subscription:
 class MqttClientSetup:
     """Helper class to setup the paho mqtt client from config."""
 
-    # We don't import on the top because some integrations
-    # should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
-
     def __init__(self, config: ConfigType) -> None:
         """Initialize the MQTT client setup helper."""
 
+        # We don't import on the top because some integrations
+        # should be able to optionally rely on MQTT.
+        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+
         if config[CONF_PROTOCOL] == PROTOCOL_31:
-            proto = self.mqtt.MQTTv31
+            proto = mqtt.MQTTv31
         else:
-            proto = self.mqtt.MQTTv311
+            proto = mqtt.MQTTv311
 
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
-            client_id = self.mqtt.base62(uuid.uuid4().int, padding=22)
-        self._client = self.mqtt.Client(client_id, protocol=proto)
+            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
+        self._client = mqtt.Client(client_id, protocol=proto)
 
         # Enable logging
         self._client.enable_logger()

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.31.0
+    rev: v2.31.1
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
@@ -31,12 +31,12 @@ repos:
           - pyflakes==2.4.0
           - flake8-docstrings==1.6.0
           - pydocstyle==6.1.1
-          - flake8-comprehensions==3.7.0
+          - flake8-comprehensions==3.8.0
           - flake8-noqa==1.2.1
           - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.0
+    rev: 1.7.4
     hooks:
       - id: bandit
         args:
