@@ -200,7 +200,7 @@ class DPCode(StrEnum):
     BRIGHTNESS_MIN_1 = "brightness_min_1"
     BRIGHTNESS_MIN_2 = "brightness_min_2"
     BRIGHTNESS_MIN_3 = "brightness_min_3"
-    CALL_PHONE = "callphone"
+    CALLPHONE = "callphone"
     CLOSED_OPENED = "closed_opened"
     C_F = "c_f"  # Temperature unit switching
     CH2O_STATE = "ch2o_state"

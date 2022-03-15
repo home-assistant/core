@@ -654,7 +654,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
-            key=DPCode.CALL_PHONE,
+            key=DPCode.CALLPHONE,
             name="Phone Call",
             icon="mdi:phone-outline",
             entity_category=EntityCategory.CONFIG,
