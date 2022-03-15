@@ -111,6 +111,7 @@ class ReliableClient:
         # When turned off, the updates usually only happen every 3 minutes.
         # 5 minutes should be enough to not time out when the purifier is turned off.
         self._status_timeout = timedelta(minutes=5)
+        self._shutdown: asyncio.Future = asyncio.Future()
 
     def start(self) -> None:
         """
@@ -123,6 +124,11 @@ class ReliableClient:
             return
 
         self.background_task = asyncio.create_task(self._connection_loop())
+
+    def stop(self):
+        """Stop the client and close all open connections."""
+        # Use cancel, so nothing breaks in case this is called multiple times.
+        self._shutdown.cancel()
 
     async def _connection_loop(self) -> None:
         while True:
@@ -151,10 +157,12 @@ class ReliableClient:
             status_watchdog = asyncio.create_task(self._status_watchdog())
             command_loop = asyncio.create_task(self._command_loop(client))
             await asyncio.wait(
-                [command_loop, status_watchdog], return_when=FIRST_COMPLETED
+                [command_loop, status_watchdog, self._shutdown],
+                return_when=FIRST_COMPLETED,
             )
 
-            # Connection is broken, so abort all tasks (we only wait for the first to complete)
+            # Connection is broken or shutdown was requested, so abort all tasks
+            # (we only wait for the first to complete).
             observe_task.cancel()
             status_watchdog.cancel()
             command_loop.cancel()
@@ -163,6 +171,10 @@ class ReliableClient:
                 await client.shutdown()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Client shutdown failed")
+
+            if self._shutdown.cancelled():
+                _LOGGER.debug("shutdown requested, stopping connection loop")
+                return
 
     async def _observe_status(self, client: CoAPClient):
         async for json_status in client.observe_status():
@@ -267,8 +279,20 @@ class ReliableClient:
 
     def observe_status(self, id_: int, callback: Callable[[Status], None]) -> None:
         """Register the given callable to be called when the client reveives a status update from the purifier."""
+        _LOGGER.debug("observing status")
         self._status_callbacks[id_] = callback
+
+    def stop_observing_status(self, id_: int) -> None:
+        """Unregister the callable previously registered with the given id from status updates."""
+        _LOGGER.debug("stopped observing status")
+        del self._status_callbacks[id_]
 
     def observe_unavailable(self, id_: int, callback: Callable[[], None]) -> None:
         """Register the given callable to be called when the client is disconnected from the purifier."""
+        _LOGGER.debug("observing unavailable")
         self.unavailable_callbacks[id_] = callback
+
+    def stop_observing_unavailable(self, id_: int) -> None:
+        """Unregister the callable previously registered with the given id from unavailable updates."""
+        _LOGGER.debug("stopped observing unavailable")
+        del self.unavailable_callbacks[id_]

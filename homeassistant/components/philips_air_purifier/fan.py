@@ -55,8 +55,15 @@ class PurifierEntity(FanEntity):
         # integration to be able to start up anyway and just be unavailable.
         self._initial_data = initial_data
 
-        client.observe_unavailable(id(self), self._set_unavailable)
-        client.observe_status(id(self), self._set_status)
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to device status updates."""
+        self._client.observe_unavailable(id(self), self._set_unavailable)
+        self._client.observe_status(id(self), self._set_status)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from device status updates."""
+        self._client.stop_observing_unavailable(id(self))
+        self._client.stop_observing_status(id(self))
 
     def _set_unavailable(self):
         self._status = None
