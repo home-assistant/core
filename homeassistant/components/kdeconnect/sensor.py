@@ -24,7 +24,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import KdeConnectPluginEntity
 from .const import DATA_KEY_CLIENT, DATA_KEY_DEVICES, DOMAIN
-from .helpers import is_plugin_compatible, raise_typeerror
+from .helpers import raise_typeerror
 
 
 @dataclass
@@ -63,7 +63,7 @@ async def async_setup_entry(
     entities = [
         KdeConnectSensor(device, plugin_registry, description)
         for description in SENSOR_TYPES
-        if is_plugin_compatible(plugin_registry, device, description.plugin_type)
+        if plugin_registry.is_plugin_compatible(device, description.plugin_type)
     ]
 
     async_add_entities(entities)

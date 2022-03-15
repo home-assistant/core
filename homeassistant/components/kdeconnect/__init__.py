@@ -27,7 +27,6 @@ _P = TypeVar("_P", bound=Plugin)
 
 
 PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 
