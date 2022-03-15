@@ -29,8 +29,8 @@
         },
         "step": {
             "ack_no_options": {
-                "description": "Er zijn geen opties voor de SysBus-implementatie",
-                "title": "OneWire SysBus-opties"
+                "description": "Er zijn geen opties voor de SysBus implementatie",
+                "title": "OneWire SysBus opties"
             },
             "configure_device": {
                 "data": {
@@ -44,7 +44,7 @@
                     "clear_device_options": "Wis alle apparaatconfiguraties",
                     "device_selection": "Selecteer apparaten om te configureren"
                 },
-                "description": "Selecteer welke configuratiestappen moeten doorlopen",
+                "description": "Selecteer welke configuratiestappen moeten worden doorlopen",
                 "title": "OneWire-apparaatopties"
             }
         }

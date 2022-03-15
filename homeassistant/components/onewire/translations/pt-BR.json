@@ -29,10 +29,6 @@
         },
         "step": {
             "ack_no_options": {
-                "data": {
-                    "one": "um",
-                    "other": "outros"
-                },
                 "description": "N\u00e3o h\u00e1 op\u00e7\u00f5es para a implementa\u00e7\u00e3o do SysBus",
                 "title": "Op\u00e7\u00f5es de OneWire SysBus"
             },

@@ -15,6 +15,7 @@ DEFAULT_INTERFACE = "any"
 KEY_GATEWAY = "gateway"
 KEY_COORDINATOR = "coordinator"
 KEY_MULTICAST_LISTENER = "multicast_listener"
+KEY_VERSION = "version"
 
 ATTR_WIDTH = "width"
 ATTR_ABSOLUTE_POSITION = "absolute_position"

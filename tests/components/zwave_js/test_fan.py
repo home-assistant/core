@@ -2,14 +2,10 @@
 import math
 
 import pytest
+from voluptuous.error import MultipleInvalid
 from zwave_js_server.event import Event
 
-from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
-    ATTR_PERCENTAGE_STEP,
-    ATTR_SPEED,
-    SPEED_MEDIUM,
-)
+from homeassistant.components.fan import ATTR_PERCENTAGE, ATTR_PERCENTAGE_STEP
 
 
 async def test_generic_fan(hass, client, fan_generic, integration):
@@ -25,7 +21,7 @@ async def test_generic_fan(hass, client, fan_generic, integration):
     await hass.services.async_call(
         "fan",
         "turn_on",
-        {"entity_id": entity_id, "speed": SPEED_MEDIUM},
+        {"entity_id": entity_id, "percentage": 66},
         blocking=True,
     )
 
@@ -54,11 +50,11 @@ async def test_generic_fan(hass, client, fan_generic, integration):
     client.async_send_command.reset_mock()
 
     # Test setting unknown speed
-    with pytest.raises(ValueError):
+    with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             "fan",
-            "set_speed",
-            {"entity_id": entity_id, "speed": 99},
+            "set_percentage",
+            {"entity_id": entity_id, "percentage": "bad"},
             blocking=True,
         )
 
@@ -150,7 +146,7 @@ async def test_generic_fan(hass, client, fan_generic, integration):
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
-    assert state.attributes[ATTR_SPEED] == "high"
+    assert state.attributes[ATTR_PERCENTAGE] == 100
 
     client.async_send_command.reset_mock()
 
@@ -175,7 +171,7 @@ async def test_generic_fan(hass, client, fan_generic, integration):
 
     state = hass.states.get(entity_id)
     assert state.state == "off"
-    assert state.attributes[ATTR_SPEED] == "off"
+    assert state.attributes[ATTR_PERCENTAGE] == 0
 
 
 async def test_configurable_speeds_fan(hass, client, hs_fc200, integration):
