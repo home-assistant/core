@@ -101,13 +101,11 @@ async def async_setup_platform(
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
-        [
-            TwitchSensor(
-                coordinator,
-                channel,
-            )
-            for channel in channels["data"]
-        ],
+        TwitchSensor(
+            coordinator,
+            channel,
+        )
+        for channel in channels["data"]
     )
 
 
