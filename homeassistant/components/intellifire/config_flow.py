@@ -1,6 +1,7 @@
 """Config flow for IntelliFire integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from aiohttp import ClientConnectionError
@@ -17,6 +18,16 @@ from .const import DOMAIN, LOGGER
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 MANUAL_ENTRY_STRING = "IP Address"  # Simplified so it does not have to be translated
+
+
+@dataclass
+class DiscoveredHostInfo:
+    """Host info for discovery."""
+
+    def __init__(self, ip: str, serial: str = "") -> None:
+        """Initialize a host info."""
+        self.ip: str = ip
+        self.serial: str = serial
 
 
 async def validate_host_input(host: str) -> str:
@@ -40,10 +51,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the Config Flow Handler."""
         self._config_context = {}
-        self._not_configured_hosts: list[str] = []
-        self._discovered_hosts: list[
-            tuple(str, str)
-        ] = []  # will store tuples of ip/serial
+        self._not_configured_hosts: list[DiscoveredHostInfo] = []
+        self._discovered_hosts: list[DiscoveredHostInfo] = []
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
@@ -56,7 +65,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         self._not_configured_hosts = [
-            ip for ip in discovered_hosts if ip not in configured_hosts
+            DiscoveredHostInfo(ip)
+            for ip in discovered_hosts
+            if ip not in configured_hosts
         ]
         LOGGER.debug("Discovered Hosts: %s", discovered_hosts)
         LOGGER.debug("Configured Hosts: %s", configured_hosts)
@@ -66,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate and create the entry."""
         self._async_abort_entries_match({CONF_HOST: host})
         serial = await validate_host_input(host)
-        await self.async_set_unique_id(serial)
+        await self.async_set_unique_id(serial, raise_on_progress=False)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         return self.async_create_entry(
             title=f"Fireplace {serial}",
@@ -112,7 +123,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): vol.In(
-                        self._not_configured_hosts + [MANUAL_ENTRY_STRING]
+                        [host.ip for host in self._not_configured_hosts]
+                        + [MANUAL_ENTRY_STRING]
                     )
                 }
             ),
@@ -137,29 +149,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Run validation logic on ip
         host = discovery_info.ip
+
         self._async_abort_entries_match({CONF_HOST: host})
         try:
             serial = await validate_host_input(host)
         except (ConnectionError, ClientConnectionError):
             return self.async_abort(reason="not_intellifire_device")
 
-        self._discovered_hosts.append((host, serial))
+        self._discovered_hosts.append(DiscoveredHostInfo(ip=host, serial=serial))
+
+        # placeholders = {CONF_HOST: host}
+
+        # self.context["title_placeholders"] = {CONF_HOST: host, "serial" : serial}
+
         return await self.async_step_dhcp_confirm()
 
     async def async_step_dhcp_confirm(self, user_input=None):
         """Attempt to confirm."""
 
+        # Add the hosts one by one
+        host = self._discovered_hosts[0].ip
+        serial = self._discovered_hosts[0].serial
+
         if user_input is None:
             # Show the confirmation dialog
-            return self.async_show_form(step_id="dhcp_confirm")
-
-        print("USER INPUT: ", user_input)
-        # Add the hosts one by one
-        for host, serial in self._discovered_hosts:
-
-            await self.async_set_unique_id(serial)
-            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-            return self.async_create_entry(
-                title=f"Fireplace {serial}",
-                data={CONF_HOST: host},
+            return self.async_show_form(
+                step_id="dhcp_confirm", description_placeholders={CONF_HOST: host}
             )
+
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        return self.async_create_entry(
+            title=f"Fireplace {serial}",
+            data={CONF_HOST: host},
+        )

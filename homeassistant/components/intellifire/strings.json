@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "Discovered Fireplace ({host})",
     "step": {
       "manual_device_entry": {
         "description": "Local Configuration",
@@ -8,7 +9,7 @@
         }
       },
       "dhcp_confirm": {
-        "description": "Do you want to setup IntelliFire Fireplaces"
+        "description": "Setup {host}"
       },
       "pick_device": {
         "data": {
