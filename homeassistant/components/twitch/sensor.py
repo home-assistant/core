@@ -98,6 +98,7 @@ async def async_setup_platform(
         ft.partial(client.get_users, logins=channels)
     )
     coordinator = TwitchDataUpdateCoordinator(hass, client, user, channels["data"])
+    await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
         [
@@ -107,7 +108,6 @@ async def async_setup_platform(
             )
             for channel in channels["data"]
         ],
-        True,
     )
 
 
