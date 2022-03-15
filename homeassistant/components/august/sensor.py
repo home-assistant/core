@@ -31,7 +31,6 @@ from .const import (
     ATTR_OPERATION_KEYPAD,
     ATTR_OPERATION_METHOD,
     ATTR_OPERATION_REMOTE,
-    DATA_AUGUST,
     DOMAIN,
     OPERATION_METHOD_AUTORELOCK,
     OPERATION_METHOD_KEYPAD,
@@ -93,7 +92,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the August sensors."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[SensorEntity] = []
     migrate_unique_id_devices = []
     operation_sensors = []

@@ -128,7 +128,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.diagnostics",
     "homeassistant.components.sonos.entity",
     "homeassistant.components.sonos.favorites",
-    "homeassistant.components.sonos.helpers",
     "homeassistant.components.sonos.media_browser",
     "homeassistant.components.sonos.media_player",
     "homeassistant.components.sonos.number",
