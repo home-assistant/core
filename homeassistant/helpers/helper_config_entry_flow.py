@@ -106,7 +106,9 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
             if cls.options_flow is None:
                 raise UnknownHandler
 
-            return HelperOptionsFlowHandler(config_entry, cls.options_flow)
+            return HelperOptionsFlowHandler(
+                config_entry, cls.options_flow, cls.async_options_flow_finished
+            )
 
         # Create an async_get_options_flow method
         cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
@@ -136,11 +138,31 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
 
     # pylint: disable-next=no-self-use
     @abstractmethod
+    @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title.
 
         The options parameter contains config entry options, which is the union of user
         input from the config flow steps.
+        """
+
+    @callback
+    def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
+        """Take necessary actions after the config flow is finished, if needed.
+
+        The options parameter contains config entry options, which is the union of user
+        input from the config flow steps.
+        """
+
+    @callback
+    @staticmethod
+    def async_options_flow_finished(
+        hass: HomeAssistant, options: Mapping[str, Any]
+    ) -> None:
+        """Take necessary actions after the options flow is finished, if needed.
+
+        The options parameter contains config entry options, which is the union of stored
+        options and user input from the options flow steps.
         """
 
     @callback
@@ -150,6 +172,7 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
         **kwargs: Any,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
+        self.async_config_flow_finished(data)
         return super().async_create_entry(
             data={}, options=data, title=self.async_config_entry_title(data), **kwargs
         )
@@ -162,10 +185,12 @@ class HelperOptionsFlowHandler(config_entries.OptionsFlow):
         self,
         config_entry: config_entries.ConfigEntry,
         options_flow: dict[str, vol.Schema],
+        async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None],
     ) -> None:
         """Initialize options flow."""
         self._common_handler = HelperCommonFlowHandler(self, options_flow, config_entry)
         self._config_entry = config_entry
+        self._async_options_flow_finished = async_options_flow_finished
 
         for step in options_flow:
             setattr(self, f"async_step_{step}", self._async_step)
@@ -179,10 +204,12 @@ class HelperOptionsFlowHandler(config_entries.OptionsFlow):
     @callback
     def async_create_entry(  # pylint: disable=arguments-differ
         self,
+        data: Mapping[str, Any],
         **kwargs: Any,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
-        return super().async_create_entry(title="", **kwargs)
+        self._async_options_flow_finished(self.hass, data)
+        return super().async_create_entry(title="", data=data, **kwargs)
 
 
 @callback

@@ -7,8 +7,8 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.const import CONF_ENTITIES
-from homeassistant.core import callback
-from homeassistant.helpers import selector
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
     HelperFlowStep,
@@ -17,6 +17,8 @@ from homeassistant.helpers.helper_config_entry_flow import (
 from . import DOMAIN
 from .binary_sensor import CONF_ALL
 
+CONF_HIDE_MEMBERS = "hide_members"
+
 
 def basic_group_options_schema(domain: str) -> vol.Schema:
     """Generate options schema."""
@@ -24,6 +26,9 @@ def basic_group_options_schema(domain: str) -> vol.Schema:
         {
             vol.Required(CONF_ENTITIES): selector.selector(
                 {"entity": {"domain": domain, "multiple": True}}
+            ),
+            vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
+                {"boolean": {}}
             ),
         }
     )
@@ -98,6 +103,39 @@ class GroupConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
+    @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"]) if "name" in options else ""
+
+    @callback
+    def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
+        """Hide the group members if requested."""
+        if options[CONF_HIDE_MEMBERS]:
+            _async_hide_members(
+                self.hass, options[CONF_ENTITIES], er.RegistryEntryHider.INTEGRATION
+            )
+
+    @callback
+    @staticmethod
+    def async_options_flow_finished(
+        hass: HomeAssistant, options: Mapping[str, Any]
+    ) -> None:
+        """Hide or unhide the group members as requested."""
+        hidden_by = (
+            er.RegistryEntryHider.INTEGRATION if options[CONF_HIDE_MEMBERS] else None
+        )
+        _async_hide_members(hass, options[CONF_ENTITIES], hidden_by)
+
+
+def _async_hide_members(
+    hass: HomeAssistant, members: list[str], hidden_by: er.RegistryEntryHider | None
+) -> None:
+    """Hide or unhide group members."""
+    registry = er.async_get(hass)
+    for member in members:
+        if not (entity_id := er.async_resolve_entity_id(registry, member)):
+            continue
+        if entity_id not in registry.entities:
+            continue
+        registry.async_update_entity(entity_id, hidden_by=hidden_by)

@@ -68,8 +68,9 @@ async def test_config_flow(
     assert result["title"] == "Living Room"
     assert result["data"] == {}
     assert result["options"] == {
-        "group_type": group_type,
         "entities": members,
+        "group_type": group_type,
+        "hide_members": False,
         "name": "Living Room",
         **extra_options,
     }
@@ -78,9 +79,10 @@ async def test_config_flow(
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
     assert config_entry.options == {
-        "group_type": group_type,
-        "name": "Living Room",
         "entities": members,
+        "group_type": group_type,
+        "hide_members": False,
+        "name": "Living Room",
         **extra_options,
     }
 
@@ -155,19 +157,22 @@ async def test_options(
         result["flow_id"],
         user_input={
             "entities": members2,
+            "hide_members": False,
         },
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        "group_type": group_type,
         "entities": members2,
+        "group_type": group_type,
+        "hide_members": False,
         "name": "Bed Room",
         **extra_options,
     }
     assert config_entry.data == {}
     assert config_entry.options == {
-        "group_type": group_type,
         "entities": members2,
+        "group_type": group_type,
+        "hide_members": False,
         "name": "Bed Room",
         **extra_options,
     }
