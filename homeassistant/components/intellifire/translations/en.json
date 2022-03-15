@@ -8,7 +8,7 @@
       },
       "step": {
         "dhcp_confirm": {
-          "description": "Do you want to setup IntelliFire Fireplace: {host}"
+          "description": "Do you want to setup IntelliFire Fireplace: {host}?"
         },  
         "manual_device_entry": {
           "title": "IntelliFire - Local Config",
