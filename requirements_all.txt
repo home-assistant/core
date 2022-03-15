@@ -311,7 +311,7 @@ amberelectric==1.0.3
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.9.4
+amcrest==1.9.7
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.63
@@ -843,13 +843,13 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220301.1
+home-assistant-frontend==20220301.2
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
 
 # homeassistant.components.home_connect
-homeconnect==0.6.3
+homeconnect==0.7.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.2
@@ -1613,7 +1613,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.1
+pyisy==3.0.5
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
