@@ -32,7 +32,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_setup": "Add your Adam instead of your Anna, see the documentation",
+      "invalid_setup": "Add your Adam instead of your Anna, see the Home Assistant Plugwise integration documentation for more information",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
