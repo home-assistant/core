@@ -194,7 +194,11 @@ class HangoutsBot:
                 return await self.hass.helpers.intent.async_handle(
                     DOMAIN,
                     intent_type,
-                    {"conv_id": {"value": conv_id}} | {key: {"value": value} for key, value in match.groupdict().items()},
+                    {"conv_id": {"value": conv_id}}
+                    | {
+                        key: {"value": value}
+                        for key, value in match.groupdict().items()
+                    },
                     text,
                 )
 
