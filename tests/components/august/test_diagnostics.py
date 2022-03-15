@@ -17,9 +17,7 @@ async def test_diagnostics(hass, hass_client):
 
     entry, _ = await _create_august_api_with_devices(hass, [lock_one, doorbell_one])
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-    import pprint
 
-    pprint.pprint(diag)
     assert diag == {
         "doorbells": {
             "K98GiDT45GUL": {
