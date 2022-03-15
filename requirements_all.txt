@@ -343,6 +343,9 @@ auroranoaa==0.0.2
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
 
+# homeassistant.components.point
+authlib==1.0
+
 # homeassistant.components.stream
 av==9.0.0
 

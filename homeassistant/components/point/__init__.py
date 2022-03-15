@@ -97,7 +97,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         token_saver=token_saver,
     )
     try:
-        await session.ensure_active_token()
+        # Requires authlib >= 1.0
+        await session.ensure_active_token(token=entry.data[CONF_TOKEN])
     except ConnectTimeout as err:
         _LOGGER.debug("Connection Timeout")
         raise ConfigEntryNotReady from err
