@@ -19,6 +19,7 @@ from .const import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_OUTGOING_CAPS,
     CONF_DEVICE_TYPE,
+    DOMAIN,
 )
 
 
@@ -37,6 +38,10 @@ class HomeAssistantStorage(AbstractStorage):
         self.hass = hass
         self._devices = {}
         self._device_id = device_id
+        self._config_path = Path(hass.config.path(DOMAIN))
+
+        if not self._config_path.exists():
+            self._config_path.mkdir()
 
         if not self.private_key_path.exists():
             self.private_key = CertificateHelper.generate_private_key()
@@ -56,12 +61,12 @@ class HomeAssistantStorage(AbstractStorage):
     @property
     def cert_path(self) -> Path:
         """Return the path to this device's ssl certificate."""
-        return Path(self.hass.config.path("kdeconnect")) / "certificate.pem"
+        return self._config_path / "certificate.pem"
 
     @property
     def private_key_path(self) -> Path:
         """Return the path to this device's private key."""
-        return Path(self.hass.config.path("kdeconnect")) / "private_key.pem"
+        return self._config_path / "private_key.pem"
 
     def store_device(self, device: KdeConnectDevice) -> None:
         """Store information on a device."""
