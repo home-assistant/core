@@ -1468,7 +1468,7 @@ ttls==1.4.3
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.5.0
+twentemilieu==0.6.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
