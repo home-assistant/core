@@ -92,6 +92,11 @@ class PurifierEntity(FanEntity):
         return self._status is not None
 
     @property
+    def icon(self) -> str | None:
+        """Use an air purifier icon instead of the default fan."""
+        return "mdi:air-purifier"
+
+    @property
     def device_info(self):
         """Return device information for the purifier."""
         if self._status is None:
