@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from geojson_client.generic_feed import GenericFeedManager
+from aio_geojson_generic_client import GenericFeedManager
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
@@ -18,10 +18,11 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,10 +45,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the GeoJSON Events platform."""
@@ -59,27 +60,31 @@ def setup_platform(
     )
     radius_in_km = config[CONF_RADIUS]
     # Initialize the entity manager.
-    feed = GeoJsonFeedEntityManager(
-        hass, add_entities, scan_interval, coordinates, url, radius_in_km
+    manager = GeoJsonFeedEntityManager(
+        hass, async_add_entities, scan_interval, coordinates, url, radius_in_km
     )
+    await manager.async_init()
 
-    def start_feed_manager(event):
-        """Start feed manager."""
-        feed.startup()
+    @callback
+    async def _first_update(event=None):
+        """Start polling."""
+        await manager.async_update()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _first_update)
 
 
 class GeoJsonFeedEntityManager:
     """Feed Entity Manager for GeoJSON feeds."""
 
     def __init__(
-        self, hass, add_entities, scan_interval, coordinates, url, radius_in_km
+        self, hass, async_add_entities, scan_interval, coordinates, url, radius_in_km
     ):
         """Initialize the GeoJSON Feed Manager."""
 
         self._hass = hass
+        websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager = GenericFeedManager(
+            websession,
             self._generate_entity,
             self._update_entity,
             self._remove_entity,
@@ -87,35 +92,40 @@ class GeoJsonFeedEntityManager:
             url,
             filter_radius=radius_in_km,
         )
-        self._add_entities = add_entities
+        self._async_add_entities = async_add_entities
         self._scan_interval = scan_interval
 
-    def startup(self):
-        """Start up this manager."""
-        self._feed_manager.update()
-        self._init_regular_updates()
+    async def async_init(self):
+        """Schedule initial and regular updates based on configured time interval."""
 
-    def _init_regular_updates(self):
-        """Schedule regular updates at the specified interval."""
-        track_time_interval(
-            self._hass, lambda now: self._feed_manager.update(), self._scan_interval
-        )
+        async def update(event_time):
+            """Update."""
+            await self.async_update()
+
+        # Trigger updates at regular intervals.
+        async_track_time_interval(self._hass, update, self._scan_interval)
+        _LOGGER.debug("Feed entity manager initialized")
+
+    async def async_update(self):
+        """Refresh data."""
+        await self._feed_manager.update()
+        _LOGGER.debug("Feed entity manager updated")
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
-    def _generate_entity(self, external_id):
+    async def _generate_entity(self, external_id):
         """Generate new entity."""
         new_entity = GeoJsonLocationEvent(self, external_id)
         # Add new entities to HA.
-        self._add_entities([new_entity], True)
+        self._async_add_entities([new_entity], True)
 
-    def _update_entity(self, external_id):
+    async def _update_entity(self, external_id):
         """Update entity."""
         dispatcher_send(self._hass, f"geo_json_events_update_{external_id}")
 
-    def _remove_entity(self, external_id):
+    async def _remove_entity(self, external_id):
         """Remove entity."""
         dispatcher_send(self._hass, f"geo_json_events_delete_{external_id}")
 
