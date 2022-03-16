@@ -267,7 +267,7 @@ async def async_setup_entry(
     sensors: list[ECBaseSensor] = [ECSensor(coordinator, desc) for desc in SENSOR_TYPES]
     sensors.extend([ECAlertSensor(coordinator, desc) for desc in ALERT_TYPES])
     aqhi_coordinator = hass.data[DOMAIN][config_entry.entry_id]["aqhi_coordinator"]
-    sensors.append(ECSensor(aqhi_coordinator, AQHI_SENSOR))
+    sensors.append(ECSensor(aqhi_coordinator, AQHI_SENSOR, False))
     async_add_entities(sensors)
 
 
@@ -297,13 +297,14 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
 class ECSensor(ECBaseSensor):
     """Environment Canada sensor for conditions."""
 
-    def __init__(self, coordinator, description):
+    def __init__(self, coordinator, description, enabled_default=True):
         """Initialize the sensor."""
         super().__init__(coordinator, description)
         self._attr_extra_state_attributes = {
             ATTR_LOCATION: self._ec_data.metadata.get("location"),
             ATTR_STATION: self._ec_data.metadata.get("station"),
         }
+        self._attr_entity_registry_enabled_default = enabled_default
 
 
 class ECAlertSensor(ECBaseSensor):
