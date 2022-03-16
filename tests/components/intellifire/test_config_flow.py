@@ -206,7 +206,7 @@ async def test_picker_already_discovered(
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_dhcp_discovery_good(
+async def test_dhcp_discovery_intellifire_device(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_intellifire_config_flow: MagicMock,
@@ -233,7 +233,7 @@ async def test_dhcp_discovery_good(
     assert result3["data"] == {"host": "1.1.1.1"}
 
 
-async def test_dhcp_discovery_bad(
+async def test_dhcp_discovery_non_intellifire_device(
     hass: HomeAssistant,
     mock_intellifire_config_flow: MagicMock,
     mock_setup_entry: AsyncMock,
@@ -253,3 +253,4 @@ async def test_dhcp_discovery_bad(
     )
 
     assert result["type"] == "abort"
+    assert result["reason"] == "not_intellifire_device"

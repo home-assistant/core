@@ -50,7 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Config Flow Handler."""
         self._config_context = {}
         self._not_configured_hosts: list[DiscoveredHostInfo] = []
-        self._discovered_hosts: list[DiscoveredHostInfo] = []
+        self._discovered_host: DiscoveredHostInfo
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
@@ -156,10 +156,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-        self._discovered_hosts.append(DiscoveredHostInfo(ip=host, serial=serial))
+        self._discovered_host = DiscoveredHostInfo(ip=host, serial=serial)
 
         placeholders = {CONF_HOST: host, "serial": serial}
         self.context["title_placeholders"] = placeholders
+        self._set_confirm_only()
 
         return await self.async_step_dhcp_confirm()
 
@@ -167,8 +168,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Attempt to confirm."""
 
         # Add the hosts one by one
-        host = self._discovered_hosts[0].ip
-        serial = self._discovered_hosts[0].serial
+        host = self._discovered_host.ip
+        serial = self._discovered_host.serial
 
         if user_input is None:
             # Show the confirmation dialog
