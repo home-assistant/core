@@ -210,12 +210,18 @@ async def _async_create_bridge_with_updated_data(
                 LOGGER.info("Updated model to %s for %s", model, host)
                 updated_data[CONF_MODEL] = model
 
-    if model and len(model) > 4 and model[4] in ("H", "J"):
+    if (
+        model
+        and len(model) > 4
+        and model[4] in ("H", "J")
+        and method != METHOD_ENCRYPTED_WEBSOCKET
+    ):
         LOGGER.info(
             "Detected model %s for %s. Some televisions from H and J series use "
-            "an encrypted protocol that may not be supported in this integration",
+            "an encrypted protocol but you are using %s which may not be supported",
             model,
             host,
+            method,
         )
 
     if updated_data:
