@@ -9,9 +9,9 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .bridge import SamsungTVBridge
-from .const import DOMAIN
+from .const import CONF_SESSION_ID, DOMAIN
 
-TO_REDACT = {CONF_TOKEN}
+TO_REDACT = {CONF_TOKEN, CONF_SESSION_ID}
 
 
 async def async_get_config_entry_diagnostics(
