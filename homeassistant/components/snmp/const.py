@@ -9,6 +9,7 @@ CONF_PRIV_KEY = "priv_key"
 CONF_PRIV_PROTOCOL = "priv_protocol"
 CONF_VERSION = "version"
 CONF_VARTYPE = "vartype"
+CONF_TIMEOUT = "timeout"
 
 DEFAULT_AUTH_PROTOCOL = "none"
 DEFAULT_COMMUNITY = "public"
@@ -18,6 +19,7 @@ DEFAULT_PORT = "161"
 DEFAULT_PRIV_PROTOCOL = "none"
 DEFAULT_VERSION = "1"
 DEFAULT_VARTYPE = "none"
+DEFAULT_TIMEOUT = 1
 
 SNMP_VERSIONS = {"1": 0, "2c": 1, "3": None}
 

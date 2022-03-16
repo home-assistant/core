@@ -42,6 +42,7 @@ from .const import (
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
     CONF_VERSION,
+    CONF_TIMEOUT,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
     DEFAULT_HOST,
@@ -49,6 +50,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
     DEFAULT_VERSION,
+    DEFAULT_TIMEOUT,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
@@ -79,6 +81,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
             MAP_PRIV_PROTOCOLS
         ),
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.integer,
     }
 )
 
@@ -105,6 +108,7 @@ async def async_setup_platform(
     accept_errors = config.get(CONF_ACCEPT_ERRORS)
     default_value = config.get(CONF_DEFAULT_VALUE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    req_timeout = config.get(CONF_TIMEOUT)
 
     if value_template is not None:
         value_template.hass = hass
@@ -125,14 +129,14 @@ async def async_setup_platform(
                 authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
                 privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
             ),
-            UdpTransportTarget((host, port)),
+            UdpTransportTarget((host, port), timeout=req_timeout),
             ContextData(),
         ]
     else:
         request_args = [
             SnmpEngine(),
             CommunityData(community, mpModel=SNMP_VERSIONS[version]),
-            UdpTransportTarget((host, port)),
+            UdpTransportTarget((host, port), timeout=req_timeout),
             ContextData(),
         ]
 
