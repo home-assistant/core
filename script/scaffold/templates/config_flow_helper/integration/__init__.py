@@ -7,10 +7,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS: list[Platform] = [Platform.SENSOR]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NEW_NAME from a config entry."""
@@ -19,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # TODO Optionally validate config entry options before setting up platform
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, (Platform.SENSOR,))
 
     # TODO Remove if the integration does not have an options flow
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
@@ -35,7 +31,9 @@ async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry, (Platform.SENSOR,)
+    ):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
