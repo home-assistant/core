@@ -1,9 +1,9 @@
 """Representation of a cover."""
 from homeassistant.components.cover import (
-    CoverEntity,
+    SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    SUPPORT_CLOSE,
+    CoverEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
