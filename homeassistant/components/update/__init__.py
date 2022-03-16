@@ -14,6 +14,10 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.config_validation import (
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -59,6 +63,8 @@ __all__ = [
     "ATTR_VERSION",
     "DEVICE_CLASSES_SCHEMA",
     "DOMAIN",
+    "PLATFORM_SCHEMA_BASE",
+    "PLATFORM_SCHEMA",
     "SERVICE_INSTALL",
     "SERVICE_SKIP",
     "SUPPORT_BACKUP",
