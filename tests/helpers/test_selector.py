@@ -208,7 +208,8 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections):
             (),
         ),
         ({"min": 10, "max": 1000, "mode": "slider", "step": 0.5}, (), ()),
-        ({"mode": "box"}, (10,), ()),
+        ({"mode": "box"}, (10, None), ("cat")),
+        ({"mode": "slider", "min": -100, "max": 100}, (10, None), ("cat")),
     ),
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections):
