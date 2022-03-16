@@ -314,12 +314,11 @@ def _get_states_with_session(
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
         query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
+        if filters:
+            query = filters.apply(query)
         query = query.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
-        if filters:
-            query = filters.apply(query)
-
     return [LazyState(row) for row in execute(query)]
 
 
