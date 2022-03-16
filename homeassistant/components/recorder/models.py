@@ -494,7 +494,7 @@ class LazyState(State):
     @property  # type: ignore[override]
     def attributes(self):
         """State attributes."""
-        if not self._attributes:
+        if self._attributes is None:
             attributes_json = self._row.attributes
             if self._attr_cache is not None and (
                 attributes := self._attr_cache.get(attributes_json)

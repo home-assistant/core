@@ -737,7 +737,7 @@ class LazyEventPartialState:
     @property
     def attributes(self):
         """State attributes."""
-        if not self._attributes:
+        if self._attributes is None:
             if (
                 self._row.attributes is None
                 or self._row.attributes == EMPTY_JSON_OBJECT
