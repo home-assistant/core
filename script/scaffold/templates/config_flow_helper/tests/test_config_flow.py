@@ -86,24 +86,22 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_suggested(schema, "entity_id") == input_sensor_1_entity_id
-    assert get_suggested(schema, "name") == "My NEW_DOMAIN"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             "entity_id": input_sensor_2_entity_id,
-            "name": "My updated NEW_DOMAIN",
         },
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         "entity_id": input_sensor_2_entity_id,
-        "name": "My updated NEW_DOMAIN",
+        "name": "My NEW_DOMAIN",
     }
     assert config_entry.data == {}
     assert config_entry.options == {
         "entity_id": input_sensor_2_entity_id,
-        "name": "My updated NEW_DOMAIN",
+        "name": "My NEW_DOMAIN",
     }
     assert config_entry.title == "My NEW_DOMAIN"
 
