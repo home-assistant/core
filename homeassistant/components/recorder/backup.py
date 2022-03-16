@@ -6,6 +6,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import Recorder
 from .const import DATA_INSTANCE
+from .util import async_migration_in_progress
 
 _LOGGER = getLogger(__name__)
 
@@ -14,6 +15,8 @@ async def async_pre_backup(hass: HomeAssistant) -> None:
     """Perform operations before a backup starts."""
     _LOGGER.info("Backup start notification, locking database for writes")
     instance: Recorder = hass.data[DATA_INSTANCE]
+    if async_migration_in_progress(hass):
+        raise HomeAssistantError("Database migration in progress")
     await instance.lock_database()
 
 
