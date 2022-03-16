@@ -84,3 +84,11 @@ class SmartThingsAcceleration(ZigbeeChannel):
                 ATTR_VALUE: value,
             },
         )
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(0xFC31)
+@registries.CLIENT_CHANNELS_REGISTRY.register(0xFC31)
+class Inovelli_Cluster(ZigbeeChannel):
+    """Inovelli Button Press Event channel."""
+
+    REPORT_CONFIG = []
