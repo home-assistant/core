@@ -21,7 +21,7 @@ PyMVGLive==1.1.4
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
-PyNaCl==1.4.0
+PyNaCl==1.5.0
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.homekit
