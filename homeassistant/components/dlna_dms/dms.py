@@ -49,7 +49,6 @@ class DlnaDmsData:
     """Storage class for domain global data."""
 
     hass: HomeAssistant
-    lock: asyncio.Lock
     requester: UpnpRequester
     upnp_factory: UpnpFactory
     devices: dict[str, DmsDeviceSource]  # Indexed by config_entry.unique_id
@@ -61,7 +60,6 @@ class DlnaDmsData:
     ) -> None:
         """Initialize global data."""
         self.hass = hass
-        self.lock = asyncio.Lock()
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
         self.requester = AiohttpSessionRequester(session, with_sleep=True)
         self.upnp_factory = UpnpFactory(self.requester, non_strict=True)
@@ -71,22 +69,19 @@ class DlnaDmsData:
     async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
         """Create a DMS device connection from a config entry."""
         assert config_entry.unique_id
-        async with self.lock:
-            source_id = config_entry.data[CONF_SOURCE_ID]
-            assert source_id not in self.sources
-            device = DmsDeviceSource(self.hass, config_entry)
-            self.devices[config_entry.unique_id] = device
-            self.sources[device.source_id] = device
-
+        source_id = config_entry.data[CONF_SOURCE_ID]
+        assert source_id not in self.sources
+        device = DmsDeviceSource(self.hass, config_entry)
+        self.devices[config_entry.unique_id] = device
+        self.sources[device.source_id] = device
         await device.async_added_to_hass()
         return True
 
     async def async_unload_entry(self, config_entry: ConfigEntry) -> bool:
         """Unload a config entry and disconnect the corresponding DMS device."""
         assert config_entry.unique_id
-        async with self.lock:
-            device = self.devices.pop(config_entry.unique_id)
-            del self.sources[device.source_id]
+        device = self.devices.pop(config_entry.unique_id)
+        del self.sources[device.source_id]
         await device.async_will_remove_from_hass()
         return True
 
