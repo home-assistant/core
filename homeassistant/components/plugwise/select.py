@@ -22,7 +22,8 @@ async def async_setup_entry(
     async_add_entities(
         PlugwiseSelectEntity(coordinator, device_id)
         for device_id, device in coordinator.data.devices.items()
-        if device["class"] in THERMOSTAT_CLASSES and device["available_schedules"]
+        if device["class"] in THERMOSTAT_CLASSES
+        and device.get("available_schedules") != ["None"]
     )
 
 
