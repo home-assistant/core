@@ -493,6 +493,9 @@ class LazyState(State):
     def attributes(self):
         """State attributes."""
         if not self._attributes:
+            _LOGGER.warning(
+                "Loading %s state: %s", self.entity_id, self._row.attributes
+            )
             try:
                 self._attributes = json.loads(self._row.attributes)
             except ValueError:
