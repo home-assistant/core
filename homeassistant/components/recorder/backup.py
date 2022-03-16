@@ -2,6 +2,7 @@
 from logging import getLogger
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import Recorder
 from .const import DATA_INSTANCE
@@ -20,4 +21,5 @@ async def async_post_backup(hass: HomeAssistant) -> None:
     """Perform operations after a backup finishes."""
     instance: Recorder = hass.data[DATA_INSTANCE]
     _LOGGER.info("Backup end notification, releasing write lock")
-    instance.unlock_database()
+    if not instance.unlock_database():
+        raise HomeAssistantError("Could not release database write lock")
