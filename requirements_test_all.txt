@@ -1373,7 +1373,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.27.0
+soco==0.27.1
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
