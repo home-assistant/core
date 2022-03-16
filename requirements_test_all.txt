@@ -1300,7 +1300,7 @@ radios==0.1.1
 regenmaschine==2022.01.0
 
 # homeassistant.components.renault
-renault-api==0.1.9
+renault-api==0.1.10
 
 # homeassistant.components.python_script
 restrictedpython==5.2
