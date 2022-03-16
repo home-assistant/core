@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "New Threshold Sensor",
+        "description": "Configure when the sensor should turn on and off. If \"threshold mode\" is set to \"lower\", the sensor turns on when the input sensor's value is lower. If \"threshold mode\" is set to \"upper\", the sensor turns on when the input sensor's value is higher.  If \"threshold mode\" is set to \"range\", the sensor turns on when the input sensor's value is in the range lower..higher.",
+        "data": {
+          "entity_id": "Input sensor",
+          "hysteresis": "Hysteresis",
+          "lower": "Lower limit",
+          "mode": "Threshold mode",
+          "name": "Name",
+          "upper": "Upper limit"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "[%key:component::threshold::config::step::user::description%]",
+        "data": {
+          "entity_id": "[%key:component::threshold::config::step::user::data::entity_id%]",
+          "hysteresis": "[%key:component::threshold::config::step::user::data::hysteresis%]",
+          "lower": "[%key:component::threshold::config::step::user::data::lower%]",
+          "mode": "[%key:component::threshold::config::step::user::data::mode%]",
+          "name": "[%key:component::threshold::config::step::user::data::name%]",
+          "upper": "[%key:component::threshold::config::step::user::data::upper%]"
+        }
+      }
+    }
+  }
+}
