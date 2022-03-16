@@ -66,11 +66,11 @@ async def async_setup_platform(
     await manager.async_init()
 
     @callback
-    async def _first_update(event=None):
-        """Start polling."""
+    async def start_feed_manager(event=None):
+        """Start feed manager."""
         await manager.async_update()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _first_update)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
 
 
 class GeoJsonFeedEntityManager:
