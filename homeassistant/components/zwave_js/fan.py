@@ -5,15 +5,22 @@ import math
 from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import TARGET_VALUE_PROPERTY
+from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
+from zwave_js_server.const.command_class.thermostat import (
+    THERMOSTAT_FAN_OFF_PROPERTY,
+    THERMOSTAT_FAN_STATE_PROPERTY,
+)
+from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
+    SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -26,10 +33,13 @@ from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import FanSpeedDataTemplate
 from .entity import ZWaveBaseEntity
+from .helpers import get_value_of_zwave_value
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
 DEFAULT_SPEED_RANGE = (1, 99)  # off is not included
+
+ATTR_FAN_STATE = "fan_state"
 
 
 async def async_setup_entry(
@@ -46,6 +56,8 @@ async def async_setup_entry(
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "configured_fan_speed":
             entities.append(ConfiguredSpeedRangeZwaveFan(config_entry, client, info))
+        elif info.platform_hint == "thermostat_fan":
+            entities.append(ZwaveThermostatFan(config_entry, client, info))
         else:
             entities.append(ZwaveFan(config_entry, client, info))
 
@@ -224,3 +236,110 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
         # the UI handles steps e.g., for a 3-speed fan, you get steps at 33,
         # 67, and 100.
         return round(percentage)
+
+
+class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
+    """Representation of a Z-Wave thermostat fan."""
+
+    _fan_mode: ZwaveValue
+    _fan_off: ZwaveValue | None = None
+    _fan_state: ZwaveValue | None = None
+
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize the thermostat fan."""
+        super().__init__(config_entry, client, info)
+
+        self._fan_mode = self.info.primary_value
+
+        self._fan_off = self.get_zwave_value(
+            THERMOSTAT_FAN_OFF_PROPERTY,
+            CommandClass.THERMOSTAT_FAN_MODE,
+            add_to_watched_value_ids=True,
+        )
+        self._fan_state = self.get_zwave_value(
+            THERMOSTAT_FAN_STATE_PROPERTY,
+            CommandClass.THERMOSTAT_FAN_STATE,
+            add_to_watched_value_ids=True,
+        )
+
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Turn the device on."""
+        if not self._fan_off:
+            raise HomeAssistantError("Unhandled action turn_on")
+        await self.info.node.async_set_value(self._fan_off, False)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        if not self._fan_off:
+            raise HomeAssistantError("Unhandled action turn_off")
+        await self.info.node.async_set_value(self._fan_off, True)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on."""
+        if (value := get_value_of_zwave_value(self._fan_off)) is None:
+            return None
+        return not cast(bool, value)
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode, e.g., auto, smart, interval, favorite."""
+        value = get_value_of_zwave_value(self._fan_mode)
+        if value is None or str(value) not in self._fan_mode.metadata.states:
+            return None
+        return cast(str, self._fan_mode.metadata.states[str(value)])
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+
+        try:
+            new_state = next(
+                int(state)
+                for state, label in self._fan_mode.metadata.states.items()
+                if label == preset_mode
+            )
+        except StopIteration:
+            raise ValueError(f"Received an invalid fan mode: {preset_mode}") from None
+
+        await self.info.node.async_set_value(self._fan_mode, new_state)
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return a list of available preset modes."""
+        if not self._fan_mode.metadata.states:
+            return None
+        return list(self._fan_mode.metadata.states.values())
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_PRESET_MODE
+
+    @property
+    def fan_state(self) -> str | None:
+        """Return the current state, Idle, Running, etc."""
+        value = get_value_of_zwave_value(self._fan_state)
+        if (
+            value is None
+            or self._fan_state is None
+            or str(value) not in self._fan_state.metadata.states
+        ):
+            return None
+        return cast(str, self._fan_state.metadata.states[str(value)])
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the optional state attributes."""
+        attrs = {}
+
+        if state := self.fan_state:
+            attrs[ATTR_FAN_STATE] = state
+
+        return attrs
