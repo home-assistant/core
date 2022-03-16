@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "New Threshold Sensor",
-        "description": "Configure when the sensor should turn on and off. If \"threshold mode\" is set to \"lower\", the sensor turns on when the input sensor's value is lower. If \"threshold mode\" is set to \"upper\", the sensor turns on when the input sensor's value is higher.  If \"threshold mode\" is set to \"range\", the sensor turns on when the input sensor's value is in the range lower..higher.",
+        "description": "Configure when the threshold mode and when the sensor should turn on and off.\n\nThreshold mode \"lower\" - The sensor turns on when the input sensor's value is less than the lower limit.\nThreshold mode \"upper\" - the sensor turns on when the input sensor's value is greater than the upper limit.\nThreshold mode \"range\" - the sensor turns on when the input sensor's value is in the range [lower limit .. upper limit].",
         "data": {
           "entity_id": "Input sensor",
           "hysteresis": "Hysteresis",
