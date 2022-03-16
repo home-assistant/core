@@ -4,11 +4,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.min_max import async_setup_entry
 from homeassistant.components.min_max.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
-from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("platform", ("sensor",))
@@ -19,8 +19,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
     input_sensors = ["sensor.input_one", "sensor.input_two"]
 
-    registry = er.async_get(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -28,7 +26,8 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.min_max.async_setup_entry", wraps=async_setup_entry
+        "homeassistant.components.min_max.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -57,22 +56,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     }
     assert config_entry.title == "My min_max"
 
-    # Check the entity is registered in the entity registry
-    assert registry.async_get(f"{platform}.my_min_max") is not None
-
-    # Check the platform is setup correctly
-    state = hass.states.get(f"{platform}.my_min_max")
-    assert state.state == "20.0"
-    assert state.attributes["count_sensors"] == 2
-
-    # Remove the config entry
-    assert await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Check the state and entity registry entry are removed
-    assert hass.states.get(f"{platform}.my_min_max") is None
-    assert registry.async_get(f"{platform}.my_min_max") is None
-
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
@@ -95,35 +78,21 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     input_sensors1 = ["sensor.input_one", "sensor.input_two"]
     input_sensors2 = ["sensor.input_one", "sensor.input_two", "sensor.input_three"]
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
             "entity_ids": input_sensors1,
             "name": "My min_max",
             "round_digits": 0,
             "type": "min",
         },
+        title="My min_max",
     )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    state = hass.states.get(f"{platform}.my_min_max")
-    assert state.state == "10.0"
-    assert state.attributes["count_sensors"] == 2
-
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.data == {}
-    assert config_entry.options == {
-        "entity_ids": input_sensors1,
-        "name": "My min_max",
-        "round_digits": 0,
-        "type": "min",
-    }
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == RESULT_TYPE_FORM
