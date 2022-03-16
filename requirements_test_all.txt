@@ -88,7 +88,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.0.2
+aioairzone==0.1.0
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -599,7 +599,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.9.9
+intellifire4py==1.0.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
