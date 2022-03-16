@@ -495,20 +495,24 @@ class LazyState(State):
     def attributes(self):
         """State attributes."""
         if not self._attributes:
+            attributes_json = self._row.attributes
             if self._attr_cache and (
-                attributes := self._attr_cache.get(self._row.attributes)
+                attributes := self._attr_cache.get(attributes_json)
             ):
                 self._attributes = attributes
+                _LOGGER.warning(
+                    "CACHE HIT %s state: %s", self.entity_id, attributes_json
+                )
                 return attributes
-            _LOGGER.warning(
-                "Loading %s state: %s", self.entity_id, self._row.attributes
-            )
+            _LOGGER.warning("Loading %s state: %s", self.entity_id, attributes_json)
             try:
-                self._attributes = json.loads(self._row.attributes)
+                self._attributes = json.loads(attributes_json)
             except ValueError:
                 # When json.loads fails
                 _LOGGER.exception("Error converting row to state: %s", self._row)
                 self._attributes = {}
+            if self._attr_cache:
+                self._attr_cache[attributes_json] = self._attributes
         return self._attributes
 
     @attributes.setter
