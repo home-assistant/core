@@ -477,9 +477,10 @@ class LazyState(State):
         "_last_changed",
         "_last_updated",
         "_context",
+        "_attr_cache",
     ]
 
-    def __init__(self, row):  # pylint: disable=super-init-not-called
+    def __init__(self, row, attr_cache=None):  # pylint: disable=super-init-not-called
         """Init the lazy state."""
         self._row = row
         self.entity_id = self._row.entity_id
@@ -488,11 +489,17 @@ class LazyState(State):
         self._last_changed = None
         self._last_updated = None
         self._context = None
+        self._attr_cache = attr_cache
 
     @property  # type: ignore[override]
     def attributes(self):
         """State attributes."""
         if not self._attributes:
+            if self._attr_cache and (
+                attributes := self._attr_cache.get(self._row.attributes)
+            ):
+                self._attributes = attributes
+                return attributes
             _LOGGER.warning(
                 "Loading %s state: %s", self.entity_id, self._row.attributes
             )

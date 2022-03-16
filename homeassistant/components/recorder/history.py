@@ -376,7 +376,8 @@ def _sorted_states_to_dict(
         domain = split_entity_id(ent_id)[0]
         ent_results = result[ent_id]
         if not minimal_response or domain in NEED_ATTRIBUTE_DOMAINS:
-            ent_results.extend(LazyState(db_state) for db_state in group)
+            attr_cache = {}
+            ent_results.extend(LazyState(db_state, attr_cache) for db_state in group)
 
         # With minimal response we only provide a native
         # State for the first and last response. All the states
