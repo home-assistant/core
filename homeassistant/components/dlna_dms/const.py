@@ -13,7 +13,7 @@ DOMAIN: Final = "dlna_dms"
 DEFAULT_NAME: Final = "DLNA Media Server"
 
 CONF_SOURCE_ID: Final = "source_id"
-CONFIG_VERSION: Final = 2
+CONFIG_VERSION: Final = 1
 
 SOURCE_SEP: Final = "/"
 ROOT_OBJECT_ID: Final = "0"
