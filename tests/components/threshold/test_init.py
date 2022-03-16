@@ -29,9 +29,8 @@ async def test_setup_and_remove_config_entry(
             "entity_id": input_sensor,
             "hysteresis": 0.0,
             "lower": -2.0,
-            "mode": "lower",
             "name": "Input threshold",
-            "upper": 0.0,
+            "upper": None,
         },
         title="Input threshold",
     )

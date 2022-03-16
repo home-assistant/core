@@ -10,31 +10,29 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
+    HelperFlowError,
     HelperFlowStep,
 )
 
-from .const import (
-    CONF_HYSTERESIS,
-    CONF_LOWER,
-    CONF_MODE,
-    CONF_UPPER,
-    DEFAULT_HYSTERESIS,
-    DOMAIN,
-    THRESHOLD_MODES,
-)
+from .const import CONF_HYSTERESIS, CONF_LOWER, CONF_UPPER, DEFAULT_HYSTERESIS, DOMAIN
+
+
+def _validate_mode(data: Any) -> Any:
+    """Validate the threshold mode."""
+    if data[CONF_LOWER] is None and data[CONF_UPPER] is None:
+        raise HelperFlowError("need_lower_upper")
+    return data
+
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_MODE): selector.selector(
-            {"select": {"options": THRESHOLD_MODES}}
-        ),
         vol.Required(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): selector.selector(
             {"number": {"mode": "box"}}
         ),
-        vol.Required(CONF_LOWER, default=0.0): selector.selector(
+        vol.Required(CONF_LOWER, default=None): selector.selector(
             {"number": {"mode": "box"}}
         ),
-        vol.Required(CONF_UPPER, default=0.0): selector.selector(
+        vol.Required(CONF_UPPER, default=None): selector.selector(
             {"number": {"mode": "box"}}
         ),
     }
@@ -49,9 +47,13 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW = {"user": HelperFlowStep(CONFIG_SCHEMA)}
+CONFIG_FLOW = {
+    "user": HelperFlowStep(CONFIG_SCHEMA, validate_user_input=_validate_mode)
+}
 
-OPTIONS_FLOW = {"init": HelperFlowStep(OPTIONS_SCHEMA)}
+OPTIONS_FLOW = {
+    "init": HelperFlowStep(OPTIONS_SCHEMA, validate_user_input=_validate_mode)
+}
 
 
 class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
