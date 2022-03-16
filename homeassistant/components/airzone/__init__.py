@@ -1,8 +1,10 @@
 """The Airzone integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from aioairzone.common import ConnectionOptions
-from aioairzone.const import AZD_ZONES
+from aioairzone.const import AZD_ID, AZD_NAME, AZD_SYSTEM, AZD_ZONES
 from aioairzone.localapi_device import AirzoneLocalApi
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +28,7 @@ class AirzoneEntity(CoordinatorEntity):
         coordinator: AirzoneUpdateCoordinator,
         entry: ConfigEntry,
         system_zone_id: str,
-        zone_name: str,
+        zone_data: dict[str, Any],
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -34,9 +36,11 @@ class AirzoneEntity(CoordinatorEntity):
         self._attr_device_info: DeviceInfo = {
             "identifiers": {(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
             "manufacturer": MANUFACTURER,
-            "name": f"Airzone [{system_zone_id}] {zone_name}",
+            "name": f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
         }
+        self.system_id = zone_data[AZD_SYSTEM]
         self.system_zone_id = system_zone_id
+        self.zone_id = zone_data[AZD_ID]
 
     def get_zone_value(self, key):
         """Return zone value by key."""
