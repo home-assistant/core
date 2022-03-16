@@ -18,7 +18,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import EntityCategory, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -148,6 +148,7 @@ class UpdateEntityDescription(EntityDescription):
     """A class that describes update entities."""
 
     device_class: UpdateDeviceClass | str | None = None
+    entity_category: EntityCategory | None = EntityCategory.CONFIG
 
 
 class UpdateEntity(RestoreEntity):
@@ -179,6 +180,15 @@ class UpdateEntity(RestoreEntity):
         if hasattr(self, "entity_description"):
             return self.entity_description.device_class
         return None
+
+    @property
+    def entity_category(self) -> EntityCategory | str | None:
+        """Return the category of the entity, if any."""
+        if hasattr(self, "_attr_entity_category"):
+            return self._attr_entity_category
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_category
+        return EntityCategory.CONFIG
 
     @property
     def in_progress(self) -> bool | int | None:

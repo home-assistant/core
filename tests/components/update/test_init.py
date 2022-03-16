@@ -31,6 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
@@ -45,14 +46,13 @@ async def test_update(hass: HomeAssistant) -> None:
     update = MockUpdateEntity()
     update.hass = hass
 
-    update._attr_device_class = UpdateDeviceClass.FIRMWARE
     update._attr_current_version = "1.0.0"
     update._attr_latest_version = "1.0.1"
     update._attr_release_summary = "Summary"
     update._attr_release_url = "https://example.com"
     update._attr_title = "Title"
 
-    assert update.device_class is UpdateDeviceClass.FIRMWARE
+    assert update.entity_category is EntityCategory.CONFIG
     assert update.current_version == "1.0.0"
     assert update.latest_version == "1.0.1"
     assert update.release_summary == "Summary"
@@ -87,11 +87,27 @@ async def test_update(hass: HomeAssistant) -> None:
 
     # UpdateEntityDescription was set
     update.entity_description = UpdateEntityDescription(key="F5 - Its very refreshing")
-    update.device_class is None
+    assert update.device_class is None
+    assert update.entity_category is EntityCategory.CONFIG
     update.entity_description = UpdateEntityDescription(
-        key="F5 - Its very refreshing", device_class=UpdateDeviceClass.FIRMWARE
+        key="F5 - Its very refreshing",
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=None,
     )
-    update.device_class is UpdateDeviceClass.FIRMWARE
+    assert update.device_class is UpdateDeviceClass.FIRMWARE
+    assert update.entity_category is None
+
+    # Device class via attribute (override entity description)
+    update._attr_device_class = None
+    assert update.device_class is None
+    update._attr_device_class = UpdateDeviceClass.FIRMWARE
+    assert update.device_class is UpdateDeviceClass.FIRMWARE
+
+    # Entity Attribute via attribute (override entity description)
+    update._attr_entity_category = None
+    assert update.entity_category is None
+    update._attr_entity_category = EntityCategory.DIAGNOSTIC
+    assert update.entity_category is EntityCategory.DIAGNOSTIC
 
     with pytest.raises(NotImplementedError):
         await update.async_install()
