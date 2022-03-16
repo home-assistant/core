@@ -280,12 +280,14 @@ def create_state_changed_event_from_old_new(
             "attributes"
             "state_id",
             "old_state_id",
+            "shared_attrs",
         ],
     )
 
     row.event_type = EVENT_STATE_CHANGED
     row.event_data = "{}"
     row.attributes = attributes_json
+    row.shared_attrs = attributes_json
     row.time_fired = event_time_fired
     row.state = new_state and new_state.get("state")
     row.entity_id = entity_id

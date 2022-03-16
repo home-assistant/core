@@ -17,7 +17,7 @@ PyFlick==0.0.2
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
-PyNaCl==1.4.0
+PyNaCl==1.5.0
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.homekit
@@ -88,7 +88,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.0.2
+aioairzone==0.1.0
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -441,6 +441,7 @@ flipr-api==1.4.2
 flux_led==0.28.27
 
 # homeassistant.components.homekit
+# homeassistant.components.recorder
 fnvhash==0.1.0
 
 # homeassistant.components.foobot
@@ -634,6 +635,9 @@ libsoundtouch==0.8
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.2
+
+# homeassistant.components.recorder
+lru-dict==1.1.7
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.2
@@ -1377,7 +1381,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.26.4
+soco==0.27.1
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
