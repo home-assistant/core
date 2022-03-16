@@ -16,7 +16,7 @@ from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
 DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
 DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
 
-PLATFORMS = [Platform.CAMERA, Platform.SENSOR, Platform.WEATHER]
+PLATFORMS = [Platform.CAMERA, Platform.SELECT, Platform.SENSOR, Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 
