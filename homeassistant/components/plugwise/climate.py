@@ -21,17 +21,10 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
+from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, THERMOSTAT_CLASSES
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
-
-THERMOSTAT_CLASSES = [
-    "thermostat",
-    "thermostatic_radiator_valve",
-    "zone_thermometer",
-    "zone_thermostat",
-]
 
 
 async def async_setup_entry(
@@ -129,8 +122,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         return {
-            "available_schemas": self.device.get("available_schedules"),
-            "selected_schema": self.device.get("selected_schedule"),
+            "available_schedules": self.device.get("available_schedules"),
+            "selected_schedule": self.device.get("selected_schedule"),
         }
 
     @plugwise_command
