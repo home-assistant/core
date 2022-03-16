@@ -512,6 +512,9 @@ class LazyState(State):
                 _LOGGER.exception("Error converting row to state: %s", self._row)
                 self._attributes = {}
             if self._attr_cache:
+                _LOGGER.warning(
+                    "CACHE PUT %s state: %s", self.entity_id, attributes_json
+                )
                 self._attr_cache[attributes_json] = self._attributes
         return self._attributes
 
