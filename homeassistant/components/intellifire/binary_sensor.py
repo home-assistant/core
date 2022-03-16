@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IntellifireDataUpdateCoordinator
@@ -57,6 +58,83 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
         name="Thermostat On",
         icon="mdi:home-thermometer-outline",
         value_fn=lambda data: data.thermostat_on,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_pilot_flame",
+        name="Pilot Flame Error",
+        icon="mdi:alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_pilot_flame,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_flame",
+        name="Flame Error",
+        icon="mdi:alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_flame,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_fan_delay",
+        name="Fan Delay Error",
+        icon="mdi:fan-alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_fan_delay,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_maintenance",
+        name="Maintenance Error",
+        icon="mdi:alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_maintenance,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_disabled",
+        name="Disabled Error",
+        icon="mdi:alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_disabled,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_fan",
+        name="Fan Error",
+        icon="mdi:fan-alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_fan,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_lights",
+        name="Lights Error",
+        icon="mdi:alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_lights,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_accessory",
+        name="Accessory Error",
+        icon="mdi:alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_accessory,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_soft_lock_out",
+        name="Soft Lock Out Error",
+        icon="mdi:alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_soft_lock_out,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_ecm_offline",
+        name="ECM Offline Error",
+        icon="mdi:alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_ecm_offline,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_offline",
+        name="Offline Error",
+        icon="mdi:alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_offline,
     ),
 )
 
