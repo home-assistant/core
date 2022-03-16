@@ -30,7 +30,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # this if statement is here to catch that.
     api_key = entry.options.get(CONF_API_KEY) or None
 
-    if (inverter_size := entry.options.get(CONF_INVERTER_SIZE)) not in (None, 0):
+    if (
+        inverter_size := entry.options.get(CONF_INVERTER_SIZE)
+    ) is not None and inverter_size > 0:
         inverter_size = inverter_size / 1000
 
     session = async_get_clientsession(hass)
