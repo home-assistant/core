@@ -293,7 +293,6 @@ omit =
     homeassistant/components/entur_public_transport/*
     homeassistant/components/environment_canada/__init__.py
     homeassistant/components/environment_canada/camera.py
-    homeassistant/components/environment_canada/select.py
     homeassistant/components/environment_canada/sensor.py
     homeassistant/components/environment_canada/weather.py
     homeassistant/components/envisalink/*

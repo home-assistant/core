@@ -1,13 +1,23 @@
 """Support for the Environment Canada radar imagery."""
 from __future__ import annotations
 
+import voluptuous as vol
+
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_OBSERVATION_TIME, DOMAIN
+
+SERVICE_SET_RADAR_TYPE = "set_radar_type"
+SET_RADAR_TYPE_SCHEMA = {
+    vol.Required("radar_type"): vol.In(["Auto", "Rain", "Snow"]),
+}
 
 
 async def async_setup_entry(
@@ -18,6 +28,13 @@ async def async_setup_entry(
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["radar_coordinator"]
     async_add_entities([ECCamera(coordinator)])
+
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_RADAR_TYPE,
+        SET_RADAR_TYPE_SCHEMA,
+        "async_set_radar_type",
+    )
 
 
 class ECCamera(CoordinatorEntity, Camera):
@@ -44,3 +61,8 @@ class ECCamera(CoordinatorEntity, Camera):
             ATTR_OBSERVATION_TIME: self.radar_object.timestamp,
         }
         return self.radar_object.image
+
+    async def async_set_radar_type(self, radar_type: str):
+        """Set the type of radar to retrieve."""
+        self.radar_object.precip_type = radar_type.lower()
+        await self.radar_object.update()
