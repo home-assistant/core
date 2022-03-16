@@ -744,11 +744,6 @@ class LazyEventPartialState:
             ):
                 self._attributes = {}
             else:
-                _LOGGER.warning(
-                    "LOGBOOK: Loading %s state: %s",
-                    self.entity_id,
-                    self._row.attributes,
-                )
                 self._attributes = json.loads(self._row.attributes)
         return self._attributes
 
