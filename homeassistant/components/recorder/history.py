@@ -376,8 +376,9 @@ def _sorted_states_to_dict(
     for ent_id, group in groupby(states, lambda state: state.entity_id):
         domain = split_entity_id(ent_id)[0]
         ent_results = result[ent_id]
+        attr_cache = {}
+
         if not minimal_response or domain in NEED_ATTRIBUTE_DOMAINS:
-            attr_cache = {}
             ent_results.extend(LazyState(db_state, attr_cache) for db_state in group)
 
         # With minimal response we only provide a native
@@ -385,7 +386,7 @@ def _sorted_states_to_dict(
         # in-between only provide the "state" and the
         # "last_changed".
         if not ent_results:
-            ent_results.append(LazyState(next(group)))
+            ent_results.append(LazyState(next(group), attr_cache))
 
         prev_state = ent_results[-1]
         initial_state_count = len(ent_results)
@@ -410,7 +411,7 @@ def _sorted_states_to_dict(
             # There was at least one state change
             # replace the last minimal state with
             # a full state
-            ent_results[-1] = LazyState(prev_state)
+            ent_results[-1] = LazyState(prev_state, attr_cache)
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
