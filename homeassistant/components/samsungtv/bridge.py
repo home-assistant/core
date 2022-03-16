@@ -321,6 +321,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         if self._app_list is None and (remote := self._get_remote()):
             with contextlib.suppress(TypeError, WebSocketTimeoutException):
                 raw_app_list: list[dict[str, str]] = remote.app_list()
+                LOGGER.debug("Received app list: %s", raw_app_list)
                 self._app_list = {
                     app["name"]: app["appId"]
                     for app in sorted(raw_app_list, key=lambda app: app["name"])
