@@ -259,10 +259,12 @@ class TimeSelector(Selector):
 
     selector_type = "time"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema({vol.Optional("as_str", default=False): bool})
 
-    def __call__(self, data: Any) -> time_sys:
+    def __call__(self, data: Any) -> str | time_sys:
         """Validate the passed selection."""
+        if self.config["as_str"]:
+            return str(cv.time(data))
         return cv.time(data)
 
 
@@ -407,10 +409,14 @@ class DurationSelector(Selector):
 
     selector_type = "duration"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema({vol.Optional("as_dict", default=False): bool})
 
-    def __call__(self, data: Any) -> timedelta:
+    def __call__(self, data: Any) -> dict[str, float] | timedelta:
         """Validate the passed selection."""
+        if self.config["as_dict"]:
+            duration_dict: dict[str, float] = cv.time_period_dict_dict(data)
+            return duration_dict
+
         duration: timedelta = cv.time_period_dict(data)
         return duration
 

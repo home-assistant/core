@@ -248,14 +248,15 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
-    (({}, ("00:00:00",), ("blah", None)),),
+    "schema,valid_selections,invalid_selections,converter",
+    (
+        ({}, ("00:00:00",), ("blah", None), dt_util.parse_time),
+        ({"as_str": True}, ("00:00:00",), ("blah", None), None),
+    ),
 )
-def test_time_selector_schema(schema, valid_selections, invalid_selections):
+def test_time_selector_schema(schema, valid_selections, invalid_selections, converter):
     """Test time selector."""
-    _test_selector(
-        "time", schema, valid_selections, invalid_selections, dt_util.parse_time
-    )
+    _test_selector("time", schema, valid_selections, invalid_selections, converter)
 
 
 @pytest.mark.parametrize(
@@ -382,24 +383,27 @@ def test_attribute_selector_schema(schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    "schema,valid_selections,invalid_selections,converter",
     (
         (
             {},
             ({"seconds": 10},),
             (None, {}),
+            lambda x: timedelta(**x),
+        ),
+        (
+            {"as_dict": True},
+            ({"seconds": 10},),
+            (None, {}),
+            None,
         ),
     ),
 )
-def test_duration_selector_schema(schema, valid_selections, invalid_selections):
+def test_duration_selector_schema(
+    schema, valid_selections, invalid_selections, converter
+):
     """Test duration selector."""
-    _test_selector(
-        "duration",
-        schema,
-        valid_selections,
-        invalid_selections,
-        lambda x: timedelta(**x),
-    )
+    _test_selector("duration", schema, valid_selections, invalid_selections, converter)
 
 
 @pytest.mark.parametrize(
