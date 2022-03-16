@@ -17,11 +17,12 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -29,10 +30,12 @@ from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     CONF_MODEL,
     CONF_ON_ACTION,
+    CONF_SESSION_ID,
     DEFAULT_NAME,
     DOMAIN,
     LEGACY_PORT,
     LOGGER,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
 )
 
@@ -110,6 +113,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
 
     # Initialize bridge
+    if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
+        if not entry.data.get(CONF_TOKEN) or not entry.data.get(CONF_SESSION_ID):
+            raise ConfigEntryAuthFailed(
+                "Token and session id are required in encrypted mode"
+            )
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
 
     # Ensure updates get saved against the config_entry
@@ -119,6 +127,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
     bridge.register_update_config_entry_callback(_update_config_entry)
+
+    # Ensure update get saved against the config_entry
+    @callback
+    def _reload_config_entry() -> None:
+        """Update config entry with the new token."""
+        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+
+    bridge.register_reload_callback(_reload_config_entry)
 
     async def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""

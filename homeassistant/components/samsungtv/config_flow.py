@@ -21,25 +21,30 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
 from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
+    CONF_SESSION_ID,
     DEFAULT_MANUFACTURER,
     DOMAIN,
     LEGACY_PORT,
     LOGGER,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
+    RESULT_INVALID_PIN,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
     WEBSOCKET_PORTS,
 )
+from .encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_WEBSOCKET]
@@ -73,6 +78,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._id: int | None = None
         self._bridge: SamsungTVBridge | None = None
         self._device_info: dict[str, Any] | None = None
+        self._encrypted_authenticator: SamsungTVEncryptedWSAsyncAuthenticator | None = (
+            None
+        )
 
     def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
         """Get device entry."""
@@ -365,16 +373,17 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm reauth."""
         errors = {}
         assert self._reauth_entry
+        method = self._reauth_entry.data[CONF_METHOD]
         if user_input is not None:
-            bridge = SamsungTVBridge.get_bridge(
+            self._bridge = SamsungTVBridge.get_bridge(
                 self.hass,
-                self._reauth_entry.data[CONF_METHOD],
+                method,
                 self._reauth_entry.data[CONF_HOST],
             )
-            result = await bridge.async_try_connect()
+            result = await self._bridge.async_try_connect()
             if result == RESULT_SUCCESS:
                 new_data = dict(self._reauth_entry.data)
-                new_data[CONF_TOKEN] = bridge.token
+                new_data[CONF_TOKEN] = self._bridge.token
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry, data=new_data
                 )
@@ -387,8 +396,50 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors = {"base": RESULT_AUTH_MISSING}
 
         self.context["title_placeholders"] = {"device": self._title}
+        step_id = "reauth_confirm"
+        if method == METHOD_ENCRYPTED_WEBSOCKET:
+            step_id = "reauth_confirm_encrypted"
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id=step_id,
             errors=errors,
             description_placeholders={"device": self._title},
+        )
+
+    async def async_step_reauth_confirm_encrypted(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Confirm reauth (encrypted method)."""
+        errors = {}
+        assert self._reauth_entry
+        if self._encrypted_authenticator is None:
+            self._encrypted_authenticator = SamsungTVEncryptedWSAsyncAuthenticator(
+                self._reauth_entry.data[CONF_HOST],
+                web_session=async_get_clientsession(self.hass),
+            )
+            await self._encrypted_authenticator.start_pairing()
+
+        if user_input is not None and (pin := user_input.get("pin")):
+            if token := await self._encrypted_authenticator.try_pin(pin):
+                session_id = (
+                    await self._encrypted_authenticator.get_session_id_and_close()
+                )
+                new_data = {
+                    **self._reauth_entry.data,
+                    CONF_TOKEN: token,
+                    CONF_SESSION_ID: session_id,
+                }
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry, data=new_data
+                )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+            errors = {"base": RESULT_INVALID_PIN}
+
+        self.context["title_placeholders"] = {"device": self._title}
+        return self.async_show_form(
+            step_id="reauth_confirm_encrypted",
+            errors=errors,
+            description_placeholders={"device": self._title},
+            data_schema=vol.Schema({vol.Required("pin"): str}),
         )
