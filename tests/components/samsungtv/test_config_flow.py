@@ -946,7 +946,7 @@ async def test_import_legacy(
         CONF_PORT: 55000,
         CONF_ON_ACTION: [{"delay": "00:00:01"}],
     }
-    assert "Updating config entry from YAML:" in caplog.text
+    assert "Updated config entry from YAML:" in caplog.text
 
     # Import identical updated data
     caplog.clear()
@@ -958,7 +958,7 @@ async def test_import_legacy(
     await hass.async_block_till_done()
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert "Updating config entry from YAML:" not in caplog.text
+    assert "Updated config entry from YAML:" not in caplog.text
 
 
 @pytest.mark.usefixtures("remote", "remotews", "rest_api_failing")
