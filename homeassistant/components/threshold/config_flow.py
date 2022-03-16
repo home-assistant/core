@@ -6,13 +6,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
     HelperFlowError,
     HelperFlowStep,
-    wrapped_entity_config_entry_title,
 )
 
 from .const import (
@@ -72,6 +71,7 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_NAME): selector.selector({"text": {}}),
         vol.Required(CONF_ENTITY_ID): selector.selector(
             {"entity": {"domain": "sensor"}}
         ),
@@ -95,7 +95,4 @@ class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return (
-            wrapped_entity_config_entry_title(self.hass, options[CONF_ENTITY_ID])
-            + " threshold"
-        )
+        return options[CONF_NAME]

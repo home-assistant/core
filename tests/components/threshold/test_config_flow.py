@@ -27,18 +27,25 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"entity_id": input_sensor, "lower": -2, "upper": None, "mode": "lower"},
+            {
+                "entity_id": input_sensor,
+                "lower": -2,
+                "upper": None,
+                "mode": "lower",
+                "name": "My threshold sensor",
+            },
         )
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "input threshold"
+    assert result["title"] == "My threshold sensor"
     assert result["data"] == {}
     assert result["options"] == {
         "entity_id": input_sensor,
         "hysteresis": 0.0,
         "lower": -2.0,
         "mode": "lower",
+        "name": "My threshold sensor",
         "upper": None,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -50,9 +57,10 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         "hysteresis": 0.0,
         "lower": -2.0,
         "mode": "lower",
+        "name": "My threshold sensor",
         "upper": None,
     }
-    assert config_entry.title == "input threshold"
+    assert config_entry.title == "My threshold sensor"
 
 
 @pytest.mark.parametrize(
@@ -81,17 +89,23 @@ async def test_modes(
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"entity_id": input_sensor, "mode": mode, **extra_input_data},
+            {
+                "entity_id": input_sensor,
+                "mode": mode,
+                "name": "My threshold sensor",
+                **extra_input_data,
+            },
         )
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "input threshold"
+    assert result["title"] == "My threshold sensor"
     assert result["data"] == {}
     assert result["options"] == {
         "entity_id": input_sensor,
         "hysteresis": 0.0,
         "mode": mode,
+        "name": "My threshold sensor",
         **extra_expected_data,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -102,6 +116,7 @@ async def test_modes(
         "entity_id": input_sensor,
         "hysteresis": 0.0,
         "mode": mode,
+        "name": "My threshold sensor",
         **extra_expected_data,
     }
 
@@ -126,7 +141,12 @@ async def test_modes_fail(hass: HomeAssistant, mode, extra_input_data, error) ->
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"entity_id": input_sensor, "mode": mode, **extra_input_data},
+        {
+            "entity_id": input_sensor,
+            "mode": mode,
+            "name": "My threshold sensor",
+            **extra_input_data,
+        },
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -158,6 +178,7 @@ async def test_options(hass: HomeAssistant) -> None:
             "hysteresis": 0.0,
             "lower": -2.0,
             "mode": "lower",
+            "name": "My threshold",
             "upper": None,
         },
         title="My threshold",
@@ -189,6 +210,7 @@ async def test_options(hass: HomeAssistant) -> None:
         "hysteresis": 0.0,
         "mode": "upper",
         "lower": None,
+        "name": "My threshold",
         "upper": 20.0,
     }
     assert config_entry.data == {}
@@ -197,6 +219,7 @@ async def test_options(hass: HomeAssistant) -> None:
         "hysteresis": 0.0,
         "mode": "upper",
         "lower": None,
+        "name": "My threshold",
         "upper": 20.0,
     }
     assert config_entry.title == "My threshold"
