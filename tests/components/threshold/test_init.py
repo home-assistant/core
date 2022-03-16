@@ -31,7 +31,7 @@ async def test_setup_and_remove_config_entry(
             "lower": -2.0,
             "mode": "lower",
             "name": "Input threshold",
-            "upper": None,
+            "upper": 0.0,
         },
         title="Input threshold",
     )

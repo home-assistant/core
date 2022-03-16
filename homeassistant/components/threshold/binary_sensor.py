@@ -25,7 +25,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import TYPE_LOWER, TYPE_RANGE, TYPE_UPPER
+from .const import (
+    CONF_HYSTERESIS,
+    CONF_LOWER,
+    CONF_MODE,
+    CONF_UPPER,
+    TYPE_LOWER,
+    TYPE_RANGE,
+    TYPE_UPPER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,10 +43,6 @@ ATTR_POSITION = "position"
 ATTR_SENSOR_VALUE = "sensor_value"
 ATTR_TYPE = "type"
 ATTR_UPPER = "upper"
-
-CONF_HYSTERESIS = "hysteresis"
-CONF_LOWER = "lower"
-CONF_UPPER = "upper"
 
 DEFAULT_NAME = "Threshold"
 DEFAULT_HYSTERESIS = 0.0
@@ -76,6 +80,12 @@ async def async_setup_entry(
     name = config_entry.title
     unique_id = config_entry.entry_id
     upper = config_entry.options[CONF_UPPER]
+
+    mode = config_entry.options[CONF_MODE]
+    if mode == TYPE_LOWER:
+        upper = None
+    if mode == TYPE_UPPER:
+        lower = None
 
     async_add_entities(
         [

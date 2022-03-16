@@ -10,61 +10,32 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
-    HelperFlowError,
     HelperFlowStep,
 )
 
 from .const import (
     CONF_HYSTERESIS,
     CONF_LOWER,
+    CONF_MODE,
     CONF_UPPER,
     DEFAULT_HYSTERESIS,
     DOMAIN,
-    TYPE_LOWER,
-    TYPE_RANGE,
-    TYPE_UPPER,
+    THRESHOLD_MODES,
 )
-
-_THRESHOLD_MODES = [TYPE_LOWER, TYPE_UPPER, TYPE_RANGE]
-
-
-def _validate_mode(data: Any) -> Any:
-    """Validate the threshold mode."""
-    if data["mode"] == TYPE_LOWER:
-        try:
-            vol.Schema(float)(data[CONF_LOWER])
-            data[CONF_UPPER] = None
-        except vol.Invalid as exc:
-            raise HelperFlowError("lower_needs_lower") from exc
-        return data
-    if data["mode"] == TYPE_UPPER:
-        try:
-            vol.Schema(float)(data[CONF_UPPER])
-            data[CONF_LOWER] = None
-        except vol.Invalid as exc:
-            raise HelperFlowError("upper_needs_upper") from exc
-        return data
-    try:
-        vol.Schema(float)(data[CONF_LOWER])
-        vol.Schema(float)(data[CONF_UPPER])
-    except vol.Invalid as exc:
-        raise HelperFlowError("range_needs_lower_upper") from exc
-    return data
-
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required("mode"): selector.selector(
-            {"select": {"options": _THRESHOLD_MODES}}
+        vol.Required(CONF_MODE): selector.selector(
+            {"select": {"options": THRESHOLD_MODES}}
         ),
         vol.Required(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): selector.selector(
             {"number": {"mode": "box"}}
         ),
-        vol.Required(CONF_LOWER, default=None): vol.Any(
-            None, selector.selector({"number": {"mode": "box"}})
+        vol.Required(CONF_LOWER, default=0.0): selector.selector(
+            {"number": {"mode": "box"}}
         ),
-        vol.Required(CONF_UPPER, default=None): vol.Any(
-            None, selector.selector({"number": {"mode": "box"}})
+        vol.Required(CONF_UPPER, default=0.0): selector.selector(
+            {"number": {"mode": "box"}}
         ),
     }
 )
@@ -78,13 +49,9 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW = {
-    "user": HelperFlowStep(CONFIG_SCHEMA, validate_user_input=_validate_mode)
-}
+CONFIG_FLOW = {"user": HelperFlowStep(CONFIG_SCHEMA)}
 
-OPTIONS_FLOW = {
-    "init": HelperFlowStep(OPTIONS_SCHEMA, validate_user_input=_validate_mode)
-}
+OPTIONS_FLOW = {"init": HelperFlowStep(OPTIONS_SCHEMA)}
 
 
 class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
