@@ -234,6 +234,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle configuration by yaml file."""
         # We need to import even if we cannot validate
         # since the TV may be off at startup
+        LOGGER.debug("Importing config entry from YAML: %s", user_input)
         await self._async_set_name_host_from_input(user_input)
         entry, _ = self._async_get_existing_matching_entry()
         if entry:
