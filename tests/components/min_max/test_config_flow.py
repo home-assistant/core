@@ -14,9 +14,6 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize("platform", ("sensor",))
 async def test_config_flow(hass: HomeAssistant, platform) -> None:
     """Test the config flow."""
-    hass.states.async_set("sensor.input_one", "10")
-    hass.states.async_set("sensor.input_two", "20")
-
     input_sensors = ["sensor.input_one", "sensor.input_two"]
 
     result = await hass.config_entries.flow.async_init(

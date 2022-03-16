@@ -75,7 +75,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Initialize Light Switch config entry."""
+    """Initialize min/max/mean config entry."""
     registry = er.async_get(hass)
     entity_ids = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITY_IDS]
