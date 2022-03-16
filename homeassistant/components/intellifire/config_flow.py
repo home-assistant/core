@@ -154,6 +154,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except (ConnectionError, ClientConnectionError):
             return self.async_abort(reason="not_intellifire_device")
 
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._discovered_hosts.append(DiscoveredHostInfo(ip=host, serial=serial))
 
         placeholders = {CONF_HOST: host, "serial": serial}
@@ -174,8 +176,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="dhcp_confirm", description_placeholders={CONF_HOST: host}
             )
 
-        await self.async_set_unique_id(serial)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         return self.async_create_entry(
             title=f"Fireplace {serial}",
             data={CONF_HOST: host},
