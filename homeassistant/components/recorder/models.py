@@ -501,7 +501,9 @@ class LazyState(State):
             ):
                 self._attributes = attributes
                 return attributes
-            _LOGGER.warning("Loading %s state: %s", self.entity_id, attributes_json)
+            _LOGGER.warning(
+                "LazyState: Loading %s state: %s", self.entity_id, attributes_json
+            )
             try:
                 self._attributes = json.loads(attributes_json)
             except ValueError:

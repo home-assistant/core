@@ -4,6 +4,7 @@ from datetime import timedelta
 from http import HTTPStatus
 from itertools import groupby
 import json
+import logging
 import re
 
 import sqlalchemy
@@ -113,6 +114,8 @@ LOG_MESSAGE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
@@ -741,6 +744,11 @@ class LazyEventPartialState:
             ):
                 self._attributes = {}
             else:
+                _LOGGER.warning(
+                    "LOGBOOK: Loading %s state: %s",
+                    self.entity_id,
+                    self._row.attributes,
+                )
                 self._attributes = json.loads(self._row.attributes)
         return self._attributes
 
