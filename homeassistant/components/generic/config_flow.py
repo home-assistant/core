@@ -8,6 +8,7 @@ import imghdr
 import logging
 from types import MappingProxyType
 from typing import Any
+from urllib.parse import urlparse, urlunparse
 
 from async_timeout import timeout
 import av
@@ -29,6 +30,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util import slugify
 
 from .camera import generate_auth
 from .const import (
@@ -72,10 +74,12 @@ def build_schema(
             description={"suggested_value": user_input.get(CONF_STREAM_SOURCE, "")},
         ): str,
         vol.Optional(
-            CONF_RTSP_TRANSPORT, default=user_input.get(CONF_RTSP_TRANSPORT)
-        ): vol.In([None, "tcp", "udp", "udp_multicast", "http"]),
+            CONF_RTSP_TRANSPORT,
+            description={"suggested_value": user_input.get(CONF_RTSP_TRANSPORT)},
+        ): vol.In(["tcp", "udp", "udp_multicast", "http"]),
         vol.Optional(
-            CONF_AUTHENTICATION, default=user_input.get(CONF_AUTHENTICATION)
+            CONF_AUTHENTICATION,
+            description={"suggested_value": user_input.get(CONF_AUTHENTICATION)},
         ): vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
         vol.Optional(
             CONF_USERNAME,
@@ -156,6 +160,14 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     if fmt not in SUPPORTED_IMAGE_TYPES:
         return {CONF_STILL_IMAGE_URL: "invalid_still_image"}, None
     return {}, f"image/{fmt}"
+
+
+def slug_url(url) -> str | None:
+    """Convert a camera url into a string suitable for a camera name."""
+    if not url:
+        return None
+    url_no_scheme = urlparse(url)._replace(scheme="")
+    return slugify(urlunparse(url_no_scheme).strip("/"))
 
 
 async def async_test_stream(hass, info) -> dict[str, str]:
@@ -241,9 +253,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = errors | await async_test_stream(self.hass, user_input)
                 still_url = user_input.get(CONF_STILL_IMAGE_URL)
                 stream_url = user_input.get(CONF_STREAM_SOURCE)
-                name = user_input.get(
-                    CONF_NAME, still_url or stream_url or DEFAULT_NAME
-                )
+                name = slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME
 
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
@@ -270,7 +280,9 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = errors | await async_test_stream(self.hass, import_config)
         still_url = import_config.get(CONF_STILL_IMAGE_URL)
         stream_url = import_config.get(CONF_STREAM_SOURCE)
-        name = import_config.get(CONF_NAME, still_url or stream_url or DEFAULT_NAME)
+        name = import_config.get(
+            CONF_NAME, slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME
+        )
         if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
             import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
         if not errors:
@@ -302,10 +314,9 @@ class GenericOptionsFlowHandler(OptionsFlow):
             errors = errors | await async_test_stream(self.hass, user_input)
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
             stream_url = user_input.get(CONF_STREAM_SOURCE)
-            name = user_input.get(CONF_NAME, still_url or stream_url or DEFAULT_NAME)
             if not errors:
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, name),
+                    title=slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME,
                     data={
                         CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
                         CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
