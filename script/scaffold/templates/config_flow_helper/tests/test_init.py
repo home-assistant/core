@@ -13,7 +13,7 @@ async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
     platform: str,
 ) -> None:
-    """Test removing a config entry."""
+    """Test setting up and removing a config entry."""
     input_sensor_entity_id = "sensor.input"
     registry = er.async_get(hass)
     NEW_DOMAIN_entity_id = f"{platform}.my_NEW_DOMAIN"
