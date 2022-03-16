@@ -13,9 +13,6 @@ from ..const import (
     UNKNOWN,
 )
 from .base import ZigbeeChannel
-import logging
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.SMARTTHINGS_HUMIDITY_CLUSTER)
