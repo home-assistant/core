@@ -67,7 +67,7 @@ class HelperCommonFlowHandler:
             try:
                 user_input = self._flow[next_step_id].validate_user_input(user_input)
             except HelperFlowError as exc:
-                return self._show_next_step(next_step_id, exc)
+                return self._show_next_step(next_step_id, exc, user_input)
 
         if user_input is not None:
             # User input was validated successfully, update options
@@ -87,17 +87,23 @@ class HelperCommonFlowHandler:
         return self._show_next_step(next_step_id)
 
     def _show_next_step(
-        self, next_step_id: str, error: HelperFlowError | None = None
+        self,
+        next_step_id: str,
+        error: HelperFlowError | None = None,
+        user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show step for next step."""
+        options = dict(self._options)
+        if user_input:
+            options.update(user_input)
         if (data_schema := self._flow[next_step_id].schema) and data_schema.schema:
             # Copy the schema, then set suggested field values to saved options
             schema = dict(data_schema.schema)
             for key in list(schema):
-                if key in self._options and isinstance(key, vol.Marker):
+                if key in options and isinstance(key, vol.Marker):
                     # Copy the marker to not modify the flow schema
                     new_key = copy.copy(key)
-                    new_key.description = {"suggested_value": self._options[key]}
+                    new_key.description = {"suggested_value": options[key]}
                     val = schema.pop(key)
                     schema[new_key] = val
             data_schema = vol.Schema(schema)
