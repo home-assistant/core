@@ -496,7 +496,7 @@ class LazyState(State):
         """State attributes."""
         if not self._attributes:
             attributes_json = self._row.attributes
-            if self._attr_cache and (
+            if self._attr_cache is not None and (
                 attributes := self._attr_cache.get(attributes_json)
             ):
                 self._attributes = attributes
@@ -511,7 +511,7 @@ class LazyState(State):
                 # When json.loads fails
                 _LOGGER.exception("Error converting row to state: %s", self._row)
                 self._attributes = {}
-            if self._attr_cache:
+            if self._attr_cache is not None:
                 _LOGGER.warning(
                     "CACHE PUT %s state: %s", self.entity_id, attributes_json
                 )
