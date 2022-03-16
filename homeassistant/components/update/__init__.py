@@ -229,7 +229,7 @@ class UpdateEntity(RestoreEntity):
     def title(self) -> str | None:
         """Title of the software.
 
-        This help differentiating between the device or entity name
+        This helps to differentiate between the device or entity name
         versus the title of the software installed.
         """
         return self._attr_title
