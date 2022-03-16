@@ -93,7 +93,6 @@ def get_significant_states_with_session(
     thermostat so that we get current temperature in our graphs).
     """
     timer_start = time.perf_counter()
-
     baked_query = hass.data[HISTORY_BAKERY](
         lambda session: session.query(*QUERY_STATES)
     )
@@ -119,7 +118,7 @@ def get_significant_states_with_session(
 
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
-    baked_query += lambda q: q.join(
+    baked_query += lambda q: q.outerjoin(
         StateAttributes, States.attributes_id == StateAttributes.attributes_id
     )
     baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
@@ -207,7 +206,8 @@ def get_last_state_changes(hass, number_of_states, entity_id):
 
         states = execute(
             baked_query(session).params(
-                number_of_states=number_of_states, entity_id=entity_id
+                number_of_states=number_of_states,
+                entity_id=entity_id,
             )
         )
 
@@ -332,7 +332,7 @@ def _get_single_entity_states_with_session(hass, session, utc_point_in_time, ent
         States.last_updated < bindparam("utc_point_in_time"),
         States.entity_id == bindparam("entity_id"),
     )
-    baked_query += lambda q: q.join(
+    baked_query += lambda q: q.outerjoin(
         StateAttributes, States.attributes_id == StateAttributes.attributes_id
     )
     baked_query += lambda q: q.order_by(States.last_updated.desc())
