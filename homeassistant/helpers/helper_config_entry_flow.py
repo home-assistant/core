@@ -16,6 +16,10 @@ from homeassistant.data_entry_flow import FlowResult, UnknownHandler
 from . import entity_registry as er
 
 
+class HelperFlowError(Exception):
+    """Validation failed."""
+
+
 @dataclass
 class HelperFlowStep:
     """Define a helper config or options flow step."""
@@ -23,6 +27,12 @@ class HelperFlowStep:
     # Optional schema for requesting and validating user input. If schema validation
     # fails, the step will be retried. If the schema is None, no user input is requested.
     schema: vol.Schema | None
+
+    # Optional function to validate user input.
+    # The validate_user_input function is called if the schema validates successfully.
+    # The validate_user_input function is passed the user input from the current step.
+    # The validate_user_input should raise HelperFlowError is user input is invalid.
+    validate_user_input: Callable[[dict[str, Any]], dict[str, Any]] = lambda x: x
 
     # Optional function to identify next step.
     # The next_step function is called if the schema validates successfully or if no
@@ -52,6 +62,13 @@ class HelperCommonFlowHandler:
         """Handle a step."""
         next_step_id: str = step_id
 
+        if user_input is not None and self._flow[next_step_id].schema is not None:
+            # Do extra validation of user input
+            try:
+                user_input = self._flow[next_step_id].validate_user_input(user_input)
+            except HelperFlowError as exc:
+                return self._show_next_step(next_step_id, exc)
+
         if user_input is not None:
             # User input was validated successfully, update options
             self._options.update(user_input)
@@ -67,6 +84,12 @@ class HelperCommonFlowHandler:
 
             next_step_id = next_step_id_or_end_flow
 
+        return self._show_next_step(next_step_id)
+
+    def _show_next_step(
+        self, next_step_id: str, error: HelperFlowError | None = None
+    ) -> FlowResult:
+        """Show step for next step."""
         if (data_schema := self._flow[next_step_id].schema) and data_schema.schema:
             # Copy the schema, then set suggested field values to saved options
             schema = dict(data_schema.schema)
@@ -79,9 +102,11 @@ class HelperCommonFlowHandler:
                     schema[new_key] = val
             data_schema = vol.Schema(schema)
 
+        errors = {"base": str(error)} if error else None
+
         # Show form for next step
         return self._handler.async_show_form(
-            step_id=next_step_id, data_schema=data_schema
+            step_id=next_step_id, data_schema=data_schema, errors=errors
         )
 
 
