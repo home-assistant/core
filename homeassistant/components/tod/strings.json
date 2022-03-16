@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "New Times of the Day Sensor",
+        "description": "Configure when the sensor should turn on and off. If \"on after\" is not set to \"absolute time\", the \"on time\" is ignored. If \"off after\" is not set to \"absolute time\", the \"off time\" is ignored.",
+        "data": {
+          "after": "On after",
+          "after_offset": "On offset",
+          "after_time": "On time",
+          "before": "Off after",
+          "before_offset": "Off offset",
+          "before_time": "Off time",
+          "name": "Name"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "[%key:component::tod::config::step::user::description%]",
+        "data": {
+          "after": "[%key:component::tod::config::step::user::data::after%]",
+          "after_offset": "[%key:component::tod::config::step::user::data::after_offset%]",
+          "after_time": "[%key:component::tod::config::step::user::data::after_time%]",
+          "before": "[%key:component::tod::config::step::user::data::before%]",
+          "before_offset": "[%key:component::tod::config::step::user::data::before_offset%]",
+          "before_time": "[%key:component::tod::config::step::user::data::before_time%]"
+        }
+      }
+    }
+  }
+}

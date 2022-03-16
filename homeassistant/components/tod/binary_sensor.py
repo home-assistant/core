@@ -8,6 +8,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AFTER,
     CONF_BEFORE,
@@ -22,14 +23,19 @@ from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_ne
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
+from .const import (
+    CONF_ABSOLUTE_TIME,
+    CONF_AFTER_OFFSET,
+    CONF_AFTER_TIME,
+    CONF_BEFORE_OFFSET,
+    CONF_BEFORE_TIME,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_AFTER = "after"
 ATTR_BEFORE = "before"
 ATTR_NEXT_UPDATE = "next_update"
-
-CONF_AFTER_OFFSET = "after_offset"
-CONF_BEFORE_OFFSET = "before_offset"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -40,6 +46,42 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Times of the Day config entry."""
+    if hass.config.time_zone is None:
+        _LOGGER.error("Timezone is not set in Home Assistant configuration")
+        return
+
+    after = config_entry.options[CONF_AFTER]
+    if after == CONF_ABSOLUTE_TIME:
+        after = cv.time(config_entry.options[CONF_AFTER_TIME])
+    after_offset_dict = config_entry.options.get(CONF_AFTER_OFFSET)
+    after_offset = (
+        cv.time_period_dict(after_offset_dict)
+        if after_offset_dict is not None
+        else timedelta(0)
+    )
+    before = config_entry.options[CONF_BEFORE]
+    if before == CONF_ABSOLUTE_TIME:
+        before = cv.time(config_entry.options[CONF_BEFORE_TIME])
+    before_offset_dict = config_entry.options.get(CONF_BEFORE_OFFSET)
+    before_offset = (
+        cv.time_period_dict(before_offset_dict)
+        if before_offset_dict is not None
+        else timedelta(0)
+    )
+    name = config_entry.title
+    unique_id = config_entry.entry_id
+
+    async_add_entities(
+        [TodSensor(name, after, after_offset, before, before_offset, unique_id)]
+    )
 
 
 async def async_setup_platform(
@@ -58,12 +100,12 @@ async def async_setup_platform(
     before = config[CONF_BEFORE]
     before_offset = config[CONF_BEFORE_OFFSET]
     name = config[CONF_NAME]
-    sensor = TodSensor(name, after, after_offset, before, before_offset)
+    sensor = TodSensor(name, after, after_offset, before, before_offset, None)
 
     async_add_entities([sensor])
 
 
-def is_sun_event(sun_event):
+def _is_sun_event(sun_event):
     """Return true if event is sun event not time."""
     return sun_event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
@@ -71,8 +113,9 @@ def is_sun_event(sun_event):
 class TodSensor(BinarySensorEntity):
     """Time of the Day Sensor."""
 
-    def __init__(self, name, after, after_offset, before, before_offset):
+    def __init__(self, name, after, after_offset, before, before_offset, unique_id):
         """Init the ToD Sensor..."""
+        self._attr_unique_id = unique_id
         self._name = name
         self._time_before = self._time_after = self._next_update = None
         self._after_offset = after_offset
@@ -119,11 +162,11 @@ class TodSensor(BinarySensorEntity):
         # calculate utc datetime corresponding to local time
         return dt_util.as_utc(datetime.combine(current_local_date, naive_time))
 
-    def _calculate_boudary_time(self):
+    def _calculate_boundary_time(self):
         """Calculate internal absolute time boundaries."""
         nowutc = dt_util.utcnow()
         # If after value is a sun event instead of absolute time
-        if is_sun_event(self._after):
+        if _is_sun_event(self._after):
             # Calculate the today's event utc time or
             # if not available take next
             after_event_date = get_astral_event_date(
@@ -139,7 +182,7 @@ class TodSensor(BinarySensorEntity):
         self._time_after = after_event_date
 
         # If before value is a sun event instead of absolute time
-        if is_sun_event(self._before):
+        if _is_sun_event(self._before):
             # Calculate the today's event utc time or  if not available take
             # next
             before_event_date = get_astral_event_date(
@@ -168,7 +211,7 @@ class TodSensor(BinarySensorEntity):
         # _time_after is set to 23:00 today
         # nowutc is set to 10:00 today
         if (
-            not is_sun_event(self._after)
+            not _is_sun_event(self._after)
             and self._time_after > nowutc
             and self._time_before > nowutc + timedelta(days=1)
         ):
@@ -182,7 +225,7 @@ class TodSensor(BinarySensorEntity):
 
     def _turn_to_next_day(self):
         """Turn to to the next day."""
-        if is_sun_event(self._after):
+        if _is_sun_event(self._after):
             self._time_after = get_astral_event_next(
                 self.hass, self._after, self._time_after - self._after_offset
             )
@@ -191,7 +234,7 @@ class TodSensor(BinarySensorEntity):
             # Offset is already there
             self._time_after += timedelta(days=1)
 
-        if is_sun_event(self._before):
+        if _is_sun_event(self._before):
             self._time_before = get_astral_event_next(
                 self.hass, self._before, self._time_before - self._before_offset
             )
@@ -202,7 +245,7 @@ class TodSensor(BinarySensorEntity):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
-        self._calculate_boudary_time()
+        self._calculate_boundary_time()
         self._calculate_next_update()
 
         @callback

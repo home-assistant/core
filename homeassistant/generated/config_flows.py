@@ -341,6 +341,7 @@ FLOWS = {
         "threshold",
         "tibber",
         "tile",
+        "tod",
         "tolo",
         "tomorrowio",
         "toon",
