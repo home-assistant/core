@@ -17,3 +17,4 @@ STATES_MAP: Final[dict[str, str]] = {
 }
 
 SUPPORTED_FEATURES: Final = SUPPORT_OPEN | SUPPORT_CLOSE
+DOMAIN = "aladdin_connect"

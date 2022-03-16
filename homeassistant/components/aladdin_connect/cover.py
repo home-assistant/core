@@ -35,23 +35,23 @@ PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Aladdin Connect platform."""
-
     username: str = config[CONF_USERNAME]
     password: str = config[CONF_PASSWORD]
     acc = AladdinConnectClient(username, password)
-
+    test = await hass.async_add_executor_job(acc.login)
     try:
-        if not acc.login():
+        if not test:
             raise ValueError("Username or Password is incorrect")
+        doors = await hass.async_add_executor_job(acc.get_doors)
         add_entities(
-            (AladdinDevice(acc, door) for door in acc.get_doors()),
+            (AladdinDevice(acc, door) for door in doors),
             update_before_add=True,
         )
     except (TypeError, KeyError, NameError, ValueError) as ex:

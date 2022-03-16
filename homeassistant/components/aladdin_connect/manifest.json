@@ -5,5 +5,9 @@
   "requirements": ["aladdin_connect==0.4"],
   "codeowners": [],
   "iot_class": "cloud_polling",
-  "loggers": ["aladdin_connect"]
+  "loggers": ["aladdin_connect"],
+  "config_flow": true,
+  "zeroconf": [],
+  "ssdp":[],
+  "homekit":{}
 }
