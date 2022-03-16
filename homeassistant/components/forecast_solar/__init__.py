@@ -16,6 +16,7 @@ from .const import (
     CONF_AZIMUTH,
     CONF_DAMPING,
     CONF_DECLINATION,
+    CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
 )
@@ -29,6 +30,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # this if statement is here to catch that.
     api_key = entry.options.get(CONF_API_KEY) or None
 
+    if (inverter_size := entry.options.get(CONF_INVERTER_SIZE)) not in (None, 0):
+        inverter_size = inverter_size / 1000
+
     session = async_get_clientsession(hass)
     forecast = ForecastSolar(
         api_key=api_key,
@@ -39,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         azimuth=(entry.options[CONF_AZIMUTH] - 180),
         kwp=(entry.options[CONF_MODULES_POWER] / 1000),
         damping=entry.options.get(CONF_DAMPING, 0),
+        inverter=inverter_size,
     )
 
     # Free account have a resolution of 1 hour, using that as the default
