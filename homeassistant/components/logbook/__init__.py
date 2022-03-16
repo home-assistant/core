@@ -514,9 +514,6 @@ def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
     return (
         _generate_events_query(session)
         .outerjoin(Events, (States.event_id == Events.event_id))
-        .outerjoin(
-            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
-        )
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(_missing_state_matcher(old_state))
         .filter(_continuous_entity_matcher())
@@ -525,15 +522,15 @@ def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
             (States.last_updated == States.last_changed)
             & States.entity_id.in_(entity_ids)
         )
+        .outerjoin(
+            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+        )
     )
 
 
 def _apply_events_types_and_states_filter(hass, query, old_state):
     events_query = (
         query.outerjoin(States, (Events.event_id == States.event_id))
-        .outerjoin(
-            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
-        )
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(
             (Events.event_type != EVENT_STATE_CHANGED)
@@ -543,7 +540,9 @@ def _apply_events_types_and_states_filter(hass, query, old_state):
             (Events.event_type != EVENT_STATE_CHANGED) | _continuous_entity_matcher()
         )
     )
-    return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES)
+    return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES).outerjoin(
+        StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+    )
 
 
 def _missing_state_matcher(old_state):
