@@ -14,11 +14,13 @@ from homeassistant.components.calendar import (
     calculate_offset,
     is_offset_reached,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 from . import (
@@ -29,8 +31,10 @@ from . import (
     DATA_SERVICE,
     DEFAULT_CONF_OFFSET,
     DOMAIN,
+    SERVICE_SCAN_CALENDARS,
 )
 from .api import GoogleCalendarService
+from .const import DISCOVER_CALENDAR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,19 +52,39 @@ TRANSPARENCY = "transparency"
 OPAQUE = "opaque"
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    disc_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the calendar platform for event devices."""
-    if disc_info is None:
-        return
+    """Set up the google calendar platform."""
 
-    if not any(data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]):
-        return
+    @callback
+    def async_discover(discovery_info: dict[str, Any]) -> None:
+        _async_setup_entities(
+            hass,
+            entry,
+            async_add_entities,
+            discovery_info,
+        )
 
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, DISCOVER_CALENDAR, async_discover)
+    )
+
+    # Look for any new calendars
+    try:
+        await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, blocking=True)
+    except HomeAssistantError as err:
+        # This can happen if there's a connection error during setup.
+        raise PlatformNotReady(str(err)) from err
+
+
+@callback
+def _async_setup_entities(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    disc_info: dict[str, Any],
+) -> None:
     calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     entities = []
     for data in disc_info[CONF_ENTITIES]:
@@ -74,7 +98,7 @@ def setup_platform(
         )
         entities.append(entity)
 
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class GoogleCalendarEventDevice(CalendarEventDevice):
@@ -144,10 +168,10 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         return event_list
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data."""
         try:
-            items, _ = self._calendar_service.list_events(
+            items, _ = await self._calendar_service.async_list_events(
                 self._calendar_id, search=self._search
             )
         except ServerNotFoundError as err:
