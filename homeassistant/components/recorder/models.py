@@ -6,6 +6,7 @@ import json
 import logging
 from typing import TypedDict, overload
 
+from fnvhash import fnv1a_32
 from sqlalchemy import (
     Boolean,
     Column,
@@ -40,7 +41,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 24
+SCHEMA_VERSION = 25
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ DB_TIMEZONE = "+00:00"
 
 TABLE_EVENTS = "events"
 TABLE_STATES = "states"
+TABLE_STATE_ATTRIBUTES = "state_attributes"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
@@ -65,6 +67,9 @@ ALL_TABLES = [
     TABLE_STATISTICS_RUNS,
     TABLE_STATISTICS_SHORT_TERM,
 ]
+
+EMPTY_JSON_OBJECT = "{}"
+
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
     mysql.DATETIME(timezone=True, fsp=6), "mysql"
@@ -161,8 +166,12 @@ class States(Base):  # type: ignore[misc,valid-type]
     last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
+    attributes_id = Column(
+        Integer, ForeignKey("state_attributes.attributes_id"), index=True
+    )
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
+    state_attributes = relationship("StateAttributes")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -182,20 +191,17 @@ class States(Base):  # type: ignore[misc,valid-type]
         state = event.data.get("new_state")
 
         dbstate = States(entity_id=entity_id)
+        dbstate.attributes = None
 
         # State got deleted
         if state is None:
             dbstate.state = ""
             dbstate.domain = split_entity_id(entity_id)[0]
-            dbstate.attributes = "{}"
             dbstate.last_changed = event.time_fired
             dbstate.last_updated = event.time_fired
         else:
             dbstate.domain = state.domain
             dbstate.state = state.state
-            dbstate.attributes = json.dumps(
-                dict(state.attributes), cls=JSONEncoder, separators=(",", ":")
-            )
             dbstate.last_changed = state.last_changed
             dbstate.last_updated = state.last_updated
 
@@ -207,7 +213,7 @@ class States(Base):  # type: ignore[misc,valid-type]
             return State(
                 self.entity_id,
                 self.state,
-                json.loads(self.attributes),
+                json.loads(self.attributes) if self.attributes else {},
                 process_timestamp(self.last_changed),
                 process_timestamp(self.last_updated),
                 # Join the events table on event_id to get the context instead
@@ -215,6 +221,53 @@ class States(Base):  # type: ignore[misc,valid-type]
                 context=Context(id=None),
                 validate_entity_id=validate_entity_id,
             )
+        except ValueError:
+            # When json.loads fails
+            _LOGGER.exception("Error converting row to state: %s", self)
+            return None
+
+
+class StateAttributes(Base):  # type: ignore[misc,valid-type]
+    """State attribute change history."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_STATE_ATTRIBUTES
+    attributes_id = Column(Integer, Identity(), primary_key=True)
+    hash = Column(Integer, index=True)
+    # Note that this is not named attributes to avoid confusion with the states table
+    shared_attrs = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.StateAttributes("
+            f"id={self.attributes_id}, hash='{self.hash}', attributes='{self.attributes}'"
+            f")>"
+        )
+
+    @staticmethod
+    def from_event(event):
+        """Create object from a state_changed event."""
+        state = event.data.get("new_state")
+        dbstate = StateAttributes()
+        # State got deleted
+        if state is None:
+            dbstate.shared_attrs = "{}"
+        else:
+            dbstate.shared_attrs = json.dumps(
+                dict(state.attributes),
+                cls=JSONEncoder,
+                separators=(",", ":"),
+            )
+        dbstate.hash = fnv1a_32(dbstate.shared_attrs.encode("utf-8"))
+        return dbstate
+
+    def to_native(self):
+        """Convert to an HA state object."""
+        try:
+            return json.loads(self.shared_attrs)
         except ValueError:
             # When json.loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
@@ -492,9 +545,13 @@ class LazyState(State):
     @property  # type: ignore[override]
     def attributes(self):
         """State attributes."""
-        if not self._attributes:
+        if self._attributes is None:
+            source = self._row.shared_attrs or self._row.attributes
+            if source == EMPTY_JSON_OBJECT or source is None:
+                self._attributes = {}
+                return self._attributes
             try:
-                self._attributes = json.loads(self._row.attributes)
+                self._attributes = json.loads(source)
             except ValueError:
                 # When json.loads fails
                 _LOGGER.exception("Error converting row to state: %s", self._row)
@@ -555,7 +612,9 @@ class LazyState(State):
             last_changed_isoformat = process_timestamp_to_utc_isoformat(
                 self._row.last_changed
             )
-        if self._last_updated:
+        if self._last_changed == self._last_updated:
+            last_updated_isoformat = last_changed_isoformat
+        elif self._last_updated:
             last_updated_isoformat = self._last_updated.isoformat()
         else:
             last_updated_isoformat = process_timestamp_to_utc_isoformat(

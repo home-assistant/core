@@ -648,6 +648,7 @@ flipr-api==1.4.2
 flux_led==0.28.27
 
 # homeassistant.components.homekit
+# homeassistant.components.recorder
 fnvhash==0.1.0
 
 # homeassistant.components.foobot
@@ -949,6 +950,9 @@ logi_circle==0.2.2
 
 # homeassistant.components.london_underground
 london-tube-status==0.2
+
+# homeassistant.components.recorder
+lru-dict==1.1.7
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.2

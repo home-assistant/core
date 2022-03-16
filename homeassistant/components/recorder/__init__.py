@@ -14,6 +14,7 @@ import threading
 import time
 from typing import Any
 
+from lru import LRU
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -65,6 +66,7 @@ from .models import (
     Base,
     Events,
     RecorderRuns,
+    StateAttributes,
     States,
     StatisticsRuns,
     process_timestamp,
@@ -520,6 +522,8 @@ class Recorder(threading.Thread):
         self._commits_without_expire = 0
         self._keepalive_count = 0
         self._old_states: dict[str, States] = {}
+        self._state_attributes_ids: LRU = LRU(2048)
+        self._pending_state_attributes: dict[str, StateAttributes] = {}
         self._pending_expunge: list[States] = []
         self.event_session = None
         self.get_session = None
@@ -910,33 +914,69 @@ class Recorder(threading.Thread):
                 dbevent.event_data = None
             else:
                 dbevent = Events.from_event(event)
-            self.event_session.add(dbevent)
         except (TypeError, ValueError):
             _LOGGER.warning("Event is not JSON serializable: %s", event)
             return
 
+        self.event_session.add(dbevent)
         if event.event_type == EVENT_STATE_CHANGED:
             try:
                 dbstate = States.from_event(event)
-                has_new_state = event.data.get("new_state")
-                if dbstate.entity_id in self._old_states:
-                    old_state = self._old_states.pop(dbstate.entity_id)
-                    if old_state.state_id:
-                        dbstate.old_state_id = old_state.state_id
-                    else:
-                        dbstate.old_state = old_state
-                if not has_new_state:
-                    dbstate.state = None
-                dbstate.event = dbevent
-                self.event_session.add(dbstate)
-                if has_new_state:
-                    self._old_states[dbstate.entity_id] = dbstate
-                    self._pending_expunge.append(dbstate)
-            except (TypeError, ValueError):
+                dbstate.attributes = None
+                dbstate_attributes = StateAttributes.from_event(event)
+            except (TypeError, ValueError) as ex:
                 _LOGGER.warning(
-                    "State is not JSON serializable: %s",
+                    "State is not JSON serializable: %s: %s",
                     event.data.get("new_state"),
+                    ex,
                 )
+
+            save_attributes = True
+            attributes_id = None
+            if pending_attributes := self._pending_state_attributes.get(
+                dbstate_attributes.shared_attrs
+            ):
+                dbstate_attributes = pending_attributes
+                save_attributes = False
+            elif attributes_id := self._state_attributes_ids.get(
+                dbstate_attributes.shared_attrs
+            ):
+                save_attributes = False
+            elif (
+                attributes := self.event_session.query(StateAttributes.attributes_id)
+                .filter(StateAttributes.hash == dbstate_attributes.hash)
+                .filter(StateAttributes.shared_attrs == dbstate_attributes.shared_attrs)
+                .first()
+            ):
+                attributes_id = attributes[0]
+                self._state_attributes_ids[
+                    dbstate_attributes.shared_attrs
+                ] = attributes_id
+                save_attributes = False
+
+            has_new_state = event.data.get("new_state")
+            if dbstate.entity_id in self._old_states:
+                old_state = self._old_states.pop(dbstate.entity_id)
+                if old_state.state_id:
+                    dbstate.old_state_id = old_state.state_id
+                else:
+                    dbstate.old_state = old_state
+            if not has_new_state:
+                dbstate.state = None
+            dbstate.event = dbevent
+            self.event_session.add(dbstate)
+            if attributes_id:
+                dbstate.attributes_id = attributes_id
+            else:
+                dbstate.state_attributes = dbstate_attributes
+            if save_attributes:
+                self._pending_state_attributes[
+                    dbstate_attributes.shared_attrs
+                ] = dbstate_attributes
+                self.event_session.add(dbstate_attributes)
+            if has_new_state:
+                self._old_states[dbstate.entity_id] = dbstate
+                self._pending_expunge.append(dbstate)
 
         # If they do not have a commit interval
         # than we commit right away
@@ -986,6 +1026,7 @@ class Recorder(threading.Thread):
                 if dbstate in self.event_session:
                     self.event_session.expunge(dbstate)
             self._pending_expunge = []
+        self._pending_state_attributes = {}
         self.event_session.commit()
 
         # Expire is an expensive operation (frequently more expensive
@@ -1006,6 +1047,8 @@ class Recorder(threading.Thread):
     def _close_event_session(self):
         """Close the event session."""
         self._old_states = {}
+        self._state_attributes_ids = {}
+        self._pending_state_attributes = {}
 
         if not self.event_session:
             return

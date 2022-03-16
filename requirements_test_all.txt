@@ -440,6 +440,7 @@ flipr-api==1.4.2
 flux_led==0.28.27
 
 # homeassistant.components.homekit
+# homeassistant.components.recorder
 fnvhash==0.1.0
 
 # homeassistant.components.foobot
@@ -633,6 +634,9 @@ libsoundtouch==0.8
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.2
+
+# homeassistant.components.recorder
+lru-dict==1.1.7
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.2

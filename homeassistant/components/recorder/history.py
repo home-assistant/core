@@ -6,6 +6,7 @@ from itertools import groupby
 import logging
 import time
 
+import sqlalchemy
 from sqlalchemy import and_, bindparam, func
 from sqlalchemy.ext import baked
 
@@ -13,7 +14,12 @@ from homeassistant.components import recorder
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 
-from .models import LazyState, States, process_timestamp_to_utc_isoformat
+from .models import (
+    LazyState,
+    StateAttributes,
+    States,
+    process_timestamp_to_utc_isoformat,
+)
 from .util import execute, session_scope
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -46,6 +52,7 @@ QUERY_STATES = [
     States.attributes,
     States.last_changed,
     States.last_updated,
+    StateAttributes.shared_attrs,
 ]
 
 HISTORY_BAKERY = "recorder_history_bakery"
@@ -90,7 +97,6 @@ def get_significant_states_with_session(
     baked_query = hass.data[HISTORY_BAKERY](
         lambda session: session.query(*QUERY_STATES)
     )
-
     if significant_changes_only:
         baked_query += lambda q: q.filter(
             (
@@ -113,7 +119,9 @@ def get_significant_states_with_session(
 
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
-
+    baked_query += lambda q: q.join(
+        StateAttributes, States.attributes_id == StateAttributes.attributes_id
+    )
     baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
 
     states = execute(
@@ -159,6 +167,9 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
             baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
             entity_id = entity_id.lower()
 
+        baked_query += lambda q: q.outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
         baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
 
         states = execute(
@@ -185,7 +196,9 @@ def get_last_state_changes(hass, number_of_states, entity_id):
         if entity_id is not None:
             baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
             entity_id = entity_id.lower()
-
+        baked_query += lambda q: q.outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
         baked_query += lambda q: q.order_by(
             States.entity_id, States.last_updated.desc()
         )
@@ -243,7 +256,7 @@ def _get_states_with_session(
 
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
-    query = session.query(*QUERY_STATES)
+    query: sqlalchemy.orm.Query = session.query(*QUERY_STATES)
 
     if entity_ids:
         # We got an include-list of entities, accelerate the query by filtering already
@@ -263,6 +276,8 @@ def _get_states_with_session(
         query = query.join(
             most_recent_state_ids,
             States.state_id == most_recent_state_ids.c.max_state_id,
+        ).outerjoin(
+            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
     else:
         # We did not get an include-list of entities, query all states in the inner
@@ -299,6 +314,9 @@ def _get_states_with_session(
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
         query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
+        query = query.outerjoin(
+            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+        )
         if filters:
             query = filters.apply(query)
 
@@ -314,6 +332,9 @@ def _get_single_entity_states_with_session(hass, session, utc_point_in_time, ent
     baked_query += lambda q: q.filter(
         States.last_updated < bindparam("utc_point_in_time"),
         States.entity_id == bindparam("entity_id"),
+    )
+    baked_query += lambda q: q.join(
+        StateAttributes, States.attributes_id == StateAttributes.attributes_id
     )
     baked_query += lambda q: q.order_by(States.last_updated.desc())
     baked_query += lambda q: q.limit(1)
