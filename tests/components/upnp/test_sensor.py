@@ -25,7 +25,7 @@ from .conftest import MockIgdDevice
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEntry):
+async def test_upnp_sensors(hass: HomeAssistant, config_entry: MockConfigEntry):
     """Test normal sensors."""
     # First poll.
     b_received_state = hass.states.get("sensor.mock_name_b_received")
@@ -43,7 +43,7 @@ async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEn
 
     # Second poll.
     mock_device: MockIgdDevice = hass.data[DOMAIN][
-        setup_integration.entry_id
+        config_entry.entry_id
     ].device._igd_device
     mock_device.traffic_data = {
         BYTES_RECEIVED: 10240,
@@ -75,11 +75,11 @@ async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEn
 
 
 async def test_derived_upnp_sensors(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ):
     """Test derived sensors."""
     coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][
-        setup_integration.entry_id
+        config_entry.entry_id
     ]
 
     # First poll.

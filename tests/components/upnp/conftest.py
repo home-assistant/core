@@ -272,7 +272,7 @@ async def ssdp_no_discovery():
 
 
 @pytest.fixture
-async def setup_integration(
+async def config_entry(
     hass: HomeAssistant, mock_get_source_ip, ssdp_instant_discovery, mock_upnp_device
 ):
     """Create an initialized integration."""

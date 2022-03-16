@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_upnp_binary_sensors(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ):
     """Test normal sensors."""
     # First poll.
@@ -26,7 +26,7 @@ async def test_upnp_binary_sensors(
 
     # Second poll.
     mock_device: MockIgdDevice = hass.data[DOMAIN][
-        setup_integration.entry_id
+        config_entry.entry_id
     ].device._igd_device
     mock_device.status_data = {
         WAN_STATUS: "Disconnected",

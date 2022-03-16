@@ -35,10 +35,9 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
 
 
 async def test_reinitialize_device(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ):
     """Test device is reinitialized when device changes location."""
-    config_entry = setup_integration
     coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     device: Device = coordinator.device
     assert device._igd_device.device.device_url == TEST_DISCOVERY.ssdp_location
