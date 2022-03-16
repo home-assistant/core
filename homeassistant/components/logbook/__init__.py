@@ -71,7 +71,7 @@ GROUP_BY_MINUTES = 15
 EMPTY_JSON_OBJECT = "{}"
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 
-HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}."
+HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}._"
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
@@ -598,7 +598,7 @@ def _keep_event(hass, event, entities_filter):
     if domain is None:
         return False
 
-    return entities_filter is None or entities_filter(f"{domain}.")
+    return entities_filter is None or entities_filter(f"{domain}._")
 
 
 def _augment_data_with_context(

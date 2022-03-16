@@ -8,11 +8,7 @@ from unittest.mock import Mock, PropertyMock, mock_open, patch
 import pytest
 
 from homeassistant.components import camera
-from homeassistant.components.camera.const import (
-    DOMAIN,
-    PREF_PRELOAD_STREAM,
-    STREAM_TYPE_WEB_RTC,
-)
+from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
 from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
@@ -24,47 +20,11 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from .common import EMPTY_8_6_JPEG, mock_turbo_jpeg
-
-from tests.components.camera import common
+from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_camera_prefs, mock_turbo_jpeg
 
 STREAM_SOURCE = "rtsp://127.0.0.1/stream"
 HLS_STREAM_SOURCE = "http://127.0.0.1/example.m3u"
 WEBRTC_OFFER = "v=0\r\n"
-WEBRTC_ANSWER = "a=sendonly"
-
-
-@pytest.fixture(name="mock_camera")
-async def mock_camera_fixture(hass):
-    """Initialize a demo camera platform."""
-    assert await async_setup_component(
-        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
-    )
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.demo.camera.Path.read_bytes",
-        return_value=b"Test",
-    ):
-        yield
-
-
-@pytest.fixture(name="mock_camera_web_rtc")
-async def mock_camera_web_rtc_fixture(hass):
-    """Initialize a demo camera platform."""
-    assert await async_setup_component(
-        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
-    )
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.camera.Camera.frontend_stream_type",
-        new_callable=PropertyMock(return_value=STREAM_TYPE_WEB_RTC),
-    ), patch(
-        "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
-        return_value=WEBRTC_ANSWER,
-    ):
-        yield
 
 
 @pytest.fixture(name="mock_stream")
@@ -78,7 +38,7 @@ def mock_stream_fixture(hass):
 @pytest.fixture(name="setup_camera_prefs")
 def setup_camera_prefs_fixture(hass):
     """Initialize HTTP API."""
-    return common.mock_camera_prefs(hass, "camera.demo_camera")
+    return mock_camera_prefs(hass, "camera.demo_camera")
 
 
 @pytest.fixture(name="image_mock_url")
@@ -146,28 +106,6 @@ async def test_get_image_from_camera(hass, image_mock_url):
 
     assert mock_camera.called
     assert image.content == b"Test"
-
-
-async def test_legacy_async_get_image_signature_warns_only_once(
-    hass, image_mock_url, caplog
-):
-    """Test that we only warn once when we encounter a legacy async_get_image function signature."""
-
-    async def _legacy_async_camera_image(self):
-        return b"Image"
-
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
-        new=_legacy_async_camera_image,
-    ):
-        image = await camera.async_get_image(hass, "camera.demo_camera")
-        assert image.content == b"Image"
-        assert "does not support requesting width and height" in caplog.text
-        caplog.clear()
-
-        image = await camera.async_get_image(hass, "camera.demo_camera")
-        assert image.content == b"Image"
-        assert "does not support requesting width and height" not in caplog.text
 
 
 async def test_get_image_from_camera_with_width_height(hass, image_mock_url):

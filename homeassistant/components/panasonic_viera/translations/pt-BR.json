@@ -14,7 +14,8 @@
                 "data": {
                     "pin": "C\u00f3digo PIN"
                 },
-                "description": "C\u00f3digo PIN"
+                "description": "C\u00f3digo PIN",
+                "title": "Pareamento"
             },
             "user": {
                 "data": {

@@ -9,12 +9,16 @@
         },
         "step": {
             "reauth_confirm": {
+                "description": "A integra\u00e7\u00e3o do SmartTub precisa re-autenticar sua conta",
                 "title": "Reautenticar Integra\u00e7\u00e3o"
             },
             "user": {
                 "data": {
+                    "email": "Email",
                     "password": "Senha"
-                }
+                },
+                "description": "Digite seu endere\u00e7o de e-mail e senha do SmartTub para fazer login",
+                "title": "Login"
             }
         }
     }

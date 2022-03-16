@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_INSTEON
 
@@ -27,16 +28,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ISY994 fan platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    devices = []
+    entities: list[ISYFanEntity | ISYFanProgramEntity] = []
 
     for node in hass_isy_data[ISY994_NODES][FAN]:
-        devices.append(ISYFanEntity(node))
+        entities.append(ISYFanEntity(node))
 
     for name, status, actions in hass_isy_data[ISY994_PROGRAMS][FAN]:
-        devices.append(ISYFanProgramEntity(name, status, actions))
+        entities.append(ISYFanProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, FAN, devices)
-    async_add_entities(devices)
+    await migrate_old_unique_ids(hass, FAN, entities)
+    async_add_entities(entities)
 
 
 class ISYFanEntity(ISYNodeEntity, FanEntity):
@@ -57,11 +58,11 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         return int_states_in_range(SPEED_RANGE)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Get if the fan is on."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
-        return self._node.status != 0
+        return bool(self._node.status != 0)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set node to speed percentage for the ISY994 fan device."""
@@ -75,15 +76,14 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send the turn on command to the ISY994 fan device."""
         await self.async_set_percentage(percentage or 67)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY994 fan device."""
         await self._node.turn_off()
 
@@ -111,19 +111,18 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Get if the fan is on."""
-        return self._node.status != 0
+        return bool(self._node.status != 0)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn on command to ISY994 fan program."""
         if not await self._actions.run_then():
             _LOGGER.error("Unable to turn off the fan")
 
     async def async_turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send the turn off command to ISY994 fan program."""
         if not await self._actions.run_else():

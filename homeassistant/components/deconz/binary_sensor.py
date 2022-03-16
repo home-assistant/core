@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pydeconz.sensor import (
     Alarm,
     CarbonMonoxide,
-    DeconzBinarySensor as PydeconzBinarySensor,
     DeconzSensor as PydeconzSensor,
     Fire,
     GenericFlag,
@@ -34,20 +33,20 @@ from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
-DECONZ_BINARY_SENSORS = (
-    Alarm,
-    CarbonMonoxide,
-    Fire,
-    GenericFlag,
-    OpenClose,
-    Presence,
-    Vibration,
-    Water,
-)
-
 ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
 ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
+
+PROVIDES_EXTRA_ATTRIBUTES = (
+    "alarm",
+    "carbon_monoxide",
+    "fire",
+    "flag",
+    "open",
+    "presence",
+    "vibration",
+    "water",
+)
 
 
 @dataclass
@@ -56,7 +55,6 @@ class DeconzBinarySensorDescriptionMixin:
 
     suffix: str
     update_key: str
-    required_attr: str
     value_fn: Callable[[PydeconzSensor], bool | None]
 
 
@@ -69,42 +67,91 @@ class DeconzBinarySensorDescription(
 
 
 ENTITY_DESCRIPTIONS = {
-    Alarm: BinarySensorEntityDescription(
-        key="alarm",
-        device_class=BinarySensorDeviceClass.SAFETY,
-    ),
-    CarbonMonoxide: BinarySensorEntityDescription(
-        key="carbonmonoxide",
-        device_class=BinarySensorDeviceClass.CO,
-    ),
-    Fire: BinarySensorEntityDescription(
-        key="fire",
-        device_class=BinarySensorDeviceClass.SMOKE,
-    ),
-    OpenClose: BinarySensorEntityDescription(
-        key="openclose",
-        device_class=BinarySensorDeviceClass.OPENING,
-    ),
-    Presence: BinarySensorEntityDescription(
-        key="presence",
-        device_class=BinarySensorDeviceClass.MOTION,
-    ),
-    Vibration: BinarySensorEntityDescription(
-        key="vibration",
-        device_class=BinarySensorDeviceClass.VIBRATION,
-    ),
-    Water: BinarySensorEntityDescription(
-        key="water",
-        device_class=BinarySensorDeviceClass.MOISTURE,
-    ),
+    Alarm: [
+        DeconzBinarySensorDescription(
+            key="alarm",
+            value_fn=lambda device: device.alarm,  # type: ignore[no-any-return]
+            suffix="",
+            update_key="alarm",
+            device_class=BinarySensorDeviceClass.SAFETY,
+        )
+    ],
+    CarbonMonoxide: [
+        DeconzBinarySensorDescription(
+            key="carbon_monoxide",
+            value_fn=lambda device: device.carbon_monoxide,  # type: ignore[no-any-return]
+            suffix="",
+            update_key="carbonmonoxide",
+            device_class=BinarySensorDeviceClass.CO,
+        )
+    ],
+    Fire: [
+        DeconzBinarySensorDescription(
+            key="fire",
+            value_fn=lambda device: device.fire,  # type: ignore[no-any-return]
+            suffix="",
+            update_key="fire",
+            device_class=BinarySensorDeviceClass.SMOKE,
+        ),
+        DeconzBinarySensorDescription(
+            key="in_test_mode",
+            value_fn=lambda device: device.in_test_mode,  # type: ignore[no-any-return]
+            suffix="Test Mode",
+            update_key="test",
+            device_class=BinarySensorDeviceClass.SMOKE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ],
+    GenericFlag: [
+        DeconzBinarySensorDescription(
+            key="flag",
+            value_fn=lambda device: device.flag,  # type: ignore[no-any-return]
+            suffix="",
+            update_key="flag",
+        )
+    ],
+    OpenClose: [
+        DeconzBinarySensorDescription(
+            key="open",
+            value_fn=lambda device: device.open,  # type: ignore[no-any-return]
+            suffix="",
+            update_key="open",
+            device_class=BinarySensorDeviceClass.OPENING,
+        )
+    ],
+    Presence: [
+        DeconzBinarySensorDescription(
+            key="presence",
+            value_fn=lambda device: device.presence,  # type: ignore[no-any-return]
+            suffix="",
+            update_key="presence",
+            device_class=BinarySensorDeviceClass.MOTION,
+        )
+    ],
+    Vibration: [
+        DeconzBinarySensorDescription(
+            key="vibration",
+            value_fn=lambda device: device.vibration,  # type: ignore[no-any-return]
+            suffix="",
+            update_key="vibration",
+            device_class=BinarySensorDeviceClass.VIBRATION,
+        )
+    ],
+    Water: [
+        DeconzBinarySensorDescription(
+            key="water",
+            value_fn=lambda device: device.water,  # type: ignore[no-any-return]
+            suffix="",
+            update_key="water",
+            device_class=BinarySensorDeviceClass.MOISTURE,
+        )
+    ],
 }
-
 
 BINARY_SENSOR_DESCRIPTIONS = [
     DeconzBinarySensorDescription(
-        key="tamper",
-        required_attr="tampered",
-        value_fn=lambda device: device.tampered,
+        key="tampered",
+        value_fn=lambda device: device.tampered,  # type: ignore[no-any-return]
         suffix="Tampered",
         update_key="tampered",
         device_class=BinarySensorDeviceClass.TAMPER,
@@ -112,20 +159,10 @@ BINARY_SENSOR_DESCRIPTIONS = [
     ),
     DeconzBinarySensorDescription(
         key="low_battery",
-        required_attr="low_battery",
-        value_fn=lambda device: device.low_battery,
+        value_fn=lambda device: device.low_battery,  # type: ignore[no-any-return]
         suffix="Low Battery",
         update_key="lowbattery",
         device_class=BinarySensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    DeconzBinarySensorDescription(
-        key="in_test_mode",
-        required_attr="in_test_mode",
-        value_fn=lambda device: device.in_test_mode,
-        suffix="Test Mode",
-        update_key="test",
-        device_class=BinarySensorDeviceClass.SMOKE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
@@ -146,32 +183,26 @@ async def async_setup_entry(
         | ValuesView[PydeconzSensor] = gateway.api.sensors.values(),
     ) -> None:
         """Add binary sensor from deCONZ."""
-        entities: list[DeconzBinarySensor | DeconzPropertyBinarySensor] = []
+        entities: list[DeconzBinarySensor] = []
 
         for sensor in sensors:
 
             if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
                 continue
 
-            if (
-                isinstance(sensor, DECONZ_BINARY_SENSORS)
-                and sensor.unique_id not in gateway.entities[DOMAIN]
+            known_entities = set(gateway.entities[DOMAIN])
+            for description in (
+                ENTITY_DESCRIPTIONS.get(type(sensor), []) + BINARY_SENSOR_DESCRIPTIONS
             ):
-                entities.append(DeconzBinarySensor(sensor, gateway))
-
-            known_sensor_entities = set(gateway.entities[DOMAIN])
-            for sensor_description in BINARY_SENSOR_DESCRIPTIONS:
 
                 if (
-                    not hasattr(sensor, sensor_description.required_attr)
-                    or sensor_description.value_fn(sensor) is None
+                    not hasattr(sensor, description.key)
+                    or description.value_fn(sensor) is None
                 ):
                     continue
 
-                new_sensor = DeconzPropertyBinarySensor(
-                    sensor, gateway, sensor_description
-                )
-                if new_sensor.unique_id not in known_sensor_entities:
+                new_sensor = DeconzBinarySensor(sensor, gateway, description)
+                if new_sensor.unique_id not in known_entities:
                     entities.append(new_sensor)
 
         if entities:
@@ -194,31 +225,51 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
     TYPE = DOMAIN
-    _device: PydeconzBinarySensor
+    _device: PydeconzSensor
+    entity_description: DeconzBinarySensorDescription
 
-    def __init__(self, device: PydeconzBinarySensor, gateway: DeconzGateway) -> None:
+    def __init__(
+        self,
+        device: PydeconzSensor,
+        gateway: DeconzGateway,
+        description: DeconzBinarySensorDescription,
+    ) -> None:
         """Initialize deCONZ binary sensor."""
+        self.entity_description: DeconzBinarySensorDescription = description
         super().__init__(device, gateway)
 
-        if entity_description := ENTITY_DESCRIPTIONS.get(type(device)):
-            self.entity_description = entity_description
+        if description.suffix:
+            self._attr_name = f"{self._device.name} {description.suffix}"
+
+        self._update_keys = {description.update_key, "reachable"}
+        if self.entity_description.key in PROVIDES_EXTRA_ATTRIBUTES:
+            self._update_keys.update({"on", "state"})
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        if self.entity_description.suffix:
+            return f"{self.serial}-{self.entity_description.suffix.lower()}"
+        return super().unique_id
 
     @callback
     def async_update_callback(self) -> None:
         """Update the sensor's state."""
-        keys = {"on", "reachable", "state"}
-        if self._device.changed_keys.intersection(keys):
+        if self._device.changed_keys.intersection(self._update_keys):
             super().async_update_callback()
 
     @property
-    def is_on(self) -> bool:
-        """Return true if sensor is on."""
-        return self._device.state  # type: ignore[no-any-return]
+    def is_on(self) -> bool | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self._device)
 
     @property
     def extra_state_attributes(self) -> dict[str, bool | float | int | list | None]:
         """Return the state attributes of the sensor."""
         attr: dict[str, bool | float | int | list | None] = {}
+
+        if self.entity_description.key not in PROVIDES_EXTRA_ATTRIBUTES:
+            return attr
 
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
@@ -237,40 +288,3 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
             attr[ATTR_VIBRATIONSTRENGTH] = self._device.vibration_strength
 
         return attr
-
-
-class DeconzPropertyBinarySensor(DeconzDevice, BinarySensorEntity):
-    """Representation of a deCONZ Property sensor."""
-
-    TYPE = DOMAIN
-    _device: PydeconzSensor
-    entity_description: DeconzBinarySensorDescription
-
-    def __init__(
-        self,
-        device: PydeconzSensor,
-        gateway: DeconzGateway,
-        description: DeconzBinarySensorDescription,
-    ) -> None:
-        """Initialize deCONZ binary sensor."""
-        self.entity_description = description
-        super().__init__(device, gateway)
-
-        self._attr_name = f"{self._device.name} {description.suffix}"
-        self._update_keys = {description.update_key, "reachable"}
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this device."""
-        return f"{self.serial}-{self.entity_description.suffix.lower()}"
-
-    @callback
-    def async_update_callback(self) -> None:
-        """Update the sensor's state."""
-        if self._device.changed_keys.intersection(self._update_keys):
-            super().async_update_callback()
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._device)

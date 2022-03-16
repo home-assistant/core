@@ -7,7 +7,12 @@
             "cannot_connect": "Falha ao conectar",
             "unknown": "Erro inesperado"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Deseja configurar {name} ({host})?",
+                "title": "Configura\u00e7\u00e3o SiteSage Emonitor"
+            },
             "user": {
                 "data": {
                     "host": "Nome do host"

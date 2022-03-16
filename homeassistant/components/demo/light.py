@@ -195,17 +195,17 @@ class DemoLight(LightEntity):
         return self._color_mode
 
     @property
-    def hs_color(self) -> tuple:
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
         return self._hs_color
 
     @property
-    def rgbw_color(self) -> tuple:
+    def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value."""
         return self._rgbw_color
 
     @property
-    def rgbww_color(self) -> tuple:
+    def rgbww_color(self) -> tuple[int, int, int, int, int]:
         """Return the rgbww color value."""
         return self._rgbww_color
 

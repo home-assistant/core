@@ -12,6 +12,7 @@
             "too_many_requests": "For mange foresp\u00f8rsler. Pr\u00f8v igjen senere",
             "unknown": "Uventet feil"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

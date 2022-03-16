@@ -12,7 +12,19 @@
             "user": {
                 "data": {
                     "password": "Senha",
+                    "server": "Servidor",
                     "username": "Usu\u00e1rio"
+                },
+                "description": "Insira as credenciais do Dexcom Share",
+                "title": "Configurar integra\u00e7\u00e3o Dexcom"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Unidade de medida"
                 }
             }
         }

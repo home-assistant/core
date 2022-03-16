@@ -52,7 +52,7 @@ async def test_async_browse_media(hass):
     assert str(excinfo.value) == "Unknown source directory."
 
     # Test invalid base
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(media_source.BrowseError) as excinfo:
         await media_source.async_browse_media(hass, f"{const.URI_SCHEME}{DOMAIN}/")
     assert str(excinfo.value) == "Invalid media source URI"
 

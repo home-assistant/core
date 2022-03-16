@@ -2,13 +2,17 @@
     "config": {
         "error": {
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "service": "Erro ao tentar acessar o SmartHab. O servi\u00e7o pode estar inoperante. Verifique sua conex\u00e3o.",
             "unknown": "Erro inesperado"
         },
         "step": {
             "user": {
                 "data": {
+                    "email": "Email",
                     "password": "Senha"
-                }
+                },
+                "description": "Por motivos t\u00e9cnicos, certifique-se de usar uma conta secund\u00e1ria espec\u00edfica para a configura\u00e7\u00e3o do Home Assistant. Voc\u00ea pode criar um a partir do aplicativo SmartHab.",
+                "title": "Configurar SmartHab"
             }
         }
     }

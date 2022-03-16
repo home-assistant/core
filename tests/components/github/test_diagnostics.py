@@ -1,14 +1,16 @@
 """Test GitHub diagnostics."""
 
+import json
+
 from aiogithubapi import GitHubException
 from aiohttp import ClientSession
 
-from homeassistant.components.github.const import CONF_REPOSITORIES
+from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .common import setup_github_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -21,13 +23,21 @@ async def test_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     mock_config_entry.options = {CONF_REPOSITORIES: ["home-assistant/core"]}
-    await setup_github_integration(hass, mock_config_entry, aioclient_mock)
+    response_json = json.loads(load_fixture("graphql.json", DOMAIN))
+    response_json["data"]["repository"]["full_name"] = "home-assistant/core"
+
+    aioclient_mock.post(
+        "https://api.github.com/graphql",
+        json=response_json,
+        headers=json.loads(load_fixture("base_headers.json", DOMAIN)),
+    )
     aioclient_mock.get(
         "https://api.github.com/rate_limit",
         json={"resources": {"core": {"remaining": 100, "limit": 100}}},
         headers={"Content-Type": "application/json"},
     )
 
+    await setup_github_integration(hass, mock_config_entry, aioclient_mock)
     result = await get_diagnostics_for_config_entry(
         hass,
         hass_client,

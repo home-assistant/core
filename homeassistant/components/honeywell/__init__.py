@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     return True
 
 
-async def update_listener(hass, config) -> None:
+async def update_listener(hass: HomeAssistant, config: ConfigEntry) -> None:
     """Update listener."""
     await hass.config_entries.async_reload(config.entry_id)
 

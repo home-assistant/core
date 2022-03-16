@@ -6,11 +6,18 @@
             "cannot_connect": "Falha ao conectar"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Deseja configurar este dispositivo Guardian?"
+            },
             "user": {
                 "data": {
                     "ip_address": "Endere\u00e7o IP",
                     "port": "Porta"
-                }
+                },
+                "description": "Configure um dispositivo local Elexa Guardian."
+            },
+            "zeroconf_confirm": {
+                "description": "Deseja configurar este dispositivo Guardian?"
             }
         }
     }

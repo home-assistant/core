@@ -17,5 +17,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "reverse": "L\u00f3gica de comuta\u00e7\u00e3o reversa (use NC)"
+                }
+            }
+        }
     }
 }

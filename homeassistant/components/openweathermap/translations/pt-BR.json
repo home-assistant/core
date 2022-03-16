@@ -11,8 +11,23 @@
             "user": {
                 "data": {
                     "api_key": "Chave da API",
+                    "language": "Idioma",
                     "latitude": "Latitude",
-                    "longitude": "Longitude"
+                    "longitude": "Longitude",
+                    "mode": "Modo",
+                    "name": "Nome da integra\u00e7\u00e3o"
+                },
+                "description": "Configure a integra\u00e7\u00e3o do OpenWeatherMap. Para gerar a chave de API, acesse https://openweathermap.org/appid",
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Idioma",
+                    "mode": "Modo"
                 }
             }
         }

@@ -13,13 +13,18 @@
             "reauth_validate": {
                 "data": {
                     "password": "Senha"
-                }
+                },
+                "description": "Digite a senha para {username}.",
+                "title": "Reautenticar uma conta August"
             },
             "user_validate": {
                 "data": {
+                    "login_method": "M\u00e9todo de login",
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
-                }
+                },
+                "description": "Se o m\u00e9todo de login for 'e-mail', o nome de usu\u00e1rio ser\u00e1 o endere\u00e7o de e-mail. Se o m\u00e9todo de login for 'telefone', o nome de usu\u00e1rio ser\u00e1 o n\u00famero de telefone no formato '+NNNNNNNNN'.",
+                "title": "Configurar uma conta August"
             },
             "validation": {
                 "data": {

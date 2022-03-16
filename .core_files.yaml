@@ -49,6 +49,7 @@ components: &components
   - homeassistant/components/alexa/*
   - homeassistant/components/auth/*
   - homeassistant/components/automation/*
+  - homeassistant/components/backup/*
   - homeassistant/components/cloud/*
   - homeassistant/components/config/*
   - homeassistant/components/configurator/*
@@ -64,6 +65,7 @@ components: &components
   - homeassistant/components/group/*
   - homeassistant/components/hassio/*
   - homeassistant/components/homeassistant/**
+  - homeassistant/components/http/**
   - homeassistant/components/image/*
   - homeassistant/components/input_boolean/*
   - homeassistant/components/input_button/*
@@ -75,6 +77,7 @@ components: &components
   - homeassistant/components/logger/*
   - homeassistant/components/lovelace/*
   - homeassistant/components/media_source/*
+  - homeassistant/components/mjpeg/*
   - homeassistant/components/mqtt/*
   - homeassistant/components/network/*
   - homeassistant/components/onboarding/*
@@ -101,6 +104,7 @@ components: &components
 # Testing related files that affect the whole test/linting suite
 tests: &tests
   - codecov.yaml
+  - pylint/**
   - requirements_test_pre_commit.txt
   - requirements_test.txt
   - tests/auth/**
@@ -111,6 +115,7 @@ tests: &tests
   - tests/helpers/*
   - tests/ignore_uncaught_exceptions.py
   - tests/mock/*
+  - tests/pylint/*
   - tests/scripts/*
   - tests/test_util/*
   - tests/testing_config/**
@@ -120,15 +125,16 @@ other: &other
   - .github/workflows/*
   - homeassistant/scripts/**
 
-requirements:
+requirements: &requirements
   - .github/workflows/*
   - homeassistant/package_constraints.txt
   - requirements*.txt
-  - setup.py
+  - setup.cfg
 
 any:
   - *base_platforms
   - *components
   - *core
   - *other
+  - *requirements
   - *tests

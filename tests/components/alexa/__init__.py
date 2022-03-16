@@ -194,7 +194,7 @@ async def assert_scene_controller_works(
         assert re.search(pattern, response["event"]["payload"]["timestamp"])
 
 
-async def reported_properties(hass, endpoint):
+async def reported_properties(hass, endpoint, return_full_response=False):
     """Use ReportState to get properties and return them.
 
     The result is a ReportedProperties instance, which has methods to make
@@ -203,6 +203,8 @@ async def reported_properties(hass, endpoint):
     request = get_new_request("Alexa", "ReportState", endpoint)
     msg = await smart_home.async_handle_message(hass, get_default_config(), request)
     await hass.async_block_till_done()
+    if return_full_response:
+        return msg
     return ReportedProperties(msg["context"]["properties"])
 
 

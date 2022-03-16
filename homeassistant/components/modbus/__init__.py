@@ -1,6 +1,7 @@
 """Support for Modbus."""
 from __future__ import annotations
 
+import logging
 from typing import cast
 
 import voluptuous as vol
@@ -60,7 +61,6 @@ from .const import (
     CONF_BYTESIZE,
     CONF_CLIMATES,
     CONF_CLOSE_COMM_ON_ERROR,
-    CONF_DATA_COUNT,
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_INPUT_TYPE,
@@ -72,8 +72,8 @@ from .const import (
     CONF_PRECISION,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
-    CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_SLAVE_COUNT,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
@@ -111,6 +111,9 @@ from .validators import (
     struct_validator,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
 
@@ -118,7 +121,7 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_SLAVE): cv.positive_int,
+        vol.Optional(CONF_SLAVE, default=0): cv.positive_int,
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
@@ -137,11 +140,13 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_COUNT): cv.positive_int,
-        vol.Optional(CONF_DATA_TYPE, default=DataType.INT): vol.In(
+        vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
             [
+                DataType.INT8,
                 DataType.INT16,
                 DataType.INT32,
                 DataType.INT64,
+                DataType.UINT8,
                 DataType.UINT16,
                 DataType.UINT32,
                 DataType.UINT64,
@@ -149,9 +154,6 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 DataType.FLOAT32,
                 DataType.FLOAT64,
                 DataType.STRING,
-                DataType.INT,
-                DataType.UINT,
-                DataType.FLOAT,
                 DataType.STRING,
                 DataType.CUSTOM,
             ]
@@ -207,7 +209,6 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 
 
 CLIMATE_SCHEMA = vol.All(
-    cv.deprecated(CONF_DATA_COUNT, replacement_key=CONF_COUNT),
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
@@ -251,13 +252,12 @@ LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
 SENSOR_SCHEMA = vol.All(
-    cv.deprecated(CONF_REVERSE_ORDER),
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
+            vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
         }
     ),
 )
@@ -268,6 +268,7 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): vol.In(
             [CALL_TYPE_COIL, CALL_TYPE_DISCRETE]
         ),
+        vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
     }
 )
 
@@ -339,7 +340,18 @@ def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
+    if DOMAIN not in config:
+        return True
     return await async_modbus_setup(
         hass,
         config,
     )
+
+
+async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
+    """Release modbus resources."""
+    _LOGGER.info("Modbus reloading")
+    hubs = hass.data[DOMAIN]
+    for name in hubs:
+        await hubs[name].async_close()
+    del hass.data[DOMAIN]

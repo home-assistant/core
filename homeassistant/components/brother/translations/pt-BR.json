@@ -9,6 +9,7 @@
             "snmp_error": "Servidor SNMP desligado ou impressora n\u00e3o suportada.",
             "wrong_host": "Nome de host ou endere\u00e7o IP inv\u00e1lido."
         },
+        "flow_title": "{model} {serial_number}",
         "step": {
             "user": {
                 "data": {
@@ -16,6 +17,13 @@
                     "type": "Tipo de impressora"
                 },
                 "description": "Configure a integra\u00e7\u00e3o da impressora Brother. Se voc\u00ea tiver problemas com a configura\u00e7\u00e3o, acesse: https://www.home-assistant.io/integrations/brother"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Tipo de impressora"
+                },
+                "description": "Deseja adicionar a impressora Brother {model} com n\u00famero de s\u00e9rie ` {serial_number} ` ao Home Assistant?",
+                "title": "Impressora Brother descoberta"
             }
         }
     }

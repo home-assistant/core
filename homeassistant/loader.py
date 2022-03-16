@@ -60,6 +60,24 @@ MAX_LOAD_CONCURRENTLY = 4
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
 
+class DHCPMatcherRequired(TypedDict, total=True):
+    """Matcher for the dhcp integration for required fields."""
+
+    domain: str
+
+
+class DHCPMatcherOptional(TypedDict, total=False):
+    """Matcher for the dhcp integration for optional fields."""
+
+    macaddress: str
+    hostname: str
+    registered_devices: bool
+
+
+class DHCPMatcher(DHCPMatcherRequired, DHCPMatcherOptional):
+    """Matcher for the dhcp integration."""
+
+
 class Manifest(TypedDict, total=False):
     """
     Integration manifest.
@@ -82,7 +100,7 @@ class Manifest(TypedDict, total=False):
     mqtt: list[str]
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
-    dhcp: list[dict[str, str]]
+    dhcp: list[dict[str, bool | str]]
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
@@ -228,16 +246,16 @@ async def async_get_zeroconf(
     return zeroconf
 
 
-async def async_get_dhcp(hass: HomeAssistant) -> list[dict[str, str]]:
+async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     """Return cached list of dhcp types."""
-    dhcp: list[dict[str, str]] = DHCP.copy()
+    dhcp = cast(list[DHCPMatcher], DHCP.copy())
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.dhcp:
             continue
         for entry in integration.dhcp:
-            dhcp.append({"domain": integration.domain, **entry})
+            dhcp.append(cast(DHCPMatcher, {"domain": integration.domain, **entry}))
 
     return dhcp
 
@@ -474,7 +492,7 @@ class Integration:
         return self.manifest.get("zeroconf")
 
     @property
-    def dhcp(self) -> list[dict[str, str]] | None:
+    def dhcp(self) -> list[dict[str, str | bool]] | None:
         """Return Integration dhcp entries."""
         return self.manifest.get("dhcp")
 
@@ -681,7 +699,7 @@ def _load_file(
     Async friendly.
     """
     with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
+        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
 
     if (cache := hass.data.get(DATA_COMPONENTS)) is None:
         if not _async_mount_config_dir(hass):

@@ -1,7 +1,8 @@
 """Support for exposing a templated binary sensor."""
 from __future__ import annotations
 
-from datetime import timedelta
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 from functools import partial
 import logging
 from typing import Any
@@ -30,15 +31,20 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_point_in_utc_time
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import (
@@ -186,7 +192,7 @@ async def async_setup_platform(
     )
 
 
-class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
+class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
     """A virtual binary sensor that triggers from another sensor."""
 
     def __init__(
@@ -212,7 +218,14 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         self._delay_off_raw = config.get(CONF_DELAY_OFF)
 
     async def async_added_to_hass(self):
-        """Register callbacks."""
+        """Restore state and register callbacks."""
+        if (
+            (self._delay_on_raw is not None or self._delay_off_raw is not None)
+            and (last_state := await self.async_get_last_state()) is not None
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
+            self._state = last_state.state == STATE_ON
+
         self.add_template_attribute("_state", self._template, None, self._update_state)
 
         if self._delay_on_raw is not None:
@@ -280,7 +293,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         return self._device_class
 
 
-class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
+class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity):
     """Sensor entity based on trigger data."""
 
     domain = BINARY_SENSOR_DOMAIN
@@ -300,12 +313,39 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
 
-        self._delay_cancel = None
-        self._auto_off_cancel = None
-        self._state = None
+        self._delay_cancel: CALLBACK_TYPE | None = None
+        self._auto_off_cancel: CALLBACK_TYPE | None = None
+        self._auto_off_time: datetime | None = None
+        self._state: bool | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        await super().async_added_to_hass()
+        if (
+            (last_state := await self.async_get_last_state()) is not None
+            and (extra_data := await self.async_get_last_binary_sensor_data())
+            is not None
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            # The trigger might have fired already while we waited for stored data,
+            # then we should not restore state
+            and self._state is None
+        ):
+            self._state = last_state.state == STATE_ON
+
+            if CONF_AUTO_OFF not in self._config:
+                return
+
+            if (
+                auto_off_time := extra_data.auto_off_time
+            ) is not None and auto_off_time <= dt_util.utcnow():
+                # It's already past the saved auto off time
+                self._state = False
+
+            if self._state and auto_off_time is not None:
+                self._set_auto_off(auto_off_time)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return state of the sensor."""
         return self._state
 
@@ -321,6 +361,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
         if self._auto_off_cancel:
             self._auto_off_cancel()
             self._auto_off_cancel = None
+            self._auto_off_time = None
 
         if not self.available:
             self.async_write_ha_state()
@@ -361,28 +402,85 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
         if not state:
             return
 
-        auto_off_time = self._rendered.get(CONF_AUTO_OFF) or self._config.get(
+        auto_off_delay = self._rendered.get(CONF_AUTO_OFF) or self._config.get(
             CONF_AUTO_OFF
         )
 
-        if auto_off_time is None:
+        if auto_off_delay is None:
             return
 
-        if not isinstance(auto_off_time, timedelta):
+        if not isinstance(auto_off_delay, timedelta):
             try:
-                auto_off_time = cv.positive_time_period(auto_off_time)
+                auto_off_delay = cv.positive_time_period(auto_off_delay)
             except vol.Invalid as err:
                 logging.getLogger(__name__).warning(
                     "Error rendering %s template: %s", CONF_AUTO_OFF, err
                 )
                 return
 
+        auto_off_time = dt_util.utcnow() + auto_off_delay
+        self._set_auto_off(auto_off_time)
+
+    def _set_auto_off(self, auto_off_time: datetime) -> None:
         @callback
         def _auto_off(_):
-            """Set state of template binary sensor."""
+            """Reset state of template binary sensor."""
             self._state = False
             self.async_write_ha_state()
 
-        self._auto_off_cancel = async_call_later(
-            self.hass, auto_off_time.total_seconds(), _auto_off
+        self._auto_off_time = auto_off_time
+        self._auto_off_cancel = async_track_point_in_utc_time(
+            self.hass, _auto_off, self._auto_off_time
         )
+
+    @property
+    def extra_restore_state_data(self) -> AutoOffExtraStoredData:
+        """Return specific state data to be restored."""
+        return AutoOffExtraStoredData(self._auto_off_time)
+
+    async def async_get_last_binary_sensor_data(
+        self,
+    ) -> AutoOffExtraStoredData | None:
+        """Restore auto_off_time."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return AutoOffExtraStoredData.from_dict(restored_last_extra_data.as_dict())
+
+
+@dataclass
+class AutoOffExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    auto_off_time: datetime | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of additional data."""
+        auto_off_time: datetime | None | dict[str, str] = self.auto_off_time
+        if isinstance(auto_off_time, datetime):
+            auto_off_time = {
+                "__type": str(type(auto_off_time)),
+                "isoformat": auto_off_time.isoformat(),
+            }
+        return {
+            "auto_off_time": auto_off_time,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> AutoOffExtraStoredData | None:
+        """Initialize a stored binary sensor state from a dict."""
+        try:
+            auto_off_time = restored["auto_off_time"]
+        except KeyError:
+            return None
+        try:
+            type_ = auto_off_time["__type"]
+            if type_ == "<class 'datetime.datetime'>":
+                auto_off_time = dt_util.parse_datetime(auto_off_time["isoformat"])
+        except TypeError:
+            # native_value is not a dict
+            pass
+        except KeyError:
+            # native_value is a dict, but does not have all values
+            return None
+
+        return cls(auto_off_time)

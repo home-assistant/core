@@ -9,7 +9,8 @@
                 "data": {
                     "host": "Nome do host",
                     "name": "Nome"
-                }
+                },
+                "description": "Configure o P1 Monitor para integrar com o Home Assistant."
             }
         }
     }

@@ -65,7 +65,7 @@ async def test_roku_sensors(
     assert device_entry.suggested_area is None
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_rokutv_sensors(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,

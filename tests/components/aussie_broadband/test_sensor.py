@@ -1,5 +1,6 @@
 """Aussie Broadband sensor platform tests."""
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import STATE_UNKNOWN
 
 from .common import setup_platform
 
@@ -17,6 +18,19 @@ MOCK_MOBILE_USAGE = {
     "international": {"calls": 3, "cost": 0},
     "sms": {"calls": 4, "cost": 0},
     "internet": {"kbytes": 512, "cost": 0},
+    "voicemail": {"calls": 6, "cost": 0},
+    "other": {"calls": 7, "cost": 0},
+    "daysTotal": 31,
+    "daysRemaining": 30,
+    "historical": [],
+}
+
+MOCK_VOIP_USAGE = {
+    "national": {"calls": 1, "cost": 0},
+    "mobile": {"calls": 2, "cost": 0},
+    "international": {"calls": 3, "cost": 0},
+    "sms": {},
+    "internet": {},
     "voicemail": {"calls": 6, "cost": 0},
     "other": {"calls": 7, "cost": 0},
     "daysTotal": 31,
@@ -48,3 +62,13 @@ async def test_phone_sensor_states(hass):
     assert hass.states.get("sensor.mobile_data_used").state == "512"
     assert hass.states.get("sensor.mobile_billing_cycle_length").state == "31"
     assert hass.states.get("sensor.mobile_billing_cycle_remaining").state == "30"
+
+
+async def test_voip_sensor_states(hass):
+    """Tests that the sensors are correct."""
+
+    await setup_platform(hass, [SENSOR_DOMAIN], usage=MOCK_VOIP_USAGE)
+
+    assert hass.states.get("sensor.mobile_national_calls").state == "1"
+    assert hass.states.get("sensor.mobile_sms_sent").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.mobile_data_used").state == STATE_UNKNOWN

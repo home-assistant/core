@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured_device": "Dispositivo j\u00e1 est\u00e1 configurado",
-            "cannot_connect": "Falha ao conectar"
+            "cannot_connect": "Falha ao conectar",
+            "updated_entry": "Esta entrada j\u00e1 foi configurada, mas o nome, aplicativos e/ou op\u00e7\u00f5es definidas na configura\u00e7\u00e3o n\u00e3o correspondem \u00e0 configura\u00e7\u00e3o anteriormente importada, portanto a entrada de configura\u00e7\u00e3o foi atualizada de acordo."
         },
         "error": {
             "cannot_connect": "Falha ao conectar",
@@ -18,10 +19,12 @@
                 "title": "Processo de pareamento completo"
             },
             "pairing_complete": {
+                "description": "Seu Dispositivo VIZIO SmartCast agora est\u00e1 conectado ao Home Assistant.",
                 "title": "Pareamento completo"
             },
             "pairing_complete_import": {
-                "description": "Seu Dispositivo VIZIO SmartCast agora est\u00e1 conectado ao Home Assistant.\n\nSeu Token de acesso \u00e9 '**{access_token}**'."
+                "description": "Seu Dispositivo VIZIO SmartCast agora est\u00e1 conectado ao Home Assistant.\n\nSeu Token de acesso \u00e9 '**{access_token}**'.",
+                "title": "Emparelhamento conclu\u00eddo"
             },
             "user": {
                 "data": {
@@ -32,6 +35,19 @@
                 },
                 "description": "Um Token de acesso s\u00f3 \u00e9 necess\u00e1rio para TVs. Se voc\u00ea estiver configurando uma TV e ainda n\u00e3o tiver um Token de acesso , deixe-o em branco para passar pelo processo de pareamento.",
                 "title": "Dispositivo VIZIO SmartCast"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplicativos para incluir ou excluir",
+                    "include_or_exclude": "Incluir ou excluir aplicativos?",
+                    "volume_step": "Tamanho do Passo do Volume"
+                },
+                "description": "Se voc\u00ea tiver uma Smart TV, poder\u00e1 filtrar sua lista de fontes opcionalmente escolhendo quais aplicativos incluir ou excluir em sua lista de fontes.",
+                "title": "Alterar op\u00e7\u00f5es para Dispositivo VIZIO SmartCast"
             }
         }
     }

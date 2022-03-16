@@ -15,6 +15,7 @@ from homeassistant.components.modbus.const import (
     CONF_STATE_OPENING,
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
+    MODBUS_DOMAIN,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -29,11 +30,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
-ENTITY_ID = f"{COVER_DOMAIN}.{TEST_ENTITY_NAME}"
-ENTITY_ID2 = f"{ENTITY_ID}2"
+ENTITY_ID = f"{COVER_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+ENTITY_ID2 = f"{ENTITY_ID}_2"
 
 
 @pytest.mark.parametrize(
@@ -270,7 +272,7 @@ async def test_restore_state_cover(hass, mock_test_state, mock_modbus):
                     CONF_SCAN_INTERVAL: 0,
                 },
                 {
-                    CONF_NAME: f"{TEST_ENTITY_NAME}2",
+                    CONF_NAME: f"{TEST_ENTITY_NAME} 2",
                     CONF_INPUT_TYPE: CALL_TYPE_COIL,
                     CONF_ADDRESS: 1235,
                     CONF_SCAN_INTERVAL: 0,
@@ -307,3 +309,15 @@ async def test_service_cover_move(hass, mock_modbus, mock_ha):
         "cover", "close_cover", {"entity_id": ENTITY_ID2}, blocking=True
     )
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
+
+
+async def test_no_discovery_info_cover(hass, caplog):
+    """Test setup without discovery info."""
+    assert COVER_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        COVER_DOMAIN,
+        {COVER_DOMAIN: {"platform": MODBUS_DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert COVER_DOMAIN in hass.config.components

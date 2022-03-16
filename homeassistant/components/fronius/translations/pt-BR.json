@@ -16,7 +16,9 @@
             "user": {
                 "data": {
                     "host": "Nome do host"
-                }
+                },
+                "description": "Configure o endere\u00e7o IP ou nome de host local do seu dispositivo Fronius.",
+                "title": "Fronius SolarNet"
             }
         }
     }

@@ -122,7 +122,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
         "config": {
             "data": {
                 "controller": REDACTED,
-                "host": "1.2.3.4",
+                "host": REDACTED,
                 "password": REDACTED,
                 "port": 1234,
                 "site": "site_id",

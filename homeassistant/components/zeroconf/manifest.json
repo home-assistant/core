@@ -2,7 +2,7 @@
   "domain": "zeroconf",
   "name": "Zero-configuration networking (zeroconf)",
   "documentation": "https://www.home-assistant.io/integrations/zeroconf",
-  "requirements": ["zeroconf==0.38.1"],
+  "requirements": ["zeroconf==0.38.4"],
   "dependencies": ["network", "api"],
   "codeowners": ["@bdraco"],
   "quality_scale": "internal",

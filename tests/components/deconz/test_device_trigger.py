@@ -5,6 +5,13 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.binary_sensor.device_trigger import (
+    CONF_BAT_LOW,
+    CONF_NOT_BAT_LOW,
+    CONF_NOT_TAMPERED,
+    CONF_TAMPERED,
+)
 from homeassistant.components.deconz import device_trigger
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.device_trigger import CONF_SUBTYPE
@@ -18,6 +25,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
@@ -65,7 +73,7 @@ async def test_get_triggers(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
@@ -120,7 +128,92 @@ async def test_get_triggers(hass, aioclient_mock):
         {
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: SENSOR_DOMAIN,
-            ATTR_ENTITY_ID: "sensor.tradfri_on_off_switch_battery_level",
+            ATTR_ENTITY_ID: "sensor.tradfri_on_off_switch_battery",
+            CONF_PLATFORM: "device",
+            CONF_TYPE: ATTR_BATTERY_LEVEL,
+        },
+    ]
+
+    assert_lists_same(triggers, expected_triggers)
+
+
+async def test_get_triggers_for_alarm_event(hass, aioclient_mock):
+    """Test triggers work."""
+    data = {
+        "sensors": {
+            "1": {
+                "config": {
+                    "battery": 95,
+                    "enrolled": 1,
+                    "on": True,
+                    "pending": [],
+                    "reachable": True,
+                },
+                "ep": 1,
+                "etag": "5aaa1c6bae8501f59929539c6e8f44d6",
+                "lastseen": "2021-07-25T18:07Z",
+                "manufacturername": "lk",
+                "modelid": "ZB-KeypadGeneric-D0002",
+                "name": "Keypad",
+                "state": {
+                    "action": "armed_stay",
+                    "lastupdated": "2021-07-25T18:02:51.172",
+                    "lowbattery": False,
+                    "panel": "exit_delay",
+                    "seconds_remaining": 55,
+                    "tampered": False,
+                },
+                "swversion": "3.13",
+                "type": "ZHAAncillaryControl",
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:00")}
+    )
+
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
+
+    expected_triggers = [
+        {
+            CONF_DEVICE_ID: device.id,
+            CONF_DOMAIN: BINARY_SENSOR_DOMAIN,
+            ATTR_ENTITY_ID: "binary_sensor.keypad_low_battery",
+            CONF_PLATFORM: "device",
+            CONF_TYPE: CONF_BAT_LOW,
+        },
+        {
+            CONF_DEVICE_ID: device.id,
+            CONF_DOMAIN: BINARY_SENSOR_DOMAIN,
+            ATTR_ENTITY_ID: "binary_sensor.keypad_low_battery",
+            CONF_PLATFORM: "device",
+            CONF_TYPE: CONF_NOT_BAT_LOW,
+        },
+        {
+            CONF_DEVICE_ID: device.id,
+            CONF_DOMAIN: BINARY_SENSOR_DOMAIN,
+            ATTR_ENTITY_ID: "binary_sensor.keypad_tampered",
+            CONF_PLATFORM: "device",
+            CONF_TYPE: CONF_TAMPERED,
+        },
+        {
+            CONF_DEVICE_ID: device.id,
+            CONF_DOMAIN: BINARY_SENSOR_DOMAIN,
+            ATTR_ENTITY_ID: "binary_sensor.keypad_tampered",
+            CONF_PLATFORM: "device",
+            CONF_TYPE: CONF_NOT_TAMPERED,
+        },
+        {
+            CONF_DEVICE_ID: device.id,
+            CONF_DOMAIN: SENSOR_DOMAIN,
+            ATTR_ENTITY_ID: "sensor.keypad_battery",
             CONF_PLATFORM: "device",
             CONF_TYPE: ATTR_BATTERY_LEVEL,
         },
@@ -156,7 +249,7 @@ async def test_get_triggers_manage_unsupported_remotes(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
@@ -201,7 +294,7 @@ async def test_functional_device_trigger(
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
@@ -244,9 +337,7 @@ async def test_functional_device_trigger(
     assert automation_calls[0].data["some"] == "test_trigger_button_press"
 
 
-async def test_validate_trigger_unknown_device(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+async def test_validate_trigger_unknown_device(hass, aioclient_mock):
     """Test unknown device does not return a trigger config."""
     await setup_deconz_integration(hass, aioclient_mock)
 
@@ -276,13 +367,11 @@ async def test_validate_trigger_unknown_device(
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 0
 
 
-async def test_validate_trigger_unsupported_device(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+async def test_validate_trigger_unsupported_device(hass, aioclient_mock):
     """Test unsupported device doesn't return a trigger config."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")},
@@ -315,13 +404,11 @@ async def test_validate_trigger_unsupported_device(
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 0
 
 
-async def test_validate_trigger_unsupported_trigger(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+async def test_validate_trigger_unsupported_trigger(hass, aioclient_mock):
     """Test unsupported trigger does not return a trigger config."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")},
@@ -356,13 +443,11 @@ async def test_validate_trigger_unsupported_trigger(
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 0
 
 
-async def test_attach_trigger_no_matching_event(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+async def test_attach_trigger_no_matching_event(hass, aioclient_mock):
     """Test no matching event for device doesn't return a trigger config."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")},

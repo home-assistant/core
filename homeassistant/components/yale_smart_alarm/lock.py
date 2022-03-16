@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
-
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, CONF_CODE
@@ -17,7 +15,7 @@ from .const import (
     COORDINATOR,
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
-    LOGGER,
+    YALE_ALL_ERRORS,
 )
 from .coordinator import YaleDataUpdateCoordinator
 from .entity import YaleEntity
@@ -51,44 +49,15 @@ class YaleDoorlock(YaleEntity, LockEntity):
 
     async def async_unlock(self, **kwargs) -> None:
         """Send unlock command."""
-        if TYPE_CHECKING:
-            assert self.coordinator.yale, "Connection to API is missing"
-
         code = kwargs.get(ATTR_CODE, self.coordinator.entry.options.get(CONF_CODE))
-
-        if not code:
-            raise HomeAssistantError(
-                f"No code provided, {self._attr_name} not unlocked"
-            )
-
-        try:
-            get_lock = await self.hass.async_add_executor_job(
-                self.coordinator.yale.lock_api.get, self._attr_name
-            )
-            lock_state = await self.hass.async_add_executor_job(
-                self.coordinator.yale.lock_api.open_lock,
-                get_lock,
-                code,
-            )
-        except (
-            AuthenticationError,
-            ConnectionError,
-            TimeoutError,
-            UnknownError,
-        ) as error:
-            raise HomeAssistantError(
-                f"Could not verify unlocking for {self._attr_name}: {error}"
-            ) from error
-
-        LOGGER.debug("Door unlock: %s", lock_state)
-        if lock_state:
-            self.coordinator.data["lock_map"][self._attr_unique_id] = "unlocked"
-            self.async_write_ha_state()
-            return
-        raise HomeAssistantError("Could not unlock, check system ready for unlocking")
+        return await self.async_set_lock("unlocked", code)
 
     async def async_lock(self, **kwargs) -> None:
         """Send lock command."""
+        return await self.async_set_lock("locked", None)
+
+    async def async_set_lock(self, command: str, code: str | None) -> None:
+        """Set lock."""
         if TYPE_CHECKING:
             assert self.coordinator.yale, "Connection to API is missing"
 
@@ -96,26 +65,25 @@ class YaleDoorlock(YaleEntity, LockEntity):
             get_lock = await self.hass.async_add_executor_job(
                 self.coordinator.yale.lock_api.get, self._attr_name
             )
-            lock_state = await self.hass.async_add_executor_job(
-                self.coordinator.yale.lock_api.close_lock,
-                get_lock,
-            )
-        except (
-            AuthenticationError,
-            ConnectionError,
-            TimeoutError,
-            UnknownError,
-        ) as error:
+            if command == "locked":
+                lock_state = await self.hass.async_add_executor_job(
+                    self.coordinator.yale.lock_api.close_lock,
+                    get_lock,
+                )
+            if command == "unlocked":
+                lock_state = await self.hass.async_add_executor_job(
+                    self.coordinator.yale.lock_api.open_lock, get_lock, code
+                )
+        except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
-                f"Could not verify unlocking for {self._attr_name}: {error}"
+                f"Could not set lock for {self._attr_name}: {error}"
             ) from error
 
-        LOGGER.debug("Door unlock: %s", lock_state)
         if lock_state:
-            self.coordinator.data["lock_map"][self._attr_unique_id] = "unlocked"
+            self.coordinator.data["lock_map"][self._attr_unique_id] = command
             self.async_write_ha_state()
             return
-        raise HomeAssistantError("Could not unlock, check system ready for unlocking")
+        raise HomeAssistantError("Could set lock, check system ready for lock.")
 
     @property
     def is_locked(self) -> bool | None:

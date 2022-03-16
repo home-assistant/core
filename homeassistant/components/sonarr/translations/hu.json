@@ -22,6 +22,7 @@
                     "host": "C\u00edm",
                     "port": "Port",
                     "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
+                    "url": "URL",
                     "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
                 }
             }

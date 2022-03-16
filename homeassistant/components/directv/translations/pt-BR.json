@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Falha ao conectar"
         },
-        "flow_title": "DirecTV: {name}",
+        "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
                 "description": "Voc\u00ea quer configurar o {name}?"

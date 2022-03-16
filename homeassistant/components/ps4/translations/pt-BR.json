@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
             "credential_error": "Erro ao buscar credenciais.",
-            "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+            "no_devices_found": "Nenhum dispositivo encontrado na rede",
             "port_987_bind_error": "N\u00e3o foi poss\u00edvel conectar na porta 987. Consulte a [documenta\u00e7\u00e3o] (https://www.home-assistant.io/components/ps4/) para informa\u00e7\u00f5es adicionais.",
             "port_997_bind_error": "N\u00e3o foi poss\u00edvel conectar na porta 997. Consulte a [documenta\u00e7\u00e3o] (https://www.home-assistant.io/components/ps4/) para informa\u00e7\u00f5es adicionais."
         },

@@ -1,110 +1,163 @@
 """Support for SleepIQ from SleepNumber."""
-from datetime import timedelta
-import logging
+from __future__ import annotations
 
-from sleepyq import Sleepyq
+import logging
+from typing import Any
+
+from asyncsleepiq import (
+    AsyncSleepIQ,
+    SleepIQAPIException,
+    SleepIQLoginException,
+    SleepIQTimeoutException,
+)
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, PRESSURE, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
 
-from .const import DOMAIN
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+from .const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
+from .coordinator import (
+    SleepIQData,
+    SleepIQDataUpdateCoordinator,
+    SleepIQPauseUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(DOMAIN): vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
+        DOMAIN: {
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+        }
     },
     extra=vol.ALLOW_EXTRA,
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the SleepIQ component.
-
-    Will automatically load sensor components to support
-    devices discovered on the account.
-    """
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
-    client = Sleepyq(username, password)
-    try:
-        data = SleepIQData(client)
-        data.update()
-    except ValueError:
-        message = """
-            SleepIQ failed to login, double check your username and password"
-        """
-        _LOGGER.error(message)
-        return False
-
-    hass.data[DOMAIN] = data
-    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
-    discovery.load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up sleepiq component."""
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
 
     return True
 
 
-class SleepIQData:
-    """Get the latest data from SleepIQ."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the SleepIQ config entry."""
+    conf = entry.data
+    email = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
 
-    def __init__(self, client):
-        """Initialize the data object."""
-        self._client = client
-        self.beds = {}
+    client_session = async_get_clientsession(hass)
 
-        self.update()
+    gateway = AsyncSleepIQ(client_session=client_session)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from SleepIQ."""
-        self._client.login()
-        beds = self._client.beds_with_sleeper_status()
+    try:
+        await gateway.login(email, password)
+    except SleepIQLoginException as err:
+        _LOGGER.error("Could not authenticate with SleepIQ server")
+        raise ConfigEntryAuthFailed(err) from err
+    except SleepIQTimeoutException as err:
+        raise ConfigEntryNotReady(
+            str(err) or "Timed out during authentication"
+        ) from err
 
-        self.beds = {bed.bed_id: bed for bed in beds}
+    try:
+        await gateway.init_beds()
+    except SleepIQTimeoutException as err:
+        raise ConfigEntryNotReady(
+            str(err) or "Timed out during initialization"
+        ) from err
+    except SleepIQAPIException as err:
+        raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
+
+    await _async_migrate_unique_ids(hass, entry, gateway)
+
+    coordinator = SleepIQDataUpdateCoordinator(hass, gateway, email)
+    pause_coordinator = SleepIQPauseUpdateCoordinator(hass, gateway, email)
+
+    # Call the SleepIQ API to refresh data
+    await coordinator.async_config_entry_first_refresh()
+    await pause_coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SleepIQData(
+        data_coordinator=coordinator,
+        pause_coordinator=pause_coordinator,
+        client=gateway,
+    )
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    return True
 
 
-class SleepIQSensor(Entity):
-    """Implementation of a SleepIQ sensor."""
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload the config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
 
-    def __init__(self, sleepiq_data, bed_id, side):
-        """Initialize the sensor."""
-        self._bed_id = bed_id
-        self._side = side
-        self.sleepiq_data = sleepiq_data
-        self.side = None
-        self.bed = None
 
-        # added by subclass
-        self._name = None
-        self.type = None
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant, entry: ConfigEntry, gateway: AsyncSleepIQ
+) -> None:
+    """Migrate old unique ids."""
+    names_to_ids = {
+        sleeper.name: sleeper.sleeper_id
+        for bed in gateway.beds.values()
+        for sleeper in bed.sleepers
+    }
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "SleepNumber {} {} {}".format(
-            self.bed.name, self.side.sleeper.first_name, self._name
+    bed_ids = {bed.id for bed in gateway.beds.values()}
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        # Old format for sleeper entities was {bed_id}_{sleeper.name}_{sensor_type}.....
+        # New format is {sleeper.sleeper_id}_{sensor_type}....
+        sensor_types = [IS_IN_BED, PRESSURE, SLEEP_NUMBER]
+
+        old_unique_id = entity_entry.unique_id
+        parts = old_unique_id.split("_")
+
+        # If it doesn't begin with a bed id or end with one of the sensor types,
+        # it doesn't need to be migrated
+        if parts[0] not in bed_ids or not old_unique_id.endswith(tuple(sensor_types)):
+            return None
+
+        sensor_type = next(filter(old_unique_id.endswith, sensor_types))
+        sleeper_name = "_".join(parts[1:]).removesuffix(f"_{sensor_type}")
+        sleeper_id = names_to_ids.get(sleeper_name)
+
+        if not sleeper_id:
+            return None
+
+        new_unique_id = f"{sleeper_id}_{sensor_type}"
+
+        _LOGGER.debug(
+            "Migrating unique_id from [%s] to [%s]",
+            old_unique_id,
+            new_unique_id,
         )
+        return {"new_unique_id": new_unique_id}
 
-    def update(self):
-        """Get the latest data from SleepIQ and updates the states."""
-        # Call the API for new sleepiq data. Each sensor will re-trigger this
-        # same exact call, but that's fine. We cache results for a short period
-        # of time to prevent hitting API limits.
-        self.sleepiq_data.update()
-
-        self.bed = self.sleepiq_data.beds[self._bed_id]
-        self.side = getattr(self.bed, self._side)
+    await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
