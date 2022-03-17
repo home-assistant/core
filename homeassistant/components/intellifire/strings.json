@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{host} ({serial})",
+    "flow_title": "{serial} ({host})",
     "step": {
       "manual_device_entry": {
         "description": "Local Configuration",

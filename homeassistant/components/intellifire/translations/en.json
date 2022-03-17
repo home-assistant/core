@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Failed to connect"
         },
-        "flow_title": "{host} ({serial})",
+        "flow_title": "{serial} ({host})",
         "step": {
             "dhcp_confirm": {
                 "description": "Do you want to setup {host}\nSerial: {serial}?"
