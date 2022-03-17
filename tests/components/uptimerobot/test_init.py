@@ -78,7 +78,9 @@ async def test_reauthentication_trigger_key_read_only(
     flows = hass.config_entries.flow.async_progress()
 
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.reason == "Read-only API key"
+    assert (
+        mock_config_entry.reason == "The provided API key is 'read-only' or 'monitor'"
+    )
 
     assert len(flows) == 1
     flow = flows[0]

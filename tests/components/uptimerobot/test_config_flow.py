@@ -77,7 +77,7 @@ async def test_form_read_only(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"]["base"] == "read_only_key"
+    assert result2["errors"]["base"] == "not_main_key"
 
 
 @pytest.mark.parametrize(
