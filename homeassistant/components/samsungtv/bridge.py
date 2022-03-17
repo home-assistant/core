@@ -480,9 +480,6 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 self._remote = None
             else:
                 LOGGER.debug("Created SamsungTVEncryptedBridge for %s", self.host)
-                if self._device_info is None:
-                    # Initialise device info on first connect
-                    await self.async_device_info()
         return self._remote
 
     async def async_power_off(self) -> None:
