@@ -7,7 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.models import StateAttributes, States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -315,14 +315,25 @@ class Plant(Entity):
         _LOGGER.debug("Initializing values for %s from the database", self._name)
         with session_scope(hass=self.hass) as session:
             query = (
-                session.query(States)
+                session.query(States, StateAttributes)
                 .filter(
                     (States.entity_id == entity_id.lower())
                     and (States.last_updated > start_date)
                 )
+                .outerjoin(
+                    StateAttributes,
+                    States.attributes_id == StateAttributes.attributes_id,
+                )
                 .order_by(States.last_updated.asc())
             )
-            states = execute(query, to_native=True, validate_entity_ids=False)
+            states = []
+            if results := execute(query, to_native=False, validate_entity_ids=False):
+                # After 2023.8 make state.to_native require StateAttributes
+                for state, attributes in results:
+                    native = state.to_native(attributes)
+                    if not native.attributes:
+                        native.attributes = attributes.to_native()
+                    states.append(native)
 
             for state in states:
                 # filter out all None, NaN and "unknown" states

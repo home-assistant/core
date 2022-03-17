@@ -6,7 +6,6 @@ from itertools import groupby
 import logging
 import time
 
-import sqlalchemy
 from sqlalchemy import and_, bindparam, func
 from sqlalchemy.ext import baked
 
