@@ -284,6 +284,7 @@ class Sun(Entity):
         # if the next update is within 1.25 of the next
         # position update just drop it
         if utc_point_in_time + delta * 1.25 > self._next_change:
+            self._update_sun_position_listener = None
             return
         self._update_sun_position_listener = event.async_track_point_in_utc_time(
             self.hass, self.update_sun_position, utc_point_in_time + delta

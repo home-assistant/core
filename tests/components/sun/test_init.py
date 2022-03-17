@@ -107,7 +107,7 @@ async def test_setting_rising(hass, legacy_patchable_time):
     )
 
 
-async def test_state_change(hass, legacy_patchable_time):
+async def test_state_change(hass, legacy_patchable_time, caplog):
     """Test if the state changes at next setting/rising."""
     now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
@@ -133,11 +133,33 @@ async def test_state_change(hass, legacy_patchable_time):
 
     assert sun.STATE_ABOVE_HORIZON == hass.states.get(sun.ENTITY_ID).state
 
+    # Update core configuration
     with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
         await hass.config.async_update(longitude=hass.config.longitude + 90)
         await hass.async_block_till_done()
 
     assert sun.STATE_ABOVE_HORIZON == hass.states.get(sun.ENTITY_ID).state
+
+    # Test listeners are not duplicated after a core configuration change
+    test_time = dt_util.parse_datetime(
+        hass.states.get(sun.ENTITY_ID).attributes[sun.STATE_ATTR_NEXT_DUSK]
+    )
+    assert test_time is not None
+
+    patched_time = test_time + timedelta(seconds=5)
+    caplog.clear()
+    with patch(
+        "homeassistant.helpers.condition.dt_util.utcnow", return_value=patched_time
+    ):
+        hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: patched_time})
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    assert caplog.text.count("sun phase_update") == 1
+    # Called once by time listener, once from Sun.update_events
+    assert caplog.text.count("sun position_update") == 2
+
+    assert sun.STATE_BELOW_HORIZON == hass.states.get(sun.ENTITY_ID).state
 
 
 async def test_norway_in_june(hass):
@@ -198,20 +220,40 @@ async def test_state_change_count(hass):
     assert len(events) < 721
 
 
-async def test_setup_and_remove_config_entry(hass: ha.HomeAssistant) -> None:
+async def test_setup_and_remove_config_entry(
+    hass: ha.HomeAssistant, legacy_patchable_time
+) -> None:
     """Test setting up and removing a config entry."""
     # Setup the config entry
     config_entry = MockConfigEntry(domain=sun.DOMAIN)
     config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     # Check the platform is setup correctly
-    assert hass.states.get("sun.sun") is not None
+    state = hass.states.get("sun.sun")
+    assert state is not None
+
+    test_time = dt_util.parse_datetime(
+        hass.states.get(sun.ENTITY_ID).attributes[sun.STATE_ATTR_NEXT_RISING]
+    )
+    assert test_time is not None
+    assert sun.STATE_BELOW_HORIZON == hass.states.get(sun.ENTITY_ID).state
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check the state and entity registry entry are removed
+    # Check the state is removed, and does not reappear
+    assert hass.states.get("sun.sun") is None
+
+    patched_time = test_time + timedelta(seconds=5)
+    with patch(
+        "homeassistant.helpers.condition.dt_util.utcnow", return_value=patched_time
+    ):
+        hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: patched_time})
+        await hass.async_block_till_done()
+
     assert hass.states.get("sun.sun") is None
