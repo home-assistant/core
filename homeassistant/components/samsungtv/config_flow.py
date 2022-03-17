@@ -8,6 +8,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 import getmac
+from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -44,7 +45,6 @@ from .const import (
     RESULT_UNKNOWN_HOST,
     WEBSOCKET_PORTS,
 )
-from .encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_WEBSOCKET]
