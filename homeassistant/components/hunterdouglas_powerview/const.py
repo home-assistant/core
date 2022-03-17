@@ -1,12 +1,12 @@
 """Support for Powerview scenes from a Powerview hub."""
 
 import asyncio
+from datetime import timedelta
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiResponseStatusError
 
 DOMAIN = "hunterdouglas_powerview"
-
 
 MANUFACTURER = "Hunter Douglas"
 
@@ -91,3 +91,6 @@ API_PATH_FWVERSION = "api/fwversion"
 TOPDOWN_SHADE_CLASSNAME = "ShadeTdbu"
 TOPDOWN_SHADE_MOTOR_TOP = "Top"
 TOPDOWN_SHADE_MOTOR_BOTTOM = "Bottom"
+
+UPDATE_INTERVAL_DEFAULT = timedelta(seconds=60)
+UPDATE_INTERVAL_MAINTENANCE = timedelta(minutes=5)

@@ -1,5 +1,4 @@
 """The Hunter Douglas PowerView integration."""
-from datetime import timedelta
 import logging
 
 from aiopvapi.helpers.aiorequest import AioRequest
@@ -48,6 +47,8 @@ from .const import (
     SCENE_DATA,
     SERIAL_NUMBER_IN_USERDATA,
     SHADE_DATA,
+    UPDATE_INTERVAL_DEFAULT,
+    UPDATE_INTERVAL_MAINTENANCE,
     USER_DATA,
 )
 
@@ -97,24 +98,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         """Fetch data from shade endpoint."""
+
+        if coordinator.update_interval == UPDATE_INTERVAL_MAINTENANCE:
+            coordinator.update_interval = UPDATE_INTERVAL_DEFAULT
+            _LOGGER.debug("Polling returned to %s", UPDATE_INTERVAL_DEFAULT)
+
         try:
             async with async_timeout.timeout(10):
                 shade_entries = await shades.get_resources()
             if not shade_entries or isinstance(shade_entries, bool):
                 # hub returns boolean on a 204/423 empty response (maintenance)
-                _LOGGER.debug("Hub is online however data is temporarily unavailable")
+                # continual polling results in inevitable error
+                # restart of hub takes between 3-5 minutes and generally between 12am-3am
+                _LOGGER.debug(
+                    "Hub is reporting that maintenance is underway. Pausing polling for %s",
+                    UPDATE_INTERVAL_MAINTENANCE,
+                )
+                coordinator.update_interval = UPDATE_INTERVAL_MAINTENANCE
                 return
+
+            # moved inside try to prevent attempting to access empty index on error
+            return _async_map_data_by_id(shade_entries[SHADE_DATA])
+
         except HUB_EXCEPTIONS as err:
             raise UpdateFailed(f"Failed to fetch new shade data. {err}") from err
-
-        return _async_map_data_by_id(shade_entries[SHADE_DATA])
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name="powerview hub",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
+        update_interval=UPDATE_INTERVAL_DEFAULT,
     )
 
     hass.data.setdefault(DOMAIN, {})
