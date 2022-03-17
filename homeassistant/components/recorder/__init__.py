@@ -931,28 +931,27 @@ class Recorder(threading.Thread):
                     ex,
                 )
 
-            save_attributes = True
-            attributes_id = None
-            if pending_attributes := self._pending_state_attributes.get(
-                dbstate_attributes.shared_attrs
-            ):
-                dbstate_attributes = pending_attributes
-                save_attributes = False
-            elif attributes_id := self._state_attributes_ids.get(
-                dbstate_attributes.shared_attrs
-            ):
-                save_attributes = False
+            shared_attrs = dbstate_attributes.shared_attrs
+            # Matching attributes found in the pending commit
+            if pending_attributes := self._pending_state_attributes.get(shared_attrs):
+                dbstate.state_attributes = pending_attributes
+            # Matching attributes id found in the cache
+            elif attributes_id := self._state_attributes_ids.get(shared_attrs):
+                dbstate.attributes_id = attributes_id
+            # Matching attributes found in the database
             elif (
                 attributes := self.event_session.query(StateAttributes.attributes_id)
                 .filter(StateAttributes.hash == dbstate_attributes.hash)
-                .filter(StateAttributes.shared_attrs == dbstate_attributes.shared_attrs)
+                .filter(StateAttributes.shared_attrs == shared_attrs)
                 .first()
             ):
-                attributes_id = attributes[0]
-                self._state_attributes_ids[
-                    dbstate_attributes.shared_attrs
-                ] = attributes_id
-                save_attributes = False
+                dbstate.attributes_id = attributes[0]
+                self._state_attributes_ids[shared_attrs] = attributes[0]
+            # No matching attributes not found, save them in the DB
+            else:
+                dbstate.state_attributes = dbstate_attributes
+                self._pending_state_attributes[shared_attrs] = dbstate_attributes
+                self.event_session.add(dbstate_attributes)
 
             has_new_state = event.data.get("new_state")
             if dbstate.entity_id in self._old_states:
@@ -965,15 +964,7 @@ class Recorder(threading.Thread):
                 dbstate.state = None
             dbstate.event = dbevent
             self.event_session.add(dbstate)
-            if attributes_id:
-                dbstate.attributes_id = attributes_id
-            else:
-                dbstate.state_attributes = dbstate_attributes
-            if save_attributes:
-                self._pending_state_attributes[
-                    dbstate_attributes.shared_attrs
-                ] = dbstate_attributes
-                self.event_session.add(dbstate_attributes)
+
             if has_new_state:
                 self._old_states[dbstate.entity_id] = dbstate
                 self._pending_expunge.append(dbstate)
