@@ -549,7 +549,6 @@ async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
-
     assert args["nodeId"] == 68
     assert args["valueId"] == {
         "ccVersion": 3,
