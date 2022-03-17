@@ -64,7 +64,6 @@ from homeassistant.const import (
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_VARIABLES,
-    CONF_VARIABLES_ON_TRIGGER,
     CONF_WAIT_FOR_TRIGGER,
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
@@ -1320,16 +1319,18 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
-        vol.Optional(CONF_VARIABLES_ON_TRIGGER): SCRIPT_VARIABLES_SCHEMA,
+        vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
     }
 )
 
 
+_base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+
+
 # This is first round of validation, we don't want to process the config here already,
 # just ensure basics as platform and ID are there.
-def _base_trigger_validator(value: Any):
-    # TODO move this to a constant
-    TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)(value)
+def _base_trigger_validator(value: Any) -> Any:
+    _base_trigger_validator_schema(value)
     return value
 
 

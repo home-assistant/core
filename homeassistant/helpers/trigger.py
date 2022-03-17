@@ -9,7 +9,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ID, CONF_PLATFORM, CONF_VARIABLES_ON_TRIGGER
+from homeassistant.const import CONF_ID, CONF_PLATFORM, CONF_VARIABLES
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
@@ -60,7 +60,7 @@ def _trigger_action_wrapper(
     hass: HomeAssistant, action: Callable, conf: ConfigType
 ) -> Callable:
     """Wrap trigger action with extra vars if configured."""
-    if CONF_VARIABLES_ON_TRIGGER not in conf:
+    if CONF_VARIABLES not in conf:
         return action
 
     @functools.wraps(action)
@@ -68,7 +68,7 @@ def _trigger_action_wrapper(
         run_variables: dict[str, Any], context: Context | None = None
     ) -> None:
         """Wrap action with extra vars."""
-        trigger_variables = conf[CONF_VARIABLES_ON_TRIGGER]
+        trigger_variables = conf[CONF_VARIABLES]
         run_variables.update(trigger_variables.async_render(hass, run_variables))
         await action(run_variables, context)
 

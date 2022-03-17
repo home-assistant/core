@@ -49,11 +49,14 @@ async def test_if_fires_on_event(hass, calls):
                 "trigger": {
                     "platform": "event",
                     "event_type": "test_event",
-                    "variables_on_trigger": {"name": "Paulus"},
+                    "variables": {
+                        "name": "Paulus",
+                        "via_event": "{{ trigger.event.event_type }}",
+                    },
                 },
                 "action": {
                     "service": "test.automation",
-                    "data_template": {"hello": "{{ name }}"},
+                    "data_template": {"hello": "{{ name }} + {{ via_event }}"},
                 },
             }
         },
@@ -62,4 +65,4 @@ async def test_if_fires_on_event(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["hello"] == "Paulus"
+    assert calls[0].data["hello"] == "Paulus + test_event"
