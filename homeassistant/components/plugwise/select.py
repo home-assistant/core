@@ -23,7 +23,7 @@ async def async_setup_entry(
         PlugwiseSelectEntity(coordinator, device_id)
         for device_id, device in coordinator.data.devices.items()
         if device["class"] in THERMOSTAT_CLASSES
-        and device.get("available_schedules") != ["None"]
+        and len(device.get("available_schedules")) > 1
     )
 
 
@@ -40,7 +40,7 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         self._attr_unique_id = f"{device_id}-select_schedule"
         self._attr_name = (f"{self.device.get('name', '')} Select Schedule").lstrip()
         self._attr_current_option = self.device.get("selected_schedule")
-        self._attr_options = self.device.get("available_schedules", list[str])
+        self._attr_options = self.device.get("available_schedules", [])
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
