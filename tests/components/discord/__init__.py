@@ -21,10 +21,9 @@ CONF_DATA = {
     CONF_NAME: NAME,
 }
 
-CONF_IMPORT_DATA = {
-    CONF_TOKEN: TOKEN,
-    CONF_NAME: NAME,
-}
+CONF_IMPORT_DATA_NO_NAME = {CONF_TOKEN: TOKEN}
+
+CONF_IMPORT_DATA = CONF_IMPORT_DATA_NO_NAME | {CONF_NAME: NAME}
 
 
 def create_entry(hass: HomeAssistant) -> ConfigEntry:

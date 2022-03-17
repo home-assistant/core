@@ -36,12 +36,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await discord_bot.login(entry.data[CONF_API_TOKEN])
     except nextcord.LoginFailure as ex:
-        await discord_bot.close()
         raise ConfigEntryAuthFailed("Invalid token given") from ex
     except (ClientConnectorError, nextcord.HTTPException, nextcord.NotFound) as ex:
-        await discord_bot.close()
         raise ConfigEntryNotReady("Failed to connect") from ex
-    await discord_bot.close()
+    finally:
+        await discord_bot.close()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
 

@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from . import (
     CONF_DATA,
     CONF_IMPORT_DATA,
+    CONF_IMPORT_DATA_NO_NAME,
     CONF_INPUT,
     NAME,
     create_entry,
@@ -99,6 +100,20 @@ async def test_flow_import(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data=CONF_IMPORT_DATA.copy(),
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"] == CONF_DATA
+
+
+async def test_flow_import_no_name(hass: HomeAssistant) -> None:
+    """Test import flow with no name in config."""
+    with mocked_discord_info(), patch_discord_login():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=CONF_IMPORT_DATA_NO_NAME,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
