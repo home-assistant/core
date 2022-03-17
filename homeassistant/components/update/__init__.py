@@ -308,6 +308,14 @@ class UpdateEntity(RestoreEntity):
         else:
             in_progress = self.__in_progress
 
+        # Clear skipped version in case it matches the current version or
+        # the latest version diverged.
+        if (
+            self.__skipped_version == self.current_version
+            or self.__skipped_version != self.latest_version
+        ):
+            self.__skipped_version = None
+
         return {
             ATTR_CURRENT_VERSION: self.current_version,
             ATTR_IN_PROGRESS: in_progress,
@@ -340,9 +348,6 @@ class UpdateEntity(RestoreEntity):
             self._attr_in_progress = False
             self.__in_progress = False
             self.async_write_ha_state()
-
-        # Clear skipped version
-        self.__skipped_version = None
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the update entity is added to hass.
