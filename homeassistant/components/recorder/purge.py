@@ -383,9 +383,7 @@ def _purge_filtered_events(
         .limit(MAX_ROWS_TO_PURGE)
         .all()
     )
-    event_ids: list[int] = [
-        event.event_id for event in events if event.event_id is not None
-    ]
+    event_ids: list[int] = [event.event_id for event in events]
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids)
     )
