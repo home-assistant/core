@@ -274,7 +274,7 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
         "last_changed": "2021-06-12T03:03:01.000323+00:00",
-        "last_updated": "2021-06-12T03:03:01.000323+00:00",
+        "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
 

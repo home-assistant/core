@@ -618,7 +618,7 @@ class LazyState(State):
             last_changed_isoformat = process_timestamp_to_utc_isoformat(
                 self._row.last_changed
             )
-        if self._last_changed == self._last_updated:
+        if self._row.last_changed == self._row.last_updated:
             last_updated_isoformat = last_changed_isoformat
         elif self._last_updated:
             last_updated_isoformat = self._last_updated.isoformat()
