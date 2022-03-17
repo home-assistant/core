@@ -3,6 +3,10 @@ from contextlib import contextmanager
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.components.select.const import (
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -15,7 +19,6 @@ from homeassistant.components.utility_meter.const import (
     HOURLY,
     QUARTER_HOURLY,
     SERVICE_CALIBRATE_METER,
-    SERVICE_SELECT_TARIFF,
 )
 from homeassistant.components.utility_meter.sensor import (
     ATTR_LAST_RESET,
@@ -116,8 +119,8 @@ async def test_state(hass):
     assert state.attributes.get("status") == PAUSED
 
     await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SELECT_TARIFF,
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
         {ATTR_ENTITY_ID: "select.energy_bill", "option": "offpeak"},
         blocking=True,
     )

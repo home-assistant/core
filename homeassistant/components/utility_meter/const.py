@@ -25,6 +25,7 @@ METER_TYPES = [
 
 DATA_UTILITY = "utility_meter_data"
 DATA_TARIFF_SENSORS = "utility_meter_sensors"
+DATA_LEGACY_COMPONENT = "utility_meter_legacy_component"
 
 CONF_METER = "meter"
 CONF_SOURCE_SENSOR = "source"

@@ -11,6 +11,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -24,6 +25,7 @@ from .const import (
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
     CONF_TARIFFS,
+    DATA_LEGACY_COMPONENT,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
     DOMAIN,
@@ -94,6 +96,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an Utility Meter."""
+    hass.data[DATA_LEGACY_COMPONENT] = EntityComponent(_LOGGER, DOMAIN, hass)
+
     hass.data[DATA_UTILITY] = {}
 
     for meter, conf in config[DOMAIN].items():

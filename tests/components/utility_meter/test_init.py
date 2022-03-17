@@ -2,11 +2,16 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.components.select.const import (
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.components.utility_meter.const import (
     DOMAIN,
     SERVICE_RESET,
     SERVICE_SELECT_NEXT_TARIFF,
     SERVICE_SELECT_TARIFF,
+    SIGNAL_RESET_METER,
 )
 import homeassistant.components.utility_meter.sensor as um_sensor
 from homeassistant.const import (
@@ -18,6 +23,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import State
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -97,8 +103,8 @@ async def test_services(hass):
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state.state == "0"
 
-    # Next tariff
-    data = {ATTR_ENTITY_ID: "select.energy_bill"}
+    # Next tariff - only supported on legacy entity
+    data = {ATTR_ENTITY_ID: "utility_meter.energy_bill"}
     await hass.services.async_call(DOMAIN, SERVICE_SELECT_NEXT_TARIFF, data)
     await hass.async_block_till_done()
 
@@ -120,14 +126,14 @@ async def test_services(hass):
 
     # Change tariff
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "wrong_tariff"}
-    await hass.services.async_call(DOMAIN, SERVICE_SELECT_TARIFF, data)
+    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     # Inexisting tariff, ignoring
     assert hass.states.get("select.energy_bill").state != "wrong_tariff"
 
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "peak"}
-    await hass.services.async_call(DOMAIN, SERVICE_SELECT_TARIFF, data)
+    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
@@ -239,3 +245,85 @@ async def test_bad_cron(hass, legacy_patchable_time):
 async def test_setup_missing_discovery(hass):
     """Test setup with configuration missing discovery_info."""
     assert not await um_sensor.async_setup_platform(hass, {CONF_PLATFORM: DOMAIN}, None)
+
+
+async def test_legacy_support(hass):
+    """Test legacy entity support."""
+    config = {
+        "utility_meter": {
+            "energy_bill": {
+                "source": "sensor.energy",
+                "cycle": "hourly",
+                "tariffs": ["peak", "offpeak"],
+            },
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, Platform.SENSOR, config)
+    await hass.async_block_till_done()
+
+    select_state = hass.states.get("select.energy_bill")
+    legacy_state = hass.states.get("utility_meter.energy_bill")
+
+    assert select_state.state == legacy_state.state == "peak"
+    select_attributes = select_state.attributes
+    legacy_attributes = legacy_state.attributes
+    assert select_attributes.keys() == {
+        "friendly_name",
+        "icon",
+        "options",
+    }
+    assert legacy_attributes.keys() == {"friendly_name", "icon", "tariffs"}
+    assert select_attributes["friendly_name"] == legacy_attributes["friendly_name"]
+    assert select_attributes["icon"] == legacy_attributes["icon"]
+    assert select_attributes["options"] == legacy_attributes["tariffs"]
+
+    # Change tariff on the select
+    data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "offpeak"}
+    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.async_block_till_done()
+
+    select_state = hass.states.get("select.energy_bill")
+    legacy_state = hass.states.get("utility_meter.energy_bill")
+    assert select_state.state == legacy_state.state == "offpeak"
+
+    # Change tariff on the legacy entity
+    data = {ATTR_ENTITY_ID: "utility_meter.energy_bill", "tariff": "offpeak"}
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_TARIFF, data)
+    await hass.async_block_till_done()
+
+    select_state = hass.states.get("select.energy_bill")
+    legacy_state = hass.states.get("utility_meter.energy_bill")
+    assert select_state.state == legacy_state.state == "offpeak"
+
+    # Cycle tariffs on the select - not supported
+    data = {ATTR_ENTITY_ID: "select.energy_bill"}
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_NEXT_TARIFF, data)
+    await hass.async_block_till_done()
+
+    select_state = hass.states.get("select.energy_bill")
+    legacy_state = hass.states.get("utility_meter.energy_bill")
+    assert select_state.state == legacy_state.state == "offpeak"
+
+    # Cycle tariffs on the legacy entity
+    data = {ATTR_ENTITY_ID: "utility_meter.energy_bill"}
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_NEXT_TARIFF, data)
+    await hass.async_block_till_done()
+
+    select_state = hass.states.get("select.energy_bill")
+    legacy_state = hass.states.get("utility_meter.energy_bill")
+    assert select_state.state == legacy_state.state == "peak"
+
+    # Reset the legacy entity
+    reset_calls = []
+
+    def async_reset_meter(entity_id):
+        reset_calls.append(entity_id)
+
+    async_dispatcher_connect(hass, SIGNAL_RESET_METER, async_reset_meter)
+
+    data = {ATTR_ENTITY_ID: "utility_meter.energy_bill"}
+    await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
+    await hass.async_block_till_done()
+    assert reset_calls == ["select.energy_bill"]
