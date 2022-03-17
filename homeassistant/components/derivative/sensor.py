@@ -28,10 +28,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-    CONF_CUSTOM_UNIT,
-    CONF_CUSTOM_UNIT_ENABLE,
     CONF_ROUND_DIGITS,
     CONF_TIME_WINDOW,
+    CONF_UNIT,
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
 )
@@ -74,7 +73,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
         vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
-        vol.Optional(CONF_CUSTOM_UNIT): cv.string,
+        vol.Optional(CONF_UNIT): cv.string,
         vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
     }
 )
@@ -92,11 +91,6 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE]
     )
 
-    # Reset custom unit of measurement if not enabled
-    unit_of_measurement = config_entry.options[CONF_CUSTOM_UNIT]
-    if not config_entry.options[CONF_CUSTOM_UNIT_ENABLE]:
-        unit_of_measurement = None
-
     unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
     if unit_prefix == "none":
         unit_prefix = None
@@ -107,7 +101,7 @@ async def async_setup_entry(
         source_entity=source_entity_id,
         time_window=cv.time_period_dict(config_entry.options[CONF_TIME_WINDOW]),
         unique_id=config_entry.entry_id,
-        unit_of_measurement=unit_of_measurement,
+        unit_of_measurement=None,
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
     )
@@ -127,7 +121,7 @@ async def async_setup_platform(
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE],
         time_window=config[CONF_TIME_WINDOW],
-        unit_of_measurement=config.get(CONF_CUSTOM_UNIT),
+        unit_of_measurement=config.get(CONF_UNIT),
         unit_prefix=config[CONF_UNIT_PREFIX],
         unit_time=config[CONF_UNIT_TIME],
         unique_id=None,

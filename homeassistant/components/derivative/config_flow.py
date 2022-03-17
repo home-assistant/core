@@ -20,8 +20,6 @@ from homeassistant.helpers.helper_config_entry_flow import (
 )
 
 from .const import (
-    CONF_CUSTOM_UNIT,
-    CONF_CUSTOM_UNIT_ENABLE,
     CONF_ROUND_DIGITS,
     CONF_TIME_WINDOW,
     CONF_UNIT_PREFIX,
@@ -46,10 +44,6 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(CONF_UNIT_TIME): selector.selector(
             {"select": {"options": TIME_UNITS}}
         ),
-        vol.Required(CONF_CUSTOM_UNIT_ENABLE, default=False): selector.selector(
-            {"boolean": {}}
-        ),
-        vol.Required(CONF_CUSTOM_UNIT): selector.selector({"text": {}}),
     }
 )
 
