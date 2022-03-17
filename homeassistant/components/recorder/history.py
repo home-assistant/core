@@ -206,8 +206,7 @@ def get_last_state_changes(hass, number_of_states, entity_id):
 
         states = execute(
             baked_query(session).params(
-                number_of_states=number_of_states,
-                entity_id=entity_id,
+                number_of_states=number_of_states, entity_id=entity_id
             )
         )
 
