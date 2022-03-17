@@ -243,7 +243,7 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         """Return string representation of instance for debugging."""
         return (
             f"<recorder.StateAttributes("
-            f"id={self.attributes_id}, hash='{self.hash}', attributes='{self.attributes}'"
+            f"id={self.attributes_id}, hash='{self.hash}', attributes='{self.shared_attrs}'"
             f")>"
         )
 
