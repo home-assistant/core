@@ -47,7 +47,11 @@ class PurifierHub:
             raise CannotConnect() from ex
 
         if "DeviceId" in status and "name" in status:
-            return {"name": status["name"], "device_id": status["DeviceId"]}
+            return {
+                "name": status["name"],
+                "device_id": status["DeviceId"],
+                "model": status["modelid"],
+            }
 
         raise CannotConnect()
 
@@ -89,7 +93,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(info["device_id"])
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=info["name"], data=user_input)
+            return self.async_create_entry(
+                title=info["name"],
+                data={"host": user_input["host"], "model": info["model"]},
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

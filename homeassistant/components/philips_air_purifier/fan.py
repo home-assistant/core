@@ -31,6 +31,7 @@ async def async_setup_entry(
     initial_data = {
         "unique_id": config_entry.unique_id,
         "name": config_entry.title,
+        "model": config_entry.data["model"],
     }
 
     entity = PurifierEntity(client, initial_data)
@@ -104,20 +105,12 @@ class PurifierEntity(FanEntity):
         Given that the purifier is sometimes not responsive for 30 seconds ore more,
         we can't query it during startup and can only use data from the config entry.
         """
-        if self._status is None:
-            info = {
-                "identifiers": {(DOMAIN, self.unique_id)},
-                "name": self.name,
-                "manufacturer": "Philips",
-            }
-        else:
-            info = {
-                "identifiers": {(DOMAIN, self._status.device_id)},
-                "name": self._status.name,
-                "sw_version": f"{self._status.firmware_version} / {self._status.wifi_firmware_version}",
-                "model": self._status.model,
-                "manufacturer": "Philips",
-            }
+        info = {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Philips",
+            "model": self._initial_data["model"],
+        }
         _LOGGER.debug("Device info: %s", str(info))
         return info
 
