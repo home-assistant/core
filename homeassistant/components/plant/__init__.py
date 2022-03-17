@@ -112,7 +112,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_
 
 # Flag for enabling/disabling the loading of the history from the database.
 # This feature is turned off right now as its tests are not 100% stable.
-ENABLE_LOAD_HISTORY = False
+ENABLE_LOAD_HISTORY = True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
