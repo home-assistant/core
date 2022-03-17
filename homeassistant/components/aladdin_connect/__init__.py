@@ -3,7 +3,7 @@
 import logging
 from typing import Final
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -14,6 +14,11 @@ from .const import DOMAIN
 PLATFORMS: list[Platform] = [Platform.COVER]
 
 _LOGGER: Final = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """YAML not supported by aladdin_connect."""
+    return True
 
 
 async def async_setup_entry(
@@ -48,7 +53,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup(hass: core.HomeAssistant, config: ConfigType) -> bool:
-    """Set up the GitHub Custom component from yaml configuration."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
+# async def async_setup(hass: core.HomeAssistant, config: ConfigType) -> bool:
+#    """Set up the GitHub Custom component from yaml configuration."""
+#    hass.data.setdefault(DOMAIN, {})
+#    return True
