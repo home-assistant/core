@@ -9,7 +9,6 @@ CONF_PRIV_KEY = "priv_key"
 CONF_PRIV_PROTOCOL = "priv_protocol"
 CONF_VERSION = "version"
 CONF_VARTYPE = "vartype"
-CONF_TIMEOUT = "timeout"
 
 DEFAULT_AUTH_PROTOCOL = "none"
 DEFAULT_COMMUNITY = "public"
