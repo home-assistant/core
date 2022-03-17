@@ -114,8 +114,8 @@ def _select_state_and_attributes_ids_to_purge(
     attribute_ids = set()
     for state in states:
         state_ids.add(state.state_id)
-        if state.attributes_ids:
-            attribute_ids.add(state.attributes_ids)
+        if state.attributes_id:
+            attribute_ids.add(state.attributes_id)
     return state_ids, attribute_ids
 
 
