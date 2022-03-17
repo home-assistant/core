@@ -348,6 +348,8 @@ def _async_register_services(hass, instance):
 class RecorderTask(abc.ABC):
     """ABC for recorder tasks."""
 
+    commit_before = True
+
     @abc.abstractmethod
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
@@ -456,6 +458,8 @@ class ExternalStatisticsTask(RecorderTask):
 class WaitTask(RecorderTask):
     """An object to insert into the recorder queue to tell it set the _queue_watch event."""
 
+    commit_before = False
+
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance._queue_watch.set()  # pylint: disable=[protected-access]
@@ -488,6 +492,7 @@ class EventTask(RecorderTask):
     """An object to insert into the recorder queue to stop the event handler."""
 
     event: bool
+    commit_before = False
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
@@ -850,7 +855,7 @@ class Recorder(threading.Thread):
         try:
             # If its not an event, commit everything
             # that is pending before running the task
-            if not isinstance(task, EventTask):
+            if task.commit_before:
                 self._commit_event_session_or_retry()
             return task.run(self)
         except exc.DatabaseError as err:
