@@ -922,7 +922,6 @@ class Recorder(threading.Thread):
         if event.event_type == EVENT_STATE_CHANGED:
             try:
                 dbstate = States.from_event(event)
-                dbstate.attributes = None
                 dbstate_attributes = StateAttributes.from_event(event)
             except (TypeError, ValueError) as ex:
                 _LOGGER.warning(
@@ -930,6 +929,7 @@ class Recorder(threading.Thread):
                     event.data.get("new_state"),
                     ex,
                 )
+                return
 
             shared_attrs = dbstate_attributes.shared_attrs
             # Matching attributes found in the pending commit
@@ -947,12 +947,13 @@ class Recorder(threading.Thread):
             ):
                 dbstate.attributes_id = attributes[0]
                 self._state_attributes_ids[shared_attrs] = attributes[0]
-            # No matching attributes not found, save them in the DB
+            # No matching attributes found, save them in the DB
             else:
                 dbstate.state_attributes = dbstate_attributes
                 self._pending_state_attributes[shared_attrs] = dbstate_attributes
                 self.event_session.add(dbstate_attributes)
 
+            dbstate.attributes = None
             has_new_state = event.data.get("new_state")
             if dbstate.entity_id in self._old_states:
                 old_state = self._old_states.pop(dbstate.entity_id)
