@@ -71,6 +71,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             bulbtype = await bulb.get_bulbtype()
         except WIZ_CONNECT_EXCEPTIONS as ex:
+            _LOGGER.debug(
+                "Failed to connect to %s during discovery: %s",
+                device.ip_address,
+                ex,
+                exc_info=True,
+            )
             raise AbortFlow("cannot_connect") from ex
         self._name = name_from_bulb_type_and_mac(bulbtype, device.mac_address)
 
@@ -97,7 +103,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=placeholders,
-            data_schema=vol.Schema({}),
         )
 
     async def async_step_pick_device(

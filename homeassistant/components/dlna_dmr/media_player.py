@@ -77,8 +77,6 @@ _T = TypeVar("_T", bound="DlnaDmrEntity")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
-Func = TypeVar("Func", bound=Callable[..., Any])
-
 
 def catch_request_errors(
     func: Callable[Concatenate[_T, _P], Awaitable[_R]]  # type: ignore[misc]

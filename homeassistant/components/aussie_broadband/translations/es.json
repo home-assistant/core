@@ -7,6 +7,13 @@
             "reauth": {
                 "description": "Actualizar la contrase\u00f1a de {username}"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Actualice la contrase\u00f1a para {username}",
+                "title": "Reautenticar Integraci\u00f3n"
+            },
             "service": {
                 "data": {
                     "services": "Servicios"

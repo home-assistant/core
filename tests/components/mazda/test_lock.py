@@ -9,7 +9,7 @@ from homeassistant.components.lock import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.mazda import init_integration
+from . import init_integration
 
 
 async def test_lock_setup(hass):

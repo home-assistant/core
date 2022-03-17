@@ -23,6 +23,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -63,8 +64,12 @@ from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
     MEDIA_TYPES_TO_SONOS,
+    MODELS_LINEIN_AND_TV,
+    MODELS_LINEIN_ONLY,
+    MODELS_TV_ONLY,
     PLAYABLE_MEDIA_TYPES,
     SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_MEDIA_UPDATED,
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
     SOURCE_LINEIN,
@@ -255,6 +260,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self._attr_unique_id = self.soco.uid
         self._attr_name = self.speaker.zone_name
 
+    async def async_added_to_hass(self) -> None:
+        """Handle common setup when added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SONOS_MEDIA_UPDATED,
+                self.async_write_media_state,
+            )
+        )
+
+    @callback
+    def async_write_media_state(self, uid: str) -> None:
+        """Write media state if the provided UID is coordinator of this speaker."""
+        if self.coordinator.uid == uid:
+            self.async_write_ha_state()
+
     @property
     def coordinator(self) -> SonosSpeaker:
         """Return the current coordinator SonosSpeaker."""
@@ -295,7 +317,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.speaker.update_groups()
         self.speaker.update_volume()
         if self.speaker.is_coordinator:
-            self.speaker.update_media()
+            self.media.poll_media()
 
     @property
     def volume_level(self) -> float | None:
@@ -455,20 +477,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.add_to_queue(favorite.reference)
             soco.play_from_queue(0)
 
-    @property  # type: ignore[misc]
+    @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        sources = [fav.title for fav in self.speaker.favorites]
-
-        model = self.coordinator.model_name.upper()
-        if "PLAY:5" in model or "CONNECT" in model:
-            sources += [SOURCE_LINEIN]
-        elif "PLAYBAR" in model:
-            sources += [SOURCE_LINEIN, SOURCE_TV]
-        elif "BEAM" in model or "PLAYBASE" in model:
-            sources += [SOURCE_TV]
-
-        return sources
+        model = self.coordinator.model_name.split()[-1].upper()
+        if model in MODELS_LINEIN_ONLY:
+            return [SOURCE_LINEIN]
+        if model in MODELS_TV_ONLY:
+            return [SOURCE_TV]
+        if model in MODELS_LINEIN_AND_TV:
+            return [SOURCE_LINEIN, SOURCE_TV]
+        return []
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def media_play(self) -> None:
@@ -524,7 +543,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_type = spotify.resolve_spotify_media_type(media_type)
             media_id = spotify.spotify_uri_from_media_browser_url(media_id)
 
+        is_radio = False
+
         if media_source.is_media_source_id(media_id):
+            is_radio = media_id.startswith("media-source://radio_browser/")
             media_type = MEDIA_TYPE_MUSIC
             media_id = (
                 run_coroutine_threadsafe(
@@ -574,7 +596,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 soco.add_uri_to_queue(media_id)
             else:
-                soco.play_uri(media_id)
+                soco.play_uri(media_id, force_radio=is_radio)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
                 item = media_browser.get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
@@ -656,6 +678,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if self.media.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.media.queue_position
+
+        if self.media.queue_size:
+            attributes["queue_size"] = self.media.queue_size
+
+        if self.source:
+            attributes[ATTR_INPUT_SOURCE] = self.source
 
         return attributes
 

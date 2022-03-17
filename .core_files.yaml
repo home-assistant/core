@@ -49,6 +49,7 @@ components: &components
   - homeassistant/components/alexa/*
   - homeassistant/components/auth/*
   - homeassistant/components/automation/*
+  - homeassistant/components/backup/*
   - homeassistant/components/cloud/*
   - homeassistant/components/config/*
   - homeassistant/components/configurator/*
@@ -128,7 +129,7 @@ requirements: &requirements
   - .github/workflows/*
   - homeassistant/package_constraints.txt
   - requirements*.txt
-  - setup.py
+  - setup.cfg
 
 any:
   - *base_platforms

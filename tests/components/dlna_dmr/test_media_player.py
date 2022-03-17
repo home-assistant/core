@@ -960,8 +960,8 @@ async def test_browse_media(
         "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
         "can_play": True,
         "can_expand": False,
-        "children_media_class": None,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_video in response["result"]["children"]
 
@@ -972,8 +972,8 @@ async def test_browse_media(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
-        "children_media_class": None,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_audio in response["result"]["children"]
 

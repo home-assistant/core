@@ -79,6 +79,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'samsungtv', 'macaddress': '606BBD*'},
     {'domain': 'samsungtv', 'macaddress': 'F47B5E*'},
     {'domain': 'samsungtv', 'macaddress': '4844F7*'},
+    {'domain': 'samsungtv', 'macaddress': '8CEA48*'},
     {'domain': 'screenlogic', 'registered_devices': True},
     {'domain': 'screenlogic', 'hostname': 'pentair: *', 'macaddress': '00C033*'},
     {'domain': 'sense', 'hostname': 'sense-*', 'macaddress': '009D6B*'},
@@ -165,5 +166,8 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'vicare', 'macaddress': 'B87424*'},
     {'domain': 'wiz', 'registered_devices': True},
     {'domain': 'wiz', 'macaddress': 'A8BB50*'},
+    {'domain': 'wiz', 'macaddress': 'D8A011*'},
+    {'domain': 'wiz', 'macaddress': '444F8E*'},
+    {'domain': 'wiz', 'macaddress': '6C2990*'},
     {'domain': 'wiz', 'hostname': 'wiz_*'},
     {'domain': 'yeelight', 'hostname': 'yeelink-*'}]
