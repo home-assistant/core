@@ -102,7 +102,7 @@ sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
 # typing typevar
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 
 def path(value: Any) -> str:
@@ -253,20 +253,20 @@ def ensure_list(value: None) -> list[Any]:
 
 
 @overload
-def ensure_list(value: list[T]) -> list[T]:
+def ensure_list(value: list[_T]) -> list[_T]:
     ...
 
 
 @overload
-def ensure_list(value: list[T] | T) -> list[T]:
+def ensure_list(value: list[_T] | _T) -> list[_T]:
     ...
 
 
-def ensure_list(value: T | None) -> list[T] | list[Any]:
+def ensure_list(value: _T | None) -> list[_T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
-    return cast("list[T]", value) if isinstance(value, list) else [value]
+    return cast("list[_T]", value) if isinstance(value, list) else [value]
 
 
 def entity_id(value: Any) -> str:
@@ -467,7 +467,7 @@ def time_period_seconds(value: float | str) -> timedelta:
 time_period = vol.Any(time_period_str, time_period_seconds, timedelta, time_period_dict)
 
 
-def match_all(value: T) -> T:
+def match_all(value: _T) -> _T:
     """Validate that matches all values."""
     return value
 
@@ -483,7 +483,7 @@ positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
 positive_time_period = vol.All(time_period, positive_timedelta)
 
 
-def remove_falsy(value: list[T]) -> list[T]:
+def remove_falsy(value: list[_T]) -> list[_T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
 
@@ -510,7 +510,7 @@ def slug(value: Any) -> str:
 
 
 def schema_with_slug_keys(
-    value_schema: T | Callable, *, slug_validator: Callable[[Any], str] = slug
+    value_schema: _T | Callable, *, slug_validator: Callable[[Any], str] = slug
 ) -> Callable:
     """Ensure dicts have slugs as keys.
 
