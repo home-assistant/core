@@ -255,7 +255,7 @@ def _purge_attributes_ids(
     )
     _LOGGER.debug("Deleted %s attribute states", deleted_rows)
 
-    # Evict eny entries in the old_states cache referring to a purged state
+    # Evict any entries in the state_attributes_ids cache referring to a purged state
     _evict_purged_attributes_from_attributes_cache(instance, attributes_ids)
 
 
