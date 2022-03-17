@@ -36,7 +36,6 @@ TESTDATA = {
     CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
     CONF_USERNAME: "fred_flintstone",
     CONF_PASSWORD: "bambam",
-    CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
     CONF_FRAMERATE: 5,
     CONF_VERIFY_SSL: False,
 }
@@ -57,11 +56,10 @@ async def test_form(hass, fakeimg_png, mock_av_open, user_flow):
             TESTDATA,
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "http://127.0.0.1/testurl/1"
+    assert result2["title"] == "127_0_0_1_testurl_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
-        CONF_RTSP_TRANSPORT: None,
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
@@ -92,11 +90,10 @@ async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
         data,
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "http://127.0.0.1/testurl/1"
+    assert result2["title"] == "127_0_0_1_testurl_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-        CONF_RTSP_TRANSPORT: None,
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
@@ -120,7 +117,7 @@ async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
         )
     assert "errors" not in result2, f"errors={result2['errors']}"
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "http://127.0.0.1/testurl/1"
+    assert result2["title"] == "127_0_0_1_testurl_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -152,7 +149,7 @@ async def test_form_only_stream(hass, mock_av_open):
             data,
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "http://127.0.0.1/testurl/2"
+    assert result2["title"] == "127_0_0_1_testurl_2"
     assert result2["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
@@ -175,7 +172,6 @@ async def test_form_still_and_stream_not_provided(hass, user_flow):
         user_flow["flow_id"],
         {
             CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-            CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
             CONF_FRAMERATE: 5,
             CONF_VERIFY_SSL: False,
         },
@@ -318,7 +314,7 @@ async def test_form_stream_novideo(hass, fakeimg_png, user_flow):
             TESTDATA,
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"stream_source": "stream_novideo"}
+    assert result2["errors"] == {"stream_source": "stream_no_video"}
 
 
 @respx.mock

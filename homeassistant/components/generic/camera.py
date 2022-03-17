@@ -12,7 +12,7 @@ from homeassistant.components.camera import (
     SUPPORT_STREAM,
     Camera,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -103,10 +103,14 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up a generic IP Camera."""
 
-    async_add_entities([GenericCamera(hass, config.options, config.unique_id)])
+    async_add_entities(
+        [GenericCamera(hass, entry.options, entry.unique_id, entry.title)]
+    )
 
 
 def generate_auth(device_info) -> httpx.Auth | None:
@@ -124,13 +128,13 @@ def generate_auth(device_info) -> httpx.Auth | None:
 class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
-    def __init__(self, hass, device_info, identifier):
+    def __init__(self, hass, device_info, identifier, title):
         """Initialize a generic camera."""
         super().__init__()
         self.hass = hass
         self._attr_unique_id = identifier
         self._authentication = device_info.get(CONF_AUTHENTICATION)
-        self._name = device_info.get(CONF_NAME)
+        self._name = device_info.get(CONF_NAME, title)
         self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
         if (
             not isinstance(self._still_image_url, template_helper.Template)
