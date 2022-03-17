@@ -155,9 +155,18 @@ def _custom_tasks(template, info: Info) -> None:
         info.update_strings(
             config={
                 "step": {
+                    "user": {
+                        "description": "New NEW_NAME Sensor",
+                        "data": {"entity": "Input sensor", "name": "Name"},
+                    },
+                },
+            },
+            options={
+                "step": {
                     "init": {
-                        "description": "Select the sensor for the NEW_NAME.",
-                        "data": {"entity_id": "Sensor entity"},
+                        "data": {
+                            "entity": "[%key:component::NEW_DOMAIN::config::step::user::description%]"
+                        },
                     },
                 },
             },
