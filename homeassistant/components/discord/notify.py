@@ -15,7 +15,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_API_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -42,9 +42,9 @@ async def async_get_service(
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> DiscordNotificationService:
-    """Get the NFAndroidTV notification service."""
+    """Get the Discord notification service."""
     if discovery_info is not None:
-        return DiscordNotificationService(hass, discovery_info[CONF_TOKEN])
+        return DiscordNotificationService(hass, discovery_info[CONF_API_TOKEN])
     return DiscordNotificationService(hass, config[CONF_TOKEN])
 
 

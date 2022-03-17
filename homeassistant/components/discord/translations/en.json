@@ -12,18 +12,15 @@
         "step": {
             "user": {
                 "data": {
-                    "api_token": "Token",
-                    "name": "Name"
+                    "api_token": "API Token"
                 },
-                "description": "Refer to the documentation on getting your Discord bot key.\n\nhttps://www.home-assistant.io/integrations/discord",
-                "title": "Discord Notifications"
+                "description": "Refer to the documentation on getting your Discord bot key.\n\n{url}"
             },
             "reauth_confirm": {
                 "data": {
-                    "api_token": "Token"
+                    "api_token": "API Token"
                 },
-                "description": "Refer to the documentation on getting your Discord bot key.\n\nhttps://www.home-assistant.io/integrations/discord",
-                "title": "Discord Notifications"
+                "description": "Refer to the documentation on getting your Discord bot key.\n\n{url}"
             }
         }
     }

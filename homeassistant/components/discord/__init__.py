@@ -3,7 +3,7 @@ from aiohttp.client_exceptions import ClientConnectorError
 import nextcord
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PLATFORM, CONF_TOKEN, Platform
+from homeassistant.const import CONF_API_TOKEN, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import discovery
@@ -34,10 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     nextcord.VoiceClient.warn_nacl = False
     discord_bot = nextcord.Client()
     try:
-        await discord_bot.login(entry.data[CONF_TOKEN])
+        await discord_bot.login(entry.data[CONF_API_TOKEN])
     except nextcord.LoginFailure as ex:
+        await discord_bot.close()
         raise ConfigEntryAuthFailed("Invalid token given") from ex
     except (ClientConnectorError, nextcord.HTTPException, nextcord.NotFound) as ex:
+        await discord_bot.close()
         raise ConfigEntryNotReady("Failed to connect") from ex
     await discord_bot.close()
 
@@ -54,10 +56,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok

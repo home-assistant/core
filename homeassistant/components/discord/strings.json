@@ -2,16 +2,13 @@
     "config": {
       "step": {
         "user": {
-          "title": "Discord Notifications",
-          "description": "Refer to the documentation on getting your Discord bot key.\n\nhttps://www.home-assistant.io/integrations/discord",
+          "description": "Refer to the documentation on getting your Discord bot key.\n\n{url}",
           "data": {
-            "api_token": "[%key:common::config_flow::data::api_token%]",
-            "name": "[%key:common::config_flow::data::name%]"
+            "api_token": "[%key:common::config_flow::data::api_token%]"
           }
         },
         "reauth_confirm": {
-          "title": "Discord Notifications",
-          "description": "Refer to the documentation on getting your Discord bot key.\n\nhttps://www.home-assistant.io/integrations/discord",
+          "description": "Refer to the documentation on getting your Discord bot key.\n\n{url}",
           "data": {
             "api_token": "[%key:common::config_flow::data::api_token%]"
           }
