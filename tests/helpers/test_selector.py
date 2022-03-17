@@ -1,11 +1,8 @@
 """Test selectors."""
-from datetime import timedelta
-
 import pytest
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.util import dt as dt_util
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 
@@ -249,15 +246,12 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections,converter",
-    (
-        ({}, ("00:00:00",), ("blah", None), dt_util.parse_time),
-        ({"as_str": True}, ("00:00:00",), ("blah", None), None),
-    ),
+    "schema,valid_selections,invalid_selections",
+    (({}, ("00:00:00",), ("blah", None)),),
 )
-def test_time_selector_schema(schema, valid_selections, invalid_selections, converter):
+def test_time_selector_schema(schema, valid_selections, invalid_selections):
     """Test time selector."""
-    _test_selector("time", schema, valid_selections, invalid_selections, converter)
+    _test_selector("time", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
@@ -384,27 +378,18 @@ def test_attribute_selector_schema(schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections,converter",
+    "schema,valid_selections,invalid_selections",
     (
         (
             {},
             ({"seconds": 10},),
             (None, {}),
-            lambda x: timedelta(**x),
-        ),
-        (
-            {"as_dict": True},
-            ({"seconds": 10},),
-            (None, {}),
-            None,
         ),
     ),
 )
-def test_duration_selector_schema(
-    schema, valid_selections, invalid_selections, converter
-):
+def test_duration_selector_schema(schema, valid_selections, invalid_selections):
     """Test duration selector."""
-    _test_selector("duration", schema, valid_selections, invalid_selections, converter)
+    _test_selector("duration", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(

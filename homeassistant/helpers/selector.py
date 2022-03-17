@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import time as time_sys, timedelta
 from typing import Any, cast
 
 import voluptuous as vol
@@ -262,13 +261,12 @@ class TimeSelector(Selector):
 
     selector_type = "time"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Optional("as_str", default=False): bool})
+    CONFIG_SCHEMA = vol.Schema({})
 
-    def __call__(self, data: Any) -> str | time_sys:
+    def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        if self.config["as_str"]:
-            return str(cv.time(data))
-        return cv.time(data)
+        cv.time(data)
+        return cast(str, data)
 
 
 @SELECTORS.register("target")
@@ -412,16 +410,12 @@ class DurationSelector(Selector):
 
     selector_type = "duration"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Optional("as_dict", default=False): bool})
+    CONFIG_SCHEMA = vol.Schema({})
 
-    def __call__(self, data: Any) -> dict[str, float] | timedelta:
+    def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        if self.config["as_dict"]:
-            duration_dict: dict[str, float] = cv.time_period_dict_dict(data)
-            return duration_dict
-
-        duration: timedelta = cv.time_period_dict(data)
-        return duration
+        cv.time_period_dict(data)
+        return cast(dict[str, float], data)
 
 
 @SELECTORS.register("icon")

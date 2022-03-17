@@ -373,7 +373,7 @@ def icon(value: Any) -> str:
     raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
 
-time_period_dict_dict = vol.All(
+time_period_dict = vol.All(
     dict,
     vol.Schema(
         {
@@ -385,10 +385,6 @@ time_period_dict_dict = vol.All(
         }
     ),
     has_at_least_one_key("days", "hours", "minutes", "seconds", "milliseconds"),
-)
-
-time_period_dict = vol.All(
-    time_period_dict_dict,
     lambda value: timedelta(**value),
 )
 
