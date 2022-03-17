@@ -482,6 +482,8 @@ class DatabaseLockTask(RecorderTask):
 class StopTask(RecorderTask):
     """An object to insert into the recorder queue to stop the event handler."""
 
+    commit_before = False
+
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance.stop_requested = True
