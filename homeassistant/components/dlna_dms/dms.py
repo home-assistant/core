@@ -47,7 +47,7 @@ from .const import (
 )
 
 _DlnaDmsDeviceMethod = TypeVar("_DlnaDmsDeviceMethod", bound="DmsDeviceSource")
-_RetType = TypeVar("_RetType")
+_R = TypeVar("_R")
 
 
 class DlnaDmsData:
@@ -167,12 +167,12 @@ class ActionError(DlnaDmsDeviceError):
 
 
 def catch_request_errors(
-    func: Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _RetType]]
-) -> Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _RetType]]:
+    func: Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _R]]
+) -> Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _R]]:
     """Catch UpnpError errors."""
 
     @functools.wraps(func)
-    async def wrapper(self: _DlnaDmsDeviceMethod, req_param: str) -> _RetType:
+    async def wrapper(self: _DlnaDmsDeviceMethod, req_param: str) -> _R:
         """Catch UpnpError errors and check availability before and after request."""
         if not self.available:
             LOGGER.warning("Device disappeared when trying to call %s", func.__name__)
