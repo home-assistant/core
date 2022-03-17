@@ -124,20 +124,17 @@ MOCK_ENTRY_WS_WITH_MAC = {
     CONF_PORT: 8002,
     CONF_TOKEN: "123456789",
 }
-MOCK_ENTRY_ENCRYPTED_WS = MockConfigEntry(
-    domain=SAMSUNGTV_DOMAIN,
-    data={
-        CONF_IP_ADDRESS: "test",
-        CONF_HOST: "fake_host",
-        CONF_METHOD: "encrypted",
-        CONF_MAC: "aa:bb:cc:dd:ee:ff",
-        CONF_NAME: "fake",
-        CONF_PORT: 8000,
-        CONF_TOKEN: "037739871315caef138547b03e348b72",
-        CONF_SESSION_ID: "2",
-    },
-    unique_id=ENTITY_ID,
-)
+MOCK_ENTRY_ENCRYPTED_WS = {
+    CONF_IP_ADDRESS: "test",
+    CONF_HOST: "fake_host",
+    CONF_METHOD: "encrypted",
+    CONF_MAC: "aa:bb:cc:dd:ee:ff",
+    CONF_NAME: "fake",
+    CONF_PORT: 8000,
+    CONF_TOKEN: "037739871315caef138547b03e348b72",
+    CONF_SESSION_ID: "2",
+}
+
 
 ENTITY_ID_NOTURNON = f"{DOMAIN}.fake_noturnon"
 MOCK_CONFIG_NOTURNON = {
@@ -245,11 +242,16 @@ async def test_setup_encrypted_websocket(
     hass: HomeAssistant, mock_now: datetime
 ) -> None:
     """Test setup of platform from config entry."""
-    MOCK_ENTRY_ENCRYPTED_WS.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_ENCRYPTED_WS,
+        unique_id=ENTITY_ID,
+    )
+    entry.add_to_hass(hass)
 
     config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
     assert len(config_entries) == 1
-    assert MOCK_ENTRY_ENCRYPTED_WS is config_entries[0]
+    assert entry is config_entries[0]
 
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote"
@@ -397,7 +399,12 @@ async def test_update_off_encryptedws(
     hass: HomeAssistant, remoteencws: Mock, rest_api: Mock, mock_now: datetime
 ) -> None:
     """Testing update tv off."""
-    MOCK_ENTRY_ENCRYPTED_WS.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_ENCRYPTED_WS,
+        unique_id=ENTITY_ID,
+    )
+    entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
     await hass.async_block_till_done()
@@ -795,7 +802,12 @@ async def test_turn_off_encrypted_websocket(
     hass: HomeAssistant, remoteencws: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    MOCK_ENTRY_ENCRYPTED_WS.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_ENCRYPTED_WS,
+        unique_id=ENTITY_ID,
+    )
+    entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
     await hass.async_block_till_done()
@@ -852,6 +864,27 @@ async def test_turn_off_ws_os_error(
     caplog.set_level(logging.DEBUG)
     await setup_samsungtv(hass, MOCK_CONFIGWS)
     remotews.close = Mock(side_effect=OSError("BOOM"))
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert "Error closing connection" in caplog.text
+
+
+async def test_turn_off_encryptedws_os_error(
+    hass: HomeAssistant, remoteencws: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for turn_off with OSError."""
+    caplog.set_level(logging.DEBUG)
+    entry = MockConfigEntry(
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_ENCRYPTED_WS,
+        unique_id=ENTITY_ID,
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    remoteencws.close = Mock(side_effect=OSError("BOOM"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
