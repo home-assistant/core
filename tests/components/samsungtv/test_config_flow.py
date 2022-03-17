@@ -57,7 +57,6 @@ from .const import (
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_APP_LIST,
     SAMPLE_DEVICE_INFO_FRAME,
-    SAMPLE_DEVICE_INFO_UE48JU6400,
 )
 
 from tests.common import MockConfigEntry
@@ -656,12 +655,16 @@ async def test_import_legacy(hass: HomeAssistant) -> None:
 async def test_import_legacy_without_name(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test importing from yaml without a name."""
     rest_api.rest_device_info.return_value = None
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_IMPORT_DATA_WITHOUT_NAME,
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+        side_effect=WebSocketProtocolError("Boom"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=MOCK_IMPORT_DATA_WITHOUT_NAME,
+        )
+        await hass.async_block_till_done()
     assert result["type"] == "create_entry"
     assert result["title"] == "fake_host"
     assert result["data"][CONF_HOST] == "fake_host"
@@ -694,19 +697,14 @@ async def test_import_websocket(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("remoteencws")
-async def test_import_websocket_encrypted(hass: HomeAssistant, rest_api: Mock):
+async def test_import_websocket_encrypted(hass: HomeAssistant):
     """Test importing from yaml with hostname."""
-    rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_UE48JU6400
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=WebSocketProtocolError("Boom"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_CONFIG_ENCRYPTED_WS,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=MOCK_CONFIG_ENCRYPTED_WS,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "fake"
@@ -862,7 +860,7 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) ->
     assert result["reason"] == "not_supported"
 
 
-@pytest.mark.usefixtures("remote", "remotews")
+@pytest.mark.usefixtures("remote", "remotews", "remoteencws")
 async def test_zeroconf_no_device_info(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from zeroconf where device_info returns None."""
     rest_api.rest_device_info.return_value = None
@@ -1270,6 +1268,9 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote.__enter__",
         return_value=True,
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+        side_effect=WebSocketProtocolError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.async_setup",
         return_value=True,

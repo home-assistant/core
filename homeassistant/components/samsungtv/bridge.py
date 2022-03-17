@@ -82,6 +82,14 @@ async def async_get_device_info(
         if info := await bridge.async_device_info():
             return port, METHOD_WEBSOCKET, info
 
+    # Try encrypted websocket port
+    bridge = SamsungTVBridge.get_bridge(
+        hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
+    )
+    result = await bridge.async_try_connect()
+    if result == RESULT_SUCCESS:
+        return port, METHOD_ENCRYPTED_WEBSOCKET, await bridge.async_device_info()
+
     # Try legacy port
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
     result = await bridge.async_try_connect()
