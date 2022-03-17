@@ -34,6 +34,8 @@ from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
     CONF_SESSION_ID,
     DOMAIN as SAMSUNGTV_DOMAIN,
+    ENCRYPTED_WEBSOCKET_PORT,
+    METHOD_ENCRYPTED_WEBSOCKET,
     TIMEOUT_WEBSOCKET,
 )
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
@@ -1178,11 +1180,19 @@ async def test_websocket_unsupported_remote_control(
     hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[OSError("Boom"), DEFAULT_MOCK],
-    ):
-        await setup_samsungtv(hass, MOCK_CONFIGWS)
+    entry = MockConfigEntry(
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_WS,
+        unique_id=ENTITY_ID,
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
+    assert len(config_entries) == 1
+    assert entry is config_entries[0]
 
     remotews.send_command.reset_mock()
 
@@ -1209,3 +1219,15 @@ async def test_websocket_unsupported_remote_control(
         "Your TV seems to be unsupported by SamsungTVWSBridge and needs a PIN: "
         "'unrecognized method value : ms.remote.control'" in caplog.text
     )
+
+    # ensure reauth triggered, and method/port updated
+    await hass.async_block_till_done()
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert entry.data[CONF_METHOD] == METHOD_ENCRYPTED_WEBSOCKET
+    assert entry.data[CONF_PORT] == ENCRYPTED_WEBSOCKET_PORT
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNAVAILABLE
