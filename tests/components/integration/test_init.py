@@ -23,12 +23,10 @@ async def test_setup_and_remove_config_entry(
         data={},
         domain=DOMAIN,
         options={
-            "custom_unit_enable": False,
             "method": "trapezoidal",
             "name": "My integration",
             "round": 1.0,
             "source": "sensor.input",
-            "unit": "",
             "unit_prefix": "k",
             "unit_time": "min",
         },
@@ -47,12 +45,12 @@ async def test_setup_and_remove_config_entry(
     assert "unit_of_measurement" not in state.attributes
     assert state.attributes["source"] == "sensor.input"
 
-    hass.states.async_set(input_sensor_entity_id, 10, {"unit_of_measurement": "dogs"})
-    hass.states.async_set(input_sensor_entity_id, 11, {"unit_of_measurement": "dogs"})
+    hass.states.async_set(input_sensor_entity_id, 10, {"unit_of_measurement": "cat"})
+    hass.states.async_set(input_sensor_entity_id, 11, {"unit_of_measurement": "cat"})
     await hass.async_block_till_done()
     state = hass.states.get(integration_entity_id)
     assert state.state != "unknown"
-    assert state.attributes["unit_of_measurement"] == "kdogsmin"
+    assert state.attributes["unit_of_measurement"] == "kcatmin"
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)

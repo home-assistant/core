@@ -33,10 +33,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-    CONF_CUSTOM_UNIT_ENABLE,
-    CONF_CUSTOM_UNIT_OF_MEASUREMENT,
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
     INTEGRATION_METHODS,
@@ -67,7 +66,7 @@ ICON = "mdi:chart-histogram"
 DEFAULT_ROUND = 3
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_CUSTOM_UNIT_OF_MEASUREMENT),
+    cv.deprecated(CONF_UNIT_OF_MEASUREMENT),
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_NAME): cv.string,
@@ -75,7 +74,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
             vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
-            vol.Optional(CONF_CUSTOM_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
                 INTEGRATION_METHODS
             ),
@@ -96,11 +95,6 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
-    # Reset custom unit of measurement if not enabled
-    unit_of_measurement = config_entry.options[CONF_CUSTOM_UNIT_OF_MEASUREMENT]
-    if not config_entry.options[CONF_CUSTOM_UNIT_ENABLE]:
-        unit_of_measurement = None
-
     unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
     if unit_prefix == "none":
         unit_prefix = None
@@ -111,7 +105,7 @@ async def async_setup_entry(
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
         source_entity=source_entity_id,
         unique_id=config_entry.entry_id,
-        unit_of_measurement=unit_of_measurement,
+        unit_of_measurement=None,
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
     )
@@ -132,7 +126,7 @@ async def async_setup_platform(
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE_SENSOR],
         unique_id=None,
-        unit_of_measurement=config.get(CONF_CUSTOM_UNIT_OF_MEASUREMENT),
+        unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT),
         unit_prefix=config[CONF_UNIT_PREFIX],
         unit_time=config[CONF_UNIT_TIME],
     )

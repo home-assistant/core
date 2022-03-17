@@ -29,12 +29,10 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "custom_unit_enable": False,
                 "method": "left",
                 "name": "My integration",
                 "round": 1,
                 "source": input_sensor_entity_id,
-                "unit": "",
                 "unit_prefix": "none",
                 "unit_time": "min",
             },
@@ -45,12 +43,10 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert result["title"] == "My integration"
     assert result["data"] == {}
     assert result["options"] == {
-        "custom_unit_enable": False,
         "method": "left",
         "name": "My integration",
         "round": 1.0,
         "source": "sensor.input",
-        "unit": "",
         "unit_prefix": "none",
         "unit_time": "min",
     }
@@ -59,12 +55,10 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
     assert config_entry.options == {
-        "custom_unit_enable": False,
         "method": "left",
         "name": "My integration",
         "round": 1.0,
         "source": "sensor.input",
-        "unit": "",
         "unit_prefix": "none",
         "unit_time": "min",
     }
@@ -90,12 +84,10 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         data={},
         domain=DOMAIN,
         options={
-            "custom_unit_enable": False,
             "method": "left",
             "name": "My integration",
             "round": 1.0,
             "source": "sensor.input",
-            "unit": "",
             "unit_prefix": "k",
             "unit_time": "min",
         },
@@ -109,44 +101,36 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
-    assert get_suggested(schema, "custom_unit_enable") is False
     assert get_suggested(schema, "method") == "left"
     assert get_suggested(schema, "round") == 1.0
-    assert get_suggested(schema, "unit") == ""
     assert get_suggested(schema, "unit_prefix") == "k"
     assert get_suggested(schema, "unit_time") == "min"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "custom_unit_enable": True,
             "method": "right",
             "round": 2.0,
-            "unit": "Mcats/h",
-            "unit_prefix": "none",
+            "unit_prefix": "T",
             "unit_time": "h",
         },
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        "custom_unit_enable": True,
         "method": "right",
         "name": "My integration",
         "round": 2.0,
         "source": "sensor.input",
-        "unit": "Mcats/h",
-        "unit_prefix": "none",
+        "unit_prefix": "T",
         "unit_time": "h",
     }
     assert config_entry.data == {}
     assert config_entry.options == {
-        "custom_unit_enable": True,
         "method": "right",
         "name": "My integration",
         "round": 2.0,
         "source": "sensor.input",
-        "unit": "Mcats/h",
-        "unit_prefix": "none",
+        "unit_prefix": "T",
         "unit_time": "h",
     }
     assert config_entry.title == "My integration"
@@ -158,6 +142,10 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert len(hass.states.async_all()) == 1
 
     # Check the state of the entity has changed as expected
+    hass.states.async_set("sensor.input", 10, {"unit_of_measurement": "dog"})
+    hass.states.async_set("sensor.input", 11, {"unit_of_measurement": "dog"})
+    await hass.async_block_till_done()
+
     state = hass.states.get(f"{platform}.my_integration")
-    assert state.state == "unknown"
-    assert state.attributes["unit_of_measurement"] == "Mcats/h"
+    assert state.state != "unknown"
+    assert state.attributes["unit_of_measurement"] == "Tdogh"
