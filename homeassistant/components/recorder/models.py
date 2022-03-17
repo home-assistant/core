@@ -273,8 +273,8 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
             return json.loads(self.shared_attrs)
         except ValueError:
             # When json.loads fails
-            _LOGGER.exception("Error converting row to state: %s", self)
-            return None
+            _LOGGER.exception("Error converting row to state attributes: %s", self)
+            return {}
 
 
 class StatisticResult(TypedDict):

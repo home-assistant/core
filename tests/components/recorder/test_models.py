@@ -9,6 +9,7 @@ from homeassistant.components.recorder.models import (
     Base,
     Events,
     RecorderRuns,
+    StateAttributes,
     States,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
@@ -38,6 +39,27 @@ def test_from_event_to_db_state():
     # events table on the event_id for state_changed events
     state.context = ha.Context(id=None)
     assert state == States.from_event(event).to_native()
+
+
+def test_from_event_to_db_state_attributes():
+    """Test converting event to db state attributes."""
+    attrs = {"this_attr": True}
+    state = ha.State("sensor.temperature", "18", attrs)
+    event = ha.Event(
+        EVENT_STATE_CHANGED,
+        {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
+        context=state.context,
+    )
+    assert StateAttributes.from_event(event).to_native() == attrs
+
+
+def test_handling_broken_json_state_attributes(caplog):
+    """Test we handle broken json in state attributes."""
+    state_attributes = StateAttributes(
+        attributes_id=444, hash=1234, shared_attrs="{NOT_PARSE}"
+    )
+    assert state_attributes.to_native() == {}
+    assert "Error converting row to state attributes" in caplog.text
 
 
 def test_from_event_to_delete_state():
