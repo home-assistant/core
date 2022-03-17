@@ -84,6 +84,9 @@ async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant) 
         "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
         side_effect=OSError,
     ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedBridge.async_device_info",
+        return_value=None,
+    ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.start_listening",
         side_effect=OSError,
     ), patch(

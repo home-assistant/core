@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_samsungtv_entry
 from .const import (
-    MOCK_ENTRY_ENCRYPTED_WS,
+    MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_UE48JU6400,
     SAMPLE_DEVICE_INFO_WIFI,
 )
@@ -58,7 +58,7 @@ async def test_entry_diagnostics_encrypted(
 ) -> None:
     """Test config entry diagnostics."""
     rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_UE48JU6400
-    config_entry = await setup_samsungtv_entry(hass, MOCK_ENTRY_ENCRYPTED_WS)
+    config_entry = await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {

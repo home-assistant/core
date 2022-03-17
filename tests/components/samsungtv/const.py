@@ -10,13 +10,16 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 
-MOCK_ENTRY_ENCRYPTED_WS = {
-    CONF_IP_ADDRESS: "test",
+MOCK_CONFIG_ENCRYPTED_WS = {
     CONF_HOST: "fake_host",
-    CONF_METHOD: "encrypted",
-    CONF_MAC: "aa:bb:cc:dd:ee:ff",
     CONF_NAME: "fake",
     CONF_PORT: 8000,
+}
+MOCK_ENTRYDATA_ENCRYPTED_WS = {
+    **MOCK_CONFIG_ENCRYPTED_WS,
+    CONF_IP_ADDRESS: "test",
+    CONF_METHOD: "encrypted",
+    CONF_MAC: "aa:bb:cc:dd:ee:ff",
     CONF_TOKEN: "037739871315caef138547b03e348b72",
     CONF_SESSION_ID: "2",
 }

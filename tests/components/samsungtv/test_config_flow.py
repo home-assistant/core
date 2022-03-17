@@ -22,6 +22,7 @@ from homeassistant.components.samsungtv.const import (
     DEFAULT_MANUFACTURER,
     DOMAIN,
     LEGACY_PORT,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
@@ -51,7 +52,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
-from .const import MOCK_ENTRY_ENCRYPTED_WS, SAMPLE_APP_LIST, SAMPLE_DEVICE_INFO_FRAME
+from .const import (
+    MOCK_CONFIG_ENCRYPTED_WS,
+    MOCK_ENTRYDATA_ENCRYPTED_WS,
+    SAMPLE_APP_LIST,
+    SAMPLE_DEVICE_INFO_FRAME,
+    SAMPLE_DEVICE_INFO_UE48JU6400,
+)
 
 from tests.common import MockConfigEntry
 
@@ -680,6 +687,31 @@ async def test_import_websocket(hass: HomeAssistant):
     assert result["title"] == "fake"
     assert result["data"][CONF_METHOD] == METHOD_WEBSOCKET
     assert result["data"][CONF_PORT] == 8002
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_NAME] == "fake"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung"
+    assert result["result"].unique_id is None
+
+
+@pytest.mark.usefixtures("remoteencws")
+async def test_import_websocket_encrypted(hass: HomeAssistant, rest_api: Mock):
+    """Test importing from yaml with hostname."""
+    rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_UE48JU6400
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+        side_effect=WebSocketProtocolError("Boom"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=MOCK_CONFIG_ENCRYPTED_WS,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "fake"
+    assert result["data"][CONF_METHOD] == METHOD_ENCRYPTED_WEBSOCKET
+    assert result["data"][CONF_PORT] == 8000
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "fake"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
@@ -1371,7 +1403,7 @@ async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remoteencws")
 async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
     """Test reauth flow for encrypted TVs."""
-    encrypted_entry_data = {**MOCK_ENTRY_ENCRYPTED_WS}
+    encrypted_entry_data = {**MOCK_ENTRYDATA_ENCRYPTED_WS}
     del encrypted_entry_data[CONF_TOKEN]
     del encrypted_entry_data[CONF_SESSION_ID]
 
