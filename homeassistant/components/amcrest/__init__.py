@@ -52,6 +52,7 @@ from .const import (
     DATA_AMCREST,
     DEVICES,
     DOMAIN,
+    RESOLUTION_LIST,
     SERVICE_EVENT,
     SERVICE_UPDATE,
 )
@@ -75,8 +76,6 @@ RECHECK_INTERVAL = timedelta(minutes=1)
 
 NOTIFICATION_ID = "amcrest_notification"
 NOTIFICATION_TITLE = "Amcrest Camera Setup"
-
-RESOLUTION_LIST = {"high": 0, "low": 1}
 
 SCAN_INTERVAL = timedelta(seconds=10)
 

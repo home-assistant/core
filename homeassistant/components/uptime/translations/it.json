@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Vuoi iniziare la configurazione?"
+            }
+        }
+    },
+    "title": "Tempo di funzionamento"
+}

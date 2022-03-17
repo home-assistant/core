@@ -44,7 +44,6 @@ def _async_device_entities(
     for device in data.get_by_types({model_type}):
         assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock))
         for description in descs:
-            assert isinstance(description, EntityDescription)
             if description.ufp_required_field:
                 required_field = get_nested_attr(device, description.ufp_required_field)
                 if not required_field:
