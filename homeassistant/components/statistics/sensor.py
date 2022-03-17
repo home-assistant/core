@@ -470,17 +470,8 @@ class StatisticsSensor(SensorEntity):
                 self.hass, _scheduled_update, next_to_purge_timestamp
             )
 
-    async def _initialize_from_database(self) -> None:
-        """Initialize the list of states from the database.
-
-        The query will get the list of states in DESCENDING order so that we
-        can limit the result to self._sample_size. Afterwards reverse the
-        list so that we get it in the right order again.
-
-        If MaxAge is provided then query will restrict to entries younger then
-        current datetime - MaxAge.
-        """
-
+    def _fetch_states_from_database(self) -> list[State]:
+        """Fetch the states from the database."""
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
         states = []
 
@@ -509,12 +500,25 @@ class StatisticsSensor(SensorEntity):
             if results := execute(query, to_native=False, validate_entity_ids=False):
                 # After 2023.8 make state.to_native require StateAttributes
                 for state, attributes in results:
-                    native = state.to_native(attributes)
+                    native = state.to_native()
                     if not native.attributes:
                         native.attributes = attributes.to_native()
                     states.append(native)
+            return states
 
-        if states:
+    async def _initialize_from_database(self) -> None:
+        """Initialize the list of states from the database.
+
+        The query will get the list of states in DESCENDING order so that we
+        can limit the result to self._sample_size. Afterwards reverse the
+        list so that we get it in the right order again.
+
+        If MaxAge is provided then query will restrict to entries younger then
+        current datetime - MaxAge.
+        """
+        if states := await self.hass.async_add_executor_job(
+            self._fetch_states_from_database
+        ):
             for state in reversed(states):
                 self._add_state_to_queue(state)
 
