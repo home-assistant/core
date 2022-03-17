@@ -104,8 +104,7 @@ class ReliableClient:
         self._observe_task: asyncio.Task | None = None
         self._commmand_queue: asyncio.Queue = asyncio.Queue()
         # dict key is a unique id that can later be used to remove the observer.
-        self._unavailable_callbacks = dict[int, Callable[[], None]]()
-        self._status_callbacks = dict[int, Callable[[Status], None]]()
+        self._status_callbacks: dict[int, Callable[[Status | None], None]] = {}
         self._last_status_at: datetime = datetime.now(timezone.utc)
         # The purifier sends a status update whenever something changes, which most commonly is the measured
         # pm25 value. When turned on, this usually happens every few seconds to every few 10s of seconds, depending
@@ -137,8 +136,8 @@ class ReliableClient:
             _LOGGER.debug("connecting")
 
             # Notify all observers that the device is currently unavailable
-            for callback in self._unavailable_callbacks.values():
-                callback()
+            for callback in self._status_callbacks.values():
+                callback(None)
 
             try:
                 client_create = CoAPClient.create(host=self._host, port=self._port)
@@ -280,8 +279,14 @@ class ReliableClient:
         if not success:
             _LOGGER.error("Failed to set manual speed %s", speed)
 
-    def observe_status(self, id_: int, callback: Callable[[Status], None]) -> None:
-        """Register the given callable to be called when the client reveives a status update from the purifier."""
+    def observe_status(
+        self, id_: int, callback: Callable[[Status | None], None]
+    ) -> None:
+        """
+        Register the given callable to be called when the client reveives a status update from the purifier.
+
+        The client passes None as status to the callback if the device is unavailable.
+        """
         _LOGGER.debug("observing status")
         self._status_callbacks[id_] = callback
 
@@ -289,13 +294,3 @@ class ReliableClient:
         """Unregister the callable previously registered with the given id from status updates."""
         _LOGGER.debug("stopped observing status")
         del self._status_callbacks[id_]
-
-    def observe_unavailable(self, id_: int, callback: Callable[[], None]) -> None:
-        """Register the given callable to be called when the client is disconnected from the purifier."""
-        _LOGGER.debug("observing unavailable")
-        self._unavailable_callbacks[id_] = callback
-
-    def stop_observing_unavailable(self, id_: int) -> None:
-        """Unregister the callable previously registered with the given id from unavailable updates."""
-        _LOGGER.debug("stopped observing unavailable")
-        del self._unavailable_callbacks[id_]
