@@ -16,11 +16,6 @@ PLATFORMS: list[Platform] = [Platform.COVER]
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """YAML not supported by aladdin_connect."""
-    return True
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
@@ -53,7 +48,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-# async def async_setup(hass: core.HomeAssistant, config: ConfigType) -> bool:
-#    """Set up the GitHub Custom component from yaml configuration."""
-#    hass.data.setdefault(DOMAIN, {})
-#    return True
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the GitHub Custom component from yaml configuration."""
+    hass.data.setdefault(DOMAIN, {})
+    return True
