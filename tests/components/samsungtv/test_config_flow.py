@@ -496,8 +496,9 @@ async def test_ssdp_websocket_not_supported(
         "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
         side_effect=WebSocketProtocolError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.start_listening",
-        side_effect=WebSocketProtocolError("Boom"),
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
+    ) as remotews, patch.object(
+        remotews, "open", side_effect=WebSocketProtocolError("Boom")
     ):
         # device not supported
         result = await hass.config_entries.flow.async_init(
