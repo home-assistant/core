@@ -20,7 +20,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -122,11 +125,11 @@ class GeoJsonFeedEntityManager:
 
     async def _update_entity(self, external_id):
         """Update entity."""
-        dispatcher_send(self._hass, f"geo_json_events_update_{external_id}")
+        async_dispatcher_send(self._hass, f"geo_json_events_update_{external_id}")
 
     async def _remove_entity(self, external_id):
         """Remove entity."""
-        dispatcher_send(self._hass, f"geo_json_events_delete_{external_id}")
+        async_dispatcher_send(self._hass, f"geo_json_events_delete_{external_id}")
 
 
 class GeoJsonLocationEvent(GeolocationEvent):
