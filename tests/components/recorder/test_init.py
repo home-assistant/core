@@ -411,9 +411,6 @@ def _add_entities(hass, entity_ids):
             native_state = state.to_native()
             native_state.attributes = state_attributes.to_native()
             states.append(native_state)
-        import pprint
-
-        pprint.pprint(states)
         return states
 
 
