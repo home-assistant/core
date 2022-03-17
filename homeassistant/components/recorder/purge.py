@@ -127,10 +127,10 @@ def _remove_attribute_ids_used_by_newer_states(
     """Return a list of attribute ids to purge."""
     if not attribute_ids:
         return set()
-    # Can this be made more efficient
     keep_attribute_ids = {
         state.attributes_id
         for state in session.query(States.attributes_id)
+        .distinct()
         .filter(States.last_updated >= purge_before)
         .filter(States.attributes_id.in_(attribute_ids))
     }
@@ -334,10 +334,10 @@ def _remove_attribute_ids_used_by_other_entities(
     """Return a list of attribute ids to purge."""
     if not attribute_ids:
         return set()
-    # Can this be made more efficient?
     keep_attribute_ids = {
         state.attributes_id
         for state in session.query(States.attributes_id)
+        .distinct()
         .filter(~States.event_id.in_(entities))
         .filter(States.attributes_id.in_(attribute_ids))
     }
