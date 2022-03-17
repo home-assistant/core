@@ -9,6 +9,7 @@ omit =
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/acer_projector/*
+
     homeassistant/components/actiontec/const.py
     homeassistant/components/actiontec/device_tracker.py
     homeassistant/components/actiontec/model.py
@@ -42,6 +43,9 @@ omit =
     homeassistant/components/airtouch4/const.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
+    homeassistant/components/aladdin_connect/__init__.py
+    homeassistant/components/aladdin_connect/cover.py
+    homeassistant/components/aladdin_connect/const.py
     homeassistant/components/alarmdecoder/__init__.py
     homeassistant/components/alarmdecoder/alarm_control_panel.py
     homeassistant/components/alarmdecoder/binary_sensor.py
