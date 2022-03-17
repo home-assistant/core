@@ -1,30 +1,28 @@
 {
     "config": {
-      "abort": {
-        "already_configured": "Device is already configured"
-      },
-      "error": {
-        "cannot_connect": "Could not connect to a fireplace endpoint at url: http://{host}/poll\nVerify IP address and try again"
-      },
-      "step": {
-        "dhcp_confirm": {
-          "description": "Do you want to setup {host}?\nSerial: {serial}"
-        },  
-        "manual_device_entry": {
-          "title": "IntelliFire - Local Config",
-          "description": "Enter the IP address of the IntelliFire unit on your local network.",
-          "data": {
-            "host": "Host (IP Address)"
-          }
+        "abort": {
+            "already_configured": "Device is already configured",
+            "not_intellifire_device": "Not an IntelliFire Device."
         },
-        "user": {
-          "description": "Username and password are the same information used in your IntelliFire Android/iOS application.",
-          "title": "IntelliFire Config"
+        "error": {
+            "cannot_connect": "Failed to connect"
         },
-        "pick_device": {
-        "title": "Device Selection",
-        "description": "The following IntelliFire devices were discovered. Please select which you wish to configure."
+        "flow_title": "{host} ({serial})",
+        "step": {
+            "dhcp_confirm": {
+                "description": "Do you want to setup {host}\nSerial: {serial}?"
+            },
+            "manual_device_entry": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Local Configuration"
+            },
+            "pick_device": {
+                "data": {
+                    "host": "Host"
+                }
+            }
         }
-      }
     }
-  }
+}
