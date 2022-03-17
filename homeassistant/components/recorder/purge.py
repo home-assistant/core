@@ -127,17 +127,19 @@ def _remove_attribute_ids_used_by_newer_states(
     """Return a list of attribute ids to purge."""
     if not attribute_ids:
         return set()
+    # Can this be made more efficient
     keep_attribute_ids = {
         state.attributes_id
         for state in session.query(States.attributes_id)
         .filter(States.last_updated >= purge_before)
         .filter(States.attributes_id.in_(attribute_ids))
     }
+    to_remove = attribute_ids - keep_attribute_ids
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
-        len(attribute_ids - keep_attribute_ids),
+        len(to_remove),
     )
-    return attribute_ids - keep_attribute_ids
+    return to_remove
 
 
 def _select_statistics_runs_to_purge(
@@ -332,17 +334,19 @@ def _remove_attribute_ids_used_by_other_entities(
     """Return a list of attribute ids to purge."""
     if not attribute_ids:
         return set()
+    # Can this be made more efficient?
     keep_attribute_ids = {
         state.attributes_id
         for state in session.query(States.attributes_id)
         .filter(~States.event_id.in_(entities))
         .filter(States.attributes_id.in_(attribute_ids))
     }
+    to_remove = attribute_ids - keep_attribute_ids
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
-        len(attribute_ids - keep_attribute_ids),
+        len(to_remove),
     )
-    return attribute_ids - keep_attribute_ids
+    return to_remove
 
 
 def _purge_filtered_states(
@@ -360,7 +364,6 @@ def _purge_filtered_states(
             .all()
         )
     )
-    # TODO: find attributes ids to purge as well
     event_ids = [id_ for id_ in event_ids if id_ is not None]
     attributes_ids_set = _remove_attribute_ids_used_by_other_entities(
         session, excluded_entity_ids, {id_ for id_ in attributes_ids if id_ is not None}
