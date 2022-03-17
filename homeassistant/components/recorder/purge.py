@@ -225,7 +225,7 @@ def _evict_purged_attributes_from_attributes_cache(
     instance: Recorder, purged_attributes_ids: set[int]
 ) -> None:
     """Evict purged attribute ids from the attribute ids cache."""
-    # Make a map from old_state_id to entity_id
+    # Make a map from attributes_id to the attributes json
     old_attributes = instance._state_attributes_ids  # pylint: disable=protected-access
     old_attributes_reversed = {
         attributes_id: attributes
