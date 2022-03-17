@@ -94,6 +94,9 @@ afsapi==0.0.4
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
 
+# homeassistant.components.geo_json_events
+aio_geojson_generic_client==0.1
+
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.13
 
@@ -678,7 +681,6 @@ garages-amsterdam==3.0.0
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
 
-# homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.6
 
