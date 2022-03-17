@@ -97,6 +97,7 @@ def get_significant_states_with_session(
     baked_query = hass.data[HISTORY_BAKERY](
         lambda session: session.query(*QUERY_STATES)
     )
+
     if significant_changes_only:
         baked_query += lambda q: q.filter(
             (
