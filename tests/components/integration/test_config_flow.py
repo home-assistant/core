@@ -101,37 +101,31 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
-    assert get_suggested(schema, "method") == "left"
     assert get_suggested(schema, "round") == 1.0
-    assert get_suggested(schema, "unit_prefix") == "k"
-    assert get_suggested(schema, "unit_time") == "min"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "method": "right",
             "round": 2.0,
-            "unit_prefix": "T",
-            "unit_time": "h",
         },
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        "method": "right",
+        "method": "left",
         "name": "My integration",
         "round": 2.0,
         "source": "sensor.input",
-        "unit_prefix": "T",
-        "unit_time": "h",
+        "unit_prefix": "k",
+        "unit_time": "min",
     }
     assert config_entry.data == {}
     assert config_entry.options == {
-        "method": "right",
+        "method": "left",
         "name": "My integration",
         "round": 2.0,
         "source": "sensor.input",
-        "unit_prefix": "T",
-        "unit_time": "h",
+        "unit_prefix": "k",
+        "unit_time": "min",
     }
     assert config_entry.title == "My integration"
 
@@ -148,4 +142,4 @@ async def test_options(hass: HomeAssistant, platform) -> None:
 
     state = hass.states.get(f"{platform}.my_integration")
     assert state.state != "unknown"
-    assert state.attributes["unit_of_measurement"] == "Tdogh"
+    assert state.attributes["unit_of_measurement"] == "kdogmin"
