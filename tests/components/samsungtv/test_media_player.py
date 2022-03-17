@@ -32,7 +32,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
-    CONF_SESSION_ID,
     DOMAIN as SAMSUNGTV_DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
     METHOD_ENCRYPTED_WEBSOCKET,
@@ -71,7 +70,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .const import SAMPLE_APP_LIST, SAMPLE_DEVICE_INFO_FRAME
+from . import setup_samsungtv_entry
+from .const import MOCK_ENTRY_ENCRYPTED_WS, SAMPLE_APP_LIST, SAMPLE_DEVICE_INFO_FRAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -124,16 +124,6 @@ MOCK_ENTRY_WS_WITH_MAC = {
     CONF_PORT: 8002,
     CONF_TOKEN: "123456789",
 }
-MOCK_ENTRY_ENCRYPTED_WS = {
-    CONF_IP_ADDRESS: "test",
-    CONF_HOST: "fake_host",
-    CONF_METHOD: "encrypted",
-    CONF_MAC: "aa:bb:cc:dd:ee:ff",
-    CONF_NAME: "fake",
-    CONF_PORT: 8000,
-    CONF_TOKEN: "037739871315caef138547b03e348b72",
-    CONF_SESSION_ID: "2",
-}
 
 
 ENTITY_ID_NOTURNON = f"{DOMAIN}.fake_noturnon"
@@ -156,19 +146,6 @@ def delay_fixture():
 async def setup_samsungtv(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up mock Samsung TV."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def setup_samsungtv_entry(hass: HomeAssistant, data: ConfigType) -> None:
-    """Set up mock Samsung TV from config entry data."""
-    entry = MockConfigEntry(
-        domain=SAMSUNGTV_DOMAIN,
-        data=data,
-        unique_id=ENTITY_ID,
-    )
-    entry.add_to_hass(hass)
-
-    await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
     await hass.async_block_till_done()
 
 
