@@ -8,6 +8,7 @@ import pytest
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
+from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -28,6 +29,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
+    CONF_SESSION_ID,
     DOMAIN as SAMSUNGTV_DOMAIN,
     TIMEOUT_WEBSOCKET,
 )
@@ -117,6 +119,20 @@ MOCK_ENTRY_WS_WITH_MAC = {
     CONF_PORT: 8002,
     CONF_TOKEN: "123456789",
 }
+MOCK_ENTRY_ENCRYPTED_WS = MockConfigEntry(
+    domain=SAMSUNGTV_DOMAIN,
+    data={
+        CONF_IP_ADDRESS: "test",
+        CONF_HOST: "fake_host",
+        CONF_METHOD: "encrypted",
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        CONF_NAME: "fake",
+        CONF_PORT: 8000,
+        CONF_TOKEN: "037739871315caef138547b03e348b72",
+        CONF_SESSION_ID: "2",
+    },
+    unique_id=ENTITY_ID,
+)
 
 ENTITY_ID_NOTURNON = f"{DOMAIN}.fake_noturnon"
 MOCK_CONFIG_NOTURNON = {
@@ -218,6 +234,36 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
     state = hass.states.get(entity_id)
     assert state
     remote_class.assert_called_once_with(**MOCK_CALLS_WS)
+
+
+async def test_setup_encrypted_websocket(
+    hass: HomeAssistant, mock_now: datetime
+) -> None:
+    """Test setup of platform from config entry."""
+    MOCK_ENTRY_ENCRYPTED_WS.add_to_hass(hass)
+
+    config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
+    assert len(config_entries) == 1
+    assert MOCK_ENTRY_ENCRYPTED_WS is config_entries[0]
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote"
+    ) as remote_class:
+        remote = Mock(SamsungTVEncryptedWSAsyncRemote)
+        remote.__aenter__ = AsyncMock(return_value=remote)
+        remote.__aexit__ = AsyncMock()
+        remote_class.return_value = remote
+        assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
+        await hass.async_block_till_done()
+
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    remote_class.assert_called_once()
 
 
 @pytest.mark.usefixtures("remote")
@@ -340,6 +386,33 @@ async def test_update_off_ws_with_power_state(
     assert state.state == STATE_OFF
 
     remotews.start_listening.assert_not_called()
+
+
+async def test_update_off_encryptedws(
+    hass: HomeAssistant, remoteencws: Mock, rest_api: Mock, mock_now: datetime
+) -> None:
+    """Testing update tv off."""
+    MOCK_ENTRY_ENCRYPTED_WS.add_to_hass(hass)
+
+    assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    rest_api.rest_device_info.assert_called_once()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+
+    remoteencws.start_listening = Mock(side_effect=WebSocketException("Boom"))
+    remoteencws.is_alive.return_value = False
+
+    next_update = mock_now + timedelta(minutes=5)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+    rest_api.rest_device_info.assert_called_once()
 
 
 @pytest.mark.usefixtures("remote")
