@@ -9,7 +9,7 @@ from types import MappingProxyType
 from typing import Any
 from unittest.mock import ANY, DEFAULT, Mock, patch
 
-from async_upnp_client import UpnpService, UpnpStateVariable
+from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.exceptions import (
     UpnpConnectionError,
     UpnpError,
