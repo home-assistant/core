@@ -13,6 +13,7 @@ from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE
 from homeassistant.components.recorder.models import (
     Events,
     RecorderRuns,
+    StateAttributes,
     States,
     StatisticsRuns,
     StatisticsShortTerm,
@@ -368,6 +369,14 @@ async def test_purge_edge_case(
                     last_changed=timestamp,
                     last_updated=timestamp,
                     event_id=1001,
+                    attributes_id=1002,
+                )
+            )
+            session.add(
+                StateAttributes(
+                    shared_attrs="{}",
+                    hash=1234,
+                    attributes_id=1002,
                 )
             )
 
@@ -381,6 +390,9 @@ async def test_purge_edge_case(
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 1
+
+        state_attributes = session.query(StateAttributes)
+        assert state_attributes.count() == 1
 
         events = session.query(Events).filter(Events.event_type == "EVENT_TEST_PURGE")
         assert events.count() == 1
@@ -426,6 +438,14 @@ async def test_purge_cutoff_date(
                     last_changed=timestamp_keep,
                     last_updated=timestamp_keep,
                     event_id=1000,
+                    attributes_id=1000,
+                )
+            )
+            session.add(
+                StateAttributes(
+                    shared_attrs="{}",
+                    hash=1234,
+                    attributes_id=1000,
                 )
             )
             for row in range(1, rows):
@@ -447,6 +467,14 @@ async def test_purge_cutoff_date(
                         last_changed=timestamp_purge,
                         last_updated=timestamp_purge,
                         event_id=1000 + row,
+                        attributes_id=1000 + row,
+                    )
+                )
+                session.add(
+                    StateAttributes(
+                        shared_attrs="{}",
+                        hash=1234,
+                        attributes_id=1000 + row,
                     )
                 )
 
@@ -462,9 +490,18 @@ async def test_purge_cutoff_date(
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
+        state_attributes = session.query(StateAttributes)
         events = session.query(Events)
         assert states.filter(States.state == "purge").count() == rows - 1
         assert states.filter(States.state == "keep").count() == 1
+        assert (
+            state_attributes.outerjoin(
+                States, StateAttributes.attributes_id == States.attributes_id
+            )
+            .filter(States.state == "keep")
+            .count()
+            == 1
+        )
         assert events.filter(Events.event_type == "PURGE").count() == rows - 1
         assert events.filter(Events.event_type == "KEEP").count() == 1
 
@@ -474,9 +511,26 @@ async def test_purge_cutoff_date(
         await async_wait_purge_done(hass, instance)
 
         states = session.query(States)
+        state_attributes = session.query(StateAttributes)
         events = session.query(Events)
         assert states.filter(States.state == "purge").count() == 0
+        assert (
+            state_attributes.outerjoin(
+                States, StateAttributes.attributes_id == States.attributes_id
+            )
+            .filter(States.state == "purge")
+            .count()
+            == 0
+        )
         assert states.filter(States.state == "keep").count() == 1
+        assert (
+            state_attributes.outerjoin(
+                States, StateAttributes.attributes_id == States.attributes_id
+            )
+            .filter(States.state == "keep")
+            .count()
+            == 1
+        )
         assert events.filter(Events.event_type == "PURGE").count() == 0
         assert events.filter(Events.event_type == "KEEP").count() == 1
 
