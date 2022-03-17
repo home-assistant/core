@@ -75,6 +75,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_import(
+        self, import_data: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Import blink config from configuration.yaml."""
+        return await self.async_step_user(import_data)
+
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
