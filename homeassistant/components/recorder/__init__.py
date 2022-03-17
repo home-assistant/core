@@ -800,6 +800,10 @@ class Recorder(threading.Thread):
     def _process_one_task_or_recover(self, task: RecorderTask):
         """Process an event, reconnect, or recover a malformed database."""
         try:
+            # If its not an event, commit everything
+            # that is pending before running the task
+            if not isinstance(task, EventTask):
+                self._commit_event_session_or_retry()
             return task.run(self)
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
