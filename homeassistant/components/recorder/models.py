@@ -8,6 +8,7 @@ from typing import TypedDict, overload
 
 from fnvhash import fnv1a_32
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -238,7 +239,7 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
     )
     __tablename__ = TABLE_STATE_ATTRIBUTES
     attributes_id = Column(Integer, Identity(), primary_key=True)
-    hash = Column(Integer, index=True)
+    hash = Column(BigInteger, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
     shared_attrs = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
 
@@ -626,7 +627,7 @@ class LazyState(State):
             last_changed_isoformat = process_timestamp_to_utc_isoformat(
                 self._row.last_changed
             )
-        if self._last_changed == self._last_updated:
+        if self._row.last_changed == self._row.last_updated:
             last_updated_isoformat = last_changed_isoformat
         elif self._last_updated:
             last_updated_isoformat = self._last_updated.isoformat()
