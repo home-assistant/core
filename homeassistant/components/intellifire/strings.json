@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Discovered Fireplace ({host})",
+    "flow_title": "{host}:{serial}",
     "step": {
       "manual_device_entry": {
         "description": "Local Configuration",
@@ -9,7 +9,7 @@
         }
       },
       "dhcp_confirm": {
-        "description": "Do you want to setup {host}?"
+        "description": "Do you want to setup {host}\nSerial: {serial}?"
       },
       "pick_device": {
         "data": {

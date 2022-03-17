@@ -174,7 +174,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             # Show the confirmation dialog
             return self.async_show_form(
-                step_id="dhcp_confirm", description_placeholders={CONF_HOST: host}
+                step_id="dhcp_confirm",
+                description_placeholders={CONF_HOST: host, "serial": serial},
             )
 
         return self.async_create_entry(
