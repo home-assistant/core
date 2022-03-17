@@ -31,7 +31,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 from .const import (
-    ALLOWED_RTSP_TRANSPORT_PROTOCOLS,
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
@@ -41,6 +40,7 @@ from .const import (
     DEFAULT_NAME,
     FFMPEG_OPTION_MAP,
     GET_IMAGE_TIMEOUT,
+    RTSP_TRANSPORTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.small_float, cv.positive_int
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(ALLOWED_RTSP_TRANSPORT_PROTOCOLS),
+        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS.keys()),
     }
 )
 
