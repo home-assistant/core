@@ -10,6 +10,8 @@ from sqlalchemy import func
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
+from homeassistant.const import EVENT_STATE_CHANGED
+
 from .const import MAX_ROWS_TO_PURGE
 from .models import (
     Events,
@@ -47,7 +49,7 @@ def purge_old_data(
         state_ids, attributes_ids = _select_state_and_attributes_ids_to_purge(
             session, purge_before, event_ids
         )
-        attribute_ids = _select_attribute_ids_to_purge(
+        attribute_ids = _remove_attribute_ids_used_by_newer_states(
             session, purge_before, attributes_ids
         )
         statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
@@ -119,7 +121,7 @@ def _select_state_and_attributes_ids_to_purge(
     return state_ids, attribute_ids
 
 
-def _select_attribute_ids_to_purge(
+def _remove_attribute_ids_used_by_newer_states(
     session: Session, purge_before: datetime, attribute_ids: set[int]
 ) -> set[int]:
     """Return a list of attribute ids to purge."""
@@ -322,15 +324,35 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
     return True
 
 
+def _remove_attribute_ids_used_by_other_entities(
+    session: Session, entities: list[str], attribute_ids: set[int]
+) -> set[int]:
+    """Return a list of attribute ids to purge."""
+    if not attribute_ids:
+        return set()
+    keep_attribute_ids = {
+        state.attributes_id
+        for state in session.query(States.attributes_id)
+        .filter(~States.event_id.in_(entities))
+        .filter(States.attributes_id.in_(attribute_ids))
+    }
+    _LOGGER.debug(
+        "Selected %s shared attributes to remove",
+        len(attribute_ids - keep_attribute_ids),
+    )
+    return attribute_ids - keep_attribute_ids
+
+
 def _purge_filtered_states(
     instance: Recorder, session: Session, excluded_entity_ids: list[str]
 ) -> None:
     """Remove filtered states and linked events."""
     state_ids: list[int]
+    attributes_ids: list[int]
     event_ids: list[int | None]
-    state_ids, event_ids = zip(
+    state_ids, attributes_ids, event_ids = zip(
         *(
-            session.query(States.state_id, States.event_id)
+            session.query(States.state_id, States.attributes_id, States.event_id)
             .filter(States.entity_id.in_(excluded_entity_ids))
             .limit(MAX_ROWS_TO_PURGE)
             .all()
@@ -338,11 +360,15 @@ def _purge_filtered_states(
     )
     # TODO: find attributes ids to purge as well
     event_ids = [id_ for id_ in event_ids if id_ is not None]
+    attributes_ids_set = _remove_attribute_ids_used_by_other_entities(
+        session, excluded_entity_ids, {id_ for id_ in attributes_ids if id_ is not None}
+    )
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
     )
     _purge_state_ids(instance, session, set(state_ids))
     _purge_event_ids(session, event_ids)  # type: ignore[arg-type]  # type of event_ids already narrowed to 'list[int]'
+    _purge_attribute_ids(instance, session, attributes_ids_set)
 
 
 def _purge_filtered_events(
@@ -355,17 +381,21 @@ def _purge_filtered_events(
         .limit(MAX_ROWS_TO_PURGE)
         .all()
     )
-    event_ids: list[int] = [event.event_id for event in events]
+    event_ids: list[int] = [
+        event.event_id for event in events if event.event_id is not None
+    ]
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids)
     )
     states: list[States] = (
         session.query(States.state_id).filter(States.event_id.in_(event_ids)).all()
     )
-    # TODO: find attributes ids to purge as well
     state_ids: set[int] = {state.state_id for state in states}
     _purge_state_ids(instance, session, state_ids)
     _purge_event_ids(session, event_ids)
+    if EVENT_STATE_CHANGED in excluded_event_types:
+        session.query(StateAttributes).delete(synchronize_session=False)
+        instance._state_attributes_ids = {}  # pylint: disable=protected-access
 
 
 @retryable_database_job("purge")
