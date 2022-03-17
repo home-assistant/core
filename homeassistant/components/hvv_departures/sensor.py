@@ -5,10 +5,13 @@ import logging
 from aiohttp import ClientConnectorError
 from pygti.exceptions import InvalidAuth
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 from homeassistant.util.dt import get_time_zone, utcnow
 
@@ -33,7 +36,11 @@ BERLIN_TIME_ZONE = get_time_zone("Europe/Berlin")
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Set up the sensor platform."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -116,7 +123,7 @@ class HVVDepartureSensor(SensorEntity):
             departure_time
             + timedelta(minutes=departure["timeOffset"])
             + timedelta(seconds=delay)
-        ).isoformat()
+        )
 
         self.attr.update(
             {
@@ -195,7 +202,7 @@ class HVVDepartureSensor(SensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_TIMESTAMP
+        return SensorDeviceClass.TIMESTAMP
 
     @property
     def extra_state_attributes(self):

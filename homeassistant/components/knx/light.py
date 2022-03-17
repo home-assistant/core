@@ -1,7 +1,7 @@
 """Support for KNX/IP lights."""
 from __future__ import annotations
 
-from typing import Any, Tuple, cast
+from typing import Any, cast
 
 from xknx import XKNX
 from xknx.devices.light import Light as XknxLight, XYYColor
@@ -23,19 +23,13 @@ from homeassistant.components.light import (
     COLOR_MODE_XY,
     LightEntity,
 )
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
-from .const import (
-    DATA_KNX_CONFIG,
-    DOMAIN,
-    KNX_ADDRESS,
-    ColorTempModes,
-    SupportedPlatforms,
-)
+from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, ColorTempModes
 from .knx_entity import KnxEntity
 from .schema import LightSchema
 
@@ -47,9 +41,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up light(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
-        SupportedPlatforms.LIGHT.value
-    ]
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.LIGHT]
 
     async_add_entities(KNXLight(xknx, entity_config) for entity_config in config)
 
@@ -220,7 +212,7 @@ class KNXLight(KnxEntity, LightEntity):
                 if not self._device.supports_brightness:
                     # brightness will be calculated from color so color must not hold brightness again
                     return cast(
-                        Tuple[int, int, int], color_util.match_max_scale((255,), rgb)
+                        tuple[int, int, int], color_util.match_max_scale((255,), rgb)
                     )
                 return rgb
         return None
@@ -234,7 +226,7 @@ class KNXLight(KnxEntity, LightEntity):
                 if not self._device.supports_brightness:
                     # brightness will be calculated from color so color must not hold brightness again
                     return cast(
-                        Tuple[int, int, int, int],
+                        tuple[int, int, int, int],
                         color_util.match_max_scale((255,), (*rgb, white)),
                     )
                 return (*rgb, white)
@@ -335,7 +327,7 @@ class KNXLight(KnxEntity, LightEntity):
                 # normalize for brightness if brightness is derived from color
                 brightness = self.brightness or 255
             rgb = cast(
-                Tuple[int, int, int],
+                tuple[int, int, int],
                 tuple(color * brightness // 255 for color in rgb),
             )
             white = white * brightness // 255 if white is not None else None

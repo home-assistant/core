@@ -26,7 +26,7 @@ from .const import (
     SEGMENT_CONTAINER_FORMAT,
     SOURCE_TIMEOUT,
 )
-from .core import Part, Segment, StreamOutput, StreamSettings
+from .core import KeyFrameConverter, Part, Segment, StreamOutput, StreamSettings
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
@@ -439,6 +439,7 @@ def stream_worker(
     source: str,
     options: dict[str, str],
     stream_state: StreamState,
+    keyframe_converter: KeyFrameConverter,
     quit_event: Event,
 ) -> None:
     """Handle consuming streams."""
@@ -447,12 +448,13 @@ def stream_worker(
         container = av.open(source, options=options, timeout=SOURCE_TIMEOUT)
     except av.AVError as err:
         raise StreamWorkerError(
-            "Error opening stream %s" % redact_credentials(str(source))
+            f"Error opening stream ({err.type}, {err.strerror}) {redact_credentials(str(source))}"
         ) from err
     try:
         video_stream = container.streams.video[0]
     except (KeyError, IndexError) as ex:
         raise StreamWorkerError("Stream has no video") from ex
+    keyframe_converter.create_codec_context(codec_context=video_stream.codec_context)
     try:
         audio_stream = container.streams.audio[0]
     except (KeyError, IndexError):
@@ -474,7 +476,7 @@ def stream_worker(
 
     def is_video(packet: av.Packet) -> Any:
         """Return true if the packet is for the video stream."""
-        return packet.stream == video_stream
+        return packet.stream.type == "video"
 
     # Have to work around two problems with RTSP feeds in ffmpeg
     # 1 - first frame has bad pts/dts https://trac.ffmpeg.org/ticket/5018
@@ -535,3 +537,6 @@ def stream_worker(
                 raise StreamWorkerError("Error demuxing stream: %s" % str(ex)) from ex
 
             muxer.mux_packet(packet)
+
+            if packet.is_keyframe and is_video(packet):
+                keyframe_converter.packet = packet

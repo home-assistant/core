@@ -16,7 +16,7 @@ async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit):
     test_address = "1/1/1"
     await knx.setup_integration(
         {
-            NumberSchema.PLATFORM_NAME: {
+            NumberSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: test_address,
                 CONF_TYPE: "percent",
@@ -72,7 +72,7 @@ async def test_number_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit):
     ):
         await knx.setup_integration(
             {
-                NumberSchema.PLATFORM_NAME: {
+                NumberSchema.PLATFORM: {
                     CONF_NAME: "test",
                     KNX_ADDRESS: [test_address, test_passive_address],
                     CONF_RESPOND_TO_READ: True,

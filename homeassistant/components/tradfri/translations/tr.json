@@ -13,7 +13,7 @@
         "step": {
             "auth": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Sunucu",
                     "security_code": "G\u00fcvenlik Kodu"
                 },
                 "description": "G\u00fcvenlik kodunu a\u011f ge\u00e7idinizin arkas\u0131nda bulabilirsiniz.",

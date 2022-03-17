@@ -4,17 +4,14 @@ from __future__ import annotations
 from fjaraskupan import Device, State
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-)
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -56,11 +53,11 @@ class RssiSensor(CoordinatorEntity[State], SensorEntity):
         self._attr_unique_id = f"{device.address}-signal-strength"
         self._attr_device_info = device_info
         self._attr_name = f"{device_info['name']} Signal Strength"
-        self._attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
         self._attr_entity_registry_enabled_default = False
-        self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self) -> StateType:

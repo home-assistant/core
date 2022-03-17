@@ -9,5 +9,6 @@
   "codeowners": [
     "@abmantis"
   ],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["whirlpool"]
 }

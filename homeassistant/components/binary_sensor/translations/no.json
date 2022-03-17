@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} batteriniv\u00e5et er lavt",
+            "is_co": "{entity_name} oppdager karbonmonoksid",
             "is_cold": "{entity_name} er kald",
             "is_connected": "{entity_name} er tilkoblet",
             "is_gas": "{entity_name} registrerer gass",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} er fuktig",
             "is_motion": "{entity_name} registrerer bevegelse",
             "is_moving": "{entity_name} er i bevegelse",
+            "is_no_co": "{entity_name} oppdager ikke karbonmonoksid",
             "is_no_gas": "{entity_name} registrerer ikke gass",
             "is_no_light": "{entity_name} registrerer ikke lys",
             "is_no_motion": "{entity_name} registrerer ikke bevegelse",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} lavt batteri",
+            "co": "{entity_name} begynte \u00e5 oppdage karbonmonoksid",
             "cold": "{entity_name} ble kald",
             "connected": "{entity_name} tilkoblet",
             "gas": "{entity_name} begynte \u00e5 registrere gass",
@@ -63,6 +66,7 @@
             "moist": "{entity_name} ble fuktig",
             "motion": "{entity_name} begynte \u00e5 registrere bevegelse",
             "moving": "{entity_name} begynte \u00e5 bevege seg",
+            "no_co": "{entity_name} sluttet \u00e5 oppdage karbonmonoksid",
             "no_gas": "{entity_name} sluttet \u00e5 registrere gass",
             "no_light": "{entity_name} sluttet \u00e5 registrere lys",
             "no_motion": "{entity_name} sluttet \u00e5 registrere bevegelse",
@@ -84,6 +88,7 @@
             "not_powered": "{entity_name} spenningsl\u00f8s",
             "not_present": "{entity_name} ikke til stede",
             "not_running": "{entity_name} kj\u00f8rer ikke lenger",
+            "not_tampered": "{entity_name} sluttet \u00e5 oppdage manipulering",
             "not_unsafe": "{entity_name} ble trygg",
             "occupied": "{entity_name} ble opptatt",
             "opened": "{entity_name} \u00e5pnet",
@@ -94,6 +99,7 @@
             "running": "{entity_name} begynte \u00e5 kj\u00f8re",
             "smoke": "{entity_name} begynte \u00e5 registrere r\u00f8yk",
             "sound": "{entity_name} begynte \u00e5 registrere lyd",
+            "tampered": "{entity_name} begynte \u00e5 oppdage manipulering",
             "turned_off": "{entity_name} sl\u00e5tt av",
             "turned_on": "{entity_name} sl\u00e5tt p\u00e5",
             "unsafe": "{entity_name} ble usikker",
@@ -102,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "karbonmonoksid",
         "cold": "kald",
         "gas": "Gass",
         "heat": "varme",
@@ -126,6 +133,14 @@
         "battery_charging": {
             "off": "Lader ikke",
             "on": "Lader"
+        },
+        "carbon_monoxide": {
+            "off": "Klart",
+            "on": "Oppdaget"
+        },
+        "co": {
+            "off": "Klart",
+            "on": "Oppdaget"
         },
         "cold": {
             "off": "Normal",

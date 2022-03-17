@@ -1,8 +1,14 @@
 """Test Z-Wave sensor."""
+import pytest
+
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.zwave import const, sensor
 import homeassistant.const
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 def test_get_device_detects_none(mock_openzwave):
@@ -67,7 +73,7 @@ def test_get_device_detects_battery_sensor(mock_openzwave):
 
     device = sensor.get_device(node=node, values=values, node_config={})
     assert isinstance(device, sensor.ZWaveBatterySensor)
-    assert device.device_class == homeassistant.const.DEVICE_CLASS_BATTERY
+    assert device.device_class is SensorDeviceClass.BATTERY
 
 
 def test_multilevelsensor_value_changed_temp_fahrenheit(hass, mock_openzwave):
@@ -87,7 +93,7 @@ def test_multilevelsensor_value_changed_temp_fahrenheit(hass, mock_openzwave):
     device.hass = hass
     assert device.state == 191.0
     assert device.unit_of_measurement == homeassistant.const.TEMP_FAHRENHEIT
-    assert device.device_class == homeassistant.const.DEVICE_CLASS_TEMPERATURE
+    assert device.device_class is SensorDeviceClass.TEMPERATURE
     value.data = 197.95555
     value_changed(value)
     assert device.state == 198.0
@@ -109,7 +115,7 @@ def test_multilevelsensor_value_changed_temp_celsius(hass, mock_openzwave):
     device.hass = hass
     assert device.state == 38.9
     assert device.unit_of_measurement == homeassistant.const.TEMP_CELSIUS
-    assert device.device_class == homeassistant.const.DEVICE_CLASS_TEMPERATURE
+    assert device.device_class is SensorDeviceClass.TEMPERATURE
     value.data = 37.95555
     value_changed(value)
     assert device.state == 38.0

@@ -15,8 +15,8 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.components.ssdp import SsdpChange
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -44,7 +44,7 @@ from .device import Device
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -91,16 +91,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register device discovered-callback.
     device_discovered_event = asyncio.Event()
-    discovery_info: Mapping[str, Any] | None = None
+    discovery_info: ssdp.SsdpServiceInfo | None = None
 
-    async def device_discovered(headers: Mapping[str, Any], change: SsdpChange) -> None:
-        if change == SsdpChange.BYEBYE:
+    async def device_discovered(
+        headers: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
+    ) -> None:
+        if change == ssdp.SsdpChange.BYEBYE:
             return
 
         nonlocal discovery_info
-        LOGGER.debug(
-            "Device discovered: %s, at: %s", usn, headers[ssdp.ATTR_SSDP_LOCATION]
-        )
+        LOGGER.debug("Device discovered: %s, at: %s", usn, headers.ssdp_location)
         discovery_info = headers
         device_discovered_event.set()
 
@@ -121,9 +121,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cancel_discovered_callback()
 
     # Create device.
-    location = discovery_info[  # pylint: disable=unsubscriptable-object
-        ssdp.ATTR_SSDP_LOCATION
-    ]
+    assert discovery_info is not None
+    assert discovery_info.ssdp_location is not None
+    location = discovery_info.ssdp_location
     try:
         device = await Device.async_create_device(hass, location)
     except UpnpConnectionError as err:
@@ -179,8 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    # Create sensors.
-    LOGGER.debug("Enabling sensors")
+    # Setup platforms, creating sensors/binary_sensors.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -190,7 +189,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload a UPnP/IGD device from a config entry."""
     LOGGER.debug("Unloading config entry: %s", config_entry.unique_id)
 
-    LOGGER.debug("Deleting sensors")
+    # Unload platforms.
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 

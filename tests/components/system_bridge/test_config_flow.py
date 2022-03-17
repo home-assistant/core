@@ -30,6 +30,7 @@ FIXTURE_ZEROCONF_INPUT = {
 
 FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
+    addresses=["1.1.1.1"],
     port=9170,
     hostname="test-bridge.local.",
     type="_system-bridge._udp.local.",
@@ -47,6 +48,7 @@ FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
 
 FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
+    addresses=["1.1.1.1"],
     port=9170,
     hostname="test-bridge.local.",
     type="_system-bridge._udp.local.",
@@ -81,9 +83,7 @@ FIXTURE_BASE_URL = (
     f"http://{FIXTURE_USER_INPUT[CONF_HOST]}:{FIXTURE_USER_INPUT[CONF_PORT]}"
 )
 
-FIXTURE_ZEROCONF_BASE_URL = (
-    f"http://{FIXTURE_ZEROCONF[CONF_HOST]}:{FIXTURE_ZEROCONF[CONF_PORT]}"
-)
+FIXTURE_ZEROCONF_BASE_URL = f"http://{FIXTURE_ZEROCONF.host}:{FIXTURE_ZEROCONF.port}"
 
 
 async def test_user_flow(

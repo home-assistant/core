@@ -1,24 +1,21 @@
 """Support for MQTT discovery."""
 import asyncio
 from collections import deque
-from dataclasses import dataclass
-import datetime as dt
 import functools
 import json
 import logging
 import re
 import time
-from typing import Any
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, BaseServiceInfo
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.frame import report
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -31,7 +28,6 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
-from .models import ReceivePayloadType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,8 +49,10 @@ SUPPORTED_COMPONENTS = [
     "humidifier",
     "light",
     "lock",
+    "notify",
     "number",
     "scene",
+    "siren",
     "select",
     "sensor",
     "switch",
@@ -89,36 +87,6 @@ def set_discovery_hash(hass, discovery_hash):
 
 class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
-
-
-@dataclass
-class MqttServiceInfo(BaseServiceInfo):
-    """Prepared info from mqtt entries."""
-
-    topic: str
-    payload: ReceivePayloadType
-    qos: int
-    retain: bool
-    subscribed_topic: str
-    timestamp: dt.datetime
-
-    # Used to prevent log flooding. To be removed in 2022.6
-    _warning_logged: bool = False
-
-    def __getitem__(self, name: str) -> Any:
-        """
-        Allow property access by name for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        if not self._warning_logged:
-            report(
-                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={"mqtt"},
-                error_if_core=False,
-            )
-            self._warning_logged = True
-        return getattr(self, name)
 
 
 async def async_start(  # noqa: C901
@@ -262,13 +230,21 @@ async def async_start(  # noqa: C901
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     if component == "device_automation":
                         # Local import to avoid circular dependencies
-                        # pylint: disable=import-outside-toplevel
+                        # pylint: disable-next=import-outside-toplevel
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
-                    elif component == "tag":
+                    elif component in "notify":
                         # Local import to avoid circular dependencies
                         # pylint: disable=import-outside-toplevel
+                        from . import notify
+
+                        await notify.async_setup_entry(
+                            hass, config_entry, AddEntitiesCallback
+                        )
+                    elif component in "tag":
+                        # Local import to avoid circular dependencies
+                        # pylint: disable-next=import-outside-toplevel
                         from . import tag
 
                         await tag.async_setup_entry(hass, config_entry)
@@ -323,7 +299,7 @@ async def async_start(  # noqa: C901
                 if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
                     return
 
-                data = MqttServiceInfo(
+                data = mqtt.MqttServiceInfo(
                     topic=msg.topic,
                     payload=msg.payload,
                     qos=msg.qos,

@@ -1,7 +1,6 @@
 """Config flow for TP-Link."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from kasa import SmartDevice, SmartDeviceException
@@ -10,16 +9,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_discover_devices, async_entry_is_legacy
+from . import async_discover_devices
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -35,13 +32,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
         return await self._async_handle_discovery(
-            discovery_info[dhcp.IP_ADDRESS], discovery_info[dhcp.MAC_ADDRESS]
+            discovery_info.ip, discovery_info.macaddress
         )
 
-    async def async_step_discovery(
+    async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         return await self._async_handle_discovery(
             discovery_info[CONF_HOST], discovery_info[CONF_MAC]
         )
@@ -114,9 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self._async_create_entry_from_device(self._discovered_devices[mac])
 
         configured_devices = {
-            entry.unique_id
-            for entry in self._async_current_entries()
-            if not async_entry_is_legacy(entry)
+            entry.unique_id for entry in self._async_current_entries()
         }
         self._discovered_devices = await async_discover_devices(self.hass)
         devices_name = {
@@ -132,18 +127,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def async_step_migration(self, migration_input: dict[str, Any]) -> FlowResult:
-        """Handle migration from legacy config entry to per device config entry."""
-        mac = migration_input[CONF_MAC]
-        await self.async_set_unique_id(dr.format_mac(mac), raise_on_progress=False)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=migration_input[CONF_NAME],
-            data={
-                CONF_HOST: migration_input[CONF_HOST],
-            },
-        )
-
     @callback
     def _async_create_entry_from_device(self, device: SmartDevice) -> FlowResult:
         """Create a config entry from a smart device."""
@@ -154,16 +137,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: device.host,
             },
         )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle import step."""
-        host = user_input[CONF_HOST]
-        try:
-            device = await self._async_try_connect(host, raise_on_progress=False)
-        except SmartDeviceException:
-            _LOGGER.error("Failed to import %s: cannot connect", host)
-            return self.async_abort(reason="cannot_connect")
-        return self._async_create_entry_from_device(device)
 
     async def _async_try_connect(
         self, host: str, raise_on_progress: bool = True

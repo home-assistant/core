@@ -4,18 +4,20 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Sequence
 from contextlib import asynccontextmanager, suppress
+from contextvars import ContextVar
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Dict, TypedDict, Union, cast
+from typing import Any, TypedDict, Union, cast
 
 import async_timeout
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.components import device_automation, scene
+from homeassistant.components import scene
+from homeassistant.components.device_automation import action as device_action
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -56,29 +58,18 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.helpers import condition, config_validation as cv, service, template
-from homeassistant.helpers.condition import (
-    ConditionCheckerType,
-    trace_condition_function,
-)
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.event import async_call_later, async_track_template
-from homeassistant.helpers.script_variables import ScriptVariables
-from homeassistant.helpers.trace import script_execution_set
-from homeassistant.helpers.trigger import (
-    async_initialize_triggers,
-    async_validate_trigger_config,
-)
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
+from . import condition, config_validation as cv, service, template
+from .condition import ConditionCheckerType, trace_condition_function
+from .dispatcher import async_dispatcher_connect, async_dispatcher_send
+from .event import async_call_later, async_track_template
+from .script_variables import ScriptVariables
 from .trace import (
     TraceElement,
     async_trace_path,
+    script_execution_set,
     trace_append_element,
     trace_id_get,
     trace_path,
@@ -90,6 +81,8 @@ from .trace import (
     trace_stack_top,
     trace_update_result,
 )
+from .trigger import async_initialize_triggers, async_validate_trigger_config
+from .typing import ConfigType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -117,6 +110,7 @@ ATTR_MAX = "max"
 
 DATA_SCRIPTS = "helpers.script"
 DATA_SCRIPT_BREAKPOINTS = "helpers.script_breakpoints"
+DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED = "helpers.script_not_allowed"
 RUN_ID_ANY = "*"
 NODE_ANY = "*"
 
@@ -133,6 +127,8 @@ ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated action
 SCRIPT_BREAKPOINT_HIT = "script_breakpoint_hit"
 SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
+
+script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", default=None)
 
 
 def action_trace_append(variables, path):
@@ -253,16 +249,10 @@ async def async_validate_action_config(
         pass
 
     elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
-        platform = await device_automation.async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], "action"
-        )
-        if hasattr(platform, "async_validate_action_config"):
-            config = await platform.async_validate_action_config(hass, config)  # type: ignore
-        else:
-            config = platform.ACTION_SCHEMA(config)  # type: ignore
+        config = await device_action.async_validate_action_config(hass, config)
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-        config = await condition.async_validate_condition_config(hass, config)  # type: ignore
+        config = await condition.async_validate_condition_config(hass, config)
 
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
         config[CONF_WAIT_FOR_TRIGGER] = await async_validate_trigger_config(
@@ -270,6 +260,16 @@ async def async_validate_action_config(
         )
 
     elif action_type == cv.SCRIPT_ACTION_REPEAT:
+        if CONF_UNTIL in config[CONF_REPEAT]:
+            conditions = await condition.async_validate_conditions_config(
+                hass, config[CONF_REPEAT][CONF_UNTIL]
+            )
+            config[CONF_REPEAT][CONF_UNTIL] = conditions
+        if CONF_WHILE in config[CONF_REPEAT]:
+            conditions = await condition.async_validate_conditions_config(
+                hass, config[CONF_REPEAT][CONF_WHILE]
+            )
+            config[CONF_REPEAT][CONF_WHILE] = conditions
         config[CONF_REPEAT][CONF_SEQUENCE] = await async_validate_actions_config(
             hass, config[CONF_REPEAT][CONF_SEQUENCE]
         )
@@ -281,6 +281,10 @@ async def async_validate_action_config(
             )
 
         for choose_conf in config[CONF_CHOOSE]:
+            conditions = await condition.async_validate_conditions_config(
+                hass, choose_conf[CONF_CONDITIONS]
+            )
+            choose_conf[CONF_CONDITIONS] = conditions
             choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
                 hass, choose_conf[CONF_SEQUENCE]
             )
@@ -340,6 +344,12 @@ class _ScriptRun:
 
     async def async_run(self) -> None:
         """Run script."""
+        # Push the script to the script execution stack
+        if (script_stack := script_stack_cv.get()) is None:
+            script_stack = []
+            script_stack_cv.set(script_stack)
+        script_stack.append(id(self._script))
+
         try:
             self._log("Running %s", self._script.running_description)
             for self._step, self._action in enumerate(self._script.sequence):
@@ -355,6 +365,8 @@ class _ScriptRun:
             script_execution_set("error")
             raise
         finally:
+            # Pop the script from the script execution stack
+            script_stack.pop()
             self._finish()
 
     async def _async_step(self, log_exceptions):
@@ -575,10 +587,7 @@ class _ScriptRun:
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""
         self._step_log("device automation")
-        platform = await device_automation.async_get_device_automation_platform(
-            self._hass, self._action[CONF_DOMAIN], "action"
-        )
-        await platform.async_call_action_from_config(
+        await device_action.async_call_action_from_config(
             self._hass, self._action, self._variables, self._context
         )
 
@@ -735,7 +744,7 @@ class _ScriptRun:
         if saved_repeat_vars:
             self._variables["repeat"] = saved_repeat_vars
         else:
-            del self._variables["repeat"]
+            self._variables.pop("repeat", None)  # Not set if count = 0
 
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
@@ -851,12 +860,13 @@ class _QueuedScriptRun(_ScriptRun):
                 {lock_task, stop_task}, return_when=asyncio.FIRST_COMPLETED
             )
         except asyncio.CancelledError:
-            lock_task.cancel()
             self._finish()
             raise
+        else:
+            self.lock_acquired = lock_task.done() and not lock_task.cancelled()
         finally:
+            lock_task.cancel()
             stop_task.cancel()
-        self.lock_acquired = lock_task.done() and not lock_task.cancelled()
 
         # If we've been told to stop, then just finish up. Otherwise, we've acquired the
         # lock so we can go ahead and start the run.
@@ -875,6 +885,7 @@ class _QueuedScriptRun(_ScriptRun):
 
 async def _async_stop_scripts_after_shutdown(hass, point_in_time):
     """Stop running Script objects started after shutdown."""
+    hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
         script for script in hass.data[DATA_SCRIPTS] if script["instance"].is_running
     ]
@@ -908,7 +919,7 @@ async def _async_stop_scripts_at_shutdown(hass, event):
         )
 
 
-_VarsType = Union[Dict[str, Any], MappingProxyType]
+_VarsType = Union[dict[str, Any], MappingProxyType]
 
 
 def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> None:
@@ -1038,6 +1049,7 @@ class Script:
         if self._change_listener_job:
             self._hass.async_run_hass_job(self._change_listener_job)
 
+    @callback
     def _chain_change_listener(self, sub_script: Script) -> None:
         if sub_script.is_running:
             self.last_action = sub_script.last_action
@@ -1183,6 +1195,12 @@ class Script:
             )
             context = Context()
 
+        # Prevent spawning new script runs when Home Assistant is shutting down
+        if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
+            self._log("Home Assistant is shutting down, starting script blocked")
+            return
+
+        # Prevent spawning new script runs if not allowed by script mode
         if self.is_running:
             if self.script_mode == SCRIPT_MODE_SINGLE:
                 if self._max_exceeded != "SILENT":
@@ -1208,7 +1226,7 @@ class Script:
                         self._hass,
                         run_variables,
                     )
-                except template.TemplateError as err:
+                except exceptions.TemplateError as err:
                     self._log("Error rendering variables: %s", err, level=logging.ERROR)
                     raise
             elif run_variables:
@@ -1219,6 +1237,18 @@ class Script:
             variables["context"] = context
         else:
             variables = cast(dict, run_variables)
+
+        # Prevent non-allowed recursive calls which will cause deadlocks when we try to
+        # stop (restart) or wait for (queued) our own script run.
+        script_stack = script_stack_cv.get()
+        if (
+            self.script_mode in (SCRIPT_MODE_RESTART, SCRIPT_MODE_QUEUED)
+            and (script_stack := script_stack_cv.get()) is not None
+            and id(self) in script_stack
+        ):
+            script_execution_set("disallowed_recursion_detected")
+            self._log("Disallowed recursion detected", level=logging.WARNING)
+            return
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun

@@ -3,7 +3,7 @@
   "name": "UPnP/IGD",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/upnp",
-  "requirements": ["async-upnp-client==0.22.12"],
+  "requirements": ["async-upnp-client==0.26.0"],
   "dependencies": ["network", "ssdp"],
   "codeowners": ["@StevenLooman","@ehendrix23"],
   "ssdp": [
@@ -14,5 +14,6 @@
       "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
     }
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["async_upnp_client"]
 }

@@ -9,12 +9,9 @@ from homeassistant.components.canary.sensor import (
     STATE_AIR_QUALITY_NORMAL,
     STATE_AIR_QUALITY_VERY_ABNORMAL,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
@@ -56,14 +53,14 @@ async def test_sensors_pro(hass, canary) -> None:
             "20_temperature",
             "21.12",
             TEMP_CELSIUS,
-            DEVICE_CLASS_TEMPERATURE,
+            SensorDeviceClass.TEMPERATURE,
             None,
         ),
         "home_dining_room_humidity": (
             "20_humidity",
             "50.46",
             PERCENTAGE,
-            DEVICE_CLASS_HUMIDITY,
+            SensorDeviceClass.HUMIDITY,
             None,
         ),
         "home_dining_room_air_quality": (
@@ -182,14 +179,14 @@ async def test_sensors_flex(hass, canary) -> None:
             "20_battery",
             "70.46",
             PERCENTAGE,
-            DEVICE_CLASS_BATTERY,
+            SensorDeviceClass.BATTERY,
             None,
         ),
         "home_dining_room_wifi": (
             "20_wifi",
             "-57.0",
             SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-            DEVICE_CLASS_SIGNAL_STRENGTH,
+            SensorDeviceClass.SIGNAL_STRENGTH,
             None,
         ),
     }

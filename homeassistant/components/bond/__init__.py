@@ -8,7 +8,12 @@ from aiohttp import ClientError, ClientResponseError, ClientTimeout
 from bond_api import Bond, BPUPSubscriptions, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_HOST,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -18,7 +23,13 @@ from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 from .const import BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
 from .utils import BondHub
 
-PLATFORMS = ["cover", "fan", "light", "switch"]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SWITCH,
+]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=hub_name,
         model=hub.target,
         sw_version=hub.fw_ver,
+        hw_version=hub.mcu_ver,
         suggested_area=hub.location,
         configuration_url=f"http://{host}",
     )

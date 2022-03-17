@@ -13,6 +13,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
 
@@ -72,7 +73,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             async with timeout(TIMEOUT):
                 device = await Appliance.factory(
                     host,
-                    self.hass.helpers.aiohttp_client.async_get_clientsession(),
+                    async_get_clientsession(self.hass),
                     key=key,
                     uuid=uuid,
                     password=password,

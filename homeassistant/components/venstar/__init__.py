@@ -1,4 +1,6 @@
 """The venstar component."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 
@@ -12,17 +14,18 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_SSL,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
+from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP, VENSTAR_TIMEOUT
 
-PLATFORMS = ["binary_sensor", "climate", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 
-async def async_setup_entry(hass, config):
+async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up the Venstar thermostat."""
     username = config.data.get(CONF_USERNAME)
     password = config.data.get(CONF_PASSWORD)
@@ -52,7 +55,7 @@ async def async_setup_entry(hass, config):
     return True
 
 
-async def async_unload_entry(hass, config):
+async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Unload the config config and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
     if unload_ok:
@@ -77,6 +80,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             update_interval=timedelta(seconds=60),
         )
         self.client = venstar_connection
+        self.runtimes: list[dict[str, int]] = []
 
     async def _async_update_data(self) -> None:
         """Update the state."""
@@ -88,7 +92,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             ) from ex
 
         # older venstars sometimes cannot handle rapid sequential connections
-        await asyncio.sleep(1)
+        await asyncio.sleep(VENSTAR_SLEEP)
 
         try:
             await self.hass.async_add_executor_job(self.client.update_sensors)
@@ -98,7 +102,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             ) from ex
 
         # older venstars sometimes cannot handle rapid sequential connections
-        await asyncio.sleep(1)
+        await asyncio.sleep(VENSTAR_SLEEP)
 
         try:
             await self.hass.async_add_executor_job(self.client.update_alerts)
@@ -106,6 +110,19 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             raise update_coordinator.UpdateFailed(
                 f"Exception during Venstar alert update: {ex}"
             ) from ex
+
+        # older venstars sometimes cannot handle rapid sequential connections
+        await asyncio.sleep(VENSTAR_SLEEP)
+
+        try:
+            self.runtimes = await self.hass.async_add_executor_job(
+                self.client.get_runtimes
+            )
+        except (OSError, RequestException) as ex:
+            raise update_coordinator.UpdateFailed(
+                f"Exception during Venstar runtime update: {ex}"
+            ) from ex
+
         return None
 
 

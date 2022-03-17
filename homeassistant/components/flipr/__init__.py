@@ -3,14 +3,16 @@ from datetime import timedelta
 import logging
 
 from flipr_api import FliprAPIRestClient
+from flipr_api.exceptions import FliprError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN, MANUFACTURER, NAME
@@ -20,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=60)
 
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -68,15 +70,20 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
-        return await self.hass.async_add_executor_job(
-            self.client.get_pool_measure_latest, self.flipr_id
-        )
+        try:
+            data = await self.hass.async_add_executor_job(
+                self.client.get_pool_measure_latest, self.flipr_id
+            )
+        except (FliprError) as error:
+            raise UpdateFailed(error) from error
+
+        return data
 
 
 class FliprEntity(CoordinatorEntity):
     """Implements a common class elements representing the Flipr component."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, description: EntityDescription

@@ -2,26 +2,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, time
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt
 
 from . import ValloxDataUpdateCoordinator
 from .const import (
@@ -56,7 +55,7 @@ class ValloxSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{uuid}-{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         if (metric_key := self.entity_description.metric_key) is None:
             return None
@@ -84,7 +83,7 @@ class ValloxFanSpeedSensor(ValloxSensor):
     """Child class for fan speed reporting."""
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         fan_is_on = self.coordinator.data.get_metric(METRIC_KEY_MODE) == MODE_ON
         return super().native_value if fan_is_on else 0
@@ -94,20 +93,17 @@ class ValloxFilterRemainingSensor(ValloxSensor):
     """Child class for filter remaining time reporting."""
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
-        super_native_value = super().native_value
+        next_filter_change_date = self.coordinator.data.get_next_filter_change_date()
 
-        if not isinstance(super_native_value, (int, float)):
+        if next_filter_change_date is None:
             return None
 
-        # Since only a delta of days is received from the device, fix the time so the timestamp does
-        # not change with every update.
-        days_remaining = float(super_native_value)
-        days_remaining_delta = timedelta(days=days_remaining)
-        now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
-
-        return (now + days_remaining_delta).isoformat()
+        return datetime.combine(
+            next_filter_change_date,
+            time(hour=13, minute=0, second=0, tzinfo=dt.DEFAULT_TIME_ZONE),
+        )
 
 
 class ValloxCellStateSensor(ValloxSensor):
@@ -144,15 +140,14 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         name="Fan Speed",
         metric_key="A_CYC_FAN_SPEED",
         icon="mdi:fan",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         sensor_type=ValloxFanSpeedSensor,
     ),
     ValloxSensorEntityDescription(
         key="remaining_time_for_filter",
         name="Remaining Time For Filter",
-        metric_key="A_CYC_REMAINING_TIME_FOR_FILTER",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         sensor_type=ValloxFilterRemainingSensor,
     ),
     ValloxSensorEntityDescription(
@@ -166,40 +161,40 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         key="extract_air",
         name="Extract Air",
         metric_key="A_CYC_TEMP_EXTRACT_AIR",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="exhaust_air",
         name="Exhaust Air",
         metric_key="A_CYC_TEMP_EXHAUST_AIR",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="outdoor_air",
         name="Outdoor Air",
         metric_key="A_CYC_TEMP_OUTDOOR_AIR",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="supply_air",
         name="Supply Air",
         metric_key="A_CYC_TEMP_SUPPLY_AIR",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="humidity",
         name="Humidity",
         metric_key="A_CYC_RH_VALUE",
-        device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
     ValloxSensorEntityDescription(
@@ -207,32 +202,26 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         name="Efficiency",
         metric_key="A_CYC_EXTRACT_EFFICIENCY",
         icon="mdi:gauge",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
     ValloxSensorEntityDescription(
         key="co2",
         name="CO2",
         metric_key="A_CYC_CO2_VALUE",
-        device_class=DEVICE_CLASS_CO2,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
-    if discovery_info is None:
-        return
-
-    name = hass.data[DOMAIN]["name"]
-    coordinator = hass.data[DOMAIN]["coordinator"]
+    name = hass.data[DOMAIN][entry.entry_id]["name"]
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
     async_add_entities(
         [

@@ -1,4 +1,6 @@
 """Support to interact with a Music Player Daemon."""
+from __future__ import annotations
+
 from contextlib import suppress
 from datetime import timedelta
 import hashlib
@@ -9,13 +11,18 @@ import mpd
 from mpd.asyncio import MPDClient
 import voluptuous as vol
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -42,7 +49,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -66,6 +76,7 @@ SUPPORT_MPD = (
     | SUPPORT_STOP
     | SUPPORT_TURN_OFF
     | SUPPORT_TURN_ON
+    | SUPPORT_BROWSE_MEDIA
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -78,7 +89,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the MPD platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -109,6 +125,9 @@ class MpdDevice(MediaPlayerEntity):
         self._muted_volume = None
         self._media_position_updated_at = None
         self._media_position = None
+        self._media_image_hash = None
+        # Track if the song changed so image doesn't have to be loaded every update.
+        self._media_image_file = None
         self._commands = None
 
         # set up MPD client
@@ -139,6 +158,7 @@ class MpdDevice(MediaPlayerEntity):
         """Fetch status from MPD."""
         self._status = await self._client.status()
         self._currentsong = await self._client.currentsong()
+        await self._async_update_media_image_hash()
 
         if (position := self._status.get("elapsed")) is None:
             position = self._status.get("time")
@@ -255,16 +275,46 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def media_image_hash(self):
         """Hash value for media image."""
-        if file := self._currentsong.get("file"):
-            return hashlib.sha256(file.encode("utf-8")).hexdigest()[:16]
-
-        return None
+        return self._media_image_hash
 
     async def async_get_media_image(self):
         """Fetch media image of current playing track."""
         if not (file := self._currentsong.get("file")):
             return None, None
+        response = await self._async_get_file_image_response(file)
+        if response is None:
+            return None, None
 
+        image = bytes(response["binary"])
+        mime = response.get(
+            "type", "image/png"
+        )  # readpicture has type, albumart does not
+        return (image, mime)
+
+    async def _async_update_media_image_hash(self):
+        """Update the hash value for the media image."""
+        file = self._currentsong.get("file")
+
+        if file == self._media_image_file:
+            return
+
+        if (
+            file is not None
+            and (response := await self._async_get_file_image_response(file))
+            is not None
+        ):
+            self._media_image_hash = hashlib.sha256(
+                bytes(response["binary"])
+            ).hexdigest()[:16]
+        else:
+            # If there is no image, this hash has to be None, else the media player component
+            # assumes there is an image and returns an error trying to load it and the
+            # frontend media control card breaks.
+            self._media_image_hash = None
+
+        self._media_image_file = file
+
+    async def _async_get_file_image_response(self, file):
         # not all MPD implementations and versions support the `albumart` and `fetchpicture` commands
         can_albumart = "albumart" in self._commands
         can_readpicture = "readpicture" in self._commands
@@ -293,14 +343,11 @@ class MpdDevice(MediaPlayerEntity):
                         error,
                     )
 
+        # response can be an empty object if there is no image
         if not response:
-            return None, None
+            return None
 
-        image = bytes(response.get("binary"))
-        mime = response.get(
-            "type", "image/png"
-        )  # readpicture has type, albumart does not
-        return (image, mime)
+        return response
 
     @property
     def volume_level(self):
@@ -404,8 +451,13 @@ class MpdDevice(MediaPlayerEntity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
-        _LOGGER.debug("Playing playlist: %s", media_id)
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_MUSIC
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
         if media_type == MEDIA_TYPE_PLAYLIST:
+            _LOGGER.debug("Playing playlist: %s", media_id)
             if media_id in self._playlists:
                 self._currentplaylist = media_id
             else:
@@ -415,6 +467,8 @@ class MpdDevice(MediaPlayerEntity):
             await self._client.load(media_id)
             await self._client.play()
         else:
+            media_id = async_process_play_media_url(self.hass, media_id)
+
             await self._client.clear()
             self._currentplaylist = None
             await self._client.add(media_id)
@@ -466,3 +520,11 @@ class MpdDevice(MediaPlayerEntity):
     async def async_media_seek(self, position):
         """Send seek command."""
         await self._client.seekcur(position)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )

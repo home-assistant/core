@@ -8,6 +8,7 @@ from typing import final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -19,7 +20,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.enum import StrEnum
 
 from .const import DOMAIN, SERVICE_PRESS
 
@@ -113,8 +113,9 @@ class ButtonEntity(RestoreEntity):
         self.async_write_ha_state()
         await self.async_press()
 
-    async def async_added_to_hass(self) -> None:
+    async def async_internal_added_to_hass(self) -> None:
         """Call when the button is added to hass."""
+        await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
         if state is not None and state.state is not None:
             self.__last_pressed = dt_util.parse_datetime(state.state)

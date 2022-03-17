@@ -8,10 +8,10 @@ from typing import NamedTuple, cast
 import pyatmo
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -19,13 +19,6 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_MBAR,
@@ -41,6 +34,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -48,6 +42,7 @@ from .const import (
     DATA_HANDLER,
     DOMAIN,
     MANUFACTURER,
+    NETATMO_CREATE_BATTERY,
     SIGNAL_NAME,
     TYPE_WEATHER,
 )
@@ -56,6 +51,7 @@ from .data_handler import (
     PUBLICDATA_DATA_CLASS_NAME,
     WEATHERSTATION_DATA_CLASS_NAME,
     NetatmoDataHandler,
+    NetatmoDevice,
 )
 from .helper import NetatmoArea
 from .netatmo_entity_base import NetatmoBase
@@ -93,8 +89,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="Temperature",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     NetatmoSensorEntityDescription(
         key="temp_trend",
@@ -109,8 +105,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="CO2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         entity_registry_enabled_default=True,
-        device_class=DEVICE_CLASS_CO2,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CO2,
     ),
     NetatmoSensorEntityDescription(
         key="pressure",
@@ -118,8 +114,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="Pressure",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=PRESSURE_MBAR,
-        device_class=DEVICE_CLASS_PRESSURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRESSURE,
     ),
     NetatmoSensorEntityDescription(
         key="pressure_trend",
@@ -135,7 +131,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         native_unit_of_measurement=SOUND_PRESSURE_DB,
         icon="mdi:volume-high",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="humidity",
@@ -143,8 +139,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="Humidity",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
     ),
     NetatmoSensorEntityDescription(
         key="rain",
@@ -152,7 +148,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="Rain",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
@@ -161,7 +157,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="sum_rain_1",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
@@ -170,7 +166,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="sum_rain_24",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
@@ -178,10 +174,10 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Battery Percent",
         netatmo_name="battery_percent",
         entity_registry_enabled_default=True,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
     ),
     NetatmoSensorEntityDescription(
         key="windangle",
@@ -197,7 +193,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="windstrength",
@@ -206,7 +202,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="gustangle",
@@ -222,7 +218,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="guststrength",
@@ -231,14 +227,14 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="reachable",
         name="Reachability",
         netatmo_name="reachable",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:signal",
     ),
     NetatmoSensorEntityDescription(
@@ -246,7 +242,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Radio",
         netatmo_name="rf_status",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:signal",
     ),
     NetatmoSensorEntityDescription(
@@ -254,17 +250,17 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Radio Level",
         netatmo_name="rf_status",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
     NetatmoSensorEntityDescription(
         key="wifi_status",
         name="Wifi",
         netatmo_name="wifi_status",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:wifi",
     ),
     NetatmoSensorEntityDescription(
@@ -272,10 +268,10 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Wifi Level",
         netatmo_name="wifi_status",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
     NetatmoSensorEntityDescription(
         key="health_idx",
@@ -390,7 +386,6 @@ async def async_setup_entry(
         WEATHERSTATION_DATA_CLASS_NAME,
         HOMECOACH_DATA_CLASS_NAME,
     ):
-        await data_handler.register_data_class(data_class_name, data_class_name, None)
         data_class = data_handler.data.get(data_class_name)
 
         if data_class and data_class.raw_data:
@@ -458,6 +453,16 @@ async def async_setup_entry(
 
     async_dispatcher_connect(
         hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
+    )
+
+    @callback
+    def _create_entity(netatmo_device: NetatmoDevice) -> None:
+        entity = NetatmoClimateBatterySensor(netatmo_device)
+        _LOGGER.debug("Adding climate battery sensor %s", entity)
+        async_add_entities([entity])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, NETATMO_CREATE_BATTERY, _create_entity)
     )
 
     await add_public_entities(False)
@@ -565,6 +570,73 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
             return
 
         self.async_write_ha_state()
+
+
+class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
+    """Implementation of a Netatmo sensor."""
+
+    entity_description: NetatmoSensorEntityDescription
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_device.data_handler)
+        self.entity_description = NetatmoSensorEntityDescription(
+            key="battery_percent",
+            name="Battery Percent",
+            netatmo_name="battery_percent",
+            entity_registry_enabled_default=True,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.BATTERY,
+        )
+
+        self._module = netatmo_device.device
+        self._id = netatmo_device.parent_id
+        self._attr_name = f"{self._module.name} {self.entity_description.name}"
+
+        self._state_class_name = netatmo_device.state_class_name
+        self._room_id = self._module.room_id
+        self._model = getattr(self._module.device_type, "value")
+
+        self._attr_unique_id = (
+            f"{self._id}-{self._module.entity_id}-{self.entity_description.key}"
+        )
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if not self._module.reachable:
+            if self.available:
+                self._attr_available = False
+                self._attr_native_value = None
+            return
+
+        self._attr_available = True
+        self._attr_native_value = self._process_battery_state()
+
+    def _process_battery_state(self) -> int | None:
+        """Construct room status."""
+        if battery_state := self._module.battery_state:
+            return process_battery_percentage(battery_state)
+
+        return None
+
+
+def process_battery_percentage(data: str) -> int:
+    """Process battery data and return percent (int) for display."""
+    mapping = {
+        "max": 100,
+        "full": 90,
+        "high": 75,
+        "medium": 50,
+        "low": 25,
+        "very low": 10,
+    }
+    return mapping[data]
 
 
 def fix_angle(angle: int) -> int:
@@ -767,15 +839,16 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         elif self.entity_description.key == "guststrength":
             data = self._data.get_latest_gust_strengths()
 
-        if data is None:
-            if self.state is None:
-                return
-            _LOGGER.debug(
-                "No station provides %s data in the area %s",
-                self.entity_description.key,
-                self._area_name,
-            )
-            self._attr_native_value = None
+        if not data:
+            if self.available:
+                _LOGGER.error(
+                    "No station provides %s data in the area %s",
+                    self.entity_description.key,
+                    self._area_name,
+                )
+                self._attr_native_value = None
+
+            self._attr_available = False
             return
 
         if values := [x for x in data.values() if x is not None]:

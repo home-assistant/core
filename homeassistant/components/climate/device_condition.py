@@ -11,7 +11,8 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import HomeAssistant, HomeAssistantError, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_capability, get_supported_features
@@ -70,7 +71,9 @@ async def async_get_conditions(
 
 
 @callback
-def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
+def async_condition_from_config(
+    hass: HomeAssistant, config: ConfigType
+) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
     if config[CONF_TYPE] == "is_hvac_mode":
         attribute = const.ATTR_HVAC_MODE

@@ -1,10 +1,11 @@
 """Support for HERE travel time sensors."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import logging
 
 import herepy
+from herepy.here_enum import RouteMode
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -24,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,7 +143,7 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: dict[str, str | bool],
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
@@ -198,14 +199,17 @@ def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
     known_working_origin = [38.9, -77.04833]
     known_working_destination = [39.0, -77.1]
     try:
-        here_client.car_route(
+        here_client.public_transport_timetable(
             known_working_origin,
             known_working_destination,
+            True,
             [
-                herepy.RouteMode[ROUTE_MODE_FASTEST],
-                herepy.RouteMode[TRAVEL_MODE_CAR],
-                herepy.RouteMode[TRAFFIC_MODE_DISABLED],
+                RouteMode[ROUTE_MODE_FASTEST],
+                RouteMode[TRAVEL_MODE_CAR],
+                RouteMode[TRAFFIC_MODE_ENABLED],
             ],
+            arrival=None,
+            departure="now",
         )
     except herepy.InvalidCredentialsError:
         return False
@@ -439,9 +443,9 @@ class HERETravelTimeData:
             return attribution
 
 
-def convert_time_to_isodate(timestr: str) -> str:
-    """Take a string like 08:00:00 and combine it with the current date."""
-    combined = datetime.combine(dt.start_of_local_day(), dt.parse_time(timestr))
+def convert_time_to_isodate(simple_time: time) -> str:
+    """Take a time like 08:00:00 and combine it with the current date."""
+    combined = datetime.combine(dt.start_of_local_day(), simple_time)
     if combined < datetime.now():
         combined = combined + timedelta(days=1)
     return combined.isoformat()

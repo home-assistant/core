@@ -99,7 +99,7 @@ async def test_zeroconf(hass: HomeAssistant):
 
     assert (
         context["title_placeholders"][CONF_NAME]
-        == DISCOVERY_INFO["hostname"].split(".", maxsplit=1)[0]
+        == DISCOVERY_INFO.hostname.split(".", maxsplit=1)[0]
     )
 
     with patch(
@@ -174,7 +174,7 @@ async def test_abort_if_configued(hass: HomeAssistant):
 @pytest.mark.usefixtures("mock_device")
 @pytest.mark.usefixtures("mock_zeroconf")
 async def test_validate_input(hass: HomeAssistant):
-    """Test input validaton."""
+    """Test input validation."""
     info = await config_flow.validate_input(hass, {CONF_IP_ADDRESS: IP})
     assert SERIAL_NUMBER in info
     assert TITLE in info

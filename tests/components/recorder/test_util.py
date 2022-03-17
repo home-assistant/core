@@ -8,6 +8,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.sql.elements import TextClause
 
+from homeassistant.components import recorder
 from homeassistant.components.recorder import run_information_with_session, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
@@ -556,3 +557,21 @@ def test_perodic_db_cleanups(hass_recorder):
     ][0]
     assert isinstance(text_obj, TextClause)
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
+
+
+async def test_write_lock_db(hass, tmp_path):
+    """Test database write lock."""
+    from sqlalchemy.exc import OperationalError
+
+    # Use file DB, in memory DB cannot do write locks.
+    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    await async_init_recorder_component(hass, config)
+    await hass.async_block_till_done()
+
+    instance = hass.data[DATA_INSTANCE]
+
+    with util.write_lock_db_sqlite(instance):
+        # Database should be locked now, try writing SQL command
+        with instance.engine.connect() as connection:
+            with pytest.raises(OperationalError):
+                connection.execute(text("DROP TABLE events;"))

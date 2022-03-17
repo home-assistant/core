@@ -16,12 +16,9 @@ from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant import auth
-from homeassistant.auth import (
-    mfa_modules as auth_mfa_modules,
-    providers as auth_providers,
-)
-from homeassistant.const import (
+from . import auth
+from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
+from .const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
@@ -52,20 +49,20 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     __version__,
 )
-from homeassistant.core import DOMAIN as CONF_CORE, SOURCE_YAML, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, extract_domain_configs
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import Integration, IntegrationNotFound
-from homeassistant.requirements import (
-    RequirementsNotFound,
-    async_get_integration_with_requirements,
+from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
+from .exceptions import HomeAssistantError
+from .helpers import (
+    config_per_platform,
+    config_validation as cv,
+    extract_domain_configs,
 )
-from homeassistant.util.package import is_docker_env
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.util.yaml import SECRET_YAML, Secrets, load_yaml
+from .helpers.entity_values import EntityValues
+from .helpers.typing import ConfigType
+from .loader import Integration, IntegrationNotFound
+from .requirements import RequirementsNotFound, async_get_integration_with_requirements
+from .util.package import is_docker_env
+from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from .util.yaml import SECRET_YAML, Secrets, load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +74,6 @@ VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
 DATA_CUSTOMIZE = "hass_customize"
 
-GROUP_CONFIG_PATH = "groups.yaml"
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
 SCENE_CONFIG_PATH = "scenes.yaml"
@@ -97,7 +93,6 @@ default_config:
 tts:
   - platform: google_translate
 
-group: !include {GROUP_CONFIG_PATH}
 automation: !include {AUTOMATION_CONFIG_PATH}
 script: !include {SCRIPT_CONFIG_PATH}
 scene: !include {SCENE_CONFIG_PATH}
@@ -265,8 +260,8 @@ CORE_CONFIG_SCHEMA = vol.All(
 
 def get_default_config_dir() -> str:
     """Put together the default configuration directory based on the OS."""
-    data_dir = os.getenv("APPDATA") if os.name == "nt" else os.path.expanduser("~")
-    return os.path.join(data_dir, CONFIG_DIR_NAME)  # type: ignore
+    data_dir = os.path.expanduser("~")
+    return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
 async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
@@ -301,7 +296,6 @@ def _write_default_config(config_dir: str) -> bool:
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     secret_path = os.path.join(config_dir, SECRET_YAML)
     version_path = os.path.join(config_dir, VERSION_FILE)
-    group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
     automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
     script_yaml_path = os.path.join(config_dir, SCRIPT_CONFIG_PATH)
     scene_yaml_path = os.path.join(config_dir, SCENE_CONFIG_PATH)
@@ -318,10 +312,6 @@ def _write_default_config(config_dir: str) -> bool:
 
         with open(version_path, "wt", encoding="utf8") as version_file:
             version_file.write(__version__)
-
-        if not os.path.isfile(group_yaml_path):
-            with open(group_yaml_path, "wt", encoding="utf8"):
-                pass
 
         if not os.path.isfile(automation_yaml_path):
             with open(automation_yaml_path, "wt", encoding="utf8") as automation_file:
@@ -542,7 +532,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_CURRENCY,
         )
     ):
-        hac.config_source = SOURCE_YAML
+        hac.config_source = ConfigSource.YAML
 
     for key, attr in (
         (CONF_LATITUDE, "latitude"),
@@ -645,10 +635,10 @@ def _log_pkg_error(package: str, component: str, config: dict, message: str) -> 
 
 def _identify_config_schema(module: ModuleType) -> str | None:
     """Extract the schema and identify list or dict based."""
-    if not isinstance(module.CONFIG_SCHEMA, vol.Schema):  # type: ignore
+    if not isinstance(module.CONFIG_SCHEMA, vol.Schema):
         return None
 
-    schema = module.CONFIG_SCHEMA.schema  # type: ignore
+    schema = module.CONFIG_SCHEMA.schema
 
     if isinstance(schema, vol.All):
         for subschema in schema.validators:
@@ -659,7 +649,7 @@ def _identify_config_schema(module: ModuleType) -> str | None:
             return None
 
     try:
-        key = next(k for k in schema if k == module.DOMAIN)  # type: ignore
+        key = next(k for k in schema if k == module.DOMAIN)
     except (TypeError, AttributeError, StopIteration):
         return None
     except Exception:  # pylint: disable=broad-except
@@ -669,8 +659,8 @@ def _identify_config_schema(module: ModuleType) -> str | None:
     if hasattr(key, "default") and not isinstance(
         key.default, vol.schema_builder.Undefined
     ):
-        default_value = module.CONFIG_SCHEMA({module.DOMAIN: key.default()})[  # type: ignore
-            module.DOMAIN  # type: ignore
+        default_value = module.CONFIG_SCHEMA({module.DOMAIN: key.default()})[
+            module.DOMAIN
         ]
 
         if isinstance(default_value, dict):
@@ -750,7 +740,7 @@ async def merge_packages_config(
 
             # If integration has a custom config validator, it needs to provide a hint.
             if config_platform is not None:
-                merge_list = config_platform.PACKAGE_MERGE_HINT == "list"  # type: ignore[attr-defined]
+                merge_list = config_platform.PACKAGE_MERGE_HINT == "list"
 
             if not merge_list:
                 merge_list = hasattr(component, "PLATFORM_SCHEMA")
@@ -826,7 +816,7 @@ async def async_process_component_config(  # noqa: C901
         config_validator, "async_validate_config"
     ):
         try:
-            return await config_validator.async_validate_config(  # type: ignore
+            return await config_validator.async_validate_config(  # type: ignore[no-any-return]
                 hass, config
             )
         except (vol.Invalid, HomeAssistantError) as ex:
@@ -839,7 +829,7 @@ async def async_process_component_config(  # noqa: C901
     # No custom config validator, proceed with schema validation
     if hasattr(component, "CONFIG_SCHEMA"):
         try:
-            return component.CONFIG_SCHEMA(config)  # type: ignore
+            return component.CONFIG_SCHEMA(config)  # type: ignore[no-any-return]
         except vol.Invalid as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
             return None
@@ -892,7 +882,7 @@ async def async_process_component_config(  # noqa: C901
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
             try:
-                p_validated = platform.PLATFORM_SCHEMA(p_config)  # type: ignore
+                p_validated = platform.PLATFORM_SCHEMA(p_config)
             except vol.Invalid as ex:
                 async_log_exception(
                     ex,
@@ -933,7 +923,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
     This method is a coroutine.
     """
     # pylint: disable=import-outside-toplevel
-    from homeassistant.helpers import check_config
+    from .helpers import check_config
 
     res = await check_config.async_check_ha_config_file(hass)
 
@@ -951,7 +941,7 @@ def async_notify_setup_error(
     This method must be run in the event loop.
     """
     # pylint: disable=import-outside-toplevel
-    from homeassistant.components import persistent_notification
+    from .components import persistent_notification
 
     if (errors := hass.data.get(DATA_PERSISTENT_ERRORS)) is None:
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}

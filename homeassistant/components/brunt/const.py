@@ -1,12 +1,14 @@
 """Constants for Brunt."""
 from datetime import timedelta
 
+from homeassistant.const import Platform
+
 DOMAIN = "brunt"
 ATTR_REQUEST_POSITION = "request_position"
 NOTIFICATION_ID = "brunt_notification"
 NOTIFICATION_TITLE = "Brunt Cover Setup"
 ATTRIBUTION = "Based on an unofficial Brunt SDK."
-PLATFORMS = ["cover"]
+PLATFORMS = [Platform.COVER]
 DATA_BAPI = "bapi"
 DATA_COOR = "coordinator"
 

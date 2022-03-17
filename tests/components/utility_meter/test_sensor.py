@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.components.utility_meter.const import (
     ATTR_TARIFF,
@@ -269,15 +269,15 @@ async def test_device_class(hass):
     state = hass.states.get("sensor.energy_meter")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "energy"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is SensorDeviceClass.ENERGY.value
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
 
     state = hass.states.get("sensor.gas_meter")
     assert state is not None
     assert state.state == "0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "some_archaic_unit"
 
 
@@ -305,6 +305,10 @@ async def test_restore_state(hass):
                 },
             ),
             State(
+                "sensor.energy_bill_midpeak",
+                "error",
+            ),
+            State(
                 "sensor.energy_bill_offpeak",
                 "6",
                 attributes={
@@ -325,6 +329,9 @@ async def test_restore_state(hass):
     assert state.attributes.get("status") == PAUSED
     assert state.attributes.get("last_reset") == last_reset
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state.state == "6"
@@ -530,7 +537,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.attributes.get("last_reset") == now.isoformat()
         assert state.state == "3"
     else:
-        assert state.attributes.get("last_period") == 0
+        assert state.attributes.get("last_period") == "0"
         assert state.state == "5"
         start_time_str = dt_util.parse_datetime(start_time).isoformat()
         assert state.attributes.get("last_reset") == start_time_str
@@ -559,7 +566,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.attributes.get("last_period") == "2"
         assert state.state == "7"
     else:
-        assert state.attributes.get("last_period") == 0
+        assert state.attributes.get("last_period") == "0"
         assert state.state == "9"
 
 

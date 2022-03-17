@@ -5,6 +5,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.components.totalconnect import DOMAIN
+from homeassistant.components.totalconnect.alarm_control_panel import (
+    SERVICE_ALARM_ARM_AWAY_INSTANT,
+    SERVICE_ALARM_ARM_HOME_INSTANT,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -117,6 +122,82 @@ async def test_arm_home_failure(hass: HomeAssistant) -> None:
             )
             await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to arm home test."
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        assert mock_request.call_count == 2
+
+
+async def test_arm_home_instant_success(hass: HomeAssistant) -> None:
+    """Test arm home instant method success."""
+    responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        assert hass.states.get(ENTITY_ID_2).state == STATE_ALARM_DISARMED
+        assert mock_request.call_count == 1
+
+        await hass.services.async_call(
+            DOMAIN, SERVICE_ALARM_ARM_HOME_INSTANT, DATA, blocking=True
+        )
+        assert mock_request.call_count == 2
+
+        async_fire_time_changed(hass, dt.utcnow() + DELAY)
+        await hass.async_block_till_done()
+        assert mock_request.call_count == 3
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_HOME
+
+
+async def test_arm_home_instant_failure(hass: HomeAssistant) -> None:
+    """Test arm home instant method failure."""
+    responses = [RESPONSE_DISARMED, RESPONSE_ARM_FAILURE]
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        assert mock_request.call_count == 1
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN, SERVICE_ALARM_ARM_HOME_INSTANT, DATA, blocking=True
+            )
+            await hass.async_block_till_done()
+        assert f"{err.value}" == "TotalConnect failed to arm home instant test."
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        assert mock_request.call_count == 2
+
+
+async def test_arm_away_instant_success(hass: HomeAssistant) -> None:
+    """Test arm home instant method success."""
+    responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        assert hass.states.get(ENTITY_ID_2).state == STATE_ALARM_DISARMED
+        assert mock_request.call_count == 1
+
+        await hass.services.async_call(
+            DOMAIN, SERVICE_ALARM_ARM_AWAY_INSTANT, DATA, blocking=True
+        )
+        assert mock_request.call_count == 2
+
+        async_fire_time_changed(hass, dt.utcnow() + DELAY)
+        await hass.async_block_till_done()
+        assert mock_request.call_count == 3
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
+
+
+async def test_arm_away_instant_failure(hass: HomeAssistant) -> None:
+    """Test arm home instant method failure."""
+    responses = [RESPONSE_DISARMED, RESPONSE_ARM_FAILURE]
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        assert mock_request.call_count == 1
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN, SERVICE_ALARM_ARM_AWAY_INSTANT, DATA, blocking=True
+            )
+            await hass.async_block_till_done()
+        assert f"{err.value}" == "TotalConnect failed to arm away instant test."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 2
 

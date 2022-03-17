@@ -19,7 +19,7 @@ from .objects import Input, NodeListClass, NodeStrClass
 # mypy: allow-untyped-calls, no-warn-return-any
 
 JSON_TYPE = Union[list, dict, str]  # pylint: disable=invalid-name
-DICT_T = TypeVar("DICT_T", bound=dict)  # pylint: disable=invalid-name
+_DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class SafeLineLoader(yaml.SafeLoader):
         """Annotate a node with the first line it was seen."""
         last_line: int = self.line
         node: yaml.nodes.Node = super().compose_node(parent, index)  # type: ignore[assignment]
-        node.__line__ = last_line + 1  # type: ignore
+        node.__line__ = last_line + 1  # type: ignore[attr-defined]
         return node
 
 
@@ -144,12 +144,12 @@ def _add_reference(
 
 @overload
 def _add_reference(
-    obj: DICT_T, loader: SafeLineLoader, node: yaml.nodes.Node
-) -> DICT_T:
+    obj: _DictT, loader: SafeLineLoader, node: yaml.nodes.Node
+) -> _DictT:
     ...
 
 
-def _add_reference(obj, loader: SafeLineLoader, node: yaml.nodes.Node):  # type: ignore
+def _add_reference(obj, loader: SafeLineLoader, node: yaml.nodes.Node):  # type: ignore[no-untyped-def]
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)

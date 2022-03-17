@@ -5,10 +5,12 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
-    Helper,
+    HUB_TEST_ACCESSORY_ID,
+    DeviceTestInfo,
+    EntityTestInfo,
+    assert_devices_and_entities_created,
     setup_accessories_from_file,
     setup_test_accessories,
 )
@@ -19,40 +21,46 @@ async def test_homeassistant_bridge_fan_setup(hass):
     accessories = await setup_accessories_from_file(
         hass, "home_assistant_bridge_fan.json"
     )
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-
-    # Check that the fan is correctly found and set up
-    fan_id = "fan.living_room_fan"
-    fan = entity_registry.async_get(fan_id)
-    assert fan.unique_id == "homekit-fan.living_room_fan-8"
-
-    fan_helper = Helper(
+    await assert_devices_and_entities_created(
         hass,
-        "fan.living_room_fan",
-        pairing,
-        accessories[0],
-        config_entry,
+        DeviceTestInfo(
+            unique_id=HUB_TEST_ACCESSORY_ID,
+            name="Home Assistant Bridge",
+            model="Bridge",
+            manufacturer="Home Assistant",
+            sw_version="0.104.0.dev0",
+            hw_version="",
+            serial_number="homekit.bridge",
+            devices=[
+                DeviceTestInfo(
+                    name="Living Room Fan",
+                    model="Fan",
+                    manufacturer="Home Assistant",
+                    sw_version="0.104.0.dev0",
+                    hw_version="",
+                    serial_number="fan.living_room_fan",
+                    unique_id="00:00:00:00:00:00:aid:1256851357",
+                    devices=[],
+                    entities=[
+                        EntityTestInfo(
+                            entity_id="fan.living_room_fan",
+                            friendly_name="Living Room Fan",
+                            unique_id="homekit-fan.living_room_fan-8",
+                            supported_features=(
+                                SUPPORT_DIRECTION
+                                | SUPPORT_SET_SPEED
+                                | SUPPORT_OSCILLATE
+                            ),
+                            capabilities={
+                                "preset_modes": None,
+                            },
+                            state="off",
+                        )
+                    ],
+                ),
+            ],
+            entities=[],
+        ),
     )
-
-    fan_state = await fan_helper.poll_and_get_state()
-    assert fan_state.attributes["friendly_name"] == "Living Room Fan"
-    assert fan_state.state == "off"
-    assert fan_state.attributes["supported_features"] == (
-        SUPPORT_DIRECTION | SUPPORT_SET_SPEED | SUPPORT_OSCILLATE
-    )
-
-    device_registry = dr.async_get(hass)
-
-    device = device_registry.async_get(fan.device_id)
-    assert device.manufacturer == "Home Assistant"
-    assert device.name == "Living Room Fan"
-    assert device.model == "Fan"
-    assert device.sw_version == "0.104.0.dev0"
-
-    bridge = device = device_registry.async_get(device.via_device_id)
-    assert bridge.manufacturer == "Home Assistant"
-    assert bridge.name == "Home Assistant Bridge"
-    assert bridge.model == "Bridge"
-    assert bridge.sw_version == "0.104.0.dev0"

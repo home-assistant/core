@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} aku on t\u00fchjenemas",
+            "is_co": "{entity_name} tuvastab vingugaasi",
             "is_cold": "{entity_name} on k\u00fclm",
             "is_connected": "{entity_name} on \u00fchendatud",
             "is_gas": "{entity_name} tuvastab gaasi(leket)",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} on niiske",
             "is_motion": "{entity_name} tuvastab liikumist",
             "is_moving": "{entity_name} liigub",
+            "is_no_co": "{entity_name} ei tuvasta vingugaasi",
             "is_no_gas": "{entity_name} ei tuvasta gaasi(leket)",
             "is_no_light": "{entity_name} ei tuvasta valgust",
             "is_no_motion": "{entity_name} ei tuvasta liikumist",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} aku hakkab t\u00fchjaks saama",
+            "co": "{entity_name} alustas vingugaasi tuvastamist",
             "cold": "{entity_name} muutus k\u00fclmaks",
             "connected": "{entity_name} on \u00fchendatud",
             "gas": "{entity_name} tuvastas gaasi(leket)",
@@ -63,6 +66,7 @@
             "moist": "{entity_name} muutus niiskeks",
             "motion": "{entity_name} tuvastas liikumist",
             "moving": "{entity_name} hakkas liikuma",
+            "no_co": "{entity_name} l\u00f5petas vingugaasi tuvastamise",
             "no_gas": "{entity_name} l\u00f5petas gaasi(lekke) tuvastamise",
             "no_light": "{entity_name} l\u00f5petas valguse tuvastamise",
             "no_motion": "{entity_name} l\u00f5petas liikumise tuvastamise",
@@ -84,6 +88,7 @@
             "not_powered": "{entity_name} pole toidet",
             "not_present": "{entity_name} puudub",
             "not_running": "{entity_name} ei t\u00f6\u00f6ta enam",
+            "not_tampered": "{entity_name} l\u00f5petas omavolilise muutmise tuvastamise",
             "not_unsafe": "{entity_name} muutus turvaliseks",
             "occupied": "{entity_name} h\u00f5ivati",
             "opened": "{entity_name} avanes",
@@ -94,6 +99,7 @@
             "running": "{entity_name} alustas t\u00f6\u00f6d",
             "smoke": "{entity_name} tuvastas suitsu",
             "sound": "{entity_name} tuvastas heli",
+            "tampered": "{entity_name} tuvastas omavolilist muutmist",
             "turned_off": "{entity_name} l\u00fclitus v\u00e4lja",
             "turned_on": "{entity_name} l\u00fclitus sisse",
             "unsafe": "{entity_name} on ebaturvaline",
@@ -102,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "vingugaas",
         "cold": "jahutus",
         "gas": "gaas",
         "heat": "k\u00fcte",
@@ -126,6 +133,14 @@
         "battery_charging": {
             "off": "Ei lae",
             "on": "Laeb"
+        },
+        "carbon_monoxide": {
+            "off": "Korras",
+            "on": "Tuvastatud"
+        },
+        "co": {
+            "off": "Puudub",
+            "on": "Tuvastatud"
         },
         "cold": {
             "off": "Normaalne",

@@ -2,7 +2,9 @@
   "domain": "aftership",
   "name": "AfterShip",
   "documentation": "https://www.home-assistant.io/integrations/aftership",
-  "requirements": ["pyaftership==0.1.2"],
+  "requirements": [
+    "pyaftership==21.11.0"
+  ],
   "codeowners": [],
   "iot_class": "cloud_polling"
 }

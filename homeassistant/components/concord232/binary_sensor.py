@@ -1,4 +1,6 @@
 """Support for exposing Concord232 elements as sensors."""
+from __future__ import annotations
+
 import datetime
 import logging
 
@@ -7,16 +9,16 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASSES,
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +33,7 @@ DEFAULT_SSL = False
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
-ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: vol.In(DEVICE_CLASSES)})
+ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -45,7 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Concord232 binary sensor platform."""
 
     host = config[CONF_HOST]
@@ -62,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
-        return False
+        return
 
     # The order of zones returned by client.list_zones() can vary.
     # When the zones are not named, this can result in the same entity
@@ -89,14 +96,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 def get_opening_type(zone):
     """Return the result of the type guessing from name."""
     if "MOTION" in zone["name"]:
-        return DEVICE_CLASS_MOTION
+        return BinarySensorDeviceClass.MOTION
     if "KEY" in zone["name"]:
-        return DEVICE_CLASS_SAFETY
+        return BinarySensorDeviceClass.SAFETY
     if "SMOKE" in zone["name"]:
-        return DEVICE_CLASS_SMOKE
+        return BinarySensorDeviceClass.SMOKE
     if "WATER" in zone["name"]:
         return "water"
-    return DEVICE_CLASS_OPENING
+    return BinarySensorDeviceClass.OPENING
 
 
 class Concord232ZoneSensor(BinarySensorEntity):

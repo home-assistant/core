@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El host ya est\u00e1 configurado.",
+            "already_configured": "El dispositivo ya est\u00e1 configurado.",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "reconfigure_successful": "La reconfiguraci\u00f3n se realiz\u00f3 correctamente"
         },
@@ -12,7 +12,7 @@
             "otp_failed": "La autenticaci\u00f3n de dos pasos fall\u00f3, vuelva a intentar con un nuevo c\u00f3digo de acceso",
             "unknown": "Error desconocido: por favor, consulta logs para obtener m\u00e1s detalles"
         },
-        "flow_title": "Synology DSM {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "2sa": {
                 "data": {

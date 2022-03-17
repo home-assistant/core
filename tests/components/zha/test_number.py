@@ -7,8 +7,8 @@ import zigpy.types
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.number import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -67,7 +67,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     assert "engineering_units" in attr_reads
     assert "application_type" in attr_reads
 
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = await find_entity_id(Platform.NUMBER, zha_device, hass)
     assert entity_id is not None
 
     await async_enable_traffic(hass, [zha_device], enabled=False)
@@ -110,7 +110,10 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     ):
         # set value via UI
         await hass.services.async_call(
-            DOMAIN, "set_value", {"entity_id": entity_id, "value": 30.0}, blocking=True
+            NUMBER_DOMAIN,
+            "set_value",
+            {"entity_id": entity_id, "value": 30.0},
+            blocking=True,
         )
         assert len(cluster.write_attributes.mock_calls) == 1
         assert cluster.write_attributes.call_args == call({"present_value": 30.0})

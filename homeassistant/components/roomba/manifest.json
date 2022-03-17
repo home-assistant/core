@@ -3,7 +3,7 @@
   "name": "iRobot Roomba and Braava",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/roomba",
-  "requirements": ["roombapy==1.6.4"],
+  "requirements": ["roombapy==1.6.5"],
   "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn"],
   "dhcp": [
     {
@@ -13,7 +13,12 @@
     {
       "hostname": "roomba-*",
       "macaddress": "80A589*"
-    }
+    },
+    {
+      "hostname": "roomba-*",
+      "macaddress": "DCF505*"
+    }    
   ],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["paho_mqtt", "roombapy"]
 }

@@ -3,9 +3,11 @@ from datetime import timedelta
 
 from aio_georss_gdacs.consts import EVENT_TYPE_MAP
 
+from homeassistant.const import Platform
+
 DOMAIN = "gdacs"
 
-PLATFORMS = ("sensor", "geo_location")
+PLATFORMS = [Platform.SENSOR, Platform.GEO_LOCATION]
 
 FEED = "feed"
 

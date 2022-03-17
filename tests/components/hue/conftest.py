@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohue.v1 as aiohue_v1
 import aiohue.v2 as aiohue_v2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.models.clip import parse_clip_resource
 import pytest
 
 from homeassistant.components import hue
@@ -21,8 +20,6 @@ from tests.common import (
     load_fixture,
     mock_device_registry,
 )
-
-# from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture(autouse=True)
@@ -189,7 +186,7 @@ def create_mock_api_v2(hass):
 
     def emit_event(event_type, data):
         """Emit an event from a (hue resource) dict."""
-        api.events.emit(EventType(event_type), parse_clip_resource(data))
+        api.events.emit(EventType(event_type), data)
 
     api.load_test_data = load_test_data
     api.emit_event = emit_event
@@ -248,9 +245,12 @@ async def setup_component(hass):
 async def setup_bridge(hass, mock_bridge, config_entry):
     """Load the Hue integration with the provided bridge."""
     mock_bridge.config_entry = config_entry
-    config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.hue.HueBridge", return_value=mock_bridge):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+    with patch.object(
+        hue.migration, "is_v2_bridge", return_value=mock_bridge.api_version == 2
+    ):
+        config_entry.add_to_hass(hass)
+        with patch("homeassistant.components.hue.HueBridge", return_value=mock_bridge):
+            await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 async def setup_platform(
@@ -281,22 +281,6 @@ async def setup_platform(
 
     # and make sure it completes before going further
     await hass.async_block_till_done()
-
-
-@pytest.fixture
-def mock_bridge_setup():
-    """Mock bridge setup."""
-    with patch.object(hue, "HueBridge") as mock_bridge:
-        mock_bridge.return_value.async_initialize_bridge = AsyncMock(return_value=True)
-        mock_bridge.return_value.api_version = 1
-        mock_bridge.return_value.api.config = Mock(
-            bridge_id="mock-id",
-            mac_address="00:00:00:00:00:00",
-            software_version="1.0.0",
-            model_id="BSB002",
-        )
-        mock_bridge.return_value.api.config.name = "Mock Hue bridge"
-        yield mock_bridge.return_value
 
 
 @pytest.fixture(name="device_reg")

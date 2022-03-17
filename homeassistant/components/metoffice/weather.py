@@ -1,16 +1,17 @@
 """Support for UK Met Office weather service."""
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_info
@@ -32,7 +33,7 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigType, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Met Office weather sensor platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
@@ -52,7 +53,7 @@ def _build_forecast_data(timestep):
     if timestep.weather:
         data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
     if timestep.precipitation:
-        data[ATTR_FORECAST_PRECIPITATION] = timestep.precipitation.value
+        data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = timestep.precipitation.value
     if timestep.temperature:
         data[ATTR_FORECAST_TEMP] = timestep.temperature.value
     if timestep.wind_direction:

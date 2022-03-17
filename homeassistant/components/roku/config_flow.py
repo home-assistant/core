@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from rokuecp import Roku, RokuError
 import voluptuous as vol
 
 from homeassistant.components import ssdp, zeroconf
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -25,7 +25,7 @@ ERROR_UNKNOWN = "unknown"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistant, data: dict) -> dict:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -45,12 +45,14 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    discovery_info: dict[str, Any]
+
+    def __init__(self) -> None:
         """Set up the instance."""
         self.discovery_info = {}
 
     @callback
-    def _show_form(self, errors: dict | None = None) -> FlowResult:
+    def _show_form(self, errors: dict[str, Any] | None = None) -> FlowResult:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -58,7 +60,9 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if not user_input:
             return self._show_form()
@@ -113,8 +117,8 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info.ssdp_location).hostname
-        name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
-        serial_number = discovery_info.upnp[ATTR_UPNP_SERIAL]
+        name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
 
         await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})

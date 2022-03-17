@@ -8,6 +8,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
@@ -24,9 +25,9 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util.enum import StrEnum
 
-DOMAIN = "switch"
+from .const import DOMAIN
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -140,15 +141,3 @@ class SwitchEntity(ToggleEntity):
                 data[attr] = value
 
         return data
-
-
-class SwitchDevice(SwitchEntity):
-    """Representation of a switch (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "SwitchDevice is deprecated, modify %s to extend SwitchEntity",
-            cls.__name__,
-        )

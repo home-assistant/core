@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "S2 Kimli\u011fi Do\u011frulanmam\u0131\u015f Anahtar",
                     "usb_path": "USB Ayg\u0131t Yolu"
                 },
+                "description": "Bu alanlar bo\u015f b\u0131rak\u0131l\u0131rsa eklenti g\u00fcvenlik anahtarlar\u0131 \u00fcretecektir.",
                 "title": "Z-Wave JS eklenti yap\u0131land\u0131rmas\u0131na girin"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "S2 Kimli\u011fi Do\u011frulanmam\u0131\u015f Anahtar",
                     "usb_path": "USB Cihaz Yolu"
                 },
+                "description": "Bu alanlar bo\u015f b\u0131rak\u0131l\u0131rsa eklenti g\u00fcvenlik anahtarlar\u0131 \u00fcretecektir.",
                 "title": "Z-Wave JS eklenti yap\u0131land\u0131rmas\u0131na girin"
             },
             "install_addon": {

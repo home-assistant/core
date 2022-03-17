@@ -36,7 +36,7 @@ async def async_setup_entry(
 
 
 class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
-    """Defines a Forcast.Solar sensor."""
+    """Defines a Forecast.Solar sensor."""
 
     entity_description: ForecastSolarSensorEntityDescription
 
@@ -47,7 +47,7 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         entity_description: ForecastSolarSensorEntityDescription,
     ) -> None:
-        """Initialize Forcast.Solar sensor."""
+        """Initialize Forecast.Solar sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = entity_description
         self.entity_id = f"{SENSOR_DOMAIN}.{entity_description.key}"
@@ -59,6 +59,7 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
             manufacturer="Forecast.Solar",
             model=coordinator.data.account_type.value,
             name="Solar Production Forecast",
+            configuration_url="https://forecast.solar",
         )
 
     @property

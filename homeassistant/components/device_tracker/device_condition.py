@@ -17,7 +17,7 @@ from homeassistant.helpers import condition, config_validation as cv, entity_reg
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 CONDITION_TYPES = {"is_home", "is_not_home"}
 
@@ -55,7 +55,9 @@ async def async_get_conditions(
 
 
 @callback
-def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
+def async_condition_from_config(
+    hass: HomeAssistant, config: ConfigType
+) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
     reverse = config[CONF_TYPE] == "is_not_home"
 

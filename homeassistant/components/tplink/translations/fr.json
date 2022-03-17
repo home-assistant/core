@@ -8,14 +8,24 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
+        "flow_title": "{name} {model} ( {host} )",
         "step": {
             "confirm": {
                 "description": "Voulez-vous configurer TP-Link smart devices?"
             },
+            "discovery_confirm": {
+                "description": "Voulez-vous configurer {name} {model} ( {host} )\u00a0?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Appareil"
+                }
+            },
             "user": {
                 "data": {
                     "host": "H\u00f4te"
-                }
+                },
+                "description": "Si vous laissez l'h\u00f4te vide, la d\u00e9couverte sera utilis\u00e9e pour trouver des appareils."
             }
         }
     }

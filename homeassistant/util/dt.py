@@ -5,17 +5,10 @@ import bisect
 from contextlib import suppress
 import datetime as dt
 import re
-import sys
-from typing import Any, cast
+from typing import Any
+import zoneinfo
 
 import ciso8601
-
-from homeassistant.const import MATCH_ALL
-
-if sys.version_info[:2] >= (3, 9):
-    import zoneinfo
-else:
-    from backports import zoneinfo
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.timezone.utc
@@ -50,8 +43,7 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
     Async friendly.
     """
     try:
-        # Cast can be removed when mypy is switched to Python 3.9.
-        return cast(dt.tzinfo, zoneinfo.ZoneInfo(time_zone_str))
+        return zoneinfo.ZoneInfo(time_zone_str)
     except zoneinfo.ZoneInfoNotFoundError:
         return None
 
@@ -215,7 +207,7 @@ def get_age(date: dt.datetime) -> str:
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:
     """Parse the time expression part and return a list of times to match."""
-    if parameter is None or parameter == MATCH_ALL:
+    if parameter is None or parameter == "*":
         res = list(range(min_value, max_value + 1))
     elif isinstance(parameter, str):
         if parameter.startswith("/"):

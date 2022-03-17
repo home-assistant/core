@@ -6,7 +6,7 @@ from xknx.devices import RawValue as XknxRawValue
 
 from homeassistant import config_entries
 from homeassistant.components.button import ButtonEntity
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -17,7 +17,6 @@ from .const import (
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
-    SupportedPlatforms,
 )
 from .knx_entity import KnxEntity
 
@@ -32,8 +31,7 @@ async def async_setup_entry(
     config: ConfigType = hass.data[DATA_KNX_CONFIG]
 
     async_add_entities(
-        KNXButton(xknx, entity_config)
-        for entity_config in config[SupportedPlatforms.BUTTON.value]
+        KNXButton(xknx, entity_config) for entity_config in config[Platform.BUTTON]
     )
 
 

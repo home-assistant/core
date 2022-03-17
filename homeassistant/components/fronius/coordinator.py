@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, Dict, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
-from pyfronius import FroniusError
+from pyfronius import BadStatusError, FroniusError
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import callback
@@ -22,6 +22,7 @@ from .sensor import (
     INVERTER_ENTITY_DESCRIPTIONS,
     LOGGER_ENTITY_DESCRIPTIONS,
     METER_ENTITY_DESCRIPTIONS,
+    OHMPILOT_ENTITY_DESCRIPTIONS,
     POWER_FLOW_ENTITY_DESCRIPTIONS,
     STORAGE_ENTITY_DESCRIPTIONS,
 )
@@ -30,17 +31,19 @@ if TYPE_CHECKING:
     from . import FroniusSolarNet
     from .sensor import _FroniusSensorEntity
 
-    FroniusEntityType = TypeVar("FroniusEntityType", bound=_FroniusSensorEntity)
+    _FroniusEntityT = TypeVar("_FroniusEntityT", bound=_FroniusSensorEntity)
 
 
 class FroniusCoordinatorBase(
-    ABC, DataUpdateCoordinator[Dict[SolarNetId, Dict[str, Any]]]
+    ABC, DataUpdateCoordinator[dict[SolarNetId, dict[str, Any]]]
 ):
     """Query Fronius endpoint and keep track of seen conditions."""
 
     default_interval: timedelta
     error_interval: timedelta
     valid_descriptions: list[SensorEntityDescription]
+
+    MAX_FAILED_UPDATES = 3
 
     def __init__(self, *args: Any, solar_net: FroniusSolarNet, **kwargs: Any) -> None:
         """Set up the FroniusCoordinatorBase class."""
@@ -61,7 +64,7 @@ class FroniusCoordinatorBase(
                 data = await self._update_method()
             except FroniusError as err:
                 self._failed_update_count += 1
-                if self._failed_update_count == 3:
+                if self._failed_update_count == self.MAX_FAILED_UPDATES:
                     self.update_interval = self.error_interval
                 raise UpdateFailed(err) from err
 
@@ -81,7 +84,7 @@ class FroniusCoordinatorBase(
     def add_entities_for_seen_keys(
         self,
         async_add_entities: AddEntitiesCallback,
-        entity_constructor: type[FroniusEntityType],
+        entity_constructor: type[_FroniusEntityT],
     ) -> None:
         """
         Add entities for received keys and registers listener for future seen keys.
@@ -97,6 +100,8 @@ class FroniusCoordinatorBase(
                 for key in self.unregistered_keys[solar_net_id].intersection(
                     device_data
                 ):
+                    if device_data[key]["value"] is None:
+                        continue
                     new_entities.append(entity_constructor(self, key, solar_net_id))
                     self.unregistered_keys[solar_net_id].remove(key)
             if new_entities:
@@ -115,6 +120,8 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
     error_interval = timedelta(minutes=10)
     valid_descriptions = INVERTER_ENTITY_DESCRIPTIONS
 
+    SILENT_RETRIES = 3
+
     def __init__(
         self, *args: Any, inverter_info: FroniusDeviceInfo, **kwargs: Any
     ) -> None:
@@ -124,9 +131,19 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
-        data = await self.solar_net.fronius.current_inverter_data(
-            self.inverter_info.solar_net_id
-        )
+        # almost 1% of `current_inverter_data` requests on Symo devices result in
+        # `BadStatusError Code: 8 - LNRequestTimeout` due to flaky internal
+        # communication between the logger and the inverter.
+        for silent_retry in range(self.SILENT_RETRIES):
+            try:
+                data = await self.solar_net.fronius.current_inverter_data(
+                    self.inverter_info.solar_net_id
+                )
+            except BadStatusError as err:
+                if silent_retry == (self.SILENT_RETRIES - 1):
+                    raise err
+                continue
+            break
         # wrap a single devices data in a dict with solar_net_id key for
         # FroniusCoordinatorBase _async_update_data and add_entities_for_seen_keys
         return {self.inverter_info.solar_net_id: data}
@@ -156,6 +173,19 @@ class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
         """Return data per solar net id from pyfronius."""
         data = await self.solar_net.fronius.current_system_meter_data()
         return data["meters"]  # type: ignore[no-any-return]
+
+
+class FroniusOhmpilotUpdateCoordinator(FroniusCoordinatorBase):
+    """Query Fronius Ohmpilots and keep track of seen conditions."""
+
+    default_interval = timedelta(minutes=1)
+    error_interval = timedelta(minutes=10)
+    valid_descriptions = OHMPILOT_ENTITY_DESCRIPTIONS
+
+    async def _update_method(self) -> dict[SolarNetId, Any]:
+        """Return data per solar net id from pyfronius."""
+        data = await self.solar_net.fronius.current_system_ohmpilot_data()
+        return data["ohmpilots"]  # type: ignore[no-any-return]
 
 
 class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):

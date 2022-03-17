@@ -12,13 +12,19 @@
                 "data": {
                     "include_domains": "Einzubeziehende Domains"
                 },
-                "description": "W\u00e4hle die Domains aus, die aufgenommen werden sollen. Alle unterst\u00fctzten Entit\u00e4ten in der Domain werden aufgenommen. F\u00fcr jeden TV-Mediaplayer und jede Kamera wird eine separate HomeKit-Instanz im Zubeh\u00f6rmodus erstellt.",
+                "description": "W\u00e4hle die einzuschlie\u00dfenden Dom\u00e4nen aus. Alle unterst\u00fctzten Ger\u00e4te in der Dom\u00e4ne werden einbezogen, mit Ausnahme der kategorisierten Ger\u00e4te. F\u00fcr jeden TV-Media-Player, jede aktivit\u00e4tsbasierte Fernbedienung, jedes Schloss und jede Kamera wird eine separate HomeKit-Instanz im Zubeh\u00f6rmodus erstellt.",
                 "title": "W\u00e4hle die zu einzubeziehenden Dom\u00e4nen aus."
             }
         }
     },
     "options": {
         "step": {
+            "accessory": {
+                "data": {
+                    "entities": "Entit\u00e4t"
+                },
+                "title": "W\u00e4hle die Entit\u00e4t f\u00fcr das Zubeh\u00f6r aus"
+            },
             "advanced": {
                 "data": {
                     "auto_start": "Autostart (deaktivieren, wenn du den homekit.start-Dienst manuell aufrufst)",
@@ -35,6 +41,20 @@
                 "description": "Pr\u00fcfe alle Kameras, die native H.264-Streams unterst\u00fctzen. Wenn die Kamera keinen H.264-Stream ausgibt, transkodiert das System das Video in H.264 f\u00fcr HomeKit. Die Transkodierung erfordert eine leistungsstarke CPU und wird wahrscheinlich nicht auf Einplatinencomputern funktionieren.",
                 "title": "W\u00e4hle den Kamera-Video-Codec."
             },
+            "exclude": {
+                "data": {
+                    "entities": "Entit\u00e4ten"
+                },
+                "description": "Alle \"{domains}\"-Entit\u00e4ten werden einbezogen, mit Ausnahme der ausgeschlossenen Entit\u00e4ten und kategorisierten Entit\u00e4ten.",
+                "title": "W\u00e4hle die auszuschlie\u00dfenden Einheiten aus"
+            },
+            "include": {
+                "data": {
+                    "entities": "Entit\u00e4ten"
+                },
+                "description": "Alle \"{domains}\"-Entit\u00e4ten werden einbezogen, sofern nicht bestimmte Entit\u00e4ten ausgew\u00e4hlt werden.",
+                "title": "W\u00e4hle die einzuschlie\u00dfenden Entit\u00e4ten aus"
+            },
             "include_exclude": {
                 "data": {
                     "entities": "Entit\u00e4ten",
@@ -45,11 +65,13 @@
             },
             "init": {
                 "data": {
+                    "domains": "Einzubeziehende Domains",
                     "include_domains": "Einzubeziehende Domains",
-                    "mode": "Modus"
+                    "include_exclude_mode": "Inklusionsmodus",
+                    "mode": "HomeKit-Modus"
                 },
                 "description": "HomeKit kann so konfiguriert werden, dass eine Br\u00fccke oder ein einzelnes Zubeh\u00f6r verf\u00fcgbar gemacht wird. Im Zubeh\u00f6rmodus kann nur eine einzelne Entit\u00e4t verwendet werden. F\u00fcr Media Player mit der TV-Ger\u00e4teklasse ist ein Zubeh\u00f6rmodus erforderlich, damit sie ordnungsgem\u00e4\u00df funktionieren. Entit\u00e4ten in den \"einzuschlie\u00dfenden Dom\u00e4nen\" werden f\u00fcr HomeKit verf\u00fcgbar gemacht. Auf dem n\u00e4chsten Bildschirm kannst du ausw\u00e4hlen, welche Entit\u00e4ten in diese Liste aufgenommen oder aus dieser ausgeschlossen werden sollen.",
-                "title": "W\u00e4hle die zu einzubeziehenden Dom\u00e4nen aus."
+                "title": "W\u00e4hle Modus und Dom\u00e4nen aus."
             },
             "yaml": {
                 "description": "Dieser Eintrag wird \u00fcber YAML gesteuert",

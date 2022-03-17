@@ -18,7 +18,7 @@
                     "api_key": "Chiave API"
                 },
                 "description": "Devi fornire una nuova chiave API di sola lettura da UptimeRobot",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {

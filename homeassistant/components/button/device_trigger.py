@@ -11,8 +11,8 @@ from homeassistant.components.automation import (
 )
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers.state import (
-    TRIGGER_SCHEMA as STATE_TRIGGER_SCHEMA,
     async_attach_trigger as async_attach_state_trigger,
+    async_validate_trigger_config as async_validate_state_trigger_config,
 )
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -25,7 +25,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 TRIGGER_TYPES = {"pressed"}
 
@@ -67,7 +67,7 @@ async def async_attach_trigger(
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
     }
 
-    state_config = STATE_TRIGGER_SCHEMA(state_config)
+    state_config = await async_validate_state_trigger_config(hass, state_config)
     return await async_attach_state_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )

@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} battery is low",
+            "is_co": "{entity_name} is detecting carbon monoxide",
             "is_cold": "{entity_name} is cold",
             "is_connected": "{entity_name} is connected",
             "is_gas": "{entity_name} is detecting gas",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} is moist",
             "is_motion": "{entity_name} is detecting motion",
             "is_moving": "{entity_name} is moving",
+            "is_no_co": "{entity_name} is not detecting carbon monoxide",
             "is_no_gas": "{entity_name} is not detecting gas",
             "is_no_light": "{entity_name} is not detecting light",
             "is_no_motion": "{entity_name} is not detecting motion",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} battery low",
+            "co": "{entity_name} started detecting carbon monoxide",
             "cold": "{entity_name} became cold",
             "connected": "{entity_name} connected",
             "gas": "{entity_name} started detecting gas",
@@ -63,6 +66,7 @@
             "moist": "{entity_name} became moist",
             "motion": "{entity_name} started detecting motion",
             "moving": "{entity_name} started moving",
+            "no_co": "{entity_name} stopped detecting carbon monoxide",
             "no_gas": "{entity_name} stopped detecting gas",
             "no_light": "{entity_name} stopped detecting light",
             "no_motion": "{entity_name} stopped detecting motion",
@@ -84,6 +88,7 @@
             "not_powered": "{entity_name} not powered",
             "not_present": "{entity_name} not present",
             "not_running": "{entity_name} is no longer running",
+            "not_tampered": "{entity_name} stopped detecting tampering",
             "not_unsafe": "{entity_name} became safe",
             "occupied": "{entity_name} became occupied",
             "opened": "{entity_name} opened",
@@ -94,6 +99,7 @@
             "running": "{entity_name} started running",
             "smoke": "{entity_name} started detecting smoke",
             "sound": "{entity_name} started detecting sound",
+            "tampered": "{entity_name} started detecting tampering",
             "turned_off": "{entity_name} turned off",
             "turned_on": "{entity_name} turned on",
             "unsafe": "{entity_name} became unsafe",
@@ -102,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "carbon_monoxide",
         "cold": "cold",
         "gas": "gas",
         "heat": "heat",
@@ -126,6 +133,14 @@
         "battery_charging": {
             "off": "Not charging",
             "on": "Charging"
+        },
+        "carbon_monoxide": {
+            "off": "Clear",
+            "on": "Detected"
+        },
+        "co": {
+            "off": "Clear",
+            "on": "Detected"
         },
         "cold": {
             "off": "Normal",

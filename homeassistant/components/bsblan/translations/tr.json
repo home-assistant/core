@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
@@ -10,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "passkey": "Ge\u00e7i\u015f anahtar\u0131 dizesi",
                     "password": "Parola",
                     "port": "Port",

@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "Sony Songpal {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "description": "Voulez-vous configurer {name} ({host})?"

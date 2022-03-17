@@ -16,6 +16,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, HARMONY_DATA, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
 from .util import (
@@ -81,12 +82,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Harmony device."""
         _LOGGER.debug("SSDP discovery_info: %s", discovery_info)
 
-        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
-        friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        parsed_url = urlparse(discovery_info.ssdp_location)
+        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
 
         self._async_abort_entries_match({CONF_HOST: parsed_url.hostname})
 

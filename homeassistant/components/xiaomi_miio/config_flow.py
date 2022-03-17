@@ -136,9 +136,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_cloud()
-        return self.async_show_form(
-            step_id="reauth_confirm", data_schema=vol.Schema({})
-        )
+        return self.async_show_form(step_id="reauth_confirm")
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
@@ -160,11 +158,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        name = discovery_info[zeroconf.ATTR_NAME]
-        self.host = discovery_info[zeroconf.ATTR_HOST]
-        self.mac = discovery_info[zeroconf.ATTR_PROPERTIES].get("mac")
+        name = discovery_info.name
+        self.host = discovery_info.host
+        self.mac = discovery_info.properties.get("mac")
         if self.mac is None:
-            poch = discovery_info[zeroconf.ATTR_PROPERTIES].get("poch", "")
+            poch = discovery_info.properties.get("poch", "")
             if (result := search(r"mac=\w+", poch)) is not None:
                 self.mac = result.group(0).split("=")[1]
 

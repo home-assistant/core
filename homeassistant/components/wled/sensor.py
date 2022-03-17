@@ -8,22 +8,20 @@ from datetime import datetime, timedelta
 from wled import Device as WLEDDevice
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_CURRENT,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TIMESTAMP,
     ELECTRIC_CURRENT_MILLIAMPERE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
@@ -46,36 +44,40 @@ class WLEDSensorEntityDescription(
 ):
     """Describes WLED sensor entity."""
 
+    exists_fn: Callable[[WLEDDevice], bool] = lambda _: True
+
 
 SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="estimated_current",
         name="Estimated Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.leds.power,
+        exists_fn=lambda device: bool(device.info.leds.max_power),
     ),
     WLEDSensorEntityDescription(
         key="info_leds_count",
         name="LED Count",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.leds.count,
     ),
     WLEDSensorEntityDescription(
         key="info_leds_max_power",
         name="Max Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        device_class=DEVICE_CLASS_CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.CURRENT,
         value_fn=lambda device: device.info.leds.max_power,
+        exists_fn=lambda device: bool(device.info.leds.max_power),
     ),
     WLEDSensorEntityDescription(
         key="uptime",
         name="Uptime",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: (utcnow() - timedelta(seconds=device.info.uptime)),
     ),
@@ -84,8 +86,8 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         name="Free Memory",
         icon="mdi:memory",
         native_unit_of_measurement=DATA_BYTES,
-        state_class=STATE_CLASS_MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.free_heap,
     ),
@@ -94,7 +96,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         name="Wi-Fi Signal",
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.signal if device.info.wifi else None,
     ),
@@ -102,8 +104,8 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         key="wifi_rssi",
         name="Wi-Fi RSSI",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.rssi if device.info.wifi else None,
     ),
@@ -111,7 +113,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         key="wifi_channel",
         name="Wi-Fi Channel",
         icon="mdi:wifi",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.channel if device.info.wifi else None,
     ),
@@ -119,7 +121,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         key="wifi_bssid",
         name="Wi-Fi BSSID",
         icon="mdi:wifi",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.bssid if device.info.wifi else None,
     ),
@@ -134,7 +136,9 @@ async def async_setup_entry(
     """Set up WLED sensor based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        WLEDSensorEntity(coordinator, description) for description in SENSORS
+        WLEDSensorEntity(coordinator, description)
+        for description in SENSORS
+        if description.exists_fn(coordinator.data)
     )
 
 

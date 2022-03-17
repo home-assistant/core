@@ -8,17 +8,19 @@ from async_timeout import timeout
 from python_awair import Awair
 from python_awair.exceptions import AuthError
 
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL, AwairResult
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass, config_entry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Awair integration from a config entry."""
     session = async_get_clientsession(hass)
     coordinator = AwairDataUpdateCoordinator(hass, config_entry, session)
@@ -33,7 +35,7 @@ async def async_setup_entry(hass, config_entry) -> bool:
     return True
 
 
-async def async_unload_entry(hass, config_entry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Awair configuration."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS

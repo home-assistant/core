@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
+            "invalid_access_token": "Token akses tidak valid",
             "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
             "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",
             "reauth_successful": "Autentikasi ulang berhasil",
@@ -12,10 +13,13 @@
             "default": "Berhasil diautentikasi"
         },
         "error": {
+            "bad_project_id": "Masukkan Cloud Project ID yang valid (periksa Cloud Console)",
             "internal_error": "Kesalahan internal saat memvalidasi kode",
             "invalid_pin": "Invalid Kode PIN",
+            "subscriber_error": "Kesalahan pelanggan tidak diketahui, lihat log",
             "timeout": "Tenggang waktu memvalidasi kode telah habis.",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "wrong_project_id": "Masukkan Cloud Project ID yang valid (Device Access Project ID yang ditemukan)"
         },
         "step": {
             "auth": {
@@ -41,6 +45,13 @@
             },
             "pick_implementation": {
                 "title": "Pilih Metode Autentikasi"
+            },
+            "pubsub": {
+                "data": {
+                    "cloud_project_id": "ID Proyek Google Cloud"
+                },
+                "description": "Kunjungi [Cloud Console]( {url} ) untuk menemukan ID Proyek Google Cloud Anda.",
+                "title": "Konfigurasikan Google Cloud"
             },
             "reauth_confirm": {
                 "description": "Integrasi Nest perlu mengautentikasi ulang akun Anda",

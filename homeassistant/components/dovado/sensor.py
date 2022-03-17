@@ -13,7 +13,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES, PERCENTAGE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DOVADO_DOMAIN
 
@@ -81,7 +84,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Dovado sensor platform."""
     dovado = hass.data[DOVADO_DOMAIN]
 

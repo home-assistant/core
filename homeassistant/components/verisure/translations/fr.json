@@ -5,7 +5,7 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {
@@ -18,14 +18,14 @@
             "reauth_confirm": {
                 "data": {
                     "description": "R\u00e9-authentifiez-vous avec votre compte Verisure My Pages.",
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe"
                 }
             },
             "user": {
                 "data": {
                     "description": "Connectez-vous avec votre compte Verisure My Pages.",
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe"
                 }
             }

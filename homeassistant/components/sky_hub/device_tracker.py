@@ -1,4 +1,6 @@
 """Support for Sky Hub."""
+from __future__ import annotations
+
 import logging
 
 from pyskyqhub.skyq_hub import SkyQHub
@@ -10,15 +12,19 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 
-async def async_get_scanner(hass, config):
+async def async_get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> DeviceScanner | None:
     """Return a Sky Hub scanner if successful."""
     host = config[DOMAIN].get(CONF_HOST, "192.168.1.254")
     websession = async_get_clientsession(hass)

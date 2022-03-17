@@ -1,14 +1,23 @@
 """Support for De Lijn (Flemish public transport) information."""
+from __future__ import annotations
+
 import logging
 
 from pydelijn.api import Passages
 from pydelijn.common import HttpException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +41,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+AUTO_ATTRIBUTES = (
+    "line_number_public",
+    "line_transport_type",
+    "final_destination",
+    "due_at_schedule",
+    "due_at_realtime",
+    "is_realtime",
+)
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the sensor."""
     api_key = config[CONF_API_KEY]
 
@@ -44,7 +67,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sensors.append(
             DeLijnPublicTransportSensor(
                 Passages(
-                    hass.loop,
                     nextpassage[CONF_STOP_ID],
                     nextpassage[CONF_NUMBER_OF_DEPARTURES],
                     api_key,
@@ -60,72 +82,42 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class DeLijnPublicTransportSensor(SensorEntity):
     """Representation of a Ruter sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_attribution = ATTRIBUTION
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:bus"
 
     def __init__(self, line):
         """Initialize the sensor."""
         self.line = line
-        self._attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self._name = None
-        self._state = None
-        self._available = True
+        self._attr_extra_state_attributes = {}
 
     async def async_update(self):
         """Get the latest data from the De Lijn API."""
         try:
             await self.line.get_passages()
-            self._name = await self.line.get_stopname()
+            self._attr_name = await self.line.get_stopname()
         except HttpException:
-            self._available = False
+            self._attr_available = False
             _LOGGER.error("De Lijn http error")
             return
 
-        self._attributes["stopname"] = self._name
+        self._attr_extra_state_attributes["stopname"] = self._attr_name
 
         if not self.line.passages:
-            self._available = False
+            self._attr_available = False
             return
 
         try:
             first = self.line.passages[0]
-            if first["due_at_realtime"] is not None:
-                first_passage = first["due_at_realtime"]
-            else:
+            if (first_passage := first["due_at_realtime"]) is None:
                 first_passage = first["due_at_schedule"]
-            self._state = first_passage
-            self._attributes["line_number_public"] = first["line_number_public"]
-            self._attributes["line_transport_type"] = first["line_transport_type"]
-            self._attributes["final_destination"] = first["final_destination"]
-            self._attributes["due_at_schedule"] = first["due_at_schedule"]
-            self._attributes["due_at_realtime"] = first["due_at_realtime"]
-            self._attributes["is_realtime"] = first["is_realtime"]
-            self._attributes["next_passages"] = self.line.passages
-            self._available = True
+            self._attr_native_value = first_passage
+
+            for key in AUTO_ATTRIBUTES:
+                self._attr_extra_state_attributes[key] = first[key]
+            self._attr_extra_state_attributes["next_passages"] = self.line.passages
+
+            self._attr_available = True
         except (KeyError) as error:
             _LOGGER.error("Invalid data received from De Lijn: %s", error)
-            self._available = False
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:bus"
-
-    @property
-    def extra_state_attributes(self):
-        """Return attributes for the sensor."""
-        return self._attributes
+            self._attr_available = False

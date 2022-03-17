@@ -42,7 +42,7 @@ from . import (
     service,
 )
 from .device_registry import DeviceRegistry
-from .entity_registry import DISABLED_INTEGRATION, EntityRegistry
+from .entity_registry import EntityRegistry, RegistryEntryDisabler
 from .event import async_call_later, async_track_time_interval
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -172,7 +172,7 @@ class EntityPlatform:
         def async_create_setup_task() -> Coroutine:
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
-                return platform.async_setup_platform(  # type: ignore
+                return platform.async_setup_platform(  # type: ignore[no-any-return,union-attr]
                     hass,
                     platform_config,
                     self._async_schedule_add_entities,
@@ -183,7 +183,7 @@ class EntityPlatform:
             # we don't want to track this task in case it blocks startup.
             return hass.loop.run_in_executor(  # type: ignore[return-value]
                 None,
-                platform.setup_platform,  # type: ignore
+                platform.setup_platform,  # type: ignore[union-attr]
                 hass,
                 platform_config,
                 self._schedule_add_entities,
@@ -456,6 +456,7 @@ class EntityPlatform:
 
             device_info = entity.device_info
             device_id = None
+            device = None
 
             if config_entry_id is not None and device_info is not None:
                 processed_dev_info: dict[str, str | None] = {
@@ -473,10 +474,11 @@ class EntityPlatform:
                     "name",
                     "suggested_area",
                     "sw_version",
+                    "hw_version",
                     "via_device",
                 ):
                     if key in device_info:
-                        processed_dev_info[key] = device_info[key]  # type: ignore[misc]
+                        processed_dev_info[key] = device_info[key]  # type: ignore[literal-required]
 
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:
@@ -501,9 +503,9 @@ class EntityPlatform:
                 except RequiredParameterMissing:
                     pass
 
-            disabled_by: str | None = None
+            disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
-                disabled_by = DISABLED_INTEGRATION
+                disabled_by = RegistryEntryDisabler.INTEGRATION
 
             entry = entity_registry.async_get_or_create(
                 self.domain,
@@ -522,6 +524,11 @@ class EntityPlatform:
                 supported_features=entity.supported_features,
                 unit_of_measurement=entity.unit_of_measurement,
             )
+
+            if device and device.disabled and not entry.disabled:
+                entry = entity_registry.async_update_entity(
+                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
+                )
 
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id
