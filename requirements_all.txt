@@ -21,7 +21,7 @@ PyMVGLive==1.1.4
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
-PyNaCl==1.4.0
+PyNaCl==1.5.0
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.homekit
@@ -107,7 +107,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.0.2
+aioairzone==0.1.0
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -670,7 +670,7 @@ freesms==0.2.0
 fritzconnection==1.8.0
 
 # homeassistant.components.google_translate
-gTTS==2.2.3
+gTTS==2.2.4
 
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==3.0.0
@@ -806,7 +806,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220312.0
+home-assistant-frontend==20220316.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -873,7 +873,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.9.9
+intellifire4py==1.0.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -1138,7 +1138,7 @@ openevsewifi==1.1.0
 openhomedevice==2.0.1
 
 # homeassistant.components.opensensemap
-opensensemap-api==0.1.5
+opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
 openwebifpy==3.2.7
@@ -2160,7 +2160,7 @@ smhi-pkg==1.0.15
 snapcast==2.1.3
 
 # homeassistant.components.sonos
-soco==0.26.4
+soco==0.27.1
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0
@@ -2315,7 +2315,7 @@ ttls==1.4.3
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.5.0
+twentemilieu==0.6.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2443,7 +2443,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.august
-yalexs==1.1.22
+yalexs==1.1.23
 
 # homeassistant.components.yeelight
 yeelight==0.7.9
