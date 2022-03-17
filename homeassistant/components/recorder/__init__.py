@@ -975,6 +975,7 @@ class Recorder(threading.Thread):
                 )
                 return
 
+            dbstate.attributes = None
             shared_attrs = dbstate_attributes.shared_attrs
             # Matching attributes found in the pending commit
             if pending_attributes := self._pending_state_attributes.get(shared_attrs):
@@ -997,22 +998,18 @@ class Recorder(threading.Thread):
                 self._pending_state_attributes[shared_attrs] = dbstate_attributes
                 self.event_session.add(dbstate_attributes)
 
-            dbstate.attributes = None
-            has_new_state = event.data.get("new_state")
-            if dbstate.entity_id in self._old_states:
-                old_state = self._old_states.pop(dbstate.entity_id)
+            if old_state := self._old_states.pop(dbstate.entity_id, None):
                 if old_state.state_id:
                     dbstate.old_state_id = old_state.state_id
                 else:
                     dbstate.old_state = old_state
-            if not has_new_state:
-                dbstate.state = None
-            dbstate.event = dbevent
-            self.event_session.add(dbstate)
-
-            if has_new_state:
+            if event.data.get("new_state"):
                 self._old_states[dbstate.entity_id] = dbstate
                 self._pending_expunge.append(dbstate)
+            else:
+                dbstate.state = None
+            self.event_session.add(dbstate)
+            dbstate.event = dbevent
 
         # If they do not have a commit interval
         # than we commit right away
