@@ -7,8 +7,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant import config_entries, core
 from .const import DOMAIN
+from typing import Any, Final
 
 PLATFORMS: list[Platform] = [Platform.COVER]
+
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -42,3 +45,20 @@ async def async_setup(hass: core.HomeAssistant, config: dict) -> bool:
     """Set up the GitHub Custom component from yaml configuration."""
     hass.data.setdefault(DOMAIN, {})
     return True
+
+
+# Example migration function
+# async def async_migrate_entry(hass, config_entry: ConfigEntry):
+#    """Migrate old entry."""
+##    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+#    if config_entry.version == 1:
+#
+#        new = {**config_entry.data}
+#
+#        config_entry.version = 2
+#        hass.config_entries.async_update_entry(config_entry, data=new)
+
+#    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+#    return True
