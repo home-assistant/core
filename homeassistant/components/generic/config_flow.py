@@ -99,13 +99,12 @@ def build_schema(
         ): bool,
     }
     if is_options_flow:
-        spec = {
-            **spec,
+        spec[
             vol.Required(
                 CONF_LIMIT_REFETCH_TO_URL_CHANGE,
                 default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False),
-            ): bool,
-        }
+            )
+        ] = bool
     return vol.Schema(spec)
 
 
