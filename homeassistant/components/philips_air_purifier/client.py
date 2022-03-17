@@ -57,6 +57,7 @@ class Status:
         name: str,
         model: str,
         firmware_version: str,
+        wifi_firmware_version: str,
         is_on: bool,
         mode: Mode,
         fan_speed: FanSpeed,
@@ -70,6 +71,7 @@ class Status:
         self.name = name
         self.model = model
         self.firmware_version = firmware_version
+        self.wifi_firmware_version = wifi_firmware_version
         self.is_on = is_on
         self.mode = mode
         self.fan_speed = fan_speed
@@ -78,8 +80,9 @@ class Status:
         """Return representation of the device status."""
         return (
             f"<Status device_id='{self.device_id}', name='{self.name}', model='{self.model}', "
-            + f"firmware_version='{self.firmware_version}', is_on={self.is_on}, mode={self.mode}, "
-            + f"fan_speed={self.fan_speed}>"
+            + f"firmware_version='{self.firmware_version}', "
+            + f"wifi_firmware_version='{self.wifi_firmware_version}', "
+            + f"is_on={self.is_on}, mode={self.mode}, fan_speed={self.fan_speed}>"
         )
 
 
@@ -183,7 +186,8 @@ class ReliableClient:
                     device_id=json_status["DeviceId"],
                     name=json_status["name"],
                     model=json_status["modelid"],
-                    firmware_version=json_status["WifiVersion"],
+                    firmware_version=json_status["swversion"],
+                    wifi_firmware_version=json_status["WifiVersion"],
                     is_on=(json_status["pwr"] == "1"),
                     mode=Mode(json_status["mode"]),
                     fan_speed=FanSpeed(json_status["om"]),

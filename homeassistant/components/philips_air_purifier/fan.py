@@ -98,7 +98,12 @@ class PurifierEntity(FanEntity):
 
     @property
     def device_info(self):
-        """Return device information for the purifier."""
+        """
+        Return device information for the purifier.
+
+        Given that the purifier is sometimes not responsive for 30 seconds ore more,
+        we can't query it during startup and can only use data from the config entry.
+        """
         if self._status is None:
             info = {
                 "identifiers": {(DOMAIN, self.unique_id)},
@@ -109,7 +114,7 @@ class PurifierEntity(FanEntity):
             info = {
                 "identifiers": {(DOMAIN, self._status.device_id)},
                 "name": self._status.name,
-                "sw_version": self._status.firmware_version,
+                "sw_version": f"{self._status.firmware_version} / {self._status.wifi_firmware_version}",
                 "model": self._status.model,
                 "manufacturer": "Philips",
             }
