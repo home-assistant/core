@@ -11,7 +11,14 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
 from .const import MAX_ROWS_TO_PURGE
-from .models import Events, RecorderRuns, States, StatisticsRuns, StatisticsShortTerm
+from .models import (
+    Events,
+    RecorderRuns,
+    StateAttributes,
+    States,
+    StatisticsRuns,
+    StatisticsShortTerm,
+)
 from .repack import repack_database
 from .util import retryable_database_job, session_scope
 
@@ -37,7 +44,12 @@ def purge_old_data(
     with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
         event_ids = _select_event_ids_to_purge(session, purge_before)
-        state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
+        state_ids, attributes_ids = _select_state_and_attributes_ids_to_purge(
+            session, purge_before, event_ids
+        )
+        attribute_ids = _select_attribute_ids_to_purge(
+            session, purge_before, attributes_ids
+        )
         statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
         short_term_statistics = _select_short_term_statistics_to_purge(
             session, purge_before
@@ -45,6 +57,9 @@ def purge_old_data(
 
         if state_ids:
             _purge_state_ids(instance, session, state_ids)
+
+        if attribute_ids:
+            _purge_attribute_ids(instance, session, attribute_ids)
 
         if event_ids:
             _purge_event_ids(session, event_ids)
@@ -82,20 +97,45 @@ def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list
     return [event.event_id for event in events]
 
 
-def _select_state_ids_to_purge(
+def _select_state_and_attributes_ids_to_purge(
     session: Session, purge_before: datetime, event_ids: list[int]
-) -> set[int]:
+) -> tuple[set[int], set[int]]:
     """Return a list of state ids to purge."""
     if not event_ids:
-        return set()
+        return set(), set()
     states = (
-        session.query(States.state_id)
+        session.query(States.state_id, States.attributes_id)
         .filter(States.last_updated < purge_before)
         .filter(States.event_id.in_(event_ids))
         .all()
     )
     _LOGGER.debug("Selected %s state ids to remove", len(states))
-    return {state.state_id for state in states}
+    state_ids = set()
+    attribute_ids = set()
+    for state in states:
+        state_ids.add(state.state_id)
+        if state.attributes_id:
+            attribute_ids.add(state.attributes_id)
+    return state_ids, attribute_ids
+
+
+def _select_attribute_ids_to_purge(
+    session: Session, purge_before: datetime, attribute_ids: set[int]
+) -> set[int]:
+    """Return a list of attribute ids to purge."""
+    if not attribute_ids:
+        return set()
+    keep_attribute_ids = {
+        state.attributes_id
+        for state in session.query(States.attributes_id)
+        .filter(States.last_updated >= purge_before)
+        .filter(States.attributes_id.in_(attribute_ids))
+    }
+    _LOGGER.debug(
+        "Selected %s shared attributes to remove",
+        len(attribute_ids - keep_attribute_ids),
+    )
+    return attribute_ids - keep_attribute_ids
 
 
 def _select_statistics_runs_to_purge(
@@ -173,6 +213,40 @@ def _evict_purged_states_from_old_states_cache(
     # Evict any purged state from the old states cache
     for purged_state_id in purged_state_ids.intersection(old_state_reversed):
         old_states.pop(old_state_reversed[purged_state_id], None)
+
+
+def _evict_purged_attributes_from_attributes_cache(
+    instance: Recorder, purged_attributes_ids: set[int]
+) -> None:
+    """Evict purged attribute ids from the attribute ids cache."""
+    # Make a map from old_state_id to entity_id
+    old_attributes = instance._state_attributes_ids  # pylint: disable=protected-access
+    old_attributes_reversed = {
+        attributes_id: attributes
+        for attributes, attributes_id in old_attributes.items()
+    }
+
+    # Evict any purged state from the old states cache
+    for purged_attribute_id in purged_attributes_ids.intersection(
+        old_attributes_reversed
+    ):
+        old_attributes.pop(old_attributes_reversed[purged_attribute_id], None)
+
+
+def _purge_attribute_ids(
+    instance: Recorder, session: Session, attributes_ids: set[int]
+) -> None:
+    """Delete old attributes ids."""
+
+    deleted_rows = (
+        session.query(StateAttributes)
+        .filter(StateAttributes.attributes_id.in_(attributes_ids))
+        .delete(synchronize_session=False)
+    )
+    _LOGGER.debug("Deleted %s attribute states", deleted_rows)
+
+    # Evict eny entries in the old_states cache referring to a purged state
+    _evict_purged_attributes_from_attributes_cache(instance, attributes_ids)
 
 
 def _purge_statistics_runs(session: Session, statistics_runs: list[int]) -> None:
@@ -262,6 +336,7 @@ def _purge_filtered_states(
             .all()
         )
     )
+    # TODO: find attributes ids to purge as well
     event_ids = [id_ for id_ in event_ids if id_ is not None]
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
@@ -287,6 +362,7 @@ def _purge_filtered_events(
     states: list[States] = (
         session.query(States.state_id).filter(States.event_id.in_(event_ids)).all()
     )
+    # TODO: find attributes ids to purge as well
     state_ids: set[int] = {state.state_id for state in states}
     _purge_state_ids(instance, session, state_ids)
     _purge_event_ids(session, event_ids)
