@@ -1,5 +1,6 @@
 """The tests for the Recorder component."""
-from datetime import datetime
+from datetime import datetime, timedelta
+from unittest.mock import PropertyMock
 
 import pytest
 from sqlalchemy import create_engine
@@ -8,6 +9,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from homeassistant.components.recorder.models import (
     Base,
     Events,
+    LazyState,
     RecorderRuns,
     StateAttributes,
     States,
@@ -17,8 +19,7 @@ from homeassistant.components.recorder.models import (
 from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
-from homeassistant.util import dt
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt, dt as dt_util
 
 
 def test_from_event_to_db_event():
@@ -237,3 +238,61 @@ async def test_event_to_db_model():
     native = Events.from_event(event, event_data="{}").to_native()
     event.data = {}
     assert native == event
+
+
+async def test_lazy_state_handles_include_json(caplog):
+    """Test that the LazyState class handles invalid json."""
+    row = PropertyMock(
+        entity_id="sensor.invalid",
+        shared_attrs="{INVALID_JSON}",
+    )
+    assert LazyState(row).attributes == {}
+    assert "Error converting row to state attributes" in caplog.text
+
+
+async def test_lazy_state_prefers_shared_attrs_over_attrs(caplog):
+    """Test that the LazyState prefers shared_attrs over attributes."""
+    row = PropertyMock(
+        entity_id="sensor.invalid",
+        shared_attrs='{"shared":true}',
+        attributes='{"shared":false}',
+    )
+    assert LazyState(row).attributes == {"shared": True}
+
+
+async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog):
+    """Test that the LazyState handles different last_updated and last_changed."""
+    now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    row = PropertyMock(
+        entity_id="sensor.valid",
+        state="off",
+        shared_attrs='{"shared":true}',
+        last_updated=now,
+        last_changed=now - timedelta(seconds=60),
+    )
+    assert LazyState(row).as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:03:01.000323+00:00",
+        "last_updated": "2021-06-12T03:03:01.000323+00:00",
+        "state": "off",
+    }
+
+
+async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
+    """Test that the LazyState handles same last_updated and last_changed."""
+    now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    row = PropertyMock(
+        entity_id="sensor.valid",
+        state="off",
+        shared_attrs='{"shared":true}',
+        last_updated=now,
+        last_changed=now,
+    )
+    assert LazyState(row).as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:04:01.000323+00:00",
+        "last_updated": "2021-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }
