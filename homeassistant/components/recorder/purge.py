@@ -185,7 +185,9 @@ def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) 
     disconnected_rows = (
         session.query(States)
         .filter(States.old_state_id.in_(state_ids))
-        .update({"old_state_id": None}, synchronize_session=False)
+        .update(
+            {"old_state_id": None, "attributes_id": None}, synchronize_session=False
+        )
     )
     _LOGGER.debug("Updated %s states to remove old_state_id", disconnected_rows)
 
