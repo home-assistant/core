@@ -29,28 +29,28 @@ def test_recorder_pool(caplog):
         session.close()
 
     _get_connection_twice()
-    assert "Database access is slower in the default executor" in caplog.text
+    assert "accesses the database without the database executor" in caplog.text
     assert connections[0] != connections[1]
 
     caplog.clear()
     new_thread = threading.Thread(target=_get_connection_twice)
     new_thread.start()
     new_thread.join()
-    assert "Database access is slower in the default executor" in caplog.text
+    assert "accesses the database without the database executor" in caplog.text
     assert connections[2] != connections[3]
 
     caplog.clear()
     new_thread = threading.Thread(target=_get_connection_twice, name=DB_WORKER_PREFIX)
     new_thread.start()
     new_thread.join()
-    assert "Database access is slower in the default executor" not in caplog.text
+    assert "accesses the database without the database executor" not in caplog.text
     assert connections[4] == connections[5]
 
     caplog.clear()
     new_thread = threading.Thread(target=_get_connection_twice, name="Recorder")
     new_thread.start()
     new_thread.join()
-    assert "Database access is slower in the default executor" not in caplog.text
+    assert "accesses the database without the database executor" not in caplog.text
     assert connections[6] == connections[7]
 
     shutdown = True
@@ -58,5 +58,5 @@ def test_recorder_pool(caplog):
     new_thread = threading.Thread(target=_get_connection_twice, name=DB_WORKER_PREFIX)
     new_thread.start()
     new_thread.join()
-    assert "Database access is slower in the default executor" not in caplog.text
+    assert "accesses the database without the database executor" not in caplog.text
     assert connections[8] != connections[9]

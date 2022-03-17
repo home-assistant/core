@@ -49,9 +49,9 @@ class RecorderPool(SingletonThreadPool, NullPool):
         if self.recorder_or_dbworker:
             return super()._do_get()
         report(
-            "Database access is slower in the default executor, "
-            "use homeassistant.components.recorder.get_instance(hass).async_add_executor_job() "
-            "for database operations",
+            "accesses the database without the database executor; "
+            "Use homeassistant.components.recorder.get_instance(hass).async_add_executor_job() "
+            "for faster database operations",
             exclude_integrations={"recorder"},
             error_if_core=False,
         )
