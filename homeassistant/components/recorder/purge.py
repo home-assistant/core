@@ -335,7 +335,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
 def _remove_attributes_ids_used_by_other_entities(
     session: Session, entities: list[str], attributes_ids: set[int]
 ) -> set[int]:
-    """Return a list of attribute ids to purge."""
+    """Remove attributes ids that are still in use for entitiy_ids we are not purging yet."""
     if not attributes_ids:
         return set()
     keep_attributes_ids = {
