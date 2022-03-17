@@ -12,14 +12,14 @@ next_tariff:
   description: Changes the tariff to the next one.
   target:
     entity:
-      domain: select
+      domain: utility_meter
 
 select_tariff:
   name: Select Tariff
   description: Selects the current tariff of a utility meter.
   target:
     entity:
-      domain: select
+      domain: utility_meter
   fields:
     tariff:
       name: Tariff
