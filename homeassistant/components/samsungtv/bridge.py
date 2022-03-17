@@ -345,12 +345,6 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
         self._remote: SamsungTVEncryptedWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
 
-        # need to remove this workaround in production code
-        if self.port == 8002:
-            LOGGER.debug("Fixing invalid port on %s", self.host)
-            self.port = ENCRYPTED_WEBSOCKET_PORT
-            self._notify_update_config_entry({CONF_PORT: ENCRYPTED_WEBSOCKET_PORT})
-
     async def async_get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
         return {}
