@@ -6,9 +6,10 @@ from typing import Final
 DOMAIN: Final = "update"
 
 # Bitfield of features supported by the update entity
-SUPPORT_SPECIFIC_VERSION: Final = 1
-SUPPORT_PROGRESS: Final = 2
-SUPPORT_BACKUP: Final = 4
+SUPPORT_INSTALL: Final = 1
+SUPPORT_SPECIFIC_VERSION: Final = 2
+SUPPORT_PROGRESS: Final = 4
+SUPPORT_BACKUP: Final = 8
 
 SERVICE_INSTALL: Final = "install"
 SERVICE_SKIP: Final = "skip"

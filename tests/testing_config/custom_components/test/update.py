@@ -9,6 +9,7 @@ import logging
 
 from homeassistant.components.update import (
     SUPPORT_BACKUP,
+    SUPPORT_INSTALL,
     SUPPORT_PROGRESS,
     SUPPORT_SPECIFIC_VERSION,
     UpdateEntity,
@@ -84,40 +85,51 @@ def init(empty=False):
                 unique_id="no_update",
                 current_version="1.0.0",
                 latest_version="1.0.0",
+                supported_features=SUPPORT_INSTALL,
             ),
             MockUpdateEntity(
                 name="Update Available",
                 unique_id="update_available",
                 current_version="1.0.0",
                 latest_version="1.0.1",
+                supported_features=SUPPORT_INSTALL,
             ),
             MockUpdateEntity(
                 name="Update Unknown",
                 unique_id="update_unknown",
                 current_version="1.0.0",
                 latest_version=None,
+                supported_features=SUPPORT_INSTALL,
             ),
             MockUpdateEntity(
                 name="Update Specific Version",
                 unique_id="update_specific_version",
                 current_version="1.0.0",
                 latest_version="1.0.0",
-                supported_features=SUPPORT_SPECIFIC_VERSION,
+                supported_features=SUPPORT_INSTALL | SUPPORT_SPECIFIC_VERSION,
             ),
             MockUpdateEntity(
                 name="Update Backup",
                 unique_id="update_backup",
                 current_version="1.0.0",
                 latest_version="1.0.1",
-                supported_features=SUPPORT_SPECIFIC_VERSION | SUPPORT_BACKUP,
+                supported_features=SUPPORT_INSTALL
+                | SUPPORT_SPECIFIC_VERSION
+                | SUPPORT_BACKUP,
             ),
             MockUpdateEntity(
                 name="Update Already in Progress",
                 unique_id="update_already_in_progres",
                 current_version="1.0.0",
                 latest_version="1.0.1",
-                supported_features=SUPPORT_PROGRESS,
+                supported_features=SUPPORT_INSTALL | SUPPORT_PROGRESS,
                 in_progress=50,
+            ),
+            MockUpdateEntity(
+                name="Update No Install",
+                unique_id="no_install",
+                current_version="1.0.0",
+                latest_version="1.0.1",
             ),
         ]
     )

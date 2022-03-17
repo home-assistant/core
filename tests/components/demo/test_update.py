@@ -26,6 +26,17 @@ async def setup_demo_update(hass: HomeAssistant) -> None:
 
 def test_setup_params(hass: HomeAssistant) -> None:
     """Test the initial parameters."""
+    state = hass.states.get("update.demo_update_no_install")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_TITLE] == "Awesomesoft Inc."
+    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
+    assert (
+        state.attributes[ATTR_RELEASE_SUMMARY] == "Awesome update, fixing everything!"
+    )
+    assert state.attributes[ATTR_RELEASE_URL] == "https://www.example.com/release/1.0.1"
+
     state = hass.states.get("update.demo_no_update")
     assert state
     assert state.state == STATE_OFF

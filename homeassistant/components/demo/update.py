@@ -6,6 +6,7 @@ import asyncio
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.components.update.const import (
     SUPPORT_BACKUP,
+    SUPPORT_INSTALL,
     SUPPORT_PROGRESS,
     SUPPORT_SPECIFIC_VERSION,
 )
@@ -28,6 +29,16 @@ async def async_setup_platform(
     """Set up demo update entities."""
     async_add_entities(
         [
+            DemoUpdate(
+                unique_id="update_no_install",
+                name="Demo Update No Install",
+                title="Awesomesoft Inc.",
+                current_version="1.0.0",
+                latest_version="1.0.1",
+                release_summary="Awesome update, fixing everything!",
+                release_url="https://www.example.com/release/1.0.1",
+                support_install=False,
+            ),
             DemoUpdate(
                 unique_id="update_2_date",
                 name="Demo No Update",
@@ -95,6 +106,7 @@ class DemoUpdate(UpdateEntity):
         release_summary: str | None = None,
         release_url: str | None = None,
         support_progress: bool = False,
+        support_install: bool = True,
         device_class: UpdateDeviceClass | None = None,
     ) -> None:
         """Initialize the Demo select entity."""
@@ -110,6 +122,8 @@ class DemoUpdate(UpdateEntity):
             identifiers={(DOMAIN, unique_id)},
             name=name,
         )
+        if support_install:
+            self._attr_supported_features |= SUPPORT_INSTALL
         if support_progress:
             self._attr_supported_features |= SUPPORT_PROGRESS
 

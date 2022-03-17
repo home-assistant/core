@@ -37,6 +37,7 @@ from .const import (
     SERVICE_INSTALL,
     SERVICE_SKIP,
     SUPPORT_BACKUP,
+    SUPPORT_INSTALL,
     SUPPORT_PROGRESS,
     SUPPORT_SPECIFIC_VERSION,
 )
@@ -68,6 +69,7 @@ __all__ = [
     "SERVICE_INSTALL",
     "SERVICE_SKIP",
     "SUPPORT_BACKUP",
+    "SUPPORT_INSTALL",
     "SUPPORT_PROGRESS",
     "SUPPORT_SPECIFIC_VERSION",
     "UpdateDeviceClass",
@@ -115,6 +117,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to validate the call."""
+    # This entity does not support installing updates.
+    if not entity.supported_features & SUPPORT_INSTALL:
+        raise HomeAssistantError(
+            f"Installing updates is not supported for {entity.name}"
+        )
 
     # If version is not specified, but no update is available.
     if (version := service_call.data.get(ATTR_VERSION)) is None and (
