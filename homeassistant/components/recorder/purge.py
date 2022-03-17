@@ -226,17 +226,21 @@ def _evict_purged_attributes_from_attributes_cache(
 ) -> None:
     """Evict purged attribute ids from the attribute ids cache."""
     # Make a map from attributes_id to the attributes json
-    old_attributes = instance._state_attributes_ids  # pylint: disable=protected-access
-    old_attributes_reversed = {
+    state_attributes_ids = (
+        instance._state_attributes_ids  # pylint: disable=protected-access
+    )
+    state_attributes_ids_reversed = {
         attributes_id: attributes
-        for attributes, attributes_id in old_attributes.items()
+        for attributes, attributes_id in state_attributes_ids.items()
     }
 
     # Evict any purged attributes from the state_attributes_ids cache
     for purged_attribute_id in purged_attributes_ids.intersection(
-        old_attributes_reversed
+        state_attributes_ids_reversed
     ):
-        old_attributes.pop(old_attributes_reversed[purged_attribute_id], None)
+        state_attributes_ids.pop(
+            state_attributes_ids_reversed[purged_attribute_id], None
+        )
 
 
 def _purge_attributes_ids(
