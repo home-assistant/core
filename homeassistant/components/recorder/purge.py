@@ -232,7 +232,7 @@ def _evict_purged_attributes_from_attributes_cache(
         for attributes, attributes_id in old_attributes.items()
     }
 
-    # Evict any purged state from the old states cache
+    # Evict any purged attributes from the state_attributes_ids cache
     for purged_attribute_id in purged_attributes_ids.intersection(
         old_attributes_reversed
     ):
