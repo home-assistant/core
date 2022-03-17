@@ -256,7 +256,7 @@ def _get_states_with_session(
 
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
-    query: sqlalchemy.orm.Query = session.query(*QUERY_STATES)
+    query = session.query(*QUERY_STATES)
 
     if entity_ids:
         # We got an include-list of entities, accelerate the query by filtering already
