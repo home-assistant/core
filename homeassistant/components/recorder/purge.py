@@ -341,7 +341,7 @@ def _remove_attributes_ids_used_by_other_entities(
     keep_attributes_ids = {
         state.attributes_id
         for state in session.query(States.attributes_id)
-        .filter(~States.event_id.in_(entities))
+        .filter(States.entity_id.not_in(entities))
         .filter(States.attributes_id.in_(attributes_ids))
         .group_by(States.attributes_id)
     }
