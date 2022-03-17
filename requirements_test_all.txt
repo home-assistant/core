@@ -237,7 +237,7 @@ airtouch4pyapi==1.0.5
 ambee==0.4.0
 
 # homeassistant.components.amberelectric
-amberelectric==1.0.3
+amberelectric==1.0.4
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -1308,7 +1308,7 @@ radios==0.1.1
 regenmaschine==2022.01.0
 
 # homeassistant.components.renault
-renault-api==0.1.9
+renault-api==0.1.10
 
 # homeassistant.components.python_script
 restrictedpython==5.2

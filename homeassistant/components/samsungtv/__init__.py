@@ -120,7 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
 
-    # Ensure update get saved against the config_entry
+    # Ensure updates get saved against the config_entry
     @callback
     def _update_config_entry(updates: Mapping[str, Any]) -> None:
         """Update config entry with the new token."""
@@ -128,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     bridge.register_update_config_entry_callback(_update_config_entry)
 
-    # Ensure update get saved against the config_entry
+    # Allow bridge to force the reload of the config_entry
     @callback
     def _reload_config_entry() -> None:
         """Update config entry with the new token."""

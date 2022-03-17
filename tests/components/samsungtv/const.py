@@ -1,4 +1,29 @@
 """Constants for the samsungtv tests."""
+from homeassistant.components.samsungtv.const import CONF_SESSION_ID
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    CONF_METHOD,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_TOKEN,
+)
+
+MOCK_CONFIG_ENCRYPTED_WS = {
+    CONF_HOST: "fake_host",
+    CONF_NAME: "fake",
+    CONF_PORT: 8000,
+}
+MOCK_ENTRYDATA_ENCRYPTED_WS = {
+    **MOCK_CONFIG_ENCRYPTED_WS,
+    CONF_IP_ADDRESS: "test",
+    CONF_METHOD: "encrypted",
+    CONF_MAC: "aa:bb:cc:dd:ee:ff",
+    CONF_TOKEN: "037739871315caef138547b03e348b72",
+    CONF_SESSION_ID: "2",
+}
+
 SAMPLE_APP_LIST = [
     {
         "appId": "111299001912",
@@ -72,4 +97,33 @@ SAMPLE_DEVICE_INFO_FRAME = {
     "type": "Samsung SmartTV",
     "uri": "https://1.2.3.4:8002/api/v2/",
     "version": "2.0.25",
+}
+
+SAMPLE_DEVICE_INFO_UE48JU6400 = {
+    "id": "uuid:223da676-497a-4e06-9507-5e27ec4f0fb3",
+    "name": "[TV] TV-UE48JU6470",
+    "version": "2.0.25",
+    "device": {
+        "type": "Samsung SmartTV",
+        "duid": "uuid:223da676-497a-4e06-9507-5e27ec4f0fb3",
+        "model": "15_HAWKM_UHD_2D",
+        "modelName": "UE48JU6400",
+        "description": "Samsung DTV RCR",
+        "networkType": "wired",
+        "ssid": "",
+        "ip": "1.2.3.4",
+        "firmwareVersion": "Unknown",
+        "name": "[TV] TV-UE48JU6470",
+        "id": "uuid:223da676-497a-4e06-9507-5e27ec4f0fb3",
+        "udn": "uuid:223da676-497a-4e06-9507-5e27ec4f0fb3",
+        "resolution": "1920x1080",
+        "countryCode": "AT",
+        "msfVersion": "2.0.25",
+        "smartHubAgreement": "true",
+        "wifiMac": "aa:bb:ww:ii:ff:ii",
+        "developerMode": "0",
+        "developerIP": "",
+    },
+    "type": "Samsung SmartTV",
+    "uri": "https://1.2.3.4:8002/api/v2/",
 }

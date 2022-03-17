@@ -32,6 +32,7 @@ from .const import (
     CONF_SESSION_ID,
     DEFAULT_MANUFACTURER,
     DOMAIN,
+    ENCRYPTED_WEBSOCKET_PORT,
     LEGACY_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
@@ -182,6 +183,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         port = user_input.get(CONF_PORT)
         if port in WEBSOCKET_PORTS:
             user_input[CONF_METHOD] = METHOD_WEBSOCKET
+        elif port == ENCRYPTED_WEBSOCKET_PORT:
+            user_input[CONF_METHOD] = METHOD_ENCRYPTED_WEBSOCKET
         elif port == LEGACY_PORT:
             user_input[CONF_METHOD] = METHOD_LEGACY
         user_input[CONF_MANUFACTURER] = DEFAULT_MANUFACTURER
@@ -375,15 +378,15 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._reauth_entry
         method = self._reauth_entry.data[CONF_METHOD]
         if user_input is not None:
-            self._bridge = SamsungTVBridge.get_bridge(
+            bridge = SamsungTVBridge.get_bridge(
                 self.hass,
                 method,
                 self._reauth_entry.data[CONF_HOST],
             )
-            result = await self._bridge.async_try_connect()
+            result = await bridge.async_try_connect()
             if result == RESULT_SUCCESS:
                 new_data = dict(self._reauth_entry.data)
-                new_data[CONF_TOKEN] = self._bridge.token
+                new_data[CONF_TOKEN] = bridge.token
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry, data=new_data
                 )

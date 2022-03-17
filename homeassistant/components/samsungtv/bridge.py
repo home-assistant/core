@@ -82,6 +82,14 @@ async def async_get_device_info(
         if info := await bridge.async_device_info():
             return port, METHOD_WEBSOCKET, info
 
+    # Try encrypted websocket port
+    bridge = SamsungTVBridge.get_bridge(
+        hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
+    )
+    result = await bridge.async_try_connect()
+    if result == RESULT_SUCCESS:
+        return port, METHOD_ENCRYPTED_WEBSOCKET, await bridge.async_device_info()
+
     # Try legacy port
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
     result = await bridge.async_try_connect()
@@ -345,12 +353,6 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
         self._remote: SamsungTVEncryptedWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
 
-        # need to remove this workaround in production code
-        if self.port == 8002:
-            LOGGER.debug("Fixing invalid port on %s", self.host)
-            self.port = ENCRYPTED_WEBSOCKET_PORT
-            self._notify_update_config_entry({CONF_PORT: ENCRYPTED_WEBSOCKET_PORT})
-
     async def async_get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
         return {}
@@ -478,9 +480,6 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 self._remote = None
             else:
                 LOGGER.debug("Created SamsungTVEncryptedBridge for %s", self.host)
-                if self._device_info is None:
-                    # Initialise device info on first connect
-                    await self.async_device_info()
         return self._remote
 
     async def async_power_off(self) -> None:
