@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from aiohttp import ClientConnectionError
 from intellifire4py import IntellifireAsync, IntellifireControlAsync
-from intellifire4py.control import LoginException
+from intellifire4py.exceptions import LoginException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform

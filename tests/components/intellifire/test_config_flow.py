@@ -1,7 +1,7 @@
 """Test the IntelliFire config flow."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from intellifire4py.control_async import LoginException
+from intellifire4py.exceptions import LoginException
 
 from homeassistant import config_entries
 from homeassistant.components.intellifire.config_flow import MANUAL_ENTRY_STRING
