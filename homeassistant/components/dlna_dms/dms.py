@@ -7,14 +7,11 @@ from dataclasses import dataclass
 import functools
 from typing import Any, TypeVar, cast
 
-from async_upnp_client import (
-    UpnpEventHandler,
-    UpnpFactory,
-    UpnpNotifyServer,
-    UpnpRequester,
-)
 from async_upnp_client.aiohttp import AiohttpSessionRequester
+from async_upnp_client.client import UpnpRequester
+from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.const import NotificationSubType
+from async_upnp_client.event_handler import UpnpEventHandler, UpnpNotifyServer
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
 from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
