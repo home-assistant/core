@@ -10,6 +10,8 @@ import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.common import MockConfigEntry
+
 
 async def test_setting_rising(hass, legacy_patchable_time):
     """Test retrieving sun setting and rising."""
@@ -194,3 +196,22 @@ async def test_state_change_count(hass):
         await hass.async_block_till_done()
 
     assert len(events) < 721
+
+
+async def test_setup_and_remove_config_entry(hass: ha.HomeAssistant) -> None:
+    """Test setting up and removing a config entry."""
+    # Setup the config entry
+    config_entry = MockConfigEntry(domain=sun.DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the platform is setup correctly
+    assert hass.states.get("sun.sun") is not None
+
+    # Remove the config entry
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the state and entity registry entry are removed
+    assert hass.states.get("sun.sun") is None
