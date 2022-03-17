@@ -43,24 +43,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update listener."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup(hass: core.HomeAssistant, config: ConfigType) -> bool:
     """Set up the GitHub Custom component from yaml configuration."""
     hass.data.setdefault(DOMAIN, {})
     return True
-
-
-# Example migration function
-# async def async_migrate_entry(hass, config_entry: ConfigEntry):
-#    """Migrate old entry."""
-#    _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-#    if config_entry.version == 1:
-#
-#        new = {**config_entry.data}
-#
-#        config_entry.version = 2
-#        hass.config_entries.async_update_entry(config_entry, data=new)
-
-#    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-#    return True
