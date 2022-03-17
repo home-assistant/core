@@ -329,16 +329,17 @@ class UpdateEntity(RestoreEntity):
         Handles setting the in_progress state in case the entity doesn't
         support it natively.
         """
-        if not (progress_support := self.supported_features & SUPPORT_PROGRESS):
+        if not self.supported_features & SUPPORT_PROGRESS:
             self.__in_progress = True
             self.async_write_ha_state()
 
         try:
             await self.async_install(version, backup)
         finally:
-            if not progress_support:
-                self.__in_progress = False
-                self.async_write_ha_state()
+            # No matter what happens, we always stop progress in the end
+            self._attr_in_progress = False
+            self.__in_progress = False
+            self.async_write_ha_state()
 
         # Clear skipped version
         self.__skipped_version = None

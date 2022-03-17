@@ -93,7 +93,6 @@ class DemoUpdate(UpdateEntity):
     """Representation of a demo update entity."""
 
     _attr_should_poll = False
-    _attr_supported_features = SUPPORT_BACKUP | SUPPORT_SPECIFIC_VERSION
 
     def __init__(
         self,
@@ -123,7 +122,9 @@ class DemoUpdate(UpdateEntity):
             name=name,
         )
         if support_install:
-            self._attr_supported_features |= SUPPORT_INSTALL
+            self._attr_supported_features |= (
+                SUPPORT_INSTALL | SUPPORT_BACKUP | SUPPORT_SPECIFIC_VERSION
+            )
         if support_progress:
             self._attr_supported_features |= SUPPORT_PROGRESS
 

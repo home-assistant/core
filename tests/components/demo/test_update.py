@@ -116,3 +116,38 @@ async def test_update_with_progress(hass: HomeAssistant) -> None:
     assert events[8].data["new_state"].attributes[ATTR_IN_PROGRESS] == 90
     assert events[9].data["new_state"].attributes[ATTR_IN_PROGRESS] is False
     assert events[9].data["new_state"].state == STATE_OFF
+
+
+async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
+    """Test update with progress failing to install."""
+    state = hass.states.get("update.demo_update_with_progress")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+
+    events = []
+    hass.helpers.event.async_track_state_change_event(
+        "update.demo_update_with_progress", callback(lambda event: events.append(event))
+    )
+
+    with patch(
+        "homeassistant.components.demo.update.asyncio.sleep",
+        side_effect=[None, None, None, None, RuntimeError],
+    ) as fake_sleep, pytest.raises(RuntimeError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.demo_update_with_progress"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert fake_sleep.call_count == 5
+    assert len(events) == 5
+    assert events[0].data["new_state"].state == STATE_ON
+    assert events[0].data["new_state"].attributes[ATTR_IN_PROGRESS] == 10
+    assert events[1].data["new_state"].attributes[ATTR_IN_PROGRESS] == 20
+    assert events[2].data["new_state"].attributes[ATTR_IN_PROGRESS] == 30
+    assert events[3].data["new_state"].attributes[ATTR_IN_PROGRESS] == 40
+    assert events[4].data["new_state"].attributes[ATTR_IN_PROGRESS] is False
+    assert events[4].data["new_state"].state == STATE_ON
