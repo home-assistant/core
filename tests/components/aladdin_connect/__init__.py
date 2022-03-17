@@ -1,1 +1,1 @@
-"""The tests for Alarm control panel platforms."""
+"""The tests for Aladdin Connect platforms."""
