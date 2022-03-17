@@ -8,7 +8,10 @@ import pytest
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
-from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
+from samsungtvws.encrypted.remote import (
+    SamsungTVEncryptedCommand,
+    SamsungTVEncryptedWSAsyncRemote,
+)
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -784,6 +787,36 @@ async def test_turn_off_websocket_frame(
     assert isinstance(commands[2], SendRemoteKey)
     assert commands[2].params["Cmd"] == "Release"
     assert commands[2].params["DataOfCmd"] == "KEY_POWER"
+
+
+async def test_turn_off_encrypted_websocket(
+    hass: HomeAssistant, remoteencws: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for turn_off."""
+    MOCK_ENTRY_ENCRYPTED_WS.add_to_hass(hass)
+
+    assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    remoteencws.send_commands.reset_mock()
+
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    # key called
+    assert remoteencws.send_commands.call_count == 1
+    commands = remoteencws.send_commands.call_args_list[0].args[0]
+    assert len(commands) == 1
+    assert isinstance(commands[0], SamsungTVEncryptedCommand)
+    assert commands[0].body["param3"] == "KEY_POWEROFF"
+
+    # commands not sent : power off in progress
+    remoteencws.send_commands.reset_mock()
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert "TV is powering off, not sending keys: ['KEY_VOLUP']" in caplog.text
+    remoteencws.send_commands.assert_not_called()
 
 
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
