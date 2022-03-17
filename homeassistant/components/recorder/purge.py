@@ -130,9 +130,9 @@ def _remove_attribute_ids_used_by_newer_states(
     keep_attribute_ids = {
         state.attributes_id
         for state in session.query(States.attributes_id)
-        .distinct()
         .filter(States.last_updated >= purge_before)
         .filter(States.attributes_id.in_(attribute_ids))
+        .group_by(States.attributes_id)
     }
     to_remove = attribute_ids - keep_attribute_ids
     _LOGGER.debug(
@@ -337,9 +337,9 @@ def _remove_attribute_ids_used_by_other_entities(
     keep_attribute_ids = {
         state.attributes_id
         for state in session.query(States.attributes_id)
-        .distinct()
         .filter(~States.event_id.in_(entities))
         .filter(States.attributes_id.in_(attribute_ids))
+        .group_by(States.attributes_id)
     }
     to_remove = attribute_ids - keep_attribute_ids
     _LOGGER.debug(
