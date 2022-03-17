@@ -197,6 +197,7 @@ def get_last_state_changes(hass, number_of_states, entity_id):
         if entity_id is not None:
             baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
             entity_id = entity_id.lower()
+
         baked_query += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
