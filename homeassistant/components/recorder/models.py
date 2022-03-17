@@ -209,6 +209,7 @@ class States(Base):  # type: ignore[misc,valid-type]
 
     def to_native(self, validate_entity_id=True):
         """Convert to an HA state object."""
+        # After 2023.8 make state.to_native require StateAttributes
         try:
             return State(
                 self.entity_id,

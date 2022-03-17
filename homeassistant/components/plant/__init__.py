@@ -324,12 +324,12 @@ class Plant(Entity):
                 .order_by(States.last_updated.asc())
             )
             states = []
-            for state, attributes in execute(
-                query, to_native=False, validate_entity_ids=False
-            ):
-                native = state.to_native()
-                native.attributes = attributes.to_native()
-                states.append(native)
+            if results := execute(query, to_native=False, validate_entity_ids=False):
+                for state, attributes in results:
+                    native = state.to_native(attributes)
+                    if not native.attributes:
+                        native.attributes = attributes.to_native()
+                    states.append(native)
 
             for state in states:
                 # filter out all None, NaN and "unknown" states
