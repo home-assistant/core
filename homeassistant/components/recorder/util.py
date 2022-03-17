@@ -149,7 +149,7 @@ def execute(qry, to_native=False, validate_entity_ids=True) -> list | None:
 
             return result
         except SQLAlchemyError as err:
-            _LOGGER.exception("Error executing query: %s", err)
+            _LOGGER.error("Error executing query: %s", err)
 
             if tryno == RETRIES - 1:
                 raise

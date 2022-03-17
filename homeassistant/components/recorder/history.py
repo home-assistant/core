@@ -93,9 +93,11 @@ def get_significant_states_with_session(
     thermostat so that we get current temperature in our graphs).
     """
     timer_start = time.perf_counter()
+
     baked_query = hass.data[HISTORY_BAKERY](
         lambda session: session.query(*QUERY_STATES)
     )
+
     if significant_changes_only:
         baked_query += lambda q: q.filter(
             (
@@ -118,6 +120,7 @@ def get_significant_states_with_session(
 
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
+
     baked_query += lambda q: q.outerjoin(
         StateAttributes, States.attributes_id == StateAttributes.attributes_id
     )
@@ -195,6 +198,7 @@ def get_last_state_changes(hass, number_of_states, entity_id):
         if entity_id is not None:
             baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
             entity_id = entity_id.lower()
+
         baked_query += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
@@ -206,8 +210,7 @@ def get_last_state_changes(hass, number_of_states, entity_id):
 
         states = execute(
             baked_query(session).params(
-                number_of_states=number_of_states,
-                entity_id=entity_id,
+                number_of_states=number_of_states, entity_id=entity_id
             )
         )
 
@@ -256,7 +259,7 @@ def _get_states_with_session(
 
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
-    query: sqlalchemy.orm.Query = session.query(*QUERY_STATES)
+    query = session.query(*QUERY_STATES)
 
     if entity_ids:
         # We got an include-list of entities, accelerate the query by filtering already
