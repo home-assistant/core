@@ -1,13 +1,15 @@
 """The aladdin_connect component."""
 
 import logging
-import asyncio
+from typing import Final
+
+from homeassistant import config_entries, core
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant import config_entries, core
+from homeassistant.helpers.typing import ConfigType
+
 from .const import DOMAIN
-from typing import Any, Final
 
 PLATFORMS: list[Platform] = [Platform.COVER]
 
@@ -41,7 +43,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_setup(hass: core.HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: core.HomeAssistant, config: ConfigType) -> bool:
     """Set up the GitHub Custom component from yaml configuration."""
     hass.data.setdefault(DOMAIN, {})
     return True
@@ -50,7 +52,7 @@ async def async_setup(hass: core.HomeAssistant, config: dict) -> bool:
 # Example migration function
 # async def async_migrate_entry(hass, config_entry: ConfigEntry):
 #    """Migrate old entry."""
-##    _LOGGER.debug("Migrating from version %s", config_entry.version)
+#    _LOGGER.debug("Migrating from version %s", config_entry.version)
 
 #    if config_entry.version == 1:
 #

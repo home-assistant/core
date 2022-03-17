@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -23,9 +24,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import NOTIFICATION_ID, NOTIFICATION_TITLE, STATES_MAP, SUPPORTED_FEATURES
+from .const import (
+    DOMAIN,
+    NOTIFICATION_ID,
+    NOTIFICATION_TITLE,
+    STATES_MAP,
+    SUPPORTED_FEATURES,
+)
 from .model import DoorDevice
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -37,11 +44,12 @@ PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Aladdin Connect platform."""
+    config = hass.data[DOMAIN][config_entry.entry_id]
     username: str = config[CONF_USERNAME]
     password: str = config[CONF_PASSWORD]
     acc = AladdinConnectClient(username, password)
