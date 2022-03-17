@@ -612,20 +612,22 @@ class LazyState(State):
 
         To be used for JSON serialization.
         """
-        if self._last_changed:
-            last_changed_isoformat = self._last_changed.isoformat()
-        else:
+        if self._last_changed is None and self._last_updated is None:
             last_changed_isoformat = process_timestamp_to_utc_isoformat(
                 self._row.last_changed
             )
-        if self._row.last_changed == self._row.last_updated:
-            last_updated_isoformat = last_changed_isoformat
-        elif self._last_updated:
-            last_updated_isoformat = self._last_updated.isoformat()
+            if self._row.last_changed == self._row.last_updated:
+                last_updated_isoformat = last_changed_isoformat
+            else:
+                last_updated_isoformat = process_timestamp_to_utc_isoformat(
+                    self._row.last_updated
+                )
         else:
-            last_updated_isoformat = process_timestamp_to_utc_isoformat(
-                self._row.last_updated
-            )
+            last_changed_isoformat = self.last_changed.isoformat()
+            if self.last_changed == self.last_updated:
+                last_updated_isoformat = last_changed_isoformat
+            else:
+                last_updated_isoformat = self.last_updated.isoformat()
         return {
             "entity_id": self.entity_id,
             "state": self.state,
