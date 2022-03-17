@@ -21,6 +21,16 @@ def lookup_all(
     return cast(ValueType, lookup_dict)
 
 
+def _apply_policy_deny_all(entity_id: str, key: str) -> bool:
+    """Decline all."""
+    return False
+
+
+def _apply_policy_allow_all(entity_id: str, key: str) -> bool:
+    """Approve all."""
+    return True
+
+
 def compile_policy(
     policy: CategoryType, subcategories: SubCatLookupType, perm_lookup: PermissionLookup
 ) -> Callable[[str, str], bool]:
@@ -31,20 +41,10 @@ def compile_policy(
     """
     # None, False, empty dict
     if not policy:
-
-        def apply_policy_deny_all(entity_id: str, key: str) -> bool:
-            """Decline all."""
-            return False
-
-        return apply_policy_deny_all
+        return _apply_policy_deny_all
 
     if policy is True:
-
-        def apply_policy_allow_all(entity_id: str, key: str) -> bool:
-            """Approve all."""
-            return True
-
-        return apply_policy_allow_all
+        return _apply_policy_allow_all
 
     assert isinstance(policy, dict)
 
@@ -54,14 +54,18 @@ def compile_policy(
         lookup_value = policy.get(key)
 
         # If any lookup value is `True`, it will always be positive
-        if isinstance(lookup_value, bool):
-            return lambda object_id, key: True
-
-        if lookup_value is not None:
+        if lookup_value is True:
+            funcs.append(_apply_policy_allow_all)
+        elif lookup_value is False:
+            funcs.append(_apply_policy_deny_all)
+        elif lookup_value is not None:
             funcs.append(_gen_dict_test_func(perm_lookup, lookup_func, lookup_value))
 
     if len(funcs) == 1:
         func = funcs[0]
+
+        if func is _apply_policy_allow_all or func is _apply_policy_deny_all:
+            return cast("Callable[[str, str], bool]", func)
 
         @wraps(func)
         def apply_policy_func(object_id: str, key: str) -> bool:
@@ -78,6 +82,36 @@ def compile_policy(
         return False
 
     return apply_policy_funcs
+
+
+def compile_merged_policy(
+    policies: list[CategoryType],
+    subcategories: SubCatLookupType,
+    perm_lookup: PermissionLookup,
+) -> Callable[[str, str], bool]:
+    """Compile an additive set of policies into a function that tests policy.
+
+    Subcategories are mapping key -> lookup function, ordered by highest
+    priority first.
+    """
+
+    raw_policy_funcs = [
+        compile_policy(policy, subcategories, perm_lookup) for policy in policies
+    ]
+    policy_funcs = [f for f in raw_policy_funcs if f is not _apply_policy_deny_all]
+
+    if not policy_funcs:
+        return _apply_policy_deny_all
+
+    if any(policy_func is _apply_policy_allow_all for policy_func in policy_funcs):
+        return _apply_policy_allow_all
+
+    if len(policy_funcs) == 1:
+        return policy_funcs[0]
+
+    return lambda object_id, key: any(
+        policy_func(object_id, key) for policy_func in policy_funcs
+    )
 
 
 def _gen_dict_test_func(
@@ -109,4 +143,4 @@ def test_all(policy: CategoryType, key: str) -> bool:
     if not isinstance(all_policy, dict):
         return bool(all_policy)
 
-    return all_policy.get(key, False)
+    return all_policy.get(key, False) is True

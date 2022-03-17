@@ -674,7 +674,7 @@ async def test_call_context_target_all(hass, mock_handle_entity_call, mock_entit
         "homeassistant.auth.AuthManager.async_get_user",
         return_value=Mock(
             permissions=PolicyPermissions(
-                {"entities": {"entity_ids": {"light.kitchen": True}}}, None
+                [{"entities": {"entity_ids": {"light.kitchen": True}}}], None
             )
         ),
     ):
@@ -702,7 +702,7 @@ async def test_call_context_target_specific(
         "homeassistant.auth.AuthManager.async_get_user",
         return_value=Mock(
             permissions=PolicyPermissions(
-                {"entities": {"entity_ids": {"light.kitchen": True}}}, None
+                [{"entities": {"entity_ids": {"light.kitchen": True}}}], None
             )
         ),
     ):
@@ -728,7 +728,7 @@ async def test_call_context_target_specific_no_auth(
     """Check targeting specific entities without auth."""
     with pytest.raises(exceptions.Unauthorized) as err, patch(
         "homeassistant.auth.AuthManager.async_get_user",
-        return_value=Mock(permissions=PolicyPermissions({}, None)),
+        return_value=Mock(permissions=PolicyPermissions([{}], None)),
     ):
         await service.entity_service_call(
             hass,

@@ -68,7 +68,7 @@ class User:
             return self._permissions
 
         self._permissions = perm_mdl.PolicyPermissions(
-            perm_mdl.merge_policies([group.policy for group in self.groups]),
+            [group.policy for group in self.groups],
             self.perm_lookup,
         )
 

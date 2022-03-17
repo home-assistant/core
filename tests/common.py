@@ -537,7 +537,9 @@ class MockUser(auth_models.User):
 
     def mock_policy(self, policy):
         """Mock a policy for a user."""
-        self._permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
+        self._permissions = auth_permissions.PolicyPermissions(
+            [policy], self.perm_lookup
+        )
 
 
 async def register_auth_provider(hass, config):

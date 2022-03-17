@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from .const import CAT_ENTITIES
 from .entities import ENTITY_POLICY_SCHEMA, compile_entities
-from .merge import merge_policies
 from .models import PermissionLookup
 from .types import PolicyType
 from .util import test_all
@@ -17,7 +16,6 @@ POLICY_SCHEMA = vol.Schema({vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA})
 
 __all__ = [
     "POLICY_SCHEMA",
-    "merge_policies",
     "PermissionLookup",
     "PolicyType",
     "AbstractPermissions",
@@ -50,22 +48,28 @@ class AbstractPermissions:
 class PolicyPermissions(AbstractPermissions):
     """Handle permissions."""
 
-    def __init__(self, policy: PolicyType, perm_lookup: PermissionLookup) -> None:
+    def __init__(
+        self, policies: list[PolicyType], perm_lookup: PermissionLookup
+    ) -> None:
         """Initialize the permission class."""
-        self._policy = policy
+        self._policies = policies
         self._perm_lookup = perm_lookup
 
     def access_all_entities(self, key: str) -> bool:
         """Check if we have a certain access to all entities."""
-        return test_all(self._policy.get(CAT_ENTITIES), key)
+        return any(test_all(policy.get(CAT_ENTITIES), key) for policy in self._policies)
 
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""
-        return compile_entities(self._policy.get(CAT_ENTITIES), self._perm_lookup)
+        return compile_entities(
+            [policy.get(CAT_ENTITIES) for policy in self._policies], self._perm_lookup
+        )
 
     def __eq__(self, other: Any) -> bool:
         """Equals check."""
-        return isinstance(other, PolicyPermissions) and other._policy == self._policy
+        return (
+            isinstance(other, PolicyPermissions) and other._policies == self._policies
+        )
 
 
 class _OwnerPermissions(AbstractPermissions):

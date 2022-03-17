@@ -9,15 +9,16 @@ import voluptuous as vol
 from .const import POLICY_CONTROL, POLICY_EDIT, POLICY_READ, SUBCAT_ALL
 from .models import PermissionLookup
 from .types import CategoryType, SubCategoryDict, ValueType
-from .util import SubCatLookupType, compile_policy, lookup_all
+from .util import SubCatLookupType, compile_merged_policy, lookup_all
 
 SINGLE_ENTITY_SCHEMA = vol.Any(
     True,
+    False,
     vol.Schema(
         {
-            vol.Optional(POLICY_READ): True,
-            vol.Optional(POLICY_CONTROL): True,
-            vol.Optional(POLICY_EDIT): True,
+            vol.Optional(POLICY_READ): vol.Any(True, False),
+            vol.Optional(POLICY_CONTROL): vol.Any(True, False),
+            vol.Optional(POLICY_EDIT): vol.Any(True, False),
         }
     ),
 )
@@ -27,10 +28,11 @@ ENTITY_AREAS = "area_ids"
 ENTITY_DEVICE_IDS = "device_ids"
 ENTITY_ENTITY_IDS = "entity_ids"
 
-ENTITY_VALUES_SCHEMA = vol.Any(True, vol.Schema({str: SINGLE_ENTITY_SCHEMA}))
+ENTITY_VALUES_SCHEMA = vol.Any(True, False, vol.Schema({str: SINGLE_ENTITY_SCHEMA}))
 
 ENTITY_POLICY_SCHEMA = vol.Any(
     True,
+    False,
     vol.Schema(
         {
             vol.Optional(SUBCAT_ALL): SINGLE_ENTITY_SCHEMA,
@@ -56,15 +58,24 @@ def _lookup_area(
     """Look up entity permissions by area."""
     entity_entry = perm_lookup.entity_registry.async_get(entity_id)
 
-    if entity_entry is None or entity_entry.device_id is None:
+    if entity_entry is None:
         return None
 
-    device_entry = perm_lookup.device_registry.async_get(entity_entry.device_id)
+    area_id = None
 
-    if device_entry is None or device_entry.area_id is None:
+    if entity_entry.device_id is not None:
+        device_entry = perm_lookup.device_registry.async_get(entity_entry.device_id)
+
+        if device_entry is not None and device_entry.area_id is not None:
+            area_id = device_entry.area_id
+
+    if area_id is None:
+        area_id = entity_entry.area_id
+
+    if area_id is None:
         return None
 
-    return area_dict.get(device_entry.area_id)
+    return area_dict.get(area_id)
 
 
 def _lookup_device(
@@ -87,7 +98,7 @@ def _lookup_entity_id(
 
 
 def compile_entities(
-    policy: CategoryType, perm_lookup: PermissionLookup
+    policies: list[CategoryType], perm_lookup: PermissionLookup
 ) -> Callable[[str, str], bool]:
     """Compile policy into a function that tests policy."""
     subcategories: SubCatLookupType = OrderedDict()
@@ -97,4 +108,4 @@ def compile_entities(
     subcategories[ENTITY_DOMAINS] = _lookup_domain
     subcategories[SUBCAT_ALL] = lookup_all
 
-    return compile_policy(policy, subcategories, perm_lookup)
+    return compile_merged_policy(policies, subcategories, perm_lookup)
