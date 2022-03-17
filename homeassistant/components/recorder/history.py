@@ -120,6 +120,7 @@ def get_significant_states_with_session(
 
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
+
     baked_query += lambda q: q.outerjoin(
         StateAttributes, States.attributes_id == StateAttributes.attributes_id
     )
