@@ -214,6 +214,8 @@ class States(Base):  # type: ignore[misc,valid-type]
             return State(
                 self.entity_id,
                 self.state,
+                # Join the state_attributes table on attributes_id to get the attributes
+                # for newer states
                 json.loads(self.attributes) if self.attributes else {},
                 process_timestamp(self.last_changed),
                 process_timestamp(self.last_updated),
