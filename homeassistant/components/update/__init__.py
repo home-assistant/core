@@ -326,15 +326,15 @@ class UpdateEntity(RestoreEntity):
             self.__in_progress = True
             self.async_write_ha_state()
 
-        await self.async_install(version, backup)
-
-        if not progress_support:
-            self.__in_progress = False
+        try:
+            await self.async_install(version, backup)
+        finally:
+            if not progress_support:
+                self.__in_progress = False
+                self.async_write_ha_state()
 
         # Clear skipped version
         self.__skipped_version = None
-
-        self.async_write_ha_state()
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the update entity is added to hass.
