@@ -1,5 +1,5 @@
 PyJWT==2.1.0
-PyNaCl==1.4.0
+PyNaCl==1.5.0
 aiodiscover==1.4.8
 aiohttp==3.8.1
 aiohttp_cors==0.7.0
@@ -14,7 +14,7 @@ certifi>=2021.5.30
 ciso8601==2.2.0
 cryptography==35.0.0
 hass-nabucasa==0.54.0
-home-assistant-frontend==20220312.0
+home-assistant-frontend==20220316.0
 httpx==0.22.0
 ifaddr==0.1.7
 jinja2==3.0.3
