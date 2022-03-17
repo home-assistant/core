@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aussie_broadband",
   "requirements": [
-    "pyaussiebb==0.0.13"
+    "pyaussiebb==0.0.14"
   ],
   "codeowners": [
     "@nickw444",
