@@ -9,7 +9,7 @@ from intellifire4py import (
     IntellifireAsync,
     IntellifireControlAsync,
 )
-from intellifire4py.control import LoginException
+from intellifire4py.control_async import LoginException
 import voluptuous as vol
 
 from homeassistant import config_entries
