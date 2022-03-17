@@ -876,7 +876,7 @@ class BaseTelegramBotEntity:
 
         if (
             msg_data["from"].get("id") not in self.allowed_chat_ids
-            and msg_data["message"]["chat"].get("id") not in self.allowed_chat_ids
+            and msg_data["chat"].get("id") not in self.allowed_chat_ids
         ):
             # Neither from id nor chat id was in allowed_chat_ids,
             # origin is not allowed.
