@@ -20,6 +20,7 @@ FLOWS = [
     "airtouch4",
     "airvisual",
     "airzone",
+    "aladdin_connect",
     "alarmdecoder",
     "almond",
     "ambee",
