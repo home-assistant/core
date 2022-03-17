@@ -12,7 +12,8 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Check your TV's External Device Manager settings to authorize Home Assistant."
+            "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Check your TV's External Device Manager settings to authorize Home Assistant.",
+            "invalid_pin": "PIN is invalid, please try again."
         },
         "flow_title": "{device}",
         "step": {
@@ -21,7 +22,10 @@
                 "title": "Samsung TV"
             },
             "reauth_confirm": {
-                "description": "After submitting, accept the the popup on {device} requesting authorization within 30 seconds."
+                "description": "After submitting, accept the the popup on {device} requesting authorization within 30 seconds or input PIN."
+            },
+            "reauth_confirm_encrypted": {
+                "description": "Please enter the PIN displayed on {device}."
             },
             "user": {
                 "data": {

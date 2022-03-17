@@ -8,6 +8,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 import getmac
+from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -38,12 +39,12 @@ from .const import (
     METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
+    RESULT_INVALID_PIN,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
     WEBSOCKET_PORTS,
 )
-from .encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_WEBSOCKET]
@@ -433,12 +434,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
-            # On websocket we will get RESULT_CANNOT_CONNECT when auth is missing
-            errors = {"base": RESULT_AUTH_MISSING}
+            errors = {"base": RESULT_INVALID_PIN}
 
         self.context["title_placeholders"] = {"device": self._title}
         return self.async_show_form(
             step_id="reauth_confirm_encrypted",
             errors=errors,
             description_placeholders={"device": self._title},
+            data_schema=vol.Schema({vol.Required("pin"): str}),
         )

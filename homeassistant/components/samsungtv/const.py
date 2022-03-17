@@ -19,6 +19,7 @@ CONF_ON_ACTION = "turn_on_action"
 CONF_SESSION_ID = "session_id"
 
 RESULT_AUTH_MISSING = "auth_missing"
+RESULT_INVALID_PIN = "invalid_pin"
 RESULT_SUCCESS = "success"
 RESULT_CANNOT_CONNECT = "cannot_connect"
 RESULT_NOT_SUPPORTED = "not_supported"

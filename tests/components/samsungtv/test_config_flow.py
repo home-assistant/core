@@ -485,9 +485,11 @@ async def test_ssdp_websocket_not_supported(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
-    ) as remotews, patch.object(
-        remotews, "open", side_effect=WebSocketProtocolError("Boom")
+        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+        side_effect=WebSocketProtocolError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.start_listening",
+        side_effect=WebSocketProtocolError("Boom"),
     ):
         # device not supported
         result = await hass.config_entries.flow.async_init(
@@ -641,7 +643,7 @@ async def test_import_legacy(hass: HomeAssistant) -> None:
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
-@pytest.mark.usefixtures("remote", "remotews")
+@pytest.mark.usefixtures("remote")
 async def test_import_legacy_without_name(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test importing from yaml without a name."""
     rest_api.rest_device_info.return_value = None
@@ -826,7 +828,7 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) ->
     assert result["reason"] == "not_supported"
 
 
-@pytest.mark.usefixtures("remote", "remotews")
+@pytest.mark.usefixtures("remote")
 async def test_zeroconf_no_device_info(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from zeroconf where device_info returns None."""
     rest_api.rest_device_info.return_value = None

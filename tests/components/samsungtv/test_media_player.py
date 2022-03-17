@@ -1100,6 +1100,6 @@ async def test_websocket_unsupported_remote_control(
 
     # error logged
     assert (
-        "Your TV seems to be unsupported by SamsungTVWSBridge and may need a PIN: "
+        "Your TV seems to be unsupported by SamsungTVWSBridge and needs a PIN: "
         "'unrecognized method value : ms.remote.control'" in caplog.text
     )
