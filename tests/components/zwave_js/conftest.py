@@ -676,6 +676,22 @@ def climate_adc_t3000_missing_mode_fixture(client, climate_adc_t3000_state):
     return node
 
 
+@pytest.fixture(name="climate_adc_t3000_missing_fan_mode_states")
+def climate_adc_t3000_missing_fan_mode_states_fixture(client, climate_adc_t3000_state):
+    """Mock a climate ADC-T3000 node with missing 'states' metadata on Thermostat Fan Mode."""
+    data = copy.deepcopy(climate_adc_t3000_state)
+    data["name"] = f"{data['name']} missing fan mode states"
+    for value in data["values"]:
+        if (
+            value["commandClassName"] == "Thermostat Fan Mode"
+            and value["property"] == "mode"
+        ):
+            del value["metadata"]["states"]
+    node = Node(client, data)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_danfoss_lc_13")
 def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
     """Mock a climate radio danfoss LC-13 node."""
