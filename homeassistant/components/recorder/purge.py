@@ -124,7 +124,7 @@ def _select_state_and_attributes_ids_to_purge(
 def _remove_attribute_ids_used_by_newer_states(
     session: Session, purge_before: datetime, attribute_ids: set[int]
 ) -> set[int]:
-    """Return a list of attribute ids to purge."""
+    """Remove attributes ids that are still in use for states we are not purging yet."""
     if not attribute_ids:
         return set()
     keep_attribute_ids = {
