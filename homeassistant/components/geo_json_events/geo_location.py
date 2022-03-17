@@ -65,7 +65,6 @@ async def async_setup_platform(
     )
     await manager.async_init()
 
-    @callback
     async def start_feed_manager(event=None):
         """Start feed manager."""
         await manager.async_update()
