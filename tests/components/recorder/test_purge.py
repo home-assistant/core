@@ -712,6 +712,17 @@ async def test_purge_filtered_states(
 
         assert session.query(StateAttributes).count() == 11
 
+        # Do it again to make sure nothing changes
+        await hass.services.async_call(
+            recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
+        )
+        await hass.async_block_till_done()
+        final_keep_state = session.query(States).get(74)
+        assert final_keep_state.old_state_id == 62  # should have been kept
+        assert final_keep_state.attributes_id == 71
+
+        assert session.query(StateAttributes).count() == 11
+
 
 async def test_purge_filtered_events(
     hass: HomeAssistant,
