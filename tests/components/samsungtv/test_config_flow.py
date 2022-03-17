@@ -21,6 +21,7 @@ from homeassistant.components.samsungtv.const import (
     DEFAULT_MANUFACTURER,
     DOMAIN,
     LEGACY_PORT,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
@@ -138,6 +139,13 @@ MOCK_WS_ENTRY = {
     CONF_HOST: "fake_host",
     CONF_METHOD: METHOD_WEBSOCKET,
     CONF_PORT: 8002,
+    CONF_MODEL: "any",
+    CONF_NAME: "any",
+}
+MOCK_WS_ENCRYPTED_ENTRY = {
+    CONF_HOST: "fake_host",
+    CONF_METHOD: METHOD_ENCRYPTED_WEBSOCKET,
+    CONF_PORT: 8000,
     CONF_MODEL: "any",
     CONF_NAME: "any",
 }
@@ -1364,6 +1372,72 @@ async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "not_supported"
+
+
+@pytest.mark.usefixtures("remoteencws")
+async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
+    """Test reauth flow for encrypted TVs."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENCRYPTED_ENTRY)
+    entry.add_to_hass(hass)
+    assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.SamsungTVEncryptedWSAsyncAuthenticator",
+        autospec=True,
+    ) as authenticator_mock:
+        authenticator_mock.return_value.try_pin.side_effect = [
+            None,
+            "037739871315caef138547b03e348b72",
+        ]
+        authenticator_mock.return_value.get_session_id_and_close.return_value = "1"
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "entry_id": entry.entry_id,
+                "source": config_entries.SOURCE_REAUTH,
+            },
+            data=entry.data,
+        )
+
+        assert result["type"] == "form"
+        assert result["step_id"] == "reauth_confirm_encrypted"
+        assert result["errors"] == {}
+
+        # First time on reauth_confirm_encrypted
+        # creates the authenticator, start pairing and requests PIN
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=None
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "reauth_confirm_encrypted"
+
+        # Invalid PIN
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"pin": "invalid"}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "reauth_confirm_encrypted"
+
+        # Valid PIN
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"pin": "1234"}
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == "abort"
+        assert result["reason"] == "reauth_successful"
+        assert entry.state == config_entries.ConfigEntryState.LOADED
+
+    authenticator_mock.assert_called_once()
+    assert authenticator_mock.call_args[0] == ("fake_host",)
+
+    authenticator_mock.return_value.start_pairing.assert_called_once()
+    assert authenticator_mock.return_value.try_pin.call_count == 2
+    assert authenticator_mock.return_value.try_pin.call_args_list == [
+        call("invalid"),
+        call("1234"),
+    ]
+    authenticator_mock.return_value.get_session_id_and_close.assert_called_once()
 
 
 @pytest.mark.usefixtures("remotews")
