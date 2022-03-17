@@ -640,6 +640,7 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
             )
     elif new_version == 25:
         _add_columns(instance, "states", ["attributes_id INTEGER"])
+        _create_index(instance, "states", "ix_states_attributes_id")
 
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")

@@ -44,8 +44,12 @@ def purge_old_data(
     with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
         event_ids = _select_event_ids_to_purge(session, purge_before)
-        state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
-        attribute_ids = _select_attribute_ids_to_purge(session, purge_before, event_ids)
+        state_ids, attributes_ids = _select_state_and_attributes_ids_to_purge(
+            session, purge_before, event_ids
+        )
+        attribute_ids = _select_attribute_ids_to_purge(
+            session, purge_before, attributes_ids
+        )
         statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
         short_term_statistics = _select_short_term_statistics_to_purge(
             session, purge_before
@@ -93,35 +97,34 @@ def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list
     return [event.event_id for event in events]
 
 
-def _select_state_ids_to_purge(
+def _select_state_and_attributes_ids_to_purge(
     session: Session, purge_before: datetime, event_ids: list[int]
-) -> set[int]:
+) -> tuple[set[int], set[int]]:
     """Return a list of state ids to purge."""
     if not event_ids:
-        return set()
+        return set(), set()
     states = (
-        session.query(States.state_id)
+        session.query(States.state_id, States.attributes_id)
         .filter(States.last_updated < purge_before)
         .filter(States.event_id.in_(event_ids))
         .all()
     )
     _LOGGER.debug("Selected %s state ids to remove", len(states))
-    return {state.state_id for state in states}
+    state_ids = set()
+    attribute_ids = set()
+    for state in states:
+        state_ids.add(state.state_id)
+        if state.attributes_ids:
+            attribute_ids.add(state.attributes_ids)
+    return state_ids, attribute_ids
 
 
 def _select_attribute_ids_to_purge(
-    session: Session, purge_before: datetime, event_ids: list[int]
+    session: Session, purge_before: datetime, attribute_ids: set[int]
 ) -> set[int]:
     """Return a list of attribute ids to purge."""
-    if not event_ids:
+    if not attribute_ids:
         return set()
-    attribute_ids = {
-        state.attributes_id
-        for state in session.query(States.attributes_id)
-        .filter(States.last_updated < purge_before)
-        .filter(States.event_id.in_(event_ids))
-        .all()
-    }
     keep_attribute_ids = {
         state.attributes_id
         for state in session.query(States.attributes_id)
