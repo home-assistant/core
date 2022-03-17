@@ -129,3 +129,4 @@ class DemoUpdate(UpdateEntity):
         self._attr_current_version = (
             version if version is not None else self.latest_version
         )
+        await self.async_update_ha_state()
