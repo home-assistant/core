@@ -582,6 +582,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         attributes = {
             "flowing": self.device.is_color_flow_enabled,
             "music_mode": self._bulb.music_mode,
+            "music_mode_state": self._bulb.music_mode_state,
         }
 
         if self.device.is_nightlight_supported:
