@@ -32,7 +32,7 @@ DEFAULT_TIME_BETWEEN_UPDATE = 30
 
 DATA_TASK = "task"
 
-DEVICE_NAME_ENERGY = "Energy Meter"
+DEVICE_NAME_ELECTRICITY = "Electricity Meter"
 DEVICE_NAME_GAS = "Gas Meter"
 
 DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D"}

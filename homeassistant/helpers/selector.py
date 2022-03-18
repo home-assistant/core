@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import time as time_sys
 from typing import Any, cast
 
 import voluptuous as vol
@@ -142,10 +141,11 @@ class DeviceSelector(Selector):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            return cv.string(data)
+            device_id: str = vol.Schema(str)(data)
+            return device_id
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [cv.string(val) for val in data]
+        return [vol.Schema(str)(val) for val in data]
 
 
 @SELECTORS.register("area")
@@ -165,10 +165,22 @@ class AreaSelector(Selector):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            return cv.string(data)
+            area_id: str = vol.Schema(str)(data)
+            return area_id
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [cv.string(val) for val in data]
+        return [vol.Schema(str)(val) for val in data]
+
+
+def has_min_max_if_slider(data: Any) -> Any:
+    """Validate configuration."""
+    if data["mode"] == "box":
+        return data
+
+    if "min" not in data or "max" not in data:
+        raise vol.Invalid("min and max are required in slider mode")
+
+    return data
 
 
 @SELECTORS.register("number")
@@ -177,24 +189,32 @@ class NumberSelector(Selector):
 
     selector_type = "number"
 
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            vol.Required("min"): vol.Coerce(float),
-            vol.Required("max"): vol.Coerce(float),
-            vol.Optional("step", default=1): vol.All(
-                vol.Coerce(float), vol.Range(min=1e-3)
-            ),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-            vol.Optional(CONF_MODE, default="slider"): vol.In(["box", "slider"]),
-        }
+    CONFIG_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional("min"): vol.Coerce(float),
+                vol.Optional("max"): vol.Coerce(float),
+                # Controls slider steps, and up/down keyboard binding for the box
+                # user input is not rounded
+                vol.Optional("step", default=1): vol.All(
+                    vol.Coerce(float), vol.Range(min=1e-3)
+                ),
+                vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
+                vol.Optional(CONF_MODE, default="slider"): vol.In(["box", "slider"]),
+            }
+        ),
+        has_min_max_if_slider,
     )
 
     def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
         value: float = vol.Coerce(float)(data)
 
-        if not self.config["min"] <= value <= self.config["max"]:
-            raise vol.Invalid(f"Value {value} is too small or too large")
+        if "min" in self.config and value < self.config["min"]:
+            raise vol.Invalid(f"Value {value} is too small")
+
+        if "max" in self.config and value > self.config["max"]:
+            raise vol.Invalid(f"Value {value} is too large")
 
         return value
 
@@ -205,11 +225,17 @@ class AddonSelector(Selector):
 
     selector_type = "addon"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("name"): str,
+            vol.Optional("slug"): str,
+        }
+    )
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        return cv.string(data)
+        addon: str = vol.Schema(str)(data)
+        return addon
 
 
 @SELECTORS.register("boolean")
@@ -234,9 +260,10 @@ class TimeSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
-    def __call__(self, data: Any) -> time_sys:
+    def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        return cv.time(data)
+        cv.time(data)
+        return cast(str, data)
 
 
 @SELECTORS.register("target")
@@ -250,7 +277,7 @@ class TargetSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
+            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
             vol.Optional("device"): DeviceSelector.CONFIG_SCHEMA,
         }
     )
@@ -295,12 +322,46 @@ class StringSelector(Selector):
 
     selector_type = "text"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Optional("multiline", default=False): bool})
+    STRING_TYPES = [
+        "number",
+        "text",
+        "search",
+        "tel",
+        "url",
+        "email",
+        "password",
+        "date",
+        "month",
+        "week",
+        "time",
+        "datetime-local",
+        "color",
+    ]
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiline", default=False): bool,
+            vol.Optional("suffix"): str,
+            # The "type" controls the input field in the browser, the resulting
+            # data can be any string so we don't validate it.
+            vol.Optional("type"): vol.In(STRING_TYPES),
+        }
+    )
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        text = cv.string(data)
+        text: str = vol.Schema(str)(data)
         return text
+
+
+select_option = vol.All(
+    dict,
+    vol.Schema(
+        {
+            vol.Required("value"): str,
+            vol.Required("label"): str,
+        }
+    ),
+)
 
 
 @SELECTORS.register("select")
@@ -310,10 +371,124 @@ class SelectSelector(Selector):
     selector_type = "select"
 
     CONFIG_SCHEMA = vol.Schema(
-        {vol.Required("options"): vol.All([str], vol.Length(min=1))}
+        {
+            vol.Required("options"): vol.All(
+                vol.Any([str], [select_option]), vol.Length(min=1)
+            )
+        }
     )
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        selected_option = vol.In(self.config["options"])(cv.string(data))
-        return selected_option
+        if isinstance(self.config["options"][0], str):
+            options = self.config["options"]
+        else:
+            options = [option["value"] for option in self.config["options"]]
+        return vol.In(options)(vol.Schema(str)(data))
+
+
+@SELECTORS.register("attribute")
+class AttributeSelector(Selector):
+    """Selector for an entity attribute."""
+
+    selector_type = "attribute"
+
+    CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        attribute: str = vol.Schema(str)(data)
+        return attribute
+
+
+@SELECTORS.register("duration")
+class DurationSelector(Selector):
+    """Selector for a duration."""
+
+    selector_type = "duration"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> dict[str, float]:
+        """Validate the passed selection."""
+        cv.time_period_dict(data)
+        return cast(dict[str, float], data)
+
+
+@SELECTORS.register("icon")
+class IconSelector(Selector):
+    """Selector for an icon."""
+
+    selector_type = "icon"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {vol.Optional("placeholder"): str}
+        # Frontend also has a fallbackPath option, this is not used by core
+    )
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        icon: str = vol.Schema(str)(data)
+        return icon
+
+
+@SELECTORS.register("theme")
+class ThemeSelector(Selector):
+    """Selector for an theme."""
+
+    selector_type = "theme"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        theme: str = vol.Schema(str)(data)
+        return theme
+
+
+@SELECTORS.register("media")
+class MediaSelector(Selector):
+    """Selector for media."""
+
+    selector_type = "media"
+
+    CONFIG_SCHEMA = vol.Schema({})
+    DATA_SCHEMA = vol.Schema(
+        {
+            # Although marked as optional in frontend, this field is required
+            vol.Required("entity_id"): cv.entity_id_or_uuid,
+            # Although marked as optional in frontend, this field is required
+            vol.Required("media_content_id"): str,
+            # Although marked as optional in frontend, this field is required
+            vol.Required("media_content_type"): str,
+            vol.Remove("metadata"): dict,
+        }
+    )
+
+    def __call__(self, data: Any) -> dict[str, float]:
+        """Validate the passed selection."""
+        media: dict[str, float] = self.DATA_SCHEMA(data)
+        return media
+
+
+@SELECTORS.register("location")
+class LocationSelector(Selector):
+    """Selector for a location."""
+
+    selector_type = "location"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {vol.Optional("radius"): bool, vol.Optional("icon"): str}
+    )
+    DATA_SCHEMA = vol.Schema(
+        {
+            vol.Required("latitude"): float,
+            vol.Required("longitude"): float,
+            vol.Optional("radius"): float,
+        }
+    )
+
+    def __call__(self, data: Any) -> dict[str, float]:
+        """Validate the passed selection."""
+        location: dict[str, float] = self.DATA_SCHEMA(data)
+        return location

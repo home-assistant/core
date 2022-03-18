@@ -18,12 +18,14 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.dt import utcnow
 
+from tests.common import MockConfigEntry
+
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 ApiResult = Callable[[dict[str, Any]], None]
 ComponentSetup = Callable[[], Awaitable[bool]]
-T = TypeVar("T")
-YieldFixture = Generator[T, None, None]
+_T = TypeVar("_T")
+YieldFixture = Generator[_T, None, None]
 
 
 CALENDAR_ID = "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com"
@@ -99,7 +101,7 @@ def calendars_config(calendars_config_entity: dict[str, Any]) -> list[dict[str, 
     ]
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 async def mock_calendars_yaml(
     hass: HomeAssistant,
     calendars_config: list[dict[str, Any]],
@@ -154,6 +156,25 @@ async def storage() -> YieldFixture[FakeStorage]:
     storage = FakeStorage()
     with patch("homeassistant.components.google.Storage", return_value=storage):
         yield storage
+
+
+@pytest.fixture
+async def config_entry(token_scopes: list[str]) -> MockConfigEntry:
+    """Fixture to create a config entry for the integration."""
+    token_expiry = utcnow() + datetime.timedelta(days=7)
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "device_auth",
+            "token": {
+                "access_token": "ACCESS_TOKEN",
+                "refresh_token": "REFRESH_TOKEN",
+                "scope": " ".join(token_scopes),
+                "token_type": "Bearer",
+                "expires_at": token_expiry.timestamp(),
+            },
+        },
+    )
 
 
 @pytest.fixture

@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugwise.exceptions import InvalidAuthentication, PlugwiseException
+from plugwise.exceptions import (
+    InvalidAuthentication,
+    InvalidSetupError,
+    PlugwiseException,
+)
 from plugwise.smile import Smile
 import voluptuous as vol
 
@@ -124,6 +128,8 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 api = await validate_gw_input(self.hass, user_input)
+            except InvalidSetupError:
+                errors[CONF_BASE] = "invalid_setup"
             except InvalidAuthentication:
                 errors[CONF_BASE] = "invalid_auth"
             except PlugwiseException:

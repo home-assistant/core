@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import functools
 from typing import Any, TypeVar
 
-from async_upnp_client import UpnpService, UpnpStateVariable
+from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpError, UpnpResponseError
 from async_upnp_client.profiles.dlna import DmrDevice, PlayMode, TransportState
@@ -76,8 +76,6 @@ PARALLEL_UPDATES = 0
 _T = TypeVar("_T", bound="DlnaDmrEntity")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
-
-Func = TypeVar("Func", bound=Callable[..., Any])
 
 
 def catch_request_errors(

@@ -5,7 +5,7 @@ from abc import abstractmethod
 from collections.abc import Callable
 import json
 import logging
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -237,10 +237,10 @@ class SetupEntity(Protocol):
 
 
 async def async_setup_entry_helper(hass, domain, async_setup, schema):
-    """Set up entity, automation or tag creation dynamically through MQTT discovery."""
+    """Set up entity, automation, notify service or tag creation dynamically through MQTT discovery."""
 
     async def async_discover(discovery_payload):
-        """Discover and add an MQTT entity, automation or tag."""
+        """Discover and add an MQTT entity, automation, notify service or tag."""
         discovery_data = discovery_payload.discovery_data
         try:
             config = schema(discovery_payload)
@@ -496,11 +496,13 @@ class MqttAvailability(Entity):
         return self._available_latest
 
 
-async def cleanup_device_registry(hass, device_id, config_entry_id):
-    """Remove device registry entry if there are no remaining entities or triggers."""
+async def cleanup_device_registry(
+    hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
+) -> None:
+    """Remove device registry entry if there are no remaining entities, triggers or notify services."""
     # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from . import device_trigger, tag
+    # pylint: disable=import-outside-toplevel
+    from . import device_trigger, notify, tag
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -511,9 +513,10 @@ async def cleanup_device_registry(hass, device_id, config_entry_id):
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
+        and not notify.device_has_notify_services(hass, device_id)
     ):
         device_registry.async_update_device(
-            device_id, remove_config_entry_id=config_entry_id
+            device_id, remove_config_entry_id=cast(str, config_entry_id)
         )
 
 

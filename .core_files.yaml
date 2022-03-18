@@ -49,6 +49,7 @@ components: &components
   - homeassistant/components/alexa/*
   - homeassistant/components/auth/*
   - homeassistant/components/automation/*
+  - homeassistant/components/backup/*
   - homeassistant/components/cloud/*
   - homeassistant/components/config/*
   - homeassistant/components/configurator/*
@@ -94,7 +95,6 @@ components: &components
   - homeassistant/components/tag/*
   - homeassistant/components/template/*
   - homeassistant/components/timer/*
-  - homeassistant/components/update/*
   - homeassistant/components/usb/*
   - homeassistant/components/webhook/*
   - homeassistant/components/websocket_api/*

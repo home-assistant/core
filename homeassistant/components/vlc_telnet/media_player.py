@@ -60,7 +60,6 @@ SUPPORT_VLC = (
 )
 
 _T = TypeVar("_T", bound="VlcDevice")
-_R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 

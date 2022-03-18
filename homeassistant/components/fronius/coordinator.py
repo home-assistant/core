@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from . import FroniusSolarNet
     from .sensor import _FroniusSensorEntity
 
-    FroniusEntityType = TypeVar("FroniusEntityType", bound=_FroniusSensorEntity)
+    _FroniusEntityT = TypeVar("_FroniusEntityT", bound=_FroniusSensorEntity)
 
 
 class FroniusCoordinatorBase(
@@ -84,7 +84,7 @@ class FroniusCoordinatorBase(
     def add_entities_for_seen_keys(
         self,
         async_add_entities: AddEntitiesCallback,
-        entity_constructor: type[FroniusEntityType],
+        entity_constructor: type[_FroniusEntityT],
     ) -> None:
         """
         Add entities for received keys and registers listener for future seen keys.

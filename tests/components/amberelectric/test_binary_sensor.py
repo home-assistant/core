@@ -112,7 +112,7 @@ async def setup_spike(hass) -> AsyncGenerator:
 
 def test_no_spike_sensor(hass: HomeAssistant, setup_no_spike) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "off"
@@ -122,7 +122,7 @@ def test_no_spike_sensor(hass: HomeAssistant, setup_no_spike) -> None:
 
 def test_potential_spike_sensor(hass: HomeAssistant, setup_potential_spike) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "off"
@@ -132,7 +132,7 @@ def test_potential_spike_sensor(hass: HomeAssistant, setup_potential_spike) -> N
 
 def test_spike_sensor(hass: HomeAssistant, setup_spike) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "on"
