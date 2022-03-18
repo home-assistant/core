@@ -1,4 +1,6 @@
 """Representation of a cover."""
+from typing import Any
+
 from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
