@@ -751,7 +751,7 @@ class LazyEventPartialState:
             if source == EMPTY_JSON_OBJECT or source is None:
                 self._attributes = {}
             else:
-                self._attributes = json.loads(source) or {}
+                self._attributes = json.loads(source)
         return self._attributes
 
     @property
