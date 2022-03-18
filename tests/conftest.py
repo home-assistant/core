@@ -41,6 +41,7 @@ from tests.common import (  # noqa: E402, isort:skip
     MockConfigEntry,
     MockUser,
     async_fire_mqtt_message,
+    async_init_recorder_component,
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
@@ -813,6 +814,28 @@ def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
 
         yield setup_recorder
         hass.stop()
+
+
+@pytest.fixture
+async def recorder_mock(enable_nightly_purge, enable_statistics, hass):
+    """Fixture with in-memory recorder."""
+    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+        side_effect=stats,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        side_effect=nightly,
+        autospec=True,
+    ):
+        await async_init_recorder_component(hass)
+        await hass.async_start()
+        await hass.async_block_till_done()
+        await hass.async_add_executor_job(
+            hass.data[recorder.DATA_INSTANCE].block_till_done
+        )
 
 
 @pytest.fixture

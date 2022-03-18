@@ -7,11 +7,12 @@ import pytest
 
 from homeassistant.components.demo import DOMAIN
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import list_statistic_ids
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
 
-from tests.components.recorder.common import wait_recording_done
+from tests.components.recorder.common import async_wait_recording_done_without_instance
 
 
 @pytest.fixture(autouse=True)
@@ -45,16 +46,16 @@ async def test_setting_up_demo(hass):
         )
 
 
-def test_demo_statistics(hass_recorder):
+async def test_demo_statistics(hass, recorder_mock):
     """Test that the demo components makes some statistics available."""
-    hass = hass_recorder()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await async_wait_recording_done_without_instance(hass)
 
-    assert setup_component(hass, DOMAIN, {DOMAIN: {}})
-    hass.block_till_done()
-    hass.start()
-    wait_recording_done(hass)
-
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await get_instance(hass).async_add_executor_job(
+        list_statistic_ids, hass
+    )
     assert {
         "name": None,
         "source": "demo",
