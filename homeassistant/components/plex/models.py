@@ -170,4 +170,7 @@ class PlexMediaSearchResult:
     @property
     def shuffle(self) -> bool:
         """Return value of shuffle parameter."""
-        return self._params.get("shuffle", False)
+        shuffle = self._params.get("shuffle", False)
+        if isinstance(shuffle, str):
+            shuffle = bool(strtobool(shuffle))
+        return shuffle
