@@ -206,11 +206,8 @@ class NumberSelector(Selector):
         has_min_max_if_slider,
     )
 
-    def __call__(self, data: Any) -> float | None:
+    def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
-        if data is None:
-            return data
-
         value: float = vol.Coerce(float)(data)
 
         if "min" in self.config and value < self.config["min"]:
