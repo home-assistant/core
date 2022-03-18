@@ -11,10 +11,8 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
-    ATTR_SPEED,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PRESET_MODE,
-    SPEED_MEDIUM,
     SUPPORT_PRESET_MODE,
     NotValidPresetModeError,
 )
@@ -415,6 +413,8 @@ async def test_inovelli_lzw36(hass, client, inovelli_lzw36, integration):
         "fan",
         "turn_on",
         {"entity_id": entity_id, "preset_mode": "breeze"},
+        blocking=True,
+    )
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
