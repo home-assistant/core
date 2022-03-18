@@ -323,6 +323,7 @@ FLOWS = [
     "steamist",
     "stookalert",
     "subaru",
+    "sun",
     "surepetcare",
     "switch_as_x",
     "switchbot",
