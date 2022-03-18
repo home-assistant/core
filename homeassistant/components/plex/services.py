@@ -143,7 +143,7 @@ def process_plex_payload(
         if not supports_playqueues:
             raise HomeAssistantError("Plex stations are not supported on this device")
         playqueue = plex_server.create_station_playqueue(content)
-        return PlexMediaSearchResult(playqueue, content)
+        return PlexMediaSearchResult(playqueue)
 
     if isinstance(content, int):
         content = {"plex_key": content}
