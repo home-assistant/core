@@ -12,7 +12,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any
+from typing import Any, TypeVar
 
 from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
@@ -58,10 +58,12 @@ from . import history, migration, purge, statistics, websocket_api
 from .const import (
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
+    DB_WORKER_PREFIX,
     DOMAIN,
     MAX_QUEUE_BACKLOG,
     SQLITE_URL_PREFIX,
 )
+from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
     Base,
     Events,
@@ -71,7 +73,7 @@ from .models import (
     StatisticsRuns,
     process_timestamp,
 )
-from .pool import RecorderPool
+from .pool import POOL_SIZE, RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -84,6 +86,9 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+T = TypeVar("T")
+
 
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
@@ -191,6 +196,15 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+# Pool size must accommodate Recorder thread + All db executors
+MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
+
+
+def get_instance(hass: HomeAssistant) -> Recorder:
+    """Get the recorder instance."""
+    return hass.data[DATA_INSTANCE]
 
 
 @bind_hass
@@ -342,6 +356,8 @@ def _async_register_services(hass, instance):
 class RecorderTask(abc.ABC):
     """ABC for recorder tasks."""
 
+    commit_before = True
+
     @abc.abstractmethod
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
@@ -450,6 +466,8 @@ class ExternalStatisticsTask(RecorderTask):
 class WaitTask(RecorderTask):
     """An object to insert into the recorder queue to tell it set the _queue_watch event."""
 
+    commit_before = False
+
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance._queue_watch.set()  # pylint: disable=[protected-access]
@@ -472,6 +490,8 @@ class DatabaseLockTask(RecorderTask):
 class StopTask(RecorderTask):
     """An object to insert into the recorder queue to stop the event handler."""
 
+    commit_before = False
+
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance.stop_requested = True
@@ -482,6 +502,7 @@ class EventTask(RecorderTask):
     """An object to insert into the recorder queue to stop the event handler."""
 
     event: bool
+    commit_before = False
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
@@ -543,12 +564,27 @@ class Recorder(threading.Thread):
         self._queue_watcher = None
         self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
+        self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
 
         self.enabled = True
 
     def set_enable(self, enable):
         """Enable or disable recording events and states."""
         self.enabled = enable
+
+    @callback
+    def async_start_executor(self):
+        """Start the executor."""
+        self._db_executor = DBInterruptibleThreadPoolExecutor(
+            thread_name_prefix=DB_WORKER_PREFIX,
+            max_workers=MAX_DB_EXECUTOR_WORKERS,
+            shutdown_hook=self._shutdown_pool,
+        )
+
+    def _shutdown_pool(self):
+        """Close the dbpool connections in the current thread."""
+        if hasattr(self.engine.pool, "shutdown"):
+            self.engine.pool.shutdown()
 
     @callback
     def async_initialize(self):
@@ -559,6 +595,19 @@ class Recorder(threading.Thread):
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)
         )
+
+    @callback
+    def async_add_executor_job(
+        self, target: Callable[..., T], *args: Any
+    ) -> asyncio.Future[T]:
+        """Add an executor job from within the event loop."""
+        return self.hass.loop.run_in_executor(self._db_executor, target, *args)
+
+    def _stop_executor(self) -> None:
+        """Stop the executor."""
+        assert self._db_executor is not None
+        self._db_executor.shutdown()
+        self._db_executor = None
 
     @callback
     def _async_check_queue(self, *_):
@@ -686,6 +735,7 @@ class Recorder(threading.Thread):
     def async_connection_success(self):
         """Connect success tasks."""
         self.async_db_ready.set_result(True)
+        self.async_start_executor()
 
     @callback
     def _async_recorder_ready(self):
@@ -813,6 +863,10 @@ class Recorder(threading.Thread):
     def _process_one_task_or_recover(self, task: RecorderTask):
         """Process an event, reconnect, or recover a malformed database."""
         try:
+            # If its not an event, commit everything
+            # that is pending before running the task
+            if task.commit_before:
+                self._commit_event_session_or_retry()
             return task.run(self)
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
@@ -993,7 +1047,9 @@ class Recorder(threading.Thread):
 
     def _commit_event_session_or_retry(self):
         """Commit the event session if there is work to do."""
-        if not self.event_session.new and not self.event_session.dirty:
+        if not self.event_session or (
+            not self.event_session.new and not self.event_session.dirty
+        ):
             return
         tries = 1
         while tries <= self.db_max_retries:
@@ -1240,6 +1296,7 @@ class Recorder(threading.Thread):
     def _shutdown(self):
         """Save end time for current run."""
         self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
+        self._stop_executor()
         self._end_session()
         self._close_connection()
 

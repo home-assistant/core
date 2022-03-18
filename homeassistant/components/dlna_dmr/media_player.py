@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import functools
 from typing import Any, TypeVar
 
-from async_upnp_client import UpnpService, UpnpStateVariable
+from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpError, UpnpResponseError
 from async_upnp_client.profiles.dlna import DmrDevice, PlayMode, TransportState

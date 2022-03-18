@@ -16,6 +16,7 @@ from homeassistant.components import frontend
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.history import sqlalchemy_filter_from_include_exclude_conf
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
     Events,
     StateAttributes,
@@ -256,7 +257,7 @@ class LogbookView(HomeAssistantView):
                 )
             )
 
-        return await hass.async_add_executor_job(json_events)
+        return await get_instance(hass).async_add_executor_job(json_events)
 
 
 def humanify(hass, events, entity_attr_cache, context_lookup):

@@ -14,7 +14,11 @@ import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import history, models as history_models
+from homeassistant.components.recorder import (
+    get_instance,
+    history,
+    models as history_models,
+)
 from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
     statistics_during_period,
@@ -142,7 +146,7 @@ async def ws_get_statistics_during_period(
     else:
         end_time = None
 
-    statistics = await hass.async_add_executor_job(
+    statistics = await get_instance(hass).async_add_executor_job(
         statistics_during_period,
         hass,
         start_time,
@@ -164,7 +168,7 @@ async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fetch a list of available statistic_id."""
-    statistic_ids = await hass.async_add_executor_job(
+    statistic_ids = await get_instance(hass).async_add_executor_job(
         list_statistic_ids,
         hass,
         msg.get("statistic_type"),
@@ -232,7 +236,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         return cast(
             web.Response,
-            await hass.async_add_executor_job(
+            await get_instance(hass).async_add_executor_job(
                 self._sorted_significant_states_json,
                 hass,
                 start_time,
