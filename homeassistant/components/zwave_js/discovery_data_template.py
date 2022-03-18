@@ -520,8 +520,12 @@ class ConfigurableFanValueMappingDataTemplate(
         """Get current fan properties from resolved data."""
         zwave_value: ZwaveValue = resolved_data["configuration_value"]
 
+        if zwave_value is None:
+            _LOGGER.warning("Unable to read device configuration value")
+            return None
+
         if zwave_value.value is None:
-            _LOGGER.warning("Unable to read fan configuration value")
+            _LOGGER.warning("Fan configuration value is missing")
             return None
 
         fan_value_mapping = self.configuration_value_to_fan_value_mapping.get(

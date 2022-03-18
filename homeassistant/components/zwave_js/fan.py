@@ -201,6 +201,9 @@ class ValueMappingZwaveFan(ZwaveFan):
     @property
     def preset_modes(self) -> list[str]:
         """Return the available preset modes."""
+        if not self.has_fan_value_mapping:
+            return []
+
         return list(self.fan_value_mapping.presets.values())
 
     @property
