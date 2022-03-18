@@ -102,12 +102,9 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return state attributes."""
-        _state_attr = None
-        if self.attributes:
-            _state_attr = {
-                key: self.get_zone_value(val) for key, val in self.attributes.items()
-            }
-        return _state_attr
+        if not self.attributes:
+            return None
+        return {key: self.get_zone_value(val) for key, val in self.attributes.items()}
 
     @property
     def is_on(self) -> bool | None:
