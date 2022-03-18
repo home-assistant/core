@@ -28,8 +28,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_mock_service
 
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
-
 
 @pytest.fixture
 def calls(hass):
@@ -44,14 +42,6 @@ def setup_comp(hass):
     hass.loop.run_until_complete(
         async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
     )
-
-
-@pytest.fixture(autouse=True)
-def teardown():
-    """Restore."""
-    yield
-
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
 
 def assert_element(trace_element, expected_element, path):
@@ -2659,8 +2649,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client,
     at 7 AM and sunset at 3AM during summer
     After sunrise is true from sunrise until midnight, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone(hass, "America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2736,8 +2725,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, 
     at 7 AM and sunset at 3AM during summer
     Before sunrise is true from midnight until sunrise, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone(hass, "America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2813,8 +2801,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, 
     at 7 AM and sunset at 3AM during summer
     Before sunset is true from midnight until sunset, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone(hass, "America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2890,8 +2877,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, c
     at 7 AM and sunset at 3AM during summer
     After sunset is true from sunset until midnight, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone(hass, "America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(

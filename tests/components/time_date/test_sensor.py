@@ -1,19 +1,8 @@
 """The tests for time_date sensor platform."""
 from unittest.mock import patch
 
-import pytest
-
 import homeassistant.components.time_date.sensor as time_date
 import homeassistant.util.dt as dt_util
-
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
-
-
-@pytest.fixture(autouse=True)
-def restore_ts():
-    """Restore default TZ."""
-    yield
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 
 # pylint: disable=protected-access
@@ -79,9 +68,7 @@ async def test_states(hass):
 
 async def test_states_non_default_timezone(hass):
     """Test states of sensors in a timezone other than UTC."""
-    new_tz = dt_util.get_time_zone("America/New_York")
-    assert new_tz is not None
-    dt_util.set_default_time_zone(new_tz)
+    hass.config.set_time_zone("America/New_York")
 
     now = dt_util.utc_from_timestamp(1495068856)
     device = time_date.TimeDateSensor(hass, "time")
@@ -116,9 +103,7 @@ async def test_states_non_default_timezone(hass):
 # pylint: disable=no-member
 async def test_timezone_intervals(hass):
     """Test date sensor behavior in a timezone besides UTC."""
-    new_tz = dt_util.get_time_zone("America/New_York")
-    assert new_tz is not None
-    dt_util.set_default_time_zone(new_tz)
+    hass.config.set_time_zone("America/New_York")
 
     device = time_date.TimeDateSensor(hass, "date")
     now = dt_util.utc_from_timestamp(50000)
@@ -128,9 +113,7 @@ async def test_timezone_intervals(hass):
     # so the second day was 18000 + 86400
     assert next_time.timestamp() == 104400
 
-    new_tz = dt_util.get_time_zone("America/Edmonton")
-    assert new_tz is not None
-    dt_util.set_default_time_zone(new_tz)
+    hass.config.set_time_zone("America/Edmonton")
     now = dt_util.parse_datetime("2017-11-13 19:47:19-07:00")
     device = time_date.TimeDateSensor(hass, "date")
     with patch("homeassistant.util.dt.utcnow", return_value=now):
@@ -138,9 +121,7 @@ async def test_timezone_intervals(hass):
     assert next_time.timestamp() == dt_util.as_timestamp("2017-11-14 00:00:00-07:00")
 
     # Entering DST
-    new_tz = dt_util.get_time_zone("Europe/Prague")
-    assert new_tz is not None
-    dt_util.set_default_time_zone(new_tz)
+    hass.config.set_time_zone("Europe/Prague")
 
     now = dt_util.parse_datetime("2020-03-29 00:00+01:00")
     with patch("homeassistant.util.dt.utcnow", return_value=now):
@@ -170,9 +151,7 @@ async def test_timezone_intervals(hass):
 )
 async def test_timezone_intervals_empty_parameter(hass):
     """Test get_interval() without parameters."""
-    new_tz = dt_util.get_time_zone("America/Edmonton")
-    assert new_tz is not None
-    dt_util.set_default_time_zone(new_tz)
+    hass.config.set_time_zone("America/Edmonton")
     device = time_date.TimeDateSensor(hass, "date")
     next_time = device.get_next_interval()
     assert next_time.timestamp() == dt_util.as_timestamp("2017-11-14 00:00:00-07:00")

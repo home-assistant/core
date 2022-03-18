@@ -222,15 +222,6 @@ CALDAV_CONFIG = {
     "custom_calendars": [],
 }
 
-ORIG_TZ = dt.DEFAULT_TIME_ZONE
-
-
-@pytest.fixture(autouse=True)
-def reset_tz():
-    """Restore the default TZ after test runs."""
-    yield
-    dt.DEFAULT_TIME_ZONE = ORIG_TZ
-
 
 @pytest.fixture
 def set_tz(request):
@@ -239,21 +230,21 @@ def set_tz(request):
 
 
 @pytest.fixture
-def utc():
+def utc(hass):
     """Set the default TZ to UTC."""
-    dt.set_default_time_zone(dt.get_time_zone("UTC"))
+    hass.config.set_time_zone("UTC")
 
 
 @pytest.fixture
-def new_york():
+def new_york(hass):
     """Set the default TZ to America/New_York."""
-    dt.set_default_time_zone(dt.get_time_zone("America/New_York"))
+    hass.config.set_time_zone("America/New_York")
 
 
 @pytest.fixture
-def baghdad():
+def baghdad(hass):
     """Set the default TZ to Asia/Baghdad."""
-    dt.set_default_time_zone(dt.get_time_zone("Asia/Baghdad"))
+    hass.config.set_time_zone("Asia/Baghdad")
 
 
 @pytest.fixture(autouse=True)
