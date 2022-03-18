@@ -53,7 +53,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_OFF
-    assert state.attributes["percentage"] is None
+    assert "percentage" not in state.attributes
     assert state.attributes["supported_features"] == fan.SUPPORT_SET_SPEED
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 

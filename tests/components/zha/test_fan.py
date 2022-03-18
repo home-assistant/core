@@ -450,8 +450,12 @@ async def test_fan_init(
     entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == expected_state
-    assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == expected_percentage
-    assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
+    entity_attrs = hass.states.get(entity_id).attributes
+    if expected_percentage is not None:
+        assert entity_attrs[ATTR_PERCENTAGE] == expected_percentage
+    else:
+        assert ATTR_PERCENTAGE not in entity_attrs
+    assert ATTR_PRESET_MODE not in entity_attrs
 
 
 async def test_fan_update_entity(
@@ -469,7 +473,7 @@ async def test_fan_update_entity(
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_OFF
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 0
-    assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
+    assert ATTR_PRESET_MODE not in hass.states.get(entity_id).attributes
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
     assert cluster.read_attributes.await_count == 2
 
@@ -488,6 +492,6 @@ async def test_fan_update_entity(
     )
     assert hass.states.get(entity_id).state == STATE_ON
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 33
-    assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
+    assert ATTR_PRESET_MODE not in hass.states.get(entity_id).attributes
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
     assert cluster.read_attributes.await_count == 4

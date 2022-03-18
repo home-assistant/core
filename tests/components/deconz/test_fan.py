@@ -222,7 +222,7 @@ async def test_fans(hass, aioclient_mock, mock_deconz_websocket):
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert not hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE]
+    assert ATTR_PERCENTAGE not in hass.states.get("fan.ceiling_fan").attributes
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
