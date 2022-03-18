@@ -145,6 +145,7 @@ async def camera_fixture(
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
     camera_obj.feature_flags.has_smart_detect = True
+    camera_obj.feature_flags.has_chime = True
     camera_obj.is_smart_detected = False
     camera_obj.wired_connection_state = WiredConnectionState(phy_rate=1000)
     camera_obj.wifi_connection_state = WifiConnectionState(
@@ -167,8 +168,8 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    # 3 from all, 7 from camera, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 23, 15)
+    # 3 from all, 8 from camera, 12 NVR
+    assert_entity_counts(hass, Platform.SENSOR, 24, 16)
 
     yield camera_obj
 
@@ -182,7 +183,16 @@ async def test_sensor_setup_sensor(
 
     entity_registry = er.async_get(hass)
 
-    expected_values = ("10", "10.0", "10.0", "10.0", "none")
+    expected_values = (
+        "10",
+        "10.0",
+        "10.0",
+        "10.0",
+        "none",
+        "2022-01-04T04:03:56+00:00",
+        "2022-01-04T04:04:04+00:00",
+        STATE_UNKNOWN,
+    )
     for index, description in enumerate(SENSE_SENSORS):
         unique_id, entity_id = ids_from_device_description(
             Platform.SENSOR, sensor, description
@@ -228,6 +238,9 @@ async def test_sensor_setup_sensor_none(
         STATE_UNAVAILABLE,
         STATE_UNAVAILABLE,
         STATE_UNAVAILABLE,
+        "2022-01-04T04:03:56+00:00",
+        "2022-01-04T04:04:04+00:00",
+        STATE_UNKNOWN,
     )
     for index, description in enumerate(SENSE_SENSORS):
         unique_id, entity_id = ids_from_device_description(
@@ -404,6 +417,7 @@ async def test_sensor_setup_camera(
         "100",
         "100.0",
         "20.0",
+        STATE_UNKNOWN,
     )
     for index, description in enumerate(CAMERA_SENSORS):
         unique_id, entity_id = ids_from_device_description(
