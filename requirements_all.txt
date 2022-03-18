@@ -812,9 +812,6 @@ holidays==0.13
 # homeassistant.components.frontend
 home-assistant-frontend==20220317.0
 
-# homeassistant.components.zwave
-# homeassistant-pyozw==0.1.10
-
 # homeassistant.components.home_connect
 homeconnect==0.7.0
 
@@ -1430,9 +1427,6 @@ pydelijn==1.0.0
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
-
-# homeassistant.components.zwave
-pydispatcher==2.0.5
 
 # homeassistant.components.doods
 pydoods==1.0.2

@@ -67,6 +67,7 @@ FLOWS = [
     "daikin",
     "deconz",
     "denonavr",
+    "derivative",
     "devolo_home_control",
     "devolo_home_network",
     "dexcom",
@@ -394,7 +395,6 @@ FLOWS = [
     "youless",
     "zerproc",
     "zha",
-    "zwave",
     "zwave_js",
     "zwave_me"
 ]
