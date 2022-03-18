@@ -44,8 +44,12 @@ ALLOWED_ERRORS = [
     'device (light) is "soft off", command (on) may not have effect',
     "device (grouped_light) has communication issues, command (.on) may not have effect",
     'device (grouped_light) is "soft off", command (.on) may not have effect'
+    "device (grouped_light) has communication issues, command (.on.on) may not have effect",
+    'device (grouped_light) is "soft off", command (.on.on) may not have effect'
     "device (light) has communication issues, command (.on) may not have effect",
     'device (light) is "soft off", command (.on) may not have effect',
+    "device (light) has communication issues, command (.on.on) may not have effect",
+    'device (light) is "soft off", command (.on.on) may not have effect',
 ]
 
 
