@@ -5,6 +5,7 @@ from http import HTTPStatus
 from itertools import groupby
 import json
 import re
+from typing import Any
 
 import sqlalchemy
 from sqlalchemy.orm import aliased
@@ -15,8 +16,10 @@ from homeassistant.components import frontend
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.history import sqlalchemy_filter_from_include_exclude_conf
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
     Events,
+    StateAttributes,
     States,
     process_timestamp_to_utc_isoformat,
 )
@@ -254,7 +257,7 @@ class LogbookView(HomeAssistantView):
                 )
             )
 
-        return await hass.async_add_executor_job(json_events)
+        return await get_instance(hass).async_add_executor_job(json_events)
 
 
 def humanify(hass, events, entity_attr_cache, context_lookup):
@@ -493,6 +496,7 @@ def _generate_events_query(session):
         States.entity_id,
         States.domain,
         States.attributes,
+        StateAttributes.shared_attrs,
     )
 
 
@@ -503,6 +507,7 @@ def _generate_events_query_without_states(session):
         literal(value=None, type_=sqlalchemy.String).label("entity_id"),
         literal(value=None, type_=sqlalchemy.String).label("domain"),
         literal(value=None, type_=sqlalchemy.Text).label("attributes"),
+        literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
     )
 
 
@@ -517,6 +522,9 @@ def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
         .filter(
             (States.last_updated == States.last_changed)
             & States.entity_id.in_(entity_ids)
+        )
+        .outerjoin(
+            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
     )
 
@@ -533,7 +541,9 @@ def _apply_events_types_and_states_filter(hass, query, old_state):
             (Events.event_type != EVENT_STATE_CHANGED) | _continuous_entity_matcher()
         )
     )
-    return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES)
+    return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES).outerjoin(
+        StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+    )
 
 
 def _missing_state_matcher(old_state):
@@ -555,6 +565,9 @@ def _continuous_entity_matcher():
     return sqlalchemy.or_(
         sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS)),
         sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON)),
+        sqlalchemy.not_(
+            StateAttributes.shared_attrs.contains(UNIT_OF_MEASUREMENT_JSON)
+        ),
     )
 
 
@@ -708,8 +721,9 @@ class LazyEventPartialState:
         """Extract the icon from the decoded attributes or json."""
         if self._attributes:
             return self._attributes.get(ATTR_ICON)
-
-        result = ICON_JSON_EXTRACT.search(self._row.attributes)
+        result = ICON_JSON_EXTRACT.search(
+            self._row.shared_attrs or self._row.attributes
+        )
         return result and result.group(1)
 
     @property
@@ -733,14 +747,12 @@ class LazyEventPartialState:
     @property
     def attributes(self):
         """State attributes."""
-        if not self._attributes:
-            if (
-                self._row.attributes is None
-                or self._row.attributes == EMPTY_JSON_OBJECT
-            ):
+        if self._attributes is None:
+            source = self._row.shared_attrs or self._row.attributes
+            if source == EMPTY_JSON_OBJECT or source is None:
                 self._attributes = {}
             else:
-                self._attributes = json.loads(self._row.attributes)
+                self._attributes = json.loads(source)
         return self._attributes
 
     @property
@@ -771,12 +783,12 @@ class EntityAttributeCache:
     that are expected to change state.
     """
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Init the cache."""
         self._hass = hass
-        self._cache = {}
+        self._cache: dict[str, dict[str, Any]] = {}
 
-    def get(self, entity_id, attribute, event):
+    def get(self, entity_id: str, attribute: str, event: LazyEventPartialState) -> Any:
         """Lookup an attribute for an entity or get it from the cache."""
         if entity_id in self._cache:
             if attribute in self._cache[entity_id]:
