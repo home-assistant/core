@@ -76,6 +76,11 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle configuration by yaml file."""
+        _LOGGER.warning(
+            "Dune yaml configuration has been deprecated in 2022.4, has been "
+            "automatically imported, and will be removed in a future version of "
+            " Home Assistant. Please remove it from your configuration.yaml"
+        )
         assert user_input is not None
         host: str = user_input[CONF_HOST]
 
