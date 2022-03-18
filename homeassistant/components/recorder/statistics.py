@@ -755,7 +755,9 @@ def list_statistic_ids(
     for platform in hass.data[DOMAIN].values():
         if not hasattr(platform, "list_statistic_ids"):
             continue
-        platform_statistic_ids = platform.list_statistic_ids(hass, statistic_type)
+        platform_statistic_ids = platform.list_statistic_ids(
+            hass, statistic_ids, statistic_type
+        )
 
         for statistic_id, info in platform_statistic_ids.items():
             if (unit := info["unit_of_measurement"]) is not None:

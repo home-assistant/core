@@ -596,11 +596,15 @@ def _compile_statistics(  # noqa: C901
     return result
 
 
-def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -> dict:
+def list_statistic_ids(
+    hass: HomeAssistant,
+    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_type: str | None = None,
+) -> dict:
     """Return statistic_ids and meta data."""
     entities = _get_sensor_states(hass)
 
-    statistic_ids = {}
+    result = {}
 
     for state in entities:
         state_class = state.attributes[ATTR_STATE_CLASS]
@@ -611,6 +615,9 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
         if statistic_type is not None and statistic_type not in provided_statistics:
             continue
 
+        if statistic_ids is not None and state.entity_id not in statistic_ids:
+            continue
+
         if (
             "sum" in provided_statistics
             and ATTR_LAST_RESET not in state.attributes
@@ -619,7 +626,7 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
             continue
 
         if device_class not in UNIT_CONVERSIONS:
-            statistic_ids[state.entity_id] = {
+            result[state.entity_id] = {
                 "source": RECORDER_DOMAIN,
                 "unit_of_measurement": native_unit,
             }
@@ -629,12 +636,12 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
             continue
 
         statistics_unit = DEVICE_CLASS_UNITS[device_class]
-        statistic_ids[state.entity_id] = {
+        result[state.entity_id] = {
             "source": RECORDER_DOMAIN,
             "unit_of_measurement": statistics_unit,
         }
 
-    return statistic_ids
+    return result
 
 
 def validate_statistics(
