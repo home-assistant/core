@@ -25,7 +25,10 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
         super().__init__(*args, **kwargs)
 
     def _adjust_thread_count(self) -> None:
-        """Port from cpython 3.10 since the default does not support a shutdown hook."""
+        """Overridden to add support for shutdown hook.
+
+        Based on the CPython 3.10 implementation.
+        """
         # if idle threads are available, don't spin new threads
         if self._idle_semaphore.acquire(  # pylint: disable=consider-using-with
             timeout=0
