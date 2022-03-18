@@ -109,7 +109,6 @@ def get_significant_states_with_session(
         )
     )
     query_keys = QUERY_STATES if need_attributes else QUERY_STATE_NO_ATTR
-
     baked_query = hass.data[HISTORY_BAKERY](lambda session: session.query(*query_keys))
 
     if significant_changes_only:
@@ -139,7 +138,6 @@ def get_significant_states_with_session(
         baked_query += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-
     baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
 
     states = execute(
