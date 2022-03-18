@@ -60,7 +60,9 @@ async def test_setup_no_sensors(hass):
 
 async def test_in_period_on_start(hass):
     """Test simple setting."""
-    test_time = datetime(2019, 1, 10, 18, 43, 0, tzinfo=dt_util.UTC)
+    test_time = datetime(
+        2019, 1, 10, 18, 43, 0, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
     config = {
         "binary_sensor": [
             {
@@ -84,7 +86,9 @@ async def test_in_period_on_start(hass):
 
 async def test_midnight_turnover_before_midnight_inside_period(hass):
     """Test midnight turnover setting before midnight inside period ."""
-    test_time = datetime(2019, 1, 10, 22, 30, 0, tzinfo=dt_util.UTC)
+    test_time = datetime(
+        2019, 1, 10, 22, 30, 0, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
     config = {
         "binary_sensor": [
             {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
@@ -103,7 +107,9 @@ async def test_midnight_turnover_before_midnight_inside_period(hass):
 
 async def test_midnight_turnover_after_midnight_inside_period(hass):
     """Test midnight turnover setting before midnight inside period ."""
-    test_time = datetime(2019, 1, 10, 21, 0, 0, tzinfo=dt_util.UTC)
+    test_time = datetime(
+        2019, 1, 10, 21, 0, 0, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
     config = {
         "binary_sensor": [
             {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
@@ -175,7 +181,9 @@ async def test_after_happens_tomorrow(hass):
 
 async def test_midnight_turnover_after_midnight_outside_period(hass):
     """Test midnight turnover setting before midnight inside period ."""
-    test_time = datetime(2019, 1, 10, 20, 0, 0, tzinfo=dt_util.UTC)
+    test_time = datetime(
+        2019, 1, 10, 20, 0, 0, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
 
     config = {
         "binary_sensor": [
@@ -192,7 +200,9 @@ async def test_midnight_turnover_after_midnight_outside_period(hass):
     state = hass.states.get("binary_sensor.night")
     assert state.state == STATE_OFF
 
-    switchover_time = datetime(2019, 1, 11, 4, 59, 0, tzinfo=dt_util.UTC)
+    switchover_time = datetime(
+        2019, 1, 11, 4, 59, 0, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
     with patch(
         "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
         return_value=switchover_time,
@@ -411,13 +421,13 @@ async def test_from_sunset_to_sunrise(hass):
 
 async def test_offset(hass):
     """Test offset."""
-    after = datetime(2019, 1, 10, 18, 0, 0, tzinfo=dt_util.UTC) + timedelta(
-        hours=1, minutes=34
-    )
+    after = datetime(
+        2019, 1, 10, 18, 0, 0, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    ) + timedelta(hours=1, minutes=34)
 
-    before = datetime(2019, 1, 10, 22, 0, 0, tzinfo=dt_util.UTC) + timedelta(
-        hours=1, minutes=45
-    )
+    before = datetime(
+        2019, 1, 10, 22, 0, 0, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    ) + timedelta(hours=1, minutes=45)
 
     entity_id = "binary_sensor.evening"
     config = {
@@ -490,9 +500,9 @@ async def test_offset(hass):
 
 async def test_offset_overnight(hass):
     """Test offset overnight."""
-    after = datetime(2019, 1, 10, 18, 0, 0, tzinfo=dt_util.UTC) + timedelta(
-        hours=1, minutes=34
-    )
+    after = datetime(
+        2019, 1, 10, 18, 0, 0, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    ) + timedelta(hours=1, minutes=34)
     entity_id = "binary_sensor.evening"
     config = {
         "binary_sensor": [
