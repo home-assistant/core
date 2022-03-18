@@ -122,13 +122,6 @@ class TariffSelect(SelectEntity, RestoreEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Select new tariff (option)."""
-        if option not in self._tariffs:
-            _LOGGER.warning(
-                "Invalid tariff: %s (possible tariffs: %s)",
-                option,
-                ", ".join(self._tariffs),
-            )
-            return
         self._current_tariff = option
         self.async_write_ha_state()
 
@@ -153,12 +146,6 @@ class LegacyTariffSelect(Entity):
             return
 
         self._attr_available = True
-
-        if (
-            not self.available
-            or (state := self.hass.states.get(self.tracked_entity_id)) is None
-        ):
-            return
 
         self._attr_name = state.attributes.get(ATTR_FRIENDLY_NAME)
         self._attr_state = state.state
