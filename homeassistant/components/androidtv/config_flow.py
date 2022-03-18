@@ -71,10 +71,6 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
-        """Initialize AndroidTV config flow."""
-        self._import_options = None
-
     @callback
     def _show_setup_form(self, user_input=None, error=None):
         """Show the setup form to the user."""
@@ -170,7 +166,6 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME) or host,
                     data=user_input,
-                    options=self._import_options,
                 )
 
         user_input = user_input or {}
