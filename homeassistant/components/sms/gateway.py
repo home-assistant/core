@@ -16,6 +16,7 @@ class Gateway:
 
     def __init__(self, config, hass):
         """Initialize the sms gateway."""
+        _LOGGER.debug("Init with connection mode:%s", config["Connection"])
         self._worker = GammuAsyncWorker(self.sms_pull)
         self._worker.configure(config)
         self._hass = hass
