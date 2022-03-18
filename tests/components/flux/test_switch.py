@@ -23,6 +23,12 @@ from tests.common import (
 )
 
 
+@pytest.fixture(autouse=True)
+def set_utc(hass):
+    """Set timezone to UTC."""
+    hass.config.set_time_zone("UTC")
+
+
 async def test_valid_config(hass):
     """Test configuration."""
     assert await async_setup_component(
