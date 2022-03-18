@@ -6,8 +6,9 @@ from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlparse
 
-from async_upnp_client import UpnpDevice, UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
+from async_upnp_client.client import UpnpDevice
+from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import UpnpError
 from async_upnp_client.profiles.igd import IgdDevice, StatusInfo
 
