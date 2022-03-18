@@ -12,16 +12,16 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
+from homeassistant.components.alarm_control_panel import FORMAT_NUMBER
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
 import homeassistant.components.climate.const as climate
-from homeassistant.components.lock import STATE_LOCKING, STATE_UNLOCKING
 import homeassistant.components.media_player.const as media_player
 from homeassistant.const import (
+    ATTR_CODE_FORMAT,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -31,6 +31,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_IDLE,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
@@ -38,6 +39,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import State
 import homeassistant.util.color as color_util
@@ -48,6 +50,7 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
+    PRESET_MODE_NA,
     Inputs,
 )
 from .errors import UnsupportedProperty
@@ -99,7 +102,7 @@ class AlexaCapability:
         return False
 
     @staticmethod
-    def properties_non_controllable() -> bool:
+    def properties_non_controllable() -> bool | None:
         """Return True if non controllable."""
         return None
 
@@ -181,8 +184,7 @@ class AlexaCapability:
         """Serialize according to the Discovery API."""
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
 
-        instance = self.instance
-        if instance is not None:
+        if (instance := self.instance) is not None:
             result["instance"] = instance
 
         properties_supported = self.properties_supported()
@@ -263,8 +265,7 @@ class AlexaCapability:
                 "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
                 "uncertaintyInMilliseconds": 0,
             }
-            instance = self.instance
-            if instance is not None:
+            if (instance := self.instance) is not None:
                 result["instance"] = instance
 
             yield result
@@ -391,6 +392,8 @@ class AlexaPowerController(AlexaCapability):
 
         if self.entity.domain == climate.DOMAIN:
             is_on = self.entity.state != climate.HVAC_MODE_OFF
+        elif self.entity.domain == fan.DOMAIN:
+            is_on = self.entity.state == fan.STATE_ON
         elif self.entity.domain == vacuum.DOMAIN:
             is_on = self.entity.state == vacuum.STATE_CLEANING
         elif self.entity.domain == timer.DOMAIN:
@@ -694,6 +697,7 @@ class AlexaSpeaker(AlexaCapability):
         "en-US",
         "es-ES",
         "es-MX",
+        "fr-FR",  # Not documented as of 2021-12-04, see PR #60489
         "it-IT",
         "ja-JP",
     }
@@ -751,6 +755,7 @@ class AlexaStepSpeaker(AlexaCapability):
         "en-IN",
         "en-US",
         "es-ES",
+        "fr-FR",  # Not documented as of 2021-12-04, see PR #60489
         "it-IT",
     }
 
@@ -817,6 +822,8 @@ class AlexaInputController(AlexaCapability):
         """Return list of supported inputs."""
         input_list = []
         for source in source_list:
+            if not isinstance(source, str):
+                continue
             formatted_source = (
                 source.lower().replace("-", "").replace("_", "").replace(" ", "")
             )
@@ -1095,8 +1102,7 @@ class AlexaThermostatController(AlexaCapability):
         supported_modes = []
         hvac_modes = self.entity.attributes.get(climate.ATTR_HVAC_MODES)
         for mode in hvac_modes:
-            thermostat_mode = API_THERMOSTAT_MODES.get(mode)
-            if thermostat_mode:
+            if thermostat_mode := API_THERMOSTAT_MODES.get(mode):
                 supported_modes.append(thermostat_mode)
 
         preset_modes = self.entity.attributes.get(climate.ATTR_PRESET_MODES)
@@ -1154,9 +1160,6 @@ class AlexaPowerLevelController(AlexaCapability):
         """Read and return a property."""
         if name != "powerLevel":
             raise UnsupportedProperty(name)
-
-        if self.entity.domain == fan.DOMAIN:
-            return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
 
 class AlexaSecurityPanelController(AlexaCapability):
@@ -1354,9 +1357,16 @@ class AlexaModeController(AlexaCapability):
             self._resource = AlexaModeResource(
                 [AlexaGlobalCatalog.SETTING_PRESET], False
             )
-            for preset_mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, []):
+            preset_modes = self.entity.attributes.get(fan.ATTR_PRESET_MODES, [])
+            for preset_mode in preset_modes:
                 self._resource.add_mode(
                     f"{fan.ATTR_PRESET_MODE}.{preset_mode}", [preset_mode]
+                )
+            # Fans with a single preset_mode completely break Alexa discovery, add a
+            # fake preset (see issue #53832).
+            if len(preset_modes) == 1:
+                self._resource.add_mode(
+                    f"{fan.ATTR_PRESET_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
                 )
             return self._resource.serialize_capability_resources()
 
@@ -1483,16 +1493,6 @@ class AlexaRangeController(AlexaCapability):
         if self.entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
             return None
 
-        # Fan Speed
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-            speed_list = self.entity.attributes.get(fan.ATTR_SPEED_LIST)
-            speed = self.entity.attributes.get(fan.ATTR_SPEED)
-            if speed_list is not None and speed is not None:
-                speed_index = next(
-                    (i for i, v in enumerate(speed_list) if v == speed), None
-                )
-                return speed_index
-
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
             return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION)
@@ -1500,6 +1500,13 @@ class AlexaRangeController(AlexaCapability):
         # Cover Tilt
         if self.instance == f"{cover.DOMAIN}.tilt":
             return self.entity.attributes.get(cover.ATTR_CURRENT_TILT_POSITION)
+
+        # Fan speed percentage
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+            supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            if supported and fan.SUPPORT_SET_SPEED:
+                return self.entity.attributes.get(fan.ATTR_PERCENTAGE)
+            return 100 if self.entity.state == fan.STATE_ON else 0
 
         # Input Number Value
         if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
@@ -1527,28 +1534,18 @@ class AlexaRangeController(AlexaCapability):
     def capability_resources(self):
         """Return capabilityResources object."""
 
-        # Fan Speed Resources
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
-            max_value = len(speed_list) - 1
+        # Fan Speed Percentage Resources
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+            percentage_step = self.entity.attributes.get(fan.ATTR_PERCENTAGE_STEP)
             self._resource = AlexaPresetResource(
-                labels=[AlexaGlobalCatalog.SETTING_FAN_SPEED],
+                labels=["Percentage", AlexaGlobalCatalog.SETTING_FAN_SPEED],
                 min_value=0,
-                max_value=max_value,
-                precision=1,
+                max_value=100,
+                # precision must be a divider of 100 and must be an integer; set step
+                # size to 1 for a consistent behavior except for on/off fans
+                precision=1 if percentage_step else 100,
+                unit=AlexaGlobalCatalog.UNIT_PERCENT,
             )
-            for index, speed in enumerate(speed_list):
-                labels = []
-                if isinstance(speed, str):
-                    labels.append(speed.replace("_", " "))
-                if index == 1:
-                    labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
-                if index == max_value:
-                    labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
-
-                if len(labels) > 0:
-                    self._resource.add_preset(value=index, labels=labels)
-
             return self._resource.serialize_capability_resources()
 
         # Cover Position Resources
@@ -1658,6 +1655,20 @@ class AlexaRangeController(AlexaCapability):
             self._semantics.add_states_to_value([AlexaSemantics.STATES_CLOSED], value=0)
             self._semantics.add_states_to_range(
                 [AlexaSemantics.STATES_OPEN], min_value=1, max_value=100
+            )
+            return self._semantics.serialize_semantics()
+
+        # Fan Speed Percentage
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+            lower_labels = [AlexaSemantics.ACTION_LOWER]
+            raise_labels = [AlexaSemantics.ACTION_RAISE]
+            self._semantics = AlexaSemantics()
+
+            self._semantics.add_action_to_directive(
+                lower_labels, "SetRangeValue", {"rangeValue": 0}
+            )
+            self._semantics.add_action_to_directive(
+                raise_labels, "SetRangeValue", {"rangeValue": 100}
             )
             return self._semantics.serialize_semantics()
 

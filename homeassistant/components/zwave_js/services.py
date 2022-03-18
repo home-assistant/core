@@ -17,15 +17,16 @@ from zwave_js_server.util.node import (
     async_set_config_parameter,
 )
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.components.group import expand_entity_ids
+from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import const
-from .helpers import async_get_node_from_device_id, async_get_node_from_entity_id
+from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
+from .helpers import async_get_nodes_from_targets
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,32 +56,14 @@ def broadcast_command(val: dict[str, Any]) -> dict[str, Any]:
     )
 
 
-# Validates that a bitmask is provided in hex form and converts it to decimal
-# int equivalent since that's what the library uses
-BITMASK_SCHEMA = vol.All(
-    cv.string,
-    vol.Lower,
-    vol.Match(
-        r"^(0x)?[0-9a-f]+$",
-        msg="Must provide an integer (e.g. 255) or a bitmask in hex form (e.g. 0xff)",
-    ),
-    lambda value: int(value, 16),
-)
-
-VALUE_SCHEMA = vol.Any(
-    bool,
-    vol.Coerce(int),
-    vol.Coerce(float),
-    BITMASK_SCHEMA,
-    cv.string,
-)
-
-
 class ZWaveServices:
     """Class that holds our services (Zwave Commands) that should be published to hass."""
 
     def __init__(
-        self, hass: HomeAssistant, ent_reg: EntityRegistry, dev_reg: DeviceRegistry
+        self,
+        hass: HomeAssistant,
+        ent_reg: er.EntityRegistry,
+        dev_reg: dr.DeviceRegistry,
     ) -> None:
         """Initialize with hass object."""
         self._hass = hass
@@ -94,27 +77,16 @@ class ZWaveServices:
         @callback
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
-            nodes: set[ZwaveNode] = set()
-            for entity_id in val.pop(ATTR_ENTITY_ID, []):
-                try:
-                    nodes.add(
-                        async_get_node_from_entity_id(
-                            self._hass, entity_id, self._ent_reg, self._dev_reg
-                        )
-                    )
-                except ValueError as err:
-                    const.LOGGER.warning(err.args[0])
-            for device_id in val.pop(ATTR_DEVICE_ID, []):
-                try:
-                    nodes.add(
-                        async_get_node_from_device_id(
-                            self._hass, device_id, self._dev_reg
-                        )
-                    )
-                except ValueError as err:
-                    const.LOGGER.warning(err.args[0])
+            val[const.ATTR_NODES] = async_get_nodes_from_targets(
+                self._hass, val, self._ent_reg, self._dev_reg
+            )
+            return val
 
-            val[const.ATTR_NODES] = nodes
+        @callback
+        def has_at_least_one_node(val: dict[str, Any]) -> dict[str, Any]:
+            """Validate that at least one node is specified."""
+            if not val.get(const.ATTR_NODES):
+                raise vol.Invalid(f"No {const.DOMAIN} nodes found for given targets")
             return val
 
         @callback
@@ -122,6 +94,9 @@ class ZWaveServices:
             """Validate the input nodes for multicast."""
             nodes: set[ZwaveNode] = val[const.ATTR_NODES]
             broadcast: bool = val[const.ATTR_BROADCAST]
+
+            if not broadcast:
+                has_at_least_one_node(val)
 
             # User must specify a node if they are attempting a broadcast and have more
             # than one zwave-js network.
@@ -152,12 +127,21 @@ class ZWaveServices:
         @callback
         def validate_entities(val: dict[str, Any]) -> dict[str, Any]:
             """Validate entities exist and are from the zwave_js platform."""
+            val[ATTR_ENTITY_ID] = expand_entity_ids(self._hass, val[ATTR_ENTITY_ID])
+            invalid_entities = []
             for entity_id in val[ATTR_ENTITY_ID]:
                 entry = self._ent_reg.async_get(entity_id)
                 if entry is None or entry.platform != const.DOMAIN:
-                    raise vol.Invalid(
-                        f"Entity {entity_id} is not a valid {const.DOMAIN} entity."
+                    const.LOGGER.info(
+                        "Entity %s is not a valid %s entity.", entity_id, const.DOMAIN
                     )
+                    invalid_entities.append(entity_id)
+
+            # Remove invalid entities
+            val[ATTR_ENTITY_ID] = list(set(val[ATTR_ENTITY_ID]) - set(invalid_entities))
+
+            if not val[ATTR_ENTITY_ID]:
+                raise vol.Invalid(f"No {const.DOMAIN} entities found in service call")
 
             return val
 
@@ -168,6 +152,9 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
                         vol.Optional(ATTR_DEVICE_ID): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
@@ -182,9 +169,12 @@ class ZWaveServices:
                             vol.Coerce(int), BITMASK_SCHEMA, cv.string
                         ),
                     },
-                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    cv.has_at_least_one_key(
+                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
                     parameter_name_does_not_need_bitmask,
                     get_nodes_from_service_data,
+                    has_at_least_one_node,
                 ),
             ),
         )
@@ -196,6 +186,9 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
                         vol.Optional(ATTR_DEVICE_ID): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
@@ -210,8 +203,11 @@ class ZWaveServices:
                             },
                         ),
                     },
-                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    cv.has_at_least_one_key(
+                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
                     get_nodes_from_service_data,
+                    has_at_least_one_node,
                 ),
             ),
         )
@@ -240,6 +236,9 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
                         vol.Optional(ATTR_DEVICE_ID): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
@@ -256,8 +255,11 @@ class ZWaveServices:
                         vol.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
                         vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
                     },
-                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    cv.has_at_least_one_key(
+                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
                     get_nodes_from_service_data,
+                    has_at_least_one_node,
                 ),
             ),
         )
@@ -269,6 +271,9 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
                         vol.Optional(ATTR_DEVICE_ID): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
@@ -286,7 +291,9 @@ class ZWaveServices:
                         vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
                     },
                     vol.Any(
-                        cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                        cv.has_at_least_one_key(
+                            ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                        ),
                         broadcast_command,
                     ),
                     get_nodes_from_service_data,
@@ -302,19 +309,26 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
                         vol.Optional(ATTR_DEVICE_ID): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
                         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
                     },
-                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    cv.has_at_least_one_key(
+                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
                     get_nodes_from_service_data,
+                    has_at_least_one_node,
                 ),
             ),
         )
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
+        # pylint: disable=no-self-use
         nodes = service.data[const.ATTR_NODES]
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
@@ -342,6 +356,7 @@ class ZWaveServices:
         self, service: ServiceCall
     ) -> None:
         """Bulk set multiple partial config values on a node."""
+        # pylint: disable=no-self-use
         nodes = service.data[const.ATTR_NODES]
         property_ = service.data[const.ATTR_CONFIG_PARAMETER]
         new_value = service.data[const.ATTR_CONFIG_VALUE]
@@ -376,7 +391,8 @@ class ZWaveServices:
 
     async def async_set_value(self, service: ServiceCall) -> None:
         """Set a value on a node."""
-        nodes = service.data[const.ATTR_NODES]
+        # pylint: disable=no-self-use
+        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         command_class = service.data[const.ATTR_COMMAND_CLASS]
         property_ = service.data[const.ATTR_PROPERTY]
         property_key = service.data.get(const.ATTR_PROPERTY_KEY)
@@ -386,15 +402,27 @@ class ZWaveServices:
         options = service.data.get(const.ATTR_OPTIONS)
 
         for node in nodes:
+            value_id = get_value_id(
+                node,
+                command_class,
+                property_,
+                endpoint=endpoint,
+                property_key=property_key,
+            )
+            # If value has a string type but the new value is not a string, we need to
+            # convert it to one. We use new variable `new_value_` to convert the data
+            # so we can preserve the original `new_value` for every node.
+            if (
+                value_id in node.values
+                and node.values[value_id].metadata.type == "string"
+                and not isinstance(new_value, str)
+            ):
+                new_value_ = str(new_value)
+            else:
+                new_value_ = new_value
             success = await node.async_set_value(
-                get_value_id(
-                    node,
-                    command_class,
-                    property_,
-                    endpoint=endpoint,
-                    property_key=property_key,
-                ),
-                new_value,
+                value_id,
+                new_value_,
                 options=options,
                 wait_for_result=wait_for_result,
             )
@@ -413,18 +441,23 @@ class ZWaveServices:
         options = service.data.get(const.ATTR_OPTIONS)
 
         if not broadcast and len(nodes) == 1:
-            const.LOGGER.warning(
+            const.LOGGER.info(
                 "Passing the zwave_js.multicast_set_value service call to the "
                 "zwave_js.set_value service since only one node was targeted"
             )
             await self.async_set_value(service)
             return
 
+        command_class = service.data[const.ATTR_COMMAND_CLASS]
+        property_ = service.data[const.ATTR_PROPERTY]
+        property_key = service.data.get(const.ATTR_PROPERTY_KEY)
+        endpoint = service.data.get(const.ATTR_ENDPOINT)
+
         value = {
-            "commandClass": service.data[const.ATTR_COMMAND_CLASS],
-            "property": service.data[const.ATTR_PROPERTY],
-            "propertyKey": service.data.get(const.ATTR_PROPERTY_KEY),
-            "endpoint": service.data.get(const.ATTR_ENDPOINT),
+            "commandClass": command_class,
+            "property": property_,
+            "propertyKey": property_key,
+            "endpoint": endpoint,
         }
         new_value = service.data[const.ATTR_VALUE]
 
@@ -432,12 +465,30 @@ class ZWaveServices:
         # schema validation and can use that to get the client, otherwise we can just
         # get the client from the node.
         client: ZwaveClient = None
-        first_node = next((node for node in nodes), None)
+        first_node: ZwaveNode = next((node for node in nodes), None)
         if first_node:
             client = first_node.client
         else:
             entry_id = self._hass.config_entries.async_entries(const.DOMAIN)[0].entry_id
             client = self._hass.data[const.DOMAIN][entry_id][const.DATA_CLIENT]
+            first_node = next(
+                node
+                for node in client.driver.controller.nodes.values()
+                if get_value_id(node, command_class, property_, endpoint, property_key)
+                in node.values
+            )
+
+        # If value has a string type but the new value is not a string, we need to
+        # convert it to one
+        value_id = get_value_id(
+            first_node, command_class, property_, endpoint, property_key
+        )
+        if (
+            value_id in first_node.values
+            and first_node.values[value_id].metadata.type == "string"
+            and not isinstance(new_value, str)
+        ):
+            new_value = str(new_value)
 
         success = await async_multicast_set_value(
             client=client,
@@ -452,5 +503,11 @@ class ZWaveServices:
 
     async def async_ping(self, service: ServiceCall) -> None:
         """Ping node(s)."""
+        # pylint: disable=no-self-use
+        const.LOGGER.warning(
+            "This service is deprecated in favor of the ping button entity. Service "
+            "calls will still work for now but the service will be removed in a "
+            "future release"
+        )
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         await asyncio.gather(*(node.async_ping() for node in nodes))

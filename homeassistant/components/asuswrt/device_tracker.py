@@ -5,8 +5,8 @@ from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_ASUSWRT, DOMAIN
 from .router import AsusWrtRouter
@@ -15,11 +15,11 @@ DEFAULT_DEVICE_NAME = "Unknown device"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for AsusWrt component."""
     router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
-    tracked = set()
+    tracked: set = set()
 
     @callback
     def update_router():
@@ -77,6 +77,11 @@ class AsusWrtDevice(ScannerEntity):
         return self._device.name
 
     @property
+    def icon(self) -> str:
+        """Return device icon."""
+        return "mdi:lan-connect" if self._device.is_connected else "mdi:lan-disconnect"
+
+    @property
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
         return self._device.ip_address
@@ -90,11 +95,6 @@ class AsusWrtDevice(ScannerEntity):
     def async_on_demand_update(self):
         """Update state."""
         self._device = self._router.devices[self._device.mac]
-        self._attr_device_info = {
-            "connections": {(CONNECTION_NETWORK_MAC, self._device.mac)},
-        }
-        if self._device.name:
-            self._attr_device_info["default_name"] = self._device.name
         self._attr_extra_state_attributes = {}
         if self._device.last_activity:
             self._attr_extra_state_attributes[

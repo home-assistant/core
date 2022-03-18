@@ -2,8 +2,10 @@
 import math
 
 from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -17,7 +19,11 @@ SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 SPEED_RANGE = (1, 99)  # off is not included
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave Fan from Config Entry."""
 
     @callback
@@ -56,7 +62,7 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
             zwave_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
         self.node.set_dimmer(self.values.primary.value_id, zwave_speed)
 
-    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
+    def turn_on(self, percentage=None, preset_mode=None, **kwargs):
         """Turn the device on."""
         self.set_percentage(percentage)
 

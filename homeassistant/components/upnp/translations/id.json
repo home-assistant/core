@@ -5,7 +5,7 @@
             "incomplete_discovery": "Proses penemuan tidak selesai",
             "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan"
         },
-        "flow_title": "UPnP/IGD: {name}",
+        "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
                 "description": "Ingin menyiapkan perangkat UPnP/IGD ini?"

@@ -1,5 +1,6 @@
 """Google config for Cloud."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 from hass_nabucasa import Cloud, cloud_api
@@ -7,9 +8,9 @@ from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_OK
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import CoreState, split_entity_id
-from homeassistant.helpers import entity_registry, start
+from homeassistant.helpers import entity_registry as er, start
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -62,18 +63,13 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        return self._cloud.is_logged_in and self._prefs.google_report_state
+        return self.enabled and self._prefs.google_report_state
 
-    @property
-    def local_sdk_webhook_id(self):
-        """Return the local SDK webhook.
-
-        Return None to disable the local SDK.
-        """
+    def get_local_webhook_id(self, agent_user_id):
+        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
         return self._prefs.google_local_webhook_id
 
-    @property
-    def local_sdk_user_id(self):
+    def get_local_agent_user_id(self, webhook_id):
         """Return the user ID to be used for actions received via the local SDK."""
         return self._user
 
@@ -92,7 +88,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         start.async_at_start(self.hass, hass_started)
 
-        # Remove old/wrong user agent ids
+        # Remove any stored user agent id that is not ours
         remove_agent_user_ids = []
         for agent_user_id in self._store.agent_user_ids:
             if agent_user_id != self.agent_user_id:
@@ -104,7 +100,7 @@ class CloudGoogleConfig(AbstractConfig):
         self._prefs.async_listen_updates(self._async_prefs_updated)
 
         self.hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._handle_entity_registry_updated,
         )
 
@@ -126,13 +122,19 @@ class CloudGoogleConfig(AbstractConfig):
         if entity_expose is not None:
             return entity_expose
 
+        entity_registry = er.async_get(self.hass)
+        if registry_entry := entity_registry.async_get(entity_id):
+            auxiliary_entity = registry_entry.entity_category is not None
+        else:
+            auxiliary_entity = False
+
         default_expose = self._prefs.google_default_expose
 
         # Backwards compat
         if default_expose is None:
-            return True
+            return not auxiliary_entity
 
-        return split_entity_id(entity_id)[0] in default_expose
+        return not auxiliary_entity and split_entity_id(entity_id)[0] in default_expose
 
     @property
     def agent_user_id(self):
@@ -164,7 +166,7 @@ class CloudGoogleConfig(AbstractConfig):
     async def _async_request_sync_devices(self, agent_user_id: str):
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
-            return HTTP_OK
+            return HTTPStatus.OK
 
         async with self._sync_entities_lock:
             resp = await cloud_api.async_google_actions_request_sync(self._cloud)
@@ -172,7 +174,18 @@ class CloudGoogleConfig(AbstractConfig):
 
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""
-        if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
+        if not self._cloud.is_logged_in:
+            if self.is_reporting_state:
+                self.async_disable_report_state()
+            if self.is_local_sdk_active:
+                self.async_disable_local_sdk()
+            return
+
+        if (
+            self.enabled
+            and GOOGLE_DOMAIN not in self.hass.config.components
+            and self.hass.is_running
+        ):
             await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
         if self.should_report_state != self.is_reporting_state:
@@ -208,7 +221,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         # Only consider entity registry updates if info relevant for Google has changed
         if event.data["action"] == "update" and not bool(
-            set(event.data["changes"]) & entity_registry.ENTITY_DESCRIBING_ATTRIBUTES
+            set(event.data["changes"]) & er.ENTITY_DESCRIBING_ATTRIBUTES
         ):
             return
 

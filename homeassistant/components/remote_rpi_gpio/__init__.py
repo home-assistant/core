@@ -2,6 +2,9 @@
 from gpiozero import LED, DigitalInputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
+
 CONF_BOUNCETIME = "bouncetime"
 CONF_INVERT_LOGIC = "invert_logic"
 CONF_PULL_MODE = "pull_mode"
@@ -13,7 +16,7 @@ DEFAULT_PULL_MODE = "UP"
 DOMAIN = "remote_rpi_gpio"
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Raspberry Pi Remote GPIO component."""
     return True
 

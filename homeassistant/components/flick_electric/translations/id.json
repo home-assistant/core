@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "client_id": "ID Klien (Opsional)",
-                    "client_secret": "Kode Rahasia Klien (Opsional)",
+                    "client_id": "ID Klien (opsional)",
+                    "client_secret": "Kode Rahasia Klien (opsional)",
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
                 },

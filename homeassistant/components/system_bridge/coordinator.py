@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Callable
 
 from systembridge import Bridge
 from systembridge.exceptions import (
@@ -63,14 +63,20 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
             await self.bridge.async_send_event(
                 "get-data",
                 [
-                    "battery",
-                    "cpu",
-                    "filesystem",
-                    "memory",
-                    "network",
-                    "os",
-                    "processes",
-                    "system",
+                    {"service": "battery", "method": "findAll", "observe": True},
+                    {"service": "cpu", "method": "findAll", "observe": True},
+                    {"service": "display", "method": "findAll", "observe": True},
+                    {"service": "filesystem", "method": "findSizes", "observe": True},
+                    {"service": "graphics", "method": "findAll", "observe": True},
+                    {"service": "memory", "method": "findAll", "observe": True},
+                    {"service": "network", "method": "findAll", "observe": True},
+                    {"service": "os", "method": "findAll", "observe": False},
+                    {
+                        "service": "processes",
+                        "method": "findCurrentLoad",
+                        "observe": True,
+                    },
+                    {"service": "system", "method": "findAll", "observe": False},
                 ],
             )
             await self.bridge.listen_for_events(callback=self.async_handle_event)

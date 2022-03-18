@@ -1,8 +1,6 @@
 """Provides device automations for Cover."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -20,12 +18,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    condition,
-    config_validation as cv,
-    entity_registry,
-    template,
-)
+from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -37,6 +30,8 @@ from . import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
 )
+
+# mypy: disallow-any-generics
 
 POSITION_CONDITION_TYPES = {"is_position", "is_tilt_position"}
 STATE_CONDITION_TYPES = {"is_open", "is_closed", "is_opening", "is_closing"}
@@ -67,10 +62,12 @@ STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 CONDITION_SCHEMA = vol.Any(POSITION_CONDITION_SCHEMA, STATE_CONDITION_SCHEMA)
 
 
-async def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_conditions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device conditions for Cover devices."""
     registry = await entity_registry.async_get_registry(hass)
-    conditions: list[dict[str, Any]] = []
+    conditions: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
@@ -100,7 +97,9 @@ async def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict
     return conditions
 
 
-async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     if config[CONF_TYPE] not in ["is_position", "is_tilt_position"]:
         return {}
@@ -121,12 +120,9 @@ async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) ->
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
-
     if config[CONF_TYPE] in STATE_CONDITION_TYPES:
         if config[CONF_TYPE] == "is_open":
             state = STATE_OPEN
@@ -144,22 +140,19 @@ def async_condition_from_config(
         return test_is_state
 
     if config[CONF_TYPE] == "is_position":
-        position = "current_position"
+        position_attr = "current_position"
     if config[CONF_TYPE] == "is_tilt_position":
-        position = "current_tilt_position"
+        position_attr = "current_tilt_position"
     min_pos = config.get(CONF_ABOVE)
     max_pos = config.get(CONF_BELOW)
-    value_template = template.Template(  # type: ignore
-        f"{{{{ state.attributes.{position} }}}}"
-    )
 
     @callback
-    def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
-        """Validate template based if-condition."""
-        value_template.hass = hass
-
+    def check_numeric_state(
+        hass: HomeAssistant, variables: TemplateVarsType = None
+    ) -> bool:
+        """Return whether the criteria are met."""
         return condition.async_numeric_state(
-            hass, config[ATTR_ENTITY_ID], max_pos, min_pos, value_template
+            hass, config[ATTR_ENTITY_ID], max_pos, min_pos, attribute=position_attr
         )
 
-    return template_if
+    return check_numeric_state

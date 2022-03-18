@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 import pyzerproc
 
-from homeassistant import setup
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -45,7 +44,6 @@ async def mock_entry(hass):
 @pytest.fixture
 async def mock_light(hass, mock_entry):
     """Create a mock light entity."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mock_entry.add_to_hass(hass)
 
@@ -72,7 +70,6 @@ async def mock_light(hass, mock_entry):
 
 async def test_init(hass, mock_entry):
     """Test platform setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mock_entry.add_to_hass(hass)
 
@@ -133,7 +130,6 @@ async def test_init(hass, mock_entry):
 
 async def test_discovery_exception(hass, mock_entry):
     """Test platform setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mock_entry.add_to_hass(hass)
 

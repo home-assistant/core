@@ -1,4 +1,5 @@
 """Tankerkoenig sensor integration."""
+from __future__ import annotations
 
 import logging
 
@@ -9,6 +10,9 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CURRENCY_EURO,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -32,7 +36,12 @@ ATTRIBUTION = "Data provided by https://creativecommons.tankerkoenig.de"
 ICON = "mdi:gas-station"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the tankerkoenig sensors."""
 
     if discovery_info is None:
@@ -110,12 +119,12 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
         return ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return unit of measurement."""
         return CURRENCY_EURO
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         # key Fuel_type is not available when the fuel station is closed, use "get" instead of "[]" to avoid exceptions
         return self.coordinator.data[self._station_id].get(self._fuel_type)

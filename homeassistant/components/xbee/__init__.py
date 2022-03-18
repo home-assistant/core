@@ -1,4 +1,5 @@
 """Support for XBee Zigbee devices."""
+# pylint: disable=import-error
 from binascii import hexlify, unhexlify
 import logging
 
@@ -18,9 +19,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -58,7 +61,7 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the connection to the XBee Zigbee device."""
     usb_device = config[DOMAIN].get(CONF_DEVICE, DEFAULT_DEVICE)
     baud = int(config[DOMAIN].get(CONF_BAUD, DEFAULT_BAUD))
@@ -115,9 +118,8 @@ class XBeeConfig:
         If an address has been provided, unhexlify it, otherwise return None
         as we're talking to our local XBee device.
         """
-        address = self._config.get("address")
-        if address is not None:
-            address = unhexlify(address)
+        if (address := self._config.get("address")) is not None:
+            return unhexlify(address)
         return address
 
     @property
@@ -369,7 +371,7 @@ class XBeeDigitalOut(XBeeDigitalIn):
 class XBeeAnalogIn(SensorEntity):
     """Representation of a GPIO pin configured as an analog input."""
 
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, config, device):
         """Initialize the XBee analog in device."""
@@ -416,7 +418,7 @@ class XBeeAnalogIn(SensorEntity):
         return self._config.should_poll
 
     @property
-    def state(self):
+    def sensor_state(self):
         """Return the state of the entity."""
         return self._value
 

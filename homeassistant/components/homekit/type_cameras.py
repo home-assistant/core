@@ -11,7 +11,8 @@ from pyhap.camera import (
 )
 from pyhap.const import CATEGORY_CAMERA
 
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components import camera
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.event import (
@@ -55,7 +56,6 @@ from .const import (
     SERV_SPEAKER,
     SERV_STATELESS_PROGRAMMABLE_SWITCH,
 )
-from .img_util import scale_jpeg_camera_image
 from .util import pid_is_alive
 
 _LOGGER = logging.getLogger(__name__)
@@ -140,7 +140,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
     def __init__(self, hass, driver, name, entity_id, aid, config):
         """Initialize a Camera accessory object."""
-        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._ffmpeg = get_ffmpeg_manager(hass)
         for config_key, conf in CONFIG_DEFAULTS.items():
             if config_key not in config:
                 config[config_key] = conf
@@ -245,17 +245,21 @@ class Camera(HomeAccessory, PyhapCamera):
         Run inside the Home Assistant event loop.
         """
         if self._char_motion_detected:
-            async_track_state_change_event(
-                self.hass,
-                [self.linked_motion_sensor],
-                self._async_update_motion_state_event,
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_motion_sensor],
+                    self._async_update_motion_state_event,
+                )
             )
 
         if self._char_doorbell_detected:
-            async_track_state_change_event(
-                self.hass,
-                [self.linked_doorbell_sensor],
-                self._async_update_doorbell_state_event,
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_doorbell_sensor],
+                    self._async_update_doorbell_state_event,
+                )
             )
 
         await super().run()
@@ -311,19 +315,16 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def _async_get_stream_source(self):
         """Find the camera stream source url."""
-        stream_source = self.config.get(CONF_STREAM_SOURCE)
-        if stream_source:
+        if stream_source := self.config.get(CONF_STREAM_SOURCE):
             return stream_source
         try:
-            stream_source = await self.hass.components.camera.async_get_stream_source(
-                self.entity_id
+            stream_source = await camera.async_get_stream_source(
+                self.hass, self.entity_id
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Failed to get stream source - this could be a transient error or your camera might not be compatible with HomeKit yet"
             )
-        if stream_source:
-            self.config[CONF_STREAM_SOURCE] = stream_source
         return stream_source
 
     async def start_stream(self, session_info, stream_config):
@@ -333,8 +334,7 @@ class Camera(HomeAccessory, PyhapCamera):
             session_info["id"],
             stream_config,
         )
-        input_source = await self._async_get_stream_source()
-        if not input_source:
+        if not (input_source := await self._async_get_stream_source()):
             _LOGGER.error("Camera has no stream source")
             return False
         if "-i " not in input_source:
@@ -437,11 +437,16 @@ class Camera(HomeAccessory, PyhapCamera):
         self.sessions[session_id].pop(FFMPEG_WATCHER)()
         self.sessions[session_id].pop(FFMPEG_LOGGER).cancel()
 
+    async def stop(self):
+        """Stop any streams when the accessory is stopped."""
+        for session_info in self.sessions.values():
+            asyncio.create_task(self.stop_stream(session_info))
+        await super().stop()
+
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
         session_id = session_info["id"]
-        stream = session_info.get("stream")
-        if not stream:
+        if not (stream := session_info.get("stream")):
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
 
@@ -467,8 +472,10 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def async_get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
-        return scale_jpeg_camera_image(
-            await self.hass.components.camera.async_get_image(self.entity_id),
-            image_size["image-width"],
-            image_size["image-height"],
+        image = await camera.async_get_image(
+            self.hass,
+            self.entity_id,
+            width=image_size["image-width"],
+            height=image_size["image-height"],
         )
+        return image.content

@@ -157,7 +157,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
         content_mapping = await self.hass.async_add_executor_job(
             braviarc.load_source_list
         )
-        self.source_list = {item: item for item in [*content_mapping]}
+        self.source_list = {item: item for item in content_mapping}
         return await self.async_step_user()
 
     async def async_step_user(

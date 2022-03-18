@@ -8,7 +8,7 @@ from arcam.fmj.client import Client
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -25,9 +25,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def _await_cancel(task):
@@ -36,7 +36,7 @@ async def _await_cancel(task):
         await task
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
     hass.data[DOMAIN_DATA_ENTRIES] = {}
     hass.data[DOMAIN_DATA_TASKS] = {}
@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Cleanup before removing config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -85,7 +85,7 @@ async def _run_client(hass, client, interval):
 
     while True:
         try:
-            with async_timeout.timeout(interval):
+            async with async_timeout.timeout(interval):
                 await client.start()
 
             _LOGGER.debug("Client connected %s", client.host)

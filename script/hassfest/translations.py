@@ -24,6 +24,7 @@ RE_REFERENCE = r"\[\%key:(.+)\%\]"
 # Only allow translatino of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
     "cert_expiry",
+    "cpuspeed",
     "emulated_roku",
     "garages_amsterdam",
     "google_travel_time",
@@ -109,6 +110,7 @@ def gen_data_entry_schema(
                 step_title_class("title"): cv.string_with_no_html,
                 vol.Optional("description"): cv.string_with_no_html,
                 vol.Optional("data"): {str: cv.string_with_no_html},
+                vol.Optional("menu_options"): {str: cv.string_with_no_html},
             }
         },
         vol.Optional("error"): {str: cv.string_with_no_html},
@@ -196,7 +198,7 @@ def gen_platform_strings_schema(config: Config, integration: Integration):
     """
 
     def device_class_validator(value):
-        """Key validator for platorm states.
+        """Key validator for platform states.
 
         Platform states are only allowed to provide states for device classes they prefix.
         """
@@ -246,6 +248,14 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
         strings_schema = gen_auth_schema(config, integration)
     elif integration.domain == "onboarding":
         strings_schema = ONBOARDING_SCHEMA
+    elif integration.domain == "binary_sensor":
+        strings_schema = gen_strings_schema(config, integration).extend(
+            {
+                vol.Optional("device_class"): cv.schema_with_slug_keys(
+                    cv.string_with_no_html, slug_validator=vol.Any("_", cv.slug)
+                )
+            }
+        )
     else:
         strings_schema = gen_strings_schema(config, integration)
 

@@ -18,7 +18,7 @@
                     "longitude": "Logitudine"
                 },
                 "description": "Usa l'API cloud di AirVisual per monitorare una latitudine/longitudine.",
-                "title": "Configurare un'area geografica"
+                "title": "Configura un'area geografica"
             },
             "geography_by_name": {
                 "data": {
@@ -28,24 +28,24 @@
                     "state": "Stato"
                 },
                 "description": "Usa l'API cloud di AirVisual per monitorare una citt\u00e0/stato/paese.",
-                "title": "Configurare un'area geografica"
+                "title": "Configura un'area geografica"
             },
             "node_pro": {
                 "data": {
                     "ip_address": "Host",
                     "password": "Password"
                 },
-                "description": "Monitorare un'unit\u00e0 AirVisual personale. La password pu\u00f2 essere recuperata dall'interfaccia utente dell'unit\u00e0.",
-                "title": "Configurare un AirVisual Node/Pro"
+                "description": "Monitora un'unit\u00e0 AirVisual personale. La password pu\u00f2 essere recuperata dall'interfaccia utente dell'unit\u00e0.",
+                "title": "Configura un AirVisual Node/Pro"
             },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Chiave API"
                 },
-                "title": "Riautenticare AirVisual"
+                "title": "Autentica nuovamente AirVisual"
             },
             "user": {
-                "description": "Scegliere il tipo di dati AirVisual che si desidera monitorare.",
+                "description": "Scegli il tipo di dati AirVisual che desideri monitorare.",
                 "title": "Configura AirVisual"
             }
         }
@@ -56,7 +56,7 @@
                 "data": {
                     "show_on_map": "Mostra l'area geografica monitorata sulla mappa"
                 },
-                "title": "Configurare AirVisual"
+                "title": "Configura AirVisual"
             }
         }
     }

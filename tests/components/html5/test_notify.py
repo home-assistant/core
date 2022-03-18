@@ -1,11 +1,11 @@
 """Test HTML5 notify platform."""
+from http import HTTPStatus
 import json
 from unittest.mock import MagicMock, mock_open, patch
 
 from aiohttp.hdrs import AUTHORIZATION
 
 import homeassistant.components.html5.notify as html5
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
@@ -294,7 +294,7 @@ async def test_registering_new_device_view(hass, hass_client):
     with patch("homeassistant.components.html5.notify.save_json") as mock_save:
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert len(mock_save.mock_calls) == 1
     assert mock_save.mock_calls[0][1][1] == {"unnamed device": SUBSCRIPTION_1}
 
@@ -309,7 +309,7 @@ async def test_registering_new_device_view_with_name(hass, hass_client):
     with patch("homeassistant.components.html5.notify.save_json") as mock_save:
         resp = await client.post(REGISTER_URL, data=json.dumps(SUB_WITH_NAME))
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert len(mock_save.mock_calls) == 1
     assert mock_save.mock_calls[0][1][1] == {"test device": SUBSCRIPTION_1}
 
@@ -321,7 +321,7 @@ async def test_registering_new_device_expiration_view(hass, hass_client):
     with patch("homeassistant.components.html5.notify.save_json") as mock_save:
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert mock_save.mock_calls[0][1][1] == {"unnamed device": SUBSCRIPTION_4}
 
 
@@ -336,7 +336,7 @@ async def test_registering_new_device_fails_view(hass, hass_client):
     ):
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
-    assert resp.status == HTTP_INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert registrations == {}
 
 
@@ -349,7 +349,7 @@ async def test_registering_existing_device_view(hass, hass_client):
         await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert mock_save.mock_calls[0][1][1] == {"unnamed device": SUBSCRIPTION_4}
     assert registrations == {"unnamed device": SUBSCRIPTION_4}
 
@@ -366,7 +366,7 @@ async def test_registering_existing_device_view_with_name(hass, hass_client):
         await client.post(REGISTER_URL, data=json.dumps(SUB_WITH_NAME))
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert mock_save.mock_calls[0][1][1] == {"test device": SUBSCRIPTION_4}
     assert registrations == {"test device": SUBSCRIPTION_4}
 
@@ -381,7 +381,7 @@ async def test_registering_existing_device_fails_view(hass, hass_client):
         mock_save.side_effect = HomeAssistantError
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
-    assert resp.status == HTTP_INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert registrations == {"unnamed device": SUBSCRIPTION_1}
 
 
@@ -393,17 +393,17 @@ async def test_registering_new_device_validation(hass, hass_client):
         REGISTER_URL,
         data=json.dumps({"browser": "invalid browser", "subscription": "sub info"}),
     )
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
     resp = await client.post(REGISTER_URL, data=json.dumps({"browser": "chrome"}))
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
     with patch("homeassistant.components.html5.notify.save_json", return_value=False):
         resp = await client.post(
             REGISTER_URL,
             data=json.dumps({"browser": "chrome", "subscription": "sub info"}),
         )
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_unregistering_device_view(hass, hass_client):
@@ -417,7 +417,7 @@ async def test_unregistering_device_view(hass, hass_client):
             data=json.dumps({"subscription": SUBSCRIPTION_1["subscription"]}),
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert len(mock_save.mock_calls) == 1
     assert registrations == {"other device": SUBSCRIPTION_2}
 
@@ -433,7 +433,7 @@ async def test_unregister_device_view_handle_unknown_subscription(hass, hass_cli
             data=json.dumps({"subscription": SUBSCRIPTION_3["subscription"]}),
         )
 
-    assert resp.status == 200, resp.response
+    assert resp.status == HTTPStatus.OK, resp.response
     assert registrations == {}
     assert len(mock_save.mock_calls) == 0
 
@@ -452,7 +452,7 @@ async def test_unregistering_device_view_handles_save_error(hass, hass_client):
             data=json.dumps({"subscription": SUBSCRIPTION_1["subscription"]}),
         )
 
-    assert resp.status == HTTP_INTERNAL_SERVER_ERROR, resp.response
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR, resp.response
     assert registrations == {
         "some device": SUBSCRIPTION_1,
         "other device": SUBSCRIPTION_2,
@@ -469,7 +469,7 @@ async def test_callback_view_no_jwt(hass, hass_client):
         ),
     )
 
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_callback_view_with_jwt(hass, hass_client):
@@ -504,7 +504,7 @@ async def test_callback_view_with_jwt(hass, hass_client):
         PUBLISH_URL, json={"type": "push"}, headers={AUTHORIZATION: bearer_token}
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.json()
     assert body == {"event": "push", "status": "ok"}
 

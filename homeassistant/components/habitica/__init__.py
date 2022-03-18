@@ -12,10 +12,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_URL,
+    Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ARGS,
@@ -72,7 +74,7 @@ INSTANCE_LIST_SCHEMA = vol.All(
 )
 CONFIG_SCHEMA = vol.Schema({DOMAIN: INSTANCE_LIST_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 SERVICE_API_CALL_SCHEMA = vol.Schema(
     {
@@ -83,7 +85,7 @@ SERVICE_API_CALL_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Habitica service."""
     configs = config.get(DOMAIN, [])
 
@@ -109,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         def __call__(self, **kwargs):
             return super().__call__(websession, **kwargs)
 
-    async def handle_api_call(call):
+    async def handle_api_call(call: ServiceCall) -> None:
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
         entries = hass.config_entries.async_entries(DOMAIN)
@@ -163,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

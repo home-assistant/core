@@ -1,25 +1,23 @@
 """Support for displaying persistent notifications."""
 from __future__ import annotations
 
-from collections import OrderedDict
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import Template, is_template_string
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
-
-# mypy: allow-untyped-calls, allow-untyped-defs
 
 ATTR_CREATED_AT = "created_at"
 ATTR_MESSAGE = "message"
@@ -33,21 +31,9 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 EVENT_PERSISTENT_NOTIFICATIONS_UPDATED = "persistent_notifications_updated"
 
-SERVICE_CREATE = "create"
-SERVICE_DISMISS = "dismiss"
-SERVICE_MARK_READ = "mark_read"
-
-SCHEMA_SERVICE_CREATE = vol.Schema(
-    {
-        vol.Required(ATTR_MESSAGE): vol.Any(cv.dynamic_template, cv.string),
-        vol.Optional(ATTR_TITLE): vol.Any(cv.dynamic_template, cv.string),
-        vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
-    }
+SCHEMA_SERVICE_NOTIFICATION = vol.Schema(
+    {vol.Required(ATTR_NOTIFICATION_ID): cv.string}
 )
-
-SCHEMA_SERVICE_DISMISS = vol.Schema({vol.Required(ATTR_NOTIFICATION_ID): cv.string})
-
-SCHEMA_SERVICE_MARK_READ = vol.Schema({vol.Required(ATTR_NOTIFICATION_ID): cv.string})
 
 DEFAULT_OBJECT_ID = "notification"
 _LOGGER = logging.getLogger(__name__)
@@ -58,13 +44,18 @@ STATUS_READ = "read"
 
 
 @bind_hass
-def create(hass, message, title=None, notification_id=None):
+def create(
+    hass: HomeAssistant,
+    message: str,
+    title: str | None = None,
+    notification_id: str | None = None,
+) -> None:
     """Generate a notification."""
     hass.add_job(async_create, hass, message, title, notification_id)
 
 
 @bind_hass
-def dismiss(hass, notification_id):
+def dismiss(hass: HomeAssistant, notification_id: str) -> None:
     """Remove a notification."""
     hass.add_job(async_dismiss, hass, notification_id)
 
@@ -76,108 +67,113 @@ def async_create(
     message: str,
     title: str | None = None,
     notification_id: str | None = None,
+    *,
+    context: Context | None = None,
 ) -> None:
     """Generate a notification."""
-    data = {
-        key: value
-        for key, value in (
-            (ATTR_TITLE, title),
-            (ATTR_MESSAGE, message),
-            (ATTR_NOTIFICATION_ID, notification_id),
+    if (notifications := hass.data.get(DOMAIN)) is None:
+        notifications = hass.data[DOMAIN] = {}
+
+    if notification_id is not None:
+        entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
+    else:
+        entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, DEFAULT_OBJECT_ID, hass=hass
         )
-        if value is not None
+        notification_id = entity_id.split(".")[1]
+
+    warn = False
+
+    attr: dict[str, str] = {}
+    if title is not None:
+        if is_template_string(title):
+            warn = True
+            try:
+                title = cast(
+                    str, Template(title, hass).async_render(parse_result=False)  # type: ignore[no-untyped-call]
+                )
+            except TemplateError as ex:
+                _LOGGER.error("Error rendering title %s: %s", title, ex)
+
+        attr[ATTR_TITLE] = title
+        attr[ATTR_FRIENDLY_NAME] = title
+
+    if is_template_string(message):
+        warn = True
+        try:
+            message = Template(message, hass).async_render(parse_result=False)  # type: ignore[no-untyped-call]
+        except TemplateError as ex:
+            _LOGGER.error("Error rendering message %s: %s", message, ex)
+
+    attr[ATTR_MESSAGE] = message
+
+    if warn:
+        _LOGGER.warning(
+            "Passing a template string to persistent_notification.async_create function is deprecated"
+        )
+
+    hass.states.async_set(entity_id, STATE, attr, context=context)
+
+    # Store notification and fire event
+    # This will eventually replace state machine storage
+    notifications[entity_id] = {
+        ATTR_MESSAGE: message,
+        ATTR_NOTIFICATION_ID: notification_id,
+        ATTR_STATUS: STATUS_UNREAD,
+        ATTR_TITLE: title,
+        ATTR_CREATED_AT: dt_util.utcnow(),
     }
 
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_CREATE, data))
+    hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED, context=context)
 
 
 @callback
 @bind_hass
-def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
+def async_dismiss(
+    hass: HomeAssistant, notification_id: str, *, context: Context | None = None
+) -> None:
     """Remove a notification."""
-    data = {ATTR_NOTIFICATION_ID: notification_id}
+    if (notifications := hass.data.get(DOMAIN)) is None:
+        notifications = hass.data[DOMAIN] = {}
 
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
+    entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
+
+    if entity_id not in notifications:
+        return
+
+    hass.states.async_remove(entity_id, context)
+
+    del notifications[entity_id]
+    hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the persistent notification component."""
-    persistent_notifications: MutableMapping[str, MutableMapping] = OrderedDict()
-    hass.data[DOMAIN] = {"notifications": persistent_notifications}
+    notifications = hass.data.setdefault(DOMAIN, {})
 
     @callback
-    def create_service(call):
+    def create_service(call: ServiceCall) -> None:
         """Handle a create notification service call."""
-        title = call.data.get(ATTR_TITLE)
-        message = call.data.get(ATTR_MESSAGE)
-        notification_id = call.data.get(ATTR_NOTIFICATION_ID)
-
-        if notification_id is not None:
-            entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
-        else:
-            entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, DEFAULT_OBJECT_ID, hass=hass
-            )
-            notification_id = entity_id.split(".")[1]
-
-        attr = {}
-        if title is not None:
-            if isinstance(title, Template):
-                try:
-                    title.hass = hass
-                    title = title.async_render(parse_result=False)
-                except TemplateError as ex:
-                    _LOGGER.error("Error rendering title %s: %s", title, ex)
-                    title = title.template
-
-            attr[ATTR_TITLE] = title
-            attr[ATTR_FRIENDLY_NAME] = title
-
-        if isinstance(message, Template):
-            try:
-                message.hass = hass
-                message = message.async_render(parse_result=False)
-            except TemplateError as ex:
-                _LOGGER.error("Error rendering message %s: %s", message, ex)
-                message = message.template
-
-        attr[ATTR_MESSAGE] = message
-
-        hass.states.async_set(entity_id, STATE, attr)
-
-        # Store notification and fire event
-        # This will eventually replace state machine storage
-        persistent_notifications[entity_id] = {
-            ATTR_MESSAGE: message,
-            ATTR_NOTIFICATION_ID: notification_id,
-            ATTR_STATUS: STATUS_UNREAD,
-            ATTR_TITLE: title,
-            ATTR_CREATED_AT: dt_util.utcnow(),
-        }
-
-        hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
+        async_create(
+            hass,
+            call.data[ATTR_MESSAGE],
+            call.data.get(ATTR_TITLE),
+            call.data.get(ATTR_NOTIFICATION_ID),
+            context=call.context,
+        )
 
     @callback
-    def dismiss_service(call):
+    def dismiss_service(call: ServiceCall) -> None:
         """Handle the dismiss notification service call."""
-        notification_id = call.data.get(ATTR_NOTIFICATION_ID)
-        entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
-
-        if entity_id not in persistent_notifications:
-            return
-
-        hass.states.async_remove(entity_id, call.context)
-
-        del persistent_notifications[entity_id]
-        hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
+        async_dismiss(hass, call.data[ATTR_NOTIFICATION_ID], context=call.context)
 
     @callback
-    def mark_read_service(call):
+    def mark_read_service(call: ServiceCall) -> None:
         """Handle the mark_read notification service call."""
         notification_id = call.data.get(ATTR_NOTIFICATION_ID)
         entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
 
-        if entity_id not in persistent_notifications:
+        if entity_id not in notifications:
             _LOGGER.error(
                 "Marking persistent_notification read failed: "
                 "Notification ID %s not found",
@@ -185,22 +181,33 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             )
             return
 
-        persistent_notifications[entity_id][ATTR_STATUS] = STATUS_READ
-        hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
+        notifications[entity_id][ATTR_STATUS] = STATUS_READ
+        hass.bus.async_fire(
+            EVENT_PERSISTENT_NOTIFICATIONS_UPDATED, context=call.context
+        )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CREATE, create_service, SCHEMA_SERVICE_CREATE
+        DOMAIN,
+        "create",
+        create_service,
+        vol.Schema(
+            {
+                vol.Required(ATTR_MESSAGE): vol.Any(cv.dynamic_template, cv.string),
+                vol.Optional(ATTR_TITLE): vol.Any(cv.dynamic_template, cv.string),
+                vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
+            }
+        ),
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_DISMISS, dismiss_service, SCHEMA_SERVICE_DISMISS
+        DOMAIN, "dismiss", dismiss_service, SCHEMA_SERVICE_NOTIFICATION
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_MARK_READ, mark_read_service, SCHEMA_SERVICE_MARK_READ
+        DOMAIN, "mark_read", mark_read_service, SCHEMA_SERVICE_NOTIFICATION
     )
 
-    hass.components.websocket_api.async_register_command(websocket_get_notifications)
+    websocket_api.async_register_command(hass, websocket_get_notifications)
 
     return True
 
@@ -227,7 +234,7 @@ def websocket_get_notifications(
                         ATTR_CREATED_AT,
                     )
                 }
-                for data in hass.data[DOMAIN]["notifications"].values()
+                for data in hass.data[DOMAIN].values()
             ],
         )
     )

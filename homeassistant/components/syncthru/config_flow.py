@@ -3,13 +3,14 @@
 import re
 from urllib.parse import urlparse
 
-from pysyncthru import SyncThru
+from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
 from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
@@ -29,19 +30,15 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_show_form(step_id="user")
         return await self._async_check_and_create("user", user_input)
 
-    async def async_step_import(self, user_input=None):
-        """Handle import initiated flow."""
-        return await self.async_step_user(user_input=user_input)
-
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle SSDP initiated flow."""
-        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
+        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
 
         self.url = url_normalize(
-            discovery_info.get(
+            discovery_info.upnp.get(
                 ssdp.ATTR_UPNP_PRESENTATION_URL,
-                f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/",
+                f"http://{urlparse(discovery_info.ssdp_location or '').hostname}/",
             )
         )
 
@@ -50,12 +47,12 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             # Update unique id of entry with the same URL
             if not existing_entry.unique_id:
-                await self.hass.config_entries.async_update_entry(
-                    existing_entry, unique_id=discovery_info[ssdp.ATTR_UPNP_UDN]
+                self.hass.config_entries.async_update_entry(
+                    existing_entry, unique_id=discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
                 )
             return self.async_abort(reason="already_configured")
 
-        self.name = discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+        self.name = discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
         if self.name:
             # Remove trailing " (ip)" if present for consistency with user driven config
             self.name = re.sub(r"\s+\([\d.]+\)\s*$", "", self.name)
@@ -109,7 +106,9 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 break
 
         session = aiohttp_client.async_get_clientsession(self.hass)
-        printer = SyncThru(user_input[CONF_URL], session)
+        printer = SyncThru(
+            user_input[CONF_URL], session, connection_mode=ConnectionMode.API
+        )
         errors = {}
         try:
             await printer.update()
@@ -117,7 +116,7 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_NAME] = DEFAULT_NAME_TEMPLATE.format(
                     printer.model() or DEFAULT_MODEL
                 )
-        except ValueError:
+        except SyncThruAPINotSupported:
             errors[CONF_URL] = "syncthru_not_supported"
         else:
             if printer.is_unknown_state():

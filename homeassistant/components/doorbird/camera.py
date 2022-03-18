@@ -1,4 +1,6 @@
 """Support for viewing the camera feed from a DoorBird video doorbell."""
+from __future__ import annotations
+
 import asyncio
 import datetime
 import logging
@@ -7,7 +9,10 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -25,7 +30,11 @@ _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the DoorBird camera platform."""
     config_entry_id = config_entry.entry_id
     config_data = hass.data[DOMAIN][config_entry_id]
@@ -78,41 +87,28 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         camera_id,
         name,
         doorstation_events,
-        interval=None,
+        interval,
         stream_url=None,
-    ):
+    ) -> None:
         """Initialize the camera on a DoorBird device."""
         super().__init__(doorstation, doorstation_info)
         self._url = url
         self._stream_url = stream_url
-        self._name = name
-        self._last_image = None
-        self._supported_features = SUPPORT_STREAM if self._stream_url else 0
-        self._interval = interval or datetime.timedelta
+        self._attr_name = name
+        self._last_image: bytes | None = None
+        self._attr_supported_features = SUPPORT_STREAM if self._stream_url else 0
+        self._interval = interval
         self._last_update = datetime.datetime.min
-        self._unique_id = f"{self._mac_addr}_{camera_id}"
+        self._attr_unique_id = f"{self._mac_addr}_{camera_id}"
         self._doorstation_events = doorstation_events
 
     async def stream_source(self):
         """Return the stream source."""
         return self._stream_url
 
-    @property
-    def unique_id(self):
-        """Camera Unique id."""
-        return self._unique_id
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return self._supported_features
-
-    @property
-    def name(self):
-        """Get the name of the camera."""
-        return self._name
-
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Pull a still image from the camera."""
         now = dt_util.utcnow()
 
@@ -121,18 +117,18 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
 
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(_TIMEOUT):
+            async with async_timeout.timeout(_TIMEOUT):
                 response = await websession.get(self._url)
 
             self._last_image = await response.read()
             self._last_update = now
             return self._last_image
         except asyncio.TimeoutError:
-            _LOGGER.error("DoorBird %s: Camera image timed out", self._name)
+            _LOGGER.error("DoorBird %s: Camera image timed out", self.name)
             return self._last_image
         except aiohttp.ClientError as error:
             _LOGGER.error(
-                "DoorBird %s: Error getting camera image: %s", self._name, error
+                "DoorBird %s: Error getting camera image: %s", self.name, error
             )
             return self._last_image
 

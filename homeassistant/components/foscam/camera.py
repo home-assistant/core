@@ -1,39 +1,19 @@
 """This component provides basic support for Foscam IP cameras."""
+from __future__ import annotations
+
 import asyncio
 
 from libpyfoscam import FoscamCamera
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_RTSP_PORT,
-    CONF_STREAM,
-    DOMAIN,
-    LOGGER,
-    SERVICE_PTZ,
-    SERVICE_PTZ_PRESET,
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required("ip"): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_NAME, default="Foscam Camera"): cv.string,
-        vol.Optional(CONF_PORT, default=88): cv.port,
-        vol.Optional(CONF_RTSP_PORT): cv.port,
-    }
-)
+from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 
 DIR_UP = "up"
 DIR_DOWN = "down"
@@ -65,30 +45,11 @@ ATTR_PRESET_NAME = "preset_name"
 PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up a Foscam IP Camera."""
-    LOGGER.warning(
-        "Loading foscam via platform config is deprecated, it will be automatically imported; Please remove it afterwards"
-    )
-
-    config_new = {
-        CONF_NAME: config[CONF_NAME],
-        CONF_HOST: config["ip"],
-        CONF_PORT: config[CONF_PORT],
-        CONF_USERNAME: config[CONF_USERNAME],
-        CONF_PASSWORD: config[CONF_PASSWORD],
-        CONF_STREAM: "Main",
-        CONF_RTSP_PORT: config.get(CONF_RTSP_PORT, 554),
-    }
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config_new
-        )
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add a Foscam IP camera from a config entry."""
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -172,7 +133,9 @@ class HassFoscamCamera(Camera):
         """Return the entity unique ID."""
         return self._unique_id
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         # Send the request to snap a picture and return raw jpg data
         # Handle exception if host is not reachable or url failed

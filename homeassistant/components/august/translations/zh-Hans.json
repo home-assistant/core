@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "\u5bc6\u7801"
+                }
+            },
+            "user_validate": {
+                "data": {
+                    "password": "\u5bc6\u7801"
+                }
+            }
+        }
+    }
+}

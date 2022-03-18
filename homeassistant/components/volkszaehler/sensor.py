@@ -1,4 +1,6 @@
 """Support for consuming values for the Volkszaehler API."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,7 +8,11 @@ from volkszaehler import Volkszaehler
 from volkszaehler.exceptions import VolkszaehlerApiConnectionError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -15,9 +21,12 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,12 +39,34 @@ DEFAULT_PORT = 80
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-SENSOR_TYPES = {
-    "average": ["Average", POWER_WATT, "mdi:power-off"],
-    "consumption": ["Consumption", ENERGY_WATT_HOUR, "mdi:power-plug"],
-    "max": ["Max", POWER_WATT, "mdi:arrow-up"],
-    "min": ["Min", POWER_WATT, "mdi:arrow-down"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="average",
+        name="Average",
+        native_unit_of_measurement=POWER_WATT,
+        icon="mdi:power-off",
+    ),
+    SensorEntityDescription(
+        key="consumption",
+        name="Consumption",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        icon="mdi:power-plug",
+    ),
+    SensorEntityDescription(
+        key="max",
+        name="Max",
+        native_unit_of_measurement=POWER_WATT,
+        icon="mdi:arrow-up",
+    ),
+    SensorEntityDescription(
+        key="min",
+        name="Min",
+        native_unit_of_measurement=POWER_WATT,
+        icon="mdi:arrow-down",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -44,13 +75,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["average"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
     }
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Volkszaehler sensors."""
 
     host = config[CONF_HOST]
@@ -60,63 +96,45 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     conditions = config[CONF_MONITORED_CONDITIONS]
 
     session = async_get_clientsession(hass)
-    vz_api = VolkszaehlerData(
-        Volkszaehler(hass.loop, session, uuid, host=host, port=port)
-    )
+    vz_api = VolkszaehlerData(Volkszaehler(session, uuid, host=host, port=port))
 
     await vz_api.async_update()
 
     if vz_api.api.data is None:
         raise PlatformNotReady
 
-    dev = []
-    for condition in conditions:
-        dev.append(VolkszaehlerSensor(vz_api, name, condition))
+    entities = [
+        VolkszaehlerSensor(vz_api, name, description)
+        for description in SENSOR_TYPES
+        if description.key in conditions
+    ]
 
-    async_add_entities(dev, True)
+    async_add_entities(entities, True)
 
 
 class VolkszaehlerSensor(SensorEntity):
     """Implementation of a Volkszaehler sensor."""
 
-    def __init__(self, vz_api, name, sensor_type):
+    def __init__(self, vz_api, name, description: SensorEntityDescription):
         """Initialize the Volkszaehler sensor."""
+        self.entity_description = description
         self.vz_api = vz_api
-        self._name = name
-        self.type = sensor_type
-        self._state = None
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {SENSOR_TYPES[self.type][0]}"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_TYPES[self.type][1]
+        self._attr_name = f"{name} {description.name}"
 
     @property
     def available(self):
         """Could the device be accessed during the last update call."""
         return self.vz_api.available
 
-    @property
-    def state(self):
-        """Return the state of the resources."""
-        return self._state
-
     async def async_update(self):
         """Get the latest data from REST API."""
         await self.vz_api.async_update()
 
         if self.vz_api.api.data is not None:
-            self._state = round(getattr(self.vz_api.api, self.type), 2)
+            self._attr_native_value = round(
+                getattr(self.vz_api.api, self.entity_description.key), 2
+            )
 
 
 class VolkszaehlerData:

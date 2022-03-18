@@ -1,4 +1,6 @@
 """Support for displaying minimal, maximal, mean or median values."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -11,10 +13,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
@@ -67,7 +71,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the min/max/mean sensor."""
     entity_ids = config.get(CONF_ENTITY_IDS)
     name = config.get(CONF_NAME)
@@ -172,7 +181,7 @@ class MinMaxSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
             return None
@@ -181,7 +190,7 @@ class MinMaxSensor(SensorEntity):
         )
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if self._unit_of_measurement_mismatch:
             return "ERR"

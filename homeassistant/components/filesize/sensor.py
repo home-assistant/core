@@ -1,14 +1,23 @@
 """Sensor for monitoring the size of a file."""
+from __future__ import annotations
+
 import datetime
 import logging
 import os
+import pathlib
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import DATA_MEGABYTES
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
@@ -18,22 +27,39 @@ _LOGGER = logging.getLogger(__name__)
 CONF_FILE_PATHS = "file_paths"
 ICON = "mdi:file"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_FILE_PATHS): vol.All(cv.ensure_list, [cv.isfile])}
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the file size sensor."""
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     sensors = []
-    for path in config.get(CONF_FILE_PATHS):
+    paths = set()
+    for path in config[CONF_FILE_PATHS]:
+        try:
+            fullpath = str(pathlib.Path(path).absolute())
+        except OSError as error:
+            _LOGGER.error("Can not access file %s, error %s", path, error)
+            continue
+
+        if fullpath in paths:
+            continue
+        paths.add(fullpath)
+
         if not hass.config.is_allowed_path(path):
             _LOGGER.error("Filepath %s is not valid or allowed", path)
             continue
-        sensors.append(Filesize(path))
+
+        sensors.append(Filesize(fullpath))
 
     if sensors:
         add_entities(sensors, True)
@@ -42,48 +68,28 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class Filesize(SensorEntity):
     """Encapsulates file size information."""
 
-    def __init__(self, path):
+    _attr_native_unit_of_measurement = DATA_MEGABYTES
+    _attr_icon = ICON
+
+    def __init__(self, path: str) -> None:
         """Initialize the data object."""
         self._path = path  # Need to check its a valid path
-        self._size = None
-        self._last_updated = None
-        self._name = path.split("/")[-1]
-        self._unit_of_measurement = DATA_MEGABYTES
+        self._attr_name = path.split("/")[-1]
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
-        statinfo = os.stat(self._path)
-        self._size = statinfo.st_size
-        last_updated = datetime.datetime.fromtimestamp(statinfo.st_mtime)
-        self._last_updated = last_updated.isoformat()
+        try:
+            statinfo = os.stat(self._path)
+        except OSError as error:
+            _LOGGER.error("Can not retrieve file statistics %s", error)
+            self._attr_native_value = None
+            return
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the size of the file in MB."""
-        decimals = 2
-        state_mb = round(self._size / 1e6, decimals)
-        return state_mb
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def extra_state_attributes(self):
-        """Return other details about the sensor state."""
-        return {
+        size = statinfo.st_size
+        last_updated = datetime.datetime.fromtimestamp(statinfo.st_mtime).isoformat()
+        self._attr_native_value = round(size / 1e6, 2) if size else None
+        self._attr_extra_state_attributes = {
             "path": self._path,
-            "last_updated": self._last_updated,
-            "bytes": self._size,
+            "last_updated": last_updated,
+            "bytes": size,
         }
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement

@@ -1,12 +1,16 @@
 """Class to hold all sensor accessories."""
+from __future__ import annotations
+
+from collections.abc import Callable
 import logging
+from typing import NamedTuple
 
 from pyhap.const import CATEGORY_SENSOR
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     STATE_HOME,
     STATE_ON,
@@ -31,16 +35,9 @@ from .const import (
     CHAR_LEAK_DETECTED,
     CHAR_MOTION_DETECTED,
     CHAR_OCCUPANCY_DETECTED,
+    CHAR_PM10_DENSITY,
+    CHAR_PM25_DENSITY,
     CHAR_SMOKE_DETECTED,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_WINDOW,
     PROP_CELSIUS,
     SERV_AIR_QUALITY_SENSOR,
     SERV_CARBON_DIOXIDE_SENSOR,
@@ -56,22 +53,51 @@ from .const import (
     THRESHOLD_CO,
     THRESHOLD_CO2,
 )
-from .util import convert_to_float, density_to_air_quality, temperature_to_homekit
+from .util import (
+    convert_to_float,
+    density_to_air_quality,
+    density_to_air_quality_pm10,
+    density_to_air_quality_pm25,
+    temperature_to_homekit,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-BINARY_SENSOR_SERVICE_MAP = {
-    DEVICE_CLASS_CO: (SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int),
-    DEVICE_CLASS_CO2: (SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
-    DEVICE_CLASS_DOOR: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
-    DEVICE_CLASS_GARAGE_DOOR: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
-    DEVICE_CLASS_GAS: (SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int),
-    DEVICE_CLASS_MOISTURE: (SERV_LEAK_SENSOR, CHAR_LEAK_DETECTED, int),
-    DEVICE_CLASS_MOTION: (SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED, bool),
-    DEVICE_CLASS_OCCUPANCY: (SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED, int),
-    DEVICE_CLASS_OPENING: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
-    DEVICE_CLASS_SMOKE: (SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED, int),
-    DEVICE_CLASS_WINDOW: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
+
+class SI(NamedTuple):
+    """Service info."""
+
+    service: str
+    char: str
+    format: Callable[[bool], int | bool]
+
+
+BINARY_SENSOR_SERVICE_MAP: dict[str, SI] = {
+    BinarySensorDeviceClass.CO: SI(
+        SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
+    ),
+    DEVICE_CLASS_CO2: SI(SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
+    BinarySensorDeviceClass.DOOR: SI(
+        SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
+    ),
+    BinarySensorDeviceClass.GARAGE_DOOR: SI(
+        SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
+    ),
+    BinarySensorDeviceClass.GAS: SI(
+        SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
+    ),
+    BinarySensorDeviceClass.MOISTURE: SI(SERV_LEAK_SENSOR, CHAR_LEAK_DETECTED, int),
+    BinarySensorDeviceClass.MOTION: SI(SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED, bool),
+    BinarySensorDeviceClass.OCCUPANCY: SI(
+        SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED, int
+    ),
+    BinarySensorDeviceClass.OPENING: SI(
+        SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
+    ),
+    BinarySensorDeviceClass.SMOKE: SI(SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED, int),
+    BinarySensorDeviceClass.WINDOW: SI(
+        SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
+    ),
 }
 
 
@@ -98,14 +124,12 @@ class TemperatureSensor(HomeAccessory):
     def async_update_state(self, new_state):
         """Update temperature after state changed."""
         unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
-        temperature = convert_to_float(new_state.state)
-        if temperature:
+        if (temperature := convert_to_float(new_state.state)) is not None:
             temperature = temperature_to_homekit(temperature, unit)
-            if self.char_temp.value != temperature:
-                self.char_temp.set_value(temperature)
-                _LOGGER.debug(
-                    "%s: Current temperature set to %.1f°C", self.entity_id, temperature
-                )
+            self.char_temp.set_value(temperature)
+            _LOGGER.debug(
+                "%s: Current temperature set to %.1f°C", self.entity_id, temperature
+            )
 
 
 @TYPES.register("HumiditySensor")
@@ -127,8 +151,7 @@ class HumiditySensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        humidity = convert_to_float(new_state.state)
-        if humidity and self.char_humidity.value != humidity:
+        if (humidity := convert_to_float(new_state.state)) is not None:
             self.char_humidity.set_value(humidity)
             _LOGGER.debug("%s: Percent set to %d%%", self.entity_id, humidity)
 
@@ -141,6 +164,15 @@ class AirQualitySensor(HomeAccessory):
         """Initialize a AirQualitySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         state = self.hass.states.get(self.entity_id)
+
+        self.create_services()
+
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
+
+    def create_services(self):
+        """Initialize a AirQualitySensor accessory object."""
         serv_air_quality = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_AIR_PARTICULATE_DENSITY]
         )
@@ -148,22 +180,71 @@ class AirQualitySensor(HomeAccessory):
         self.char_density = serv_air_quality.configure_char(
             CHAR_AIR_PARTICULATE_DENSITY, value=0
         )
-        # Set the state so it is in sync on initial
-        # GET to avoid an event storm after homekit startup
-        self.async_update_state(state)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update accessory after state change."""
+        if (density := convert_to_float(new_state.state)) is not None:
+            if self.char_density.value != density:
+                self.char_density.set_value(density)
+                _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+            air_quality = density_to_air_quality(density)
+            self.char_quality.set_value(air_quality)
+            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+
+
+@TYPES.register("PM10Sensor")
+class PM10Sensor(AirQualitySensor):
+    """Generate a PM10Sensor accessory as PM 10 sensor."""
+
+    def create_services(self):
+        """Override the init function for PM 10 Sensor."""
+        serv_air_quality = self.add_preload_service(
+            SERV_AIR_QUALITY_SENSOR, [CHAR_PM10_DENSITY]
+        )
+        self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
+        self.char_density = serv_air_quality.configure_char(CHAR_PM10_DENSITY, value=0)
 
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
-        if density:
-            if self.char_density.value != density:
-                self.char_density.set_value(density)
-                _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
-            air_quality = density_to_air_quality(density)
-            if self.char_quality.value != air_quality:
-                self.char_quality.set_value(air_quality)
-                _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+        if not density:
+            return
+        if self.char_density.value != density:
+            self.char_density.set_value(density)
+            _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+        air_quality = density_to_air_quality_pm10(density)
+        if self.char_quality.value != air_quality:
+            self.char_quality.set_value(air_quality)
+            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+
+
+@TYPES.register("PM25Sensor")
+class PM25Sensor(AirQualitySensor):
+    """Generate a PM25Sensor accessory as PM 2.5 sensor."""
+
+    def create_services(self):
+        """Override the init function for PM 2.5 Sensor."""
+        serv_air_quality = self.add_preload_service(
+            SERV_AIR_QUALITY_SENSOR, [CHAR_PM25_DENSITY]
+        )
+        self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
+        self.char_density = serv_air_quality.configure_char(CHAR_PM25_DENSITY, value=0)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update accessory after state change."""
+        density = convert_to_float(new_state.state)
+        if not density:
+            return
+        if self.char_density.value != density:
+            self.char_density.set_value(density)
+            _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+        air_quality = density_to_air_quality_pm25(density)
+        if self.char_quality.value != air_quality:
+            self.char_quality.set_value(air_quality)
+            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
 
 
 @TYPES.register("CarbonMonoxideSensor")
@@ -192,16 +273,13 @@ class CarbonMonoxideSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        value = convert_to_float(new_state.state)
-        if value:
-            if self.char_level.value != value:
-                self.char_level.set_value(value)
+        if (value := convert_to_float(new_state.state)) is not None:
+            self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
             co_detected = value > THRESHOLD_CO
-            if self.char_detected.value is not co_detected:
-                self.char_detected.set_value(co_detected)
-                _LOGGER.debug("%s: Set to %d", self.entity_id, value)
+            self.char_detected.set_value(co_detected)
+            _LOGGER.debug("%s: Set to %d", self.entity_id, value)
 
 
 @TYPES.register("CarbonDioxideSensor")
@@ -230,16 +308,13 @@ class CarbonDioxideSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        value = convert_to_float(new_state.state)
-        if value:
-            if self.char_level.value != value:
-                self.char_level.set_value(value)
+        if (value := convert_to_float(new_state.state)) is not None:
+            self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
             co2_detected = value > THRESHOLD_CO2
-            if self.char_detected.value is not co2_detected:
-                self.char_detected.set_value(co2_detected)
-                _LOGGER.debug("%s: Set to %d", self.entity_id, value)
+            self.char_detected.set_value(co2_detected)
+            _LOGGER.debug("%s: Set to %d", self.entity_id, value)
 
 
 @TYPES.register("LightSensor")
@@ -261,8 +336,7 @@ class LightSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        luminance = convert_to_float(new_state.state)
-        if luminance and self.char_light.value != luminance:
+        if (luminance := convert_to_float(new_state.state)) is not None:
             self.char_light.set_value(luminance)
             _LOGGER.debug("%s: Set to %d", self.entity_id, luminance)
 
@@ -279,14 +353,14 @@ class BinarySensor(HomeAccessory):
         service_char = (
             BINARY_SENSOR_SERVICE_MAP[device_class]
             if device_class in BINARY_SENSOR_SERVICE_MAP
-            else BINARY_SENSOR_SERVICE_MAP[DEVICE_CLASS_OCCUPANCY]
+            else BINARY_SENSOR_SERVICE_MAP[BinarySensorDeviceClass.OCCUPANCY]
         )
 
-        self.format = service_char[2]
-        service = self.add_preload_service(service_char[0])
+        self.format = service_char.format
+        service = self.add_preload_service(service_char.service)
         initial_value = False if self.format is bool else 0
         self.char_detected = service.configure_char(
-            service_char[1], value=initial_value
+            service_char.char, value=initial_value
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
@@ -297,6 +371,5 @@ class BinarySensor(HomeAccessory):
         """Update accessory after state change."""
         state = new_state.state
         detected = self.format(state in (STATE_ON, STATE_HOME))
-        if self.char_detected.value != detected:
-            self.char_detected.set_value(detected)
-            _LOGGER.debug("%s: Set to %d", self.entity_id, detected)
+        self.char_detected.set_value(detected)
+        _LOGGER.debug("%s: Set to %d", self.entity_id, detected)

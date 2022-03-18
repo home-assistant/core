@@ -2,10 +2,17 @@
 from datetime import timedelta
 
 from bond_api import Action, DeviceType
+import pytest
 
 from homeassistant import core
+from homeassistant.components.bond.const import (
+    ATTR_POWER_STATE,
+    DOMAIN as BOND_DOMAIN,
+    SERVICE_SET_POWER_TRACKED_STATE,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
@@ -13,6 +20,7 @@ from homeassistant.util import utcnow
 from .common import (
     help_test_entity_available,
     patch_bond_action,
+    patch_bond_action_returns_clientresponseerror,
     patch_bond_device_state,
     setup_platform,
 )
@@ -74,6 +82,44 @@ async def test_turn_off_switch(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     mock_turn_off.assert_called_once_with("test-device-id", Action.turn_off())
+
+
+async def test_switch_set_power_belief(hass: core.HomeAssistant):
+    """Tests that the set power belief service delegates to API."""
+    await setup_platform(
+        hass, SWITCH_DOMAIN, generic_device("name-1"), bond_device_id="test-device-id"
+    )
+
+    with patch_bond_action() as mock_bond_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BOND_DOMAIN,
+            SERVICE_SET_POWER_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_bond_action.assert_called_once_with(
+        "test-device-id", Action.set_power_state_belief(False)
+    )
+
+
+async def test_switch_set_power_belief_api_error(hass: core.HomeAssistant):
+    """Tests that the set power belief service throws HomeAssistantError in the event of an api error."""
+    await setup_platform(
+        hass, SWITCH_DOMAIN, generic_device("name-1"), bond_device_id="test-device-id"
+    )
+
+    with pytest.raises(
+        HomeAssistantError
+    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+        await hass.services.async_call(
+            BOND_DOMAIN,
+            SERVICE_SET_POWER_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
 
 async def test_update_reports_switch_is_on(hass: core.HomeAssistant):

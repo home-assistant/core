@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Final
+from typing import Final
 
 import bluetooth  # pylint: disable=import-error
 from bt_proximity import BluetoothRSSI
@@ -30,7 +30,7 @@ from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     BT_PREFIX,
@@ -60,13 +60,18 @@ def is_bluetooth_device(device: Device) -> bool:
 
 def discover_devices(device_id: int) -> list[tuple[str, str]]:
     """Discover Bluetooth devices."""
-    result = bluetooth.discover_devices(
-        duration=8,
-        lookup_names=True,
-        flush_cache=True,
-        lookup_class=False,
-        device_id=device_id,
-    )
+    try:
+        result = bluetooth.discover_devices(
+            duration=8,
+            lookup_names=True,
+            flush_cache=True,
+            lookup_class=False,
+            device_id=device_id,
+        )
+    except OSError as ex:
+        # OSError is generally thrown if a bluetooth device isn't found
+        _LOGGER.error("Couldn't discover bluetooth devices: %s", ex)
+        return []
     _LOGGER.debug("Bluetooth devices discovered = %d", len(result))
     return result  # type: ignore[no-any-return]
 
@@ -126,7 +131,7 @@ async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
     async_see: Callable[..., Awaitable[None]],
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Bluetooth Scanner."""
     device_id: int = config[CONF_DEVICE_ID]

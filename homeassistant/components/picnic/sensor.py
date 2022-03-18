@@ -1,113 +1,93 @@
 """Definition of Picnic sensors."""
 from __future__ import annotations
 
-from typing import Any
+from datetime import datetime
+from typing import Any, cast
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import ADDRESS, ATTRIBUTION, CONF_COORDINATOR, DOMAIN, SENSOR_TYPES
+from .const import (
+    ADDRESS,
+    ATTRIBUTION,
+    CONF_COORDINATOR,
+    DOMAIN,
+    SENSOR_TYPES,
+    PicnicSensorEntityDescription,
+)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Picnic sensor entries."""
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
     # Add an entity for each sensor type
     async_add_entities(
-        PicnicSensor(picnic_coordinator, config_entry, sensor_type, props)
-        for sensor_type, props in SENSOR_TYPES.items()
+        PicnicSensor(picnic_coordinator, config_entry, description)
+        for description in SENSOR_TYPES
     )
 
-    return True
 
-
-class PicnicSensor(CoordinatorEntity):
+class PicnicSensor(SensorEntity, CoordinatorEntity):
     """The CoordinatorEntity subclass representing Picnic sensors."""
+
+    _attr_attribution = ATTRIBUTION
+    entity_description: PicnicSensorEntityDescription
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[Any],
         config_entry: ConfigEntry,
-        sensor_type,
-        properties,
-    ):
+        description: PicnicSensorEntityDescription,
+    ) -> None:
         """Init a Picnic sensor."""
         super().__init__(coordinator)
+        self.entity_description = description
 
-        self.sensor_type = sensor_type
-        self.properties = properties
-        self.entity_id = f"sensor.picnic_{sensor_type}"
+        self.entity_id = f"sensor.picnic_{description.key}"
         self._service_unique_id = config_entry.unique_id
 
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit this state is expressed in."""
-        return self.properties.get("unit")
+        self._attr_name = self._to_capitalized_name(description.key)
+        self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
 
     @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{self._service_unique_id}.{self.sensor_type}"
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self._to_capitalized_name(self.sensor_type)
-
-    @property
-    def state(self) -> StateType:
-        """Return the state of the entity."""
+    def native_value(self) -> StateType | datetime:
+        """Return the value reported by the sensor."""
         data_set = (
-            self.coordinator.data.get(self.properties["data_type"], {})
+            self.coordinator.data.get(self.entity_description.data_type, {})
             if self.coordinator.data is not None
             else {}
         )
-        return self.properties["state"](data_set)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self.properties.get("class")
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        return self.properties["icon"]
+        return self.entity_description.value_fn(data_set)
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self.state is not None
+        """Return True if last update was successful."""
+        return self.coordinator.last_update_success
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self.properties.get("default_enabled", False)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the sensor specific state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._service_unique_id)},
-            "manufacturer": "Picnic",
-            "model": self._service_unique_id,
-            "name": f"Picnic: {self.coordinator.data[ADDRESS]}",
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, cast(str, self._service_unique_id))},
+            manufacturer="Picnic",
+            model=self._service_unique_id,
+            name=f"Picnic: {self.coordinator.data[ADDRESS]}",
+        )
 
     @staticmethod
     def _to_capitalized_name(name: str) -> str:

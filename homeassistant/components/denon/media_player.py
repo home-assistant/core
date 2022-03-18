@@ -1,4 +1,6 @@
 """Support for Denon Network Receivers."""
+from __future__ import annotations
+
 import logging
 import telnetlib
 
@@ -18,7 +20,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +83,12 @@ MEDIA_MODES = {
 #  'Favorites': 'FVP'}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Denon platform."""
     denon = DenonDevice(config[CONF_NAME], config[CONF_HOST])
 

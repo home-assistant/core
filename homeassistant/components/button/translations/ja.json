@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "press": "{entity_name} \u30dc\u30bf\u30f3\u3092\u62bc\u3059"
+        },
+        "trigger_type": {
+            "pressed": "{entity_name} \u304c\u62bc\u3055\u308c\u307e\u3057\u305f"
+        }
+    },
+    "title": "\u30dc\u30bf\u30f3"
+}

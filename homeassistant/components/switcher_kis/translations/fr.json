@@ -6,7 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Voulez-vous commencer l'installation ?"
+                "description": "Voulez-vous commencer la configuration\u00a0?"
             }
         }
     }

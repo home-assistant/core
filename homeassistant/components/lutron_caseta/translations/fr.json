@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Pont Cas\u00e9ta d\u00e9j\u00e0 configur\u00e9.",
-            "cannot_connect": "Installation annul\u00e9e du pont Cas\u00e9ta en raison d'un \u00e9chec de connexion.",
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
             "not_lutron_device": "L'appareil d\u00e9couvert n'est pas un appareil Lutron"
         },
         "error": {
-            "cannot_connect": "\u00c9chec de la connexion \u00e0 la passerelle Cas\u00e9ta; v\u00e9rifiez la configuration de votre h\u00f4te et de votre certificat."
+            "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "Lutron Cas\u00e9ta {name} ( {host} )",
+        "flow_title": "{name} ( {host} )",
         "step": {
             "import_failed": {
                 "description": "Impossible de configurer la passerelle (h\u00f4te: {host} ) import\u00e9 \u00e0 partir de configuration.yaml.",
@@ -20,7 +20,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Hote"
+                    "host": "H\u00f4te"
                 },
                 "description": "Saisissez l'adresse IP de l'appareil.",
                 "title": "Se connecter automatiquement au pont"
@@ -66,11 +66,11 @@
             "stop_2": "Arr\u00eat 2",
             "stop_3": "Arr\u00eat 3",
             "stop_4": "Arr\u00eat 4",
-            "stop_all": "Arr\u00eate tout"
+            "stop_all": "Arr\u00eater tout"
         },
         "trigger_type": {
-            "press": "\" {subtype} \" appuy\u00e9",
-            "release": "\" {subtype} \" publi\u00e9"
+            "press": "\u00ab\u00a0{subtype}\u00a0\u00bb enfonc\u00e9",
+            "release": "\u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9"
         }
     }
 }

@@ -8,11 +8,13 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_LIGHTS
+from .const import DOMAIN, VS_DISCOVERY, VS_LIGHTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,29 +26,33 @@ DEV_TYPE_TO_HA = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up lights."""
 
-    async def async_discover(devices):
+    @callback
+    def discover(devices):
         """Add new devices to platform."""
-        _async_setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities)
 
-    disp = async_dispatcher_connect(
-        hass, VS_DISCOVERY.format(VS_LIGHTS), async_discover
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_LIGHTS), discover)
     )
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
-    _async_setup_entities(hass.data[DOMAIN][VS_LIGHTS], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_LIGHTS], async_add_entities)
 
 
 @callback
-def _async_setup_entities(devices, async_add_entities):
+def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     entities = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
             entities.append(VeSyncDimmableLightHA(dev))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white"):
+        elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
             entities.append(VeSyncTunableWhiteLightHA(dev))
         else:
             _LOGGER.debug(
@@ -82,7 +88,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature
-        if self.color_mode in (COLOR_MODE_COLOR_TEMP) and ATTR_COLOR_TEMP in kwargs:
+        if self.color_mode in (COLOR_MODE_COLOR_TEMP,) and ATTR_COLOR_TEMP in kwargs:
             # get white temperature from HA data
             color_temp = int(kwargs[ATTR_COLOR_TEMP])
             # ensure value between min-max supported Mireds

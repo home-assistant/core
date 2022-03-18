@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "not_zha_device": "Toto za\u0159\u00edzen\u00ed nen\u00ed za\u0159\u00edzen\u00ed zha",
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
         "error": {
@@ -48,6 +49,7 @@
             "turn_on": "Zapnout"
         },
         "trigger_type": {
+            "device_dropped": "Za\u0159\u00edzen\u00ed vypado",
             "device_offline": "Za\u0159\u00edzen\u00ed je offline",
             "device_rotated": "Za\u0159\u00edzen\u00ed oto\u010deno \"{subtype}\"",
             "device_shaken": "Za\u0159\u00edzen\u00ed se zat\u0159\u00e1slo",

@@ -8,6 +8,8 @@ import tempfile
 from typing import Any
 from unittest.mock import patch
 
+from pytest import LogCaptureFixture
+
 from homeassistant import setup
 from homeassistant.components.switch import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import (
@@ -18,6 +20,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -90,6 +93,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
                     "command_on": f"echo 1 > {path}",
                     "command_off": f"echo 0 > {path}",
                     "value_template": '{{ value=="1" }}',
+                    "icon_template": '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}',
                 }
             },
         )
@@ -108,6 +112,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_ON
+        assert entity_state.attributes.get("icon") == "mdi:on"
 
         await hass.services.async_call(
             DOMAIN,
@@ -119,6 +124,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_OFF
+        assert entity_state.attributes.get("icon") == "mdi:off"
 
 
 async def test_state_json_value(hass: HomeAssistant) -> None:
@@ -136,6 +142,7 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
                     "command_on": f"echo '{oncmd}' > {path}",
                     "command_off": f"echo '{offcmd}' > {path}",
                     "value_template": '{{ value_json.status=="ok" }}',
+                    "icon_template": '{% if value_json.status=="ok" %} mdi:on {% else %} mdi:off {% endif %}',
                 }
             },
         )
@@ -154,6 +161,7 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_ON
+        assert entity_state.attributes.get("icon") == "mdi:on"
 
         await hass.services.async_call(
             DOMAIN,
@@ -165,6 +173,7 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_OFF
+        assert entity_state.attributes.get("icon") == "mdi:off"
 
 
 async def test_state_code(hass: HomeAssistant) -> None:
@@ -262,10 +271,13 @@ async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
     )
 
     entity_state = hass.states.get("switch.test")
+    assert entity_state
     assert entity_state.name == "Test friendly name!"
 
 
-async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistant) -> None:
+async def test_switch_command_state_fail(
+    caplog: LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test that switch failures are handled correctly."""
     await setup_test_entity(
         hass,
@@ -282,6 +294,7 @@ async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistant) -> No
     await hass.async_block_till_done()
 
     entity_state = hass.states.get("switch.test")
+    assert entity_state
     assert entity_state.state == "on"
 
     await hass.services.async_call(
@@ -293,13 +306,14 @@ async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistant) -> No
     await hass.async_block_till_done()
 
     entity_state = hass.states.get("switch.test")
+    assert entity_state
     assert entity_state.state == "on"
 
     assert "Command failed" in caplog.text
 
 
 async def test_switch_command_state_code_exceptions(
-    caplog: Any, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
@@ -332,7 +346,7 @@ async def test_switch_command_state_code_exceptions(
 
 
 async def test_switch_command_state_value_exceptions(
-    caplog: Any, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
@@ -365,8 +379,43 @@ async def test_switch_command_state_value_exceptions(
         assert "Error trying to exec command" in caplog.text
 
 
-async def test_no_switches(caplog: Any, hass: HomeAssistant) -> None:
+async def test_no_switches(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
     """Test with no switches."""
 
     await setup_test_entity(hass, {})
     assert "No switches" in caplog.text
+
+
+async def test_unique_id(hass: HomeAssistant) -> None:
+    """Test unique_id option and if it only creates one switch per id."""
+    await setup_test_entity(
+        hass,
+        {
+            "unique": {
+                "command_on": "echo on",
+                "command_off": "echo off",
+                "unique_id": "unique",
+            },
+            "not_unique_1": {
+                "command_on": "echo on",
+                "command_off": "echo off",
+                "unique_id": "not-so-unique-anymore",
+            },
+            "not_unique_2": {
+                "command_on": "echo on",
+                "command_off": "echo off",
+                "unique_id": "not-so-unique-anymore",
+            },
+        },
+    )
+
+    assert len(hass.states.async_all()) == 2
+
+    ent_reg = entity_registry.async_get(hass)
+
+    assert len(ent_reg.entities) == 2
+    assert ent_reg.async_get_entity_id("switch", "command_line", "unique") is not None
+    assert (
+        ent_reg.async_get_entity_id("switch", "command_line", "not-so-unique-anymore")
+        is not None
+    )

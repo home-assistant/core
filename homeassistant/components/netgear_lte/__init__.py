@@ -2,15 +2,13 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Final
 
 import aiohttp
 import attr
 import eternalegypt
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -18,8 +16,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RECIPIENT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -28,6 +27,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from . import sensor_types
 
@@ -35,6 +35,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 DISPATCHER_NETGEAR_LTE = "netgear_lte_update"
+
+CONF_NOTIFY: Final = "notify"
+CONF_BINARY_SENSOR: Final = "binary_sensor"
+CONF_SENSOR: Final = "sensor"
 
 DOMAIN = "netgear_lte"
 DATA_KEY = "netgear_lte"
@@ -89,12 +93,12 @@ CONFIG_SCHEMA = vol.Schema(
                     {
                         vol.Required(CONF_HOST): cv.string,
                         vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Optional(NOTIFY_DOMAIN, default={}): vol.All(
+                        vol.Optional(CONF_NOTIFY, default={}): vol.All(
                             cv.ensure_list, [NOTIFY_SCHEMA]
                         ),
-                        vol.Optional(SENSOR_DOMAIN, default={}): SENSOR_SCHEMA,
+                        vol.Optional(CONF_SENSOR, default={}): SENSOR_SCHEMA,
                         vol.Optional(
-                            BINARY_SENSOR_DOMAIN, default={}
+                            CONF_BINARY_SENSOR, default={}
                         ): BINARY_SENSOR_SCHEMA,
                     }
                 )
@@ -171,7 +175,7 @@ class LTEData:
         return next(iter(self.modem_data.values()))
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Netgear LTE component."""
     if DATA_KEY not in hass.data:
         websession = async_create_clientsession(
@@ -179,7 +183,7 @@ async def async_setup(hass, config):
         )
         hass.data[DATA_KEY] = LTEData(websession)
 
-        async def service_handler(service):
+        async def service_handler(service: ServiceCall) -> None:
             """Apply a service."""
             host = service.data.get(ATTR_HOST)
             conf = {CONF_HOST: host}
@@ -193,12 +197,9 @@ async def async_setup(hass, config):
                 for sms_id in service.data[ATTR_SMS_ID]:
                     await modem_data.modem.delete_sms(sms_id)
             elif service.service == SERVICE_SET_OPTION:
-                failover = service.data.get(ATTR_FAILOVER)
-                if failover:
+                if failover := service.data.get(ATTR_FAILOVER):
                     await modem_data.modem.set_failover_mode(failover)
-
-                autoconnect = service.data.get(ATTR_AUTOCONNECT)
-                if autoconnect:
+                if autoconnect := service.data.get(ATTR_AUTOCONNECT):
                     await modem_data.modem.set_autoconnect_mode(autoconnect)
             elif service.service == SERVICE_CONNECT_LTE:
                 await modem_data.modem.connect_lte()
@@ -226,36 +227,36 @@ async def async_setup(hass, config):
     # Load platforms for each modem
     for lte_conf in netgear_lte_config:
         # Notify
-        for notify_conf in lte_conf[NOTIFY_DOMAIN]:
+        for notify_conf in lte_conf[CONF_NOTIFY]:
             discovery_info = {
                 CONF_HOST: lte_conf[CONF_HOST],
                 CONF_NAME: notify_conf.get(CONF_NAME),
-                NOTIFY_DOMAIN: notify_conf,
+                CONF_NOTIFY: notify_conf,
             }
             hass.async_create_task(
                 discovery.async_load_platform(
-                    hass, NOTIFY_DOMAIN, DOMAIN, discovery_info, config
+                    hass, Platform.NOTIFY, DOMAIN, discovery_info, config
                 )
             )
 
         # Sensor
-        sensor_conf = lte_conf.get(SENSOR_DOMAIN)
-        discovery_info = {CONF_HOST: lte_conf[CONF_HOST], SENSOR_DOMAIN: sensor_conf}
+        sensor_conf = lte_conf[CONF_SENSOR]
+        discovery_info = {CONF_HOST: lte_conf[CONF_HOST], CONF_SENSOR: sensor_conf}
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, SENSOR_DOMAIN, DOMAIN, discovery_info, config
+                hass, Platform.SENSOR, DOMAIN, discovery_info, config
             )
         )
 
         # Binary Sensor
-        binary_sensor_conf = lte_conf.get(BINARY_SENSOR_DOMAIN)
+        binary_sensor_conf = lte_conf[CONF_BINARY_SENSOR]
         discovery_info = {
             CONF_HOST: lte_conf[CONF_HOST],
-            BINARY_SENSOR_DOMAIN: binary_sensor_conf,
+            CONF_BINARY_SENSOR: binary_sensor_conf,
         }
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, BINARY_SENSOR_DOMAIN, DOMAIN, discovery_info, config
+                hass, Platform.BINARY_SENSOR, DOMAIN, discovery_info, config
             )
         )
 

@@ -1,14 +1,14 @@
 """Support for testing internet speed via Fast.com."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
 from fastdotcom import fast_com
 import voluptuous as vol
 
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -54,7 +54,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.services.async_register(DOMAIN, "speedtest", update)
 
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    )
 
     return True
 
@@ -67,7 +69,7 @@ class SpeedtestData:
         self.data: dict[str, Any] | None = None
         self._hass = hass
 
-    def update(self) -> None:
+    def update(self, now: datetime | None = None) -> None:
         """Get the latest data from fast.com."""
 
         _LOGGER.debug("Executing fast.com speedtest")

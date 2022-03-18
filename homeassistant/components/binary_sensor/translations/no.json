@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} batteriniv\u00e5et er lavt",
+            "is_co": "{entity_name} oppdager karbonmonoksid",
             "is_cold": "{entity_name} er kald",
             "is_connected": "{entity_name} er tilkoblet",
             "is_gas": "{entity_name} registrerer gass",
@@ -11,12 +12,14 @@
             "is_moist": "{entity_name} er fuktig",
             "is_motion": "{entity_name} registrerer bevegelse",
             "is_moving": "{entity_name} er i bevegelse",
+            "is_no_co": "{entity_name} oppdager ikke karbonmonoksid",
             "is_no_gas": "{entity_name} registrerer ikke gass",
             "is_no_light": "{entity_name} registrerer ikke lys",
             "is_no_motion": "{entity_name} registrerer ikke bevegelse",
             "is_no_problem": "{entity_name} registrerer ikke et problem",
             "is_no_smoke": "{entity_name} registrerer ikke r\u00f8yk",
             "is_no_sound": "{entity_name} registrerer ikke lyd",
+            "is_no_update": "{entity_name} er oppdatert",
             "is_no_vibration": "{entity_name} registrerer ikke bevegelse",
             "is_not_bat_low": "{entity_name} batteri er normalt",
             "is_not_cold": "{entity_name} er ikke kald",
@@ -30,6 +33,8 @@
             "is_not_plugged_in": "{entity_name} er koblet fra",
             "is_not_powered": "{entity_name} er spenningsl\u00f8s",
             "is_not_present": "{entity_name} er ikke tilstede",
+            "is_not_running": "{entity_name} kj\u00f8rer ikke",
+            "is_not_tampered": "{entity_name} oppdager ikke manipulering",
             "is_not_unsafe": "{entity_name} er trygg",
             "is_occupied": "{entity_name} er opptatt",
             "is_off": "{entity_name} er sl\u00e5tt av",
@@ -39,28 +44,36 @@
             "is_powered": "{entity_name} er spenningssatt",
             "is_present": "{entity_name} er tilstede",
             "is_problem": "{entity_name} registrerer et problem",
+            "is_running": "{entity_name} kj\u00f8rer",
             "is_smoke": "{entity_name} registrerer r\u00f8yk",
             "is_sound": "{entity_name} registrerer lyd",
+            "is_tampered": "{entity_name} oppdager manipulering",
             "is_unsafe": "{entity_name} er utrygg",
+            "is_update": "{entity_name} har en tilgjengelig oppdatering",
             "is_vibration": "{entity_name} registrerer vibrasjon"
         },
         "trigger_type": {
             "bat_low": "{entity_name} lavt batteri",
+            "co": "{entity_name} begynte \u00e5 oppdage karbonmonoksid",
             "cold": "{entity_name} ble kald",
             "connected": "{entity_name} tilkoblet",
             "gas": "{entity_name} begynte \u00e5 registrere gass",
             "hot": "{entity_name} ble varm",
+            "is_not_tampered": "{entity_name} sluttet \u00e5 oppdage manipulering",
+            "is_tampered": "{entity_name} begynte \u00e5 oppdage manipulering",
             "light": "{entity_name} begynte \u00e5 registrere lys",
             "locked": "{entity_name} l\u00e5st",
             "moist": "{entity_name} ble fuktig",
             "motion": "{entity_name} begynte \u00e5 registrere bevegelse",
             "moving": "{entity_name} begynte \u00e5 bevege seg",
+            "no_co": "{entity_name} sluttet \u00e5 oppdage karbonmonoksid",
             "no_gas": "{entity_name} sluttet \u00e5 registrere gass",
             "no_light": "{entity_name} sluttet \u00e5 registrere lys",
             "no_motion": "{entity_name} sluttet \u00e5 registrere bevegelse",
             "no_problem": "{entity_name} sluttet \u00e5 registrere problem",
             "no_smoke": "{entity_name} sluttet \u00e5 registrere r\u00f8yk",
             "no_sound": "{entity_name} sluttet \u00e5 registrere lyd",
+            "no_update": "{entity_name} ble oppdatert",
             "no_vibration": "{entity_name} sluttet \u00e5 registrere vibrasjon",
             "not_bat_low": "{entity_name} batteri normalt",
             "not_cold": "{entity_name} ble ikke lenger kald",
@@ -74,6 +87,8 @@
             "not_plugged_in": "{entity_name} koblet fra",
             "not_powered": "{entity_name} spenningsl\u00f8s",
             "not_present": "{entity_name} ikke til stede",
+            "not_running": "{entity_name} kj\u00f8rer ikke lenger",
+            "not_tampered": "{entity_name} sluttet \u00e5 oppdage manipulering",
             "not_unsafe": "{entity_name} ble trygg",
             "occupied": "{entity_name} ble opptatt",
             "opened": "{entity_name} \u00e5pnet",
@@ -81,13 +96,30 @@
             "powered": "{entity_name} spenningssatt",
             "present": "{entity_name} tilstede",
             "problem": "{entity_name} begynte \u00e5 registrere et problem",
+            "running": "{entity_name} begynte \u00e5 kj\u00f8re",
             "smoke": "{entity_name} begynte \u00e5 registrere r\u00f8yk",
             "sound": "{entity_name} begynte \u00e5 registrere lyd",
+            "tampered": "{entity_name} begynte \u00e5 oppdage manipulering",
             "turned_off": "{entity_name} sl\u00e5tt av",
             "turned_on": "{entity_name} sl\u00e5tt p\u00e5",
             "unsafe": "{entity_name} ble usikker",
+            "update": "{entity_name} har en oppdatering tilgjengelig",
             "vibration": "{entity_name} begynte \u00e5 oppdage vibrasjon"
         }
+    },
+    "device_class": {
+        "co": "karbonmonoksid",
+        "cold": "kald",
+        "gas": "Gass",
+        "heat": "varme",
+        "moisture": "fuktighet",
+        "motion": "bevegelse",
+        "occupancy": "Bruk",
+        "power": "kraft",
+        "problem": "problem",
+        "smoke": "r\u00f8yk",
+        "sound": "lyd",
+        "vibration": "vibrasjon"
     },
     "state": {
         "_": {
@@ -101,6 +133,14 @@
         "battery_charging": {
             "off": "Lader ikke",
             "on": "Lader"
+        },
+        "carbon_monoxide": {
+            "off": "Klart",
+            "on": "Oppdaget"
+        },
+        "co": {
+            "off": "Klart",
+            "on": "Oppdaget"
         },
         "cold": {
             "off": "Normal",
@@ -166,6 +206,10 @@
             "off": "",
             "on": ""
         },
+        "running": {
+            "off": "Kj\u00f8rer ikke",
+            "on": "Kj\u00f8rer"
+        },
         "safety": {
             "off": "Sikker",
             "on": "Usikker"
@@ -177,6 +221,10 @@
         "sound": {
             "off": "Klart",
             "on": "Oppdaget"
+        },
+        "update": {
+            "off": "Oppdatert",
+            "on": "Oppdatering tilgjengelig"
         },
         "vibration": {
             "off": "Klart",

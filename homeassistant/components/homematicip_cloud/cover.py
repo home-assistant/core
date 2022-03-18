@@ -15,13 +15,12 @@ from homematicip.base.enums import DoorCommand, DoorState
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_SHUTTER,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -33,11 +32,13 @@ HMIP_SLATS_CLOSED = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = []
+    entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
         if isinstance(device, AsyncBlindModule):
             entities.append(HomematicipBlindModule(hap, device))
@@ -69,17 +70,17 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_BLIND
+        return CoverDeviceClass.BLIND
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         if self._device.primaryShadingLevel is not None:
             return int((1 - self._device.primaryShadingLevel) * 100)
         return None
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
         if self._device.secondaryShadingLevel is not None:
             return int((1 - self._device.secondaryShadingLevel) * 100)
@@ -162,10 +163,10 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_SHUTTER
+        return CoverDeviceClass.SHUTTER
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         if self._device.functionalChannels[self._channel].shutterLevel is not None:
             return int(
@@ -227,7 +228,7 @@ class HomematicipMultiCoverSlats(HomematicipMultiCoverShutter, CoverEntity):
         )
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
         if self._device.functionalChannels[self._channel].slatsLevel is not None:
             return int(
@@ -267,7 +268,7 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
     """Representation of the HomematicIP Garage Door Module."""
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         door_state_to_position = {
             DoorState.CLOSED: 0,
@@ -280,7 +281,7 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_GARAGE
+        return CoverDeviceClass.GARAGE
 
     @property
     def is_closed(self) -> bool | None:
@@ -311,17 +312,17 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_SHUTTER
+        return CoverDeviceClass.SHUTTER
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         if self._device.shutterLevel is not None:
             return int((1 - self._device.shutterLevel) * 100)
         return None
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
         if self._device.slatsLevel is not None:
             return int((1 - self._device.slatsLevel) * 100)

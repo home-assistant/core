@@ -3,15 +3,15 @@
         "abort": {
             "all_configured": "Az \u00f6sszes \u00f6sszekapcsolt szerver m\u00e1r konfigur\u00e1lva van",
             "already_configured": "Ez a Plex szerver m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt",
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
             "token_request_timeout": "Token k\u00e9r\u00e9sre sz\u00e1nt id\u0151 lej\u00e1rt",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
-            "faulty_credentials": "A hiteles\u00edt\u00e9s sikertelen",
-            "host_or_token": "Legal\u00e1bb egyet kell megadnia a Gazdag\u00e9p vagy a Token k\u00f6z\u00fcl",
-            "no_servers": "Nincs szerver csatlakoztatva a fi\u00f3khoz",
+            "faulty_credentials": "A hiteles\u00edt\u00e9s sikertelen, k\u00e9rem, ellen\u0151rizze a token-t",
+            "host_or_token": "Legal\u00e1bb egyet kell megadnia a C\u00edm vagy a Token k\u00f6z\u00fcl",
+            "no_servers": "Nincsenek Plex-fi\u00f3khoz kapcsol\u00f3d\u00f3 kiszolg\u00e1l\u00f3k",
             "not_found": "A Plex szerver nem tal\u00e1lhat\u00f3",
             "ssl_error": "SSL tan\u00fas\u00edtv\u00e1ny probl\u00e9ma"
         },
@@ -19,7 +19,7 @@
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "port": "Port",
                     "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
                     "token": "Token (opcion\u00e1lis)",

@@ -5,6 +5,7 @@ import pytest
 import voluptuous as vol
 from zwave_js_server.exceptions import SetValueFailed
 
+from homeassistant.components.group import Group
 from homeassistant.components.zwave_js.const import (
     ATTR_BROADCAST,
     ATTR_COMMAND_CLASS,
@@ -25,12 +26,15 @@ from homeassistant.components.zwave_js.const import (
     SERVICE_SET_CONFIG_PARAMETER,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.helpers.area_registry import async_get as async_get_area_reg
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
+from homeassistant.setup import async_setup_component
 
 from .common import (
     AEON_SMART_SWITCH_LIGHT_ENTITY,
@@ -39,6 +43,7 @@ from .common import (
     CLIMATE_DANFOSS_LC13_ENTITY,
     CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
+    SCHLAGE_BE469_LOCK_ENTITY,
 )
 
 from tests.common import MockConfigEntry
@@ -224,12 +229,104 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
 
     client.async_send_command_no_wait.reset_mock()
 
+    # Test using area ID
+    area_reg = async_get_area_reg(hass)
+    area = area_reg.async_get_or_create("test")
+    ent_reg.async_update_entity(entity_entry.entity_id, area_id=area.id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG_PARAMETER,
+        {
+            ATTR_AREA_ID: area.id,
+            ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
+            ATTR_CONFIG_VALUE: "Fahrenheit",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClassName": "Configuration",
+        "commandClass": 112,
+        "endpoint": 0,
+        "property": 41,
+        "propertyName": "Temperature Threshold (Unit)",
+        "propertyKey": 15,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "valueSize": 3,
+            "min": 1,
+            "max": 2,
+            "default": 1,
+            "format": 0,
+            "allowManualEntry": False,
+            "states": {"1": "Celsius", "2": "Fahrenheit"},
+            "label": "Temperature Threshold (Unit)",
+            "isFromConfig": True,
+        },
+        "value": 0,
+    }
+    assert args["value"] == 2
+
+    client.async_send_command_no_wait.reset_mock()
+
     # Test setting parameter by property and bitmask
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_CONFIG_PARAMETER,
         {
             ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_PARAMETER_BITMASK: "0x01",
+            ATTR_CONFIG_VALUE: 1,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClassName": "Configuration",
+        "commandClass": 112,
+        "endpoint": 0,
+        "property": 102,
+        "propertyName": "Group 2: Send battery reports",
+        "propertyKey": 1,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "valueSize": 4,
+            "min": 0,
+            "max": 1,
+            "default": 1,
+            "format": 0,
+            "allowManualEntry": True,
+            "label": "Group 2: Send battery reports",
+            "description": "Include battery information in periodic reports to Group 2",
+            "isFromConfig": True,
+        },
+        "value": 0,
+    }
+    assert args["value"] == 1
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test groups get expanded
+    assert await async_setup_component(hass, "group", {})
+    await Group.async_create_group(hass, "test", [AIR_TEMPERATURE_SENSOR])
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG_PARAMETER,
+        {
+            ATTR_ENTITY_ID: "group.test",
             ATTR_CONFIG_PARAMETER: 102,
             ATTR_CONFIG_PARAMETER_BITMASK: "0x01",
             ATTR_CONFIG_VALUE: 1,
@@ -401,6 +498,20 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
 
     client.async_send_command.reset_mock()
 
+    # Test setting config parameter with no valid nodes raises Exception
+    with pytest.raises(vol.MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_CONFIG_PARAMETER: 102,
+                ATTR_CONFIG_PARAMETER_BITMASK: 1,
+                ATTR_CONFIG_VALUE: 1,
+            },
+            blocking=True,
+        )
+
 
 async def test_bulk_set_config_parameters(hass, client, multisensor_6, integration):
     """Test the bulk_set_partial_config_parameters service."""
@@ -412,6 +523,33 @@ async def test_bulk_set_config_parameters(hass, client, multisensor_6, integrati
         SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
         {
             ATTR_DEVICE_ID: device.id,
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_VALUE: 241,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClass": 112,
+        "property": 102,
+    }
+    assert args["value"] == 241
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test using area ID
+    area_reg = async_get_area_reg(hass)
+    area = area_reg.async_get_or_create("test")
+    dev_reg.async_update_device(device.id, area_id=area.id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        {
+            ATTR_AREA_ID: area.id,
             ATTR_CONFIG_PARAMETER: 102,
             ATTR_CONFIG_VALUE: 241,
         },
@@ -550,11 +688,43 @@ async def test_bulk_set_config_parameters(hass, client, multisensor_6, integrati
 
     client.async_send_command.reset_mock()
 
+    # Test groups get expanded
+    assert await async_setup_component(hass, "group", {})
+    await Group.async_create_group(hass, "test", [AIR_TEMPERATURE_SENSOR])
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        {
+            ATTR_ENTITY_ID: "group.test",
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_VALUE: {
+                1: 1,
+                16: 1,
+                32: 1,
+                64: 1,
+                128: 1,
+            },
+        },
+        blocking=True,
+    )
 
-async def test_poll_value(
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClass": 112,
+        "property": 102,
+    }
+    assert args["value"] == 241
+
+    client.async_send_command.reset_mock()
+
+
+async def test_refresh_value(
     hass, client, climate_radio_thermostat_ct100_plus_different_endpoints, integration
 ):
-    """Test the poll_value service."""
+    """Test the refresh_value service."""
     # Test polling the primary value
     client.async_send_command.return_value = {"result": 2}
     await hass.services.async_call(
@@ -619,6 +789,25 @@ async def test_poll_value(
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 8
+
+    client.async_send_command.reset_mock()
+
+    # Test groups get expanded
+    assert await async_setup_component(hass, "group", {})
+    await Group.async_create_group(hass, "test", [CLIMATE_RADIO_THERMOSTAT_ENTITY])
+    client.async_send_command.return_value = {"result": 2}
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {
+            ATTR_ENTITY_ID: "group.test",
+            ATTR_REFRESH_ALL_VALUES: "true",
+        },
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 8
+
+    client.async_send_command.reset_mock()
 
     # Test polling against an invalid entity raises MultipleInvalid
     with pytest.raises(vol.MultipleInvalid):
@@ -709,6 +898,87 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
 
     client.async_send_command.reset_mock()
 
+    # Test using area ID
+    area_reg = async_get_area_reg(hass)
+    area = area_reg.async_get_or_create("test")
+    dev_reg.async_update_device(device.id, area_id=area.id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_AREA_ID: area.id,
+            ATTR_COMMAND_CLASS: 117,
+            ATTR_PROPERTY: "local",
+            ATTR_VALUE: "0x2",
+            ATTR_WAIT_FOR_RESULT: 1,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 5
+    assert args["valueId"] == {
+        "commandClassName": "Protection",
+        "commandClass": 117,
+        "endpoint": 0,
+        "property": "local",
+        "propertyName": "local",
+        "ccVersion": 2,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "label": "Local protection state",
+            "states": {"0": "Unprotected", "2": "NoOperationPossible"},
+        },
+        "value": 0,
+    }
+    assert args["value"] == 2
+
+    client.async_send_command.reset_mock()
+
+    # Test groups get expanded
+    assert await async_setup_component(hass, "group", {})
+    await Group.async_create_group(hass, "test", [CLIMATE_DANFOSS_LC13_ENTITY])
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "group.test",
+            ATTR_COMMAND_CLASS: 117,
+            ATTR_PROPERTY: "local",
+            ATTR_VALUE: "0x2",
+            ATTR_WAIT_FOR_RESULT: 1,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 5
+    assert args["valueId"] == {
+        "commandClassName": "Protection",
+        "commandClass": 117,
+        "endpoint": 0,
+        "property": "local",
+        "propertyName": "local",
+        "ccVersion": 2,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "label": "Local protection state",
+            "states": {"0": "Unprotected", "2": "NoOperationPossible"},
+        },
+        "value": 0,
+    }
+    assert args["value"] == 2
+
+    client.async_send_command.reset_mock()
+
     # Test that when a command fails we raise an exception
     client.async_send_command.return_value = {"success": False}
 
@@ -749,6 +1019,8 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
     }
     assert args["value"] == 2
 
+    client.async_send_command.reset_mock()
+
     # Test missing device and entities keys
     with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
@@ -762,6 +1034,51 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
             },
             blocking=True,
         )
+
+
+async def test_set_value_string(
+    hass, client, climate_danfoss_lc_13, lock_schlage_be469, integration
+):
+    """Test set_value service converts number to string when needed."""
+    client.async_send_command.return_value = {"success": True}
+
+    # Test that number gets converted to a string when needed
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+            ATTR_COMMAND_CLASS: 99,
+            ATTR_PROPERTY: "userCode",
+            ATTR_PROPERTY_KEY: 1,
+            ATTR_VALUE: 12345,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == lock_schlage_be469.node_id
+    assert args["valueId"] == {
+        "commandClassName": "User Code",
+        "commandClass": 99,
+        "endpoint": 0,
+        "property": "userCode",
+        "propertyName": "userCode",
+        "propertyKey": 1,
+        "propertyKeyName": "1",
+        "metadata": {
+            "type": "string",
+            "readable": True,
+            "writeable": True,
+            "minLength": 4,
+            "maxLength": 10,
+            "label": "User Code (1)",
+        },
+        "value": "**********",
+    }
+    assert args["value"] == "12345"
 
 
 async def test_set_value_options(hass, client, aeon_smart_switch_6, integration):
@@ -878,6 +1195,83 @@ async def test_multicast_set_value(
 
     client.async_send_command.reset_mock()
 
+    # Test using area ID
+    dev_reg = async_get_dev_reg(hass)
+    device_eurotronic = dev_reg.async_get_device(
+        {get_device_id(client, climate_eurotronic_spirit_z)}
+    )
+    assert device_eurotronic
+    device_danfoss = dev_reg.async_get_device(
+        {get_device_id(client, climate_danfoss_lc_13)}
+    )
+    assert device_danfoss
+    area_reg = async_get_area_reg(hass)
+    area = area_reg.async_get_or_create("test")
+    dev_reg.async_update_device(device_eurotronic.id, area_id=area.id)
+    dev_reg.async_update_device(device_danfoss.id, area_id=area.id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MULTICAST_SET_VALUE,
+        {
+            ATTR_AREA_ID: area.id,
+            ATTR_COMMAND_CLASS: 67,
+            ATTR_PROPERTY: "setpoint",
+            ATTR_PROPERTY_KEY: 1,
+            ATTR_VALUE: "0x2",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "multicast_group.set_value"
+    assert args["nodeIDs"] == [
+        climate_eurotronic_spirit_z.node_id,
+        climate_danfoss_lc_13.node_id,
+    ]
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "property": "setpoint",
+        "propertyKey": 1,
+    }
+    assert args["value"] == 2
+
+    client.async_send_command.reset_mock()
+
+    # Test groups get expanded for multicast call
+    assert await async_setup_component(hass, "group", {})
+    await Group.async_create_group(
+        hass, "test", [CLIMATE_DANFOSS_LC13_ENTITY, CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY]
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MULTICAST_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "group.test",
+            ATTR_COMMAND_CLASS: 67,
+            ATTR_PROPERTY: "setpoint",
+            ATTR_PROPERTY_KEY: 1,
+            ATTR_VALUE: "0x2",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "multicast_group.set_value"
+    assert args["nodeIDs"] == [
+        climate_eurotronic_spirit_z.node_id,
+        climate_danfoss_lc_13.node_id,
+    ]
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "property": "setpoint",
+        "propertyKey": 1,
+    }
+    assert args["value"] == 2
+
+    client.async_send_command.reset_mock()
+
     # Test successful broadcast call
     await hass.services.async_call(
         DOMAIN,
@@ -965,8 +1359,8 @@ async def test_multicast_set_value(
     diff_network_node.client.driver.controller.home_id.return_value = "diff_home_id"
 
     with pytest.raises(vol.MultipleInvalid), patch(
-        "homeassistant.components.zwave_js.services.async_get_node_from_device_id",
-        return_value=diff_network_node,
+        "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
+        side_effect=(climate_danfoss_lc_13, diff_network_node),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1021,8 +1415,7 @@ async def test_multicast_set_value_options(
             ],
             ATTR_COMMAND_CLASS: 51,
             ATTR_PROPERTY: "targetColor",
-            ATTR_PROPERTY_KEY: 2,
-            ATTR_VALUE: 2,
+            ATTR_VALUE: '{ "warmWhite": 0, "coldWhite": 0, "red": 255, "green": 0, "blue": 0 }',
             ATTR_OPTIONS: {"transitionDuration": 1},
         },
         blocking=True,
@@ -1038,12 +1431,49 @@ async def test_multicast_set_value_options(
     assert args["valueId"] == {
         "commandClass": 51,
         "property": "targetColor",
-        "propertyKey": 2,
     }
-    assert args["value"] == 2
+    assert (
+        args["value"]
+        == '{ "warmWhite": 0, "coldWhite": 0, "red": 255, "green": 0, "blue": 0 }'
+    )
     assert args["options"] == {"transitionDuration": 1}
 
     client.async_send_command.reset_mock()
+
+
+async def test_multicast_set_value_string(
+    hass,
+    client,
+    lock_id_lock_as_id150,
+    lock_schlage_be469,
+    integration,
+):
+    """Test multicast_set_value service converts number to string when needed."""
+    client.async_send_command.return_value = {"success": True}
+
+    # Test that number gets converted to a string when needed
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MULTICAST_SET_VALUE,
+        {
+            ATTR_BROADCAST: True,
+            ATTR_COMMAND_CLASS: 99,
+            ATTR_PROPERTY: "userCode",
+            ATTR_PROPERTY_KEY: 1,
+            ATTR_VALUE: 12345,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "broadcast_node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 99,
+        "property": "userCode",
+        "propertyKey": 1,
+    }
+    assert args["value"] == "12345"
 
 
 async def test_ping(
@@ -1054,6 +1484,16 @@ async def test_ping(
     integration,
 ):
     """Test ping service."""
+    dev_reg = async_get_dev_reg(hass)
+    device_radio_thermostat = dev_reg.async_get_device(
+        {get_device_id(client, climate_radio_thermostat_ct100_plus_different_endpoints)}
+    )
+    assert device_radio_thermostat
+    device_danfoss = dev_reg.async_get_device(
+        {get_device_id(client, climate_danfoss_lc_13)}
+    )
+    assert device_danfoss
+
     client.async_send_command.return_value = {"responded": True}
 
     # Test successful ping call
@@ -1070,7 +1510,91 @@ async def test_ping(
     )
 
     assert len(client.async_send_command.call_args_list) == 2
-    args = client.async_send_command.call_args[0][0]
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.ping"
+    assert (
+        args["nodeId"]
+        == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
+    )
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.ping"
+    assert args["nodeId"] == climate_danfoss_lc_13.node_id
+
+    client.async_send_command.reset_mock()
+
+    # Test successful ping call with devices
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PING,
+        {
+            ATTR_DEVICE_ID: [
+                device_radio_thermostat.id,
+                device_danfoss.id,
+            ],
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.ping"
+    assert (
+        args["nodeId"]
+        == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
+    )
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.ping"
+    assert args["nodeId"] == climate_danfoss_lc_13.node_id
+
+    client.async_send_command.reset_mock()
+
+    # Test successful ping call with area
+    area_reg = async_get_area_reg(hass)
+    area = area_reg.async_get_or_create("test")
+    dev_reg.async_update_device(device_radio_thermostat.id, area_id=area.id)
+    dev_reg.async_update_device(device_danfoss.id, area_id=area.id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PING,
+        {ATTR_AREA_ID: area.id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.ping"
+    assert (
+        args["nodeId"]
+        == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
+    )
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.ping"
+    assert args["nodeId"] == climate_danfoss_lc_13.node_id
+
+    client.async_send_command.reset_mock()
+
+    # Test groups get expanded for multicast call
+    assert await async_setup_component(hass, "group", {})
+    await Group.async_create_group(
+        hass, "test", [CLIMATE_DANFOSS_LC13_ENTITY, CLIMATE_RADIO_THERMOSTAT_ENTITY]
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PING,
+        {
+            ATTR_ENTITY_ID: "group.test",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.ping"
+    assert (
+        args["nodeId"]
+        == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
+    )
+    args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "node.ping"
     assert args["nodeId"] == climate_danfoss_lc_13.node_id
 

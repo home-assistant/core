@@ -4,6 +4,7 @@ from __future__ import annotations
 from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
@@ -42,7 +43,7 @@ class NightscoutSensor(SensorEntity):
         self._unique_id = unique_id
         self._name = name
         self._state = None
-        self._attributes = None
+        self._attributes: dict[str, Any] = {}
         self._unit_of_measurement = "mg/dL"
         self._icon = "mdi:cloud-question"
         self._available = False
@@ -58,7 +59,7 @@ class NightscoutSensor(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
@@ -68,7 +69,7 @@ class NightscoutSensor(SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Povezava ni uspela",
+            "unknown_license_plate": "Neznana registrska tablica"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "license_plate": "Registrska tablica"
+                }
+            }
+        }
+    }
+}

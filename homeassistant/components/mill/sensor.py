@@ -1,85 +1,224 @@
 """Support for mill wifi-enabled home heaters."""
+from __future__ import annotations
+
+import mill
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_ENERGY,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, STATE_UNKNOWN
-from homeassistant.util import dt as dt_util
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONF_IP_ADDRESS,
+    CONF_USERNAME,
+    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
+    TEMP_CELSIUS,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONSUMPTION_TODAY, CONSUMPTION_YEAR, DOMAIN, MANUFACTURER
+from .const import (
+    BATTERY,
+    CLOUD,
+    CONNECTION_TYPE,
+    CONSUMPTION_TODAY,
+    CONSUMPTION_YEAR,
+    DOMAIN,
+    ECO2,
+    HUMIDITY,
+    LOCAL,
+    MANUFACTURER,
+    TEMPERATURE,
+    TVOC,
+)
+
+HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=CONSUMPTION_YEAR,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        name="Year consumption",
+    ),
+    SensorEntityDescription(
+        key=CONSUMPTION_TODAY,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        name="Day consumption",
+    ),
+)
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        name="Humidity",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        name="Battery",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ECO2,
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        name="Estimated CO2",
+    ),
+    SensorEntityDescription(
+        key=TVOC,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        name="TVOC",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+LOCAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="control_signal",
+        native_unit_of_measurement=PERCENTAGE,
+        name="Control signal",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="current_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_WATT,
+        name="Current power",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="raw_ambient_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="Uncalibrated temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Mill sensor."""
+    if entry.data.get(CONNECTION_TYPE) == LOCAL:
+        mill_data_coordinator = hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]]
 
-    mill_data_connection = hass.data[DOMAIN]
-
-    dev = []
-    for heater in mill_data_connection.heaters.values():
-        for sensor_type in (CONSUMPTION_TODAY, CONSUMPTION_YEAR):
-            dev.append(
-                MillHeaterEnergySensor(heater, mill_data_connection, sensor_type)
+        async_add_entities(
+            LocalMillSensor(
+                mill_data_coordinator,
+                entity_description,
             )
-    async_add_entities(dev)
+            for entity_description in LOCAL_SENSOR_TYPES
+        )
+        return
+
+    mill_data_coordinator = hass.data[DOMAIN][CLOUD][entry.data[CONF_USERNAME]]
+
+    entities = [
+        MillSensor(
+            mill_data_coordinator,
+            entity_description,
+            mill_device,
+        )
+        for mill_device in mill_data_coordinator.data.values()
+        for entity_description in (
+            HEATER_SENSOR_TYPES
+            if isinstance(mill_device, mill.Heater)
+            else SENSOR_TYPES
+        )
+    ]
+
+    async_add_entities(entities)
 
 
-class MillHeaterEnergySensor(SensorEntity):
+class MillSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Mill Sensor device."""
 
-    def __init__(self, heater, mill_data_connection, sensor_type):
+    def __init__(self, coordinator, entity_description, mill_device):
         """Initialize the sensor."""
-        self._id = heater.device_id
-        self._conn = mill_data_connection
-        self._sensor_type = sensor_type
+        super().__init__(coordinator)
 
-        self._attr_device_class = DEVICE_CLASS_ENERGY
-        self._attr_name = f"{heater.name} {sensor_type.replace('_', ' ')}"
-        self._attr_unique_id = f"{heater.device_id}_{sensor_type}"
-        self._attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, heater.device_id)},
-            "name": self.name,
-            "manufacturer": MANUFACTURER,
-            "model": f"generation {1 if heater.is_gen1 else 2}",
-        }
-        if self._sensor_type == CONSUMPTION_TODAY:
-            self._attr_last_reset = dt_util.as_utc(
-                dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        self._id = mill_device.device_id
+        self.entity_description = entity_description
+        self._available = False
+
+        self._attr_name = f"{mill_device.name} {entity_description.name}"
+        self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, mill_device.device_id)},
+            name=self.name,
+            manufacturer=MANUFACTURER,
+        )
+        if isinstance(mill_device, mill.Heater):
+            self._attr_device_info["model"] = f"Generation {mill_device.generation}"
+        elif isinstance(mill_device, mill.Sensor):
+            self._attr_device_info["model"] = "Mill Sense Air"
+        self._update_attr(mill_device)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attr(self.coordinator.data[self._id])
+        self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._available
+
+    @callback
+    def _update_attr(self, device):
+        self._available = device.available
+        self._attr_native_value = getattr(device, self.entity_description.key)
+
+
+class LocalMillSensor(CoordinatorEntity, SensorEntity):
+    """Representation of a Mill Sensor device."""
+
+    def __init__(self, coordinator, entity_description):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self.entity_description = entity_description
+        self._attr_name = (
+            f"{coordinator.mill_data_connection.name} {entity_description.name}"
+        )
+        if mac := coordinator.mill_data_connection.mac_address:
+            self._attr_unique_id = f"{mac}_{entity_description.key}"
+            self._attr_device_info = DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, mac)},
+                configuration_url=self.coordinator.mill_data_connection.url,
+                manufacturer=MANUFACTURER,
+                model="Generation 3",
+                name=coordinator.mill_data_connection.name,
+                sw_version=coordinator.mill_data_connection.version,
             )
-        elif self._sensor_type == CONSUMPTION_YEAR:
-            self._attr_last_reset = dt_util.as_utc(
-                dt_util.now().replace(
-                    month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-                )
-            )
 
-    async def async_update(self):
-        """Retrieve latest state."""
-        heater = await self._conn.update_device(self._id)
-        self._attr_available = heater.available
-
-        if self._sensor_type == CONSUMPTION_TODAY:
-            _state = heater.day_consumption
-        elif self._sensor_type == CONSUMPTION_YEAR:
-            _state = heater.year_consumption
-        else:
-            _state = None
-        if _state is None:
-            self._attr_state = _state
-            return
-
-        if self.state not in [STATE_UNKNOWN, None] and _state < self.state:
-            if self._sensor_type == CONSUMPTION_TODAY:
-                self._attr_last_reset = dt_util.as_utc(
-                    dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
-                )
-            elif self._sensor_type == CONSUMPTION_YEAR:
-                self._attr_last_reset = dt_util.as_utc(
-                    dt_util.now().replace(
-                        month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-                    )
-                )
-        self._attr_state = _state
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.coordinator.data[self.entity_description.key]

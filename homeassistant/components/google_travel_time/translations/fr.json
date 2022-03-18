@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "common::config_flow::data::api_key",
+                    "api_key": "Cl\u00e9 d'API",
                     "destination": "Destination",
                     "name": "Nom",
                     "origin": "Origine"

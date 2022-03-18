@@ -1,8 +1,9 @@
 """API for persistent storage for the frontend."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
@@ -18,8 +19,8 @@ STORAGE_VERSION_USER_DATA = 1
 async def async_setup_frontend_storage(hass: HomeAssistant) -> None:
     """Set up frontend storage."""
     hass.data[DATA_STORAGE] = ({}, {})
-    hass.components.websocket_api.async_register_command(websocket_set_user_data)
-    hass.components.websocket_api.async_register_command(websocket_get_user_data)
+    websocket_api.async_register_command(hass, websocket_set_user_data)
+    websocket_api.async_register_command(hass, websocket_get_user_data)
 
 
 def with_store(orig_func: Callable) -> Callable:
@@ -32,9 +33,8 @@ def with_store(orig_func: Callable) -> Callable:
         """Provide user specific data and store to function."""
         stores, data = hass.data[DATA_STORAGE]
         user_id = connection.user.id
-        store = stores.get(user_id)
 
-        if store is None:
+        if (store := stores.get(user_id)) is None:
             store = stores[user_id] = hass.helpers.storage.Store(
                 STORAGE_VERSION_USER_DATA, f"frontend.user_data_{connection.user.id}"
             )

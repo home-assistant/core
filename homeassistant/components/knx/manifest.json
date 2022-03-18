@@ -1,9 +1,17 @@
 {
   "domain": "knx",
   "name": "KNX",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/knx",
-  "requirements": ["xknx==0.18.9"],
-  "codeowners": ["@Julius2342", "@farmio", "@marvin-w"],
+  "requirements": [
+    "xknx==0.19.2"
+  ],
+  "codeowners": [
+    "@Julius2342",
+    "@farmio",
+    "@marvin-w"
+  ],
   "quality_scale": "silver",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["xknx"]
 }

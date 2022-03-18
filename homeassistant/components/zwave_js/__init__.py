@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Callable
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -11,15 +12,23 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
     EntryControlNotification,
     NotificationNotification,
+    PowerLevelNotification,
 )
 from zwave_js_server.model.value import Value, ValueNotification
 
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -28,10 +37,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .addon import AddonError, AddonManager, AddonState, get_addon_manager
 from .api import async_register_api
 from .const import (
+    ATTR_ACKNOWLEDGED_FRAMES,
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DATA_TYPE,
@@ -48,14 +59,24 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_PROPERTY_KEY_NAME,
     ATTR_PROPERTY_NAME,
+    ATTR_STATUS,
+    ATTR_TEST_NODE_ID,
     ATTR_TYPE,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_ADDON_DEVICE,
     CONF_ADDON_NETWORK_KEY,
+    CONF_ADDON_S0_LEGACY_KEY,
+    CONF_ADDON_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_S2_AUTHENTICATED_KEY,
+    CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_NETWORK_KEY,
+    CONF_S0_LEGACY_KEY,
+    CONF_S2_ACCESS_CONTROL_KEY,
+    CONF_S2_AUTHENTICATED_KEY,
+    CONF_S2_UNAUTHENTICATED_KEY,
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DATA_CLIENT,
@@ -67,8 +88,18 @@ from .const import (
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import ZwaveDiscoveryInfo, async_discover_values
-from .helpers import async_enable_statistics, get_device_id, get_unique_id
+from .discovery import (
+    ZwaveDiscoveryInfo,
+    async_discover_node_values,
+    async_discover_single_value,
+)
+from .helpers import (
+    async_enable_statistics,
+    get_device_id,
+    get_device_id_ext,
+    get_unique_id,
+    get_valueless_base_unique_id,
+)
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
 
@@ -79,7 +110,7 @@ DATA_CONNECT_FAILED_LOGGED = "connect_failed_logged"
 DATA_INVALID_SERVER_VERSION_LOGGED = "invalid_server_version_logged"
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
     hass.data[DOMAIN] = {}
     return True
@@ -92,19 +123,41 @@ def register_node_in_dev_reg(
     dev_reg: device_registry.DeviceRegistry,
     client: ZwaveClient,
     node: ZwaveNode,
+    remove_device_func: Callable[[device_registry.DeviceEntry], None],
 ) -> device_registry.DeviceEntry:
     """Register node in dev reg."""
+    device_id = get_device_id(client, node)
+    device_id_ext = get_device_id_ext(client, node)
+    device = dev_reg.async_get_device({device_id})
+
+    # Replace the device if it can be determined that this node is not the
+    # same product as it was previously.
+    if (
+        device_id_ext
+        and device
+        and len(device.identifiers) == 2
+        and device_id_ext not in device.identifiers
+    ):
+        remove_device_func(device)
+        device = None
+
+    if device_id_ext:
+        ids = {device_id, device_id_ext}
+    else:
+        ids = {device_id}
+
     params = {
-        "config_entry_id": entry.entry_id,
-        "identifiers": {get_device_id(client, node)},
-        "sw_version": node.firmware_version,
-        "name": node.name or node.device_config.description or f"Node {node.node_id}",
-        "model": node.device_config.label,
-        "manufacturer": node.device_config.manufacturer,
+        ATTR_IDENTIFIERS: ids,
+        ATTR_SW_VERSION: node.firmware_version,
+        ATTR_NAME: node.name
+        or node.device_config.description
+        or f"Node {node.node_id}",
+        ATTR_MODEL: node.device_config.label,
+        ATTR_MANUFACTURER: node.device_config.manufacturer,
     }
     if node.location:
-        params["suggested_area"] = node.location
-    device = dev_reg.async_get_or_create(**params)
+        params[ATTR_SUGGESTED_AREA] = node.location
+    device = dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
 
     async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 
@@ -115,8 +168,7 @@ async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: ConfigEntry
 ) -> bool:
     """Set up Z-Wave JS from a config entry."""
-    use_addon = entry.data.get(CONF_USE_ADDON)
-    if use_addon:
+    if use_addon := entry.data.get(CONF_USE_ADDON):
         await async_ensure_addon_running(hass, entry)
 
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
@@ -125,18 +177,78 @@ async def async_setup_entry(  # noqa: C901
     entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
     entry_hass_data[DATA_CLIENT] = client
-    entry_hass_data[DATA_PLATFORM_SETUP] = {}
+    platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
+    discovered_value_ids: dict[str, set[str]] = defaultdict(set)
+
+    async def async_setup_platform(platform: str) -> None:
+        """Set up platform if needed."""
+        if platform not in platform_setup_tasks:
+            platform_setup_tasks[platform] = hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+            )
+        await platform_setup_tasks[platform]
+
+    @callback
+    def remove_device(device: device_registry.DeviceEntry) -> None:
+        """Remove device from registry."""
+        # note: removal of entity registry entry is handled by core
+        dev_reg.async_remove_device(device.id)
+        registered_unique_ids.pop(device.id, None)
+        discovered_value_ids.pop(device.id, None)
+
+    async def async_handle_discovery_info(
+        device: device_registry.DeviceEntry,
+        disc_info: ZwaveDiscoveryInfo,
+        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
+    ) -> None:
+        """Handle discovery info and all dependent tasks."""
+        # This migration logic was added in 2021.3 to handle a breaking change to
+        # the value_id format. Some time in the future, this call (as well as the
+        # helper functions) can be removed.
+        async_migrate_discovered_value(
+            hass,
+            ent_reg,
+            registered_unique_ids[device.id][disc_info.platform],
+            device,
+            client,
+            disc_info,
+        )
+
+        platform = disc_info.platform
+        await async_setup_platform(platform)
+
+        LOGGER.debug("Discovered entity: %s", disc_info)
+        async_dispatcher_send(
+            hass, f"{DOMAIN}_{entry.entry_id}_add_{platform}", disc_info
+        )
+
+        # If we don't need to watch for updates return early
+        if not disc_info.assumed_state:
+            return
+        value_updates_disc_info[disc_info.primary_value.value_id] = disc_info
+        # If this is the first time we found a value we want to watch for updates,
+        # return early
+        if len(value_updates_disc_info) != 1:
+            return
+        # add listener for value updated events
+        entry.async_on_unload(
+            disc_info.node.on(
+                "value updated",
+                lambda event: async_on_value_updated_fire_event(
+                    value_updates_disc_info, event["value"]
+                ),
+            )
+        )
 
     async def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
-
-        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
-
         # register (or update) node in device registry
-        device = register_node_in_dev_reg(hass, entry, dev_reg, client, node)
+        device = register_node_in_dev_reg(
+            hass, entry, dev_reg, client, node, remove_device
+        )
         # We only want to create the defaultdict once, even on reinterviews
         if device.id not in registered_unique_ids:
             registered_unique_ids[device.id] = defaultdict(set)
@@ -144,44 +256,22 @@ async def async_setup_entry(  # noqa: C901
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
-        for disc_info in async_discover_values(node):
-            platform = disc_info.platform
-
-            # This migration logic was added in 2021.3 to handle a breaking change to
-            # the value_id format. Some time in the future, this call (as well as the
-            # helper functions) can be removed.
-            async_migrate_discovered_value(
-                hass,
-                ent_reg,
-                registered_unique_ids[device.id][platform],
-                device,
-                client,
-                disc_info,
-            )
-
-            if platform not in platform_setup_tasks:
-                platform_setup_tasks[platform] = hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(entry, platform)
+        await asyncio.gather(
+            *(
+                async_handle_discovery_info(device, disc_info, value_updates_disc_info)
+                for disc_info in async_discover_node_values(
+                    node, device, discovered_value_ids
                 )
-
-            await platform_setup_tasks[platform]
-
-            LOGGER.debug("Discovered entity: %s", disc_info)
-            async_dispatcher_send(
-                hass, f"{DOMAIN}_{entry.entry_id}_add_{platform}", disc_info
             )
+        )
 
-            # Capture discovery info for values we want to watch for updates
-            if disc_info.assumed_state:
-                value_updates_disc_info[disc_info.primary_value.value_id] = disc_info
-
-        # add listener for value updated events if necessary
-        if value_updates_disc_info:
+        # add listeners to handle new values that get added later
+        for event in ("value added", "value updated", "metadata updated"):
             entry.async_on_unload(
                 node.on(
-                    "value updated",
-                    lambda event: async_on_value_updated(
-                        value_updates_disc_info, event["value"]
+                    event,
+                    lambda event: hass.async_create_task(
+                        async_on_value_added(value_updates_disc_info, event["value"])
                     ),
                 )
             )
@@ -203,24 +293,19 @@ async def async_setup_entry(  # noqa: C901
 
     async def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
-        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
-
-        # We need to set up the sensor platform if it hasn't already been setup in
-        # order to create the node status sensor
-        if SENSOR_DOMAIN not in platform_setup_tasks:
-            platform_setup_tasks[SENSOR_DOMAIN] = hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
+        # No need for a ping button or node status sensor for controller nodes
+        if not node.is_controller_node:
+            # Create a node status sensor for each device
+            await async_setup_platform(SENSOR_DOMAIN)
+            async_dispatcher_send(
+                hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
             )
 
-        # This guard ensures that concurrent runs of this function all await the
-        # platform setup task
-        if not platform_setup_tasks[SENSOR_DOMAIN].done():
-            await platform_setup_tasks[SENSOR_DOMAIN]
-
-        # Create a node status sensor for each device
-        async_dispatcher_send(
-            hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
-        )
+            # Create a ping button for each device
+            await async_setup_platform(BUTTON_DOMAIN)
+            async_dispatcher_send(
+                hass, f"{DOMAIN}_{entry.entry_id}_add_ping_button_entity", node
+            )
 
         # we only want to run discovery when the node has reached ready state,
         # otherwise we'll have all kinds of missing info issues.
@@ -235,22 +320,59 @@ async def async_setup_entry(  # noqa: C901
         )
         # we do submit the node to device registry so user has
         # some visual feedback that something is (in the process of) being added
-        register_node_in_dev_reg(hass, entry, dev_reg, client, node)
+        register_node_in_dev_reg(hass, entry, dev_reg, client, node, remove_device)
+
+    async def async_on_value_added(
+        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+    ) -> None:
+        """Fire value updated event."""
+        # If node isn't ready or a device for this node doesn't already exist, we can
+        # let the node ready event handler perform discovery. If a value has already
+        # been processed, we don't need to do it again
+        device_id = get_device_id(client, value.node)
+        if (
+            not value.node.ready
+            or not (device := dev_reg.async_get_device({device_id}))
+            or value.value_id in discovered_value_ids[device.id]
+        ):
+            return
+
+        LOGGER.debug("Processing node %s added value %s", value.node, value)
+        await asyncio.gather(
+            *(
+                async_handle_discovery_info(device, disc_info, value_updates_disc_info)
+                for disc_info in async_discover_single_value(
+                    value, device, discovered_value_ids
+                )
+            )
+        )
 
     @callback
-    def async_on_node_removed(node: ZwaveNode) -> None:
+    def async_on_node_removed(event: dict) -> None:
         """Handle node removed event."""
+        node: ZwaveNode = event["node"]
+        replaced: bool = event.get("replaced", False)
         # grab device in device registry attached to this node
         dev_id = get_device_id(client, node)
         device = dev_reg.async_get_device({dev_id})
-        # note: removal of entity registry entry is handled by core
-        dev_reg.async_remove_device(device.id)  # type: ignore
-        registered_unique_ids.pop(device.id, None)  # type: ignore
+        # We assert because we know the device exists
+        assert device
+        if replaced:
+            discovered_value_ids.pop(device.id, None)
+
+            async_dispatcher_send(
+                hass,
+                f"{DOMAIN}_{get_valueless_base_unique_id(client, node)}_remove_entity",
+            )
+        else:
+            remove_device(device)
 
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        # We assert because we know the device exists
+        assert device
         raw_value = value = notification.value
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
@@ -261,7 +383,7 @@ async def async_setup_entry(  # noqa: C901
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
                 ATTR_ENDPOINT: notification.endpoint,
-                ATTR_DEVICE_ID: device.id,  # type: ignore
+                ATTR_DEVICE_ID: device.id,
                 ATTR_COMMAND_CLASS: notification.command_class,
                 ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
                 ATTR_LABEL: notification.metadata.label,
@@ -276,15 +398,19 @@ async def async_setup_entry(  # noqa: C901
 
     @callback
     def async_on_notification(
-        notification: EntryControlNotification | NotificationNotification,
+        notification: EntryControlNotification
+        | NotificationNotification
+        | PowerLevelNotification,
     ) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        # We assert because we know the device exists
+        assert device
         event_data = {
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: client.driver.controller.home_id,
-            ATTR_DEVICE_ID: device.id,  # type: ignore
+            ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
         }
 
@@ -297,7 +423,7 @@ async def async_setup_entry(  # noqa: C901
                     ATTR_EVENT_DATA: notification.event_data,
                 }
             )
-        else:
+        elif isinstance(notification, NotificationNotification):
             event_data.update(
                 {
                     ATTR_COMMAND_CLASS_NAME: "Notification",
@@ -308,11 +434,22 @@ async def async_setup_entry(  # noqa: C901
                     ATTR_PARAMETERS: notification.parameters,
                 }
             )
+        elif isinstance(notification, PowerLevelNotification):
+            event_data.update(
+                {
+                    ATTR_COMMAND_CLASS_NAME: "Power Level",
+                    ATTR_TEST_NODE_ID: notification.test_node_id,
+                    ATTR_STATUS: notification.status,
+                    ATTR_ACKNOWLEDGED_FRAMES: notification.acknowledged_frames,
+                }
+            )
+        else:
+            raise TypeError(f"Unhandled notification type: {notification}")
 
         hass.bus.async_fire(ZWAVE_JS_NOTIFICATION_EVENT, event_data)
 
     @callback
-    def async_on_value_updated(
+    def async_on_value_updated_fire_event(
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
     ) -> None:
         """Fire value updated event."""
@@ -323,10 +460,10 @@ async def async_setup_entry(  # noqa: C901
         disc_info = value_updates_disc_info[value.value_id]
 
         device = dev_reg.async_get_device({get_device_id(client, value.node)})
+        # We assert because we know the device exists
+        assert device
 
-        unique_id = get_unique_id(
-            client.driver.controller.home_id, disc_info.primary_value.value_id
-        )
+        unique_id = get_unique_id(client, disc_info.primary_value.value_id)
         entity_id = ent_reg.async_get_entity_id(disc_info.platform, DOMAIN, unique_id)
 
         raw_value = value_ = value.value
@@ -338,7 +475,7 @@ async def async_setup_entry(  # noqa: C901
             {
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
-                ATTR_DEVICE_ID: device.id,  # type: ignore
+                ATTR_DEVICE_ID: device.id,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,
                 ATTR_COMMAND_CLASS_NAME: value.command_class_name,
@@ -444,9 +581,7 @@ async def async_setup_entry(  # noqa: C901
         # listen for nodes being removed from the mesh
         # NOTE: This will not remove nodes that were removed when HA was not running
         entry.async_on_unload(
-            client.driver.controller.on(
-                "node removed", lambda event: async_on_node_removed(event["node"])
-            )
+            client.driver.controller.on("node removed", async_on_node_removed)
         )
 
     platform_task = hass.async_create_task(start_platforms())
@@ -569,29 +704,61 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         raise ConfigEntryNotReady from err
 
     usb_path: str = entry.data[CONF_USB_PATH]
-    network_key: str = entry.data[CONF_NETWORK_KEY]
+    # s0_legacy_key was saved as network_key before s2 was added.
+    s0_legacy_key: str = entry.data.get(CONF_S0_LEGACY_KEY, "")
+    if not s0_legacy_key:
+        s0_legacy_key = entry.data.get(CONF_NETWORK_KEY, "")
+    s2_access_control_key: str = entry.data.get(CONF_S2_ACCESS_CONTROL_KEY, "")
+    s2_authenticated_key: str = entry.data.get(CONF_S2_AUTHENTICATED_KEY, "")
+    s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")
     addon_state = addon_info.state
 
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
-            usb_path, network_key, catch_error=True
+            usb_path,
+            s0_legacy_key,
+            s2_access_control_key,
+            s2_authenticated_key,
+            s2_unauthenticated_key,
+            catch_error=True,
         )
         raise ConfigEntryNotReady
 
     if addon_state == AddonState.NOT_RUNNING:
         addon_manager.async_schedule_setup_addon(
-            usb_path, network_key, catch_error=True
+            usb_path,
+            s0_legacy_key,
+            s2_access_control_key,
+            s2_authenticated_key,
+            s2_unauthenticated_key,
+            catch_error=True,
         )
         raise ConfigEntryNotReady
 
     addon_options = addon_info.options
     addon_device = addon_options[CONF_ADDON_DEVICE]
-    addon_network_key = addon_options[CONF_ADDON_NETWORK_KEY]
+    # s0_legacy_key was saved as network_key before s2 was added.
+    addon_s0_legacy_key = addon_options.get(CONF_ADDON_S0_LEGACY_KEY, "")
+    if not addon_s0_legacy_key:
+        addon_s0_legacy_key = addon_options.get(CONF_ADDON_NETWORK_KEY, "")
+    addon_s2_access_control_key = addon_options.get(
+        CONF_ADDON_S2_ACCESS_CONTROL_KEY, ""
+    )
+    addon_s2_authenticated_key = addon_options.get(CONF_ADDON_S2_AUTHENTICATED_KEY, "")
+    addon_s2_unauthenticated_key = addon_options.get(
+        CONF_ADDON_S2_UNAUTHENTICATED_KEY, ""
+    )
     updates = {}
     if usb_path != addon_device:
         updates[CONF_USB_PATH] = addon_device
-    if network_key != addon_network_key:
-        updates[CONF_NETWORK_KEY] = addon_network_key
+    if s0_legacy_key != addon_s0_legacy_key:
+        updates[CONF_S0_LEGACY_KEY] = addon_s0_legacy_key
+    if s2_access_control_key != addon_s2_access_control_key:
+        updates[CONF_S2_ACCESS_CONTROL_KEY] = addon_s2_access_control_key
+    if s2_authenticated_key != addon_s2_authenticated_key:
+        updates[CONF_S2_AUTHENTICATED_KEY] = addon_s2_authenticated_key
+    if s2_unauthenticated_key != addon_s2_unauthenticated_key:
+        updates[CONF_S2_UNAUTHENTICATED_KEY] = addon_s2_unauthenticated_key
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 

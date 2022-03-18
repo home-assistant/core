@@ -1,4 +1,6 @@
 """Support for the worldtides.info API."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import time
@@ -14,7 +16,10 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +39,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the WorldTidesInfo sensor."""
     name = config.get(CONF_NAME)
 
@@ -88,7 +98,7 @@ class WorldTidesInfoSensor(SensorEntity):
         return attr
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self.data:
             if "High" in str(self.data["extremes"][0]["type"]):

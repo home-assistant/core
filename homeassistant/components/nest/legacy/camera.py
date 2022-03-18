@@ -1,10 +1,15 @@
 """Support for Nest Cameras."""
+# mypy: ignore-errors
+
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import requests
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_ON_OFF, Camera
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 
 from .const import DATA_NEST, DOMAIN
@@ -59,14 +64,14 @@ class NestCamera(Camera):
         return self.device.device_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "identifiers": {(DOMAIN, self.device.device_id)},
-            "name": self.device.name_long,
-            "manufacturer": "Nest Labs",
-            "model": "Camera",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.device_id)},
+            manufacturer="Nest Labs",
+            model="Camera",
+            name=self.device.name_long,
+        )
 
     @property
     def should_poll(self):
@@ -131,7 +136,9 @@ class NestCamera(Camera):
     def _ready_for_snapshot(self, now):
         return self._next_snapshot_at is None or now > self._next_snapshot_at
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         now = utcnow()
         if self._ready_for_snapshot(now):

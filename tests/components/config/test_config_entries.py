@@ -1,6 +1,7 @@
 """Test config entries API."""
 
 from collections import OrderedDict
+from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -8,9 +9,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow
 from homeassistant.components.config import config_entries
-from homeassistant.config_entries import HANDLERS
+from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
+from homeassistant.helpers import config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -45,9 +47,15 @@ async def test_get_entries(hass, client):
 
             @staticmethod
             @callback
-            def async_get_options_flow(config, options):
+            def async_get_options_flow(config_entry):
                 """Get options flow."""
                 pass
+
+            @classmethod
+            @callback
+            def async_supports_options_flow(cls, config_entry):
+                """Return options flow support for this handler."""
+                return True
 
         hass.helpers.config_entry_flow.register_discovery_flow(
             "comp2", "Comp 2", lambda: None
@@ -71,11 +79,11 @@ async def test_get_entries(hass, client):
             domain="comp3",
             title="Test 3",
             source="bla3",
-            disabled_by=core_ce.DISABLED_USER,
+            disabled_by=core_ce.ConfigEntryDisabler.USER,
         ).add_to_hass(hass)
 
         resp = await client.get("/api/config/config_entries/entry")
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         for entry in data:
             entry.pop("entry_id")
@@ -86,6 +94,7 @@ async def test_get_entries(hass, client):
                 "source": "bla",
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": True,
+                "supports_remove_device": False,
                 "supports_unload": True,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -98,6 +107,7 @@ async def test_get_entries(hass, client):
                 "source": "bla2",
                 "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -110,10 +120,11 @@ async def test_get_entries(hass, client):
                 "source": "bla3",
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
-                "disabled_by": core_ce.DISABLED_USER,
+                "disabled_by": core_ce.ConfigEntryDisabler.USER,
                 "reason": None,
             },
         ]
@@ -124,7 +135,7 @@ async def test_remove_entry(hass, client):
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert data == {"require_restart": True}
     assert len(hass.config_entries.async_entries()) == 0
@@ -137,7 +148,7 @@ async def test_reload_entry(hass, client):
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert data == {"require_restart": True}
     assert len(hass.config_entries.async_entries()) == 1
@@ -146,7 +157,7 @@ async def test_reload_entry(hass, client):
 async def test_reload_invalid_entry(hass, client):
     """Test reloading an invalid entry via the API."""
     resp = await client.post("/api/config/config_entries/entry/invalid/reload")
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_remove_entry_unauth(hass, client, hass_admin_user):
@@ -155,7 +166,7 @@ async def test_remove_entry_unauth(hass, client, hass_admin_user):
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -167,7 +178,7 @@ async def test_reload_entry_unauth(hass, client, hass_admin_user):
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -178,7 +189,38 @@ async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
-    assert resp.status == 403
+    assert resp.status == HTTPStatus.FORBIDDEN
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_reload_entry_in_setup_retry(hass, client, hass_admin_user):
+    """Test reloading an entry via the API that is in setup retry."""
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=True)
+    mock_migrate_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_migrate_entry=mock_migrate_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    entry = MockConfigEntry(domain="comp", state=core_ce.ConfigEntryState.SETUP_RETRY)
+    entry.supports_unload = True
+    entry.add_to_hass(hass)
+
+    with patch.dict(HANDLERS, {"comp": ConfigFlow, "test": ConfigFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/entry/{entry.entry_id}/reload"
+        )
+        await hass.async_block_till_done()
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {"require_restart": False}
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -186,7 +228,7 @@ async def test_available_flows(hass, client):
     """Test querying the available flows."""
     with patch.object(config_flows, "FLOWS", ["hello", "world"]):
         resp = await client.get("/api/config/config_entries/flow_handlers")
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         assert set(data) == {"hello", "world"}
 
@@ -222,7 +264,7 @@ async def test_initialize_flow(hass, client):
             json={"handler": "test", "show_advanced_options": True},
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     data.pop("flow_id")
@@ -242,6 +284,35 @@ async def test_initialize_flow(hass, client):
         "errors": {"username": "Should be unique."},
         "last_step": None,
     }
+
+
+async def test_initialize_flow_unmet_dependency(hass, client):
+    """Test unmet dependencies are listed."""
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    mock_integration(
+        hass, MockModule(domain="dependency_1", config_schema=config_schema)
+    )
+    # The test2 config flow should  fail because dependency_1 can't be automatically setup
+    mock_integration(
+        hass,
+        MockModule(domain="test2", partial_manifest={"dependencies": ["dependency_1"]}),
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            pass
+
+    with patch.dict(HANDLERS, {"test2": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test2", "show_advanced_options": True},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    data = await resp.text()
+    assert data == "Failed dependencies dependency_1"
 
 
 async def test_initialize_flow_unauth(hass, client, hass_admin_user):
@@ -266,7 +337,7 @@ async def test_initialize_flow_unauth(hass, client, hass_admin_user):
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_abort(hass, client):
@@ -282,7 +353,7 @@ async def test_abort(hass, client):
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     data.pop("flow_id")
     assert data == {
@@ -314,7 +385,7 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     entries = hass.config_entries.async_entries("test")
     assert len(entries) == 1
@@ -333,6 +404,7 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_options": False,
+            "supports_remove_device": False,
             "supports_unload": False,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -369,7 +441,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         flow_id = data.pop("flow_id")
         assert data == {
@@ -387,7 +459,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
             f"/api/config/config_entries/flow/{flow_id}",
             json={"user_title": "user-title"},
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
 
         entries = hass.config_entries.async_entries("test")
         assert len(entries) == 1
@@ -406,6 +478,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -442,7 +515,7 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         flow_id = data.pop("flow_id")
         assert data == {
@@ -461,7 +534,7 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
         f"/api/config/config_entries/flow/{flow_id}",
         json={"user_title": "user-title"},
     )
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_get_progress_index(hass, hass_ws_client):
@@ -532,14 +605,14 @@ async def test_get_progress_flow(hass, client):
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     resp2 = await client.get(
         "/api/config/config_entries/flow/{}".format(data["flow_id"])
     )
 
-    assert resp2.status == 200
+    assert resp2.status == HTTPStatus.OK
     data2 = await resp2.json()
 
     assert data == data2
@@ -566,7 +639,7 @@ async def test_get_progress_flow_unauth(hass, client, hass_admin_user):
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     hass_admin_user.groups = []
@@ -575,7 +648,7 @@ async def test_get_progress_flow_unauth(hass, client, hass_admin_user):
         "/api/config/config_entries/flow/{}".format(data["flow_id"])
     )
 
-    assert resp2.status == 401
+    assert resp2.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_options_flow(hass, client):
@@ -608,7 +681,7 @@ async def test_options_flow(hass, client):
         url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     data.pop("flow_id")
@@ -657,7 +730,7 @@ async def test_two_step_options_flow(hass, client):
         url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         flow_id = data.pop("flow_id")
         assert data == {
@@ -675,7 +748,7 @@ async def test_two_step_options_flow(hass, client):
             f"/api/config/config_entries/options/flow/{flow_id}",
             json={"enabled": True},
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         data.pop("flow_id")
         assert data == {
@@ -685,6 +758,81 @@ async def test_two_step_options_flow(hass, client):
             "version": 1,
             "description": None,
             "description_placeholders": None,
+        }
+
+
+async def test_options_flow_with_invalid_data(hass, client):
+    """Test an options flow with invalid_data."""
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            class OptionsFlowHandler(data_entry_flow.FlowHandler):
+                async def async_step_init(self, user_input=None):
+                    return self.async_show_form(
+                        step_id="finish",
+                        data_schema=vol.Schema(
+                            {
+                                vol.Required(
+                                    "choices", default=["invalid", "valid"]
+                                ): cv.multi_select({"valid": "Valid"})
+                            }
+                        ),
+                    )
+
+                async def async_step_finish(self, user_input=None):
+                    return self.async_create_entry(
+                        title="Enable disable", data=user_input
+                    )
+
+            return OptionsFlowHandler()
+
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        url = "/api/config/config_entries/options/flow"
+        resp = await client.post(url, json={"handler": entry.entry_id})
+
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        flow_id = data.pop("flow_id")
+        assert data == {
+            "type": "form",
+            "handler": "test1",
+            "step_id": "finish",
+            "data_schema": [
+                {
+                    "default": ["invalid", "valid"],
+                    "name": "choices",
+                    "options": {"valid": "Valid"},
+                    "required": True,
+                    "type": "multi_select",
+                }
+            ],
+            "description_placeholders": None,
+            "errors": None,
+            "last_step": None,
+        }
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/options/flow/{flow_id}",
+            json={"choices": ["valid", "invalid"]},
+        )
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        data = await resp.json()
+        assert data == {
+            "message": "User input malformed: invalid is not a valid option for "
+            "dictionary value @ data['choices']"
         }
 
 
@@ -794,14 +942,14 @@ async def test_disable_entry(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": entry.entry_id,
-            "disabled_by": core_ce.DISABLED_USER,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
         }
     )
     response = await ws_client.receive_json()
 
     assert response["success"]
     assert response["result"] == {"require_restart": True}
-    assert entry.disabled_by == core_ce.DISABLED_USER
+    assert entry.disabled_by is core_ce.ConfigEntryDisabler.USER
     assert entry.state is core_ce.ConfigEntryState.FAILED_UNLOAD
 
     # Enable
@@ -847,7 +995,7 @@ async def test_disable_entry_nonexisting(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": "non_existing",
-            "disabled_by": core_ce.DISABLED_USER,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
         }
     )
     response = await ws_client.receive_json()
@@ -869,7 +1017,7 @@ async def test_ignore_flow(hass, hass_ws_client):
 
         async def async_step_user(self, user_input=None):
             await self.async_set_unique_id("mock-unique-id")
-            return self.async_show_form(step_id="account", data_schema=vol.Schema({}))
+            return self.async_show_form(step_id="account")
 
     ws_client = await hass_ws_client(hass)
 

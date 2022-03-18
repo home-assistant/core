@@ -3,13 +3,16 @@ import asyncio
 import datetime
 import functools
 import logging
+import socket
 import ssl
 import threading
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp.test_utils import make_mocked_request
+import freezegun
 import multidict
 import pytest
+import pytest_socket
 import requests_mock as _requests_mock
 
 from homeassistant import core as ha, loader, runner, util
@@ -23,8 +26,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
-from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED, HASSIO_USER_NAME
 from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
@@ -36,6 +38,7 @@ pytest.register_assert_rewrite("tests.common")
 from tests.common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
+    MockConfigEntry,
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
@@ -59,6 +62,116 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
+
+
+def pytest_runtest_setup():
+    """Prepare pytest_socket and freezegun.
+
+    pytest_socket:
+    Throw if tests attempt to open sockets.
+
+    allow_unix_socket is set to True because it's needed by asyncio.
+    Important: socket_allow_hosts must be called before disable_socket, otherwise all
+    destinations will be allowed.
+
+    freezegun:
+    Modified to include https://github.com/spulec/freezegun/pull/424
+    """
+    pytest_socket.socket_allow_hosts(["127.0.0.1"])
+    disable_socket(allow_unix_socket=True)
+
+    freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime
+    freezegun.api.FakeDatetime = HAFakeDatetime
+
+
+@pytest.fixture
+def socket_disabled(pytestconfig):
+    """Disable socket.socket for duration of this test function.
+
+    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
+    and hardcodes allow_unix_socket to True because it's not passed on the command line.
+    """
+    socket_was_enabled = socket.socket == pytest_socket._true_socket
+    disable_socket(allow_unix_socket=True)
+    yield
+    if socket_was_enabled:
+        pytest_socket.enable_socket()
+
+
+@pytest.fixture
+def socket_enabled(pytestconfig):
+    """Enable socket.socket for duration of this test function.
+
+    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
+    and hardcodes allow_unix_socket to True because it's not passed on the command line.
+    """
+    socket_was_disabled = socket.socket != pytest_socket._true_socket
+    pytest_socket.enable_socket()
+    yield
+    if socket_was_disabled:
+        disable_socket(allow_unix_socket=True)
+
+
+def disable_socket(allow_unix_socket=False):
+    """Disable socket.socket to disable the Internet. useful in testing.
+
+    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/75
+    """
+
+    class GuardedSocket(socket.socket):
+        """socket guard to disable socket creation (from pytest-socket)."""
+
+        def __new__(cls, *args, **kwargs):
+            try:
+                if len(args) > 0:
+                    is_unix_socket = args[0] == socket.AF_UNIX
+                else:
+                    is_unix_socket = kwargs.get("family") == socket.AF_UNIX
+            except AttributeError:
+                # AF_UNIX not supported on Windows https://bugs.python.org/issue33408
+                is_unix_socket = False
+            if is_unix_socket and allow_unix_socket:
+                return super().__new__(cls, *args, **kwargs)
+            raise pytest_socket.SocketBlockedError()
+
+    socket.socket = GuardedSocket
+
+
+def ha_datetime_to_fakedatetime(datetime):
+    """Convert datetime to FakeDatetime.
+
+    Modified to include https://github.com/spulec/freezegun/pull/424.
+    """
+    return freezegun.api.FakeDatetime(
+        datetime.year,
+        datetime.month,
+        datetime.day,
+        datetime.hour,
+        datetime.minute,
+        datetime.second,
+        datetime.microsecond,
+        datetime.tzinfo,
+        fold=datetime.fold,
+    )
+
+
+class HAFakeDatetime(freezegun.api.FakeDatetime):
+    """Modified to include https://github.com/spulec/freezegun/pull/424."""
+
+    @classmethod
+    def now(cls, tz=None):
+        """Return frozen now."""
+        now = cls._time_to_freeze() or freezegun.api.real_datetime.now()
+        if tz:
+            result = tz.fromutc(now.replace(tzinfo=tz))
+        else:
+            result = now
+
+        # Add the _tz_offset only if it's non-zero to preserve fold
+        if cls._tz_offset():
+            result += cls._tz_offset()
+
+        return ha_datetime_to_fakedatetime(result)
 
 
 def check_real(func):
@@ -165,8 +278,6 @@ def hass(loop, load_registries, hass_storage, request):
             request.module.__name__,
             request.function.__name__,
         ) in IGNORE_UNCAUGHT_EXCEPTIONS:
-            continue
-        if isinstance(ex, ServiceNotFound):
             continue
         raise ex
 
@@ -296,6 +407,26 @@ def hass_read_only_access_token(hass, hass_read_only_user, local_auth):
 
 
 @pytest.fixture
+def hass_supervisor_user(hass, local_auth):
+    """Return the Home Assistant Supervisor user."""
+    admin_group = hass.loop.run_until_complete(
+        hass.auth.async_get_group(GROUP_ID_ADMIN)
+    )
+    return MockUser(
+        name=HASSIO_USER_NAME, groups=[admin_group], system_generated=True
+    ).add_to_hass(hass)
+
+
+@pytest.fixture
+def hass_supervisor_access_token(hass, hass_supervisor_user, local_auth):
+    """Return a Home Assistant Supervisor access token."""
+    refresh_token = hass.loop.run_until_complete(
+        hass.auth.async_create_refresh_token(hass_supervisor_user)
+    )
+    return hass.auth.async_create_access_token(refresh_token)
+
+
+@pytest.fixture
 def legacy_auth(hass):
     """Load legacy API password provider."""
     prv = legacy_api_password.LegacyApiPasswordAuthProvider(
@@ -319,7 +450,7 @@ def local_auth(hass):
 
 
 @pytest.fixture
-def hass_client(hass, aiohttp_client, hass_access_token):
+def hass_client(hass, aiohttp_client, hass_access_token, socket_enabled):
     """Return an authenticated HTTP client."""
 
     async def auth_client():
@@ -329,6 +460,17 @@ def hass_client(hass, aiohttp_client, hass_access_token):
         )
 
     return auth_client
+
+
+@pytest.fixture
+def hass_client_no_auth(hass, aiohttp_client, socket_enabled):
+    """Return an unauthenticated HTTP client."""
+
+    async def client():
+        """Return an authenticated client."""
+        return await aiohttp_client(hass.http.app)
+
+    return client
 
 
 @pytest.fixture
@@ -356,31 +498,24 @@ def current_request_with_host(current_request):
 
 
 @pytest.fixture
-def hass_ws_client(aiohttp_client, hass_access_token, hass):
+def hass_ws_client(aiohttp_client, hass_access_token, hass, socket_enabled):
     """Websocket client fixture connected to websocket server."""
 
     async def create_client(hass=hass, access_token=hass_access_token):
         """Create a websocket client."""
         assert await async_setup_component(hass, "websocket_api", {})
-
         client = await aiohttp_client(hass.http.app)
+        websocket = await client.ws_connect(URL)
+        auth_resp = await websocket.receive_json()
+        assert auth_resp["type"] == TYPE_AUTH_REQUIRED
 
-        with patch("homeassistant.components.http.auth.setup_auth"):
-            websocket = await client.ws_connect(URL)
-            auth_resp = await websocket.receive_json()
-            assert auth_resp["type"] == TYPE_AUTH_REQUIRED
+        if access_token is None:
+            await websocket.send_json({"type": TYPE_AUTH, "access_token": "incorrect"})
+        else:
+            await websocket.send_json({"type": TYPE_AUTH, "access_token": access_token})
 
-            if access_token is None:
-                await websocket.send_json(
-                    {"type": TYPE_AUTH, "access_token": "incorrect"}
-                )
-            else:
-                await websocket.send_json(
-                    {"type": TYPE_AUTH, "access_token": access_token}
-                )
-
-            auth_ok = await websocket.receive_json()
-            assert auth_ok["type"] == TYPE_AUTH_OK
+        auth_ok = await websocket.receive_json()
+        assert auth_ok["type"] == TYPE_AUTH_OK
 
         # wrap in client
         websocket.client = client
@@ -456,19 +591,25 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     if mqtt_config is None:
         mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
 
-    result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
-    assert result
     await hass.async_block_till_done()
 
-    # Workaround: asynctest==0.13 fails on @functools.lru_cache
-    spec = dir(hass.data["mqtt"])
-    spec.remove("_matching_subscriptions")
+    entry = MockConfigEntry(
+        data=mqtt_config,
+        domain=mqtt.DOMAIN,
+        title="Tasmota",
+    )
+
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],
-        spec_set=spec,
+        spec_set=hass.data["mqtt"],
         wraps=hass.data["mqtt"],
     )
+    mqtt_component_mock.conf = hass.data["mqtt"].conf  # For diagnostics
     mqtt_component_mock._mqttc = mqtt_client_mock
 
     hass.data["mqtt"] = mqtt_component_mock
@@ -477,11 +618,38 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     return component
 
 
+@pytest.fixture(autouse=True)
+def mock_get_source_ip():
+    """Mock network util's async_get_source_ip."""
+    with patch(
+        "homeassistant.components.network.util.async_get_source_ip",
+        return_value="10.10.10.10",
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_zeroconf():
     """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.models.HaZeroconf") as mock_zc:
-        yield mock_zc.return_value
+    with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True), patch(
+        "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_async_zeroconf(mock_zeroconf):
+    """Mock AsyncZeroconf."""
+    with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
+        zc = mock_aiozc.return_value
+        zc.async_unregister_service = AsyncMock()
+        zc.async_register_service = AsyncMock()
+        zc.async_update_service = AsyncMock()
+        zc.zeroconf.async_wait_for_start = AsyncMock()
+        zc.zeroconf.done = False
+        zc.async_close = AsyncMock()
+        zc.ha_async_close = AsyncMock()
+        yield zc
 
 
 @pytest.fixture
@@ -610,13 +778,28 @@ def enable_statistics():
 
 
 @pytest.fixture
-def hass_recorder(enable_statistics, hass_storage):
+def enable_nightly_purge():
+    """Fixture to control enabling of recorder's nightly purge job.
+
+    To enable nightly purgin, tests can be marked with:
+    @pytest.mark.parametrize("enable_nightly_purge", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
-    stats = recorder.Recorder.async_hourly_statistics if enable_statistics else None
+    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     with patch(
-        "homeassistant.components.recorder.Recorder.async_hourly_statistics",
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         side_effect=stats,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        side_effect=nightly,
         autospec=True,
     ):
 
@@ -630,3 +813,30 @@ def hass_recorder(enable_statistics, hass_storage):
 
         yield setup_recorder
         hass.stop()
+
+
+@pytest.fixture
+def mock_integration_frame():
+    """Mock as if we're calling code from inside an integration."""
+    correct_frame = Mock(
+        filename="/home/paulus/homeassistant/components/hue/light.py",
+        lineno="23",
+        line="self.light.is_on",
+    )
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            correct_frame,
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        yield correct_frame

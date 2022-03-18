@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "cannot_connect": "Gagal terhubung",
             "not_konn_panel": "Bukan perangkat Konnected.io yang dikenali",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
@@ -78,7 +79,7 @@
                     "alarm2_out2": "OUT2/ALARM2",
                     "out1": "OUT1"
                 },
-                "description": "Pilih konfigurasi I/O lainnya di bawah ini.  Anda dapat mengonfigurasi detail opsi pada langkah berikutnya.",
+                "description": "Pilih konfigurasi I/O lainnya di bawah ini. Anda dapat mengonfigurasi detail opsi pada langkah berikutnya.",
                 "title": "Konfigurasikan I/O yang Diperluas"
             },
             "options_misc": {

@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "no_unconfigured_devices": "Geen niet-geconfigureerde apparaten gevonden.",
+            "switchbot_unsupported_type": "Niet-ondersteund Switchbot-type.",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "mac": "MAC-adres apparaat",
+                    "name": "Naam",
+                    "password": "Wachtwoord"
+                },
+                "title": "Switchbot-apparaat instellen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "retry_count": "Aantal herhalingen",
+                    "retry_timeout": "Time-out tussen nieuwe pogingen",
+                    "scan_timeout": "Hoe lang te scannen voor advertentiegegevens",
+                    "update_time": "Tijd tussen updates (seconden)"
+                }
+            }
+        }
+    }
+}

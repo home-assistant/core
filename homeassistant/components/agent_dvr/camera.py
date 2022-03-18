@@ -5,14 +5,10 @@ import logging
 from agent import AgentError
 
 from homeassistant.components.camera import SUPPORT_ON_OFF
-from homeassistant.components.mjpeg.camera import (
-    CONF_MJPEG_URL,
-    CONF_STILL_IMAGE_URL,
-    MjpegCamera,
-    filter_urllib3_logging,
-)
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTRIBUTION,
@@ -67,28 +63,24 @@ async def async_setup_entry(
 class AgentCamera(MjpegCamera):
     """Representation of an Agent Device Stream."""
 
-    _attr_supported_features = SUPPORT_ON_OFF
-
     def __init__(self, device):
         """Initialize as a subclass of MjpegCamera."""
-        device_info = {
-            CONF_NAME: device.name,
-            CONF_MJPEG_URL: f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
-            CONF_STILL_IMAGE_URL: f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
-        }
         self.device = device
         self._removed = False
         self._attr_name = f"{device.client.name} {device.name}"
         self._attr_unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
-        self._attr_should_poll = True
-        super().__init__(device_info)
-        self._attr_device_info = {
-            "identifiers": {(AGENT_DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Agent",
-            "model": "Camera",
-            "sw_version": device.client.version,
-        }
+        super().__init__(
+            name=device.name,
+            mjpeg_url=f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
+            still_image_url=f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(AGENT_DOMAIN, self.unique_id)},
+            manufacturer="Agent",
+            model="Camera",
+            name=self.name,
+            sw_version=device.client.version,
+        )
 
     async def async_update(self):
         """Update our state from the Agent API."""
@@ -102,10 +94,10 @@ class AgentCamera(MjpegCamera):
             if self.device.client.is_available and not self._removed:
                 _LOGGER.error("%s lost", self.name)
                 self._removed = True
-        self._attr_available = self.device.client.is_available
         self._attr_icon = "mdi:camcorder-off"
         if self.is_on:
             self._attr_icon = "mdi:camcorder"
+        self._attr_available = self.device.client.is_available
         self._attr_extra_state_attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             "editable": False,
@@ -116,6 +108,11 @@ class AgentCamera(MjpegCamera):
             "has_ptz": self.device.has_ptz,
             "alerts_enabled": self.device.alerts_active,
         }
+
+    @property
+    def should_poll(self) -> bool:
+        """Update the state periodically."""
+        return True
 
     @property
     def is_recording(self) -> bool:
@@ -136,6 +133,11 @@ class AgentCamera(MjpegCamera):
     def connected(self) -> bool:
         """Return True if entity is connected."""
         return self.device.connected
+
+    @property
+    def supported_features(self) -> int:
+        """Return supported features."""
+        return SUPPORT_ON_OFF
 
     @property
     def is_on(self) -> bool:

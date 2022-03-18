@@ -1,13 +1,15 @@
 """Support for Waterfurnace."""
+from __future__ import annotations
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    POWER_WATT,
-    TEMP_FAHRENHEIT,
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    SensorDeviceClass,
+    SensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.const import PERCENTAGE, POWER_WATT, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 from . import DOMAIN as WF_DOMAIN, UPDATE_TOPIC
@@ -40,13 +42,21 @@ SENSORS = [
         "tstatactivesetpoint",
         None,
         TEMP_FAHRENHEIT,
-        DEVICE_CLASS_TEMPERATURE,
+        SensorDeviceClass.TEMPERATURE,
     ),
     WFSensorConfig(
-        "Leaving Air", "leavingairtemp", None, TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE
+        "Leaving Air",
+        "leavingairtemp",
+        None,
+        TEMP_FAHRENHEIT,
+        SensorDeviceClass.TEMPERATURE,
     ),
     WFSensorConfig(
-        "Room Temp", "tstatroomtemp", None, TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE
+        "Room Temp",
+        "tstatroomtemp",
+        None,
+        TEMP_FAHRENHEIT,
+        SensorDeviceClass.TEMPERATURE,
     ),
     WFSensorConfig("Loop Temp", "enteringwatertemp", None, TEMP_FAHRENHEIT),
     WFSensorConfig(
@@ -64,7 +74,12 @@ SENSORS = [
 ]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Waterfurnace sensor."""
     if discovery_info is None:
         return
@@ -101,7 +116,7 @@ class WaterFurnaceSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -111,7 +126,7 @@ class WaterFurnaceSensor(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit_of_measurement
 

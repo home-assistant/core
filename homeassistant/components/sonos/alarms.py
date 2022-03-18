@@ -3,16 +3,20 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from soco import SoCo
-from soco.alarms import Alarm, get_alarms
-from soco.exceptions import SoCoException
+from soco.alarms import Alarm, Alarms
+from soco.events_base import Event as SonosEvent
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DATA_SONOS, SONOS_ALARMS_UPDATED, SONOS_CREATE_ALARM
+from .helpers import soco_error
 from .household_coordinator import SonosHouseholdCoordinator
+
+if TYPE_CHECKING:
+    from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,48 +27,71 @@ class SonosAlarms(SonosHouseholdCoordinator):
     def __init__(self, *args: Any) -> None:
         """Initialize the data."""
         super().__init__(*args)
-        self._alarms: dict[str, Alarm] = {}
+        self.alarms: Alarms = Alarms()
+        self.created_alarm_ids: set[str] = set()
 
     def __iter__(self) -> Iterator:
         """Return an iterator for the known alarms."""
-        alarms = list(self._alarms.values())
-        return iter(alarms)
+        return iter(self.alarms)
 
     def get(self, alarm_id: str) -> Alarm | None:
         """Get an Alarm instance."""
-        return self._alarms.get(alarm_id)
+        return self.alarms.get(alarm_id)
 
-    async def async_update_entities(self, soco: SoCo) -> bool:
+    async def async_update_entities(
+        self, soco: SoCo, update_id: int | None = None
+    ) -> None:
         """Create and update alarms entities, return success."""
-        try:
-            new_alarms = await self.hass.async_add_executor_job(self.update_cache, soco)
-        except (OSError, SoCoException) as err:
-            _LOGGER.error("Could not refresh alarms using %s: %s", soco, err)
+        updated = await self.hass.async_add_executor_job(
+            self.update_cache, soco, update_id
+        )
+        if not updated:
+            return
+
+        for alarm_id, alarm in self.alarms.alarms.items():
+            if alarm_id in self.created_alarm_ids:
+                continue
+            speaker = self.hass.data[DATA_SONOS].discovered.get(alarm.zone.uid)
+            if speaker:
+                async_dispatcher_send(
+                    self.hass, SONOS_CREATE_ALARM, speaker, [alarm_id]
+                )
+        async_dispatcher_send(self.hass, f"{SONOS_ALARMS_UPDATED}-{self.household_id}")
+
+    async def async_process_event(
+        self, event: SonosEvent, speaker: SonosSpeaker
+    ) -> None:
+        """Process the event payload in an async lock and update entities."""
+        event_id = event.variables["alarm_list_version"].split(":")[-1]
+        event_id = int(event_id)
+        async with self.cache_update_lock:
+            if event_id <= self.last_processed_event_id:
+                # Skip updates if this event_id has already been seen
+                return
+            speaker.event_stats.process(event)
+            await self.async_update_entities(speaker.soco, event_id)
+
+    @soco_error()
+    def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
+        """Update cache of known alarms and return if cache has changed."""
+        self.alarms.update(soco)
+
+        if update_id and self.alarms.last_id < update_id:
+            # Skip updates if latest query result is outdated or lagging
             return False
 
-        for alarm in new_alarms:
-            speaker = self.hass.data[DATA_SONOS].discovered[alarm.zone.uid]
-            async_dispatcher_send(
-                self.hass, SONOS_CREATE_ALARM, speaker, [alarm.alarm_id]
-            )
-        async_dispatcher_send(self.hass, f"{SONOS_ALARMS_UPDATED}-{self.household_id}")
+        if (
+            self.last_processed_event_id
+            and self.alarms.last_id <= self.last_processed_event_id
+        ):
+            # Skip updates already processed
+            return False
+
+        _LOGGER.debug(
+            "Updating processed event %s from %s (was %s)",
+            self.alarms.last_id,
+            soco,
+            self.last_processed_event_id,
+        )
+        self.last_processed_event_id = self.alarms.last_id
         return True
-
-    def update_cache(self, soco: SoCo) -> set[Alarm]:
-        """Populate cache of known alarms.
-
-        Prune deleted alarms and return new alarms.
-        """
-        soco_alarms = get_alarms(soco)
-        new_alarms = set()
-
-        for alarm in soco_alarms:
-            if alarm.alarm_id not in self._alarms:
-                new_alarms.add(alarm)
-                self._alarms[alarm.alarm_id] = alarm
-
-        for alarm_id, alarm in list(self._alarms.items()):
-            if alarm not in soco_alarms:
-                self._alarms.pop(alarm_id)
-
-        return new_alarms

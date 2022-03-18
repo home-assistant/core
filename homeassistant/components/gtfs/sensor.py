@@ -5,22 +5,21 @@ import datetime
 import logging
 import os
 import threading
-from typing import Any, Callable
+from typing import Any
 
 import pygtfs
 from sqlalchemy.sql import text
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_NAME,
-    CONF_OFFSET,
-    DEVICE_CLASS_TIMESTAMP,
-    STATE_UNKNOWN,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
 )
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
@@ -254,8 +253,8 @@ WHEELCHAIR_ACCESS_OPTIONS = {1: True, 2: False}
 WHEELCHAIR_BOARDING_DEFAULT = STATE_UNKNOWN
 WHEELCHAIR_BOARDING_OPTIONS = {1: True, 2: False}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {  # type: ignore
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Required(CONF_DATA): cv.string,
@@ -481,7 +480,7 @@ def get_next_departure(
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: Callable[[list], None],
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the GTFS sensor."""
@@ -490,11 +489,10 @@ def setup_platform(
     origin = config.get(CONF_ORIGIN)
     destination = config.get(CONF_DESTINATION)
     name = config.get(CONF_NAME)
-    offset = config.get(CONF_OFFSET)
+    offset: datetime.timedelta = config[CONF_OFFSET]
     include_tomorrow = config[CONF_TOMORROW]
 
-    if not os.path.exists(gtfs_dir):
-        os.makedirs(gtfs_dir)
+    os.makedirs(gtfs_dir, exist_ok=True)
 
     if not os.path.exists(os.path.join(gtfs_dir, data)):
         _LOGGER.error("The given GTFS data file/folder was not found")
@@ -518,7 +516,7 @@ def setup_platform(
 class GTFSDepartureSensor(SensorEntity):
     """Implementation of a GTFS departure sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self,
@@ -540,11 +538,11 @@ class GTFSDepartureSensor(SensorEntity):
         self._available = False
         self._icon = ICON
         self._name = ""
-        self._state: str | None = None
-        self._attributes = {}
+        self._state: datetime.datetime | None = None
+        self._attributes: dict[str, Any] = {}
 
         self._agency = None
-        self._departure = {}
+        self._departure: dict[str, Any] = {}
         self._destination = None
         self._origin = None
         self._route = None
@@ -559,7 +557,7 @@ class GTFSDepartureSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self) -> str | None:  # type: ignore
+    def native_value(self) -> datetime.datetime | None:
         """Return the state of the sensor."""
         return self._state
 
@@ -615,9 +613,9 @@ class GTFSDepartureSensor(SensorEntity):
             if not self._departure:
                 self._state = None
             else:
-                self._state = dt_util.as_utc(
-                    self._departure["departure_time"]
-                ).isoformat()
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.UTC
+                )
 
             # Fetch trip and route details once, unless updated
             if not self._departure:

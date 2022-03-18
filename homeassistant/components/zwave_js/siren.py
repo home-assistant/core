@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import ToneID
+from zwave_js_server.const.command_class.sound_switch import ToneID
 
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenEntity
 from homeassistant.components.siren.const import (
@@ -58,9 +58,9 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
         """Initialize a ZwaveSirenEntity entity."""
         super().__init__(config_entry, client, info)
         # Entity class attributes
-        self._attr_available_tones = list(
-            self.info.primary_value.metadata.states.values()
-        )
+        self._attr_available_tones = {
+            int(id): val for id, val in self.info.primary_value.metadata.states.items()
+        }
         self._attr_supported_features = (
             SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_VOLUME_SET
         )
@@ -68,8 +68,10 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
             self._attr_supported_features |= SUPPORT_TONES
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return whether device is on."""
+        if self.info.primary_value.value is None:
+            return None
         return bool(self.info.primary_value.value)
 
     async def async_set_value(
@@ -82,22 +84,14 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        tone: str | None = kwargs.get(ATTR_TONE)
+        tone_id: int | None = kwargs.get(ATTR_TONE)
         options = {}
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
             options["volume"] = round(volume * 100)
         # Play the default tone if a tone isn't provided
-        if tone is None:
+        if tone_id is None:
             await self.async_set_value(ToneID.DEFAULT, options)
             return
-
-        tone_id = int(
-            next(
-                key
-                for key, value in self.info.primary_value.metadata.states.items()
-                if value == tone
-            )
-        )
 
         await self.async_set_value(tone_id, options)
 

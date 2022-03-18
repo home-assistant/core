@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from homeassistant import config as conf_util
 from homeassistant.const import (
@@ -11,7 +11,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
 )
-from homeassistant.core import CoreState, Event, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     discovery,
@@ -19,6 +19,7 @@ from homeassistant.helpers import (
     update_coordinator,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
 from .const import CONF_TRIGGER, DOMAIN, PLATFORMS
@@ -26,12 +27,12 @@ from .const import CONF_TRIGGER, DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the template integration."""
     if DOMAIN in config:
         await _process_config(hass, config)
 
-    async def _reload_config(call: Event) -> None:
+    async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload top-level + platforms."""
         try:
             unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
@@ -60,7 +61,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def _process_config(hass, hass_config):
+async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     """Process config."""
     coordinators: list[TriggerUpdateCoordinator] | None = hass.data.pop(DOMAIN, None)
 
@@ -125,7 +126,7 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         if self._unsub_trigger:
             self._unsub_trigger()
 
-    async def async_setup(self, hass_config):
+    async def async_setup(self, hass_config: ConfigType) -> None:
         """Set up the trigger and create entities."""
         if self.hass.state == CoreState.running:
             await self._attach_triggers()

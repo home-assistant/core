@@ -9,6 +9,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_ID
 
 from .const import DOMAIN
 
@@ -27,9 +28,9 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if (
             user_input is not None
             and self.discovered_hubs is not None
-            and user_input["id"] in self.discovered_hubs
+            and user_input[CONF_ID] in self.discovered_hubs
         ):
-            return await self.async_create(self.discovered_hubs[user_input["id"]])
+            return await self.async_create(self.discovered_hubs[user_input[CONF_ID]])
 
         # Already configured hosts
         already_configured = {
@@ -55,7 +56,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("id"): vol.In(
+                    vol.Required(CONF_ID): vol.In(
                         {hub.id: f"{hub.id} {hub.host}" for hub in hubs}
                     )
                 }
@@ -65,4 +66,4 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_create(self, hub):
         """Create the Acmeda Hub entry."""
         await self.async_set_unique_id(hub.id, raise_on_progress=False)
-        return self.async_create_entry(title=hub.id, data={"host": hub.host})
+        return self.async_create_entry(title=hub.id, data={CONF_HOST: hub.host})

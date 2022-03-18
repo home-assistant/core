@@ -1,17 +1,22 @@
 """Support for the ZHA platform."""
+from __future__ import annotations
+
 import functools
 import time
 
-from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
     CHANNEL_POWER_CONFIGURATION,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -19,12 +24,16 @@ from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 from .sensor import Battery
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.DEVICE_TRACKER)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Zigbee Home Automation device tracker from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.DEVICE_TRACKER]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -33,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 @STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
@@ -97,3 +106,19 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         Percentage from 0-100.
         """
         return self._battery_level
+
+    @property
+    def device_info(  # pylint: disable=overridden-final-method
+        self,
+    ) -> DeviceInfo | None:
+        """Return device info."""
+        # We opt ZHA device tracker back into overriding this method because
+        # it doesn't track IP-based devices.
+        # Call Super because ScannerEntity overrode it.
+        return super(ZhaEntity, self).device_info
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return unique ID."""
+        # Call Super because ScannerEntity overrode it.
+        return super(ZhaEntity, self).unique_id

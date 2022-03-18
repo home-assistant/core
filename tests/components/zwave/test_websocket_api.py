@@ -1,6 +1,8 @@
 """Test Z-Wave Websocket API."""
 from unittest.mock import call, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.zwave.const import (
@@ -12,6 +14,10 @@ from homeassistant.components.zwave.const import (
 from homeassistant.components.zwave.websocket_api import ID, TYPE
 
 NETWORK_KEY = "0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST"
+
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 async def test_zwave_ws_api(hass, mock_openzwave, hass_ws_client):
@@ -44,8 +50,8 @@ async def test_zwave_ws_api(hass, mock_openzwave, hass_ws_client):
     assert result[CONF_POLLING_INTERVAL] == 6000
 
 
-async def test_zwave_ozw_migration_api(hass, mock_openzwave, hass_ws_client):
-    """Test Z-Wave to OpenZWave websocket migration API."""
+async def test_zwave_zwave_js_migration_api(hass, mock_openzwave, hass_ws_client):
+    """Test Z-Wave to Z-Wave JS websocket migration API."""
 
     await async_setup_component(
         hass,
@@ -76,14 +82,14 @@ async def test_zwave_ozw_migration_api(hass, mock_openzwave, hass_ws_client):
     ) as async_init:
 
         async_init.return_value = {"flow_id": "mock_flow_id"}
-        await client.send_json({ID: 7, TYPE: "zwave/start_ozw_config_flow"})
+        await client.send_json({ID: 7, TYPE: "zwave/start_zwave_js_config_flow"})
         msg = await client.receive_json()
 
     result = msg["result"]
 
     assert result["flow_id"] == "mock_flow_id"
     assert async_init.call_args == call(
-        "ozw",
+        "zwave_js",
         context={"source": config_entries.SOURCE_IMPORT},
         data={"usb_path": "/dev/zwave", "network_key": NETWORK_KEY},
     )

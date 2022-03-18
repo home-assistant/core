@@ -1,55 +1,73 @@
 """Support for Ecobee sensors."""
+from __future__ import annotations
+
 from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_FAHRENHEIT,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
-SENSOR_TYPES = {
-    "temperature": ["Temperature", TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE],
-    "humidity": ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up ecobee (temperature and humidity) sensors."""
     data = hass.data[DOMAIN]
-    dev = []
-    for index in range(len(data.ecobee.thermostats)):
-        for sensor in data.ecobee.get_remote_sensors(index):
-            for item in sensor["capability"]:
-                if item["type"] not in ("temperature", "humidity"):
-                    continue
+    entities = [
+        EcobeeSensor(data, sensor["name"], index, description)
+        for index in range(len(data.ecobee.thermostats))
+        for sensor in data.ecobee.get_remote_sensors(index)
+        for item in sensor["capability"]
+        for description in SENSOR_TYPES
+        if description.key == item["type"]
+    ]
 
-                dev.append(EcobeeSensor(data, sensor["name"], item["type"], index))
-
-    async_add_entities(dev, True)
+    async_add_entities(entities, True)
 
 
 class EcobeeSensor(SensorEntity):
     """Representation of an Ecobee sensor."""
 
-    def __init__(self, data, sensor_name, sensor_type, sensor_index):
+    def __init__(
+        self, data, sensor_name, sensor_index, description: SensorEntityDescription
+    ):
         """Initialize the sensor."""
+        self.entity_description = description
         self.data = data
-        self._name = f"{sensor_name} {SENSOR_TYPES[sensor_type][0]}"
         self.sensor_name = sensor_name
-        self.type = sensor_type
         self.index = sensor_index
         self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
-    @property
-    def name(self):
-        """Return the name of the Ecobee sensor."""
-        return self._name
+        self._attr_name = f"{sensor_name} {description.name}"
 
     @property
     def unique_id(self):
@@ -62,7 +80,7 @@ class EcobeeSensor(SensorEntity):
                 return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device information for this sensor."""
         identifier = None
         model = None
@@ -85,12 +103,12 @@ class EcobeeSensor(SensorEntity):
             break
 
         if identifier is not None and model is not None:
-            return {
-                "identifiers": {(DOMAIN, identifier)},
-                "name": self.sensor_name,
-                "manufacturer": MANUFACTURER,
-                "model": model,
-            }
+            return DeviceInfo(
+                identifiers={(DOMAIN, identifier)},
+                manufacturer=MANUFACTURER,
+                model=model,
+                name=self.sensor_name,
+            )
         return None
 
     @property
@@ -100,14 +118,7 @@ class EcobeeSensor(SensorEntity):
         return thermostat["runtime"]["connected"]
 
     @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE):
-            return self.type
-        return None
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._state in (
             ECOBEE_STATE_CALIBRATING,
@@ -116,15 +127,10 @@ class EcobeeSensor(SensorEntity):
         ):
             return None
 
-        if self.type == "temperature":
+        if self.entity_description.key == "temperature":
             return float(self._state) / 10
 
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement this sensor expresses itself in."""
-        return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest state of the sensor."""
@@ -133,7 +139,7 @@ class EcobeeSensor(SensorEntity):
             if sensor["name"] != self.sensor_name:
                 continue
             for item in sensor["capability"]:
-                if item["type"] != self.type:
+                if item["type"] != self.entity_description.key:
                     continue
                 self._state = item["value"]
                 break

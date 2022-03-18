@@ -6,21 +6,24 @@ from asyncio import CancelledError
 from contextlib import suppress
 from datetime import timedelta
 from functools import partial
-from typing import Any
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.objects import DSMRObject
 import serial
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import EventType, StateType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -31,12 +34,10 @@ from .const import (
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
     DATA_TASK,
-    DEFAULT_DSMR_VERSION,
-    DEFAULT_PORT,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
     DEFAULT_TIME_BETWEEN_UPDATE,
-    DEVICE_NAME_ENERGY,
+    DEVICE_NAME_ELECTRICITY,
     DEVICE_NAME_GAS,
     DOMAIN,
     LOGGER,
@@ -44,37 +45,7 @@ from .const import (
 )
 from .models import DSMRSensorEntityDescription
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-            cv.string, vol.In(["5L", "5B", "5", "4", "2.2"])
-        ),
-        vol.Optional(CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL): int,
-        vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
-) -> None:
-    """Import the platform into a config entry."""
-    LOGGER.warning(
-        "Configuration of the DSMR platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2021.9; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
+UNIT_CONVERSION = {"m3": VOLUME_CUBIC_METERS}
 
 
 async def async_setup_entry(
@@ -111,7 +82,7 @@ async def async_setup_entry(
             create_tcp_dsmr_reader,
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
-            entry.data[CONF_DSMR_VERSION],
+            dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
             keep_alive_interval=60,
@@ -120,7 +91,7 @@ async def async_setup_entry(
         reader_factory = partial(
             create_dsmr_reader,
             entry.data[CONF_PORT],
-            entry.data[CONF_DSMR_VERSION],
+            dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
         )
@@ -131,22 +102,29 @@ async def async_setup_entry(
         transport = None
         protocol = None
 
-        while hass.state != CoreState.stopping:
+        while hass.state == CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
             try:
                 transport, protocol = await hass.loop.create_task(reader_factory())
 
                 if transport:
                     # Register listener to close transport on HA shutdown
+                    @callback
+                    def close_transport(_event: EventType) -> None:
+                        """Close the transport on HA shutdown."""
+                        if not transport:
+                            return
+                        transport.close()
+
                     stop_listener = hass.bus.async_listen_once(
-                        EVENT_HOMEASSISTANT_STOP, transport.close
+                        EVENT_HOMEASSISTANT_STOP, close_transport
                     )
 
                     # Wait for reader to close
                     await protocol.wait_closed()
 
                     # Unexpected disconnect
-                    if not hass.is_stopping:
+                    if hass.state == CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
@@ -173,7 +151,9 @@ async def async_setup_entry(
                     entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
                 )
             except CancelledError:
-                if stop_listener:
+                if stop_listener and (
+                    hass.state == CoreState.not_running or hass.is_running
+                ):
                     stop_listener()  # pylint: disable=not-callable
 
                 if transport:
@@ -206,15 +186,17 @@ class DSMREntity(SensorEntity):
         self.telegram: dict[str, DSMRObject] = {}
 
         device_serial = entry.data[CONF_SERIAL_ID]
-        device_name = DEVICE_NAME_ENERGY
+        device_name = DEVICE_NAME_ELECTRICITY
         if entity_description.is_gas:
             device_serial = entry.data[CONF_SERIAL_ID_GAS]
             device_name = DEVICE_NAME_GAS
+        if device_serial is None:
+            device_serial = entry.entry_id
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, device_serial)},
-            "name": device_name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_serial)},
+            name=device_name,
+        )
         self._attr_unique_id = f"{device_serial}_{entity_description.name}".replace(
             " ", "_"
         )
@@ -238,10 +220,9 @@ class DSMREntity(SensorEntity):
         return attr
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
-        value = self.get_dsmr_object_attr("value")
-        if value is None:
+        if (value := self.get_dsmr_object_attr("value")) is None:
             return None
 
         if self.entity_description.key == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
@@ -258,9 +239,12 @@ class DSMREntity(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return self.get_dsmr_object_attr("unit")
+        unit_of_measurement = self.get_dsmr_object_attr("unit")
+        if unit_of_measurement in UNIT_CONVERSION:
+            return UNIT_CONVERSION[unit_of_measurement]
+        return unit_of_measurement
 
     @staticmethod
     def translate_tariff(value: str, dsmr_version: str) -> str | None:

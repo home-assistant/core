@@ -1,4 +1,6 @@
 """Support for Homematic lights."""
+from __future__ import annotations
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -12,6 +14,9 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
@@ -19,7 +24,12 @@ from .entity import HMDevice
 SUPPORT_HOMEMATIC = SUPPORT_BRIGHTNESS
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Homematic light platform."""
     if discovery_info is None:
         return

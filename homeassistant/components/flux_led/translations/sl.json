@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana",
+            "no_devices_found": "V omre\u017eju ni mogo\u010de najti nobene naprave"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Gostitelj"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_effect_speed_pct": "U\u010dinek po meri: Hitrost v odstotkih za u\u010dinek, ki spreminja barve.",
+                    "custom_effect_transition": "U\u010dinek po meri: Vrsta prehoda med barvami.",
+                    "mode": "Izbrani na\u010din svetlosti."
+                }
+            }
+        }
+    }
+}

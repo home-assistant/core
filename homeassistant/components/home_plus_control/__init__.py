@@ -8,7 +8,7 @@ from homepluscontrol.homeplusapi import HomePlusControlApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
@@ -16,6 +16,7 @@ from homeassistant.helpers import (
     dispatcher,
 )
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import config_flow, helpers
@@ -45,12 +46,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 # The Legrand Home+ Control platform is currently limited to "switch" entities
-PLATFORMS = ["switch"]
+PLATFORMS = [Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Legrand Home+ Control component from configuration.yaml."""
     hass.data[DOMAIN] = {}
 

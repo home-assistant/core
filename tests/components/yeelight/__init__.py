@@ -1,9 +1,13 @@
 """Tests for the Yeelight integration."""
-from unittest.mock import MagicMock, patch
+import asyncio
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from async_upnp_client.search import SsdpSearchListener
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -11,8 +15,12 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     YeelightScanner,
+    scanner,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
+from homeassistant.core import callback
+
+FAIL_TO_BIND_IP = "1.2.3.4"
 
 IP_ADDRESS = "192.168.1.239"
 MODEL = "color"
@@ -23,13 +31,28 @@ CAPABILITIES = {
     "id": ID,
     "model": MODEL,
     "fw_ver": FW_VER,
+    "location": f"yeelight://{IP_ADDRESS}",
     "support": "get_prop set_default set_power toggle set_bright start_cf stop_cf"
     " set_scene cron_add cron_get cron_del set_ct_abx set_rgb",
     "name": "",
 }
 
+ID_DECIMAL = f"{int(ID, 16):08d}"
+
+ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+    host=IP_ADDRESS,
+    addresses=[IP_ADDRESS],
+    port=54321,
+    hostname=f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
+    type="_miio._udp.local.",
+    name=f"yeelink-light-strip1_miio{ID_DECIMAL}._miio._udp.local.",
+    properties={"epoch": "1", "mac": "000000000000"},
+)
+
 NAME = "name"
-UNIQUE_NAME = f"yeelight_{MODEL}_{ID}"
+SHORT_ID = hex(int("0x000000000015243f", 16))
+UNIQUE_NAME = f"yeelight_{MODEL}_{SHORT_ID}"
+UNIQUE_FRIENDLY_NAME = f"Yeelight {MODEL.title()} {SHORT_ID}"
 
 MODULE = "homeassistant.components.yeelight"
 MODULE_CONFIG_FLOW = f"{MODULE}.config_flow"
@@ -79,31 +102,97 @@ YAML_CONFIGURATION = {
 CONFIG_ENTRY_DATA = {CONF_ID: ID}
 
 
+class MockAsyncBulb:
+    """A mock for yeelight.aio.AsyncBulb."""
+
+    def __init__(self, model, bulb_type, cannot_connect):
+        """Init the mock."""
+        self.model = model
+        self.bulb_type = bulb_type
+        self._async_callback = None
+        self._cannot_connect = cannot_connect
+
+    async def async_listen(self, callback):
+        """Mock the listener."""
+        if self._cannot_connect:
+            raise BulbException
+        self._async_callback = callback
+
+    async def async_stop_listening(self):
+        """Drop the listener."""
+        self._async_callback = None
+
+    def set_capabilities(self, capabilities):
+        """Mock setting capabilities."""
+        self.capabilities = capabilities
+
+
 def _mocked_bulb(cannot_connect=False):
-    bulb = MagicMock()
-    type(bulb).get_capabilities = MagicMock(
-        return_value=None if cannot_connect else CAPABILITIES
+    bulb = MockAsyncBulb(MODEL, BulbType.Color, cannot_connect)
+    type(bulb).async_get_properties = AsyncMock(
+        side_effect=BulbException if cannot_connect else None
     )
     type(bulb).get_properties = MagicMock(
         side_effect=BulbException if cannot_connect else None
     )
     type(bulb).get_model_specs = MagicMock(return_value=_MODEL_SPECS[MODEL])
-
-    bulb.capabilities = CAPABILITIES
-    bulb.model = MODEL
-    bulb.bulb_type = BulbType.Color
-    bulb.last_properties = PROPERTIES
+    bulb.capabilities = CAPABILITIES.copy()
+    bulb.available = True
+    bulb.last_properties = PROPERTIES.copy()
     bulb.music_mode = False
-
+    bulb.async_get_properties = AsyncMock()
+    bulb.async_update = AsyncMock()
+    bulb.async_turn_on = AsyncMock()
+    bulb.async_turn_off = AsyncMock()
+    bulb.async_set_brightness = AsyncMock()
+    bulb.async_set_color_temp = AsyncMock()
+    bulb.async_set_hsv = AsyncMock()
+    bulb.async_set_rgb = AsyncMock()
+    bulb.async_start_flow = AsyncMock()
+    bulb.async_stop_flow = AsyncMock()
+    bulb.async_set_power_mode = AsyncMock()
+    bulb.async_set_scene = AsyncMock()
+    bulb.async_set_default = AsyncMock()
+    bulb.async_start_music = AsyncMock()
     return bulb
 
 
-def _patch_discovery(prefix, no_device=False):
+def _patched_ssdp_listener(info: ssdp.SsdpHeaders, *args, **kwargs):
+    listener = SsdpSearchListener(*args, **kwargs)
+
+    async def _async_callback(*_):
+        if kwargs["source"][0] == FAIL_TO_BIND_IP:
+            raise OSError
+        await listener.async_connect_callback()
+
+    @callback
+    def _async_search(*_):
+        if info:
+            asyncio.create_task(listener.async_callback(info))
+
+    listener.async_start = _async_callback
+    listener.async_search = _async_search
+    return listener
+
+
+def _patch_discovery(no_device=False, capabilities=None):
     YeelightScanner._scanner = None  # Clear class scanner to reset hass
 
-    def _mocked_discovery(timeout=2, interface=False):
-        if no_device:
-            return []
-        return [{"ip": IP_ADDRESS, "port": 55443, "capabilities": CAPABILITIES}]
+    def _generate_fake_ssdp_listener(*args, **kwargs):
+        info = None
+        if not no_device:
+            info = capabilities or CAPABILITIES
+        return _patched_ssdp_listener(info, *args, **kwargs)
 
-    return patch(f"{prefix}.discover_bulbs", side_effect=_mocked_discovery)
+    return patch(
+        "homeassistant.components.yeelight.scanner.SsdpSearchListener",
+        new=_generate_fake_ssdp_listener,
+    )
+
+
+def _patch_discovery_interval():
+    return patch.object(scanner, "DISCOVERY_SEARCH_INTERVAL", timedelta(seconds=0))
+
+
+def _patch_discovery_timeout():
+    return patch.object(scanner, "DISCOVERY_TIMEOUT", 0.0001)

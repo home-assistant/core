@@ -15,7 +15,7 @@
                     "password": "Password"
                 },
                 "description": "Inserisci la password per {username}.",
-                "title": "Riautentica un account di August"
+                "title": "Autentica nuovamente un account di August"
             },
             "user_validate": {
                 "data": {

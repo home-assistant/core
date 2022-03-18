@@ -10,6 +10,10 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.zwave_js import DOMAIN, device_condition
 from homeassistant.components.zwave_js.helpers import get_zwave_value_from_config
 from homeassistant.exceptions import HomeAssistantError
@@ -48,7 +52,7 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "type": "config_parameter",
             "device_id": device.id,
             "value_id": value_id,
-            "subtype": f"{value_id} ({name})",
+            "subtype": f"{config_value.property_} ({name})",
         },
         {
             "condition": "device",
@@ -57,7 +61,9 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "device_id": device.id,
         },
     ]
-    conditions = await async_get_device_automations(hass, "condition", device.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device.id
+    )
     for condition in expected_conditions:
         assert condition in conditions
 
@@ -209,17 +215,6 @@ async def test_node_status_state(
     assert len(calls) == 4
     assert calls[3].data["some"] == "dead - event - test_event4"
 
-    event = Event(
-        "unknown",
-        data={
-            "source": "node",
-            "event": "unknown",
-            "nodeId": lock_schlage_be469.node_id,
-        },
-    )
-    lock_schlage_be469.receive_event(event)
-    await hass.async_block_till_done()
-
 
 async def test_config_parameter_state(
     hass, client, lock_schlage_be469, integration, calls
@@ -244,7 +239,7 @@ async def test_config_parameter_state(
                             "device_id": device.id,
                             "type": "config_parameter",
                             "value_id": f"{lock_schlage_be469.node_id}-112-0-3",
-                            "subtype": f"{lock_schlage_be469.node_id}-112-0-3 (Beeper)",
+                            "subtype": "3 (Beeper)",
                             "value": 255,
                         }
                     ],
@@ -264,7 +259,7 @@ async def test_config_parameter_state(
                             "device_id": device.id,
                             "type": "config_parameter",
                             "value_id": f"{lock_schlage_be469.node_id}-112-0-6",
-                            "subtype": f"{lock_schlage_be469.node_id}-112-0-6 (User Slot Status)",
+                            "subtype": "6 (User Slot Status)",
                             "value": 1,
                         }
                     ],
@@ -430,7 +425,17 @@ async def test_get_condition_capabilities_value(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    cc_options = [(cc.value, cc.name) for cc in CommandClass]
+    cc_options = [
+        (133, "Association"),
+        (128, "Battery"),
+        (98, "Door Lock"),
+        (122, "Firmware Update Meta Data"),
+        (114, "Manufacturer Specific"),
+        (113, "Notification"),
+        (152, "Security"),
+        (99, "User Code"),
+        (134, "Version"),
+    ]
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -467,7 +472,7 @@ async def test_get_condition_capabilities_config_parameter(
             "device_id": device.id,
             "type": "config_parameter",
             "value_id": f"{node.node_id}-112-0-1",
-            "subtype": f"{node.node_id}-112-0-1 (Temperature Reporting Threshold)",
+            "subtype": "1 (Temperature Reporting Threshold)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -498,7 +503,7 @@ async def test_get_condition_capabilities_config_parameter(
             "device_id": device.id,
             "type": "config_parameter",
             "value_id": f"{node.node_id}-112-0-10",
-            "subtype": f"{node.node_id}-112-0-10 (Temperature Reporting Filter)",
+            "subtype": "10 (Temperature Reporting Filter)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -509,6 +514,7 @@ async def test_get_condition_capabilities_config_parameter(
         {
             "name": "value",
             "required": True,
+            "type": "integer",
             "valueMin": 0,
             "valueMax": 124,
         }
@@ -523,7 +529,7 @@ async def test_get_condition_capabilities_config_parameter(
             "device_id": device.id,
             "type": "config_parameter",
             "value_id": f"{node.node_id}-112-0-2",
-            "subtype": f"{node.node_id}-112-0-2 (HVAC Settings)",
+            "subtype": "2 (HVAC Settings)",
         },
     )
     assert not capabilities
@@ -538,7 +544,7 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
 
     with pytest.raises(HomeAssistantError):
         await device_condition.async_condition_from_config(
-            {"type": "failed.test", "device_id": device.id}, False
+            hass, {"type": "failed.test", "device_id": device.id}
         )
 
     with patch(
@@ -553,6 +559,47 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
                 hass, {"type": "failed.test", "device_id": device.id}
             )
             == {}
+        )
+
+    INVALID_CONFIG = {
+        "condition": "device",
+        "domain": DOMAIN,
+        "device_id": device.id,
+        "type": "value",
+        "command_class": CommandClass.DOOR_LOCK.value,
+        "property": 9999,
+        "property_key": 9999,
+        "endpoint": 9999,
+        "value": 9999,
+    }
+
+    # Test that invalid config raises exception
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_condition.async_validate_condition_config(hass, INVALID_CONFIG)
+
+    # Unload entry so we can verify that validation will pass on an invalid config
+    # since we return early
+    await hass.config_entries.async_unload(integration.entry_id)
+    assert (
+        await device_condition.async_validate_condition_config(hass, INVALID_CONFIG)
+        == INVALID_CONFIG
+    )
+
+    # Test invalid device ID fails validation
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_condition.async_validate_condition_config(
+            hass,
+            {
+                "condition": "device",
+                "domain": DOMAIN,
+                "type": "value",
+                "device_id": "invalid_device_id",
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": 9999,
+                "property_key": 9999,
+                "endpoint": 9999,
+                "value": 9999,
+            },
         )
 
 

@@ -1,7 +1,7 @@
 """Provides a binary sensor which gets its values from a TCP socket."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .common import TCP_PLATFORM_SCHEMA, TcpEntity
 from .const import CONF_VALUE_ON
@@ -21,7 +21,7 @@ def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the TCP binary sensor."""
     add_entities([TcpBinarySensor(hass, config)])

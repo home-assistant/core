@@ -7,9 +7,6 @@ from pysmartthings import Attribute, Capability
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_SHADE,
     DOMAIN as COVER_DOMAIN,
     STATE_CLOSED,
     STATE_CLOSING,
@@ -18,9 +15,13 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -35,7 +36,11 @@ VALUE_TO_STATE = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add covers for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
@@ -103,13 +108,13 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         """Update the attrs of the cover."""
         value = None
         if Capability.door_control in self._device.capabilities:
-            self._device_class = DEVICE_CLASS_DOOR
+            self._device_class = CoverDeviceClass.DOOR
             value = self._device.status.door
         elif Capability.window_shade in self._device.capabilities:
-            self._device_class = DEVICE_CLASS_SHADE
+            self._device_class = CoverDeviceClass.SHADE
             value = self._device.status.window_shade
         elif Capability.garage_door_control in self._device.capabilities:
-            self._device_class = DEVICE_CLASS_GARAGE
+            self._device_class = CoverDeviceClass.GARAGE
             value = self._device.status.door
 
         self._state = VALUE_TO_STATE.get(value)

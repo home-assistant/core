@@ -1,4 +1,6 @@
 """Sensor for displaying the number of result on Shodan.io."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,18 +8,17 @@ import shodan
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by Shodan"
 
 CONF_QUERY = "query"
 
 DEFAULT_NAME = "Shodan Sensor"
-
-ICON = "mdi:tooltip-text"
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -30,18 +31,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Shodan sensor."""
-    api_key = config.get(CONF_API_KEY)
-    name = config.get(CONF_NAME)
-    query = config.get(CONF_QUERY)
+    api_key = config[CONF_API_KEY]
+    name = config[CONF_NAME]
+    query = config[CONF_QUERY]
 
     data = ShodanData(shodan.Shodan(api_key), query)
     try:
         data.update()
     except shodan.exception.APIError as error:
         _LOGGER.warning("Unable to connect to Shodan.io: %s", error)
-        return False
+        return
 
     add_entities([ShodanSensor(data, name)], True)
 
@@ -49,53 +55,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ShodanSensor(SensorEntity):
     """Representation of the Shodan sensor."""
 
-    def __init__(self, data, name):
+    _attr_attribution = "Data provided by Shodan"
+    _attr_icon = "mdi:tooltip-text"
+    _attr_native_unit_of_measurement = "Hits"
+
+    def __init__(self, data: ShodanData, name: str) -> None:
         """Initialize the Shodan sensor."""
         self.data = data
-        self._name = name
-        self._state = None
-        self._unit_of_measurement = "Hits"
+        self._attr_name = name
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
-        self.data.update()
-        self._state = self.data.details["total"]
+        data = self.data.update()
+        self._attr_native_value = data["total"]
 
 
 class ShodanData:
     """Get the latest data and update the states."""
 
-    def __init__(self, api, query):
+    def __init__(self, api: shodan.Shodan, query: str) -> None:
         """Initialize the data object."""
         self._api = api
         self._query = query
-        self.details = None
 
     def update(self):
         """Get the latest data from shodan.io."""
-        self.details = self._api.count(self._query)
+        return self._api.count(self._query)

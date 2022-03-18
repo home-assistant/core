@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "DirecTV: {name}",
+        "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
                 "data": {
@@ -18,7 +18,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nom d'h\u00f4te ou adresse IP"
+                    "host": "H\u00f4te"
                 }
             }
         }

@@ -1,14 +1,15 @@
 """Initialization of ATAG One sensor platform."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_BAR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TIME_HOURS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, AtagEntity
 
@@ -24,7 +25,11 @@ SENSORS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Initialize sensor platform from config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([AtagSensor(coordinator, sensor) for sensor in SENSORS])
@@ -38,8 +43,8 @@ class AtagSensor(AtagEntity, SensorEntity):
         super().__init__(coordinator, SENSORS[sensor])
         self._attr_name = sensor
         if coordinator.data.report[self._id].sensorclass in (
-            DEVICE_CLASS_PRESSURE,
-            DEVICE_CLASS_TEMPERATURE,
+            SensorDeviceClass.PRESSURE,
+            SensorDeviceClass.TEMPERATURE,
         ):
             self._attr_device_class = coordinator.data.report[self._id].sensorclass
         if coordinator.data.report[self._id].measure in (
@@ -49,10 +54,12 @@ class AtagSensor(AtagEntity, SensorEntity):
             PERCENTAGE,
             TIME_HOURS,
         ):
-            self._attr_unit_of_measurement = coordinator.data.report[self._id].measure
+            self._attr_native_unit_of_measurement = coordinator.data.report[
+                self._id
+            ].measure
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data.report[self._id].state
 

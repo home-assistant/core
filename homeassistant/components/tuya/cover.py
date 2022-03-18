@@ -1,118 +1,383 @@
-"""Support for Tuya covers."""
-from datetime import timedelta
+"""Support for Tuya Cover."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
+from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.cover import (
-    DOMAIN as SENSOR_DOMAIN,
-    ENTITY_ID_FORMAT,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
+    CoverEntityDescription,
 )
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TuyaDevice
-from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
+from . import HomeAssistantTuyaData
+from .base import IntegerTypeData, TuyaEntity
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
-SCAN_INTERVAL = timedelta(seconds=15)
+
+@dataclass
+class TuyaCoverEntityDescription(CoverEntityDescription):
+    """Describe an Tuya cover entity."""
+
+    current_state: DPCode | None = None
+    current_state_inverse: bool = False
+    current_position: DPCode | tuple[DPCode, ...] | None = None
+    set_position: DPCode | None = None
+    open_instruction_value: str = "open"
+    close_instruction_value: str = "close"
+    stop_instruction_value: str = "stop"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up tuya sensors dynamically through tuya discovery."""
+COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
+    # Curtain
+    # Note: Multiple curtains isn't documented
+    # https://developer.tuya.com/en/docs/iot/categorycl?id=Kaiuz1hnpo7df
+    "cl": (
+        TuyaCoverEntityDescription(
+            key=DPCode.CONTROL,
+            name="Curtain",
+            current_state=DPCode.SITUATION_SET,
+            current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
+            set_position=DPCode.PERCENT_CONTROL,
+            device_class=CoverDeviceClass.CURTAIN,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.CONTROL_2,
+            name="Curtain 2",
+            current_position=DPCode.PERCENT_STATE_2,
+            set_position=DPCode.PERCENT_CONTROL_2,
+            device_class=CoverDeviceClass.CURTAIN,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.CONTROL_3,
+            name="Curtain 3",
+            current_position=DPCode.PERCENT_STATE_3,
+            set_position=DPCode.PERCENT_CONTROL_3,
+            device_class=CoverDeviceClass.CURTAIN,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.MACH_OPERATE,
+            name="Curtain",
+            current_position=DPCode.POSITION,
+            set_position=DPCode.POSITION,
+            device_class=CoverDeviceClass.CURTAIN,
+            open_instruction_value="FZ",
+            close_instruction_value="ZZ",
+            stop_instruction_value="STOP",
+        ),
+        # switch_1 is an undocumented code that behaves identically to control
+        # It is used by the Kogan Smart Blinds Driver
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Blind",
+            current_position=DPCode.PERCENT_CONTROL,
+            set_position=DPCode.PERCENT_CONTROL,
+            device_class=CoverDeviceClass.BLIND,
+        ),
+    ),
+    # Garage Door Opener
+    # https://developer.tuya.com/en/docs/iot/categoryckmkzq?id=Kaiuz0ipcboee
+    "ckmkzq": (
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Door",
+            current_state=DPCode.DOORCONTACT_STATE,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Door 2",
+            current_state=DPCode.DOORCONTACT_STATE_2,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_3,
+            name="Door 3",
+            current_state=DPCode.DOORCONTACT_STATE_3,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
+        ),
+    ),
+    # Curtain Switch
+    # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
+    "clkg": (
+        TuyaCoverEntityDescription(
+            key=DPCode.CONTROL,
+            name="Curtain",
+            current_position=DPCode.PERCENT_CONTROL,
+            set_position=DPCode.PERCENT_CONTROL,
+            device_class=CoverDeviceClass.CURTAIN,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.CONTROL_2,
+            name="Curtain 2",
+            current_position=DPCode.PERCENT_CONTROL_2,
+            set_position=DPCode.PERCENT_CONTROL_2,
+            device_class=CoverDeviceClass.CURTAIN,
+        ),
+    ),
+    # Curtain Robot
+    # Note: Not documented
+    "jdcljqr": (
+        TuyaCoverEntityDescription(
+            key=DPCode.CONTROL,
+            current_position=DPCode.PERCENT_STATE,
+            set_position=DPCode.PERCENT_CONTROL,
+            device_class=CoverDeviceClass.CURTAIN,
+        ),
+    ),
+}
 
-    platform = config_entry.data[CONF_PLATFORM]
 
-    async def async_discover_sensor(dev_ids):
-        """Discover and add a discovered tuya sensor."""
-        if not dev_ids:
-            return
-        entities = await hass.async_add_executor_job(
-            _setup_entities,
-            hass,
-            dev_ids,
-            platform,
-        )
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Tuya cover dynamically through Tuya discovery."""
+    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+
+    @callback
+    def async_discover_device(device_ids: list[str]) -> None:
+        """Discover and add a discovered tuya cover."""
+        entities: list[TuyaCoverEntity] = []
+        for device_id in device_ids:
+            device = hass_data.device_manager.device_map[device_id]
+            if descriptions := COVERS.get(device.category):
+                for description in descriptions:
+                    if (
+                        description.key in device.function
+                        or description.key in device.status_range
+                    ):
+                        entities.append(
+                            TuyaCoverEntity(
+                                device, hass_data.device_manager, description
+                            )
+                        )
+
         async_add_entities(entities)
 
-    async_dispatcher_connect(
-        hass, TUYA_DISCOVERY_NEW.format(SENSOR_DOMAIN), async_discover_sensor
+    async_discover_device([*hass_data.device_manager.device_map])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
 
-    devices_ids = hass.data[DOMAIN]["pending"].pop(SENSOR_DOMAIN)
-    await async_discover_sensor(devices_ids)
 
+class TuyaCoverEntity(TuyaEntity, CoverEntity):
+    """Tuya Cover Device."""
 
-def _setup_entities(hass, dev_ids, platform):
-    """Set up Tuya Cover device."""
-    tuya = hass.data[DOMAIN][TUYA_DATA]
-    entities = []
-    for dev_id in dev_ids:
-        device = tuya.get_device_by_id(dev_id)
-        if device is None:
-            continue
-        entities.append(TuyaCover(device, platform))
-    return entities
+    _current_position: IntegerTypeData | None = None
+    _set_position: IntegerTypeData | None = None
+    _tilt: IntegerTypeData | None = None
+    entity_description: TuyaCoverEntityDescription
 
+    def __init__(
+        self,
+        device: TuyaDevice,
+        device_manager: TuyaDeviceManager,
+        description: TuyaCoverEntityDescription,
+    ) -> None:
+        """Init Tuya Cover."""
+        super().__init__(device, device_manager)
+        self.entity_description = description
+        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._attr_supported_features = 0
 
-class TuyaCover(TuyaDevice, CoverEntity):
-    """Tuya cover devices."""
+        # Check if this cover is based on a switch or has controls
+        if self.find_dpcode(description.key, prefer_function=True):
+            if device.function[description.key].type == "Boolean":
+                self._attr_supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
+            elif enum_type := self.find_dpcode(
+                description.key, dptype=DPType.ENUM, prefer_function=True
+            ):
+                if description.open_instruction_value in enum_type.range:
+                    self._attr_supported_features |= SUPPORT_OPEN
+                if description.close_instruction_value in enum_type.range:
+                    self._attr_supported_features |= SUPPORT_CLOSE
+                if description.stop_instruction_value in enum_type.range:
+                    self._attr_supported_features |= SUPPORT_STOP
 
-    def __init__(self, tuya, platform):
-        """Init tuya cover device."""
-        super().__init__(tuya, platform)
-        self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
-        self._was_closing = False
-        self._was_opening = False
+        # Determine type to use for setting the position
+        if int_type := self.find_dpcode(
+            description.set_position, dptype=DPType.INTEGER, prefer_function=True
+        ):
+            self._attr_supported_features |= SUPPORT_SET_POSITION
+            self._set_position = int_type
+            # Set as default, unless overwritten below
+            self._current_position = int_type
+
+        # Determine type for getting the position
+        if int_type := self.find_dpcode(
+            description.current_position, dptype=DPType.INTEGER, prefer_function=True
+        ):
+            self._current_position = int_type
+
+        # Determine type to use for setting the tilt
+        if int_type := self.find_dpcode(
+            (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL),
+            dptype=DPType.INTEGER,
+            prefer_function=True,
+        ):
+            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
+            self._tilt = int_type
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._tuya.support_stop():
-            return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
-        return SUPPORT_OPEN | SUPPORT_CLOSE
+    def current_cover_position(self) -> int | None:
+        """Return cover current position."""
+        if self._current_position is None:
+            return None
+
+        if (position := self.device.status.get(self._current_position.dpcode)) is None:
+            return None
+
+        return round(
+            self._current_position.remap_value_to(position, 0, 100, reverse=True)
+        )
 
     @property
-    def is_opening(self):
-        """Return if the cover is opening or not."""
-        state = self._tuya.state()
-        if state == 1:
-            self._was_opening = True
-            self._was_closing = False
-            return True
-        return False
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current position of cover tilt.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        if self._tilt is None:
+            return None
+
+        if (angle := self.device.status.get(self._tilt.dpcode)) is None:
+            return None
+
+        return round(self._tilt.remap_value_to(angle, 0, 100))
 
     @property
-    def is_closing(self):
-        """Return if the cover is closing or not."""
-        state = self._tuya.state()
-        if state == 2:
-            self._was_opening = False
-            self._was_closing = True
-            return True
-        return False
+    def is_closed(self) -> bool | None:
+        """Return true if cover is closed."""
+        if (
+            self.entity_description.current_state is not None
+            and (
+                current_state := self.device.status.get(
+                    self.entity_description.current_state
+                )
+            )
+            is not None
+        ):
+            return self.entity_description.current_state_inverse is not (
+                current_state in (True, "fully_close")
+            )
 
-    @property
-    def is_closed(self):
-        """Return if the cover is closed or not."""
-        state = self._tuya.state()
-        if state != 2 and self._was_closing:
-            return True
-        if state != 1 and self._was_opening:
-            return False
+        if (position := self.current_cover_position) is not None:
+            return position == 0
+
         return None
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self._tuya.open_cover()
+        value: bool | str = True
+        if self.find_dpcode(
+            self.entity_description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
+            value = self.entity_description.open_instruction_value
 
-    def close_cover(self, **kwargs):
+        commands: list[dict[str, str | int]] = [
+            {"code": self.entity_description.key, "value": value}
+        ]
+
+        if self._set_position is not None:
+            commands.append(
+                {
+                    "code": self._set_position.dpcode,
+                    "value": round(
+                        self._set_position.remap_value_from(100, 0, 100, reverse=True),
+                    ),
+                }
+            )
+
+        self._send_command(commands)
+
+    def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        self._tuya.close_cover()
+        value: bool | str = False
+        if self.find_dpcode(
+            self.entity_description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
+            value = self.entity_description.close_instruction_value
 
-    def stop_cover(self, **kwargs):
+        commands: list[dict[str, str | int]] = [
+            {"code": self.entity_description.key, "value": value}
+        ]
+
+        if self._set_position is not None:
+            commands.append(
+                {
+                    "code": self._set_position.dpcode,
+                    "value": round(
+                        self._set_position.remap_value_from(0, 0, 100, reverse=True),
+                    ),
+                }
+            )
+
+        self._send_command(commands)
+
+    def set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position."""
+        if self._set_position is None:
+            raise RuntimeError(
+                "Cannot set position, device doesn't provide methods to set it"
+            )
+
+        self._send_command(
+            [
+                {
+                    "code": self._set_position.dpcode,
+                    "value": round(
+                        self._set_position.remap_value_from(
+                            kwargs[ATTR_POSITION], 0, 100, reverse=True
+                        )
+                    ),
+                }
+            ]
+        )
+
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        if self.is_closed is None:
-            self._was_opening = False
-            self._was_closing = False
-        self._tuya.stop_cover()
+        self._send_command(
+            [
+                {
+                    "code": self.entity_description.key,
+                    "value": self.entity_description.stop_instruction_value,
+                }
+            ]
+        )
+
+    def set_cover_tilt_position(self, **kwargs):
+        """Move the cover tilt to a specific position."""
+        if self._tilt is None:
+            raise RuntimeError(
+                "Cannot set tilt, device doesn't provide methods to set it"
+            )
+
+        self._send_command(
+            [
+                {
+                    "code": self._tilt.dpcode,
+                    "value": round(
+                        self._tilt.remap_value_from(
+                            kwargs[ATTR_TILT_POSITION], 0, 100, reverse=True
+                        )
+                    ),
+                }
+            ]
+        )

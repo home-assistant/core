@@ -38,7 +38,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "timeout": "Se acab\u00f3 el tiempo"
+                    "timeout": "L\u00edmite de tiempo"
                 },
                 "title": "Conectarse al dispositivo"
             }

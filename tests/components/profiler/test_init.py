@@ -3,7 +3,6 @@ from datetime import timedelta
 import os
 from unittest.mock import patch
 
-from homeassistant import setup
 from homeassistant.components.profiler import (
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
@@ -25,7 +24,6 @@ async def test_basic_usage(hass, tmpdir):
     """Test we can setup and the service is registered."""
     test_dir = tmpdir.mkdir("profiles")
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -57,7 +55,6 @@ async def test_memory_usage(hass, tmpdir):
     """Test we can setup and the service is registered."""
     test_dir = tmpdir.mkdir("profiles")
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -88,7 +85,6 @@ async def test_memory_usage(hass, tmpdir):
 async def test_object_growth_logging(hass, caplog):
     """Test we can setup and the service and we can dump objects to the log."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -129,31 +125,41 @@ async def test_object_growth_logging(hass, caplog):
 async def test_dump_log_object(hass, caplog):
     """Test we can setup and the service is registered and logging works."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    class DumpLogDummy:
+        def __init__(self, fail):
+            self.fail = fail
+
+        def __repr__(self):
+            if self.fail:
+                raise Exception("failed")
+            return "<DumpLogDummy success>"
+
+    obj1 = DumpLogDummy(False)
+    obj2 = DumpLogDummy(True)
+
     assert hass.services.has_service(DOMAIN, SERVICE_DUMP_LOG_OBJECTS)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_DUMP_LOG_OBJECTS, {CONF_TYPE: "MockConfigEntry"}
+        DOMAIN, SERVICE_DUMP_LOG_OBJECTS, {CONF_TYPE: "DumpLogDummy"}
     )
     await hass.async_block_till_done()
 
-    assert "MockConfigEntry" in caplog.text
+    assert "<DumpLogDummy success>" in caplog.text
+    assert "Failed to serialize" in caplog.text
+    del obj1
+    del obj2
     caplog.clear()
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_log_thread_frames(hass, caplog):
     """Test we can log thread frames."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -175,7 +181,6 @@ async def test_log_thread_frames(hass, caplog):
 async def test_log_scheduled(hass, caplog):
     """Test we can log scheduled items in the event loop."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 

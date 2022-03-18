@@ -9,7 +9,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Ingin mengonfigurasi Home Assistant untuk terhubung ke AdGuard Home yang disediakan oleh add-on Supervisor {addon}?",
+                "description": "Ingin mengonfigurasi Home Assistant untuk terhubung ke AdGuard Home yang disediakan oleh add-on: {addon}?",
                 "title": "AdGuard Home melalui add-on Home Assistant"
             },
             "user": {

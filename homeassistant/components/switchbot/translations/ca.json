@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "no_unconfigured_devices": "No s'han trobat dispositius no configurats.",
+            "switchbot_unsupported_type": "Tipus de Switchbot no compatible.",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "mac": "Adre\u00e7a MAC del dispositiu",
+                    "name": "Nom",
+                    "password": "Contrasenya"
+                },
+                "title": "Configuraci\u00f3 de dispositiu Switchbot"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "retry_count": "Nombre de reintents",
+                    "retry_timeout": "Temps d'espera entre reintents",
+                    "scan_timeout": "Quant de temps s'ha d'escanejar en busca de dades d'alerta",
+                    "update_time": "Temps entre actualitzacions (segons)"
+                }
+            }
+        }
+    }
+}

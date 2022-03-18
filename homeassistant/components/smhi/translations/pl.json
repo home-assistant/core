@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
+        },
         "error": {
             "name_exists": "Nazwa ju\u017c istnieje",
             "wrong_location": "Lokalizacja w Szwecji"

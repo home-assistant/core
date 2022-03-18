@@ -6,6 +6,7 @@
             "auth_missing": "Home Assistant is niet gemachtigd om verbinding te maken met deze Samsung TV. Controleer de instellingen van Extern apparaatbeheer van uw tv om Home Assistant te machtigen.",
             "cannot_connect": "Kan geen verbinding maken",
             "id_missing": "Dit Samsung-apparaat heeft geen serienummer.",
+            "missing_config_entry": "Dit Samsung-apparaat heeft geen configuratie-invoer.",
             "not_supported": "Deze Samsung TV wordt momenteel niet ondersteund.",
             "reauth_successful": "Herauthenticatie was succesvol",
             "unknown": "Onverwachte fout"

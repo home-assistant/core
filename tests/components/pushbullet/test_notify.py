@@ -1,4 +1,5 @@
 """The tests for the pushbullet notification platform."""
+from http import HTTPStatus
 import json
 from unittest.mock import patch
 
@@ -17,7 +18,7 @@ def mock_pushbullet():
     with patch.object(
         PushBullet,
         "_get_data",
-        return_value=json.loads(load_fixture("pushbullet_devices.json")),
+        return_value=json.loads(load_fixture("devices.json", "pushbullet")),
     ):
         yield
 
@@ -62,7 +63,7 @@ async def test_pushbullet_push_default(hass, requests_mock, mock_pushbullet):
     requests_mock.register_uri(
         "POST",
         "https://api.pushbullet.com/v2/pushes",
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={"mock_response": "Ok"},
     )
     data = {"title": "Test Title", "message": "Test Message"}
@@ -91,7 +92,7 @@ async def test_pushbullet_push_device(hass, requests_mock, mock_pushbullet):
     requests_mock.register_uri(
         "POST",
         "https://api.pushbullet.com/v2/pushes",
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={"mock_response": "Ok"},
     )
     data = {
@@ -129,7 +130,7 @@ async def test_pushbullet_push_devices(hass, requests_mock, mock_pushbullet):
     requests_mock.register_uri(
         "POST",
         "https://api.pushbullet.com/v2/pushes",
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={"mock_response": "Ok"},
     )
     data = {
@@ -175,7 +176,7 @@ async def test_pushbullet_push_email(hass, requests_mock, mock_pushbullet):
     requests_mock.register_uri(
         "POST",
         "https://api.pushbullet.com/v2/pushes",
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={"mock_response": "Ok"},
     )
     data = {
@@ -214,7 +215,7 @@ async def test_pushbullet_push_mixed(hass, requests_mock, mock_pushbullet):
     requests_mock.register_uri(
         "POST",
         "https://api.pushbullet.com/v2/pushes",
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={"mock_response": "Ok"},
     )
     data = {
@@ -260,7 +261,7 @@ async def test_pushbullet_push_no_file(hass, requests_mock, mock_pushbullet):
     requests_mock.register_uri(
         "POST",
         "https://api.pushbullet.com/v2/pushes",
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={"mock_response": "Ok"},
     )
     data = {

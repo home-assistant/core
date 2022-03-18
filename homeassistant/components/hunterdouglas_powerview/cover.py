@@ -14,14 +14,16 @@ import async_timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_SHADE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
@@ -49,7 +51,9 @@ TRANSITION_COMPLETE_DURATION = 30
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the hunter douglas shades."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]
@@ -145,7 +149,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @property
     def device_class(self):
         """Return device class."""
-        return DEVICE_CLASS_SHADE
+        return CoverDeviceClass.SHADE
 
     @property
     def name(self):
@@ -177,8 +181,6 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         """Move the shade to a position."""
         current_hass_position = hd_position_to_hass(self._current_cover_position)
         steps_to_move = abs(current_hass_position - target_hass_position)
-        if not steps_to_move:
-            return
         self._async_schedule_update_for_transition(steps_to_move)
         self._async_update_from_command(
             await self._shade.move(

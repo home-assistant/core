@@ -69,8 +69,8 @@
             "stop_all": "Detener todo"
         },
         "trigger_type": {
-            "press": "\"{subtipo}\" presionado",
-            "release": "\"{subtipo}\" liberado"
+            "press": "\"{subtype}\" presionado",
+            "release": "\"{subtype}\" liberado"
         }
     }
 }

@@ -1,4 +1,5 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
+from homeassistant.const import Platform
 
 STATE_RINGING = "ringing"
 STATE_DIALING = "dialing"
@@ -36,6 +37,6 @@ DEFAULT_NAME = "Phone"
 DOMAIN = "fritzbox_callmonitor"
 MANUFACTURER = "AVM"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 FRITZBOX_PHONEBOOK = "fritzbox_phonebook"

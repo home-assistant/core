@@ -1,22 +1,13 @@
 """Constants for the deCONZ component."""
 import logging
 
-from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
-)
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import Platform
 
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "deconz"
+
+HASSIO_CONFIGURATION_URL = "homeassistant://hassio/ingress/core_deconz"
 
 CONF_BRIDGE_ID = "bridgeid"
 CONF_GROUP_ID_BASE = "group_id_base"
@@ -32,22 +23,20 @@ CONF_ALLOW_NEW_DEVICES = "allow_new_devices"
 CONF_MASTER_GATEWAY = "master"
 
 PLATFORMS = [
-    ALARM_CONTROL_PANEL_DOMAIN,
-    BINARY_SENSOR_DOMAIN,
-    CLIMATE_DOMAIN,
-    COVER_DOMAIN,
-    FAN_DOMAIN,
-    LIGHT_DOMAIN,
-    LOCK_DOMAIN,
-    SCENE_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
 ]
-
-NEW_GROUP = "groups"
-NEW_LIGHT = "lights"
-NEW_SCENE = "scenes"
-NEW_SENSOR = "sensors"
 
 ATTR_DARK = "dark"
 ATTR_LOCKED = "locked"
@@ -55,24 +44,8 @@ ATTR_OFFSET = "offset"
 ATTR_ON = "on"
 ATTR_VALVE = "valve"
 
-# Covers
-LEVEL_CONTROLLABLE_OUTPUT = "Level controllable output"
-DAMPERS = [LEVEL_CONTROLLABLE_OUTPUT]
-WINDOW_COVERING_CONTROLLER = "Window covering controller"
-WINDOW_COVERING_DEVICE = "Window covering device"
-WINDOW_COVERS = [WINDOW_COVERING_CONTROLLER, WINDOW_COVERING_DEVICE]
-COVER_TYPES = DAMPERS + WINDOW_COVERS
-
-# Fans
-FANS = ["Fan"]
-
-# Locks
-LOCK_TYPES = ["Door Lock", "ZHADoorLock"]
-
 # Switches
 POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
-SIRENS = ["Warning device"]
-SWITCH_TYPES = POWER_PLUGS + SIRENS
 
 CONF_ANGLE = "angle"
 CONF_GESTURE = "gesture"

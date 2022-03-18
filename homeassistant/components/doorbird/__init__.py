@@ -1,11 +1,16 @@
 """Support for DoorBird devices."""
+from __future__ import annotations
+
+from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import web
 from doorbirdpy import DoorBird
 import requests
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -15,13 +20,12 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
@@ -55,10 +59,10 @@ DEVICE_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the DoorBird component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -67,9 +71,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     def _reset_device_favorites_handler(event):
         """Handle clearing favorites on device."""
-        token = event.data.get("token")
-
-        if token is None:
+        if (token := event.data.get("token")) is None:
             return
 
         doorstation = get_doorstation_by_token(hass, token)
@@ -107,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         status, info = await hass.async_add_executor_job(_init_doorbird_device, device)
     except requests.exceptions.HTTPError as err:
-        if err.response.status_code == HTTP_UNAUTHORIZED:
+        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error(
                 "Authorization rejected by DoorBird for %s@%s", username, device_ip
             )
@@ -153,7 +155,7 @@ def _init_doorbird_device(device):
     return device.ready(), device.info()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
@@ -165,11 +167,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def _async_register_events(hass, doorstation):
+async def _async_register_events(
+    hass: HomeAssistant, doorstation: ConfiguredDoorBird
+) -> bool:
     try:
         await hass.async_add_executor_job(doorstation.register_events, hass)
     except requests.exceptions.HTTPError:
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             "Doorbird configuration failed.  Please verify that API "
             "Operator permission is enabled for the Doorbird user. "
             "A restart will be required once permissions have been "
@@ -182,7 +187,7 @@ async def _async_register_events(hass, doorstation):
     return True
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     config_entry_id = entry.entry_id
     doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]
@@ -241,7 +246,7 @@ class ConfiguredDoorBird:
         """Get token for device."""
         return self._token
 
-    def register_events(self, hass):
+    def register_events(self, hass: HomeAssistant) -> None:
         """Register events on device."""
         # Get the URL of this server
         hass_url = get_url(hass)
@@ -250,10 +255,16 @@ class ConfiguredDoorBird:
         if self.custom_url is not None:
             hass_url = self.custom_url
 
-        for event in self.doorstation_events:
-            self._register_event(hass_url, event)
+        if not self.doorstation_events:
+            # User may not have permission to get the favorites
+            return
 
-            _LOGGER.info("Successfully registered URL for %s on %s", event, self.name)
+        favorites = self.device.favorites()
+        for event in self.doorstation_events:
+            if self._register_event(hass_url, event, favs=favorites):
+                _LOGGER.info(
+                    "Successfully registered URL for %s on %s", event, self.name
+                )
 
     @property
     def slug(self):
@@ -263,29 +274,31 @@ class ConfiguredDoorBird:
     def _get_event_name(self, event):
         return f"{self.slug}_{event}"
 
-    def _register_event(self, hass_url, event):
+    def _register_event(
+        self, hass_url: str, event: str, favs: dict[str, Any] | None = None
+    ) -> bool:
         """Add a schedule entry in the device for a sensor."""
         url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
         # Register HA URL as webhook if not already, then get the ID
+        if self.webhook_is_registered(url, favs=favs):
+            return True
+
+        self.device.change_favorite("http", f"Home Assistant ({event})", url)
         if not self.webhook_is_registered(url):
-            self.device.change_favorite("http", f"Home Assistant ({event})", url)
-
-        fav_id = self.get_webhook_id(url)
-
-        if not fav_id:
             _LOGGER.warning(
-                'Could not find favorite for URL "%s". ' 'Skipping sensor "%s"',
+                'Unable to set favorite URL "%s". ' 'Event "%s" will not fire',
                 url,
                 event,
             )
-            return
+            return False
+        return True
 
     def webhook_is_registered(self, url, favs=None) -> bool:
         """Return whether the given URL is registered as a device favorite."""
         return self.get_webhook_id(url, favs) is not None
 
-    def get_webhook_id(self, url, favs=None) -> str or None:
+    def get_webhook_id(self, url, favs=None) -> str | None:
         """
         Return the device favorite ID for the given URL.
 
@@ -323,6 +336,7 @@ class DoorBirdRequestView(HomeAssistantView):
 
     async def get(self, request, event):
         """Respond to requests from the device."""
+        # pylint: disable=no-self-use
         hass = request.app["hass"]
 
         token = request.query.get("token")
@@ -331,7 +345,7 @@ class DoorBirdRequestView(HomeAssistantView):
 
         if device is None:
             return web.Response(
-                status=HTTP_UNAUTHORIZED, text="Invalid token provided."
+                status=HTTPStatus.UNAUTHORIZED, text="Invalid token provided."
             )
 
         if device:
@@ -343,7 +357,7 @@ class DoorBirdRequestView(HomeAssistantView):
             hass.bus.async_fire(RESET_DEVICE_FAVORITES, {"token": token})
 
             message = f"HTTP Favorites cleared for {device.slug}"
-            return web.Response(status=HTTP_OK, text=message)
+            return web.Response(text=message)
 
         event_data[ATTR_ENTITY_ID] = hass.data[DOMAIN][
             DOOR_STATION_EVENT_ENTITY_IDS
@@ -351,4 +365,4 @@ class DoorBirdRequestView(HomeAssistantView):
 
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
-        return web.Response(status=HTTP_OK, text="OK")
+        return web.Response(text="OK")

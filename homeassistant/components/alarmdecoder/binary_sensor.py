@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_RELAY_ADDR,
@@ -34,8 +35,8 @@ ATTR_RF_LOOP1 = "rf_loop1"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up for AlarmDecoder sensor."""
 
     zones = entry.options.get(OPTIONS_ZONES, DEFAULT_ZONE_OPTIONS)
@@ -76,11 +77,15 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._attr_name = zone_name
+        self._attr_is_on = False
         self._rfid = zone_rfid
         self._loop = zone_loop
         self._relay_addr = relay_addr
         self._relay_chan = relay_chan
         self._attr_device_class = zone_type
+        self._attr_extra_state_attributes = {
+            CONF_ZONE_NUMBER: self._zone_number,
+        }
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -111,13 +116,13 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
     def _fault_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
-            self._attr_state = 1
+            self._attr_is_on = True
             self.schedule_update_ha_state()
 
     def _restore_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or (int(zone) == self._zone_number and not self._loop):
-            self._attr_state = 0
+            self._attr_is_on = False
             self.schedule_update_ha_state()
 
     def _rfx_message_callback(self, message):
@@ -125,7 +130,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         if self._rfid and message and message.serial_number == self._rfid:
             rfstate = message.value
             if self._loop:
-                self._attr_state = 1 if message.loop[self._loop - 1] else 0
+                self._attr_is_on = bool(message.loop[self._loop - 1])
             attr = {CONF_ZONE_NUMBER: self._zone_number}
             if self._rfid and rfstate is not None:
                 attr[ATTR_RF_BIT0] = bool(rfstate & 0x01)
@@ -150,5 +155,5 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
                 message.channel,
                 message.value,
             )
-            self._attr_state = message.value
+            self._attr_is_on = bool(message.value)
             self.schedule_update_ha_state()

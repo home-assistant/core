@@ -1,9 +1,10 @@
 """Support for HDMI CEC."""
 from __future__ import annotations
 
-from functools import partial, reduce
+from functools import reduce
 import logging
 import multiprocessing
+from typing import Any
 
 from pycec.cec import CecAdapter
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
@@ -41,10 +42,11 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery, event
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "hdmi_cec"
 
@@ -186,8 +188,10 @@ def parse_mapping(mapping, parents=None):
                 yield (val, pad_physical_address(cur))
 
 
-def setup(hass: HomeAssistant, base_config):  # noqa: C901
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     """Set up the CEC capability."""
+
+    hass.data[DOMAIN] = {}
 
     # Parse configuration into a dict of device name to physical address
     # represented as a list of four elements.
@@ -221,11 +225,14 @@ def setup(hass: HomeAssistant, base_config):  # noqa: C901
             hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
             adapter.init()
 
-    hdmi_network.set_initialized_callback(
-        partial(event.async_call_later, hass, WATCHDOG_INTERVAL, _adapter_watchdog)
-    )
+    @callback
+    def _async_initialized_callback(*_: Any):
+        """Add watchdog on initialization."""
+        return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
 
-    def _volume(call):
+    hdmi_network.set_initialized_callback(_async_initialized_callback)
+
+    def _volume(call: ServiceCall) -> None:
         """Increase/decrease volume and mute/unmute system."""
         mute_key_mapping = {
             ATTR_TOGGLE: KEY_MUTE_TOGGLE,
@@ -259,7 +266,7 @@ def setup(hass: HomeAssistant, base_config):  # noqa: C901
                 hdmi_network.send_command(KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
 
-    def _tx(call):
+    def _tx(call: ServiceCall) -> None:
         """Send CEC command."""
         data = call.data
         if ATTR_RAW in data:
@@ -277,7 +284,7 @@ def setup(hass: HomeAssistant, base_config):  # noqa: C901
                 cmd = data[ATTR_CMD]
             else:
                 _LOGGER.error("Attribute 'cmd' is missing")
-                return False
+                return
             if ATTR_ATT in data:
                 if isinstance(data[ATTR_ATT], (list,)):
                     att = data[ATTR_ATT]
@@ -288,16 +295,15 @@ def setup(hass: HomeAssistant, base_config):  # noqa: C901
             command = CecCommand(cmd, dst, src, att)
         hdmi_network.send_command(command)
 
-    def _standby(call):
+    def _standby(call: ServiceCall) -> None:
         hdmi_network.standby()
 
-    def _power_on(call):
+    def _power_on(call: ServiceCall) -> None:
         hdmi_network.power_on()
 
-    def _select_device(call):
+    def _select_device(call: ServiceCall) -> None:
         """Select the active device."""
-        addr = call.data[ATTR_DEVICE]
-        if not addr:
+        if not (addr := call.data[ATTR_DEVICE]):
             _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
             return
         if addr in device_aliases:
@@ -318,7 +324,7 @@ def setup(hass: HomeAssistant, base_config):  # noqa: C901
         hdmi_network.active_source(addr)
         _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 
-    def _update(call):
+    def _update(call: ServiceCall) -> None:
         """
         Update if device update is needed.
 
@@ -329,7 +335,7 @@ def setup(hass: HomeAssistant, base_config):  # noqa: C901
     def _new_device(device):
         """Handle new devices which are detected by HDMI network."""
         key = f"{DOMAIN}.{device.name}"
-        hass.data[key] = device
+        hass.data[DOMAIN][key] = device
         ent_platform = base_config[DOMAIN][CONF_TYPES].get(key, platform)
         discovery.load_platform(
             hass,

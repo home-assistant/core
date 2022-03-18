@@ -1,5 +1,6 @@
 """Tests for Logi Circle config flow."""
 import asyncio
+from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -203,7 +204,7 @@ async def test_callback_view_rejects_missing_code(hass):
     view = LogiCircleAuthCallbackView()
     resp = await view.get(MockRequest(hass, {}))
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_callback_view_accepts_code(
@@ -214,7 +215,7 @@ async def test_callback_view_accepts_code(
     view = LogiCircleAuthCallbackView()
 
     resp = await view.get(MockRequest(hass, {"code": "456"}))
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     await hass.async_block_till_done()
     mock_logi_circle.authorize.assert_called_with("456")

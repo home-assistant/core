@@ -1,23 +1,21 @@
 """Support for Samsung Printers with SyncThru web interface."""
-
-import logging
+from __future__ import annotations
 
 from pysyncthru import SyncThru, SyncthruState
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, PERCENTAGE
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from . import device_identifiers
-from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 COLORS = ["black", "cyan", "magenta", "yellow"]
 DRUM_COLORS = COLORS
@@ -40,36 +38,12 @@ SYNCTHRU_STATE_HUMAN = {
     SyncthruState.ERROR: "error",
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(
-            CONF_NAME, default=DEFAULT_NAME_TEMPLATE.format(DEFAULT_MODEL)
-        ): cv.string,
-    }
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the SyncThru component."""
-    _LOGGER.warning(
-        "Loading syncthru via platform config is deprecated and no longer "
-        "necessary as of 0.113; Please remove it from your configuration YAML"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_URL: config.get(CONF_RESOURCE),
-                CONF_NAME: config.get(CONF_NAME),
-            },
-        )
-    )
-    return True
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up from config entry."""
 
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -81,7 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     supp_output_tray = printer.output_tray_status()
 
     name = config_entry.data[CONF_NAME]
-    entities = [SyncThruMainSensor(coordinator, name)]
+    entities: list[SyncThruSensor] = [SyncThruMainSensor(coordinator, name)]
 
     for key in supp_toner:
         entities.append(SyncThruTonerSensor(coordinator, name, key))
@@ -89,8 +63,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(SyncThruDrumSensor(coordinator, name, key))
     for key in supp_tray:
         entities.append(SyncThruInputTraySensor(coordinator, name, key))
-    for key in supp_output_tray:
-        entities.append(SyncThruOutputTraySensor(coordinator, name, key))
+    for int_key in supp_output_tray:
+        entities.append(SyncThruOutputTraySensor(coordinator, name, int_key))
 
     async_add_entities(entities)
 
@@ -124,14 +98,18 @@ class SyncThruSensor(CoordinatorEntity, SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measuremnt."""
         return self._unit_of_measurement
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
-        return {"identifiers": device_identifiers(self.syncthru)}
+        if (identifiers := device_identifiers(self.syncthru)) is None:
+            return None
+        return DeviceInfo(
+            identifiers=identifiers,
+        )
 
 
 class SyncThruMainSensor(SyncThruSensor):
@@ -148,7 +126,7 @@ class SyncThruMainSensor(SyncThruSensor):
         self._id_suffix = "_main"
 
     @property
-    def state(self):
+    def native_value(self):
         """Set state to human readable version of syncthru status."""
         return SYNCTHRU_STATE_HUMAN[self.syncthru.device_status()]
 
@@ -182,7 +160,7 @@ class SyncThruTonerSensor(SyncThruSensor):
         return self.syncthru.toner_status().get(self._color, {})
 
     @property
-    def state(self):
+    def native_value(self):
         """Show amount of remaining toner."""
         return self.syncthru.toner_status().get(self._color, {}).get("remaining")
 
@@ -204,7 +182,7 @@ class SyncThruDrumSensor(SyncThruSensor):
         return self.syncthru.drum_status().get(self._color, {})
 
     @property
-    def state(self):
+    def native_value(self):
         """Show amount of remaining drum."""
         return self.syncthru.drum_status().get(self._color, {}).get("remaining")
 
@@ -225,7 +203,7 @@ class SyncThruInputTraySensor(SyncThruSensor):
         return self.syncthru.input_tray_status().get(self._number, {})
 
     @property
-    def state(self):
+    def native_value(self):
         """Display ready unless there is some error, then display error."""
         tray_state = (
             self.syncthru.input_tray_status().get(self._number, {}).get("newError")
@@ -251,7 +229,7 @@ class SyncThruOutputTraySensor(SyncThruSensor):
         return self.syncthru.output_tray_status().get(self._number, {})
 
     @property
-    def state(self):
+    def native_value(self):
         """Display ready unless there is some error, then display error."""
         tray_state = (
             self.syncthru.output_tray_status().get(self._number, {}).get("status")

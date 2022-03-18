@@ -4,22 +4,24 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 import logging
+from typing import Any
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform
-from homeassistant.helpers.entity_platform import EntityPlatform, async_get_platforms
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
+
+from . import config_per_platform
+from .entity_platform import EntityPlatform, async_get_platforms
+from .typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_reload_integration_platforms(
-    hass: HomeAssistant, integration_name: str, integration_platforms: Iterable
+    hass: HomeAssistant, integration_name: str, integration_platforms: Iterable[str]
 ) -> None:
     """Reload an integration's platforms.
 
@@ -62,7 +64,7 @@ async def _resetup_platform(
     if not conf:
         return
 
-    root_config: dict = {integration_platform: []}
+    root_config: dict[str, Any] = {integration_platform: []}
     # Extract only the config for template, ignore the rest.
     for p_type, p_config in config_per_platform(conf, integration_platform):
         if p_type != integration_name:
@@ -75,11 +77,11 @@ async def _resetup_platform(
     if hasattr(component, "async_reset_platform"):
         # If the integration has its own way to reset
         # use this method.
-        await component.async_reset_platform(hass, integration_name)  # type: ignore
-        await component.async_setup(hass, root_config)  # type: ignore
+        await component.async_reset_platform(hass, integration_name)
+        await component.async_setup(hass, root_config)
         return
 
-    # If its an entity platform, we use the entity_platform
+    # If it's an entity platform, we use the entity_platform
     # async_reset method
     platform = async_get_platform_without_config_entry(
         hass, integration_name, integration_platform
@@ -90,7 +92,7 @@ async def _resetup_platform(
 
     if not root_config[integration_platform]:
         # No config for this platform
-        # and its not loaded.  Nothing to do
+        # and it's not loaded. Nothing to do.
         return
 
     await _async_setup_platform(
@@ -102,7 +104,7 @@ async def _async_setup_platform(
     hass: HomeAssistant,
     integration_name: str,
     integration_platform: str,
-    platform_configs: list[dict],
+    platform_configs: list[dict[str, Any]],
 ) -> None:
     """Platform for the first time when new configuration is added."""
     if integration_platform not in hass.data:
@@ -120,7 +122,7 @@ async def _async_setup_platform(
 
 
 async def _async_reconfig_platform(
-    platform: EntityPlatform, platform_configs: list[dict]
+    platform: EntityPlatform, platform_configs: list[dict[str, Any]]
 ) -> None:
     """Reconfigure an already loaded platform."""
     await platform.async_reset()
@@ -155,7 +157,7 @@ def async_get_platform_without_config_entry(
 
 
 async def async_setup_reload_service(
-    hass: HomeAssistant, domain: str, platforms: Iterable
+    hass: HomeAssistant, domain: str, platforms: Iterable[str]
 ) -> None:
     """Create the reload service for the domain."""
     if hass.services.has_service(domain, SERVICE_RELOAD):
@@ -171,7 +173,9 @@ async def async_setup_reload_service(
     )
 
 
-def setup_reload_service(hass: HomeAssistant, domain: str, platforms: Iterable) -> None:
+def setup_reload_service(
+    hass: HomeAssistant, domain: str, platforms: Iterable[str]
+) -> None:
     """Sync version of async_setup_reload_service."""
     asyncio.run_coroutine_threadsafe(
         async_setup_reload_service(hass, domain, platforms),

@@ -7,9 +7,9 @@ from .const import (
     DEVICE,
     DEVICE_ID,
     DEVICE_NAME,
-    DEVICE_STATE_ATTRIBUTES,
     DEVICE_TYPE,
     DOMAIN,
+    EXTRA_STATE_ATTRIBUTES,
     SENSOR_DATA,
     SENSOR_SIGNAL,
 )
@@ -53,19 +53,16 @@ class PlaatoEntity(entity.Entity):
         return f"{self._device_id}_{self._sensor_type}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> entity.DeviceInfo:
         """Get device info."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": "Plaato",
-            "model": self._device_type,
-        }
-
-        if self._sensor_data.firmware_version != "":
-            device_info["sw_version"] = self._sensor_data.firmware_version
-
-        return device_info
+        sw_version = self._sensor_data.firmware_version
+        return entity.DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer="Plaato",
+            model=self._device_type,
+            name=self._device_name,
+            sw_version=sw_version if sw_version != "" else None,
+        )
 
     @property
     def extra_state_attributes(self):
@@ -73,7 +70,7 @@ class PlaatoEntity(entity.Entity):
         if self._attributes:
             return {
                 attr_key: self._attributes[plaato_key]
-                for attr_key, plaato_key in DEVICE_STATE_ATTRIBUTES.items()
+                for attr_key, plaato_key in EXTRA_STATE_ATTRIBUTES.items()
                 if plaato_key in self._attributes
                 and self._attributes[plaato_key] is not None
             }

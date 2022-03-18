@@ -1,11 +1,18 @@
 """Support for retrieving status info from Google Wifi/OnHub routers."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -13,7 +20,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TIME_DAYS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,90 +42,118 @@ ENDPOINT = "/api/v1/status"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
-MONITORED_CONDITIONS = {
-    ATTR_CURRENT_VERSION: [
-        ["software", "softwareVersion"],
-        None,
-        "mdi:checkbox-marked-circle-outline",
-    ],
-    ATTR_NEW_VERSION: [["software", "updateNewVersion"], None, "mdi:update"],
-    ATTR_UPTIME: [["system", "uptime"], TIME_DAYS, "mdi:timelapse"],
-    ATTR_LAST_RESTART: [["system", "uptime"], None, "mdi:restart"],
-    ATTR_LOCAL_IP: [["wan", "localIpAddress"], None, "mdi:access-point-network"],
-    ATTR_STATUS: [["wan", "online"], None, "mdi:google"],
-}
+
+@dataclass
+class GoogleWifiRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    primary_key: str
+    sensor_key: str
+
+
+@dataclass
+class GoogleWifiSensorEntityDescription(
+    SensorEntityDescription, GoogleWifiRequiredKeysMixin
+):
+    """Describes GoogleWifi sensor entity."""
+
+
+SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
+    GoogleWifiSensorEntityDescription(
+        key=ATTR_CURRENT_VERSION,
+        primary_key="software",
+        sensor_key="softwareVersion",
+        icon="mdi:checkbox-marked-circle-outline",
+    ),
+    GoogleWifiSensorEntityDescription(
+        key=ATTR_NEW_VERSION,
+        primary_key="software",
+        sensor_key="updateNewVersion",
+        icon="mdi:update",
+    ),
+    GoogleWifiSensorEntityDescription(
+        key=ATTR_UPTIME,
+        primary_key="system",
+        sensor_key="uptime",
+        native_unit_of_measurement=TIME_DAYS,
+        icon="mdi:timelapse",
+    ),
+    GoogleWifiSensorEntityDescription(
+        key=ATTR_LAST_RESTART,
+        primary_key="system",
+        sensor_key="uptime",
+        icon="mdi:restart",
+    ),
+    GoogleWifiSensorEntityDescription(
+        key=ATTR_LOCAL_IP,
+        primary_key="wan",
+        sensor_key="localIpAddress",
+        icon="mdi:access-point-network",
+    ),
+    GoogleWifiSensorEntityDescription(
+        key=ATTR_STATUS,
+        primary_key="wan",
+        sensor_key="online",
+        icon="mdi:google",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=list(MONITORED_CONDITIONS)
-        ): vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Google Wifi sensor."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    conditions = config.get(CONF_MONITORED_CONDITIONS)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
-    api = GoogleWifiAPI(host, conditions)
-    dev = []
-    for condition in conditions:
-        dev.append(GoogleWifiSensor(api, name, condition))
-
-    add_entities(dev, True)
+    api = GoogleWifiAPI(host, monitored_conditions)
+    entities = [
+        GoogleWifiSensor(api, name, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_conditions
+    ]
+    add_entities(entities, True)
 
 
 class GoogleWifiSensor(SensorEntity):
     """Representation of a Google Wifi sensor."""
 
-    def __init__(self, api, name, variable):
+    entity_description: GoogleWifiSensorEntityDescription
+
+    def __init__(self, api, name, description: GoogleWifiSensorEntityDescription):
         """Initialize a Google Wifi sensor."""
+        self.entity_description = description
         self._api = api
-        self._name = name
-        self._state = None
-
-        variable_info = MONITORED_CONDITIONS[variable]
-        self._var_name = variable
-        self._var_units = variable_info[1]
-        self._var_icon = variable_info[2]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name}_{self._var_name}"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._var_icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._var_units
+        self._attr_name = f"{name}_{description.key}"
 
     @property
     def available(self):
         """Return availability of Google Wifi API."""
         return self._api.available
 
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
     def update(self):
         """Get the latest data from the Google Wifi API."""
         self._api.update()
         if self.available:
-            self._state = self._api.data[self._var_name]
+            self._attr_native_value = self._api.data[self.entity_description.key]
         else:
-            self._state = None
+            self._attr_native_value = None
 
 
 class GoogleWifiAPI:
@@ -155,13 +193,15 @@ class GoogleWifiAPI:
 
     def data_format(self):
         """Format raw data into easily accessible dict."""
-        for attr_key in self.conditions:
-            value = MONITORED_CONDITIONS[attr_key]
+        for description in SENSOR_TYPES:
+            if description.key not in self.conditions:
+                continue
+            attr_key = description.key
             try:
-                primary_key = value[0][0]
-                sensor_key = value[0][1]
-                if primary_key in self.raw_data:
-                    sensor_value = self.raw_data[primary_key][sensor_key]
+                if description.primary_key in self.raw_data:
+                    sensor_value = self.raw_data[description.primary_key][
+                        description.sensor_key
+                    ]
                     # Format sensor for better readability
                     if attr_key == ATTR_NEW_VERSION and sensor_value == "0.0.0.0":
                         sensor_value = "Latest"
@@ -185,7 +225,7 @@ class GoogleWifiAPI:
                 _LOGGER.error(
                     "Router does not support %s field. "
                     "Please remove %s from monitored_conditions",
-                    sensor_key,
+                    description.sensor_key,
                     attr_key,
                 )
                 self.data[attr_key] = STATE_UNKNOWN

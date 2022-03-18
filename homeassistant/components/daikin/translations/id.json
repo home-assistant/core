@@ -5,6 +5,7 @@
             "cannot_connect": "Gagal terhubung"
         },
         "error": {
+            "api_password": "Autentikasi tidak valid, gunakan Kunci API atau Kata Sandi.",
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"

@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "reauth_failed_existing": "Nie mo\u017cna zaktualizowa\u0107 wpisu konfiguracji, usu\u0144 integracj\u0119 i skonfiguruj j\u0105 ponownie.",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",

@@ -1,10 +1,9 @@
 """Config flow for Plaato."""
-import logging
-
 from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import callback
@@ -23,8 +22,6 @@ from .const import (
     PLACEHOLDER_DOCS_URL,
     PLACEHOLDER_WEBHOOK_URL,
 )
-
-_LOGGER = logging.getLogger(__package__)
 
 
 class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -88,7 +85,10 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         use_webhook = self._init_info[CONF_USE_WEBHOOK]
 
         if use_webhook and user_input is None:
-            webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+            try:
+                webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+            except cloud.CloudNotConnected:
+                return self.async_abort(reason="cloud_not_connected")
             self._init_info[CONF_WEBHOOK_ID] = webhook_id
             self._init_info[CONF_CLOUDHOOK] = cloudhook
 
@@ -143,14 +143,12 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _get_webhook_id(self):
         """Generate webhook ID."""
-        webhook_id = self.hass.components.webhook.async_generate_id()
-        if self.hass.components.cloud.async_active_subscription():
-            webhook_url = await self.hass.components.cloud.async_create_cloudhook(
-                webhook_id
-            )
+        webhook_id = webhook.async_generate_id()
+        if cloud.async_active_subscription(self.hass):
+            webhook_url = await cloud.async_create_cloudhook(self.hass, webhook_id)
             cloudhook = True
         else:
-            webhook_url = self.hass.components.webhook.async_generate_url(webhook_id)
+            webhook_url = webhook.async_generate_url(self.hass, webhook_id)
             cloudhook = False
 
         return webhook_id, webhook_url, cloudhook
@@ -213,7 +211,7 @@ class PlaatoOptionsFlowHandler(config_entries.OptionsFlow):
         webhook_url = (
             ""
             if webhook_id is None
-            else self.hass.components.webhook.async_generate_url(webhook_id)
+            else webhook.async_generate_url(self.hass, webhook_id)
         )
 
         return self.async_show_form(

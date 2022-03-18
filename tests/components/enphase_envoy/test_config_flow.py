@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import httpx
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.enphase_envoy.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -12,7 +13,7 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -22,6 +23,91 @@ async def test_form(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
         return_value=True,
+    ), patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.get_full_serial_number",
+        return_value="1234",
+    ), patch(
+        "homeassistant.components.enphase_envoy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Envoy 1234"
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "name": "Envoy 1234",
+        "username": "test-username",
+        "password": "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_no_serial_number(hass: HomeAssistant) -> None:
+    """Test user setup without a serial number."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.get_full_serial_number",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.enphase_envoy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Envoy"
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "name": "Envoy",
+        "username": "test-username",
+        "password": "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_fetching_serial_fails(hass: HomeAssistant) -> None:
+    """Test user setup without a serial number."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.get_full_serial_number",
+        side_effect=httpx.HTTPStatusError(
+            "any", request=MagicMock(), response=MagicMock()
+        ),
     ), patch(
         "homeassistant.components.enphase_envoy.async_setup_entry",
         return_value=True,
@@ -118,49 +204,21 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_import(hass: HomeAssistant) -> None:
-    """Test we can import from yaml."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    with patch(
-        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.enphase_envoy.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "ip_address": "1.1.1.1",
-                "name": "Pool Envoy",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Pool Envoy"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "name": "Pool Envoy",
-        "username": "test-username",
-        "password": "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test we can setup from zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "properties": {"serialnum": "1234"},
-            "host": "1.1.1.1",
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.1.1.1",
+            addresses=["1.1.1.1"],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234"},
+            type="mock_type",
+        ),
     )
     await hass.async_block_till_done()
 
@@ -198,7 +256,6 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
 
 async def test_form_host_already_exists(hass: HomeAssistant) -> None:
     """Test host already exists."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -237,7 +294,7 @@ async def test_form_host_already_exists(hass: HomeAssistant) -> None:
 
 async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
     """Test serial number already exists from zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -254,10 +311,15 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "properties": {"serialnum": "1234"},
-            "host": "1.1.1.1",
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.1.1.1",
+            addresses=["1.1.1.1"],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234"},
+            type="mock_type",
+        ),
     )
 
     assert result["type"] == "abort"
@@ -266,7 +328,7 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
 
 async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
     """Test hosts already exists from zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -289,10 +351,15 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data={
-                "properties": {"serialnum": "1234"},
-                "host": "1.1.1.1",
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="1.1.1.1",
+                addresses=["1.1.1.1"],
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={"serialnum": "1234"},
+                type="mock_type",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -306,7 +373,7 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
 
 async def test_reauth(hass: HomeAssistant) -> None:
     """Test we reauth auth."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={

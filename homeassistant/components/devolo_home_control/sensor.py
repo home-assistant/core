@@ -5,32 +5,37 @@ from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
 
 DEVICE_CLASS_MAPPING = {
-    "battery": DEVICE_CLASS_BATTERY,
-    "temperature": DEVICE_CLASS_TEMPERATURE,
-    "light": DEVICE_CLASS_ILLUMINANCE,
-    "humidity": DEVICE_CLASS_HUMIDITY,
-    "current": DEVICE_CLASS_POWER,
-    "total": DEVICE_CLASS_ENERGY,
-    "voltage": DEVICE_CLASS_VOLTAGE,
+    "battery": SensorDeviceClass.BATTERY,
+    "temperature": SensorDeviceClass.TEMPERATURE,
+    "light": SensorDeviceClass.ILLUMINANCE,
+    "humidity": SensorDeviceClass.HUMIDITY,
+    "current": SensorDeviceClass.POWER,
+    "total": SensorDeviceClass.ENERGY,
+    "voltage": SensorDeviceClass.VOLTAGE,
+}
+
+STATE_CLASS_MAPPING = {
+    "battery": SensorStateClass.MEASUREMENT,
+    "temperature": SensorStateClass.MEASUREMENT,
+    "light": SensorStateClass.MEASUREMENT,
+    "humidity": SensorStateClass.MEASUREMENT,
+    "current": SensorStateClass.MEASUREMENT,
+    "total": SensorStateClass.TOTAL_INCREASING,
+    "voltage": SensorStateClass.MEASUREMENT,
 }
 
 
@@ -71,14 +76,14 @@ async def async_setup_entry(
                     )
                 )
 
-    async_add_entities(entities, False)
+    async_add_entities(entities)
 
 
 class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity, SensorEntity):
     """Abstract representation of a multi level sensor within devolo Home Control."""
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return self._value
 
@@ -106,7 +111,10 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
         self._attr_device_class = DEVICE_CLASS_MAPPING.get(
             self._multi_level_sensor_property.sensor_type
         )
-        self._attr_unit_of_measurement = self._multi_level_sensor_property.unit
+        self._attr_state_class = STATE_CLASS_MAPPING.get(
+            self._multi_level_sensor_property.sensor_type
+        )
+        self._attr_native_unit_of_measurement = self._multi_level_sensor_property.unit
 
         self._value = self._multi_level_sensor_property.value
 
@@ -132,7 +140,9 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
         )
 
         self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
-        self._attr_unit_of_measurement = PERCENTAGE
+        self._attr_state_class = STATE_CLASS_MAPPING.get("battery")
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_native_unit_of_measurement = PERCENTAGE
 
         self._value = device_instance.battery_level
 
@@ -157,15 +167,13 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
 
         self._sensor_type = consumption
         self._attr_device_class = DEVICE_CLASS_MAPPING.get(consumption)
-        self._attr_unit_of_measurement = getattr(
+        self._attr_state_class = STATE_CLASS_MAPPING.get(consumption)
+        self._attr_native_unit_of_measurement = getattr(
             device_instance.consumption_property[element_uid], f"{consumption}_unit"
         )
 
         if consumption == "total":
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
-            self._attr_last_reset = device_instance.consumption_property[
-                element_uid
-            ].total_since
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
         self._value = getattr(
             device_instance.consumption_property[element_uid], consumption
@@ -180,15 +188,11 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
 
     def _sync(self, message: tuple) -> None:
         """Update the consumption sensor state."""
-        if message[0] == self._attr_unique_id and message[2] != "total_since":
+        if message[0] == self._attr_unique_id:
             self._value = getattr(
                 self._device_instance.consumption_property[self._attr_unique_id],
                 self._sensor_type,
             )
-        elif message[0] == self._attr_unique_id and message[2] == "total_since":
-            self._attr_last_reset = self._device_instance.consumption_property[
-                self._attr_unique_id
-            ].total_since
         else:
             self._generic_message(message)
         self.schedule_update_ha_state()

@@ -3,10 +3,8 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.ruckus_unleashed import API_MAC, DOMAIN
-from homeassistant.components.ruckus_unleashed.const import API_AP, API_ID, API_NAME
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
 
 from tests.common import async_fire_time_changed
@@ -112,24 +110,3 @@ async def test_restoring_clients(hass):
     device = hass.states.get(TEST_CLIENT_ENTITY_ID)
     assert device is not None
     assert device.state == STATE_NOT_HOME
-
-
-async def test_client_device_setup(hass):
-    """Test a client device is created."""
-    await init_integration(hass)
-
-    router_info = DEFAULT_AP_INFO[API_AP][API_ID]["1"]
-
-    device_registry = dr.async_get(hass)
-    client_device = device_registry.async_get_device(
-        identifiers={},
-        connections={(CONNECTION_NETWORK_MAC, TEST_CLIENT[API_MAC])},
-    )
-    router_device = device_registry.async_get_device(
-        identifiers={(CONNECTION_NETWORK_MAC, router_info[API_MAC])},
-        connections={(CONNECTION_NETWORK_MAC, router_info[API_MAC])},
-    )
-
-    assert client_device
-    assert client_device.name == TEST_CLIENT[API_NAME]
-    assert client_device.via_device_id == router_device.id

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9ja configur\u00e9 "
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
             "invalid_place_or_service_id": "ID de lieu ou de service non valide"

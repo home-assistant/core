@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "no_udn": "SSDP ke\u015fif bilgisinin UDN'si yok",
+            "not_keenetic_ndms2": "Bulunan \u00f6\u011fe bir Keenetic y\u00f6nlendirici de\u011fil"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Sunucu",
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "title": "Keenetic NDMS2 Router'\u0131 kurun"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "Ev aral\u0131\u011f\u0131n\u0131 g\u00f6z \u00f6n\u00fcnde bulundurun",
+                    "include_arp": "ARP verilerini kullan (hotspot verileri kullan\u0131l\u0131yorsa yoksay\u0131l\u0131r)",
+                    "include_associated": "WiFi AP ili\u015fkilendirme verilerini kullan (hotspot verileri kullan\u0131l\u0131yorsa yoksay\u0131l\u0131r)",
+                    "interfaces": "Taranacak aray\u00fczleri se\u00e7in",
+                    "scan_interval": "Tarama aral\u0131\u011f\u0131",
+                    "try_hotspot": "'ip hotspot' verilerini kullan\u0131n (en do\u011frusu)"
+                }
+            }
+        }
+    }
+}

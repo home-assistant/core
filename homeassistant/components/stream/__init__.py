@@ -16,7 +16,7 @@ to always keep workers active.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
 import re
 import secrets
@@ -25,42 +25,61 @@ import time
 from types import MappingProxyType
 from typing import cast
 
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ENDPOINTS,
+    ATTR_SETTINGS,
     ATTR_STREAMS,
+    CONF_LL_HLS,
+    CONF_PART_DURATION,
+    CONF_SEGMENT_DURATION,
     DOMAIN,
     HLS_PROVIDER,
     MAX_SEGMENTS,
     OUTPUT_IDLE_TIMEOUT,
     RECORDER_PROVIDER,
+    SEGMENT_DURATION_ADJUSTER,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
+    TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
-from .core import PROVIDERS, IdleTimer, StreamOutput
-from .hls import async_setup_hls
+from .core import PROVIDERS, IdleTimer, KeyFrameConverter, StreamOutput, StreamSettings
+from .hls import HlsStreamOutput, async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
 
-STREAM_SOURCE_RE = re.compile("//.*:.*@")
+STREAM_SOURCE_REDACT_PATTERN = [
+    (re.compile(r"//.*:.*@"), "//****:****@"),
+    (re.compile(r"\?auth=.*"), "?auth=****"),
+]
 
 
 def redact_credentials(data: str) -> str:
     """Redact credentials from string data."""
-    return STREAM_SOURCE_RE.sub("//****:****@", data)
+    for (pattern, repl) in STREAM_SOURCE_REDACT_PATTERN:
+        data = pattern.sub(repl, data)
+    return data
 
 
 def create_stream(
-    hass: HomeAssistant, stream_source: str, options: dict[str, str]
+    hass: HomeAssistant,
+    stream_source: str,
+    options: dict[str, str],
+    stream_label: str | None = None,
 ) -> Stream:
     """Create a stream with the specified identfier based on the source url.
 
-    The stream_source is typically an rtsp url and options are passed into
-    pyav / ffmpeg as options.
+    The stream_source is typically an rtsp url (though any url accepted by ffmpeg is fine) and
+    options are passed into pyav / ffmpeg as options.
+
+    The stream_label is a string used as an additional message in logging.
     """
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
@@ -73,16 +92,60 @@ def create_stream(
             **options,
         }
 
-    stream = Stream(hass, stream_source, options=options)
+    stream = Stream(hass, stream_source, options=options, stream_label=stream_label)
     hass.data[DOMAIN][ATTR_STREAMS].append(stream)
     return stream
 
 
+DOMAIN_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_LL_HLS, default=True): cv.boolean,
+        vol.Optional(CONF_SEGMENT_DURATION, default=6): vol.All(
+            cv.positive_float, vol.Range(min=2, max=10)
+        ),
+        vol.Optional(CONF_PART_DURATION, default=1): vol.All(
+            cv.positive_float, vol.Range(min=0.2, max=1.5)
+        ),
+    }
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: DOMAIN_SCHEMA,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+def filter_libav_logging() -> None:
+    """Filter libav logging to only log when the stream logger is at DEBUG."""
+
+    def libav_filter(record: logging.LogRecord) -> bool:
+        return logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
+
+    for logging_namespace in (
+        "libav.mp4",
+        "libav.h264",
+        "libav.hevc",
+        "libav.rtsp",
+        "libav.tcp",
+        "libav.tls",
+        "libav.mpegts",
+        "libav.NULL",
+    ):
+        logging.getLogger(logging_namespace).addFilter(libav_filter)
+
+    # Set log level to error for libav.mp4
+    logging.getLogger("libav.mp4").setLevel(logging.ERROR)
+    # Suppress "deprecated pixel format" WARNING
+    logging.getLogger("libav.swscaler").setLevel(logging.ERROR)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
-    # Set log level to error for libav
-    logging.getLogger("libav").setLevel(logging.ERROR)
-    logging.getLogger("libav.mp4").setLevel(logging.ERROR)
+
+    # Drop libav log messages if stream logging is above DEBUG
+    filter_libav_logging()
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable=import-outside-toplevel
@@ -91,6 +154,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = []
+    conf = DOMAIN_SCHEMA(config.get(DOMAIN, {}))
+    if conf[CONF_LL_HLS]:
+        assert isinstance(conf[CONF_SEGMENT_DURATION], float)
+        assert isinstance(conf[CONF_PART_DURATION], float)
+        hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
+            ll_hls=True,
+            min_segment_duration=conf[CONF_SEGMENT_DURATION]
+            - SEGMENT_DURATION_ADJUSTER,
+            part_target_duration=conf[CONF_PART_DURATION],
+            hls_advance_part_limit=max(int(3 / conf[CONF_PART_DURATION]), 3),
+            hls_part_timeout=2 * conf[CONF_PART_DURATION],
+        )
+    else:
+        hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
+            ll_hls=False,
+            min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS
+            - SEGMENT_DURATION_ADJUSTER,
+            part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+            hls_advance_part_limit=3,
+            hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+        )
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)
@@ -116,18 +200,31 @@ class Stream:
     """Represents a single stream."""
 
     def __init__(
-        self, hass: HomeAssistant, source: str, options: dict[str, str]
+        self,
+        hass: HomeAssistant,
+        source: str,
+        options: dict[str, str],
+        stream_label: str | None = None,
     ) -> None:
         """Initialize a stream."""
         self.hass = hass
         self.source = source
         self.options = options
+        self._stream_label = stream_label
         self.keepalive = False
         self.access_token: str | None = None
         self._thread: threading.Thread | None = None
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
+        self._keyframe_converter = KeyFrameConverter(hass)
+        self._available: bool = True
+        self._update_callback: Callable[[], None] | None = None
+        self._logger = (
+            logging.getLogger(f"{__package__}.stream.{stream_label}")
+            if stream_label
+            else _LOGGER
+        )
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -148,7 +245,7 @@ class Stream:
         self, fmt: str, timeout: int = OUTPUT_IDLE_TIMEOUT
     ) -> StreamOutput:
         """Add provider output stream."""
-        if not self._outputs.get(fmt):
+        if not (provider := self._outputs.get(fmt)):
 
             @callback
             def idle_callback() -> None:
@@ -162,7 +259,7 @@ class Stream:
                 self.hass, IdleTimer(self.hass, timeout, idle_callback)
             )
             self._outputs[fmt] = provider
-        return self._outputs[fmt]
+        return provider
 
     def remove_provider(self, provider: StreamOutput) -> None:
         """Remove provider output stream."""
@@ -178,6 +275,22 @@ class Stream:
         if all(p.idle for p in self._outputs.values()):
             self.access_token = None
 
+    @property
+    def available(self) -> bool:
+        """Return False if the stream is started and known to be unavailable."""
+        return self._available
+
+    def set_update_callback(self, update_callback: Callable[[], None]) -> None:
+        """Set callback to run when state changes."""
+        self._update_callback = update_callback
+
+    @callback
+    def _async_update_state(self, available: bool) -> None:
+        """Set state and Run callback to notify state has been updated."""
+        self._available = available
+        if self._update_callback:
+            self._update_callback()
+
     def start(self) -> None:
         """Start a stream."""
         if self._thread is None or not self._thread.is_alive():
@@ -191,11 +304,15 @@ class Stream:
                 target=self._run_worker,
             )
             self._thread.start()
-            _LOGGER.info("Started stream: %s", redact_credentials(str(self.source)))
+            self._logger.info(
+                "Started stream: %s", redact_credentials(str(self.source))
+            )
 
     def update_source(self, new_source: str) -> None:
         """Restart the stream with a new stream source."""
-        _LOGGER.debug("Updating stream source %s", new_source)
+        self._logger.debug(
+            "Updating stream source %s", redact_credentials(str(new_source))
+        )
         self.source = new_source
         self._fast_restart_once = True
         self._thread_quit.set()
@@ -204,21 +321,36 @@ class Stream:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream integration without installing reqs
         # pylint: disable=import-outside-toplevel
-        from .worker import SegmentBuffer, stream_worker
+        from .worker import StreamState, StreamWorkerError, stream_worker
 
-        segment_buffer = SegmentBuffer(self.outputs)
+        stream_state = StreamState(self.hass, self.outputs)
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-            stream_worker(self.source, self.options, segment_buffer, self._thread_quit)
-            segment_buffer.discontinuity()
-            if not self.keepalive or self._thread_quit.is_set():
+            self.hass.add_job(self._async_update_state, True)
+            try:
+                stream_worker(
+                    self.source,
+                    self.options,
+                    stream_state,
+                    self._keyframe_converter,
+                    self._thread_quit,
+                )
+            except StreamWorkerError as err:
+                self._logger.error("Error from stream worker: %s", str(err))
+
+            stream_state.discontinuity()
+            if not _should_retry() or self._thread_quit.is_set():
                 if self._fast_restart_once:
-                    # The stream source is updated, restart without any delay.
+                    # The stream source is updated, restart without any delay and reset the retry
+                    # backoff for the new url.
+                    wait_timeout = 0
                     self._fast_restart_once = False
                     self._thread_quit.clear()
                     continue
                 break
+
+            self.hass.add_job(self._async_update_state, False)
             # To avoid excessive restarts, wait before restarting
             # As the required recovery time may be different for different setups, start
             # with trying a short wait_timeout and increase it on each reconnection attempt.
@@ -226,10 +358,10 @@ class Stream:
             if time.time() - start_time > STREAM_RESTART_RESET_TIME:
                 wait_timeout = 0
             wait_timeout += STREAM_RESTART_INCREMENT
-            _LOGGER.debug(
+            self._logger.debug(
                 "Restarting stream worker in %d seconds: %s",
                 wait_timeout,
-                self.source,
+                redact_credentials(str(self.source)),
             )
         self._worker_finished()
 
@@ -257,7 +389,9 @@ class Stream:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
-            _LOGGER.info("Stopped stream: %s", redact_credentials(str(self.source)))
+            self._logger.info(
+                "Stopped stream: %s", redact_credentials(str(self.source))
+            )
 
     async def async_record(
         self, video_path: str, duration: int = 30, lookback: int = 5
@@ -273,8 +407,7 @@ class Stream:
             raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
         # Add recorder
-        recorder = self.outputs().get(RECORDER_PROVIDER)
-        if recorder:
+        if recorder := self.outputs().get(RECORDER_PROVIDER):
             assert isinstance(recorder, RecorderOutput)
             raise HomeAssistantError(
                 f"Stream already recording to {recorder.video_path}!"
@@ -285,12 +418,36 @@ class Stream:
         recorder.video_path = video_path
 
         self.start()
-        _LOGGER.debug("Started a stream recording of %s seconds", duration)
+        self._logger.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
-        hls = self.outputs().get(HLS_PROVIDER)
+        hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
         if lookback > 0 and hls:
             num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
             await hls.recv()
             recorder.prepend(list(hls.get_segments())[-num_segments:])
+
+    async def async_get_image(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes | None:
+        """
+        Fetch an image from the Stream and return it as a jpeg in bytes.
+
+        Calls async_get_image from KeyFrameConverter. async_get_image should only be
+        called directly from the main loop and not from an executor thread as it uses
+        hass.add_executor_job underneath the hood.
+        """
+
+        self.add_provider(HLS_PROVIDER)
+        self.start()
+        return await self._keyframe_converter.async_get_image(
+            width=width, height=height
+        )
+
+
+def _should_retry() -> bool:
+    """Return true if worker failures should be retried, for disabling during tests."""
+    return True

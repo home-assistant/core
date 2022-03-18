@@ -1,36 +1,54 @@
 """Config flow to configure the SimpliSafe component."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NamedTuple
 
-from simplipy import get_api
-from simplipy.api import API
-from simplipy.errors import (
-    InvalidCredentialsError,
-    PendingAuthorizationError,
-    SimplipyError,
+from simplipy import API
+from simplipy.errors import InvalidCredentialsError, SimplipyError
+from simplipy.util.auth import (
+    get_auth0_code_challenge,
+    get_auth0_code_verifier,
+    get_auth_url,
 )
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from . import async_get_client_id
-from .const import DOMAIN, LOGGER
+from .const import CONF_USER_ID, DOMAIN, LOGGER
 
-FULL_DATA_SCHEMA = vol.Schema(
+CONF_AUTH_CODE = "auth_code"
+CONF_DOCS_URL = "docs_url"
+
+AUTH_DOCS_URL = (
+    "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code"
+)
+
+STEP_USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_CODE): str,
+        vol.Required(CONF_AUTH_CODE): cv.string,
     }
 )
-PASSWORD_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+
+
+class SimpliSafeOAuthValues(NamedTuple):
+    """Define a named tuple to handle SimpliSafe OAuth strings."""
+
+    code_verifier: str
+    auth_url: str
+
+
+@callback
+def async_get_simplisafe_oauth_values() -> SimpliSafeOAuthValues:
+    """Get a SimpliSafe OAuth code verifier and auth URL."""
+    code_verifier = get_auth0_code_verifier()
+    code_challenge = get_auth0_code_challenge(code_verifier)
+    auth_url = get_auth_url(code_challenge)
+    return SimpliSafeOAuthValues(code_verifier, auth_url)
 
 
 class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -40,8 +58,8 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._code: str | None = None
-        self._password: str | None = None
+        self._oauth_values: SimpliSafeOAuthValues | None = None
+        self._reauth: bool = False
         self._username: str | None = None
 
     @staticmethod
@@ -52,32 +70,44 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return SimpliSafeOptionsFlowHandler(config_entry)
 
-    async def _async_get_simplisafe_api(self) -> API:
-        """Get an authenticated SimpliSafe API client."""
-        assert self._username
-        assert self._password
+    def _async_show_form(self, *, errors: dict[str, Any] | None = None) -> FlowResult:
+        """Show the form."""
+        self._oauth_values = async_get_simplisafe_oauth_values()
 
-        client_id = await async_get_client_id(self.hass)
-        websession = aiohttp_client.async_get_clientsession(self.hass)
-
-        return await get_api(
-            self._username,
-            self._password,
-            client_id=client_id,
-            session=websession,
+        return self.async_show_form(
+            step_id="user",
+            data_schema=STEP_USER_SCHEMA,
+            errors=errors or {},
+            description_placeholders={
+                CONF_URL: self._oauth_values.auth_url,
+                CONF_DOCS_URL: AUTH_DOCS_URL,
+            },
         )
 
-    async def _async_login_during_step(
-        self, *, step_id: str, form_schema: vol.Schema
+    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self._username = config.get(CONF_USERNAME)
+        self._reauth = True
+        return await self.async_step_user()
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Attempt to log into the API from within a config flow step."""
+        """Handle the start of the config flow."""
+        if user_input is None:
+            return self._async_show_form()
+
+        assert self._oauth_values
+
         errors = {}
+        session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
-            await self._async_get_simplisafe_api()
-        except PendingAuthorizationError:
-            LOGGER.info("Awaiting confirmation of MFA email click")
-            return await self.async_step_mfa()
+            simplisafe = await API.async_from_auth(
+                user_input[CONF_AUTH_CODE],
+                self._oauth_values.code_verifier,
+                session=session,
+            )
         except InvalidCredentialsError:
             errors = {"base": "invalid_auth"}
         except SimplipyError as err:
@@ -85,95 +115,32 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors = {"base": "unknown"}
 
         if errors:
-            return self.async_show_form(
-                step_id=step_id,
-                data_schema=form_schema,
-                errors=errors,
+            return self._async_show_form(errors=errors)
+
+        data = {CONF_USER_ID: simplisafe.user_id, CONF_TOKEN: simplisafe.refresh_token}
+        unique_id = str(simplisafe.user_id)
+
+        if self._reauth:
+            # "Old" config entries utilized the user's email address (username) as the
+            # unique ID, whereas "new" config entries utilize the SimpliSafe user ID –
+            # either one is a candidate for re-auth:
+            existing_entry = await self.async_set_unique_id(self._username or unique_id)
+            if not existing_entry:
+                # If we don't have an entry that matches this user ID, the user logged
+                # in with different credentials:
+                return self.async_abort(reason="wrong_account")
+
+            self.hass.config_entries.async_update_entry(
+                existing_entry, unique_id=unique_id, data=data
             )
-
-        return await self.async_step_finish(
-            {
-                CONF_USERNAME: self._username,
-                CONF_PASSWORD: self._password,
-                CONF_CODE: self._code,
-            }
-        )
-
-    async def async_step_finish(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle finish config entry setup."""
-        assert self._username
-
-        existing_entry = await self.async_set_unique_id(self._username)
-        if existing_entry:
-            self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(existing_entry.entry_id)
             )
             return self.async_abort(reason="reauth_successful")
-        return self.async_create_entry(title=self._username, data=user_input)
 
-    async def async_step_mfa(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle multi-factor auth confirmation."""
-        if user_input is None:
-            return self.async_show_form(step_id="mfa")
-
-        try:
-            await self._async_get_simplisafe_api()
-        except PendingAuthorizationError:
-            LOGGER.error("Still awaiting confirmation of MFA email click")
-            return self.async_show_form(
-                step_id="mfa", errors={"base": "still_awaiting_mfa"}
-            )
-
-        return await self.async_step_finish(
-            {
-                CONF_USERNAME: self._username,
-                CONF_PASSWORD: self._password,
-                CONF_CODE: self._code,
-            }
-        )
-
-    async def async_step_reauth(self, config: ConfigType) -> FlowResult:
-        """Handle configuration by re-auth."""
-        self._code = config.get(CONF_CODE)
-        self._username = config[CONF_USERNAME]
-
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle re-auth completion."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=PASSWORD_DATA_SCHEMA
-            )
-
-        self._password = user_input[CONF_PASSWORD]
-
-        return await self._async_login_during_step(
-            step_id="reauth_confirm", form_schema=PASSWORD_DATA_SCHEMA
-        )
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the start of the config flow."""
-        if not user_input:
-            return self.async_show_form(step_id="user", data_schema=FULL_DATA_SCHEMA)
-
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
-
-        self._code = user_input.get(CONF_CODE)
-        self._password = user_input[CONF_PASSWORD]
-        self._username = user_input[CONF_USERNAME]
-
-        return await self._async_login_during_step(
-            step_id="user", form_schema=FULL_DATA_SCHEMA
-        )
+        return self.async_create_entry(title=unique_id, data=data)
 
 
 class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
