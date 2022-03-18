@@ -158,10 +158,10 @@ def get_significant_states_with_session(
         states,
         start_time,
         entity_ids,
-        need_attributes,
         filters,
         include_start_time_state,
         minimal_response,
+        need_attributes,
     )
 
 
@@ -254,7 +254,7 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
 
     with session_scope(hass=hass) as session:
         return _get_states_with_session(
-            hass, session, utc_point_in_time, True, entity_ids, run, filters
+            hass, session, utc_point_in_time, entity_ids, run, filters
         )
 
 
@@ -262,10 +262,10 @@ def _get_states_with_session(
     hass,
     session,
     utc_point_in_time,
-    need_attributes,
     entity_ids=None,
     run=None,
     filters=None,
+    need_attributes=True,
 ):
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
@@ -383,10 +383,10 @@ def _sorted_states_to_dict(
     states,
     start_time,
     entity_ids,
-    need_attributes=True,
     filters=None,
     include_start_time_state=True,
     minimal_response=False,
+    need_attributes=True,
 ):
     """Convert SQL results into JSON friendly data structure.
 
@@ -414,10 +414,10 @@ def _sorted_states_to_dict(
             hass,
             session,
             start_time,
-            need_attributes,
             entity_ids,
             run=run,
             filters=filters,
+            need_attributes=need_attributes,
         ):
             state.last_changed = start_time
             state.last_updated = start_time
