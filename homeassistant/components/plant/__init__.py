@@ -325,7 +325,6 @@ class Plant(Entity):
             )
             states = []
             if results := execute(query, to_native=False, validate_entity_ids=False):
-                # After 2023.8 make state.to_native require StateAttributes
                 for state, attributes in results:
                     native = state.to_native()
                     if not native.attributes:
