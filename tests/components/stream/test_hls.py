@@ -181,7 +181,7 @@ async def test_hls_stream(
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
         "keepalive": False,
         "start_worker": 1,
-        "video_stream": "h264",
+        "video_codec": "h264",
         "worker_error": 1,
     }
 
