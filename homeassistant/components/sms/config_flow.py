@@ -2,17 +2,27 @@
 import logging
 
 import gammu  # pylint: disable=import-error
-import voluptuous as vol
+import voluptuous as vol  # pylint: disable=import-error
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DEVICE
+import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import (  # pylint: disable=unused-import
+    CONF_BAUD_SPEED,
+    DEFAULT_BAUD_SPEED,
+    DOMAIN,
+)
 from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_DEVICE): str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE): str,
+        vol.Optional(CONF_BAUD_SPEED, default=DEFAULT_BAUD_SPEED): cv.positive_int,
+    }
+)
 
 
 async def get_imei_from_config(hass: core.HomeAssistant, data):
@@ -21,13 +31,17 @@ async def get_imei_from_config(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     device = data[CONF_DEVICE]
-    config = {"Device": device, "Connection": "at"}
+    baud_speed = data[CONF_BAUD_SPEED]
+    connection_mode = "at"
+    if baud_speed is not DEFAULT_BAUD_SPEED:
+        connection_mode += str(baud_speed)
+    config = {"Device": device, "Connection": connection_mode}
     gateway = await create_sms_gateway(config, hass)
     if not gateway:
         raise CannotConnect
     try:
         imei = await gateway.get_imei_async()
-    except gammu.GSMError as err:
+    except gammu.GSMError as err:  # pylint: disable=no-member
         raise CannotConnect from err
     finally:
         await gateway.terminate_async()

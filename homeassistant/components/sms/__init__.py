@@ -1,5 +1,7 @@
 """The sms component."""
-import voluptuous as vol
+import logging
+
+import voluptuous as vol  # pylint: disable=import-error
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE, Platform
@@ -7,8 +9,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SMS_GATEWAY
+from .const import CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED, DOMAIN, SMS_GATEWAY
 from .gateway import create_sms_gateway
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -21,7 +25,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Configure Gammu state machine."""
     hass.data.setdefault(DOMAIN, {})
-    if not (sms_config := config.get(DOMAIN, {})):
+    if not (sms_config := config.get(DOMAIN, {})):  # pylint: disable=superfluous-parens
         return True
 
     hass.async_create_task(
@@ -39,7 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure Gammu state machine."""
 
     device = entry.data[CONF_DEVICE]
-    config = {"Device": device, "Connection": "at"}
+    baud_speed = entry.data[CONF_BAUD_SPEED]
+    connection_mode = "at"
+    if baud_speed is not DEFAULT_BAUD_SPEED:
+        connection_mode += str(baud_speed)
+    config = {"Device": device, "Connection": connection_mode}
+    _LOGGER.debug("Connecting mode:%s", connection_mode)
     gateway = await create_sms_gateway(config, hass)
     if not gateway:
         return False
