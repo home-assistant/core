@@ -1,10 +1,12 @@
 """Test the Z-Wave JS fan platform."""
+import copy
 import math
 
 import pytest
 from voluptuous.error import MultipleInvalid
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -24,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -64,7 +67,6 @@ async def test_generic_fan(hass, client, fan_generic, integration):
             "type": "number",
             "readable": True,
             "writeable": True,
-            "label": "Target value",
         },
     }
     assert args["value"] == 66
@@ -107,7 +109,6 @@ async def test_generic_fan(hass, client, fan_generic, integration):
             "type": "number",
             "readable": True,
             "writeable": True,
-            "label": "Target value",
         },
     }
     assert args["value"] == 255
@@ -139,7 +140,6 @@ async def test_generic_fan(hass, client, fan_generic, integration):
             "type": "number",
             "readable": True,
             "writeable": True,
-            "label": "Target value",
         },
     }
     assert args["value"] == 0
@@ -261,6 +261,64 @@ async def test_configurable_speeds_fan(hass, client, hs_fc200, integration):
     state = hass.states.get(entity_id)
     assert math.isclose(state.attributes[ATTR_PERCENTAGE_STEP], 33.3333, rel_tol=1e-3)
     assert state.attributes[ATTR_PRESET_MODES] == []
+
+
+async def test_configurable_speeds_fan_with_missing_config_value(
+    hass, client, hs_fc200_state, integration
+):
+    """Test a fan entity with configurable speeds."""
+    entity_id = "fan.scene_capable_fan_control_switch"
+
+    # Attach a modified version of the node with a bad config
+    bad_node_data = copy.deepcopy(hs_fc200_state)
+    fan_type_value = next(
+        (
+            v
+            for v in bad_node_data["values"]
+            if v["endpoint"] == 0 and v["commandClass"] == 112 and v["property"] == 5
+        ),
+        None,
+    )
+    assert fan_type_value is not None
+    bad_node_data["values"].remove(fan_type_value)
+
+    node = Node(client, bad_node_data)
+    event = {"node": node}
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_configurable_speeds_fan_with_bad_config_value(
+    hass, client, hs_fc200_state, integration
+):
+    """Test a fan entity with configurable speeds."""
+    entity_id = "fan.scene_capable_fan_control_switch"
+
+    # Attach a modified version of the node with a bad config
+    bad_node_data = copy.deepcopy(hs_fc200_state)
+    fan_type_value = next(
+        (
+            v
+            for v in bad_node_data["values"]
+            if v["endpoint"] == 0 and v["commandClass"] == 112 and v["property"] == 5
+        ),
+        None,
+    )
+    assert fan_type_value is not None
+
+    # 42 is not a valid configuration option with this device
+    fan_type_value["value"] = 42
+
+    node = Node(client, bad_node_data)
+    event = {"node": node}
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_fixed_speeds_fan(hass, client, ge_12730, integration):

@@ -237,8 +237,7 @@ class ValueMappingZwaveFan(ZwaveFan):
     def supported_features(self) -> int:
         """Flag supported features."""
         flags = SUPPORT_SET_SPEED
-
-        if self.fan_value_mapping.presets:
+        if self.has_fan_value_mapping and self.fan_value_mapping.presets:
             flags |= SUPPORT_PRESET_MODE
 
         return flags
@@ -397,4 +396,3 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
             attrs[ATTR_FAN_STATE] = state
 
         return attrs
-
