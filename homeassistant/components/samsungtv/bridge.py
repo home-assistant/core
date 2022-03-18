@@ -704,7 +704,14 @@ class SamsungTVEncryptedBridge(
         commands: list[SamsungTVEncryptedCommand],
     ) -> None:
         """Send the commands using websocket protocol."""
-        await remote.send_commands(commands)
+        # pylint:disable=[fixme,protected-access]
+        # TODO: this should be moved to external library if it works
+        for command in commands:
+            assert remote._connection
+            await remote._connection.send("1::/com.samsung.companion")
+            await asyncio.sleep(KEY_PRESS_TIMEOUT)
+            await remote.send_command(command)
+            await asyncio.sleep(KEY_PRESS_TIMEOUT)
 
     async def _async_get_remote_under_lock(
         self,
@@ -740,4 +747,10 @@ class SamsungTVEncryptedBridge(
 
     async def _send_power_off(self) -> None:
         """Send power off command to remote."""
-        await self._async_send_commands([SendEncryptedRemoteKey.click("KEY_POWEROFF")])
+        # It seems that some TVs need KEY_POWER and some TVs need KEY_POWEROFF
+        await self._async_send_commands(
+            [
+                SendEncryptedRemoteKey.click("KEY_POWEROFF"),
+                SendEncryptedRemoteKey.click("KEY_POWER"),
+            ]
+        )
