@@ -13,11 +13,13 @@ bcrypt==3.1.7
 certifi>=2021.5.30
 ciso8601==2.2.0
 cryptography==35.0.0
+fnvhash==0.1.0
 hass-nabucasa==0.54.0
 home-assistant-frontend==20220317.0
 httpx==0.22.0
 ifaddr==0.1.7
 jinja2==3.0.3
+lru-dict==1.1.7
 paho-mqtt==1.6.1
 pillow==9.0.1
 pip>=21.0,<22.1
