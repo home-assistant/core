@@ -877,7 +877,7 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
         "keepalive": False,
         "start_worker": 1,
-        "video_stream": "hevc",
+        "video_codec": "hevc",
         "worker_error": 1,
     }
 
