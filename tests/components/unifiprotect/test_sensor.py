@@ -26,7 +26,6 @@ from homeassistant.components.unifiprotect.sensor import (
     NVR_SENSORS,
     OBJECT_TYPE_NONE,
     SENSE_SENSORS,
-    SENSE_TRIP_SENSORS,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -590,7 +589,7 @@ async def test_sensor_update_alarm(
 
     # Last Trip Time
     unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, sensor, SENSE_TRIP_SENSORS[0]
+        Platform.SENSOR, sensor, SENSE_SENSORS[-3]
     )
     entity_registry = er.async_get(hass)
 
