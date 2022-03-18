@@ -93,8 +93,8 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     async def async_update_hvac_params(self, params) -> None:
         """Send HVAC parameters to API."""
         try:
-            await self.coordinator.airzone.put_hvac(params)
-            self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
+            await self.airzone.put_hvac(params)
+            self.coordinator.async_set_updated_data(self.airzone.data())
         except (AirzoneError, ClientConnectorError) as error:
             _LOGGER.error(error)
 
