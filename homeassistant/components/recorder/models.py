@@ -48,6 +48,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DB_TIMEZONE = "+00:00"
 
+EMPTY_CONTEXT = Context(id="")
+
 TABLE_EVENTS = "events"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
@@ -181,7 +183,7 @@ class States(Base):  # type: ignore[misc,valid-type]
             f"id={self.state_id}, domain='{self.domain}', entity_id='{self.entity_id}', "
             f"state='{self.state}', event_id='{self.event_id}', "
             f"last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}', "
-            f"old_state_id={self.old_state_id}"
+            f"old_state_id={self.old_state_id}, attributes_id={self.attributes_id}"
             f")>"
         )
 
@@ -222,7 +224,7 @@ class States(Base):  # type: ignore[misc,valid-type]
                 process_timestamp(self.last_updated),
                 # Join the events table on event_id to get the context instead
                 # as it will always be there for state_changed events
-                context=Context(id=None),
+                context=EMPTY_CONTEXT,
                 validate_entity_id=validate_entity_id,
             )
         except ValueError:
@@ -582,7 +584,7 @@ class LazyState(State):
     def context(self):
         """State context."""
         if not self._context:
-            self._context = Context(id=None)
+            self._context = EMPTY_CONTEXT
         return self._context
 
     @context.setter
@@ -621,20 +623,22 @@ class LazyState(State):
 
         To be used for JSON serialization.
         """
-        if self._last_changed:
-            last_changed_isoformat = self._last_changed.isoformat()
-        else:
+        if self._last_changed is None and self._last_updated is None:
             last_changed_isoformat = process_timestamp_to_utc_isoformat(
                 self._row.last_changed
             )
-        if self._row.last_changed == self._row.last_updated:
-            last_updated_isoformat = last_changed_isoformat
-        elif self._last_updated:
-            last_updated_isoformat = self._last_updated.isoformat()
+            if self._row.last_changed == self._row.last_updated:
+                last_updated_isoformat = last_changed_isoformat
+            else:
+                last_updated_isoformat = process_timestamp_to_utc_isoformat(
+                    self._row.last_updated
+                )
         else:
-            last_updated_isoformat = process_timestamp_to_utc_isoformat(
-                self._row.last_updated
-            )
+            last_changed_isoformat = self.last_changed.isoformat()
+            if self.last_changed == self.last_updated:
+                last_updated_isoformat = last_changed_isoformat
+            else:
+                last_updated_isoformat = self.last_updated.isoformat()
         return {
             "entity_id": self.entity_id,
             "state": self.state,
