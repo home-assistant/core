@@ -128,7 +128,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.diagnostics",
     "homeassistant.components.sonos.entity",
     "homeassistant.components.sonos.favorites",
-    "homeassistant.components.sonos.helpers",
     "homeassistant.components.sonos.media_browser",
     "homeassistant.components.sonos.media_player",
     "homeassistant.components.sonos.number",
@@ -215,9 +214,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.zha.sensor",
     "homeassistant.components.zha.siren",
     "homeassistant.components.zha.switch",
-    "homeassistant.components.zwave",
-    "homeassistant.components.zwave.migration",
-    "homeassistant.components.zwave.node_entity",
 ]
 
 # Component modules which should set no_implicit_reexport = true.
