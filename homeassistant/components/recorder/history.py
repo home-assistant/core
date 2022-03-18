@@ -380,6 +380,7 @@ def _sorted_states_to_dict(
     axis correctly.
     """
     result = defaultdict(list)
+    include_attributes = True
     # Set all entity IDs to empty lists in result set to maintain the order
     if entity_ids is not None:
         include_attributes = not minimal_response
@@ -390,8 +391,6 @@ def _sorted_states_to_dict(
             ):
                 include_attributes = True
             result[ent_id] = []
-    else:
-        include_attributes = True
 
     # Get the states at the start time
     timer_start = time.perf_counter()
