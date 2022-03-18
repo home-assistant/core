@@ -424,7 +424,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Return root media objects."""
 
         return BrowseMedia(
-            title="Library",
+            title="Philips TV",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="",
             media_content_type="",
