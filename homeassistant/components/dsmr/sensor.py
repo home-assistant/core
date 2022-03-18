@@ -37,7 +37,7 @@ from .const import (
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
     DEFAULT_TIME_BETWEEN_UPDATE,
-    DEVICE_NAME_ENERGY,
+    DEVICE_NAME_ELECTRICITY,
     DEVICE_NAME_GAS,
     DOMAIN,
     LOGGER,
@@ -186,7 +186,7 @@ class DSMREntity(SensorEntity):
         self.telegram: dict[str, DSMRObject] = {}
 
         device_serial = entry.data[CONF_SERIAL_ID]
-        device_name = DEVICE_NAME_ENERGY
+        device_name = DEVICE_NAME_ELECTRICITY
         if entity_description.is_gas:
             device_serial = entry.data[CONF_SERIAL_ID_GAS]
             device_name = DEVICE_NAME_GAS

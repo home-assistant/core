@@ -121,6 +121,13 @@ def area_mock(hass):
         area_id="own-area",
         entity_category="config",
     )
+    hidden_entity_in_own_area = ent_reg.RegistryEntry(
+        entity_id="light.hidden_in_own_area",
+        unique_id="hidden-in-own-area-id",
+        platform="test",
+        area_id="own-area",
+        hidden_by=ent_reg.RegistryEntryHider.USER,
+    )
     entity_in_area = ent_reg.RegistryEntry(
         entity_id="light.in_area",
         unique_id="in-area-id",
@@ -133,6 +140,13 @@ def area_mock(hass):
         platform="test",
         device_id=device_in_area.id,
         entity_category="config",
+    )
+    hidden_entity_in_area = ent_reg.RegistryEntry(
+        entity_id="light.hidden_in_area",
+        unique_id="hidden-in-area-id",
+        platform="test",
+        device_id=device_in_area.id,
+        hidden_by=ent_reg.RegistryEntryHider.USER,
     )
     entity_in_other_area = ent_reg.RegistryEntry(
         entity_id="light.in_other_area",
@@ -161,6 +175,13 @@ def area_mock(hass):
         device_id=device_no_area.id,
         entity_category="config",
     )
+    hidden_entity_no_area = ent_reg.RegistryEntry(
+        entity_id="light.hidden_no_area",
+        unique_id="hidden-no-area-id",
+        platform="test",
+        device_id=device_no_area.id,
+        hidden_by=ent_reg.RegistryEntryHider.USER,
+    )
     entity_diff_area = ent_reg.RegistryEntry(
         entity_id="light.diff_area",
         unique_id="diff-area-id",
@@ -186,12 +207,15 @@ def area_mock(hass):
         {
             entity_in_own_area.entity_id: entity_in_own_area,
             config_entity_in_own_area.entity_id: config_entity_in_own_area,
+            hidden_entity_in_own_area.entity_id: hidden_entity_in_own_area,
             entity_in_area.entity_id: entity_in_area,
             config_entity_in_area.entity_id: config_entity_in_area,
+            hidden_entity_in_area.entity_id: hidden_entity_in_area,
             entity_in_other_area.entity_id: entity_in_other_area,
             entity_assigned_to_area.entity_id: entity_assigned_to_area,
             entity_no_area.entity_id: entity_no_area,
             config_entity_no_area.entity_id: config_entity_no_area,
+            hidden_entity_no_area.entity_id: hidden_entity_no_area,
             entity_diff_area.entity_id: entity_diff_area,
             entity_in_area_a.entity_id: entity_in_area_a,
             entity_in_area_b.entity_id: entity_in_area_b,

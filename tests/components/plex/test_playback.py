@@ -43,7 +43,6 @@ async def test_media_player_playback(
     requests_mock,
     playqueue_created,
     player_plexweb_resources,
-    caplog,
 ):
     """Test playing media on a Plex media_player."""
     requests_mock.get("http://1.2.3.5:32400/resources", text=player_plexweb_resources)
@@ -68,7 +67,7 @@ async def test_media_player_playback(
                 },
                 True,
             )
-    assert f"Media could not be found: {payload}" in str(excinfo.value)
+    assert f"No {MEDIA_TYPE_MOVIE} results in 'Movies' for" in str(excinfo.value)
 
     movie1 = MockPlexMedia("Movie", "movie")
     movie2 = MockPlexMedia("Movie II", "movie")
@@ -120,8 +119,7 @@ async def test_media_player_playback(
                 },
                 True,
             )
-    assert f"Media could not be found: {payload}" in str(excinfo.value)
-    assert "Multiple matches, make content_id more specific" in caplog.text
+    assert "Multiple matches, make content_id more specific" in str(excinfo.value)
 
     # Test multiple choices with allow_multiple
     movies = [movie1, movie2, movie3]

@@ -735,15 +735,12 @@ homeassistant/components/overkiz/* @imicknl @vlebourl @tetienne
 tests/components/overkiz/* @imicknl @vlebourl @tetienne
 homeassistant/components/ovo_energy/* @timmo001
 tests/components/ovo_energy/* @timmo001
-homeassistant/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
-tests/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
 homeassistant/components/p1_monitor/* @klaasnicolaas
 tests/components/p1_monitor/* @klaasnicolaas
 homeassistant/components/panel_custom/* @home-assistant/frontend
 tests/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
 tests/components/panel_iframe/* @home-assistant/frontend
-homeassistant/components/pcal9535a/* @Shulyaka
 homeassistant/components/persistent_notification/* @home-assistant/core
 tests/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
@@ -1068,6 +1065,8 @@ homeassistant/components/updater/* @home-assistant/core
 tests/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23
 tests/components/upnp/* @StevenLooman @ehendrix23
+homeassistant/components/uptime/* @frenck
+tests/components/uptime/* @frenck
 homeassistant/components/uptimerobot/* @ludeeus @chemelli74
 tests/components/uptimerobot/* @ludeeus @chemelli74
 homeassistant/components/usb/* @bdraco
@@ -1182,8 +1181,6 @@ tests/components/zodiac/* @JulienTant
 homeassistant/components/zone/* @home-assistant/core
 tests/components/zone/* @home-assistant/core
 homeassistant/components/zoneminder/* @rohankapoorcom
-homeassistant/components/zwave/* @home-assistant/z-wave
-tests/components/zwave/* @home-assistant/z-wave
 homeassistant/components/zwave_js/* @home-assistant/z-wave
 tests/components/zwave_js/* @home-assistant/z-wave
 homeassistant/components/zwave_me/* @lawfulchaos @Z-Wave-Me

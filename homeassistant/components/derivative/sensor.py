@@ -8,6 +8,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -20,23 +21,25 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    CONF_ROUND_DIGITS,
+    CONF_TIME_WINDOW,
+    CONF_UNIT,
+    CONF_UNIT_PREFIX,
+    CONF_UNIT_TIME,
+)
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE_ID = "source"
-
-CONF_ROUND_DIGITS = "round"
-CONF_UNIT_PREFIX = "unit_prefix"
-CONF_UNIT_TIME = "unit_time"
-CONF_UNIT = "unit"
-CONF_TIME_WINDOW = "time_window"
 
 # SI Metric prefixes
 UNIT_PREFIXES = {
@@ -76,6 +79,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Derivative config entry."""
+    registry = er.async_get(hass)
+    # Validate + resolve entity registry id to entity_id
+    source_entity_id = er.async_validate_entity_id(
+        registry, config_entry.options[CONF_SOURCE]
+    )
+
+    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
+    if unit_prefix == "none":
+        unit_prefix = None
+
+    derivative_sensor = DerivativeSensor(
+        name=config_entry.title,
+        round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
+        source_entity=source_entity_id,
+        time_window=cv.time_period_dict(config_entry.options[CONF_TIME_WINDOW]),
+        unique_id=config_entry.entry_id,
+        unit_of_measurement=None,
+        unit_prefix=unit_prefix,
+        unit_time=config_entry.options[CONF_UNIT_TIME],
+    )
+
+    async_add_entities([derivative_sensor])
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -84,13 +117,14 @@ async def async_setup_platform(
 ) -> None:
     """Set up the derivative sensor."""
     derivative = DerivativeSensor(
-        source_entity=config[CONF_SOURCE],
         name=config.get(CONF_NAME),
         round_digits=config[CONF_ROUND_DIGITS],
+        source_entity=config[CONF_SOURCE],
+        time_window=config[CONF_TIME_WINDOW],
+        unit_of_measurement=config.get(CONF_UNIT),
         unit_prefix=config[CONF_UNIT_PREFIX],
         unit_time=config[CONF_UNIT_TIME],
-        unit_of_measurement=config.get(CONF_UNIT),
-        time_window=config[CONF_TIME_WINDOW],
+        unique_id=None,
     )
 
     async_add_entities([derivative])
@@ -101,15 +135,18 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
 
     def __init__(
         self,
-        source_entity,
+        *,
         name,
         round_digits,
+        source_entity,
+        time_window,
+        unit_of_measurement,
         unit_prefix,
         unit_time,
-        unit_of_measurement,
-        time_window,
+        unique_id,
     ):
         """Initialize the derivative sensor."""
+        self._attr_unique_id = unique_id
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
@@ -214,7 +251,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             self.async_write_ha_state()
 
         async_track_state_change_event(
-            self.hass, [self._sensor_source_id], calc_derivative
+            self.hass, self._sensor_source_id, calc_derivative
         )
 
     @property

@@ -8,6 +8,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_SLAVE_COUNT,
+    MODBUS_DOMAIN,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
@@ -377,3 +379,15 @@ async def test_slave_binary_sensor(hass, expected, slaves, mock_do_cycle):
     for i in range(len(slaves)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}".replace(" ", "_")
         assert hass.states.get(entity_id).state == slaves[i]
+
+
+async def test_no_discovery_info_binary_sensor(hass, caplog):
+    """Test setup without discovery info."""
+    assert SENSOR_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": MODBUS_DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert SENSOR_DOMAIN in hass.config.components

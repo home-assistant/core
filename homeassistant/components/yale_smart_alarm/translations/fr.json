@@ -5,8 +5,8 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "cannot_connect": "Impossible de se connecter",
-            "invalid_auth": "Authentification invalide"
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification non valide"
         },
         "step": {
             "reauth_confirm": {

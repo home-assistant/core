@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 # Keep track of integrations already reported to prevent flooding
 _REPORTED_INTEGRATIONS: set[str] = set()
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+_CallableT = TypeVar("_CallableT", bound=Callable)
 
 
 def get_integration_frame(
@@ -113,7 +113,7 @@ def report_integration(
     )
 
 
-def warn_use(func: CALLABLE_T, what: str) -> CALLABLE_T:
+def warn_use(func: _CallableT, what: str) -> _CallableT:
     """Mock a function to warn when it was about to be used."""
     if asyncio.iscoroutinefunction(func):
 
@@ -127,4 +127,4 @@ def warn_use(func: CALLABLE_T, what: str) -> CALLABLE_T:
         def report_use(*args: Any, **kwargs: Any) -> None:
             report(what)
 
-    return cast(CALLABLE_T, report_use)
+    return cast(_CallableT, report_use)

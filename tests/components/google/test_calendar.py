@@ -53,10 +53,15 @@ TEST_EVENT = {
 
 @pytest.fixture(autouse=True)
 def mock_test_setup(
-    mock_calendars_yaml, test_api_calendar, mock_calendars_list, mock_token_read
+    hass,
+    mock_calendars_yaml,
+    test_api_calendar,
+    mock_calendars_list,
+    config_entry,
 ):
     """Fixture that pulls in the default fixtures for tests in this file."""
     mock_calendars_list({"items": [test_api_calendar]})
+    config_entry.add_to_hass(hass)
     return
 
 
@@ -300,12 +305,11 @@ async def test_update_error(
     assert state.name == TEST_ENTITY_NAME
     assert state.state == "on"
 
-    # Advance time to avoid throttling
+    # Advance time beyond update/throttle point
     now += datetime.timedelta(minutes=30)
     with patch(
         "homeassistant.components.google.api.google_discovery.build"
     ) as mock, patch("homeassistant.util.utcnow", return_value=now):
-
         mock.return_value.events.return_value.list.return_value.execute.return_value = {
             "items": [
                 {
@@ -417,3 +421,19 @@ async def test_opaque_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert (len(events) > 0) == expect_visible_event
+
+
+async def test_scan_calendar_error(
+    hass,
+    calendar_resource,
+    component_setup,
+    test_api_calendar,
+):
+    """Test that the calendar update handles a server error."""
+    with patch(
+        "homeassistant.components.google.api.google_discovery.build",
+        side_effect=httplib2.ServerNotFoundError("unit test"),
+    ):
+        assert await component_setup()
+
+    assert not hass.states.get(TEST_ENTITY)

@@ -8,7 +8,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_api_key": "Cl\u00e9 d'API invalide",
+            "invalid_api_key": "Cl\u00e9 d'API non valide",
             "reauth_failed_matching_account": "La cl\u00e9 API que vous avez fournie ne correspond pas \u00e0 l\u2019ID de compte pour la configuration existante.",
             "unknown": "Erreur inattendue"
         },
