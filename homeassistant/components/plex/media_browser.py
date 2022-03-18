@@ -50,11 +50,18 @@ def browse_media(  # noqa: C901
     """Implement the websocket media browsing helper."""
     server_id = None
     plex_server = None
+    special_folder = None
+
     if media_content_id:
         url = URL(media_content_id)
         server_id = url.host
         plex_server = hass.data[DOMAIN][SERVERS][server_id]
-        media_content_id = url.name
+        if media_content_type == "hub":
+            _, hub_location, hub_identifier = url.parts
+        elif media_content_type in ["library", "server"] and len(url.parts) > 2:
+            _, media_content_id, special_folder = url.parts
+        else:
+            media_content_id = url.name
 
     if media_content_type in ("plex_root", None):
         return root_payload(hass, is_internal, platform=platform)
@@ -91,7 +98,7 @@ def browse_media(  # noqa: C901
         server_info = BrowseMedia(
             title=plex_server.friendly_name,
             media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_id=generate_plex_uri(server_id, ""),
+            media_content_id=generate_plex_uri(server_id, "server"),
             media_content_type="server",
             can_play=False,
             can_expand=True,
@@ -169,20 +176,19 @@ def browse_media(  # noqa: C901
         return media_info
 
     if media_content_type == "hub":
-        location, hub_identifier = media_content_id.split("~")
-        if location == "server":
+        if hub_location == "server":
             hub = next(
                 x
                 for x in plex_server.library.hubs()
                 if x.hubIdentifier == hub_identifier
             )
-            media_content_id = f"server~{hub.hubIdentifier}"
+            media_content_id = f"server/{hub.hubIdentifier}"
         else:
-            library_section = plex_server.library.sectionByID(int(location))
+            library_section = plex_server.library.sectionByID(int(hub_location))
             hub = next(
                 x for x in library_section.hubs() if x.hubIdentifier == hub_identifier
             )
-            media_content_id = f"{hub.librarySectionID}~{hub.hubIdentifier}"
+            media_content_id = f"{hub.librarySectionID}/{hub.hubIdentifier}"
         try:
             children_media_class = ITEM_TYPE_MEDIA_CLASS[hub.type]
         except KeyError as err:
@@ -205,11 +211,6 @@ def browse_media(  # noqa: C901
             else:
                 payload["children"].append(item_payload(item))
         return BrowseMedia(**payload)
-
-    if media_content_id and "~" in media_content_id:
-        media_content_id, special_folder = media_content_id.split("~")
-    else:
-        special_folder = None
 
     if special_folder:
         if media_content_type == "server":
@@ -234,7 +235,7 @@ def browse_media(  # noqa: C901
             "title": title,
             "media_class": MEDIA_CLASS_DIRECTORY,
             "media_content_id": generate_plex_uri(
-                server_id, f"{media_content_id}~{special_folder}"
+                server_id, f"{media_content_id}/{special_folder}"
             ),
             "media_content_type": media_content_type,
             "can_play": False,
@@ -343,7 +344,7 @@ def library_section_payload(section):
 def special_library_payload(parent_payload, special_type):
     """Create response payload for special library folders."""
     title = f"{special_type} ({parent_payload.title})"
-    special_library_id = f"{parent_payload.media_content_id}~{special_type}"
+    special_library_id = f"{parent_payload.media_content_id}/{special_type}"
     return BrowseMedia(
         title=title,
         media_class=parent_payload.media_class,
@@ -358,9 +359,9 @@ def special_library_payload(parent_payload, special_type):
 def hub_payload(hub):
     """Create response payload for a hub."""
     if hasattr(hub, "librarySectionID"):
-        media_content_id = f"{hub.librarySectionID}~{hub.hubIdentifier}"
+        media_content_id = f"{hub.librarySectionID}/{hub.hubIdentifier}"
     else:
-        media_content_id = f"server~{hub.hubIdentifier}"
+        media_content_id = f"server/{hub.hubIdentifier}"
     server_id = hub._server.machineIdentifier  # pylint: disable=protected-access
     payload = {
         "title": hub.title,
