@@ -42,6 +42,11 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         self._attr_current_option = self.device.get("selected_schedule")
         self._attr_options = self.device.get("available_schedules", [])
 
+    @property
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        return self.device.get("selected_schedule")
+
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.coordinator.api.set_schedule_state(
@@ -49,3 +54,4 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
             option,
             STATE_ON,
         )
+        await self.coordinator.async_request_refresh()
