@@ -1,11 +1,8 @@
 """Test selectors."""
-from datetime import timedelta
-
 import pytest
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.util import dt as dt_util
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 
@@ -253,9 +250,7 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_time_selector_schema(schema, valid_selections, invalid_selections):
     """Test time selector."""
-    _test_selector(
-        "time", schema, valid_selections, invalid_selections, dt_util.parse_time
-    )
+    _test_selector("time", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
@@ -393,13 +388,7 @@ def test_attribute_selector_schema(schema, valid_selections, invalid_selections)
 )
 def test_duration_selector_schema(schema, valid_selections, invalid_selections):
     """Test duration selector."""
-    _test_selector(
-        "duration",
-        schema,
-        valid_selections,
-        invalid_selections,
-        lambda x: timedelta(**x),
-    )
+    _test_selector("duration", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
