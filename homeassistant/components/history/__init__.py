@@ -167,6 +167,7 @@ async def ws_get_list_statistic_ids(
     statistic_ids = await hass.async_add_executor_job(
         list_statistic_ids,
         hass,
+        None,
         msg.get("statistic_type"),
     )
     connection.send_result(msg["id"], statistic_ids)
