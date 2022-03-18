@@ -236,12 +236,18 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
 
     with session_scope(hass=hass) as session:
         return _get_states_with_session(
-            hass, session, utc_point_in_time, entity_ids, run, filters
+            hass, session, utc_point_in_time, True, entity_ids, run, filters
         )
 
 
 def _get_states_with_session(
-    hass, session, utc_point_in_time, entity_ids=None, run=None, filters=None
+    hass,
+    session,
+    utc_point_in_time,
+    include_attributes,
+    entity_ids=None,
+    run=None,
+    filters=None,
 ):
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
@@ -278,9 +284,11 @@ def _get_states_with_session(
         query = query.join(
             most_recent_state_ids,
             States.state_id == most_recent_state_ids.c.max_state_id,
-        ).outerjoin(
-            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
+        if include_attributes:
+            query = query.outerjoin(
+                StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+            )
     else:
         # We did not get an include-list of entities, query all states in the inner
         # query, then filter out unwanted domains as well as applying the custom filter.
@@ -318,9 +326,10 @@ def _get_states_with_session(
         query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
         if filters:
             query = filters.apply(query)
-        query = query.outerjoin(
-            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
-        )
+        if include_attributes:
+            query = query.outerjoin(
+                StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+            )
 
     attr_cache = {}
     return [LazyState(row, attr_cache) for row in execute(query)]
@@ -373,15 +382,29 @@ def _sorted_states_to_dict(
     result = defaultdict(list)
     # Set all entity IDs to empty lists in result set to maintain the order
     if entity_ids is not None:
+        include_attributes = not minimal_response
         for ent_id in entity_ids:
+            if (
+                not include_attributes
+                and split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS
+            ):
+                include_attributes = True
             result[ent_id] = []
+    else:
+        include_attributes = True
 
     # Get the states at the start time
     timer_start = time.perf_counter()
     if include_start_time_state:
         run = recorder.run_information_from_instance(hass, start_time)
         for state in _get_states_with_session(
-            hass, session, start_time, entity_ids, run=run, filters=filters
+            hass,
+            session,
+            start_time,
+            include_attributes,
+            entity_ids,
+            run=run,
+            filters=filters,
         ):
             state.last_changed = start_time
             state.last_updated = start_time
