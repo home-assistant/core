@@ -9,8 +9,12 @@ CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
 CONF_RTSP_TRANSPORT = "rtsp_transport"
 FFMPEG_OPTION_MAP = {CONF_RTSP_TRANSPORT: "rtsp_transport"}
-ALLOWED_RTSP_TRANSPORT_PROTOCOLS = {"tcp", "udp", "udp_multicast", "http"}
-
+RTSP_TRANSPORTS = {
+    "tcp": "TCP",
+    "udp": "UDP",
+    "udp_multicast": "UDP Multicast",
+    "http": "HTTP",
+}
 GET_IMAGE_TIMEOUT = 10
 
 DEFAULT_USERNAME = None

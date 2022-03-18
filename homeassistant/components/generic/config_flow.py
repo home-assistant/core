@@ -44,6 +44,7 @@ from .const import (
     DOMAIN,
     FFMPEG_OPTION_MAP,
     GET_IMAGE_TIMEOUT,
+    RTSP_TRANSPORTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ def build_schema(
         vol.Optional(
             CONF_RTSP_TRANSPORT,
             description={"suggested_value": user_input.get(CONF_RTSP_TRANSPORT)},
-        ): vol.In(["tcp", "udp", "udp_multicast", "http"]),
+        ): vol.In(RTSP_TRANSPORTS),
         vol.Optional(
             CONF_AUTHENTICATION,
             description={"suggested_value": user_input.get(CONF_AUTHENTICATION)},
@@ -98,13 +99,12 @@ def build_schema(
         ): bool,
     }
     if is_options_flow:
-        spec = {
-            **spec,
+        spec[
             vol.Required(
                 CONF_LIMIT_REFETCH_TO_URL_CHANGE,
                 default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False),
-            ): bool,
-        }
+            )
+        ] = bool
     return vol.Schema(spec)
 
 

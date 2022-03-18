@@ -299,7 +299,7 @@ async def test_setup_alternative_options(
             },
         )
         await hass.async_block_till_done()
-    assert hass.data["camera"].get_entity("camera.config_test")
+    assert hass.states.get("camera.config_test")
 
 
 @respx.mock
