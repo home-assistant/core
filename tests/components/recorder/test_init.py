@@ -288,7 +288,7 @@ async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
 
     await async_wait_recording_done(hass, instance)
 
-    with patch.object(instance, "db_retry_wait", 0.2), patch.object(
+    with patch.object(instance, "db_retry_wait", 0.05), patch.object(
         instance.event_session,
         "flush",
         side_effect=OperationalError(
