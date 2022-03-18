@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 import logging
 from typing import Any
 
@@ -30,11 +30,17 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 VALID_STATES = {STATE_ON, STATE_OFF}
+
+# These are used as parameters to fan.turn_on service.
+SPEED_AND_MODE_ATTRIBUTES = {
+    ATTR_PERCENTAGE: SERVICE_SET_PERCENTAGE,
+    ATTR_PRESET_MODE: SERVICE_SET_PRESET_MODE,
+}
+
 ATTRIBUTES = {  # attribute: service
     ATTR_DIRECTION: SERVICE_SET_DIRECTION,
     ATTR_OSCILLATING: SERVICE_OSCILLATE,
-    ATTR_PERCENTAGE: SERVICE_SET_PERCENTAGE,
-    ATTR_PRESET_MODE: SERVICE_SET_PRESET_MODE,
+    **SPEED_AND_MODE_ATTRIBUTES,
 }
 
 
@@ -56,37 +62,45 @@ async def _async_reproduce_state(
         )
         return
 
-    # Return if we are already at the right state.
-    if cur_state.state == state.state and all(
-        check_attr_equal(cur_state.attributes, state.attributes, attr)
-        for attr in ATTRIBUTES
-    ):
-        return
-
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
-    service_calls = {}  # service: service_data
+    service_calls: list[tuple[str, dict[str, Any]]] = []
 
     if state.state == STATE_ON:
         # The fan should be on
         if cur_state.state != STATE_ON:
-            # Turn on the fan at first
-            service_calls[SERVICE_TURN_ON] = service_data
+            # Turn on the fan with all the speed and modes settings.
+            # The `turn_on` method will figure out in which mode to
+            # turn the fan on.
+            service_calls.append(
+                (
+                    SERVICE_TURN_ON,
+                    {
+                        attr: state.attributes.get(attr)
+                        for attr in SPEED_AND_MODE_ATTRIBUTES
+                        if state.attributes.get(attr) is not None
+                    },
+                )
+            )
 
+        # All the attributes are copied directly.
+        # Attributes that are not supported will not show up in the state.
+        # Percentage and preset mode attributes would already be set, but
+        # this simplifies the code in exchange for a no-op call.
         for attr, service in ATTRIBUTES.items():
-            # Call services to adjust the attributes
-            if attr in state.attributes and not check_attr_equal(
-                state.attributes, cur_state.attributes, attr
-            ):
-                data = service_data.copy()
-                data[attr] = state.attributes[attr]
-                service_calls[service] = data
+            if attr not in state.attributes:
+                continue
 
-    elif state.state == STATE_OFF:
-        service_calls[SERVICE_TURN_OFF] = service_data
+            if (value := state.attributes[attr]) != cur_state.attributes.get(attr):
+                service_calls.append((service, {attr: value}))
+    elif state.state == STATE_OFF and cur_state.state != state.state:
+        service_calls.append((SERVICE_TURN_OFF, {}))
 
-    for service, data in service_calls.items():
+    for service, data in service_calls:
         await hass.services.async_call(
-            DOMAIN, service, data, context=context, blocking=True
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: state.entity_id, **data},
+            context=context,
+            blocking=True,
         )
 
 
@@ -106,8 +120,3 @@ async def async_reproduce_states(
             for state in states
         )
     )
-
-
-def check_attr_equal(attr1: Mapping, attr2: Mapping, attr_str: str) -> bool:
-    """Return true if the given attributes are equal."""
-    return attr1.get(attr_str) == attr2.get(attr_str)
