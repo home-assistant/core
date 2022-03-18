@@ -11,10 +11,11 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER, PLEX_URI_SCHEME
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import PLEX_DIRECT_URL
+from .const import DEFAULT_DATA, PLEX_DIRECT_URL
 
 
 class MockPlexMedia:
@@ -94,6 +95,35 @@ async def test_media_player_playback(
         )
         assert playmedia_mock.called
 
+    # Test movie success with media browser URL
+    playmedia_mock.reset()
+    assert await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: media_player,
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MOVIE,
+            ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME
+            + f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/1",
+        },
+        True,
+    )
+    assert playmedia_mock.called
+
+    # Test movie success with legacy media browser URL
+    playmedia_mock.reset()
+    assert await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: media_player,
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MOVIE,
+            ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME + "1",
+        },
+        True,
+    )
+    assert playmedia_mock.called
+
     # Test multiple choices with exact match
     playmedia_mock.reset()
     movies = [movie1, movie2]
@@ -146,3 +176,19 @@ async def test_media_player_playback(
         )
         assert mock_create_playqueue.call_args.args == (movies,)
         assert playmedia_mock.called
+
+    # Test radio station
+    playmedia_mock.reset()
+    radio_id = "/library/sections/3/stations/1"
+    assert await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: media_player,
+            ATTR_MEDIA_CONTENT_TYPE: "station",
+            ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME
+            + f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/{radio_id}",
+        },
+        True,
+    )
+    assert playmedia_mock.called
