@@ -12,7 +12,8 @@ from typing import Any, Literal, cast
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.models import StateAttributes, States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
@@ -470,21 +471,13 @@ class StatisticsSensor(SensorEntity):
                 self.hass, _scheduled_update, next_to_purge_timestamp
             )
 
-    async def _initialize_from_database(self) -> None:
-        """Initialize the list of states from the database.
-
-        The query will get the list of states in DESCENDING order so that we
-        can limit the result to self._sample_size. Afterwards reverse the
-        list so that we get it in the right order again.
-
-        If MaxAge is provided then query will restrict to entries younger then
-        current datetime - MaxAge.
-        """
-
+    def _fetch_states_from_database(self) -> list[State]:
+        """Fetch the states from the database."""
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
+        states = []
 
         with session_scope(hass=self.hass) as session:
-            query = session.query(States).filter(
+            query = session.query(States, StateAttributes).filter(
                 States.entity_id == self._source_entity_id.lower()
             )
 
@@ -499,12 +492,33 @@ class StatisticsSensor(SensorEntity):
             else:
                 _LOGGER.debug("%s: retrieving all records", self.entity_id)
 
+            query = query.outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
             query = query.order_by(States.last_updated.desc()).limit(
                 self._samples_max_buffer_size
             )
-            states = execute(query, to_native=True, validate_entity_ids=False)
+            if results := execute(query, to_native=False, validate_entity_ids=False):
+                for state, attributes in results:
+                    native = state.to_native()
+                    if not native.attributes:
+                        native.attributes = attributes.to_native()
+                    states.append(native)
+        return states
 
-        if states:
+    async def _initialize_from_database(self) -> None:
+        """Initialize the list of states from the database.
+
+        The query will get the list of states in DESCENDING order so that we
+        can limit the result to self._sample_size. Afterwards reverse the
+        list so that we get it in the right order again.
+
+        If MaxAge is provided then query will restrict to entries younger then
+        current datetime - MaxAge.
+        """
+        if states := await get_instance(self.hass).async_add_executor_job(
+            self._fetch_states_from_database
+        ):
             for state in reversed(states):
                 self._add_state_to_queue(state)
 

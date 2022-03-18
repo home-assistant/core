@@ -19,6 +19,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.media_player.errors import BrowseError
 
 from .const import DOMAIN, PLEX_URI_SCHEME
+from .errors import MediaNotFound
 from .helpers import pretty_title
 
 
@@ -115,9 +116,9 @@ def browse_media(  # noqa: C901
 
     def build_item_response(payload):
         """Create response payload for the provided media query."""
-        media = plex_server.lookup_media(**payload)
-
-        if media is None:
+        try:
+            media = plex_server.lookup_media(**payload)
+        except MediaNotFound:
             return None
 
         try:

@@ -15,3 +15,5 @@ MAX_QUEUE_BACKLOG = 30000
 # We can increase this back to 1000 once most
 # have upgraded their sqlite version
 MAX_ROWS_TO_PURGE = 998
+
+DB_WORKER_PREFIX = "DbWorker"
