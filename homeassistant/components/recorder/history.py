@@ -320,11 +320,10 @@ def _get_states_with_session(
             query = filters.apply(query)
         query = query.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
-        )            
+        )
 
     attr_cache = {}
     return [LazyState(row, attr_cache) for row in execute(query)]
-
 
 
 def _get_single_entity_states_with_session(hass, session, utc_point_in_time, entity_id):
