@@ -32,6 +32,7 @@ TUYA_SUPPORT_TYPE = {
     "fsd",  # Fan with Light
     "fskg",  # Fan wall switch
     "kj",  # Air Purifier
+    "xktyd",  # Smart Star Projector
 }
 
 
@@ -77,7 +78,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         super().__init__(device, device_manager)
 
         self._switch = self.find_dpcode(
-            (DPCode.SWITCH_FAN, DPCode.SWITCH), prefer_function=True
+            (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH), prefer_function=True
         )
 
         self._attr_preset_modes = []

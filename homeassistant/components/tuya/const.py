@@ -224,6 +224,7 @@ class DPCode(StrEnum):
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    COLOUR_SWITCH = "colour_switch"
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
     CONTROL = "control"
     CONTROL_2 = "control_2"
@@ -265,6 +266,7 @@ class DPCode(StrEnum):
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
     FAN_MODE = "fan_mode"
     FAN_VERTICAL = "fan_vertical"  # Vertical swing flap angle
+    FAN_SWITCH = "fan_switch"
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
     FEED_REPORT = "feed_report"
@@ -290,6 +292,8 @@ class DPCode(StrEnum):
     IPC_WORK_MODE = "ipc_work_mode"
     KEY_TONE = "key_tone"
     LANGUAGE = "language"
+    LASER_BRIGHT = "laser_bright"
+    LASER_SWITCH = "laser_switch"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
@@ -381,6 +385,7 @@ class DPCode(StrEnum):
     SPECIAL_FUNCTION = "special_function"
     SPEED = "speed"  # Speed level
     SPRAY_MODE = "spray_mode"  # Spraying mode
+    STAR_WORK_MODE = "star_work_mode"
     START = "start"  # Start
     STATUS = "status"
     STAY_ALARM_MODE = "stay_alarm_mode"
