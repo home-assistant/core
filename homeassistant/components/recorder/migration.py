@@ -639,7 +639,7 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
                 "ix_statistics_short_term_statistic_id_start",
             )
     elif new_version == 25:
-        _add_columns(instance, "states", ["attributes_id INTEGER"])
+        _add_columns(instance, "states", ["attributes_id INTEGER(20)"])
         _create_index(instance, "states", "ix_states_attributes_id")
 
     else:
