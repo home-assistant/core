@@ -24,7 +24,6 @@ from homeassistant.components.unifiprotect.const import (
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
-    ATTR_LAST_TRIP_TIME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -230,7 +229,7 @@ async def test_binary_sensor_setup_light(
 
     entity_registry = er.async_get(hass)
 
-    for index, description in enumerate(LIGHT_SENSORS):
+    for description in LIGHT_SENSORS:
         unique_id, entity_id = ids_from_device_description(
             Platform.BINARY_SENSOR, light, description
         )
@@ -243,9 +242,6 @@ async def test_binary_sensor_setup_light(
         assert state
         assert state.state == STATE_OFF
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-
-        if index == 1:
-            assert state.attributes[ATTR_LAST_TRIP_TIME] == now - timedelta(hours=1)
 
 
 async def test_binary_sensor_setup_camera_all(
@@ -268,8 +264,6 @@ async def test_binary_sensor_setup_camera_all(
     assert state
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-
-    assert state.attributes[ATTR_LAST_TRIP_TIME] == now - timedelta(hours=1)
 
     # Is Dark
     description = CAMERA_SENSORS[1]
@@ -333,8 +327,7 @@ async def test_binary_sensor_setup_sensor(
 
     entity_registry = er.async_get(hass)
 
-    expected_trip_time = now - timedelta(hours=1)
-    for index, description in enumerate(SENSE_SENSORS):
+    for description in SENSE_SENSORS:
         unique_id, entity_id = ids_from_device_description(
             Platform.BINARY_SENSOR, sensor, description
         )
@@ -347,9 +340,6 @@ async def test_binary_sensor_setup_sensor(
         assert state
         assert state.state == STATE_OFF
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-
-        if index != 1:
-            assert state.attributes[ATTR_LAST_TRIP_TIME] == expected_trip_time
 
 
 async def test_binary_sensor_setup_sensor_none(

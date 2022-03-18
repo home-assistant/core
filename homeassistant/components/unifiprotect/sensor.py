@@ -46,6 +46,7 @@ from .entity import (
     async_all_device_entities,
 )
 from .models import ProtectRequiredKeysMixin, T
+from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -59,6 +60,7 @@ class ProtectSensorEntityDescription(
     """Describes UniFi Protect Sensor entity."""
 
     precision: int | None = None
+    ufp_last_trip_value: str | None = None
 
     def get_ufp_value(self, obj: ProtectDeviceModel) -> Any:
         """Return value from UniFi Protect device."""
@@ -399,6 +401,59 @@ MOTION_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 )
 
 
+CAMERA_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="doorbell_last_trip_time",
+        name="Doorbell Last Trip Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:doorbell-video",
+        ufp_required_field="feature_flags.has_chime",
+        ufp_last_trip_value="last_ring",
+    ),
+)
+
+LIGHT_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="motion_last_trip_time",
+        name="Motion Detected Last Trip Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_last_trip_value="last_motion",
+    ),
+)
+
+SENSE_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="door_last_trip_time",
+        name="Contact Last Trip Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_last_trip_value="open_status_changed_at",
+        ufp_enabled="is_contact_sensor_enabled",
+    ),
+    ProtectSensorEntityDescription(
+        key="motion_last_trip_time",
+        name="Motion Detected Last Trip Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_last_trip_value="motion_detected_at",
+        ufp_enabled="is_motion_sensor_enabled",
+    ),
+    ProtectSensorEntityDescription(
+        key="tampering_last_trip_time",
+        name="Tampering Detected Last Trip Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_last_trip_value="tampering_detected_at",
+    ),
+)
+
+MOTION_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="motion_last_trip_time",
+        name="Motion Last Trip Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_last_trip_value="last_motion",
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -413,6 +468,13 @@ async def async_setup_entry(
         camera_descs=CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
         sense_descs=SENSE_SENSORS,
         lock_descs=DOORLOCK_SENSORS,
+    )
+    entities += async_all_device_entities(
+        data,
+        ProtectTripSensor,
+        camera_descs=CAMERA_TRIP_SENSORS,
+        light_descs=LIGHT_TRIP_SENSORS,
+        sense_descs=SENSE_TRIP_SENSORS,
     )
     entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)
@@ -433,6 +495,14 @@ def _async_motion_entities(
             entities.append(ProtectEventSensor(data, device, description))
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",
+                description.name,
+                device.name,
+            )
+
+        for description in MOTION_TRIP_SENSORS:
+            entities.append(ProtectTripSensor(data, device, description))
+            _LOGGER.debug(
+                "Adding trip sensor entity %s for %s",
                 description.name,
                 device.name,
             )
@@ -520,3 +590,25 @@ class ProtectEventSensor(ProtectDeviceSensor, EventThumbnailMixin):
             self._attr_native_value = OBJECT_TYPE_NONE
         else:
             self._attr_native_value = self._event.smart_detect_types[0].value
+
+
+class ProtectTripSensor(ProtectDeviceEntity, SensorEntity):
+    """A Ubiquiti UniFi Protect Trip Time Sensor."""
+
+    entity_description: ProtectSensorEntityDescription
+
+    def __init__(
+        self,
+        data: ProtectData,
+        device: ProtectAdoptableDeviceModel,
+        description: ProtectSensorEntityDescription,
+    ) -> None:
+        """Initialize an UniFi Protect trip time sensor."""
+        super().__init__(data, device, description)
+
+    @callback
+    def _async_update_device_from_protect(self) -> None:
+        super()._async_update_device_from_protect()
+        value = self.entity_description.ufp_last_trip_value
+        assert value is not None
+        self._attr_native_value = get_nested_attr(self.device, value)
