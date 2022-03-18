@@ -2,11 +2,11 @@
 import logging
 
 import gammu  # pylint: disable=import-error
-import voluptuous as vol  # pylint: disable=import-error
+import voluptuous as vol  # pylint: disable=wrong-import-order, import-error
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DEVICE
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import selector
 
 from .const import (  # pylint: disable=unused-import
     CONF_BAUD_SPEED,
@@ -20,7 +20,16 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE): str,
-        vol.Optional(CONF_BAUD_SPEED, default=DEFAULT_BAUD_SPEED): cv.positive_int,
+        vol.Optional(CONF_BAUD_SPEED, default=DEFAULT_BAUD_SPEED): selector.selector(
+            {
+                "select": {
+                    "options": [
+                        {"value": DEFAULT_BAUD_SPEED, "label": "Auto"},
+                        {"value": 50, "label": "50"},
+                    ]
+                }
+            }
+        ),
     }
 )
 
