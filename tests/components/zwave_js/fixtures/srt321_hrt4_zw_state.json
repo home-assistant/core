@@ -258,5 +258,6 @@
           "2.0"
         ]
       }
-    ]
+    ],
+    "isControllerNode": false
   }

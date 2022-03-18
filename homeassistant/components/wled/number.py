@@ -5,8 +5,8 @@ from functools import partial
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_INTENSITY, ATTR_SPEED, DOMAIN
@@ -40,7 +40,7 @@ NUMBERS = [
         key=ATTR_SPEED,
         name="Speed",
         icon="mdi:speedometer",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         step=1,
         min_value=0,
         max_value=255,
@@ -48,7 +48,7 @@ NUMBERS = [
     NumberEntityDescription(
         key=ATTR_INTENSITY,
         name="Intensity",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         step=1,
         min_value=0,
         max_value=255,

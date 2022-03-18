@@ -7,12 +7,12 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, TypedDict
-import uuid
 
 import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .util import uuid as uuid_util
 
 RESULT_TYPE_FORM = "form"
 RESULT_TYPE_CREATE_ENTRY = "create_entry"
@@ -21,6 +21,7 @@ RESULT_TYPE_EXTERNAL_STEP = "external"
 RESULT_TYPE_EXTERNAL_STEP_DONE = "external_done"
 RESULT_TYPE_SHOW_PROGRESS = "progress"
 RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
+RESULT_TYPE_MENU = "menu"
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
@@ -69,7 +70,7 @@ class FlowResult(TypedDict, total=False):
     title: str
     data: Mapping[str, Any]
     step_id: str
-    data_schema: vol.Schema
+    data_schema: vol.Schema | None
     extra: str
     required: bool
     errors: dict[str, str] | None
@@ -82,6 +83,7 @@ class FlowResult(TypedDict, total=False):
     result: Any
     last_step: bool | None
     options: Mapping[str, Any]
+    menu_options: list[str] | Mapping[str, Any]
 
 
 @callback
@@ -223,7 +225,7 @@ class FlowManager(abc.ABC):
             raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
-        flow.flow_id = uuid.uuid4().hex
+        flow.flow_id = uuid_util.random_uuid_hex()
         flow.context = context
         flow.init_data = data
         self._async_add_flow_progress(flow)
@@ -249,7 +251,15 @@ class FlowManager(abc.ABC):
         if cur_step.get("data_schema") is not None and user_input is not None:
             user_input = cur_step["data_schema"](user_input)
 
-        result = await self._async_handle_step(flow, cur_step["step_id"], user_input)
+        # Handle a menu navigation choice
+        if cur_step["type"] == RESULT_TYPE_MENU and user_input:
+            result = await self._async_handle_step(
+                flow, user_input["next_step_id"], None
+            )
+        else:
+            result = await self._async_handle_step(
+                flow, cur_step["step_id"], user_input
+            )
 
         if cur_step["type"] in (RESULT_TYPE_EXTERNAL_STEP, RESULT_TYPE_SHOW_PROGRESS):
             if cur_step["type"] == RESULT_TYPE_EXTERNAL_STEP and result["type"] not in (
@@ -343,6 +353,7 @@ class FlowManager(abc.ABC):
             RESULT_TYPE_EXTERNAL_STEP_DONE,
             RESULT_TYPE_SHOW_PROGRESS,
             RESULT_TYPE_SHOW_PROGRESS_DONE,
+            RESULT_TYPE_MENU,
         ):
             raise ValueError(f"Handler returned incorrect type: {result['type']}")
 
@@ -352,6 +363,7 @@ class FlowManager(abc.ABC):
             RESULT_TYPE_EXTERNAL_STEP_DONE,
             RESULT_TYPE_SHOW_PROGRESS,
             RESULT_TYPE_SHOW_PROGRESS_DONE,
+            RESULT_TYPE_MENU,
         ):
             flow.cur_step = result
             return result
@@ -378,11 +390,11 @@ class FlowHandler:
 
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    flow_id: str = None  # type: ignore
-    hass: HomeAssistant = None  # type: ignore
-    handler: str = None  # type: ignore
+    flow_id: str = None  # type: ignore[assignment]
+    hass: HomeAssistant = None  # type: ignore[assignment]
+    handler: str = None  # type: ignore[assignment]
     # Ensure the attribute has a subscriptable, but immutable, default value.
-    context: dict[str, Any] = MappingProxyType({})  # type: ignore
+    context: dict[str, Any] = MappingProxyType({})  # type: ignore[assignment]
 
     # Set by _async_create_flow callback
     init_step = "init"
@@ -408,7 +420,7 @@ class FlowHandler:
         self,
         *,
         step_id: str,
-        data_schema: vol.Schema = None,
+        data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
         description_placeholders: dict[str, Any] | None = None,
         last_step: bool | None = None,
@@ -505,6 +517,28 @@ class FlowHandler:
             "flow_id": self.flow_id,
             "handler": self.handler,
             "step_id": next_step_id,
+        }
+
+    @callback
+    def async_show_menu(
+        self,
+        *,
+        step_id: str,
+        menu_options: list[str] | dict[str, str],
+        description_placeholders: dict | None = None,
+    ) -> FlowResult:
+        """Show a navigation menu to the user.
+
+        Options dict maps step_id => i18n label
+        """
+        return {
+            "type": RESULT_TYPE_MENU,
+            "flow_id": self.flow_id,
+            "handler": self.handler,
+            "step_id": step_id,
+            "data_schema": vol.Schema({"next_step_id": vol.In(menu_options)}),
+            "menu_options": menu_options,
+            "description_placeholders": description_placeholders,
         }
 
 

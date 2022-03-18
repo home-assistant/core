@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "Prvn\u00ed tla\u010d\u00edtko",
+            "2": "Druh\u00e9 tla\u010d\u00edtko",
+            "3": "T\u0159et\u00ed tla\u010d\u00edtko",
+            "4": "\u010ctvrt\u00e9 tla\u010d\u00edtko",
             "button_1": "Prvn\u00ed tla\u010d\u00edtko",
             "button_2": "Druh\u00e9 tla\u010d\u00edtko",
             "button_3": "T\u0159et\u00ed tla\u010d\u00edtko",
@@ -47,11 +51,16 @@
             "turn_on": "Zapnout"
         },
         "trigger_type": {
+            "double_short_release": "Oba \"{subtype}\" uvoln\u011bny",
+            "initial_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto",
+            "long_release": "Tla\u010d\u00edtko \"{subtype}\" uvoln\u011bno po dlouh\u00e9m stisku",
             "remote_button_long_release": "Tla\u010d\u00edtko \"{subtype}\" uvoln\u011bno po dlouh\u00e9m stisku",
             "remote_button_short_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto",
             "remote_button_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\"",
             "remote_double_button_long_press": "Oba \"{subtype}\" uvoln\u011bny po dlouh\u00e9m stisku",
-            "remote_double_button_short_press": "Oba \"{subtype}\" uvoln\u011bny"
+            "remote_double_button_short_press": "Oba \"{subtype}\" uvoln\u011bny",
+            "repeat": "Tla\u010d\u00edtko \"{subtype}\" podr\u017eeno",
+            "short_release": "Tla\u010d\u00edtko \"{subtype}\" uvoln\u011bno po kr\u00e1tk\u00e9m stisku"
         }
     },
     "options": {
@@ -59,7 +68,9 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Povolit skupiny Hue",
-                    "allow_unreachable": "Povolit nedostupn\u00fdm \u017e\u00e1rovk\u00e1m spr\u00e1vn\u011b hl\u00e1sit jejich stav"
+                    "allow_hue_scenes": "Povolit sc\u00e9ny Hue",
+                    "allow_unreachable": "Povolit nedostupn\u00fdm \u017e\u00e1rovk\u00e1m spr\u00e1vn\u011b hl\u00e1sit jejich stav",
+                    "ignore_availability": "Ignorovat stav spojen\u00ed pro dan\u00e9 za\u0159\u00edzen\u00ed"
                 }
             }
         }

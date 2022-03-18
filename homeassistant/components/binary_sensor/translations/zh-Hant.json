@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name}\u96fb\u91cf\u904e\u4f4e",
+            "is_co": "{entity_name}\u6b63\u5075\u6e2c\u5230\u4e00\u6c27\u5316\u78b3",
             "is_cold": "{entity_name}\u51b7",
             "is_connected": "{entity_name}\u5df2\u9023\u7dda",
             "is_gas": "{entity_name}\u5075\u6e2c\u5230\u6c23\u9ad4",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name}\u6f6e\u6fd5",
             "is_motion": "{entity_name}\u5075\u6e2c\u5230\u52d5\u4f5c\u4e2d",
             "is_moving": "{entity_name}\u79fb\u52d5\u4e2d",
+            "is_no_co": "{entity_name}\u672a\u5075\u6e2c\u5230\u4e00\u6c27\u5316\u78b3",
             "is_no_gas": "{entity_name}\u672a\u5075\u6e2c\u5230\u6c23\u9ad4",
             "is_no_light": "{entity_name}\u672a\u5075\u6e2c\u5230\u5149\u7dda",
             "is_no_motion": "{entity_name}\u672a\u5075\u6e2c\u5230\u52d5\u4f5c",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name}\u96fb\u91cf\u4f4e",
+            "co": "{entity_name}\u5df2\u5075\u6e2c\u5230\u4e00\u6c27\u5316\u78b3",
             "cold": "{entity_name}\u5df2\u8b8a\u51b7",
             "connected": "{entity_name}\u5df2\u9023\u7dda",
             "gas": "{entity_name}\u5df2\u958b\u59cb\u5075\u6e2c\u6c23\u9ad4",
@@ -63,6 +66,7 @@
             "moist": "{entity_name}\u5df2\u8b8a\u6f6e\u6fd5",
             "motion": "{entity_name}\u5df2\u5075\u6e2c\u5230\u52d5\u4f5c",
             "moving": "{entity_name}\u958b\u59cb\u79fb\u52d5",
+            "no_co": "{entity_name}\u5df2\u505c\u6b62\u5075\u6e2c\u4e00\u6c27\u5316\u78b3",
             "no_gas": "{entity_name}\u5df2\u505c\u6b62\u5075\u6e2c\u6c23\u9ad4",
             "no_light": "{entity_name}\u5df2\u505c\u6b62\u5075\u6e2c\u5149\u7dda",
             "no_motion": "{entity_name}\u5df2\u505c\u6b62\u5075\u6e2c\u52d5\u4f5c",
@@ -104,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "\u4e00\u6c27\u5316\u78b3",
         "cold": "\u51b7",
         "gas": "\u6c23\u9ad4",
         "heat": "\u71b1",
@@ -128,6 +133,14 @@
         "battery_charging": {
             "off": "\u672a\u5728\u5145\u96fb",
             "on": "\u5145\u96fb\u4e2d"
+        },
+        "carbon_monoxide": {
+            "off": "\u672a\u89f8\u767c",
+            "on": "\u5df2\u89f8\u767c"
+        },
+        "co": {
+            "off": "\u672a\u5075\u6e2c",
+            "on": "\u5075\u6e2c"
         },
         "cold": {
             "off": "\u6b63\u5e38",

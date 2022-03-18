@@ -14,11 +14,32 @@ ZEROCONF = {
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
-            "model": "appletv*"
+            "properties": {
+                "model": "appletv*"
+            }
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "model": "audioaccessory*"
+            }
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "airport*"
+            }
         },
         {
             "domain": "samsungtv",
-            "manufacturer": "samsung*"
+            "properties": {
+                "manufacturer": "samsung*"
+            }
+        }
+    ],
+    "_airport._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_api._udp.local.": [
@@ -26,27 +47,45 @@ ZEROCONF = {
             "domain": "guardian"
         }
     ],
+    "_appletv-v2._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_axis-video._tcp.local.": [
         {
             "domain": "axis",
-            "macaddress": "00408C*"
+            "properties": {
+                "macaddress": "00408c*"
+            }
         },
         {
             "domain": "axis",
-            "macaddress": "ACCC8E*"
+            "properties": {
+                "macaddress": "accc8e*"
+            }
         },
         {
             "domain": "axis",
-            "macaddress": "B8A44F*"
+            "properties": {
+                "macaddress": "b8a44f*"
+            }
         },
         {
             "domain": "doorbird",
-            "macaddress": "1CCAE3*"
+            "properties": {
+                "macaddress": "1ccae3*"
+            }
         }
     ],
     "_bond._tcp.local.": [
         {
             "domain": "bond"
+        }
+    ],
+    "_companion-link._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_daap._tcp.local.": [
@@ -105,11 +144,20 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         {
             "domain": "homekit_controller"
+        },
+        {
+            "domain": "zwave_me",
+            "name": "*z.wave-me*"
         }
     ],
     "_homekit._tcp.local.": [
         {
             "domain": "homekit"
+        }
+    ],
+    "_hscp._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_http._tcp.local.": [
@@ -123,7 +171,13 @@ ZEROCONF = {
         },
         {
             "domain": "nam",
-            "manufacturer": "nettigo"
+            "properties": {
+                "manufacturer": "nettigo"
+            }
+        },
+        {
+            "domain": "pure_energie",
+            "name": "smartbridge*"
         },
         {
             "domain": "rachio",
@@ -143,6 +197,11 @@ ZEROCONF = {
             "domain": "hue"
         }
     ],
+    "_hwenergy._tcp.local.": [
+        {
+            "domain": "homewizard"
+        }
+    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp"
@@ -154,6 +213,10 @@ ZEROCONF = {
         }
     ],
     "_kizbox._tcp.local.": [
+        {
+            "domain": "overkiz",
+            "name": "gateway*"
+        },
         {
             "domain": "somfy",
             "name": "gateway*"
@@ -227,6 +290,45 @@ ZEROCONF = {
             "name": "brother*"
         }
     ],
+    "_raop._tcp.local.": [
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "appletv*"
+            }
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "audioaccessory*"
+            }
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "airport*"
+            }
+        }
+    ],
+    "_sideplay._tcp.local.": [
+        {
+            "domain": "ecobee",
+            "properties": {
+                "mdl": "eb-*"
+            }
+        },
+        {
+            "domain": "ecobee",
+            "properties": {
+                "mdl": "ecobee*"
+            }
+        }
+    ],
+    "_sleep-proxy._udp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos"
@@ -288,16 +390,23 @@ HOMEKIT = {
     "BSB002": "hue",
     "C105X": "roku",
     "C135X": "roku",
+    "EB-*": "ecobee",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
     "MYQ": "myq",
-    "NL*": "nanoleaf",
+    "NL29": "nanoleaf",
+    "NL42": "nanoleaf",
+    "NL47": "nanoleaf",
+    "NL48": "nanoleaf",
+    "NL52": "nanoleaf",
+    "NL59": "nanoleaf",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
     "SPK5": "rainmachine",
+    "Sensibo": "sensibo",
     "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",
@@ -305,6 +414,7 @@ HOMEKIT = {
     "Welcome": "netatmo",
     "Wemo": "wemo",
     "YL*": "yeelight",
+    "ecobee*": "ecobee",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

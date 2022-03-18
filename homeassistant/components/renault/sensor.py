@@ -12,6 +12,7 @@ from renault_api.kamereon.models import (
     KamereonVehicleCockpitData,
     KamereonVehicleHvacStatusData,
     KamereonVehicleLocationData,
+    KamereonVehicleResStateData,
 )
 
 from homeassistant.components.sensor import (
@@ -306,6 +307,24 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RenaultSensorEntityDescription(
+        key="hvac_soc_threshold",
+        coordinator="hvac_status",
+        data_key="socThreshold",
+        entity_class=RenaultSensor[KamereonVehicleHvacStatusData],
+        name="HVAC SOC Threshold",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    RenaultSensorEntityDescription(
+        key="hvac_last_activity",
+        coordinator="hvac_status",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_key="lastUpdateTime",
+        entity_class=RenaultSensor[KamereonVehicleHvacStatusData],
+        entity_registry_enabled_default=False,
+        name="HVAC Last Activity",
+        value_lambda=_get_utc_value,
+    ),
+    RenaultSensorEntityDescription(
         key="location_last_activity",
         coordinator="location",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -314,5 +333,20 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         name="Location Last Activity",
         value_lambda=_get_utc_value,
+    ),
+    RenaultSensorEntityDescription(
+        key="res_state",
+        coordinator="res_state",
+        data_key="details",
+        entity_class=RenaultSensor[KamereonVehicleResStateData],
+        name="Remote Engine Start",
+    ),
+    RenaultSensorEntityDescription(
+        key="res_state_code",
+        coordinator="res_state",
+        data_key="code",
+        entity_class=RenaultSensor[KamereonVehicleResStateData],
+        entity_registry_enabled_default=False,
+        name="Remote Engine Start Code",
     ),
 )

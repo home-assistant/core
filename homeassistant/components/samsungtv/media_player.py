@@ -1,15 +1,18 @@
 """Support for interface with an Samsung TV."""
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 
 import voluptuous as vol
 from wakeonlan import send_magic_packet
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -33,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
-from .bridge import SamsungTVLegacyBridge, SamsungTVWSBridge
+from .bridge import SamsungTVBridge, SamsungTVWSBridge
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -43,7 +46,6 @@ from .const import (
     LOGGER,
 )
 
-KEY_PRESS_TIMEOUT = 1.2
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
 SUPPORT_SAMSUNGTV = (
@@ -86,9 +88,11 @@ async def async_setup_entry(
 class SamsungTVDevice(MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
+    _attr_source_list: list[str]
+
     def __init__(
         self,
-        bridge: SamsungTVLegacyBridge | SamsungTVWSBridge,
+        bridge: SamsungTVBridge,
         config_entry: ConfigEntry,
         on_script: Script | None,
     ) -> None:
@@ -104,8 +108,9 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._attr_state: str | None = None
         self._attr_unique_id = config_entry.unique_id
         self._attr_is_volume_muted: bool = False
-        self._attr_device_class = DEVICE_CLASS_TV
+        self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
+        self._app_list: dict[str, str] | None = None
 
         if self._on_script or self._mac:
             self._attr_supported_features = SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
@@ -146,21 +151,41 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
         )
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update state of device."""
         if self._auth_failed or self.hass.is_stopping:
             return
         if self._power_off_in_progress():
             self._attr_state = STATE_OFF
         else:
-            self._attr_state = STATE_ON if self._bridge.is_on() else STATE_OFF
+            self._attr_state = (
+                STATE_ON if await self._bridge.async_is_on() else STATE_OFF
+            )
 
-    def send_key(self, key: str) -> None:
-        """Send a key to the tv and handles exceptions."""
-        if self._power_off_in_progress() and key != "KEY_POWEROFF":
-            LOGGER.info("TV is powering off, not sending command: %s", key)
+        if self._attr_state == STATE_ON and self._app_list is None:
+            self._app_list = {}  # Ensure that we don't update it twice in parallel
+            await self._async_update_app_list()
+
+    async def _async_update_app_list(self) -> None:
+        self._app_list = await self._bridge.async_get_app_list()
+        if self._app_list is not None:
+            self._attr_source_list.extend(self._app_list)
+
+    async def _async_launch_app(self, app_id: str) -> None:
+        """Send launch_app to the tv."""
+        if self._power_off_in_progress():
+            LOGGER.info("TV is powering off, not sending launch_app command")
             return
-        self._bridge.send_key(key)
+        assert isinstance(self._bridge, SamsungTVWSBridge)
+        await self._bridge.async_launch_app(app_id)
+
+    async def _async_send_keys(self, keys: list[str]) -> None:
+        """Send a key to the tv and handles exceptions."""
+        assert keys
+        if self._power_off_in_progress() and keys[0] != "KEY_POWEROFF":
+            LOGGER.info("TV is powering off, not sending keys: %s", keys)
+            return
+        await self._bridge.async_send_keys(keys)
 
     def _power_off_in_progress(self) -> bool:
         return (
@@ -180,55 +205,56 @@ class SamsungTVDevice(MediaPlayerEntity):
             or self._power_off_in_progress()
         )
 
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off media player."""
         self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
+        await self._bridge.async_power_off()
 
-        self.send_key("KEY_POWEROFF")
-        # Force closing of remote session to provide instant UI feedback
-        self._bridge.close_remote()
-
-    def volume_up(self) -> None:
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        self.send_key("KEY_VOLUP")
+        await self._async_send_keys(["KEY_VOLUP"])
 
-    def volume_down(self) -> None:
+    async def async_volume_down(self) -> None:
         """Volume down media player."""
-        self.send_key("KEY_VOLDOWN")
+        await self._async_send_keys(["KEY_VOLDOWN"])
 
-    def mute_volume(self, mute: bool) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self.send_key("KEY_MUTE")
+        await self._async_send_keys(["KEY_MUTE"])
 
-    def media_play_pause(self) -> None:
+    async def async_media_play_pause(self) -> None:
         """Simulate play pause media player."""
         if self._playing:
-            self.media_pause()
+            await self.async_media_pause()
         else:
-            self.media_play()
+            await self.async_media_play()
 
-    def media_play(self) -> None:
+    async def async_media_play(self) -> None:
         """Send play command."""
         self._playing = True
-        self.send_key("KEY_PLAY")
+        await self._async_send_keys(["KEY_PLAY"])
 
-    def media_pause(self) -> None:
+    async def async_media_pause(self) -> None:
         """Send media pause command to media player."""
         self._playing = False
-        self.send_key("KEY_PAUSE")
+        await self._async_send_keys(["KEY_PAUSE"])
 
-    def media_next_track(self) -> None:
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
-        self.send_key("KEY_CHUP")
+        await self._async_send_keys(["KEY_CHUP"])
 
-    def media_previous_track(self) -> None:
+    async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
-        self.send_key("KEY_CHDOWN")
+        await self._async_send_keys(["KEY_CHDOWN"])
 
     async def async_play_media(
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Support changing a channel."""
+        if media_type == MEDIA_TYPE_APP:
+            await self._async_launch_app(media_id)
+            return
+
         if media_type != MEDIA_TYPE_CHANNEL:
             LOGGER.error("Unsupported media type")
             return
@@ -240,10 +266,9 @@ class SamsungTVDevice(MediaPlayerEntity):
             LOGGER.error("Media ID must be positive integer")
             return
 
-        for digit in media_id:
-            await self.hass.async_add_executor_job(self.send_key, f"KEY_{digit}")
-            await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
-        await self.hass.async_add_executor_job(self.send_key, "KEY_ENTER")
+        await self._async_send_keys(
+            keys=[f"KEY_{digit}" for digit in media_id] + ["KEY_ENTER"]
+        )
 
     def _wake_on_lan(self) -> None:
         """Wake the device via wake on lan."""
@@ -259,10 +284,14 @@ class SamsungTVDevice(MediaPlayerEntity):
         elif self._mac:
             await self.hass.async_add_executor_job(self._wake_on_lan)
 
-    def select_source(self, source: str) -> None:
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if source not in SOURCES:
-            LOGGER.error("Unsupported source")
+        if self._app_list and source in self._app_list:
+            await self._async_launch_app(self._app_list[source])
             return
 
-        self.send_key(SOURCES[source])
+        if source in SOURCES:
+            await self._async_send_keys([SOURCES[source]])
+            return
+
+        LOGGER.error("Unsupported source")

@@ -1,4 +1,5 @@
 """The select entities for musiccast."""
+from __future__ import annotations
 
 from aiomusiccast.capabilities import OptionSetter
 
@@ -8,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, MusicCastCapabilityEntity, MusicCastDataUpdateCoordinator
+from .const import DEVICE_CLASS_MAPPING
 
 
 async def async_setup_entry(
@@ -45,9 +47,9 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
         await self.capability.set(value)
 
     @property
-    def device_class(self) -> str:
-        """Return the ID of the capability, to identify the entity for translations."""
-        return f"{DOMAIN}__{self.capability.id.lower()}"
+    def device_class(self) -> str | None:
+        """Return the device class, to identify the entity for translations."""
+        return DEVICE_CLASS_MAPPING.get(self.capability.id)
 
     @property
     def options(self):
@@ -57,4 +59,4 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
     @property
     def current_option(self):
         """Return the currently selected option."""
-        return self.capability.options[self.capability.current]
+        return self.capability.options.get(self.capability.current)

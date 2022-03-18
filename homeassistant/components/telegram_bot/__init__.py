@@ -29,8 +29,10 @@ from homeassistant.const import (
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +63,7 @@ ATTR_PASSWORD = "password"
 ATTR_REPLY_TO_MSGID = "reply_to_message_id"
 ATTR_REPLYMARKUP = "reply_markup"
 ATTR_SHOW_ALERT = "show_alert"
+ATTR_STICKER_ID = "sticker_id"
 ATTR_TARGET = "target"
 ATTR_TEXT = "text"
 ATTR_URL = "url"
@@ -163,6 +166,10 @@ SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
     }
 )
 
+SERVICE_SCHEMA_SEND_STICKER = SERVICE_SCHEMA_SEND_FILE.extend(
+    {vol.Optional(ATTR_STICKER_ID): cv.string}
+)
+
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend(
     {
         vol.Required(ATTR_LONGITUDE): cv.template,
@@ -226,7 +233,7 @@ SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema({vol.Required(ATTR_CHAT_ID): vol.Coerce(i
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
-    SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_STICKER,
     SERVICE_SEND_ANIMATION: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VOICE: SERVICE_SCHEMA_SEND_FILE,
@@ -298,7 +305,7 @@ def load_data(
     return None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
     if not config[DOMAIN]:
         return False
@@ -325,7 +332,7 @@ async def async_setup(hass, config):
             hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
         )
 
-    async def async_send_telegram_message(service):
+    async def async_send_telegram_message(service: ServiceCall) -> None:
         """Handle sending Telegram Bot message service calls."""
 
         def _render_template_attr(data, attribute):
@@ -369,7 +376,6 @@ async def async_setup(hass, config):
             )
         elif msgtype in [
             SERVICE_SEND_PHOTO,
-            SERVICE_SEND_STICKER,
             SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
             SERVICE_SEND_VOICE,
@@ -377,6 +383,10 @@ async def async_setup(hass, config):
         ]:
             await hass.async_add_executor_job(
                 partial(notify_service.send_file, msgtype, **kwargs)
+            )
+        elif msgtype == SERVICE_SEND_STICKER:
+            await hass.async_add_executor_job(
+                partial(notify_service.send_sticker, **kwargs)
             )
         elif msgtype == SERVICE_SEND_LOCATION:
             await hass.async_add_executor_job(
@@ -794,6 +804,25 @@ class TelegramNotificationService:
                 file_content.seek(0)
         else:
             _LOGGER.error("Can't send file with kwargs: %s", kwargs)
+
+    def send_sticker(self, target=None, **kwargs):
+        """Send a sticker from a telegram sticker pack."""
+        params = self._get_msg_kwargs(kwargs)
+        stickerid = kwargs.get(ATTR_STICKER_ID)
+        if stickerid:
+            for chat_id in self._get_target_chat_ids(target):
+                self._send_msg(
+                    self.bot.send_sticker,
+                    "Error sending sticker",
+                    params[ATTR_MESSAGE_TAG],
+                    chat_id=chat_id,
+                    sticker=stickerid,
+                    disable_notification=params[ATTR_DISABLE_NOTIF],
+                    reply_markup=params[ATTR_REPLYMARKUP],
+                    timeout=params[ATTR_TIMEOUT],
+                )
+        else:
+            self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
 
     def send_location(self, latitude, longitude, target=None, **kwargs):
         """Send a location."""

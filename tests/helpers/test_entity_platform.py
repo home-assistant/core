@@ -390,6 +390,30 @@ async def test_async_remove_with_platform(hass):
     assert len(hass.states.async_entity_ids()) == 0
 
 
+async def test_async_remove_with_platform_update_finishes(hass):
+    """Remove an entity when an update finishes after its been removed."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity1 = MockEntity(name="test_1")
+
+    async def _delayed_update(*args, **kwargs):
+        await asyncio.sleep(0.01)
+
+    entity1.async_update = _delayed_update
+
+    # Add, remove, add, remove and make sure no updates
+    # cause the entity to reappear after removal
+    for i in range(2):
+        await component.async_add_entities([entity1])
+        assert len(hass.states.async_entity_ids()) == 1
+        entity1.async_write_ha_state()
+        assert hass.states.get(entity1.entity_id) is not None
+        task = asyncio.create_task(entity1.async_update_ha_state(True))
+        await entity1.async_remove()
+        assert len(hass.states.async_entity_ids()) == 0
+        await task
+        assert len(hass.states.async_entity_ids()) == 0
+
+
 async def test_not_adding_duplicate_entities_with_unique_id(hass, caplog):
     """Test for not adding duplicate entities."""
     caplog.set_level(logging.ERROR)
@@ -838,6 +862,7 @@ async def test_device_info_called(hass):
                         "model": "test-model",
                         "name": "test-name",
                         "sw_version": "test-sw",
+                        "hw_version": "test-hw",
                         "suggested_area": "Heliport",
                         "entry_type": dr.DeviceEntryType.SERVICE,
                         "via_device": ("hue", "via-id"),
@@ -869,6 +894,7 @@ async def test_device_info_called(hass):
     assert device.name == "test-name"
     assert device.suggested_area == "Heliport"
     assert device.sw_version == "test-sw"
+    assert device.hw_version == "test-hw"
     assert device.via_device_id == via.id
 
 

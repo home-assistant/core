@@ -34,7 +34,7 @@
                     "flow_impl": "Provider"
                 },
                 "description": "Scegli il metodo di autenticazione",
-                "title": "Fornitore di autenticazione"
+                "title": "Provider di autenticazione"
             },
             "link": {
                 "data": {
@@ -55,7 +55,7 @@
             },
             "reauth_confirm": {
                 "description": "L'integrazione di Nest deve autenticare nuovamente il tuo account",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             }
         }
     },

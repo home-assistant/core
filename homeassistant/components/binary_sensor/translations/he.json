@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "\u05e1\u05d5\u05dc\u05dc\u05ea {entity_name} \u05d7\u05dc\u05e9\u05d4",
+            "is_co": "{entity_name} \u05de\u05d6\u05d4\u05d4 \u05e4\u05d7\u05de\u05df \u05d7\u05d3 \u05d7\u05de\u05e6\u05e0\u05d9",
             "is_cold": "{entity_name} \u05e7\u05e8",
             "is_connected": "{entity_name} \u05de\u05d7\u05d5\u05d1\u05e8",
             "is_gas": "{entity_name} \u05de\u05d6\u05d4\u05d4 \u05d2\u05d6",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} \u05dc\u05d7",
             "is_motion": "{entity_name} \u05de\u05d6\u05d4\u05d4 \u05ea\u05e0\u05d5\u05e2\u05d4",
             "is_moving": "{entity_name} \u05d6\u05d6",
+            "is_no_co": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05de\u05d6\u05d4\u05d4 \u05e4\u05d7\u05de\u05df \u05d7\u05d3 \u05d7\u05de\u05e6\u05e0\u05d9",
             "is_no_gas": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05de\u05d6\u05d4\u05d4 \u05d2\u05d6",
             "is_no_light": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05de\u05d6\u05d4\u05d4 \u05d0\u05d5\u05e8",
             "is_no_motion": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05de\u05d6\u05d4\u05d4 \u05ea\u05e0\u05d5\u05e2\u05d4",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "\u05e1\u05d5\u05dc\u05dc\u05ea {entity_name} \u05d7\u05dc\u05e9\u05d4",
+            "co": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05e4\u05d7\u05de\u05df \u05d7\u05d3 \u05d7\u05de\u05e6\u05e0\u05d9",
             "cold": "{entity_name} \u05e0\u05d4\u05d9\u05d4 \u05e7\u05e8",
             "connected": "{entity_name} \u05de\u05d7\u05d5\u05d1\u05e8",
             "gas": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05d2\u05d6",
@@ -63,6 +66,7 @@
             "moist": "{entity_name} \u05d4\u05e4\u05da \u05dc\u05d7",
             "motion": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05ea\u05e0\u05d5\u05e2\u05d4",
             "moving": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05e0\u05d5\u05e2",
+            "no_co": "{entity_name} \u05d4\u05e4\u05e1\u05d9\u05e7 \u05e4\u05d7\u05de\u05df \u05d7\u05d3 \u05d7\u05de\u05e6\u05e0\u05d9",
             "no_gas": "{entity_name} \u05d4\u05e4\u05e1\u05d9\u05e7 \u05dc\u05d6\u05d4\u05d5\u05ea \u05d2\u05d6",
             "no_light": "{entity_name} \u05d4\u05e4\u05e1\u05d9\u05e7 \u05dc\u05d6\u05d4\u05d5\u05ea \u05d0\u05d5\u05e8",
             "no_motion": "{entity_name} \u05d4\u05e4\u05e1\u05d9\u05e7 \u05dc\u05d6\u05d4\u05d5\u05ea \u05ea\u05e0\u05d5\u05e2\u05d4",
@@ -84,6 +88,7 @@
             "not_powered": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05de\u05d5\u05e4\u05e2\u05dc",
             "not_present": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05e7\u05d9\u05d9\u05dd",
             "not_running": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05e4\u05d5\u05e2\u05dc \u05e2\u05d5\u05d3",
+            "not_tampered": "{entity_name} \u05d4\u05e4\u05e1\u05d9\u05e7 \u05dc\u05d6\u05d4\u05d5\u05ea \u05d7\u05d1\u05dc\u05d4",
             "not_unsafe": "{entity_name} \u05d4\u05e4\u05da \u05dc\u05d1\u05d8\u05d5\u05d7",
             "occupied": "{entity_name} \u05e0\u05ea\u05e4\u05e1",
             "opened": "{entity_name} \u05e0\u05e4\u05ea\u05d7",
@@ -94,6 +99,7 @@
             "running": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05e4\u05e2\u05d5\u05dc",
             "smoke": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05e2\u05e9\u05df",
             "sound": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05e6\u05dc\u05d9\u05dc",
+            "tampered": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05d7\u05d1\u05dc\u05d4",
             "turned_off": "{entity_name} \u05db\u05d5\u05d1\u05d4",
             "turned_on": "{entity_name} \u05d4\u05d5\u05e4\u05e2\u05dc",
             "unsafe": "{entity_name} \u05d4\u05e4\u05da \u05dc\u05dc\u05d0 \u05d1\u05d8\u05d5\u05d7",
@@ -102,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "\u05e4\u05d7\u05de\u05df \u05d7\u05d3 \u05d7\u05de\u05e6\u05e0\u05d9",
         "cold": "\u05e7\u05d5\u05e8",
         "gas": "\u05d2\u05d6",
         "heat": "\u05d7\u05d5\u05dd",
@@ -126,6 +133,14 @@
         "battery_charging": {
             "off": "\u05dc\u05d0 \u05e0\u05d8\u05e2\u05df",
             "on": "\u05e0\u05d8\u05e2\u05df"
+        },
+        "carbon_monoxide": {
+            "off": "\u05e0\u05e7\u05d9",
+            "on": "\u05d6\u05d5\u05d4\u05d4"
+        },
+        "co": {
+            "off": "\u05e0\u05e7\u05d9",
+            "on": "\u05d6\u05d5\u05d4\u05d4"
         },
         "cold": {
             "off": "\u05e0\u05d5\u05e8\u05de\u05dc\u05d9",

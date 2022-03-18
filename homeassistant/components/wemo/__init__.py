@@ -1,23 +1,22 @@
 """Support for WeMo device discovery."""
 from __future__ import annotations
 
+from collections.abc import Sequence
+from datetime import datetime
 import logging
+from typing import Optional
 
 import pywemo
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DOMAIN
@@ -29,36 +28,35 @@ MAX_CONCURRENCY = 3
 
 # Mapping from Wemo model_name to domain.
 WEMO_MODEL_DISPATCH = {
-    "Bridge": [LIGHT_DOMAIN],
-    "CoffeeMaker": [SWITCH_DOMAIN],
-    "Dimmer": [LIGHT_DOMAIN],
-    "Humidifier": [FAN_DOMAIN],
-    "Insight": [BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN],
-    "LightSwitch": [SWITCH_DOMAIN],
-    "Maker": [BINARY_SENSOR_DOMAIN, SWITCH_DOMAIN],
-    "Motion": [BINARY_SENSOR_DOMAIN],
-    "OutdoorPlug": [SWITCH_DOMAIN],
-    "Sensor": [BINARY_SENSOR_DOMAIN],
-    "Socket": [SWITCH_DOMAIN],
+    "Bridge": [Platform.LIGHT],
+    "CoffeeMaker": [Platform.SWITCH],
+    "Dimmer": [Platform.LIGHT],
+    "Humidifier": [Platform.FAN],
+    "Insight": [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH],
+    "LightSwitch": [Platform.SWITCH],
+    "Maker": [Platform.BINARY_SENSOR, Platform.SWITCH],
+    "Motion": [Platform.BINARY_SENSOR],
+    "OutdoorPlug": [Platform.SWITCH],
+    "Sensor": [Platform.BINARY_SENSOR],
+    "Socket": [Platform.SWITCH],
 }
 
 _LOGGER = logging.getLogger(__name__)
 
+HostPortTuple = tuple[str, Optional[int]]
 
-def coerce_host_port(value):
+
+def coerce_host_port(value: str) -> HostPortTuple:
     """Validate that provided value is either just host or host:port.
 
     Returns (host, None) or (host, port) respectively.
     """
-    host, _, port = value.partition(":")
+    host, _, port_str = value.partition(":")
 
     if not host:
         raise vol.Invalid("host cannot be empty")
 
-    if port:
-        port = cv.port(port)
-    else:
-        port = None
+    port = cv.port(port_str) if port_str else None
 
     return host, port
 
@@ -82,7 +80,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for WeMo devices."""
     hass.data[DOMAIN] = {
         "config": config.get(DOMAIN, {}),
@@ -112,11 +110,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     discovery_responder = pywemo.ssdp.DiscoveryResponder(registry.port)
     await hass.async_add_executor_job(discovery_responder.start)
 
-    static_conf = config.get(CONF_STATIC, [])
+    static_conf: Sequence[HostPortTuple] = config.get(CONF_STATIC, [])
     wemo_dispatcher = WemoDispatcher(entry)
     wemo_discovery = WemoDiscovery(hass, wemo_dispatcher, static_conf)
 
-    async def async_stop_wemo(event):
+    async def async_stop_wemo(event: Event) -> None:
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
         await hass.async_add_executor_job(registry.stop)
@@ -127,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
     )
 
-    # Need to do this at least once in case statics are defined and discovery is disabled
+    # Need to do this at least once in case statistics are defined and discovery is disabled
     await wemo_discovery.discover_statics()
 
     if config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
@@ -142,8 +140,8 @@ class WemoDispatcher:
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the WemoDispatcher."""
         self._config_entry = config_entry
-        self._added_serial_numbers = set()
-        self._loaded_components = set()
+        self._added_serial_numbers: set[str] = set()
+        self._loaded_components: set[str] = set()
 
     async def async_add_unique_device(
         self, hass: HomeAssistant, wemo: pywemo.WeMoDevice
@@ -153,7 +151,7 @@ class WemoDispatcher:
             return
 
         coordinator = await async_register_device(hass, self._config_entry, wemo)
-        for component in WEMO_MODEL_DISPATCH.get(wemo.model_name, [SWITCH_DOMAIN]):
+        for component in WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]):
             # Three cases:
             # - First time we see component, we need to load it and initialize the backlog
             # - Component is being loaded, add to backlog
@@ -191,16 +189,18 @@ class WemoDiscovery:
         self,
         hass: HomeAssistant,
         wemo_dispatcher: WemoDispatcher,
-        static_config: list[tuple[[str, str | None]]],
+        static_config: Sequence[HostPortTuple],
     ) -> None:
         """Initialize the WemoDiscovery."""
         self._hass = hass
         self._wemo_dispatcher = wemo_dispatcher
-        self._stop = None
+        self._stop: CALLBACK_TYPE | None = None
         self._scan_delay = 0
         self._static_config = static_config
 
-    async def async_discover_and_schedule(self, *_) -> None:
+    async def async_discover_and_schedule(
+        self, event_time: datetime | None = None
+    ) -> None:
         """Periodically scan the network looking for WeMo devices."""
         _LOGGER.debug("Scanning network for WeMo devices")
         try:
@@ -229,26 +229,23 @@ class WemoDiscovery:
             self._stop()
             self._stop = None
 
-    async def discover_statics(self):
+    async def discover_statics(self) -> None:
         """Initialize or Re-Initialize connections to statically configured devices."""
-        if self._static_config:
-            _LOGGER.debug("Adding statically configured WeMo devices")
-            for device in await gather_with_concurrency(
-                MAX_CONCURRENCY,
-                *(
-                    self._hass.async_add_executor_job(
-                        validate_static_config, host, port
-                    )
-                    for host, port in self._static_config
-                ),
-            ):
-                if device:
-                    await self._wemo_dispatcher.async_add_unique_device(
-                        self._hass, device
-                    )
+        if not self._static_config:
+            return
+        _LOGGER.debug("Adding statically configured WeMo devices")
+        for device in await gather_with_concurrency(
+            MAX_CONCURRENCY,
+            *(
+                self._hass.async_add_executor_job(validate_static_config, host, port)
+                for host, port in self._static_config
+            ),
+        ):
+            if device:
+                await self._wemo_dispatcher.async_add_unique_device(self._hass, device)
 
 
-def validate_static_config(host, port):
+def validate_static_config(host: str, port: int | None) -> pywemo.WeMoDevice | None:
     """Handle a static config."""
     url = pywemo.setup_url_for_address(host, port)
 

@@ -17,33 +17,17 @@ from zwave_js_server.model.value import ConfigurationValue
 from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_ENERGY,
     DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -72,9 +56,12 @@ from .const import (
     SERVICE_RESET_METER,
 )
 from .discovery import ZwaveDiscoveryInfo
-from .discovery_data_template import NumericSensorDataTemplateData
+from .discovery_data_template import (
+    NumericSensorDataTemplate,
+    NumericSensorDataTemplateData,
+)
 from .entity import ZWaveBaseEntity
-from .helpers import get_device_id
+from .helpers import get_device_id, get_valueless_base_unique_id
 
 LOGGER = logging.getLogger(__name__)
 
@@ -90,91 +77,91 @@ STATUS_ICON: dict[NodeStatus, str] = {
 ENTITY_DESCRIPTION_KEY_MAP: dict[str, SensorEntityDescription] = {
     ENTITY_DESC_KEY_BATTERY: SensorEntityDescription(
         ENTITY_DESC_KEY_BATTERY,
-        device_class=DEVICE_CLASS_BATTERY,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_CURRENT: SensorEntityDescription(
         ENTITY_DESC_KEY_CURRENT,
-        device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_VOLTAGE: SensorEntityDescription(
         ENTITY_DESC_KEY_VOLTAGE,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_ENERGY_MEASUREMENT: SensorEntityDescription(
         ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING: SensorEntityDescription(
         ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ENTITY_DESC_KEY_POWER: SensorEntityDescription(
         ENTITY_DESC_KEY_POWER,
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_POWER_FACTOR: SensorEntityDescription(
         ENTITY_DESC_KEY_POWER_FACTOR,
-        device_class=DEVICE_CLASS_POWER_FACTOR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_CO: SensorEntityDescription(
         ENTITY_DESC_KEY_CO,
-        device_class=DEVICE_CLASS_CO,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.CO,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_CO2: SensorEntityDescription(
         ENTITY_DESC_KEY_CO2,
-        device_class=DEVICE_CLASS_CO2,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_HUMIDITY: SensorEntityDescription(
         ENTITY_DESC_KEY_HUMIDITY,
-        device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_ILLUMINANCE: SensorEntityDescription(
         ENTITY_DESC_KEY_ILLUMINANCE,
-        device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_PRESSURE: SensorEntityDescription(
         ENTITY_DESC_KEY_PRESSURE,
-        device_class=DEVICE_CLASS_PRESSURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_SIGNAL_STRENGTH: SensorEntityDescription(
         ENTITY_DESC_KEY_SIGNAL_STRENGTH,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_TEMPERATURE: SensorEntityDescription(
         ENTITY_DESC_KEY_TEMPERATURE,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_TARGET_TEMPERATURE: SensorEntityDescription(
         ENTITY_DESC_KEY_TARGET_TEMPERATURE,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=None,
     ),
     ENTITY_DESC_KEY_MEASUREMENT: SensorEntityDescription(
         ENTITY_DESC_KEY_MEASUREMENT,
         device_class=None,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_TOTAL_INCREASING: SensorEntityDescription(
         ENTITY_DESC_KEY_TOTAL_INCREASING,
         device_class=None,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 }
 
@@ -311,6 +298,15 @@ class ZWaveStringSensor(ZwaveSensorBase):
 
 class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor."""
+
+    @callback
+    def on_value_update(self) -> None:
+        """Handle scale changes for this value on value updated event."""
+        self._attr_native_unit_of_measurement = (
+            NumericSensorDataTemplate()
+            .resolve_data(self.info.primary_value)
+            .unit_of_measurement
+        )
 
     @property
     def native_value(self) -> float:
@@ -465,7 +461,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     """Representation of a node status sensor."""
 
     _attr_should_poll = False
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, node: ZwaveNode
@@ -481,9 +477,8 @@ class ZWaveNodeStatusSensor(SensorEntity):
         )
         # Entity class attributes
         self._attr_name = f"{name}: Node Status"
-        self._attr_unique_id = (
-            f"{self.client.driver.controller.home_id}.{node.node_id}.node_status"
-        )
+        self._base_unique_id = get_valueless_base_unique_id(client, node)
+        self._attr_unique_id = f"{self._base_unique_id}.node_status"
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
             identifiers={get_device_id(self.client, self.node)},
@@ -493,7 +488,10 @@ class ZWaveNodeStatusSensor(SensorEntity):
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
         # pylint: disable=no-self-use
-        raise ValueError("There is no value to poll for this entity")
+        LOGGER.error(
+            "There is no value to refresh for this entity so the zwave_js.refresh_value "
+            "service won't work for it"
+        )
 
     @callback
     def _status_changed(self, _: dict) -> None:
@@ -516,6 +514,13 @@ class ZWaveNodeStatusSensor(SensorEntity):
                 self.hass,
                 f"{DOMAIN}_{self.unique_id}_poll_value",
                 self.async_poll_value,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
+                self.async_remove,
             )
         )
         self.async_write_ha_state()

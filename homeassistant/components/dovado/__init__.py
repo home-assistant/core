@@ -12,7 +12,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     DEVICE_DEFAULT_NAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Dovado component."""
 
     hass.data[DOMAIN] = DovadoData(

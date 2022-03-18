@@ -6,7 +6,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.models import StateAttributes, States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -21,12 +22,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,12 +110,7 @@ DOMAIN = "plant"
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
 
-# Flag for enabling/disabling the loading of the history from the database.
-# This feature is turned off right now as its tests are not 100% stable.
-ENABLE_LOAD_HISTORY = False
-
-
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Plant component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -280,9 +277,11 @@ class Plant(Entity):
 
     async def async_added_to_hass(self):
         """After being added to hass, load from history."""
-        if ENABLE_LOAD_HISTORY and "recorder" in self.hass.config.components:
+        if "recorder" in self.hass.config.components:
             # only use the database if it's configured
-            await self.hass.async_add_executor_job(self._load_history_from_db)
+            await get_instance(self.hass).async_add_executor_job(
+                self._load_history_from_db
+            )
             self.async_write_ha_state()
 
         async_track_state_change_event(
@@ -311,14 +310,24 @@ class Plant(Entity):
         _LOGGER.debug("Initializing values for %s from the database", self._name)
         with session_scope(hass=self.hass) as session:
             query = (
-                session.query(States)
+                session.query(States, StateAttributes)
                 .filter(
                     (States.entity_id == entity_id.lower())
                     and (States.last_updated > start_date)
                 )
+                .outerjoin(
+                    StateAttributes,
+                    States.attributes_id == StateAttributes.attributes_id,
+                )
                 .order_by(States.last_updated.asc())
             )
-            states = execute(query, to_native=True, validate_entity_ids=False)
+            states = []
+            if results := execute(query, to_native=False, validate_entity_ids=False):
+                for state, attributes in results:
+                    native = state.to_native()
+                    if not native.attributes:
+                        native.attributes = attributes.to_native()
+                    states.append(native)
 
             for state in states:
                 # filter out all None, NaN and "unknown" states

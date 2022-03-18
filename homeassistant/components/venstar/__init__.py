@@ -25,7 +25,7 @@ from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP, VENSTAR_TIMEOUT
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 
-async def async_setup_entry(hass, config):
+async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up the Venstar thermostat."""
     username = config.data.get(CONF_USERNAME)
     password = config.data.get(CONF_PASSWORD)
@@ -55,7 +55,7 @@ async def async_setup_entry(hass, config):
     return True
 
 
-async def async_unload_entry(hass, config):
+async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Unload the config config and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
     if unload_ok:

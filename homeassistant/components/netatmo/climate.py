@@ -124,9 +124,6 @@ async def async_setup_entry(
     """Set up the Netatmo energy platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    await data_handler.register_data_class(
-        CLIMATE_TOPOLOGY_CLASS_NAME, CLIMATE_TOPOLOGY_CLASS_NAME, None
-    )
     climate_topology = data_handler.data.get(CLIMATE_TOPOLOGY_CLASS_NAME)
 
     if not climate_topology or climate_topology.raw_data == {}:
@@ -136,14 +133,13 @@ async def async_setup_entry(
     for home_id in climate_topology.home_ids:
         signal_name = f"{CLIMATE_STATE_CLASS_NAME}-{home_id}"
 
-        try:
-            await data_handler.register_data_class(
-                CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
-            )
-        except KeyError:
+        await data_handler.register_data_class(
+            CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
+        )
+
+        if (climate_state := data_handler.data[signal_name]) is None:
             continue
 
-        climate_state = data_handler.data[signal_name]
         climate_topology.register_handler(home_id, climate_state.process_topology)
 
         for room in climate_state.homes[home_id].rooms.values():

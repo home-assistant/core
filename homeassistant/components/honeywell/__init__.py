@@ -4,7 +4,9 @@ from datetime import timedelta
 
 import somecomfort
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
@@ -15,7 +17,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 PLATFORMS = [Platform.CLIMATE]
 
 
-async def async_setup_entry(hass, config):
+async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up the Honeywell thermostat."""
     username = config.data[CONF_USERNAME]
     password = config.data[CONF_PASSWORD]
@@ -53,12 +55,12 @@ async def async_setup_entry(hass, config):
     return True
 
 
-async def update_listener(hass, config) -> None:
+async def update_listener(hass: HomeAssistant, config: ConfigEntry) -> None:
     """Update listener."""
     await hass.config_entries.async_reload(config.entry_id)
 
 
-async def async_unload_entry(hass, config):
+async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Unload the config config and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
     if unload_ok:

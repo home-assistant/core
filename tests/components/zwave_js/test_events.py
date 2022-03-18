@@ -1,4 +1,7 @@
 """Test Z-Wave JS (value notification) events."""
+from unittest.mock import AsyncMock
+
+import pytest
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
@@ -259,3 +262,48 @@ async def test_value_updated(hass, vision_security_zl7432, integration, client):
     await hass.async_block_till_done()
     # We should only still have captured one event
     assert len(events) == 1
+
+
+async def test_power_level_notification(hass, hank_binary_switch, integration, client):
+    """Test power level notification events."""
+    # just pick a random node to fake the notification event
+    node = hank_binary_switch
+    events = async_capture_events(hass, "zwave_js_notification")
+
+    event = Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": 7,
+            "ccId": 115,
+            "args": {
+                "commandClassName": "Powerlevel",
+                "commandClass": 115,
+                "testNodeId": 1,
+                "status": 0,
+                "acknowledgedFrames": 2,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data["command_class_name"] == "Power Level"
+    assert events[0].data["command_class"] == 115
+    assert events[0].data["test_node_id"] == 1
+    assert events[0].data["status"] == 0
+    assert events[0].data["acknowledged_frames"] == 2
+
+
+async def test_unknown_notification(hass, hank_binary_switch, integration, client):
+    """Test behavior of unknown notification type events."""
+    # just pick a random node to fake the notification event
+    node = hank_binary_switch
+
+    # We emit the event directly so we can skip any validation and event handling
+    # by the lib. We will use a class that is guaranteed not to be recognized
+    notification_obj = AsyncMock()
+    notification_obj.node = node
+    with pytest.raises(TypeError):
+        node.emit("notification", {"notification": notification_obj})

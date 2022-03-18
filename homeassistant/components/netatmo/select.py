@@ -37,9 +37,6 @@ async def async_setup_entry(
     """Set up the Netatmo energy platform schedule selector."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    await data_handler.register_data_class(
-        CLIMATE_TOPOLOGY_CLASS_NAME, CLIMATE_TOPOLOGY_CLASS_NAME, None
-    )
     climate_topology = data_handler.data.get(CLIMATE_TOPOLOGY_CLASS_NAME)
 
     if not climate_topology or climate_topology.raw_data == {}:
@@ -49,17 +46,13 @@ async def async_setup_entry(
     for home_id in climate_topology.home_ids:
         signal_name = f"{CLIMATE_STATE_CLASS_NAME}-{home_id}"
 
-        try:
-            await data_handler.register_data_class(
-                CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
-            )
-        except KeyError:
-            continue
-
         await data_handler.register_data_class(
             CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
         )
-        climate_state = data_handler.data.get(signal_name)
+
+        if (climate_state := data_handler.data[signal_name]) is None:
+            continue
+
         climate_topology.register_handler(home_id, climate_state.process_topology)
 
         hass.data[DOMAIN][DATA_SCHEDULES][home_id] = climate_state.homes[
@@ -70,12 +63,10 @@ async def async_setup_entry(
         NetatmoScheduleSelect(
             data_handler,
             home_id,
-            [
-                schedule.name
-                for schedule in hass.data[DOMAIN][DATA_SCHEDULES][home_id].values()
-            ],
+            [schedule.name for schedule in schedules.values()],
         )
-        for home_id in hass.data[DOMAIN][DATA_SCHEDULES]
+        for home_id, schedules in hass.data[DOMAIN][DATA_SCHEDULES].items()
+        if schedules
     ]
 
     _LOGGER.debug("Adding climate schedule select entities %s", entities)

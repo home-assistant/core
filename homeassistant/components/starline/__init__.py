@@ -1,9 +1,11 @@
 """The StarLine component."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .account import StarlineAccount
@@ -39,19 +41,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def async_set_scan_interval(call):
+    async def async_set_scan_interval(call: ServiceCall) -> None:
         """Set scan interval."""
         options = dict(entry.options)
         options[CONF_SCAN_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
         hass.config_entries.async_update_entry(entry=entry, options=options)
 
-    async def async_set_scan_obd_interval(call):
+    async def async_set_scan_obd_interval(call: ServiceCall) -> None:
         """Set OBD info scan interval."""
         options = dict(entry.options)
         options[CONF_SCAN_OBD_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
         hass.config_entries.async_update_entry(entry=entry, options=options)
 
-    async def async_update(call=None):
+    async def async_update(call: ServiceCall | None = None) -> None:
         """Update all data."""
         await account.update()
         await account.update_obd()

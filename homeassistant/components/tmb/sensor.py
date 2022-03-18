@@ -1,4 +1,6 @@
 """Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -8,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,13 +49,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensors."""
     ibus_client = IBus(config[CONF_APP_ID], config[CONF_APP_KEY])
 
     sensors = []
 
-    for line_stop in config.get(CONF_BUS_STOPS):
+    for line_stop in config[CONF_BUS_STOPS]:
         line = line_stop[CONF_LINE]
         stop = line_stop[CONF_BUS_STOP]
         if line_stop.get(CONF_NAME):

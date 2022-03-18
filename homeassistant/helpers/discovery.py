@@ -7,11 +7,11 @@ There are two different types of discoveries that can be fired/listened for.
 """
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any, TypedDict
 
 from homeassistant import core, setup
-from homeassistant.core import CALLBACK_TYPE
+from homeassistant.const import Platform
 from homeassistant.loader import bind_hass
 
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send
@@ -21,8 +21,6 @@ SIGNAL_PLATFORM_DISCOVERED = "discovery.platform_discovered_{}"
 EVENT_LOAD_PLATFORM = "load_platform.{}"
 ATTR_PLATFORM = "platform"
 ATTR_DISCOVERED = "discovered"
-
-# mypy: disallow-any-generics
 
 
 class DiscoveryDict(TypedDict):
@@ -38,7 +36,7 @@ class DiscoveryDict(TypedDict):
 def async_listen(
     hass: core.HomeAssistant,
     service: str,
-    callback: CALLBACK_TYPE,
+    callback: Callable[[str, DiscoveryInfoType | None], Awaitable[None] | None],
 ) -> None:
     """Set up listener for discovery of specific service.
 
@@ -68,11 +66,7 @@ def discover(
     hass_config: ConfigType,
 ) -> None:
     """Fire discovery event. Can ensure a component is loaded."""
-    hass.add_job(
-        async_discover(  # type: ignore
-            hass, service, discovered, component, hass_config
-        )
-    )
+    hass.add_job(async_discover(hass, service, discovered, component, hass_config))
 
 
 @bind_hass
@@ -126,25 +120,23 @@ def async_listen_platform(
 @bind_hass
 def load_platform(
     hass: core.HomeAssistant,
-    component: str,
+    component: Platform | str,
     platform: str,
-    discovered: DiscoveryInfoType,
+    discovered: DiscoveryInfoType | None,
     hass_config: ConfigType,
 ) -> None:
     """Load a component and platform dynamically."""
     hass.add_job(
-        async_load_platform(  # type: ignore
-            hass, component, platform, discovered, hass_config
-        )
+        async_load_platform(hass, component, platform, discovered, hass_config)
     )
 
 
 @bind_hass
 async def async_load_platform(
     hass: core.HomeAssistant,
-    component: str,
+    component: Platform | str,
     platform: str,
-    discovered: DiscoveryInfoType,
+    discovered: DiscoveryInfoType | None,
     hass_config: ConfigType,
 ) -> None:
     """Load a component and platform dynamically.

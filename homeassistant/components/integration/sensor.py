@@ -1,4 +1,6 @@
 """Numeric integration of data coming from a source sensor over time."""
+from __future__ import annotations
+
 from decimal import Decimal, DecimalException
 import logging
 
@@ -10,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -22,10 +25,24 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    CONF_ROUND_DIGITS,
+    CONF_SOURCE_SENSOR,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_UNIT_PREFIX,
+    CONF_UNIT_TIME,
+    INTEGRATION_METHODS,
+    METHOD_LEFT,
+    METHOD_RIGHT,
+    METHOD_TRAPEZOIDAL,
+)
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -33,19 +50,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE_ID = "source"
 
-CONF_SOURCE_SENSOR = "source"
-CONF_ROUND_DIGITS = "round"
-CONF_UNIT_PREFIX = "unit_prefix"
-CONF_UNIT_TIME = "unit_time"
-CONF_UNIT_OF_MEASUREMENT = "unit"
-
-TRAPEZOIDAL_METHOD = "trapezoidal"
-LEFT_METHOD = "left"
-RIGHT_METHOD = "right"
-INTEGRATION_METHOD = [TRAPEZOIDAL_METHOD, LEFT_METHOD, RIGHT_METHOD]
-
 # SI Metric prefixes
-UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "M": 10 ** 6, "G": 10 ** 9, "T": 10 ** 12}
+UNIT_PREFIXES = {None: 1, "k": 10**3, "M": 10**6, "G": 10**9, "T": 10**12}
 
 # SI Time prefixes
 UNIT_TIME = {
@@ -69,24 +75,60 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD): vol.In(
-                INTEGRATION_METHOD
+            vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
+                INTEGRATION_METHODS
             ),
         }
     ),
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Integration - Riemann sum integral config entry."""
+    registry = er.async_get(hass)
+    # Validate + resolve entity registry id to entity_id
+    source_entity_id = er.async_validate_entity_id(
+        registry, config_entry.options[CONF_SOURCE_SENSOR]
+    )
+
+    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
+    if unit_prefix == "none":
+        unit_prefix = None
+
+    integral = IntegrationSensor(
+        integration_method=config_entry.options[CONF_METHOD],
+        name=config_entry.title,
+        round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
+        source_entity=source_entity_id,
+        unique_id=config_entry.entry_id,
+        unit_of_measurement=None,
+        unit_prefix=unit_prefix,
+        unit_time=config_entry.options[CONF_UNIT_TIME],
+    )
+
+    async_add_entities([integral])
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the integration sensor."""
     integral = IntegrationSensor(
-        config[CONF_SOURCE_SENSOR],
-        config.get(CONF_NAME),
-        config[CONF_ROUND_DIGITS],
-        config[CONF_UNIT_PREFIX],
-        config[CONF_UNIT_TIME],
-        config.get(CONF_UNIT_OF_MEASUREMENT),
-        config[CONF_METHOD],
+        integration_method=config[CONF_METHOD],
+        name=config.get(CONF_NAME),
+        round_digits=config[CONF_ROUND_DIGITS],
+        source_entity=config[CONF_SOURCE_SENSOR],
+        unique_id=None,
+        unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT),
+        unit_prefix=config[CONF_UNIT_PREFIX],
+        unit_time=config[CONF_UNIT_TIME],
     )
 
     async_add_entities([integral])
@@ -97,15 +139,18 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
 
     def __init__(
         self,
-        source_entity,
-        name,
-        round_digits,
-        unit_prefix,
-        unit_time,
-        unit_of_measurement,
-        integration_method,
-    ):
+        *,
+        integration_method: str,
+        name: str | None,
+        round_digits: int,
+        source_entity: str,
+        unique_id: str | None,
+        unit_of_measurement: str | None,
+        unit_prefix: str | None,
+        unit_time: str,
+    ) -> None:
         """Initialize the integration sensor."""
+        self._attr_unique_id = unique_id
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = None
@@ -141,17 +186,27 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             old_state = event.data.get("old_state")
             new_state = event.data.get("new_state")
 
+            # We may want to update our state before an early return,
+            # based on the source sensor's unit_of_measurement
+            # or device_class.
+            update_state = False
+
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                self._unit_of_measurement = self._unit_template.format(
-                    "" if unit is None else unit
-                )
+                if unit is not None:
+                    self._unit_of_measurement = self._unit_template.format(unit)
+                    update_state = True
+
             if (
                 self.device_class is None
                 and new_state.attributes.get(ATTR_DEVICE_CLASS)
                 == SensorDeviceClass.POWER
             ):
                 self._attr_device_class = SensorDeviceClass.ENERGY
+                update_state = True
+
+            if update_state:
+                self.async_write_ha_state()
 
             if (
                 old_state is None
@@ -168,15 +223,15 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                     new_state.last_updated - old_state.last_updated
                 ).total_seconds()
 
-                if self._method == TRAPEZOIDAL_METHOD:
+                if self._method == METHOD_TRAPEZOIDAL:
                     area = (
                         (Decimal(new_state.state) + Decimal(old_state.state))
                         * Decimal(elapsed_time)
                         / 2
                     )
-                elif self._method == LEFT_METHOD:
+                elif self._method == METHOD_LEFT:
                     area = Decimal(old_state.state) * Decimal(elapsed_time)
-                elif self._method == RIGHT_METHOD:
+                elif self._method == METHOD_RIGHT:
                     area = Decimal(new_state.state) * Decimal(elapsed_time)
 
                 integral = area / (self._unit_prefix * self._unit_time)

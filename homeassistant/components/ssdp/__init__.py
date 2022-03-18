@@ -2,19 +2,24 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
-from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
+from async_upnp_client.const import (
+    AddressTupleVXType,
+    DeviceOrServiceType,
+    SsdpHeaders,
+    SsdpSource,
+)
 from async_upnp_client.description_cache import DescriptionCache
-from async_upnp_client.ssdp import SSDP_PORT
-from async_upnp_client.ssdp_listener import SsdpDevice, SsdpListener
+from async_upnp_client.ssdp import SSDP_PORT, determine_source_target, is_ipv4_address
+from async_upnp_client.ssdp_listener import SsdpDevice, SsdpDeviceTracker, SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
@@ -30,7 +35,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
 
 DOMAIN = "ssdp"
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(minutes=2)
 
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
@@ -372,17 +377,10 @@ class Scanner:
 
     async def _async_build_source_set(self) -> set[IPv4Address | IPv6Address]:
         """Build the list of ssdp sources."""
-        adapters = await network.async_get_adapters(self.hass)
-        sources: set[IPv4Address | IPv6Address] = set()
-        if network.async_only_default_interface_enabled(adapters):
-            sources.add(IPv4Address("0.0.0.0"))
-            return sources
-
         return {
             source_ip
             for source_ip in await network.async_get_enabled_source_ips(self.hass)
-            if not source_ip.is_loopback
-            and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
+            if not source_ip.is_loopback and not source_ip.is_global
         }
 
     async def async_scan(self, *_: Any) -> None:
@@ -401,11 +399,8 @@ class Scanner:
         # address. This matches pysonos' behavior
         # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
         for listener in self._ssdp_listeners:
-            try:
-                IPv4Address(listener.source_ip)
-            except ValueError:
-                continue
-            await listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
+            if is_ipv4_address(listener.source):
+                await listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
 
     async def async_start(self) -> None:
         """Start the scanners."""
@@ -425,11 +420,26 @@ class Scanner:
 
     async def _async_start_ssdp_listeners(self) -> None:
         """Start the SSDP Listeners."""
+        # Devices are shared between all sources.
+        device_tracker = SsdpDeviceTracker()
         for source_ip in await self._async_build_source_set():
+            source_ip_str = str(source_ip)
+            if source_ip.version == 6:
+                source_tuple: AddressTupleVXType = (
+                    source_ip_str,
+                    0,
+                    0,
+                    int(getattr(source_ip, "scope_id")),
+                )
+            else:
+                source_tuple = (source_ip_str, 0)
+            source, target = determine_source_target(source_tuple)
             self._ssdp_listeners.append(
                 SsdpListener(
                     async_callback=self._ssdp_listener_callback,
-                    source_ip=source_ip,
+                    source=source,
+                    target=target,
+                    device_tracker=device_tracker,
                 )
             )
         results = await asyncio.gather(
@@ -439,9 +449,9 @@ class Scanner:
         failed_listeners = []
         for idx, result in enumerate(results):
             if isinstance(result, Exception):
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Failed to setup listener for %s: %s",
-                    self._ssdp_listeners[idx].source_ip,
+                    self._ssdp_listeners[idx].source,
                     result,
                 )
                 failed_listeners.append(self._ssdp_listeners[idx])
@@ -472,22 +482,24 @@ class Scanner:
         )
 
         location = ssdp_device.location
-        info_desc = await self._async_get_description_dict(location) or {}
+        info_desc = None
         combined_headers = ssdp_device.combined_headers(dst)
-        info_with_desc = CaseInsensitiveDict(combined_headers, **info_desc)
-
         callbacks = self._async_get_matching_callbacks(combined_headers)
         matching_domains: set[str] = set()
 
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
+            info_desc = await self._async_get_description_dict(location) or {}
+            assert isinstance(combined_headers, CaseInsensitiveDict)
             matching_domains = self.integration_matchers.async_matching_domains(
-                info_with_desc
+                CaseInsensitiveDict({**combined_headers.as_dict(), **info_desc})
             )
 
         if not callbacks and not matching_domains:
             return
 
+        if info_desc is None:
+            info_desc = await self._async_get_description_dict(location) or {}
         discovery_info = discovery_info_from_headers_and_description(
             combined_headers, info_desc
         )
@@ -565,7 +577,10 @@ def discovery_info_from_headers_and_description(
     """Convert headers and description to discovery_info."""
     ssdp_usn = combined_headers["usn"]
     ssdp_st = combined_headers.get("st")
-    upnp_info = {**info_desc}
+    if isinstance(info_desc, CaseInsensitiveDict):
+        upnp_info = {**info_desc.as_dict()}
+    else:
+        upnp_info = {**info_desc}
 
     # Increase compatibility: depending on the message type,
     # either the ST (Search Target, from M-SEARCH messages)

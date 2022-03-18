@@ -34,7 +34,7 @@
                     "scan_interval": "Intervallo di scansione (secondi)",
                     "username": "Nome utente"
                 },
-                "description": "Immettere le informazioni di accesso e la configurazione di Hive.",
+                "description": "Inserisci le informazioni di accesso e la configurazione di Hive.",
                 "title": "Accesso Hive"
             }
         }

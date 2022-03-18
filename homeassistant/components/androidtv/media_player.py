@@ -1,10 +1,10 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
+from __future__ import annotations
+
 from datetime import datetime
 import functools
 import logging
-import os
 
-from adb_shell.auth.keygen import keygen
 from adb_shell.exceptions import (
     AdbTimeoutError,
     InvalidChecksumError,
@@ -13,12 +13,11 @@ from adb_shell.exceptions import (
     TcpTimeoutException,
 )
 from androidtv import ha_state_detection_rules_validator
-from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
-from androidtv.setup_async import setup
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -33,25 +32,57 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
-    ATTR_ENTITY_ID,
+    ATTR_CONNECTIONS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-ANDROIDTV_DOMAIN = "androidtv"
+from . import get_androidtv_mac
+from .const import (
+    ANDROID_DEV,
+    ANDROID_DEV_OPT,
+    CONF_ADB_SERVER_IP,
+    CONF_ADB_SERVER_PORT,
+    CONF_ADBKEY,
+    CONF_APPS,
+    CONF_EXCLUDE_UNNAMED_APPS,
+    CONF_GET_SOURCES,
+    CONF_MIGRATION_OPTIONS,
+    CONF_SCREENCAP,
+    CONF_STATE_DETECTION_RULES,
+    CONF_TURN_OFF_COMMAND,
+    CONF_TURN_ON_COMMAND,
+    DEFAULT_ADB_SERVER_PORT,
+    DEFAULT_DEVICE_CLASS,
+    DEFAULT_EXCLUDE_UNNAMED_APPS,
+    DEFAULT_GET_SOURCES,
+    DEFAULT_PORT,
+    DEFAULT_SCREENCAP,
+    DEVICE_ANDROIDTV,
+    DEVICE_CLASSES,
+    DOMAIN,
+    SIGNAL_CONFIG_ENTITY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,54 +116,14 @@ ATTR_DEVICE_PATH = "device_path"
 ATTR_HDMI_INPUT = "hdmi_input"
 ATTR_LOCAL_PATH = "local_path"
 
-CONF_ADBKEY = "adbkey"
-CONF_ADB_SERVER_IP = "adb_server_ip"
-CONF_ADB_SERVER_PORT = "adb_server_port"
-CONF_APPS = "apps"
-CONF_EXCLUDE_UNNAMED_APPS = "exclude_unnamed_apps"
-CONF_GET_SOURCES = "get_sources"
-CONF_STATE_DETECTION_RULES = "state_detection_rules"
-CONF_TURN_ON_COMMAND = "turn_on_command"
-CONF_TURN_OFF_COMMAND = "turn_off_command"
-CONF_SCREENCAP = "screencap"
-
-DEFAULT_NAME = "Android TV"
-DEFAULT_PORT = 5555
-DEFAULT_ADB_SERVER_PORT = 5037
-DEFAULT_GET_SOURCES = True
-DEFAULT_DEVICE_CLASS = "auto"
-DEFAULT_SCREENCAP = True
-
-DEVICE_ANDROIDTV = "androidtv"
-DEVICE_FIRETV = "firetv"
-DEVICE_CLASSES = [DEFAULT_DEVICE_CLASS, DEVICE_ANDROIDTV, DEVICE_FIRETV]
-
 SERVICE_ADB_COMMAND = "adb_command"
 SERVICE_DOWNLOAD = "download"
 SERVICE_LEARN_SENDEVENT = "learn_sendevent"
 SERVICE_UPLOAD = "upload"
 
-SERVICE_ADB_COMMAND_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_COMMAND): cv.string}
-)
+DEFAULT_NAME = "Android TV"
 
-SERVICE_DOWNLOAD_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_DEVICE_PATH): cv.string,
-        vol.Required(ATTR_LOCAL_PATH): cv.string,
-    }
-)
-
-SERVICE_UPLOAD_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_DEVICE_PATH): cv.string,
-        vol.Required(ATTR_LOCAL_PATH): cv.string,
-    }
-)
-
-
+# Deprecated in Home Assistant 2022.2
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -153,7 +144,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
             {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
         ),
-        vol.Optional(CONF_EXCLUDE_UNNAMED_APPS, default=False): cv.boolean,
+        vol.Optional(
+            CONF_EXCLUDE_UNNAMED_APPS, default=DEFAULT_EXCLUDE_UNNAMED_APPS
+        ): cv.boolean,
         vol.Optional(CONF_SCREENCAP, default=DEFAULT_SCREENCAP): cv.boolean,
     }
 )
@@ -168,180 +161,108 @@ ANDROIDTV_STATES = {
 }
 
 
-def setup_androidtv(hass, config):
-    """Generate an ADB key (if needed) and load it."""
-    adbkey = config.get(CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey"))
-    if CONF_ADB_SERVER_IP not in config:
-        # Use "adb_shell" (Python ADB implementation)
-        if not os.path.isfile(adbkey):
-            # Generate ADB key files
-            keygen(adbkey)
-
-        # Load the ADB key
-        signer = ADBPythonSync.load_adbkey(adbkey)
-        adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
-
-    else:
-        # Use "pure-python-adb" (communicate with ADB server)
-        signer = None
-        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
-
-    return adbkey, signer, adb_log
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Android TV / Fire TV platform."""
-    hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
-    address = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
+    host = config[CONF_HOST]
 
-    if address in hass.data[ANDROIDTV_DOMAIN]:
-        _LOGGER.warning("Platform already setup on %s, skipping", address)
-        return
+    # get main data
+    config_data = {
+        CONF_HOST: host,
+        CONF_DEVICE_CLASS: config.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
+        CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
+    }
+    for key in (CONF_ADBKEY, CONF_ADB_SERVER_IP, CONF_ADB_SERVER_PORT, CONF_NAME):
+        if key in config:
+            config_data[key] = config[key]
 
-    adbkey, signer, adb_log = await hass.async_add_executor_job(
-        setup_androidtv, hass, config
-    )
-
-    aftv = await setup(
-        config[CONF_HOST],
-        config[CONF_PORT],
-        adbkey,
-        config.get(CONF_ADB_SERVER_IP, ""),
-        config[CONF_ADB_SERVER_PORT],
-        config[CONF_STATE_DETECTION_RULES],
-        config[CONF_DEVICE_CLASS],
-        10.0,
-        signer,
-    )
-
-    if not aftv.available:
-        # Determine the name that will be used for the device in the log
-        if CONF_NAME in config:
-            device_name = config[CONF_NAME]
-        elif config[CONF_DEVICE_CLASS] == DEVICE_ANDROIDTV:
-            device_name = "Android TV device"
-        elif config[CONF_DEVICE_CLASS] == DEVICE_FIRETV:
-            device_name = "Fire TV device"
-        else:
-            device_name = "Android TV / Fire TV device"
-
-        _LOGGER.warning(
-            "Could not connect to %s at %s %s", device_name, address, adb_log
+    # get options
+    config_options = {
+        key: config[key]
+        for key in (
+            CONF_APPS,
+            CONF_EXCLUDE_UNNAMED_APPS,
+            CONF_GET_SOURCES,
+            CONF_SCREENCAP,
+            CONF_STATE_DETECTION_RULES,
+            CONF_TURN_OFF_COMMAND,
+            CONF_TURN_ON_COMMAND,
         )
-        raise PlatformNotReady
+        if key in config
+    }
 
-    async def _async_close(event):
-        """Close the ADB socket connection when HA stops."""
-        await aftv.adb_close()
+    # save option to use with entry
+    if config_options:
+        config_data[CONF_MIGRATION_OPTIONS] = config_options
 
-    # Close the ADB connection when HA stops
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
+    # Launch config entries setup
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config_data
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Android TV entity."""
+    aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
+    device_class = aftv.DEVICE_CLASS
+    device_type = "Android TV" if device_class == DEVICE_ANDROIDTV else "Fire TV"
+    if CONF_NAME in entry.data:
+        device_name = entry.data[CONF_NAME]
+    else:
+        device_name = f"{device_type} {entry.data[CONF_HOST]}"
 
     device_args = [
         aftv,
-        config[CONF_NAME],
-        config[CONF_APPS],
-        config[CONF_GET_SOURCES],
-        config.get(CONF_TURN_ON_COMMAND),
-        config.get(CONF_TURN_OFF_COMMAND),
-        config[CONF_EXCLUDE_UNNAMED_APPS],
-        config[CONF_SCREENCAP],
+        device_name,
+        device_type,
+        entry.unique_id,
+        entry.entry_id,
+        hass.data[DOMAIN][entry.entry_id],
     ]
 
-    if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
-        device = AndroidTVDevice(*device_args)
-        device_name = config.get(CONF_NAME, "Android TV")
-    else:
-        device = FireTVDevice(*device_args)
-        device_name = config.get(CONF_NAME, "Fire TV")
-
-    async_add_entities([device])
-    _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
-    hass.data[ANDROIDTV_DOMAIN][address] = device
-
-    if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
-        return
-
-    platform = entity_platform.async_get_current_platform()
-
-    async def service_adb_command(service):
-        """Dispatch service calls to target entities."""
-        cmd = service.data[ATTR_COMMAND]
-        entity_id = service.data[ATTR_ENTITY_ID]
-        target_devices = [
-            dev
-            for dev in hass.data[ANDROIDTV_DOMAIN].values()
-            if dev.entity_id in entity_id
+    async_add_entities(
+        [
+            AndroidTVDevice(*device_args)
+            if device_class == DEVICE_ANDROIDTV
+            else FireTVDevice(*device_args)
         ]
-
-        for target_device in target_devices:
-            output = await target_device.adb_command(cmd)
-
-            # log the output, if there is any
-            if output:
-                _LOGGER.info(
-                    "Output of command '%s' from '%s': %s",
-                    cmd,
-                    target_device.entity_id,
-                    output,
-                )
-
-    hass.services.async_register(
-        ANDROIDTV_DOMAIN,
-        SERVICE_ADB_COMMAND,
-        service_adb_command,
-        schema=SERVICE_ADB_COMMAND_SCHEMA,
     )
 
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_ADB_COMMAND,
+        {vol.Required(ATTR_COMMAND): cv.string},
+        "adb_command",
+    )
     platform.async_register_entity_service(
         SERVICE_LEARN_SENDEVENT, {}, "learn_sendevent"
     )
-
-    async def service_download(service):
-        """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
-        local_path = service.data[ATTR_LOCAL_PATH]
-        if not hass.config.is_allowed_path(local_path):
-            _LOGGER.warning("'%s' is not secure to load data from!", local_path)
-            return
-
-        device_path = service.data[ATTR_DEVICE_PATH]
-        entity_id = service.data[ATTR_ENTITY_ID]
-        target_device = [
-            dev
-            for dev in hass.data[ANDROIDTV_DOMAIN].values()
-            if dev.entity_id in entity_id
-        ][0]
-
-        await target_device.adb_pull(local_path, device_path)
-
-    hass.services.async_register(
-        ANDROIDTV_DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_DOWNLOAD,
-        service_download,
-        schema=SERVICE_DOWNLOAD_SCHEMA,
+        {
+            vol.Required(ATTR_DEVICE_PATH): cv.string,
+            vol.Required(ATTR_LOCAL_PATH): cv.string,
+        },
+        "service_download",
     )
-
-    async def service_upload(service):
-        """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
-        local_path = service.data[ATTR_LOCAL_PATH]
-        if not hass.config.is_allowed_path(local_path):
-            _LOGGER.warning("'%s' is not secure to load data from!", local_path)
-            return
-
-        device_path = service.data[ATTR_DEVICE_PATH]
-        entity_id = service.data[ATTR_ENTITY_ID]
-        target_devices = [
-            dev
-            for dev in hass.data[ANDROIDTV_DOMAIN].values()
-            if dev.entity_id in entity_id
-        ]
-
-        for target_device in target_devices:
-            await target_device.adb_push(local_path, device_path)
-
-    hass.services.async_register(
-        ANDROIDTV_DOMAIN, SERVICE_UPLOAD, service_upload, schema=SERVICE_UPLOAD_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_UPLOAD,
+        {
+            vol.Required(ATTR_DEVICE_PATH): cv.string,
+            vol.Required(ATTR_LOCAL_PATH): cv.string,
+        },
+        "service_upload",
     )
 
 
@@ -398,37 +319,42 @@ class ADBDevice(MediaPlayerEntity):
         self,
         aftv,
         name,
-        apps,
-        get_sources,
-        turn_on_command,
-        turn_off_command,
-        exclude_unnamed_apps,
-        screencap,
+        dev_type,
+        unique_id,
+        entry_id,
+        entry_data,
     ):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
         self._attr_name = name
-        self._app_id_to_name = APPS.copy()
-        self._app_id_to_name.update(apps)
-        self._app_name_to_id = {
-            value: key for key, value in self._app_id_to_name.items() if value
-        }
+        self._attr_unique_id = unique_id
+        self._entry_id = entry_id
+        self._entry_data = entry_data
 
-        # Make sure that apps overridden via the `apps` parameter are reflected
-        # in `self._app_name_to_id`
-        for key, value in apps.items():
-            self._app_name_to_id[value] = key
-        self._get_sources = get_sources
-        self._attr_unique_id = self.aftv.device_properties.get("serialno")
+        info = aftv.device_properties
+        model = info.get(ATTR_MODEL)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            model=f"{model} ({dev_type})" if model else dev_type,
+            name=name,
+        )
+        if manufacturer := info.get(ATTR_MANUFACTURER):
+            self._attr_device_info[ATTR_MANUFACTURER] = manufacturer
+        if sw_version := info.get(ATTR_SW_VERSION):
+            self._attr_device_info[ATTR_SW_VERSION] = sw_version
+        if mac := get_androidtv_mac(info):
+            self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
 
-        self.turn_on_command = turn_on_command
-        self.turn_off_command = turn_off_command
-
-        self._exclude_unnamed_apps = exclude_unnamed_apps
-        self._screencap = screencap
+        self._app_id_to_name = {}
+        self._app_name_to_id = {}
+        self._get_sources = DEFAULT_GET_SOURCES
+        self._exclude_unnamed_apps = DEFAULT_EXCLUDE_UNNAMED_APPS
+        self._screencap = DEFAULT_SCREENCAP
+        self.turn_on_command = None
+        self.turn_off_command = None
 
         # ADB exceptions to catch
-        if not self.aftv.adb_server_ip:
+        if not aftv.adb_server_ip:
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AdbTimeoutError,
@@ -450,8 +376,46 @@ class ADBDevice(MediaPlayerEntity):
             ATTR_HDMI_INPUT: None,
         }
 
+    def _process_config(self):
+        """Load the config options."""
+        _LOGGER.debug("Loading configuration options")
+        options = self._entry_data[ANDROID_DEV_OPT]
+
+        apps = options.get(CONF_APPS, {})
+        self._app_id_to_name = APPS.copy()
+        self._app_id_to_name.update(apps)
+        self._app_name_to_id = {
+            value: key for key, value in self._app_id_to_name.items() if value
+        }
+
+        # Make sure that apps overridden via the `apps` parameter are reflected
+        # in `self._app_name_to_id`
+        for key, value in apps.items():
+            self._app_name_to_id[value] = key
+
+        self._get_sources = options.get(CONF_GET_SOURCES, DEFAULT_GET_SOURCES)
+        self._exclude_unnamed_apps = options.get(
+            CONF_EXCLUDE_UNNAMED_APPS, DEFAULT_EXCLUDE_UNNAMED_APPS
+        )
+        self._screencap = options.get(CONF_SCREENCAP, DEFAULT_SCREENCAP)
+        self.turn_off_command = options.get(CONF_TURN_OFF_COMMAND)
+        self.turn_on_command = options.get(CONF_TURN_ON_COMMAND)
+
+    async def async_added_to_hass(self):
+        """Set config parameter when add to hass."""
+        await super().async_added_to_hass()
+        self._process_config()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_CONFIG_ENTITY}_{self._entry_id}",
+                self._process_config,
+            )
+        )
+        return
+
     @property
-    def media_image_hash(self):
+    def media_image_hash(self) -> str | None:
         """Hash value for media image."""
         return f"{datetime.now().timestamp()}" if self._screencap else None
 
@@ -531,13 +495,13 @@ class ADBDevice(MediaPlayerEntity):
                 await self.aftv.stop_app(self._app_name_to_id.get(source_, source_))
 
     @adb_decorator()
-    async def adb_command(self, cmd):
+    async def adb_command(self, command):
         """Send an ADB command to an Android TV / Fire TV device."""
-        if key := KEYS.get(cmd):
+        if key := KEYS.get(command):
             await self.aftv.adb_shell(f"input keyevent {key}")
             return
 
-        if cmd == "GET_PROPERTIES":
+        if command == "GET_PROPERTIES":
             self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = str(
                 await self.aftv.get_properties_dict()
             )
@@ -545,7 +509,7 @@ class ADBDevice(MediaPlayerEntity):
             return
 
         try:
-            response = await self.aftv.adb_shell(cmd)
+            response = await self.aftv.adb_shell(command)
         except UnicodeDecodeError:
             return
 
@@ -564,20 +528,29 @@ class ADBDevice(MediaPlayerEntity):
             self.async_write_ha_state()
 
             msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
-            self.hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                self.hass,
                 msg,
                 title="Android TV",
             )
             _LOGGER.info("%s", msg)
 
     @adb_decorator()
-    async def adb_pull(self, local_path, device_path):
+    async def service_download(self, device_path, local_path):
         """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
+        if not self.hass.config.is_allowed_path(local_path):
+            _LOGGER.warning("'%s' is not secure to load data from!", local_path)
+            return
+
         await self.aftv.adb_pull(local_path, device_path)
 
     @adb_decorator()
-    async def adb_push(self, local_path, device_path):
+    async def service_upload(self, device_path, local_path):
         """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
+        if not self.hass.config.is_allowed_path(local_path):
+            _LOGGER.warning("'%s' is not secure to load data from!", local_path)
+            return
+
         await self.aftv.adb_push(local_path, device_path)
 
 
@@ -635,7 +608,11 @@ class AndroidTVDevice(ADBDevice):
     @adb_decorator()
     async def async_mute_volume(self, mute):
         """Mute the volume."""
-        await self.aftv.mute_volume()
+        is_muted = await self.aftv.is_volume_muted()
+
+        # `None` indicates that the muted status could not be determined
+        if is_muted is not None and is_muted != mute:
+            await self.aftv.mute_volume()
 
     @adb_decorator()
     async def async_set_volume_level(self, volume):

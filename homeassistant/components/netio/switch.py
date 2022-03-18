@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import Any
 
 from pynetio import Netio
 import voluptuous as vol
@@ -20,8 +19,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ CONF_OUTLETS = "outlets"
 DEFAULT_PORT = 1234
 DEFAULT_USERNAME = "admin"
 Device = namedtuple("Device", ["netio", "entities"])
-DEVICES: dict[str, Any] = {}
+DEVICES: dict[str, Device] = {}
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -52,13 +53,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Netio platform."""
 
-    host = config.get(CONF_HOST)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    port = config[CONF_PORT]
 
     if not DEVICES:
         hass.http.register_view(NetioApiView)
@@ -77,7 +83,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(DEVICES[host].entities)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, dispose)
-    return True
 
 
 def dispose(event):

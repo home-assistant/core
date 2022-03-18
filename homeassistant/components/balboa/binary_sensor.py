@@ -1,8 +1,13 @@
 """Support for Balboa Spa binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CIRC_PUMP, DOMAIN, FILTER
 from .entity import BalboaEntity
@@ -15,10 +20,14 @@ FILTER_STATES = [
 ]
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the spa's binary sensors."""
     spa = hass.data[DOMAIN][entry.entry_id]
-    entities = [BalboaSpaFilter(entry, spa, FILTER, index) for index in range(1, 3)]
+    entities: list[BalboaSpaBinarySensor] = [
+        BalboaSpaFilter(entry, spa, FILTER, index) for index in range(1, 3)
+    ]
     if spa.have_circ_pump():
         entities.append(BalboaSpaCircPump(entry, spa, CIRC_PUMP))
 

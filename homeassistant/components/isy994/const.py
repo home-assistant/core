@@ -1,21 +1,7 @@
 """Constants for the ISY994 Platform."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_COLD,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_SOUND,
-    DEVICE_CLASS_VIBRATION,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_FAN,
@@ -218,7 +204,7 @@ UOM_PERCENTAGE = "51"
 # responses, not using them for Home Assistant states
 # Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
 # Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
-NODE_FILTERS = {
+NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
     Platform.BINARY_SENSOR: {
         FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: [],
@@ -651,8 +637,8 @@ HA_HVAC_TO_ISY = {
 HA_FAN_TO_ISY = {FAN_ON: "on", FAN_AUTO: "auto"}
 
 BINARY_SENSOR_DEVICE_TYPES_ISY = {
-    DEVICE_CLASS_MOISTURE: ["16.8.", "16.13.", "16.14."],
-    DEVICE_CLASS_OPENING: [
+    BinarySensorDeviceClass.MOISTURE: ["16.8.", "16.13.", "16.14."],
+    BinarySensorDeviceClass.OPENING: [
         "16.9.",
         "16.6.",
         "16.7.",
@@ -661,22 +647,22 @@ BINARY_SENSOR_DEVICE_TYPES_ISY = {
         "16.20.",
         "16.21.",
     ],
-    DEVICE_CLASS_MOTION: ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
+    BinarySensorDeviceClass.MOTION: ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
 }
 
 BINARY_SENSOR_DEVICE_TYPES_ZWAVE = {
-    DEVICE_CLASS_SAFETY: ["137", "172", "176", "177", "178"],
-    DEVICE_CLASS_SMOKE: ["138", "156"],
-    DEVICE_CLASS_PROBLEM: ["148", "149", "157", "158", "164", "174", "175"],
-    DEVICE_CLASS_GAS: ["150", "151"],
-    DEVICE_CLASS_SOUND: ["153"],
-    DEVICE_CLASS_COLD: ["152", "168"],
-    DEVICE_CLASS_HEAT: ["154", "166", "167"],
-    DEVICE_CLASS_MOISTURE: ["159", "169"],
-    DEVICE_CLASS_DOOR: ["160"],
-    DEVICE_CLASS_BATTERY: ["162"],
-    DEVICE_CLASS_MOTION: ["155"],
-    DEVICE_CLASS_VIBRATION: ["173"],
+    BinarySensorDeviceClass.SAFETY: ["137", "172", "176", "177", "178"],
+    BinarySensorDeviceClass.SMOKE: ["138", "156"],
+    BinarySensorDeviceClass.PROBLEM: ["148", "149", "157", "158", "164", "174", "175"],
+    BinarySensorDeviceClass.GAS: ["150", "151"],
+    BinarySensorDeviceClass.SOUND: ["153"],
+    BinarySensorDeviceClass.COLD: ["152", "168"],
+    BinarySensorDeviceClass.HEAT: ["154", "166", "167"],
+    BinarySensorDeviceClass.MOISTURE: ["159", "169"],
+    BinarySensorDeviceClass.DOOR: ["160"],
+    BinarySensorDeviceClass.BATTERY: ["162"],
+    BinarySensorDeviceClass.MOTION: ["155"],
+    BinarySensorDeviceClass.VIBRATION: ["173"],
 }
 
 

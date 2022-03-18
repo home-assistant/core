@@ -1,4 +1,6 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
+from __future__ import annotations
+
 import logging
 
 from afsapi import AFSAPI
@@ -33,7 +35,10 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,14 +71,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Frontier Silicon platform."""
     if discovery_info is not None:
         async_add_entities(
             [AFSAPIDevice(discovery_info["ssdp_description"], DEFAULT_PASSWORD, None)],
             True,
         )
-        return True
+        return
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -85,13 +95,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             [AFSAPIDevice(f"http://{host}:{port}/device", password, name)], True
         )
         _LOGGER.debug("FSAPI device %s:%s -> %s", host, port, password)
-        return True
     except requests.exceptions.RequestException:
         _LOGGER.error(
             "Could not add the FSAPI device at %s:%s -> %s", host, port, password
         )
-
-    return False
 
 
 class AFSAPIDevice(MediaPlayerEntity):

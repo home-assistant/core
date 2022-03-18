@@ -31,6 +31,8 @@ from .const import (
     PYNUT_UNIQUE_ID,
 )
 
+NUT_FAKE_SERIAL = ["unknown", "blank"]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -113,7 +115,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -145,7 +147,9 @@ def _firmware_from_status(status):
 def _serial_from_status(status):
     """Find the best serialvalue from the status."""
     serial = status.get("device.serial") or status.get("ups.serial")
-    if serial and (serial.lower() == "unknown" or serial.count("0") == len(serial)):
+    if serial and (
+        serial.lower() in NUT_FAKE_SERIAL or serial.count("0") == len(serial)
+    ):
         return None
     return serial
 

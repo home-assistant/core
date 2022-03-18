@@ -46,8 +46,11 @@ from tests.common import async_fire_time_changed
 DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
 
+@pytest.fixture(autouse=True)
 def teardown():
     """Stop everything that was started."""
+    yield
+
     dt_util.set_default_time_zone(DEFAULT_TIME_ZONE)
 
 

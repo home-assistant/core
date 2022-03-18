@@ -1,4 +1,5 @@
 """The tests for mqtt select component."""
+import copy
 import json
 from unittest.mock import patch
 
@@ -26,6 +27,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -33,6 +35,9 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -471,7 +476,14 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG, payload="milk"
+        hass,
+        mqtt_mock,
+        select.DOMAIN,
+        DEFAULT_CONFIG,
+        select.SERVICE_SELECT_OPTION,
+        service_parameters={ATTR_OPTION: "beer"},
+        command_payload="beer",
+        state_payload="milk",
     )
 
 
@@ -523,4 +535,78 @@ async def test_mqtt_payload_not_an_option_warning(hass, caplog, mqtt_mock):
     assert (
         "Invalid option for select.test_select: 'öl' (valid options: ['milk', 'beer'])"
         in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload,template",
+    [
+        (
+            select.SERVICE_SELECT_OPTION,
+            "command_topic",
+            {"option": "beer"},
+            "beer",
+            "command_template",
+        ),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass, mqtt_mock, caplog, service, topic, parameters, payload, template
+):
+    """Test publishing MQTT payload with different encoding."""
+    domain = select.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    config["options"] = ["milk", "beer"]
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
+    )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = select.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = select.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("state_topic", "milk", None, "milk"),
+        ("state_topic", "beer", None, "beer"),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    config = copy.deepcopy(DEFAULT_CONFIG["select"])
+    config["options"] = ["milk", "beer"]
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        "select",
+        config,
+        topic,
+        value,
+        attribute,
+        attribute_value,
     )

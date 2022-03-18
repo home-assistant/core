@@ -16,6 +16,7 @@ from homeassistant.components import (
     group,
     image_processing,
     input_boolean,
+    input_button,
     input_number,
     light,
     lock,
@@ -82,7 +83,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_ADAPTERS = Registry()
+ENTITY_ADAPTERS: Registry[str, type[AlexaEntity]] = Registry()
 
 TRANSLATION_TABLE = dict.fromkeys(map(ord, r"}{\/|\"()[]+~!><*%"), None)
 
@@ -426,6 +427,7 @@ class SwitchCapabilities(AlexaEntity):
 
 
 @ENTITY_ADAPTERS.register(button.DOMAIN)
+@ENTITY_ADAPTERS.register(input_button.DOMAIN)
 class ButtonCapabilities(AlexaEntity):
     """Class to represent Button capabilities."""
 

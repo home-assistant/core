@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "not_zha_device": "Este dispositivo no es un dispositivo zha",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "usb_probe_failed": "No se ha podido sondear el dispositivo usb"
         },
@@ -9,6 +10,9 @@
         },
         "flow_title": "ZHA: {name}",
         "step": {
+            "confirm": {
+                "description": "\u00bfQuieres configurar {name} ?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Tipo de Radio"

@@ -1,11 +1,16 @@
 """Support for Melnor RainCloud sprinkler water timer."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ALLOWED_WATERING_TIME,
@@ -31,13 +36,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a sensor for a raincloud device."""
     raincloud = hass.data[DATA_RAINCLOUD].data
-    default_watering_timer = config.get(CONF_WATERING_TIME)
+    default_watering_timer = config[CONF_WATERING_TIME]
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         # create a sensor for each zone managed by faucet
         for zone in raincloud.controller.faucet.zones:
             sensors.append(RainCloudSwitch(default_watering_timer, zone, sensor_type))

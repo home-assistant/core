@@ -3,7 +3,8 @@
 import asyncio
 from datetime import datetime, timedelta
 import sqlite3
-from unittest.mock import patch
+import threading
+from unittest.mock import Mock, patch
 
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
@@ -21,6 +22,7 @@ from homeassistant.components.recorder import (
     SERVICE_PURGE_ENTITIES,
     SQLITE_URL_PREFIX,
     Recorder,
+    get_instance,
     run_information,
     run_information_from_instance,
     run_information_with_session,
@@ -29,6 +31,7 @@ from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import (
     Events,
     RecorderRuns,
+    StateAttributes,
     States,
     StatisticsRuns,
     process_timestamp,
@@ -100,6 +103,30 @@ async def test_shutdown_before_startup_finishes(hass):
     assert run_info.end is not None
 
 
+async def test_shutdown_closes_connections(hass):
+    """Test shutdown closes connections."""
+
+    hass.state = CoreState.not_running
+
+    await async_init_recorder_component(hass)
+    instance = get_instance(hass)
+    await instance.async_db_ready
+    await hass.async_block_till_done()
+    pool = instance.engine.pool
+    pool.shutdown = Mock()
+
+    def _ensure_connected():
+        with session_scope(hass=hass) as session:
+            list(session.query(States))
+
+    await instance.async_add_executor_job(_ensure_connected)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert len(pool.shutdown.mock_calls) == 1
+
+
 async def test_state_gets_saved_when_set_before_start_event(
     hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
@@ -140,10 +167,13 @@ async def test_saving_state(
     await async_wait_recording_done(hass, instance)
 
     with session_scope(hass=hass) as session:
-        db_states = list(session.query(States))
+        db_states = []
+        for db_state, db_state_attributes in session.query(States, StateAttributes):
+            db_states.append(db_state)
+            state = db_state.to_native()
+            state.attributes = db_state_attributes.to_native()
         assert len(db_states) == 1
         assert db_states[0].event_id > 0
-        state = db_states[0].to_native()
 
     assert state == _state_empty_context(hass, entity_id)
 
@@ -287,7 +317,7 @@ async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
 
     await async_wait_recording_done(hass, instance)
 
-    with patch.object(instance, "db_retry_wait", 0.2), patch.object(
+    with patch.object(instance, "db_retry_wait", 0.05), patch.object(
         instance.event_session,
         "flush",
         side_effect=OperationalError(
@@ -374,7 +404,14 @@ def _add_entities(hass, entity_ids):
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        return [st.to_native() for st in session.query(States)]
+        states = []
+        for state, state_attributes in session.query(States, StateAttributes).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
+            native_state = state.to_native()
+            native_state.attributes = state_attributes.to_native()
+            states.append(native_state)
+        return states
 
 
 def _add_events(hass, events):
@@ -531,7 +568,7 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
     entity_id = "lock.mine"
     hass.states.set(entity_id, STATE_LOCKED)
     hass.states.set(entity_id, STATE_UNLOCKED)
-    hass.states.async_remove(entity_id)
+    hass.states.remove(entity_id)
 
     wait_recording_done(hass)
 
@@ -599,6 +636,7 @@ def run_tasks_at_time(hass, test_time):
     hass.data[DATA_INSTANCE].block_till_done()
 
 
+@pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge(hass_recorder):
     """Test periodic purge scheduling."""
     hass = hass_recorder()
@@ -656,6 +694,7 @@ def test_auto_purge(hass_recorder):
     dt_util.set_default_time_zone(original_tz)
 
 
+@pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_disabled(hass_recorder):
     """Test periodic db cleanup still run when auto purge is disabled."""
     hass = hass_recorder({CONF_AUTO_PURGE: False})
@@ -1204,12 +1243,34 @@ async def test_database_lock_timeout(hass):
     """Test locking database timeout when recorder stopped."""
     await async_init_recorder_component(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
 
     instance: Recorder = hass.data[DATA_INSTANCE]
+
+    class BlockQueue(recorder.RecorderTask):
+        event: threading.Event = threading.Event()
+
+        def run(self, instance: Recorder) -> None:
+            self.event.wait()
+
+    block_task = BlockQueue()
+    instance.queue.put(block_task)
     with patch.object(recorder, "DB_LOCK_TIMEOUT", 0.1):
         try:
             with pytest.raises(TimeoutError):
                 await instance.lock_database()
         finally:
             instance.unlock_database()
+            block_task.event.set()
+
+
+async def test_database_lock_without_instance(hass):
+    """Test database lock doesn't fail if instance is not initialized."""
+    await async_init_recorder_component(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    with patch.object(instance, "engine", None):
+        try:
+            assert await instance.lock_database()
+        finally:
+            assert instance.unlock_database()

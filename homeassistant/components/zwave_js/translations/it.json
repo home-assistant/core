@@ -9,7 +9,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi",
-            "discovery_requires_supervisor": "Il rilevamento richiede il Supervisor.",
+            "discovery_requires_supervisor": "Il rilevamento richiede il supervisore.",
             "not_zwave_device": "Il dispositivo rilevato non \u00e8 un dispositivo Z-Wave."
         },
         "error": {
@@ -49,9 +49,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS Supervisor"
+                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS del supervisore"
                 },
-                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS Supervisor?",
+                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS del supervisore?",
                 "title": "Seleziona il metodo di connessione"
             },
             "start_addon": {
@@ -67,7 +67,7 @@
             "clear_lock_usercode": "Cancella codice utente su {entity_name}",
             "ping": "Dispositivo ping",
             "refresh_value": "Aggiorna il/i valore/i per {entity_name}",
-            "reset_meter": "Azzerare i contatori su {subtype}",
+            "reset_meter": "Azzera i contatori su {subtype}",
             "set_config_parameter": "Imposta il valore del parametro di configurazione {subtype}",
             "set_lock_usercode": "Imposta un codice utente su {entity_name}",
             "set_value": "Imposta un valore Z-Wave"
@@ -97,7 +97,7 @@
             "addon_start_failed": "Impossibile avviare il componente aggiuntivo Z-Wave JS.",
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "cannot_connect": "Impossibile connettersi",
-            "different_device": "Il dispositivo USB connesso non \u00e8 lo stesso configurato in precedenza per questa voce di configurazione. Si prega, invece, di creare una nuova voce di configurazione per il nuovo dispositivo."
+            "different_device": "Il dispositivo USB connesso non \u00e8 lo stesso configurato in precedenza per questa voce di configurazione. Crea invece una nuova voce di configurazione per il nuovo dispositivo."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -111,7 +111,7 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "emulate_hardware": "Emulare l'hardware",
+                    "emulate_hardware": "Emula l'hardware",
                     "log_level": "Livello di registro",
                     "network_key": "Chiave di rete",
                     "s0_legacy_key": "Chiave S0 (Obsoleta)",
@@ -133,9 +133,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS di Supervisor"
+                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS del supervisore"
                 },
-                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS di Supervisor?",
+                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS del supervisore?",
                 "title": "Seleziona il metodo di connessione"
             },
             "start_addon": {

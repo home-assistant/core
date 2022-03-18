@@ -14,7 +14,7 @@
                     "ip_address": "Indirizzo IP",
                     "port": "Porta"
                 },
-                "description": "Configurare un dispositivo Elexa Guardian locale."
+                "description": "Configura un dispositivo Elexa Guardian locale."
             },
             "zeroconf_confirm": {
                 "description": "Vuoi configurare questo dispositivo Guardian?"

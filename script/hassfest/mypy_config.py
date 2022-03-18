@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 from typing import Final
 
+from homeassistant.const import REQUIRED_PYTHON_VER
+
 from .model import Config, Integration
 
 # Modules which have type hints which known to be broken.
@@ -14,138 +16,221 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.blueprint.*",
-    "homeassistant.components.climacell.*",
-    "homeassistant.components.cloud.*",
-    "homeassistant.components.config.*",
-    "homeassistant.components.conversation.*",
-    "homeassistant.components.deconz.*",
-    "homeassistant.components.demo.*",
-    "homeassistant.components.denonavr.*",
-    "homeassistant.components.dhcp.*",
-    "homeassistant.components.doorbird.*",
-    "homeassistant.components.enphase_envoy.*",
-    "homeassistant.components.evohome.*",
-    "homeassistant.components.fireservicerota.*",
-    "homeassistant.components.firmata.*",
-    "homeassistant.components.flo.*",
-    "homeassistant.components.fortios.*",
-    "homeassistant.components.foscam.*",
-    "homeassistant.components.freebox.*",
-    "homeassistant.components.geniushub.*",
-    "homeassistant.components.glances.*",
-    "homeassistant.components.google_assistant.*",
-    "homeassistant.components.gree.*",
-    "homeassistant.components.growatt_server.*",
-    "homeassistant.components.habitica.*",
-    "homeassistant.components.harmony.*",
-    "homeassistant.components.hassio.*",
-    "homeassistant.components.here_travel_time.*",
-    "homeassistant.components.hisense_aehw4a1.*",
-    "homeassistant.components.home_connect.*",
-    "homeassistant.components.home_plus_control.*",
-    "homeassistant.components.homekit.*",
-    "homeassistant.components.homekit_controller.*",
-    "homeassistant.components.honeywell.*",
-    "homeassistant.components.humidifier.*",
-    "homeassistant.components.iaqualink.*",
-    "homeassistant.components.icloud.*",
-    "homeassistant.components.image.*",
-    "homeassistant.components.incomfort.*",
-    "homeassistant.components.influxdb.*",
-    "homeassistant.components.input_datetime.*",
-    "homeassistant.components.input_number.*",
-    "homeassistant.components.ipp.*",
-    "homeassistant.components.isy994.*",
-    "homeassistant.components.izone.*",
-    "homeassistant.components.kaiterra.*",
-    "homeassistant.components.keenetic_ndms2.*",
-    "homeassistant.components.kodi.*",
-    "homeassistant.components.konnected.*",
-    "homeassistant.components.kostal_plenticore.*",
-    "homeassistant.components.kulersky.*",
-    "homeassistant.components.litejet.*",
-    "homeassistant.components.litterrobot.*",
-    "homeassistant.components.lovelace.*",
-    "homeassistant.components.luftdaten.*",
-    "homeassistant.components.lutron_caseta.*",
-    "homeassistant.components.lyric.*",
-    "homeassistant.components.melcloud.*",
-    "homeassistant.components.meteo_france.*",
-    "homeassistant.components.metoffice.*",
-    "homeassistant.components.minecraft_server.*",
-    "homeassistant.components.mobile_app.*",
-    "homeassistant.components.motion_blinds.*",
-    "homeassistant.components.mullvad.*",
-    "homeassistant.components.ness_alarm.*",
-    "homeassistant.components.nest.legacy.*",
-    "homeassistant.components.netgear.*",
-    "homeassistant.components.nightscout.*",
-    "homeassistant.components.nilu.*",
-    "homeassistant.components.nsw_fuel_station.*",
-    "homeassistant.components.nuki.*",
-    "homeassistant.components.nws.*",
-    "homeassistant.components.nzbget.*",
-    "homeassistant.components.omnilogic.*",
-    "homeassistant.components.onboarding.*",
-    "homeassistant.components.ondilo_ico.*",
-    "homeassistant.components.onvif.*",
-    "homeassistant.components.ovo_energy.*",
-    "homeassistant.components.ozw.*",
-    "homeassistant.components.philips_js.*",
-    "homeassistant.components.ping.*",
-    "homeassistant.components.pioneer.*",
-    "homeassistant.components.plaato.*",
-    "homeassistant.components.plex.*",
-    "homeassistant.components.plugwise.*",
-    "homeassistant.components.plum_lightpad.*",
-    "homeassistant.components.point.*",
-    "homeassistant.components.profiler.*",
-    "homeassistant.components.rachio.*",
-    "homeassistant.components.ring.*",
-    "homeassistant.components.ruckus_unleashed.*",
-    "homeassistant.components.screenlogic.*",
-    "homeassistant.components.search.*",
-    "homeassistant.components.sense.*",
-    "homeassistant.components.sharkiq.*",
-    "homeassistant.components.sma.*",
-    "homeassistant.components.smartthings.*",
-    "homeassistant.components.solaredge.*",
-    "homeassistant.components.somfy.*",
-    "homeassistant.components.somfy_mylink.*",
-    "homeassistant.components.sonos.*",
-    "homeassistant.components.spotify.*",
-    "homeassistant.components.stt.*",
-    "homeassistant.components.system_health.*",
-    "homeassistant.components.system_log.*",
-    "homeassistant.components.tado.*",
-    "homeassistant.components.telegram_bot.*",
-    "homeassistant.components.template.*",
-    "homeassistant.components.toon.*",
-    "homeassistant.components.unifi.*",
-    "homeassistant.components.upnp.*",
-    "homeassistant.components.vera.*",
-    "homeassistant.components.verisure.*",
-    "homeassistant.components.vizio.*",
-    "homeassistant.components.wemo.*",
-    "homeassistant.components.withings.*",
-    "homeassistant.components.xbox.*",
-    "homeassistant.components.xiaomi_aqara.*",
-    "homeassistant.components.xiaomi_miio.*",
-    "homeassistant.components.yeelight.*",
-    "homeassistant.components.zha.*",
-    "homeassistant.components.zwave.*",
+    "homeassistant.components.blueprint.importer",
+    "homeassistant.components.blueprint.models",
+    "homeassistant.components.blueprint.websocket_api",
+    "homeassistant.components.cloud.client",
+    "homeassistant.components.cloud.http_api",
+    "homeassistant.components.conversation",
+    "homeassistant.components.conversation.default_agent",
+    "homeassistant.components.deconz.alarm_control_panel",
+    "homeassistant.components.deconz.binary_sensor",
+    "homeassistant.components.deconz.climate",
+    "homeassistant.components.deconz.cover",
+    "homeassistant.components.deconz.fan",
+    "homeassistant.components.deconz.light",
+    "homeassistant.components.deconz.lock",
+    "homeassistant.components.deconz.logbook",
+    "homeassistant.components.deconz.number",
+    "homeassistant.components.deconz.sensor",
+    "homeassistant.components.deconz.siren",
+    "homeassistant.components.deconz.switch",
+    "homeassistant.components.denonavr.config_flow",
+    "homeassistant.components.denonavr.media_player",
+    "homeassistant.components.denonavr.receiver",
+    "homeassistant.components.evohome",
+    "homeassistant.components.evohome.climate",
+    "homeassistant.components.evohome.water_heater",
+    "homeassistant.components.google_assistant.helpers",
+    "homeassistant.components.google_assistant.http",
+    "homeassistant.components.google_assistant.report_state",
+    "homeassistant.components.google_assistant.trait",
+    "homeassistant.components.gree.climate",
+    "homeassistant.components.gree.switch",
+    "homeassistant.components.harmony",
+    "homeassistant.components.harmony.config_flow",
+    "homeassistant.components.harmony.data",
+    "homeassistant.components.hassio",
+    "homeassistant.components.hassio.auth",
+    "homeassistant.components.hassio.binary_sensor",
+    "homeassistant.components.hassio.ingress",
+    "homeassistant.components.hassio.sensor",
+    "homeassistant.components.hassio.system_health",
+    "homeassistant.components.hassio.websocket_api",
+    "homeassistant.components.here_travel_time.sensor",
+    "homeassistant.components.home_plus_control",
+    "homeassistant.components.home_plus_control.api",
+    "homeassistant.components.homekit.aidmanager",
+    "homeassistant.components.homekit.config_flow",
+    "homeassistant.components.homekit.util",
+    "homeassistant.components.honeywell.climate",
+    "homeassistant.components.icloud",
+    "homeassistant.components.icloud.account",
+    "homeassistant.components.icloud.device_tracker",
+    "homeassistant.components.icloud.sensor",
+    "homeassistant.components.influxdb",
+    "homeassistant.components.input_datetime",
+    "homeassistant.components.izone.climate",
+    "homeassistant.components.konnected",
+    "homeassistant.components.konnected.config_flow",
+    "homeassistant.components.kostal_plenticore.helper",
+    "homeassistant.components.kostal_plenticore.select",
+    "homeassistant.components.kostal_plenticore.sensor",
+    "homeassistant.components.kostal_plenticore.switch",
+    "homeassistant.components.lovelace",
+    "homeassistant.components.lovelace.dashboard",
+    "homeassistant.components.lovelace.resources",
+    "homeassistant.components.lovelace.websocket",
+    "homeassistant.components.lutron_caseta",
+    "homeassistant.components.lutron_caseta.device_trigger",
+    "homeassistant.components.lutron_caseta.switch",
+    "homeassistant.components.lyric.climate",
+    "homeassistant.components.lyric.config_flow",
+    "homeassistant.components.lyric.sensor",
+    "homeassistant.components.melcloud",
+    "homeassistant.components.melcloud.climate",
+    "homeassistant.components.meteo_france.sensor",
+    "homeassistant.components.meteo_france.weather",
+    "homeassistant.components.minecraft_server",
+    "homeassistant.components.minecraft_server.helpers",
+    "homeassistant.components.minecraft_server.sensor",
+    "homeassistant.components.nilu.air_quality",
+    "homeassistant.components.nzbget",
+    "homeassistant.components.nzbget.config_flow",
+    "homeassistant.components.nzbget.coordinator",
+    "homeassistant.components.nzbget.switch",
+    "homeassistant.components.omnilogic.common",
+    "homeassistant.components.omnilogic.sensor",
+    "homeassistant.components.omnilogic.switch",
+    "homeassistant.components.onvif.base",
+    "homeassistant.components.onvif.binary_sensor",
+    "homeassistant.components.onvif.button",
+    "homeassistant.components.onvif.camera",
+    "homeassistant.components.onvif.config_flow",
+    "homeassistant.components.onvif.device",
+    "homeassistant.components.onvif.event",
+    "homeassistant.components.onvif.models",
+    "homeassistant.components.onvif.parsers",
+    "homeassistant.components.onvif.sensor",
+    "homeassistant.components.philips_js",
+    "homeassistant.components.philips_js.config_flow",
+    "homeassistant.components.philips_js.device_trigger",
+    "homeassistant.components.philips_js.light",
+    "homeassistant.components.philips_js.media_player",
+    "homeassistant.components.plex.media_player",
+    "homeassistant.components.profiler",
+    "homeassistant.components.solaredge.config_flow",
+    "homeassistant.components.solaredge.coordinator",
+    "homeassistant.components.solaredge.sensor",
+    "homeassistant.components.sonos",
+    "homeassistant.components.sonos.alarms",
+    "homeassistant.components.sonos.binary_sensor",
+    "homeassistant.components.sonos.diagnostics",
+    "homeassistant.components.sonos.entity",
+    "homeassistant.components.sonos.favorites",
+    "homeassistant.components.sonos.media_browser",
+    "homeassistant.components.sonos.media_player",
+    "homeassistant.components.sonos.number",
+    "homeassistant.components.sonos.sensor",
+    "homeassistant.components.sonos.speaker",
+    "homeassistant.components.sonos.statistics",
+    "homeassistant.components.system_health",
+    "homeassistant.components.telegram_bot.polling",
+    "homeassistant.components.template.number",
+    "homeassistant.components.template.sensor",
+    "homeassistant.components.toon",
+    "homeassistant.components.toon.config_flow",
+    "homeassistant.components.toon.models",
+    "homeassistant.components.unifi",
+    "homeassistant.components.unifi.config_flow",
+    "homeassistant.components.unifi.device_tracker",
+    "homeassistant.components.unifi.diagnostics",
+    "homeassistant.components.unifi.unifi_entity_base",
+    "homeassistant.components.vizio.config_flow",
+    "homeassistant.components.vizio.media_player",
+    "homeassistant.components.withings",
+    "homeassistant.components.withings.binary_sensor",
+    "homeassistant.components.withings.common",
+    "homeassistant.components.withings.config_flow",
+    "homeassistant.components.xbox",
+    "homeassistant.components.xbox.base_sensor",
+    "homeassistant.components.xbox.binary_sensor",
+    "homeassistant.components.xbox.browse_media",
+    "homeassistant.components.xbox.media_source",
+    "homeassistant.components.xbox.sensor",
+    "homeassistant.components.xiaomi_aqara",
+    "homeassistant.components.xiaomi_aqara.binary_sensor",
+    "homeassistant.components.xiaomi_aqara.lock",
+    "homeassistant.components.xiaomi_aqara.sensor",
+    "homeassistant.components.xiaomi_miio",
+    "homeassistant.components.xiaomi_miio.air_quality",
+    "homeassistant.components.xiaomi_miio.binary_sensor",
+    "homeassistant.components.xiaomi_miio.device",
+    "homeassistant.components.xiaomi_miio.device_tracker",
+    "homeassistant.components.xiaomi_miio.fan",
+    "homeassistant.components.xiaomi_miio.humidifier",
+    "homeassistant.components.xiaomi_miio.light",
+    "homeassistant.components.xiaomi_miio.sensor",
+    "homeassistant.components.xiaomi_miio.switch",
+    "homeassistant.components.yeelight",
+    "homeassistant.components.yeelight.light",
+    "homeassistant.components.yeelight.scanner",
+    "homeassistant.components.zha.alarm_control_panel",
+    "homeassistant.components.zha.api",
+    "homeassistant.components.zha.binary_sensor",
+    "homeassistant.components.zha.button",
+    "homeassistant.components.zha.climate",
+    "homeassistant.components.zha.config_flow",
+    "homeassistant.components.zha.core.channels",
+    "homeassistant.components.zha.core.channels.base",
+    "homeassistant.components.zha.core.channels.closures",
+    "homeassistant.components.zha.core.channels.general",
+    "homeassistant.components.zha.core.channels.homeautomation",
+    "homeassistant.components.zha.core.channels.hvac",
+    "homeassistant.components.zha.core.channels.lighting",
+    "homeassistant.components.zha.core.channels.lightlink",
+    "homeassistant.components.zha.core.channels.manufacturerspecific",
+    "homeassistant.components.zha.core.channels.measurement",
+    "homeassistant.components.zha.core.channels.protocol",
+    "homeassistant.components.zha.core.channels.security",
+    "homeassistant.components.zha.core.channels.smartenergy",
+    "homeassistant.components.zha.core.decorators",
+    "homeassistant.components.zha.core.device",
+    "homeassistant.components.zha.core.discovery",
+    "homeassistant.components.zha.core.gateway",
+    "homeassistant.components.zha.core.group",
+    "homeassistant.components.zha.core.helpers",
+    "homeassistant.components.zha.core.registries",
+    "homeassistant.components.zha.core.store",
+    "homeassistant.components.zha.core.typing",
+    "homeassistant.components.zha.cover",
+    "homeassistant.components.zha.device_action",
+    "homeassistant.components.zha.device_tracker",
+    "homeassistant.components.zha.entity",
+    "homeassistant.components.zha.fan",
+    "homeassistant.components.zha.light",
+    "homeassistant.components.zha.lock",
+    "homeassistant.components.zha.select",
+    "homeassistant.components.zha.sensor",
+    "homeassistant.components.zha.siren",
+    "homeassistant.components.zha.switch",
 ]
+
+# Component modules which should set no_implicit_reexport = true.
+NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
+    "homeassistant.components",
+    "homeassistant.components.diagnostics.*",
+}
 
 HEADER: Final = """
 # Automatically generated by hassfest.
 #
-# To update, run python3 -m script.hassfest
+# To update, run python3 -m script.hassfest -p mypy_config
 
 """.lstrip()
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
-    "python_version": "3.8",
+    "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
     "show_error_codes": "true",
     "follow_imports": "silent",
     # Enable some checks globally.
@@ -155,6 +240,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
+    "enable_error_code": "ignore-without-code",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
@@ -176,6 +262,25 @@ STRICT_SETTINGS: Final[list[str]] = [
     # "no_implicit_reexport",
 ]
 
+# Strict settings are already applied for core files.
+# To enable granular typing, add additional settings if core files are given.
+STRICT_SETTINGS_CORE: Final[list[str]] = [
+    "disallow_any_generics",
+]
+
+
+def _strict_module_in_ignore_list(
+    module: str, ignored_modules_set: set[str]
+) -> str | None:
+    if module in ignored_modules_set:
+        return module
+    if module.endswith("*"):
+        module = module[:-1]
+        for ignored_module in ignored_modules_set:
+            if ignored_module.startswith(module):
+                return ignored_module
+    return None
+
 
 def generate_and_validate(config: Config) -> str:
     """Validate and generate mypy config."""
@@ -186,11 +291,19 @@ def generate_and_validate(config: Config) -> str:
         lines = fp.readlines()
 
     # Filter empty and commented lines.
-    strict_modules: list[str] = [
+    parsed_modules: list[str] = [
         line.strip()
         for line in lines
         if line.strip() != "" and not line.startswith("#")
     ]
+
+    strict_modules: list[str] = []
+    strict_core_modules: list[str] = []
+    for module in parsed_modules:
+        if module.startswith("homeassistant.components"):
+            strict_modules.append(module)
+        else:
+            strict_core_modules.append(module)
 
     ignored_modules_set: set[str] = set(IGNORED_MODULES)
     for module in strict_modules:
@@ -201,13 +314,19 @@ def generate_and_validate(config: Config) -> str:
             config.add_error(
                 "mypy_config", f"Only components should be added: {module}"
             )
-        if module in ignored_modules_set:
+        if ignored_module := _strict_module_in_ignore_list(module, ignored_modules_set):
             config.add_error(
-                "mypy_config", f"Module '{module}' is in ignored list in mypy_config.py"
+                "mypy_config",
+                f"Module '{ignored_module}' is in ignored list in mypy_config.py",
             )
 
     # Validate that all modules exist.
-    all_modules = strict_modules + IGNORED_MODULES
+    all_modules = (
+        strict_modules
+        + strict_core_modules
+        + IGNORED_MODULES
+        + list(NO_IMPLICIT_REEXPORT_MODULES)
+    )
     for module in all_modules:
         if module.endswith(".*"):
             module_path = Path(module[:-2].replace(".", os.path.sep))
@@ -235,17 +354,37 @@ def generate_and_validate(config: Config) -> str:
     for key in STRICT_SETTINGS:
         mypy_config.set(general_section, key, "true")
 
+    # By default enable no_implicit_reexport only for homeassistant.*
+    # Disable it afterwards for all components
+    components_section = "mypy-homeassistant.*"
+    mypy_config.add_section(components_section)
+    mypy_config.set(components_section, "no_implicit_reexport", "true")
+
+    for core_module in strict_core_modules:
+        core_section = f"mypy-{core_module}"
+        mypy_config.add_section(core_section)
+        for key in STRICT_SETTINGS_CORE:
+            mypy_config.set(core_section, key, "true")
+
     # By default strict checks are disabled for components.
     components_section = "mypy-homeassistant.components.*"
     mypy_config.add_section(components_section)
     for key in STRICT_SETTINGS:
         mypy_config.set(components_section, key, "false")
+    mypy_config.set(components_section, "no_implicit_reexport", "false")
 
     for strict_module in strict_modules:
         strict_section = f"mypy-{strict_module}"
         mypy_config.add_section(strict_section)
         for key in STRICT_SETTINGS:
             mypy_config.set(strict_section, key, "true")
+        if strict_module in NO_IMPLICIT_REEXPORT_MODULES:
+            mypy_config.set(strict_section, "no_implicit_reexport", "true")
+
+    for reexport_module in NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules):
+        reexport_section = f"mypy-{reexport_module}"
+        mypy_config.add_section(reexport_section)
+        mypy_config.set(reexport_section, "no_implicit_reexport", "true")
 
     # Disable strict checks for tests
     tests_section = "mypy-tests.*"

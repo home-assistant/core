@@ -1,0 +1,12 @@
+{
+    "state": {
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "toggle": "P\u0159epnout"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "Automaticky",
+            "bypass": "Bypass",
+            "manual": "Manu\u00e1ln\u00ed"
+        }
+    }
+}

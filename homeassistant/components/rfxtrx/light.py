@@ -10,23 +10,13 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.const import CONF_DEVICES, STATE_ON
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    DEFAULT_SIGNAL_REPETITIONS,
-    DeviceTuple,
-    RfxtrxCommandEntity,
-    connect_auto_add,
-    get_device_id,
-    get_rfx_object,
-)
-from .const import (
-    COMMAND_OFF_LIST,
-    COMMAND_ON_LIST,
-    CONF_DATA_BITS,
-    CONF_SIGNAL_REPETITIONS,
-)
+from . import DeviceTuple, RfxtrxCommandEntity, async_setup_platform_entry
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,64 +32,29 @@ def supported(event: rfxtrxmod.RFXtrxEvent):
 
 
 async def async_setup_entry(
-    hass,
-    config_entry,
-    async_add_entities,
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up config entry."""
-    discovery_info = config_entry.data
-    device_ids: set[DeviceTuple] = set()
 
-    # Add switch from config file
-    entities = []
-    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
-        if (event := get_rfx_object(packet_id)) is None:
-            _LOGGER.error("Invalid device: %s", packet_id)
-            continue
-        if not supported(event):
-            continue
+    def _constructor(
+        event: rfxtrxmod.RFXtrxEvent,
+        auto: rfxtrxmod.RFXtrxEvent | None,
+        device_id: DeviceTuple,
+        entity_info: dict,
+    ):
+        return [
+            RfxtrxLight(
+                event.device,
+                device_id,
+                event=event if auto else None,
+            )
+        ]
 
-        device_id = get_device_id(
-            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
-        )
-        if device_id in device_ids:
-            continue
-        device_ids.add(device_id)
-
-        entity = RfxtrxLight(
-            event.device, device_id, entity_info.get(CONF_SIGNAL_REPETITIONS, 1)
-        )
-
-        entities.append(entity)
-
-    async_add_entities(entities)
-
-    @callback
-    def light_update(event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
-        """Handle light updates from the RFXtrx gateway."""
-        if not supported(event):
-            return
-
-        if device_id in device_ids:
-            return
-        device_ids.add(device_id)
-
-        _LOGGER.info(
-            "Added light (Device ID: %s Class: %s Sub: %s, Event: %s)",
-            event.device.id_string.lower(),
-            event.device.__class__.__name__,
-            event.device.subtype,
-            "".join(f"{x:02x}" for x in event.data),
-        )
-
-        entity = RfxtrxLight(
-            event.device, device_id, DEFAULT_SIGNAL_REPETITIONS, event=event
-        )
-
-        async_add_entities([entity])
-
-    # Subscribe to main RFXtrx events
-    connect_auto_add(hass, discovery_info, light_update)
+    await async_setup_platform_entry(
+        hass, config_entry, async_add_entities, supported, _constructor
+    )
 
 
 class RfxtrxLight(RfxtrxCommandEntity, LightEntity):

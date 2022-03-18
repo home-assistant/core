@@ -410,9 +410,15 @@ def test_service_schema():
             "entity_id": "all",
             "alias": "turn on kitchen lights",
         },
+        {"service": "scene.turn_on", "metadata": {}},
     )
     for value in options:
         cv.SERVICE_SCHEMA(value)
+
+    # Check metadata is removed from the validated output
+    assert cv.SERVICE_SCHEMA({"service": "scene.turn_on", "metadata": {}}) == {
+        "service": "scene.turn_on"
+    }
 
 
 def test_entity_service_schema():
@@ -1184,12 +1190,61 @@ def test_key_value_schemas():
         schema({"mode": mode, "data": data})
 
 
+def test_key_value_schemas_with_default():
+    """Test key value schemas."""
+    schema = vol.Schema(
+        cv.key_value_schemas(
+            "mode",
+            {
+                "number": vol.Schema({"mode": "number", "data": int}),
+                "string": vol.Schema({"mode": "string", "data": str}),
+            },
+            vol.Schema({"mode": cv.dynamic_template}),
+            "a cool template",
+        )
+    )
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema(True)
+        assert str(excinfo.value) == "Expected a dictionary"
+
+    for mode in None, {"a": "dict"}, "invalid":
+        with pytest.raises(vol.Invalid) as excinfo:
+            schema({"mode": mode})
+        assert (
+            str(excinfo.value)
+            == f"Unexpected value for mode: '{mode}'. Expected number, string, a cool template"
+        )
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema({"mode": "number", "data": "string-value"})
+    assert str(excinfo.value) == "expected int for dictionary value @ data['data']"
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema({"mode": "string", "data": 1})
+    assert str(excinfo.value) == "expected str for dictionary value @ data['data']"
+
+    for mode, data in (("number", 1), ("string", "hello")):
+        schema({"mode": mode, "data": data})
+    schema({"mode": "{{ 1 + 1}}"})
+
+
 def test_script(caplog):
     """Test script validation is user friendly."""
     for data, msg in (
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
         ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
+        (
+            {"condition": "not", "conditions": {"condition": "invalid"}},
+            "Unexpected value for condition: 'invalid'",
+        ),
+        # The validation error message could be improved to explain that this is not
+        # a valid shorthand template
+        (
+            {"condition": "not", "conditions": "not a dynamic template"},
+            "Expected a dictionary",
+        ),
         ({"event": None}, "string value is None for dictionary value @ data['event']"),
         (
             {"device_id": None},

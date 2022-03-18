@@ -1,17 +1,24 @@
 """Provide functionality to interact with the vlc telnet interface."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, TypeVar
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
-import voluptuous as vol
+from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components import media_source
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerEntity,
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -24,25 +31,16 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
+from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, LOGGER
+from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DOMAIN, LOGGER
 
 MAX_VOLUME = 500
 
@@ -58,35 +56,11 @@ SUPPORT_VLC = (
     | SUPPORT_STOP
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_VOLUME_SET
-)
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
+    | SUPPORT_BROWSE_MEDIA
 )
 
-Func = TypeVar("Func", bound=Callable[..., Any])
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the vlc platform."""
-    LOGGER.warning(
-        "Loading VLC media player Telnet integration via platform setup is deprecated; "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
+_T = TypeVar("_T", bound="VlcDevice")
+_P = ParamSpec("_P")
 
 
 async def async_setup_entry(
@@ -101,11 +75,13 @@ async def async_setup_entry(
     async_add_entities([VlcDevice(entry, vlc, name, available)], True)
 
 
-def catch_vlc_errors(func: Func) -> Func:
+def catch_vlc_errors(
+    func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
     """Catch VLC errors."""
 
     @wraps(func)
-    async def wrapper(self: VlcDevice, *args: Any, **kwargs: Any) -> Any:
+    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Catch VLC errors and modify availability."""
         try:
             await func(self, *args, **kwargs)
@@ -117,7 +93,7 @@ def catch_vlc_errors(func: Func) -> Func:
                 LOGGER.error("Connection error: %s", err)
                 self._available = False
 
-    return cast(Func, wrapper)
+    return wrapper
 
 
 class VlcDevice(MediaPlayerEntity):
@@ -148,6 +124,7 @@ class VlcDevice(MediaPlayerEntity):
             manufacturer="VideoLAN",
             name=name,
         )
+        self._using_addon = config_entry.source == SOURCE_HASSIO
 
     @catch_vlc_errors
     async def async_update(self) -> None:
@@ -201,10 +178,16 @@ class VlcDevice(MediaPlayerEntity):
         self._media_artist = data.get(0, {}).get("artist")
         self._media_title = data.get(0, {}).get("title")
 
-        if not self._media_title:
-            # Fall back to filename.
-            if data_info := data.get("data"):
-                self._media_title = data_info["filename"]
+        if self._media_title:
+            return
+
+        # Fall back to filename.
+        if data_info := data.get("data"):
+            self._media_title = data_info["filename"]
+
+            # Strip out auth signatures if streaming local media
+            if self._media_title and (pos := self._media_title.find("?authSig=")) != -1:
+                self._media_title = self._media_title[:pos]
 
     @property
     def name(self) -> str:
@@ -321,13 +304,21 @@ class VlcDevice(MediaPlayerEntity):
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media from a URL or file."""
-        if media_type != MEDIA_TYPE_MUSIC:
-            LOGGER.error(
-                "Invalid media type %s. Only %s is supported",
-                media_type,
-                MEDIA_TYPE_MUSIC,
+        # Handle media_source
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            media_type = sourced_media.mime_type
+            media_id = sourced_media.url
+
+        if media_type != MEDIA_TYPE_MUSIC and not media_type.startswith("audio/"):
+            raise HomeAssistantError(
+                f"Invalid media type {media_type}. Only {MEDIA_TYPE_MUSIC} is supported"
             )
-            return
+
+        # If media ID is a relative URL, we serve it from HA.
+        media_id = async_process_play_media_url(
+            self.hass, media_id, for_supervisor_network=self._using_addon
+        )
 
         await self._vlc.add(media_id)
         self._state = STATE_PLAYING
@@ -352,3 +343,13 @@ class VlcDevice(MediaPlayerEntity):
         """Enable/disable shuffle mode."""
         shuffle_command = "on" if shuffle else "off"
         await self._vlc.random(shuffle_command)
+
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )
