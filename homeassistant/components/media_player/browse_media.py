@@ -10,7 +10,9 @@ import yarl
 
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import (
+    NoURLAvailableError,
     get_supervisor_network_url,
     get_url,
     is_hass_url,
@@ -52,7 +54,12 @@ def async_process_play_media_url(
             base_url = get_supervisor_network_url(hass)
 
         if not base_url:
-            base_url = get_url(hass)
+            try:
+                base_url = get_url(hass)
+            except NoURLAvailableError as err:
+                raise HomeAssistantError(
+                    "Unable to determine Home Assistant URL to send to device"
+                ) from err
 
         media_content_id = f"{base_url}{media_content_id}"
 
