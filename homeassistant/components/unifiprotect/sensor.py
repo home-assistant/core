@@ -404,7 +404,7 @@ MOTION_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 CAMERA_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="doorbell_last_trip_time",
-        name="Doorbell Last Trip Time",
+        name="Last Doorbell Ring",
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.has_chime",
@@ -415,7 +415,7 @@ CAMERA_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 LIGHT_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="motion_last_trip_time",
-        name="Motion Detected Last Trip Time",
+        name="Last Motion Detected",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_last_trip_value="last_motion",
     ),
@@ -424,21 +424,21 @@ LIGHT_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 SENSE_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="door_last_trip_time",
-        name="Contact Last Trip Time",
+        name="Last Contact",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_last_trip_value="open_status_changed_at",
         ufp_enabled="is_contact_sensor_enabled",
     ),
     ProtectSensorEntityDescription(
         key="motion_last_trip_time",
-        name="Motion Detected Last Trip Time",
+        name="Last Motion Detected",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_last_trip_value="motion_detected_at",
         ufp_enabled="is_motion_sensor_enabled",
     ),
     ProtectSensorEntityDescription(
         key="tampering_last_trip_time",
-        name="Tampering Detected Last Trip Time",
+        name="Last Tampering Detected",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_last_trip_value="tampering_detected_at",
     ),
