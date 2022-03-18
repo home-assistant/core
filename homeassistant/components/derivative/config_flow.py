@@ -7,7 +7,9 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_NAME,
     CONF_SOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
     TIME_DAYS,
     TIME_HOURS,
     TIME_MINUTES,
@@ -27,21 +29,40 @@ from .const import (
     DOMAIN,
 )
 
-UNIT_PREFIXES = ["none", "n", "µ", "m", "k", "M", "G", "T"]
-TIME_UNITS = [TIME_SECONDS, TIME_MINUTES, TIME_HOURS, TIME_DAYS]
+UNIT_PREFIXES = [
+    {"value": "none", "label": "none"},
+    {"value": "n", "label": "n (nano)"},
+    {"value": "µ", "label": "µ (micro)"},
+    {"value": "m", "label": "m (milli)"},
+    {"value": "k", "label": "k (kilo)"},
+    {"value": "M", "label": "M (mega)"},
+    {"value": "G", "label": "T (tera)"},
+    {"value": "T", "label": "P (peta)"},
+]
+TIME_UNITS = [
+    {"value": TIME_SECONDS, "label": "s (seconds)"},
+    {"value": TIME_MINUTES, "label": "min (minutes)"},
+    {"value": TIME_HOURS, "label": "h (hours)"},
+    {"value": TIME_DAYS, "label": "d (days)"},
+]
 
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            {"number": {"min": 0, "max": 6, "mode": "box"}}
+            {
+                "number": {
+                    "min": 0,
+                    "max": 6,
+                    "mode": "box",
+                    CONF_UNIT_OF_MEASUREMENT: "decimals",
+                }
+            }
         ),
-        vol.Required(CONF_TIME_WINDOW): selector.selector(
-            {"duration": {"as_dict": True}}
-        ),
-        vol.Required(CONF_UNIT_PREFIX, default=TIME_HOURS): selector.selector(
+        vol.Required(CONF_TIME_WINDOW): selector.selector({"duration": {}}),
+        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.selector(
             {"select": {"options": UNIT_PREFIXES}}
         ),
-        vol.Required(CONF_UNIT_TIME): selector.selector(
+        vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.selector(
             {"select": {"options": TIME_UNITS}}
         ),
     }
@@ -49,7 +70,7 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required("name"): selector.selector({"text": {}}),
+        vol.Required(CONF_NAME): selector.selector({"text": {}}),
         vol.Required(CONF_SOURCE): selector.selector(
             {"entity": {"domain": "sensor"}},
         ),
@@ -69,4 +90,4 @@ class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return cast(str, options["name"])
+        return cast(str, options[CONF_NAME])
