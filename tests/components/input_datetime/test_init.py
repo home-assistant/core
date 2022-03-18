@@ -129,7 +129,9 @@ async def test_set_datetime(hass):
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30, tzinfo=datetime.timezone.utc)
+    dt_obj = datetime.datetime(
+        2017, 9, 7, 19, 46, 30, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
 
     await async_set_date_and_time(hass, entity_id, dt_obj)
 
@@ -155,7 +157,9 @@ async def test_set_datetime_2(hass):
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30, tzinfo=datetime.timezone.utc)
+    dt_obj = datetime.datetime(
+        2017, 9, 7, 19, 46, 30, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
 
     await async_set_datetime(hass, entity_id, dt_obj)
 
@@ -181,7 +185,9 @@ async def test_set_datetime_3(hass):
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30, tzinfo=datetime.timezone.utc)
+    dt_obj = datetime.datetime(
+        2017, 9, 7, 19, 46, 30, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
 
     await async_set_timestamp(hass, entity_id, dt_util.as_utc(dt_obj).timestamp())
 
