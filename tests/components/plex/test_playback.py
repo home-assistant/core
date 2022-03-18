@@ -54,7 +54,9 @@ async def test_media_player_playback(
 
     media_player = "media_player.plex_plex_web_chrome"
     requests_mock.post("/playqueues", text=playqueue_created)
-    requests_mock.get("/player/playback/playMedia", status_code=HTTPStatus.OK)
+    playmedia_mock = requests_mock.get(
+        "/player/playback/playMedia", status_code=HTTPStatus.OK
+    )
 
     # Test media lookup failure
     payload = '{"library_name": "Movies", "title": "Movie 1" }'
@@ -70,6 +72,7 @@ async def test_media_player_playback(
                 },
                 True,
             )
+            assert not playmedia_mock.called
     assert f"No {MEDIA_TYPE_MOVIE} results in 'Movies' for" in str(excinfo.value)
 
     movie1 = MockPlexMedia("Movie", "movie")
@@ -89,12 +92,12 @@ async def test_media_player_playback(
             },
             True,
         )
+        assert playmedia_mock.called
 
     # Test multiple choices with exact match
+    playmedia_mock.reset()
     movies = [movie1, movie2]
-    with patch("plexapi.library.LibrarySection.search", return_value=movies), patch(
-        "homeassistant.components.plex.server.PlexServer.create_playqueue"
-    ) as mock_create_playqueue:
+    with patch("plexapi.library.LibrarySection.search", return_value=movies):
         assert await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -105,9 +108,10 @@ async def test_media_player_playback(
             },
             True,
         )
-        assert mock_create_playqueue.call_args.args == (movie1,)
+        assert playmedia_mock.called
 
     # Test multiple choices without exact match
+    playmedia_mock.reset()
     movies = [movie2, movie3]
     with pytest.raises(HomeAssistantError) as excinfo:
         payload = '{"library_name": "Movies", "title": "Movie" }'
@@ -122,6 +126,7 @@ async def test_media_player_playback(
                 },
                 True,
             )
+            assert not playmedia_mock.called
     assert "Multiple matches, make content_id more specific" in str(excinfo.value)
 
     # Test multiple choices with allow_multiple
@@ -140,3 +145,4 @@ async def test_media_player_playback(
             True,
         )
         assert mock_create_playqueue.call_args.args == (movies,)
+        assert playmedia_mock.called
