@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any, Final
 
 from aioairzone.const import (
@@ -28,13 +29,28 @@ from . import AirzoneEntity
 from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
 
-BINARY_SENSOR_TYPES: Final[tuple[BinarySensorEntityDescription, ...]] = (
-    BinarySensorEntityDescription(
+
+@dataclass
+class AirzoneBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """A class that describes airzone binary sensor entities."""
+
+    attributes: dict[str, str] | None = None
+
+
+BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
+    AirzoneBinarySensorEntityDescription(
+        attributes={
+            "air": AZD_AIR_DEMAND,
+            "floor": AZD_FLOOR_DEMAND,
+        },
         device_class=DEVICE_CLASS_RUNNING,
         key=AZD_DEMAND,
         name="Demand",
     ),
-    BinarySensorEntityDescription(
+    AirzoneBinarySensorEntityDescription(
+        attributes={
+            "errors": AZD_ERRORS,
+        },
         device_class=DEVICE_CLASS_PROBLEM,
         key=AZD_PROBLEMS,
         name="Problem",
@@ -71,7 +87,7 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        description: BinarySensorEntityDescription,
+        description: AirzoneBinarySensorEntityDescription,
         entry: ConfigEntry,
         system_zone_id: str,
         zone_data: dict[str, Any],
@@ -81,20 +97,16 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
         self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
         self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}_{description.key}"
         self.entity_description = description
+        self.attributes = description.attributes
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return state attributes."""
         _state_attr = None
-        if self.entity_description.key == AZD_DEMAND:
-            _state_attr = {
-                "air": self.get_zone_value(AZD_AIR_DEMAND),
-                "floor": self.get_zone_value(AZD_FLOOR_DEMAND),
-            }
-        elif self.entity_description.key == AZD_PROBLEMS:
-            _state_attr = {
-                "errors": self.get_zone_value(AZD_ERRORS),
-            }
+        if self.attributes:
+            _state_attr = {}
+            for key, val in self.attributes.items():
+                _state_attr[key] = self.get_zone_value(val)
         return _state_attr
 
     @property
