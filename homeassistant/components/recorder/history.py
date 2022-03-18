@@ -6,8 +6,9 @@ from itertools import groupby
 import logging
 import time
 
-from sqlalchemy import and_, bindparam, func
+from sqlalchemy import Text, and_, bindparam, func
 from sqlalchemy.ext import baked
+from sqlalchemy.sql.expression import literal
 
 from homeassistant.components import recorder
 from homeassistant.core import split_entity_id
@@ -44,13 +45,20 @@ NEED_ATTRIBUTE_DOMAINS = {
     "water_heater",
 }
 
-QUERY_STATES = [
+BASE_STATES = [
     States.domain,
     States.entity_id,
     States.state,
     States.attributes,
     States.last_changed,
     States.last_updated,
+]
+QUERY_STATE_NO_ATTR = [
+    *BASE_STATES,
+    literal(value=None, type_=Text).label("shared_attrs"),
+]
+QUERY_STATES = [
+    *BASE_STATES,
     StateAttributes.shared_attrs,
 ]
 
@@ -92,10 +100,17 @@ def get_significant_states_with_session(
     thermostat so that we get current temperature in our graphs).
     """
     timer_start = time.perf_counter()
-
-    baked_query = hass.data[HISTORY_BAKERY](
-        lambda session: session.query(*QUERY_STATES)
+    need_attributes = (
+        entity_ids is None
+        or not minimal_response
+        or any(
+            split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS
+            for ent_id in entity_ids
+        )
     )
+    query_keys = QUERY_STATES if need_attributes else QUERY_STATE_NO_ATTR
+
+    baked_query = hass.data[HISTORY_BAKERY](lambda session: session.query(*query_keys))
 
     if significant_changes_only:
         baked_query += lambda q: q.filter(
@@ -120,9 +135,11 @@ def get_significant_states_with_session(
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
 
-    baked_query += lambda q: q.outerjoin(
-        StateAttributes, States.attributes_id == StateAttributes.attributes_id
-    )
+    if need_attributes:
+        baked_query += lambda q: q.outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
+
     baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
 
     states = execute(
@@ -141,6 +158,7 @@ def get_significant_states_with_session(
         states,
         start_time,
         entity_ids,
+        need_attributes,
         filters,
         include_start_time_state,
         minimal_response,
@@ -244,7 +262,7 @@ def _get_states_with_session(
     hass,
     session,
     utc_point_in_time,
-    include_attributes,
+    need_attributes,
     entity_ids=None,
     run=None,
     filters=None,
@@ -264,7 +282,8 @@ def _get_states_with_session(
 
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
-    query = session.query(*QUERY_STATES)
+    query_keys = QUERY_STATES if need_attributes else QUERY_STATE_NO_ATTR
+    query = session.query(*query_keys)
 
     if entity_ids:
         # We got an include-list of entities, accelerate the query by filtering already
@@ -285,7 +304,7 @@ def _get_states_with_session(
             most_recent_state_ids,
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
-        if include_attributes:
+        if need_attributes:
             query = query.outerjoin(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
             )
@@ -326,7 +345,7 @@ def _get_states_with_session(
         query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
         if filters:
             query = filters.apply(query)
-        if include_attributes:
+        if need_attributes:
             query = query.outerjoin(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
             )
@@ -364,6 +383,7 @@ def _sorted_states_to_dict(
     states,
     start_time,
     entity_ids,
+    need_attributes=True,
     filters=None,
     include_start_time_state=True,
     minimal_response=False,
@@ -380,16 +400,10 @@ def _sorted_states_to_dict(
     axis correctly.
     """
     result = defaultdict(list)
-    include_attributes = True
+
     # Set all entity IDs to empty lists in result set to maintain the order
     if entity_ids is not None:
-        include_attributes = not minimal_response
         for ent_id in entity_ids:
-            if (
-                not include_attributes
-                and split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS
-            ):
-                include_attributes = True
             result[ent_id] = []
 
     # Get the states at the start time
@@ -400,7 +414,7 @@ def _sorted_states_to_dict(
             hass,
             session,
             start_time,
-            include_attributes,
+            need_attributes,
             entity_ids,
             run=run,
             filters=filters,
