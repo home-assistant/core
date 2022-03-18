@@ -33,10 +33,8 @@ from homeassistant.components.androidtv.const import (
     PROP_ETHMAC,
     PROP_WIFIMAC,
 )
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PLATFORM, CONF_PORT
-from homeassistant.setup import async_setup_component
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 from tests.components.androidtv.patchers import isfile
@@ -132,28 +130,6 @@ async def test_user(hass, config, eth_mac, wifi_mac):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import(hass):
-    """Test import config."""
-
-    # test with all provided
-    with patch(
-        CONNECT_METHOD,
-        return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONFIG_PYTHON_ADB,
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == HOST
-        assert result["data"] == CONFIG_PYTHON_ADB
-
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_user_adbkey(hass):
     """Test user step with adbkey file."""
     config_data = CONFIG_PYTHON_ADB.copy()
@@ -174,25 +150,6 @@ async def test_user_adbkey(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == config_data
-
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_data(hass):
-    """Test import from configuration file."""
-    config_data = CONFIG_PYTHON_ADB.copy()
-    config_data[CONF_PLATFORM] = DOMAIN
-    config_data[CONF_ADBKEY] = ADBKEY
-    config_data[CONF_TURN_OFF_COMMAND] = "off"
-    platform_data = {MP_DOMAIN: config_data}
-
-    with patch(
-        CONNECT_METHOD,
-        return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP, PATCH_ISFILE, PATCH_ACCESS:
-
-        assert await async_setup_component(hass, MP_DOMAIN, platform_data)
-        await hass.async_block_till_done()
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -315,23 +272,6 @@ async def test_abort_if_host_exist(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
-
-
-async def test_abort_import_if_host_exist(hass):
-    """Test we abort if component is already setup."""
-    MockConfigEntry(
-        domain=DOMAIN, data=CONFIG_ADB_SERVER, unique_id=ETH_MAC
-    ).add_to_hass(hass)
-
-    # Should fail, same Host in entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=CONFIG_ADB_SERVER,
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
 
 
 async def test_abort_if_unique_exist(hass):
