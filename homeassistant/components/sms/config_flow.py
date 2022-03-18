@@ -11,6 +11,7 @@ from homeassistant.helpers import selector
 from .const import (  # pylint: disable=unused-import
     CONF_BAUD_SPEED,
     DEFAULT_BAUD_SPEED,
+    DEFAULT_BAUD_SPEEDS,
     DOMAIN,
 )
 from .gateway import create_sms_gateway
@@ -21,14 +22,7 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE): str,
         vol.Optional(CONF_BAUD_SPEED, default=DEFAULT_BAUD_SPEED): selector.selector(
-            {
-                "select": {
-                    "options": [
-                        {"value": DEFAULT_BAUD_SPEED, "label": "Auto"},
-                        {"value": 50, "label": "50"},
-                    ]
-                }
-            }
+            {"select": {"options": DEFAULT_BAUD_SPEEDS}}
         ),
     }
 )
