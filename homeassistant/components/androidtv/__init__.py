@@ -7,7 +7,7 @@ from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
 from androidtv.setup_async import setup
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
@@ -154,10 +154,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if not aftv:
         raise ConfigEntryNotReady(error_message)
-
-    # migrate existing entity to new unique ID
-    if entry.source == SOURCE_IMPORT:
-        _migrate_aftv_entity(hass, aftv, entry.unique_id)
 
     async def async_close_connection(event):
         """Close Android TV connection on HA Stop."""
