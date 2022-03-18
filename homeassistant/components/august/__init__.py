@@ -1,10 +1,15 @@
 """Support for August devices."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import ValuesView
 from itertools import chain
 import logging
 
 from aiohttp import ClientError, ClientResponseError
+from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.exceptions import AugustApiAIOHTTPError
+from yalexs.lock import Lock, LockDetail
 from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 
@@ -18,19 +23,19 @@ from homeassistant.exceptions import (
 )
 
 from .activity import ActivityStream
-from .const import DATA_AUGUST, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
+from .const import DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-API_CACHED_ATTRS = (
+API_CACHED_ATTRS = {
     "door_state",
     "door_state_datetime",
     "lock_status",
     "lock_status_datetime",
-)
+}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -52,7 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    hass.data[DOMAIN][entry.entry_id][DATA_AUGUST].async_stop()
+    data: AugustData = hass.data[DOMAIN][entry.entry_id]
+    data.async_stop()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -78,10 +84,8 @@ async def async_setup_august(
     await august_gateway.async_refresh_access_token_if_needed()
 
     hass.data.setdefault(DOMAIN, {})
-    data = hass.data[DOMAIN][config_entry.entry_id] = {
-        DATA_AUGUST: AugustData(hass, august_gateway)
-    }
-    await data[DATA_AUGUST].async_setup()
+    data = hass.data[DOMAIN][config_entry.entry_id] = AugustData(hass, august_gateway)
+    await data.async_setup()
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
@@ -189,16 +193,16 @@ class AugustData(AugustSubscriberMixin):
         self.activity_stream.async_stop()
 
     @property
-    def doorbells(self):
+    def doorbells(self) -> ValuesView[Doorbell]:
         """Return a list of py-august Doorbell objects."""
         return self._doorbells_by_id.values()
 
     @property
-    def locks(self):
+    def locks(self) -> ValuesView[Lock]:
         """Return a list of py-august Lock objects."""
         return self._locks_by_id.values()
 
-    def get_device_detail(self, device_id):
+    def get_device_detail(self, device_id: str) -> DoorbellDetail | LockDetail:
         """Return the py-august LockDetail or DoorbellDetail object for a device."""
         return self._device_detail_by_id[device_id]
 

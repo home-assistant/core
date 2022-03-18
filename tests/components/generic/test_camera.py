@@ -280,7 +280,7 @@ async def test_setup_alternative_options(hass, hass_ws_client):
         },
     )
     await hass.async_block_till_done()
-    assert hass.data["camera"].get_entity("camera.config_test")
+    assert hass.states.get("camera.config_test")
 
 
 async def test_no_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png):

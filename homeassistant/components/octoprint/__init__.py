@@ -1,4 +1,6 @@
 """Support for monitoring OctoPrint 3D printers."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from typing import cast
@@ -175,7 +177,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {"coordinator": coordinator, "client": client}
+    hass.data[DOMAIN][entry.entry_id] = {
+        "coordinator": coordinator,
+        "client": client,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

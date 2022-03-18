@@ -228,7 +228,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
-    if not entry.unique_id or ":" not in entry.unique_id and is_ip_address(host):
+    if (not entry.unique_id or ":" not in entry.unique_id) and is_ip_address(host):
+        _LOGGER.debug(
+            "Unique id for %s is missing during setup, trying to fill from discovery",
+            host,
+        )
         if device := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, device)
 
@@ -275,9 +279,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         keypad.add_callback(_element_changed)
 
     try:
-        if not await async_wait_for_elk_to_sync(
-            elk, LOGIN_TIMEOUT, SYNC_TIMEOUT, conf[CONF_HOST]
-        ):
+        if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):
             return False
     except asyncio.TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
@@ -327,7 +329,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_wait_for_elk_to_sync(
-    elk: elkm1.Elk, login_timeout: int, sync_timeout: int, conf_host: str
+    elk: elkm1.Elk,
+    login_timeout: int,
+    sync_timeout: int,
 ) -> bool:
     """Wait until the elk has finished sync. Can fail login or timeout."""
 
@@ -347,21 +351,32 @@ async def async_wait_for_elk_to_sync(
             login_event.set()
             sync_event.set()
 
+    def first_response(*args, **kwargs):
+        _LOGGER.debug("ElkM1 received first response (VN)")
+        login_event.set()
+
     def sync_complete():
         sync_event.set()
 
     success = True
     elk.add_handler("login", login_status)
+    # VN is the first command sent for panel, when we get
+    # it back we now we are logged in either with or without a password
+    elk.add_handler("VN", first_response)
     elk.add_handler("sync_complete", sync_complete)
-    events = ((login_event, login_timeout), (sync_event, sync_timeout))
-
-    for event, timeout in events:
+    for name, event, timeout in (
+        ("login", login_event, login_timeout),
+        ("sync_complete", sync_event, sync_timeout),
+    ):
+        _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
         try:
             async with async_timeout.timeout(timeout):
                 await event.wait()
         except asyncio.TimeoutError:
+            _LOGGER.debug("Timed out waiting for %s event", name)
             elk.disconnect()
             raise
+        _LOGGER.debug("Received %s event", name)
 
     return success
 

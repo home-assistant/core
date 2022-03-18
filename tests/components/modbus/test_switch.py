@@ -34,14 +34,15 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}"
-ENTITY_ID2 = f"{ENTITY_ID}2"
+ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+ENTITY_ID2 = f"{ENTITY_ID}_2"
 
 
 @pytest.mark.parametrize(
@@ -281,7 +282,7 @@ async def test_restore_state_switch(hass, mock_test_state, mock_modbus):
                     CONF_SCAN_INTERVAL: 0,
                 },
                 {
-                    CONF_NAME: f"{TEST_ENTITY_NAME}2",
+                    CONF_NAME: f"{TEST_ENTITY_NAME} 2",
                     CONF_ADDRESS: 18,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SCAN_INTERVAL: 0,
@@ -395,3 +396,15 @@ async def test_delay_switch(hass, mock_modbus):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_no_discovery_info_switch(hass, caplog):
+    """Test setup without discovery info."""
+    assert SWITCH_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {SWITCH_DOMAIN: {"platform": MODBUS_DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert SWITCH_DOMAIN in hass.config.components

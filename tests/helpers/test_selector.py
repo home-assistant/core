@@ -3,7 +3,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.util import dt as dt_util
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 
@@ -35,12 +34,6 @@ def test_invalid_base_schema(schema):
     """Test base schema validation."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector(schema)
-
-
-def test_validate_selector():
-    """Test return is the same as input."""
-    schema = {"device": {"manufacturer": "mock-manuf", "model": "mock-model"}}
-    assert schema == selector.validate_selector(schema)
 
 
 def _test_selector(
@@ -99,6 +92,11 @@ def _test_selector(
             ("abc123",),
             (None,),
         ),
+        (
+            {"multiple": True},
+            (["abc123", "def456"],),
+            ("abc123", None, ["abc123", None]),
+        ),
     ),
 )
 def test_device_selector_schema(schema, valid_selections, invalid_selections):
@@ -122,6 +120,17 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections):
             {"integration": "zha", "domain": "binary_sensor", "device_class": "motion"},
             ("binary_sensor.abc123", FAKE_UUID),
             (None, "sensor.abc123"),
+        ),
+        (
+            {"multiple": True, "domain": "sensor"},
+            (["sensor.abc123", "sensor.def456"], ["sensor.abc123", FAKE_UUID]),
+            (
+                "sensor.abc123",
+                FAKE_UUID,
+                None,
+                "abc123",
+                ["sensor.abc123", "light.def456"],
+            ),
         ),
     ),
 )
@@ -165,6 +174,11 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections):
             ("abc123",),
             (None,),
         ),
+        (
+            {"multiple": True},
+            ((["abc123", "def456"],)),
+            (None, "abc123", ["abc123", None]),
+        ),
     ),
 )
 def test_area_selector_schema(schema, valid_selections, invalid_selections):
@@ -191,11 +205,25 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections):
             (),
         ),
         ({"min": 10, "max": 1000, "mode": "slider", "step": 0.5}, (), ()),
+        ({"mode": "box"}, (10,), ()),
     ),
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections):
     """Test number selector."""
     _test_selector("number", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        {},  # Must have mandatory fields
+        {"mode": "slider"},  # Must have min+max in slider mode
+    ),
+)
+def test_number_selector_schema_error(schema):
+    """Test select selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"number": schema})
 
 
 @pytest.mark.parametrize(
@@ -222,9 +250,7 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_time_selector_schema(schema, valid_selections, invalid_selections):
     """Test time selector."""
-    _test_selector(
-        "time", schema, valid_selections, invalid_selections, dt_util.parse_time
-    )
+    _test_selector("time", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
@@ -300,6 +326,16 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
             ("red", "green", "blue"),
             ("cat", 0, None),
         ),
+        (
+            {
+                "options": [
+                    {"value": "red", "label": "Ruby Red"},
+                    {"value": "green", "label": "Emerald Green"},
+                ]
+            },
+            ("red", "green"),
+            ("cat", 0, None),
+        ),
     ),
 )
 def test_select_selector_schema(schema, valid_selections, invalid_selections):
@@ -310,12 +346,142 @@ def test_select_selector_schema(schema, valid_selections, invalid_selections):
 @pytest.mark.parametrize(
     "schema",
     (
-        {},
-        {"options": {"hello": "World"}},
-        {"options": []},
+        {},  # Must have options
+        {"options": {"hello": "World"}},  # Options must be a list
+        {"options": []},  # Must have at least option
+        # Options must be strings or value / label pairs
+        {"options": [{"hello": "World"}]},
+        # Options must all be of the same type
+        {"options": ["red", {"value": "green", "label": "Emerald Green"}]},
     ),
 )
 def test_select_selector_schema_error(schema):
     """Test select selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"select": schema})
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {"entity_id": "sensor.abc"},
+            ("friendly_name", "device_class"),
+            (None,),
+        ),
+    ),
+)
+def test_attribute_selector_schema(schema, valid_selections, invalid_selections):
+    """Test attribute selector."""
+    _test_selector("attribute", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ({"seconds": 10},),
+            (None, {}),
+        ),
+    ),
+)
+def test_duration_selector_schema(schema, valid_selections, invalid_selections):
+    """Test duration selector."""
+    _test_selector("duration", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ("mdi:abc",),
+            (None,),
+        ),
+    ),
+)
+def test_icon_selector_schema(schema, valid_selections, invalid_selections):
+    """Test icon selector."""
+    _test_selector("icon", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ("abc",),
+            (None,),
+        ),
+    ),
+)
+def test_theme_selector_schema(schema, valid_selections, invalid_selections):
+    """Test theme selector."""
+    _test_selector("theme", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            (
+                {
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+                {
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+            (None, "abc", {}),
+        ),
+    ),
+)
+def test_media_selector_schema(schema, valid_selections, invalid_selections):
+    """Test media selector."""
+
+    def drop_metadata(data):
+        """Drop metadata key from the input."""
+        data.pop("metadata", None)
+        return data
+
+    _test_selector("media", schema, valid_selections, invalid_selections, drop_metadata)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            (
+                {
+                    "latitude": 1.0,
+                    "longitude": 2.0,
+                },
+                {
+                    "latitude": 1.0,
+                    "longitude": 2.0,
+                    "radius": 3.0,
+                },
+            ),
+            (
+                None,
+                "abc",
+                {},
+                {"latitude": 1.0},
+                {"longitude": 1.0},
+                {"latitude": 1.0, "longitude": "1.0"},
+            ),
+        ),
+    ),
+)
+def test_location_selector_schema(schema, valid_selections, invalid_selections):
+    """Test location selector."""
+
+    _test_selector("location", schema, valid_selections, invalid_selections)

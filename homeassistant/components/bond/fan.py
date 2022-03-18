@@ -10,7 +10,6 @@ from bond_api import Action, BPUPSubscriptions, DeviceType, Direction
 import voluptuous as vol
 
 from homeassistant.components.fan import (
-    ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     SUPPORT_DIRECTION,
@@ -57,7 +56,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SET_FAN_SPEED_TRACKED_STATE,
-        {vol.Required(ATTR_SPEED): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
+        {vol.Required("speed"): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
         "async_set_speed_belief",
     )
 
@@ -107,7 +106,9 @@ class BondFan(BondEntity, FanEntity):
         """Return the current speed percentage for the fan."""
         if not self._speed or not self._power:
             return 0
-        return ranged_value_to_percentage(self._speed_range, self._speed)
+        return min(
+            100, max(0, ranged_value_to_percentage(self._speed_range, self._speed))
+        )
 
     @property
     def speed_count(self) -> int:
@@ -183,7 +184,6 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

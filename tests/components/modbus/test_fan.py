@@ -29,11 +29,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
 
-ENTITY_ID = f"{FAN_DOMAIN}.{TEST_ENTITY_NAME}"
-ENTITY_ID2 = f"{ENTITY_ID}2"
+ENTITY_ID = f"{FAN_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+ENTITY_ID2 = f"{ENTITY_ID}_2"
 
 
 @pytest.mark.parametrize(
@@ -228,7 +229,7 @@ async def test_restore_state_fan(hass, mock_test_state, mock_modbus):
                     CONF_SCAN_INTERVAL: 0,
                 },
                 {
-                    CONF_NAME: f"{TEST_ENTITY_NAME}2",
+                    CONF_NAME: f"{TEST_ENTITY_NAME} 2",
                     CONF_ADDRESS: 18,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SCAN_INTERVAL: 0,
@@ -309,3 +310,15 @@ async def test_service_fan_update(hass, mock_modbus, mock_ha):
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_no_discovery_info_fan(hass, caplog):
+    """Test setup without discovery info."""
+    assert FAN_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        FAN_DOMAIN,
+        {FAN_DOMAIN: {"platform": MODBUS_DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert FAN_DOMAIN in hass.config.components

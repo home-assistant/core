@@ -5,7 +5,7 @@
   "requirements": [
     "getmac==0.8.2",
     "samsungctl[websocket]==0.7.1",
-    "samsungtvws==1.7.0",
+    "samsungtvws[async,encrypted]==2.4.0",
     "wakeonlan==2.0.1"
   ],
   "ssdp": [
@@ -24,10 +24,10 @@
     {"macaddress": "8CC8CD*"},
     {"macaddress": "606BBD*"},
     {"macaddress": "F47B5E*"},
-    {"macaddress": "4844F7*"}
+    {"macaddress": "4844F7*"},
+    {"macaddress": "8CEA48*"}
   ],
   "codeowners": [
-    "@escoand",
     "@chemelli74",
     "@epenet"
   ],

@@ -89,6 +89,9 @@
             "vibration": "{entity_name} b\u00f6rjade detektera vibrationer"
         }
     },
+    "device_class": {
+        "motion": "r\u00f6relse"
+    },
     "state": {
         "_": {
             "off": "Av",

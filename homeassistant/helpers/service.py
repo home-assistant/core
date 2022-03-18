@@ -218,7 +218,7 @@ def async_prepare_call_from_config(
 
             if CONF_ENTITY_ID in target:
                 registry = entity_registry.async_get(hass)
-                target[CONF_ENTITY_ID] = entity_registry.async_resolve_entity_ids(
+                target[CONF_ENTITY_ID] = entity_registry.async_validate_entity_ids(
                     registry, cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
                 )
         except TemplateError as ex:
@@ -359,7 +359,7 @@ def async_extract_referenced_entity_ids(
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
 
-    # Find devices for this area
+    # Find devices for targeted areas
     selected.referenced_devices.update(selector.device_ids)
     for device_entry in dev_reg.devices.values():
         if device_entry.area_id in selector.area_ids:
@@ -369,20 +369,20 @@ def async_extract_referenced_entity_ids(
         return selected
 
     for ent_entry in ent_reg.entities.values():
-        # Do not add config or diagnostic entities referenced by areas or devices
-
-        if ent_entry.entity_category is not None:
+        # Do not add entities which are hidden or which are config or diagnostic entities
+        if ent_entry.entity_category is not None or ent_entry.hidden_by is not None:
             continue
 
         if (
-            # when area matches the target area
+            # The entity's area matches a targeted area
             ent_entry.area_id in selector.area_ids
-            # when device matches a referenced devices with no explicitly set area
+            # The entity's device matches a device referenced by an area and the entity
+            # has no explicitly set area
             or (
                 not ent_entry.area_id
                 and ent_entry.device_id in selected.referenced_devices
             )
-            # when device matches target device
+            # The entity's device matches a targeted device
             or ent_entry.device_id in selector.device_ids
         ):
             selected.indirectly_referenced.add(ent_entry.entity_id)

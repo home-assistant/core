@@ -24,7 +24,7 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Overweeg thuis tijd (seconden)"
+                    "consider_home": "Aantal seconden dat wordt gewacht voordat een apparaat als afwezig wordt beschouwd"
                 },
                 "description": "Optionele instellingen opgeven",
                 "title": "Netgear"

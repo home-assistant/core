@@ -6,16 +6,32 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from aionanoleaf import EffectsEvent, InvalidToken, Nanoleaf, StateEvent, Unavailable
+from aionanoleaf import (
+    EffectsEvent,
+    InvalidToken,
+    Nanoleaf,
+    StateEvent,
+    TouchEvent,
+    Unavailable,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_TOKEN,
+    CONF_TYPE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, NANOLEAF_EVENT, TOUCH_GESTURE_TRIGGER_MAP, TOUCH_MODELS
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
 
@@ -46,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = DataUpdateCoordinator(
         hass,
-        logging.getLogger(__name__),
+        _LOGGER,
         name=entry.title,
         update_interval=timedelta(minutes=1),
         update_method=async_get_state,
@@ -54,14 +70,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    async def update_light_state_callback(event: StateEvent | EffectsEvent) -> None:
+    async def light_event_callback(event: StateEvent | EffectsEvent) -> None:
         """Receive state and effect event."""
         coordinator.async_set_updated_data(None)
 
+    if supports_touch := nanoleaf.model in TOUCH_MODELS:
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, nanoleaf.serial_no)},
+        )
+
+        async def touch_event_callback(event: TouchEvent) -> None:
+            """Receive touch event."""
+            gesture_type = TOUCH_GESTURE_TRIGGER_MAP.get(event.gesture_id)
+            if gesture_type is None:
+                _LOGGER.debug("Received unknown touch gesture ID %s", event.gesture_id)
+                return
+            _LOGGER.warning("Received touch gesture %s", gesture_type)
+            hass.bus.async_fire(
+                NANOLEAF_EVENT,
+                {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: gesture_type},
+            )
+
     event_listener = asyncio.create_task(
         nanoleaf.listen_events(
-            state_callback=update_light_state_callback,
-            effects_callback=update_light_state_callback,
+            state_callback=light_event_callback,
+            effects_callback=light_event_callback,
+            touch_callback=touch_event_callback if supports_touch else None,
         )
     )
 

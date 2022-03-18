@@ -1,5 +1,8 @@
 """Support for SleepIQ from SleepNumber."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from asyncsleepiq import (
     AsyncSleepIQ,
@@ -10,19 +13,31 @@ from asyncsleepiq import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, PRESSURE, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
-from .coordinator import SleepIQDataUpdateCoordinator
+from .const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
+from .coordinator import (
+    SleepIQData,
+    SleepIQDataUpdateCoordinator,
+    SleepIQPauseUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -59,9 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await gateway.login(email, password)
-    except SleepIQLoginException:
+    except SleepIQLoginException as err:
         _LOGGER.error("Could not authenticate with SleepIQ server")
-        return False
+        raise ConfigEntryAuthFailed(err) from err
     except SleepIQTimeoutException as err:
         raise ConfigEntryNotReady(
             str(err) or "Timed out during authentication"
@@ -76,12 +91,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SleepIQAPIException as err:
         raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
+    await _async_migrate_unique_ids(hass, entry, gateway)
+
     coordinator = SleepIQDataUpdateCoordinator(hass, gateway, email)
+    pause_coordinator = SleepIQPauseUpdateCoordinator(hass, gateway, email)
 
     # Call the SleepIQ API to refresh data
     await coordinator.async_config_entry_first_refresh()
+    await pause_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SleepIQData(
+        data_coordinator=coordinator,
+        pause_coordinator=pause_coordinator,
+        client=gateway,
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -93,3 +116,48 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
+
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant, entry: ConfigEntry, gateway: AsyncSleepIQ
+) -> None:
+    """Migrate old unique ids."""
+    names_to_ids = {
+        sleeper.name: sleeper.sleeper_id
+        for bed in gateway.beds.values()
+        for sleeper in bed.sleepers
+    }
+
+    bed_ids = {bed.id for bed in gateway.beds.values()}
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        # Old format for sleeper entities was {bed_id}_{sleeper.name}_{sensor_type}.....
+        # New format is {sleeper.sleeper_id}_{sensor_type}....
+        sensor_types = [IS_IN_BED, PRESSURE, SLEEP_NUMBER]
+
+        old_unique_id = entity_entry.unique_id
+        parts = old_unique_id.split("_")
+
+        # If it doesn't begin with a bed id or end with one of the sensor types,
+        # it doesn't need to be migrated
+        if parts[0] not in bed_ids or not old_unique_id.endswith(tuple(sensor_types)):
+            return None
+
+        sensor_type = next(filter(old_unique_id.endswith, sensor_types))
+        sleeper_name = "_".join(parts[1:]).removesuffix(f"_{sensor_type}")
+        sleeper_id = names_to_ids.get(sleeper_name)
+
+        if not sleeper_id:
+            return None
+
+        new_unique_id = f"{sleeper_id}_{sensor_type}"
+
+        _LOGGER.debug(
+            "Migrating unique_id from [%s] to [%s]",
+            old_unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
