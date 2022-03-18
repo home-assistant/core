@@ -1,6 +1,6 @@
 """Tests for Plex player playback methods/services."""
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -14,11 +14,14 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import PLEX_DIRECT_URL
+
 
 class MockPlexMedia:
     """Minimal mock of plexapi media object."""
 
     key = "key"
+    _server = Mock(_baseurl=PLEX_DIRECT_URL)
 
     def __init__(self, title, mediatype):
         """Initialize the instance."""
