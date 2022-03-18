@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
+from collections.abc import Callable, Mapping
 import contextlib
 from typing import Any, cast
 
@@ -24,6 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TIMEOUT,
+    CONF_TOKEN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -87,12 +89,12 @@ class SamsungTVBridge(ABC):
         method: str,
         host: str,
         port: int | None = None,
-        token: str | None = None,
+        entry_data: Mapping[str, Any] | None = None,
     ) -> SamsungTVBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
             return SamsungTVLegacyBridge(hass, method, host, port)
-        return SamsungTVWSBridge(hass, method, host, port, token)
+        return SamsungTVWSBridge(hass, method, host, port, entry_data)
 
     def __init__(
         self, hass: HomeAssistant, method: str, host: str, port: int | None = None
@@ -104,15 +106,17 @@ class SamsungTVBridge(ABC):
         self.host = host
         self.token: str | None = None
         self._reauth_callback: CALLBACK_TYPE | None = None
-        self._new_token_callback: CALLBACK_TYPE | None = None
+        self._update_config_entry: Callable[[Mapping[str, Any]], None] | None = None
 
     def register_reauth_callback(self, func: CALLBACK_TYPE) -> None:
         """Register a callback function."""
         self._reauth_callback = func
 
-    def register_new_token_callback(self, func: CALLBACK_TYPE) -> None:
+    def register_update_config_entry_callback(
+        self, func: Callable[[Mapping[str, Any]], None]
+    ) -> None:
         """Register a callback function."""
-        self._new_token_callback = func
+        self._update_config_entry = func
 
     @abstractmethod
     async def async_try_connect(self) -> str:
@@ -147,10 +151,10 @@ class SamsungTVBridge(ABC):
         if self._reauth_callback is not None:
             self._reauth_callback()
 
-    def _notify_new_token_callback(self) -> None:
-        """Notify new token callback."""
-        if self._new_token_callback is not None:
-            self._new_token_callback()
+    def _notify_update_config_entry(self, updates: Mapping[str, Any]) -> None:
+        """Notify update config callback."""
+        if self._update_config_entry is not None:
+            self._update_config_entry(updates)
 
 
 class SamsungTVLegacyBridge(SamsungTVBridge):
@@ -304,11 +308,12 @@ class SamsungTVWSBridge(SamsungTVBridge):
         method: str,
         host: str,
         port: int | None = None,
-        token: str | None = None,
+        entry_data: Mapping[str, Any] | None = None,
     ) -> None:
         """Initialize Bridge."""
         super().__init__(hass, method, host, port)
-        self.token = token
+        if entry_data:
+            self.token = entry_data.get(CONF_TOKEN)
         self._rest_api: SamsungTVAsyncRest | None = None
         self._app_list: dict[str, str] | None = None
         self._device_info: dict[str, Any] | None = None
@@ -374,6 +379,15 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self.token = remote.token
                     LOGGER.debug("Working config: %s", config)
                     return RESULT_SUCCESS
+            except ConnectionClosedError as err:
+                LOGGER.info(
+                    "Working but unsupported config: %s, error: '%s'; this may "
+                    "be an indication that access to the TV has been denied. Please "
+                    "check the Device Connection Manager on your TV",
+                    config,
+                    err,
+                )
+                result = RESULT_NOT_SUPPORTED
             except WebSocketException as err:
                 LOGGER.debug(
                     "Working but unsupported config: %s, error: %s", config, err
@@ -496,7 +510,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                         self._remote.token,
                     )
                     self.token = self._remote.token
-                    self._notify_new_token_callback()
+                    self._notify_update_config_entry({CONF_TOKEN: self.token})
         return self._remote
 
     @staticmethod
