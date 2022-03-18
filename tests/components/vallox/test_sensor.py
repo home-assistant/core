@@ -34,7 +34,7 @@ def helsinki(hass: HomeAssistant) -> None:
 @pytest.fixture
 def new_york(hass: HomeAssistant) -> None:
     """Set the default TZ to America/New_York."""
-    hass.config.set_time_zone("Europe/Helsinki")
+    hass.config.set_time_zone("America/New_York")
 
 
 def _sensor_to_datetime(sensor):
