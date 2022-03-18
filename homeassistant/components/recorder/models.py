@@ -48,6 +48,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DB_TIMEZONE = "+00:00"
 
+EMPTY_CONTEXT = Context(id="")
+
 TABLE_EVENTS = "events"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
@@ -181,7 +183,7 @@ class States(Base):  # type: ignore[misc,valid-type]
             f"id={self.state_id}, domain='{self.domain}', entity_id='{self.entity_id}', "
             f"state='{self.state}', event_id='{self.event_id}', "
             f"last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}', "
-            f"old_state_id={self.old_state_id}"
+            f"old_state_id={self.old_state_id}, attributes_id={self.attributes_id}"
             f")>"
         )
 
@@ -222,7 +224,7 @@ class States(Base):  # type: ignore[misc,valid-type]
                 process_timestamp(self.last_updated),
                 # Join the events table on event_id to get the context instead
                 # as it will always be there for state_changed events
-                context=Context(id=None),
+                context=EMPTY_CONTEXT,
                 validate_entity_id=validate_entity_id,
             )
         except ValueError:
@@ -573,7 +575,7 @@ class LazyState(State):
     def context(self):
         """State context."""
         if not self._context:
-            self._context = Context(id=None)
+            self._context = EMPTY_CONTEXT
         return self._context
 
     @context.setter
