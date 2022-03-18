@@ -9,18 +9,33 @@ import pytest
 from rabbitair import Mode, Model, Speed
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.rabbitair.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 from homeassistant.helpers.device_registry import format_mac
 
 TEST_HOST = "1.1.1.1"
+TEST_NAME = "abcdef1234_123456789012345678"
 TEST_TOKEN = "0123456789abcdef0123456789abcdef"
 TEST_MAC = "01:23:45:67:89:AB"
 TEST_FIRMWARE = "2.3.17"
 TEST_HARDWARE = "1.0.0.4"
 TEST_UNIQUE_ID = format_mac(TEST_MAC)
 TEST_TITLE = f"RabbitAir-{TEST_MAC.replace(':', '')}"
+
+ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+    host=TEST_HOST,
+    port=9009,
+    hostname=f"{TEST_NAME}.local.",
+    type="_rabbitair._udp.local.",
+    name=f"{TEST_NAME}._rabbitair._udp.local.",
+    properties={"id": TEST_MAC.replace(":", "")},
+)
 
 
 @pytest.fixture(autouse=True)
@@ -70,7 +85,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
     with patch(
         "homeassistant.components.rabbitair.async_setup_entry",
@@ -91,6 +106,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "host": TEST_HOST,
         "access_token": TEST_TOKEN,
     }
+    assert result2["result"].unique_id == TEST_UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -111,7 +127,7 @@ async def test_form_cannot_connect(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
     with patch(
         "rabbitair.UdpClient.get_info",
@@ -135,7 +151,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
     with patch(
         "homeassistant.components.rabbitair.config_flow.validate_input",
@@ -151,3 +167,43 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+@pytest.mark.usefixtures("rabbitair_connect")
+async def test_zeroconf_discovery(hass):
+    """Test zeroconf discovery setup flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=ZEROCONF_DATA
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert not result["errors"]
+
+    with patch(
+        "homeassistant.components.rabbitair.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": TEST_NAME + ".local",
+                "access_token": TEST_TOKEN,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == TEST_TITLE
+    assert result2["data"] == {
+        "host": TEST_NAME + ".local",
+        "access_token": TEST_TOKEN,
+    }
+    assert result2["result"].unique_id == TEST_UNIQUE_ID
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=ZEROCONF_DATA
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"

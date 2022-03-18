@@ -20,20 +20,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_ACCESS_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
-    }
-)
-
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
+    """Validate the user input allows us to connect."""
     try:
         try:
             zeroconf_instance = await zeroconf.async_get_async_instance(hass)
@@ -66,38 +55,58 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _discovered_host: str | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-
         errors = {}
 
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAccessToken:
-            errors["base"] = "invalid_access_token"
-        except InvalidHost:
-            errors["base"] = "invalid_host"
-        except TimeoutConnect:
-            errors["base"] = "timeout_connect"
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.debug("Unexpected exception: %s", err)
-            errors["base"] = "unknown"
-        else:
-            await self.async_set_unique_id(dr.format_mac(info["mac"]))
-            self._abort_if_unique_id_configured(updates=user_input)
-            return self.async_create_entry(title=info["title"], data=user_input)
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAccessToken:
+                errors["base"] = "invalid_access_token"
+            except InvalidHost:
+                errors["base"] = "invalid_host"
+            except TimeoutConnect:
+                errors["base"] = "timeout_connect"
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.debug("Unexpected exception: %s", err)
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(dr.format_mac(info["mac"]))
+                self._abort_if_unique_id_configured(updates=user_input)
+                return self.async_create_entry(title=info["title"], data=user_input)
 
+        user_input = user_input or {}
+        host = user_input.get(CONF_HOST, self._discovered_host)
+        token = user_input.get(CONF_ACCESS_TOKEN)
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=host): str,
+                    vol.Required(CONF_ACCESS_TOKEN, default=token): vol.All(
+                        str, vol.Length(min=32, max=32)
+                    ),
+                }
+            ),
+            errors=errors,
         )
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle zeroconf discovery."""
+        mac = dr.format_mac(discovery_info.properties["id"])
+        await self.async_set_unique_id(mac)
+        self._abort_if_unique_id_configured()
+        self._discovered_host = discovery_info.hostname.rstrip(".")
+        return await self.async_step_user()
 
 
 class CannotConnect(HomeAssistantError):
