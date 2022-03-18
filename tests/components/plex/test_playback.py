@@ -22,6 +22,7 @@ class MockPlexMedia:
     """Minimal mock of plexapi media object."""
 
     key = "key"
+    viewOffset = 333
     _server = Mock(_baseurl=PLEX_DIRECT_URL)
 
     def __init__(self, title, mediatype):
@@ -94,6 +95,22 @@ async def test_media_player_playback(
             True,
         )
         assert playmedia_mock.called
+
+    # Test movie success with resume
+    playmedia_mock.reset()
+    with patch("plexapi.library.LibrarySection.search", return_value=movies):
+        assert await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: media_player,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MOVIE,
+                ATTR_MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie 1", "resume": true}',
+            },
+            True,
+        )
+        assert playmedia_mock.called
+        assert playmedia_mock.last_request.qs["offset"][0] == str(movie1.viewOffset)
 
     # Test movie success with media browser URL
     playmedia_mock.reset()
