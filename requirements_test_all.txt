@@ -88,7 +88,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.0.2
+aioairzone==0.1.0
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -456,7 +456,7 @@ freebox-api==0.0.10
 fritzconnection==1.8.0
 
 # homeassistant.components.google_translate
-gTTS==2.2.3
+gTTS==2.2.4
 
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==3.0.0
@@ -599,7 +599,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.9.9
+intellifire4py==1.0.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -1471,7 +1471,7 @@ ttls==1.4.3
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.5.0
+twentemilieu==0.6.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -1566,7 +1566,7 @@ xmltodict==0.12.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.august
-yalexs==1.1.22
+yalexs==1.1.23
 
 # homeassistant.components.yeelight
 yeelight==0.7.9

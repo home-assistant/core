@@ -3,6 +3,7 @@ from http import HTTPStatus
 from unittest.mock import PropertyMock, patch
 
 import pytest
+import voluptuous as vol
 import yarl
 
 from homeassistant.components import tts
@@ -16,6 +17,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
+from homeassistant.util.network import normalize_url
 
 from tests.common import assert_setup_component, async_mock_service
 
@@ -689,3 +691,41 @@ async def test_tags_with_wave(hass, demo_provider):
     )
 
     assert tagged_data != demo_data
+
+
+@pytest.mark.parametrize(
+    "value",
+    (
+        "http://example.local:8123",
+        "http://example.local",
+        "http://example.local:80",
+        "https://example.com",
+        "https://example.com:443",
+        "https://example.com:8123",
+    ),
+)
+def test_valid_base_url(value):
+    """Test we validate base urls."""
+    assert tts.valid_base_url(value) == normalize_url(value)
+    # Test we strip trailing `/`
+    assert tts.valid_base_url(value + "/") == normalize_url(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    (
+        "http://example.local:8123/sub-path",
+        "http://example.local/sub-path",
+        "https://example.com/sub-path",
+        "https://example.com:8123/sub-path",
+        "mailto:some@email",
+        "http:example.com",
+        "http:/example.com",
+        "http//example.com",
+        "example.com",
+    ),
+)
+def test_invalid_base_url(value):
+    """Test we catch bad base urls."""
+    with pytest.raises(vol.Invalid):
+        tts.valid_base_url(value)

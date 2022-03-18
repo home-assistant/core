@@ -150,6 +150,19 @@ def _custom_tasks(template, info: Info) -> None:
             },
         )
 
+    elif template == "config_flow_helper":
+        info.update_manifest(config_flow=True)
+        info.update_strings(
+            config={
+                "step": {
+                    "init": {
+                        "description": "Select the sensor for the NEW_NAME.",
+                        "data": {"entity_id": "Sensor entity"},
+                    },
+                },
+            },
+        )
+
     elif template == "config_flow_oauth2":
         info.update_manifest(config_flow=True, dependencies=["http"])
         info.update_strings(
