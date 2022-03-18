@@ -46,7 +46,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         """Open cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=99")
 
-    def set_cover_position(self, value: float) -> None:
+    def set_cover_position(self, **kwargs: Any) -> None:
         """Update the current value."""
         self.controller.zwave_api.send_command(
             self.device.id, f"exact?level={str(round(value))}"
