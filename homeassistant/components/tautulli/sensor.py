@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         icon="mdi:plex",
-        key="tautulli",
+        key="watching_count",
         name="Tautulli",
         native_unit_of_measurement="Watching",
     ),
@@ -88,9 +88,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tautulli sensor."""
+    coordinator: TautulliDataUpdateCoordinator = hass.data[DOMAIN]
     async_add_entities(
         TautulliSensor(
-            hass.data[DOMAIN],
+            coordinator,
             description,
         )
         for description in SENSOR_TYPES

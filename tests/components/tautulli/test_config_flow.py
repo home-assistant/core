@@ -21,10 +21,6 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-def _patch_setup():
-    return patch("homeassistant.components.tautulli.async_setup_entry")
-
-
 async def test_flow_user_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test user step single instance allowed."""
     entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
@@ -49,7 +45,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch_config_flow_tautulli(AsyncMock()), _patch_setup():
+    with patch_config_flow_tautulli(AsyncMock()):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DATA,
@@ -99,7 +95,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_flow_import(hass: HomeAssistant) -> None:
     """Test import step."""
-    with patch_config_flow_tautulli(AsyncMock()), _patch_setup():
+    with patch_config_flow_tautulli(AsyncMock()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -146,7 +142,9 @@ async def test_flow_reauth(
 
     new_conf = {CONF_API_KEY: "efgh"}
     CONF_DATA[CONF_API_KEY] = "efgh"
-    with patch_config_flow_tautulli(AsyncMock()), _patch_setup() as mock_entry:
+    with patch_config_flow_tautulli(AsyncMock()), patch(
+        "homeassistant.components.tautulli.async_setup_entry"
+    ) as mock_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=new_conf,
