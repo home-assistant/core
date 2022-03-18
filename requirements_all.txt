@@ -329,7 +329,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.26.0
+async-upnp-client==0.27.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -808,7 +808,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220316.0
+home-assistant-frontend==20220317.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -1207,7 +1207,7 @@ pillow==9.0.1
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.10.0
+plexapi==4.10.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
