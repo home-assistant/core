@@ -22,6 +22,12 @@ new_task:
       example: Chores,Delivieries
       selector:
         text:
+    assignee:
+      name: Assignee
+      description: A members username of a shared project to assign this task to.
+      example: username
+      selector:
+        text:
     priority:
       name: Priority
       description: The priority of this task, from 1 (normal) to 4 (urgent).
@@ -30,7 +36,7 @@ new_task:
           min: 1
           max: 4
     due_date_string:
-      name: Dure date string
+      name: Due date string
       description: The day this task is due, in natural language.
       example: Tomorrow
       selector:
@@ -41,20 +47,20 @@ new_task:
       selector:
         select:
           options:
-            - 'da'
-            - 'de'
-            - 'en'
-            - 'es'
-            - 'fr'
-            - 'it'
-            - 'ja'
-            - 'ko'
-            - 'nl'
-            - 'pl'
-            - 'pt'
-            - 'ru'
-            - 'sv'
-            - 'zh'
+            - "da"
+            - "de"
+            - "en"
+            - "es"
+            - "fr"
+            - "it"
+            - "ja"
+            - "ko"
+            - "nl"
+            - "pl"
+            - "pt"
+            - "ru"
+            - "sv"
+            - "zh"
     due_date:
       name: Due date
       description: The time this task is due, in format YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS, in UTC timezone.
@@ -73,20 +79,20 @@ new_task:
       selector:
         select:
           options:
-            - 'da'
-            - 'de'
-            - 'en'
-            - 'es'
-            - 'fr'
-            - 'it'
-            - 'ja'
-            - 'ko'
-            - 'nl'
-            - 'pl'
-            - 'pt'
-            - 'ru'
-            - 'sv'
-            - 'zh'
+            - "da"
+            - "de"
+            - "en"
+            - "es"
+            - "fr"
+            - "it"
+            - "ja"
+            - "ko"
+            - "nl"
+            - "pl"
+            - "pt"
+            - "ru"
+            - "sv"
+            - "zh"
     reminder_date:
       name: Reminder date
       description: When should user be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone.

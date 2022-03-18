@@ -35,6 +35,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Stuur commando: {subtype}",
+            "send_status": "Stuur status update: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Ontvangen commando: {subtype}",
+            "status": "Ontvangen status: {subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "Apparaat is al geconfigureerd",
@@ -51,6 +61,7 @@
                     "debug": "Foutopsporing inschakelen",
                     "device": "Selecteer het apparaat om te configureren",
                     "event_code": "Voer de gebeurteniscode in om toe te voegen",
+                    "protocols": "Protocollen",
                     "remove_device": "Apparaat selecteren dat u wilt verwijderen"
                 },
                 "title": "Rfxtrx-opties"

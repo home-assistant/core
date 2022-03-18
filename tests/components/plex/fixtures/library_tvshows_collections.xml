@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MediaContainer size="0" allowSync="1" art="/:/resources/show-fanart.jpg" identifier="com.plexapp.plugins.library" librarySectionID="2" librarySectionTitle="TV Shows" librarySectionUUID="1d8c8690-2dc5-48e6-9b54-accfacd0067c" mediaTagPrefix="/system/bundle/media/flags/" mediaTagVersion="1628745015" sortAsc="1" thumb="/:/resources/show.png" title1="TV Shows" title2="All Shows" viewGroup="show" viewMode="131122">
+    <Meta>
+        <Type key="/library/sections/2/all?type=18" type="collection" title="Collections" active="1">
+            <Sort active="1" activeDirection="asc" default="asc" defaultDirection="asc" descKey="titleSort:desc" firstCharacterKey="/library/sections/2/firstCharacter?type=18" key="titleSort" title="Title" />
+        </Type>
+        <FieldType type="tag">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+        </FieldType>
+        <FieldType type="integer">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+            <Operator key="&gt;&gt;=" title="is greater than" />
+            <Operator key="&lt;&lt;=" title="is less than" />
+        </FieldType>
+        <FieldType type="string">
+            <Operator key="=" title="contains" />
+            <Operator key="!=" title="does not contain" />
+            <Operator key="==" title="is" />
+            <Operator key="!==" title="is not" />
+            <Operator key="&lt;=" title="begins with" />
+            <Operator key="&gt;=" title="ends with" />
+        </FieldType>
+        <FieldType type="boolean">
+            <Operator key="=" title="is true" />
+            <Operator key="!=" title="is false" />
+        </FieldType>
+        <FieldType type="date">
+            <Operator key="&lt;&lt;=" title="is before" />
+            <Operator key="&gt;&gt;=" title="is after" />
+        </FieldType>
+        <FieldType type="subtitleLanguage">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+        </FieldType>
+        <FieldType type="audioLanguage">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+        </FieldType>
+        <FieldType type="resolution">
+            <Operator key="=" title="is" />
+        </FieldType>
+    </Meta>
+</MediaContainer>

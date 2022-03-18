@@ -1,4 +1,6 @@
 """Support for interface with an Aquos TV."""
+from __future__ import annotations
+
 import logging
 
 import sharp_aquos_rc
@@ -27,7 +29,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +81,12 @@ SOURCES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Sharp Aquos TV platform."""
 
     name = config[CONF_NAME]
@@ -84,23 +94,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
     power_on_enabled = config["power_on_enabled"]
-
-    if discovery_info:
-        _LOGGER.debug("%s", discovery_info)
-        vals = discovery_info.split(":")
-        if len(vals) > 1:
-            port = vals[1]
-
-        host = vals[0]
-        remote = sharp_aquos_rc.TV(host, port, username, password, timeout=20)
-        add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
-        return True
-
     host = config[CONF_HOST]
     remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
     add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
-    return True
 
 
 def _retry(func):
@@ -127,7 +124,9 @@ class SharpAquosTVDevice(MediaPlayerEntity):
     _attr_source_list = list(SOURCES.values())
     _attr_supported_features = SUPPORT_SHARPTV
 
-    def __init__(self, name, remote, power_on_enabled=False):
+    def __init__(
+        self, name: str, remote: sharp_aquos_rc.TV, power_on_enabled: bool = False
+    ) -> None:
         """Initialize the aquos device."""
         self._power_on_enabled = power_on_enabled
         if power_on_enabled:

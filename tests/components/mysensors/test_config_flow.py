@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.mysensors.const import (
     CONF_BAUD_RATE,
     CONF_DEVICE,
@@ -34,7 +34,7 @@ async def get_form(
     hass: HomeAssistant, gatway_type: ConfGatewayType, expected_step_id: str
 ) -> FlowResult:
     """Get a form for the given gateway type."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     stepuser = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -92,7 +92,7 @@ async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
 
 async def test_missing_mqtt(hass: HomeAssistant) -> None:
     """Test configuring a mqtt gateway without mqtt integration setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -442,7 +442,6 @@ async def test_config_invalid(
 )
 async def test_import(hass: HomeAssistant, mqtt: None, user_input: dict) -> None:
     """Test importing a gateway."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch("sys.platform", "win32"), patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
@@ -738,7 +737,6 @@ async def test_duplicate(
     expected_result: tuple[str, str] | None,
 ) -> None:
     """Test duplicate detection."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch("sys.platform", "win32"), patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True

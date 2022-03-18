@@ -5,18 +5,15 @@ from typing import Final
 
 from canary.api import Device, Location, SensorType
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -37,17 +34,17 @@ CANARY_FLEX: Final = "Canary Flex"
 # Sensor types are defined like so:
 # sensor type name, unit_of_measurement, icon, device class, products supported
 SENSOR_TYPES: Final[list[SensorTypeItem]] = [
-    ("temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, [CANARY_PRO]),
-    ("humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, [CANARY_PRO]),
+    ("temperature", TEMP_CELSIUS, None, SensorDeviceClass.TEMPERATURE, [CANARY_PRO]),
+    ("humidity", PERCENTAGE, None, SensorDeviceClass.HUMIDITY, [CANARY_PRO]),
     ("air_quality", None, "mdi:weather-windy", None, [CANARY_PRO]),
     (
         "wifi",
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         None,
-        DEVICE_CLASS_SIGNAL_STRENGTH,
+        SensorDeviceClass.SIGNAL_STRENGTH,
         [CANARY_FLEX],
     ),
-    ("battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY, [CANARY_FLEX]),
+    ("battery", PERCENTAGE, None, SensorDeviceClass.BATTERY, [CANARY_FLEX]),
 ]
 
 STATE_AIR_QUALITY_NORMAL: Final = "normal"
@@ -113,15 +110,14 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
             canary_sensor_type = SensorType.BATTERY
 
         self._canary_type = canary_sensor_type
-        self._attr_state = self.reading
         self._attr_unique_id = f"{device.device_id}_{sensor_type[0]}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(device.device_id))},
-            "name": device.name,
-            "model": device.device_type["name"],
-            "manufacturer": MANUFACTURER,
-        }
-        self._attr_unit_of_measurement = sensor_type[1]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(device.device_id))},
+            model=device.device_type["name"],
+            manufacturer=MANUFACTURER,
+            name=device.name,
+        )
+        self._attr_native_unit_of_measurement = sensor_type[1]
         self._attr_device_class = sensor_type[3]
         self._attr_icon = sensor_type[2]
 
@@ -143,6 +139,11 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
             return round(float(value), SENSOR_VALUE_PRECISION)
 
         return None
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        return self.reading
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:

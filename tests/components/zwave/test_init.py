@@ -15,13 +15,15 @@ from homeassistant.components.zwave import (
     DATA_NETWORK,
     const,
 )
-from homeassistant.components.zwave.binary_sensor import get_device
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
+from homeassistant.const import ATTR_NAME
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, mock_registry
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 @pytest.fixture(autouse=True)
@@ -1852,38 +1854,6 @@ async def test_remove_association(hass, mock_openzwave, zwave_setup_ready):
     assert len(group.remove_association.mock_calls) == 1
     assert group.remove_association.mock_calls[0][1][0] == 24
     assert group.remove_association.mock_calls[0][1][1] == 5
-
-
-async def test_refresh_entity(hass, mock_openzwave, zwave_setup_ready):
-    """Test zwave refresh_entity service."""
-    node = MockNode()
-    value = MockValue(
-        data=False, node=node, command_class=const.COMMAND_CLASS_SENSOR_BINARY
-    )
-    power_value = MockValue(data=50, node=node, command_class=const.COMMAND_CLASS_METER)
-    values = MockEntityValues(primary=value, power=power_value)
-    device = get_device(node=node, values=values, node_config={})
-    device.hass = hass
-    device.entity_id = "binary_sensor.mock_entity_id"
-    await device.async_added_to_hass()
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        "zwave", "refresh_entity", {ATTR_ENTITY_ID: "binary_sensor.mock_entity_id"}
-    )
-    await hass.async_block_till_done()
-
-    assert node.refresh_value.called
-    assert len(node.refresh_value.mock_calls) == 2
-    assert (
-        sorted(
-            [
-                node.refresh_value.mock_calls[0][1][0],
-                node.refresh_value.mock_calls[1][1][0],
-            ]
-        )
-        == sorted([value.value_id, power_value.value_id])
-    )
 
 
 async def test_refresh_node(hass, mock_openzwave, zwave_setup_ready):

@@ -2,29 +2,33 @@
 from __future__ import annotations
 
 import asyncio
-import logging
-from typing import Any, Dict, Final, cast
+from http import HTTPStatus
+from typing import Any, Final
 
 import aiohttp
 import aioshelly
+from aioshelly.block_device import BlockDevice
+from aioshelly.rpc_device import RpcDevice
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries, core
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant import config_entries
+from homeassistant.components import zeroconf
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, DOMAIN
-from .utils import get_coap_context, get_device_sleep_period
-
-_LOGGER: Final = logging.getLogger(__name__)
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, DOMAIN, LOGGER
+from .utils import (
+    get_block_device_name,
+    get_block_device_sleep_period,
+    get_coap_context,
+    get_info_auth,
+    get_info_gen,
+    get_model_name,
+    get_rpc_device_name,
+)
 
 HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -32,34 +36,49 @@ HTTP_CONNECT_ERRORS: Final = (asyncio.TimeoutError, aiohttp.ClientError)
 
 
 async def validate_input(
-    hass: core.HomeAssistant, host: str, data: dict[str, Any]
+    hass: HomeAssistant,
+    host: str,
+    info: dict[str, Any],
+    data: dict[str, Any],
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
+    Data has the keys from HOST_SCHEMA with values provided by the user.
     """
-
-    options = aioshelly.ConnectionOptions(
-        host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
+    options = aioshelly.common.ConnectionOptions(
+        host,
+        data.get(CONF_USERNAME),
+        data.get(CONF_PASSWORD),
     )
-    coap_context = await get_coap_context(hass)
 
     async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-        device = await aioshelly.Device.create(
+        if get_info_gen(info) == 2:
+            rpc_device = await RpcDevice.create(
+                aiohttp_client.async_get_clientsession(hass),
+                options,
+            )
+            await rpc_device.shutdown()
+            return {
+                "title": get_rpc_device_name(rpc_device),
+                CONF_SLEEP_PERIOD: 0,
+                "model": rpc_device.model,
+                "gen": 2,
+            }
+
+        # Gen1
+        coap_context = await get_coap_context(hass)
+        block_device = await BlockDevice.create(
             aiohttp_client.async_get_clientsession(hass),
             coap_context,
             options,
         )
-
-    device.shutdown()
-
-    # Return info that you want to store in the config entry.
-    return {
-        "title": device.settings["name"],
-        "hostname": device.settings["device"]["hostname"],
-        "sleep_period": get_device_sleep_period(device.settings),
-        "model": device.settings["device"]["type"],
-    }
+        block_device.shutdown()
+        return {
+            "title": get_block_device_name(block_device),
+            CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
+            "model": block_device.model,
+            "gen": 1,
+        }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -79,35 +98,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host: str = user_input[CONF_HOST]
             try:
-                info = await self._async_get_info(host)
+                self.info = await self._async_get_info(host)
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
-            except aioshelly.FirmwareUnsupported:
+            except aioshelly.exceptions.FirmwareUnsupported:
                 return self.async_abort(reason="unsupported_firmware")
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["mac"])
+                await self.async_set_unique_id(self.info["mac"])
                 self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
-                if info["auth"]:
+                if get_info_auth(self.info):
                     return await self.async_step_credentials()
 
                 try:
-                    device_info = await validate_input(self.hass, self.host, {})
+                    device_info = await validate_input(
+                        self.hass, self.host, self.info, {}
+                    )
                 except HTTP_CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
                 except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Unexpected exception")
+                    LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
                     return self.async_create_entry(
-                        title=device_info["title"] or device_info["hostname"],
+                        title=device_info["title"],
                         data={
                             **user_input,
-                            "sleep_period": device_info["sleep_period"],
+                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                             "model": device_info["model"],
+                            "gen": device_info["gen"],
                         },
                     )
 
@@ -122,25 +144,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                device_info = await validate_input(self.hass, self.host, user_input)
+                device_info = await validate_input(
+                    self.hass, self.host, self.info, user_input
+                )
             except aiohttp.ClientResponseError as error:
-                if error.status == HTTP_UNAUTHORIZED:
+                if error.status == HTTPStatus.UNAUTHORIZED:
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=device_info["title"] or device_info["hostname"],
+                    title=device_info["title"],
                     data={
                         **user_input,
                         CONF_HOST: self.host,
-                        "sleep_period": device_info["sleep_period"],
+                        CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                         "model": device_info["model"],
+                        "gen": device_info["gen"],
                     },
                 )
         else:
@@ -158,29 +183,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
+        host = discovery_info.host
         try:
-            self.info = info = await self._async_get_info(discovery_info["host"])
+            self.info = await self._async_get_info(host)
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
-        except aioshelly.FirmwareUnsupported:
+        except aioshelly.exceptions.FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
-        await self.async_set_unique_id(info["mac"])
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
-        self.host = discovery_info["host"]
+        await self.async_set_unique_id(self.info["mac"])
+        self._abort_if_unique_id_configured({CONF_HOST: host})
+        self.host = host
 
-        self.context["title_placeholders"] = {
-            "name": discovery_info.get("name", "").split(".")[0]
-        }
+        self.context["title_placeholders"] = {"name": discovery_info.name.split(".")[0]}
 
-        if info["auth"]:
+        if get_info_auth(self.info):
             return await self.async_step_credentials()
 
         try:
-            self.device_info = await validate_input(self.hass, self.host, {})
+            self.device_info = await validate_input(self.hass, self.host, self.info, {})
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
 
@@ -193,11 +217,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             return self.async_create_entry(
-                title=self.device_info["title"] or self.device_info["hostname"],
+                title=self.device_info["title"],
                 data={
                     "host": self.host,
-                    "sleep_period": self.device_info["sleep_period"],
+                    CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
                     "model": self.device_info["model"],
+                    "gen": self.device_info["gen"],
                 },
             )
 
@@ -206,9 +231,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                "model": aioshelly.MODEL_NAMES.get(
-                    self.info["type"], self.info["type"]
-                ),
+                "model": get_model_name(self.info),
                 "host": self.host,
             },
             errors=errors,
@@ -217,10 +240,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_get_info(self, host: str) -> dict[str, Any]:
         """Get info from shelly device."""
         async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-            return cast(
-                Dict[str, Any],
-                await aioshelly.get_info(
-                    aiohttp_client.async_get_clientsession(self.hass),
-                    host,
-                ),
+            return await aioshelly.common.get_info(
+                aiohttp_client.async_get_clientsession(self.hass), host
             )

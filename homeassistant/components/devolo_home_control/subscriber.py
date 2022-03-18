@@ -1,7 +1,6 @@
 """Subscriber for devolo home control API publisher."""
-
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 _LOGGER = logging.getLogger(__name__)
 

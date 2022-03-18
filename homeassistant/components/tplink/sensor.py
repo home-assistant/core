@@ -1,92 +1,111 @@
 """Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
 from __future__ import annotations
 
-from typing import Any, Final
+from dataclasses import dataclass
+from typing import cast
 
-from pyHS100 import SmartPlug
+from kasa import SmartDevice
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.components.tplink import SmartPlugDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
-    CONF_ALIAS,
-    CONF_DEVICE_ID,
-    CONF_MAC,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
+from . import legacy_device_id
 from .const import (
-    CONF_EMETER_PARAMS,
-    CONF_MODEL,
-    CONF_SW_VERSION,
-    CONF_SWITCH,
-    COORDINATORS,
-    DOMAIN as TPLINK_DOMAIN,
+    ATTR_CURRENT_A,
+    ATTR_CURRENT_POWER_W,
+    ATTR_TODAY_ENERGY_KWH,
+    ATTR_TOTAL_ENERGY_KWH,
+    DOMAIN,
+)
+from .coordinator import TPLinkDataUpdateCoordinator
+from .entity import CoordinatedTPLinkEntity
+
+
+@dataclass
+class TPLinkSensorEntityDescription(SensorEntityDescription):
+    """Describes TPLink sensor entity."""
+
+    emeter_attr: str | None = None
+    precision: int | None = None
+
+
+ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
+    TPLinkSensorEntityDescription(
+        key=ATTR_CURRENT_POWER_W,
+        native_unit_of_measurement=POWER_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Current Consumption",
+        emeter_attr="power",
+        precision=1,
+    ),
+    TPLinkSensorEntityDescription(
+        key=ATTR_TOTAL_ENERGY_KWH,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        name="Total Consumption",
+        emeter_attr="total",
+        precision=3,
+    ),
+    TPLinkSensorEntityDescription(
+        key=ATTR_TODAY_ENERGY_KWH,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        name="Today's Consumption",
+        precision=3,
+    ),
+    TPLinkSensorEntityDescription(
+        key=ATTR_VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Voltage",
+        emeter_attr="voltage",
+        precision=1,
+    ),
+    TPLinkSensorEntityDescription(
+        key=ATTR_CURRENT_A,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Current",
+        emeter_attr="current",
+        precision=2,
+    ),
 )
 
-ATTR_CURRENT_A = "current_a"
-ATTR_CURRENT_POWER_W = "current_power_w"
-ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
-ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 
-ENERGY_SENSORS: Final[list[SensorEntityDescription]] = [
-    SensorEntityDescription(
-        key=ATTR_CURRENT_POWER_W,
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
-        name="Current Consumption",
-    ),
-    SensorEntityDescription(
-        key=ATTR_TOTAL_ENERGY_KWH,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        name="Total Consumption",
-    ),
-    SensorEntityDescription(
-        key=ATTR_TODAY_ENERGY_KWH,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        name="Today's Consumption",
-    ),
-    SensorEntityDescription(
-        key=ATTR_VOLTAGE,
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
-        name="Voltage",
-    ),
-    SensorEntityDescription(
-        key=ATTR_CURRENT_A,
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
-        name="Current",
-    ),
-]
+def async_emeter_from_device(
+    device: SmartDevice, description: TPLinkSensorEntityDescription
+) -> float | None:
+    """Map a sensor key to the device attribute."""
+    if attr := description.emeter_attr:
+        if (val := getattr(device.emeter_realtime, attr)) is None:
+            return None
+        return round(cast(float, val), description.precision)
+
+    # ATTR_TODAY_ENERGY_KWH
+    if (emeter_today := device.emeter_today) is not None:
+        return round(cast(float, emeter_today), description.precision)
+    # today's consumption not available, when device was off all the day
+    # bulb's do not report this information, so filter it out
+    return None if device.is_bulb else 0.0
 
 
 async def async_setup_entry(
@@ -94,65 +113,58 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switches."""
+    """Set up sensors."""
+    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[SmartPlugSensor] = []
-    coordinators: list[SmartPlugDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
-        COORDINATORS
-    ]
-    switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
-    for switch in switches:
-        coordinator: SmartPlugDataUpdateCoordinator = coordinators[
-            switch.context or switch.mac
+    parent = coordinator.device
+    if not parent.has_emeter:
+        return
+
+    def _async_sensors_for_device(device: SmartDevice) -> list[SmartPlugSensor]:
+        return [
+            SmartPlugSensor(device, coordinator, description)
+            for description in ENERGY_SENSORS
+            if async_emeter_from_device(device, description) is not None
         ]
-        if not switch.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
-            continue
-        for description in ENERGY_SENSORS:
-            if coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None:
-                entities.append(SmartPlugSensor(switch, coordinator, description))
+
+    if parent.is_strip:
+        # Historically we only add the children if the device is a strip
+        for child in parent.children:
+            entities.extend(_async_sensors_for_device(child))
+    else:
+        entities.extend(_async_sensors_for_device(parent))
 
     async_add_entities(entities)
 
 
-class SmartPlugSensor(CoordinatorEntity, SensorEntity):
+class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a TPLink Smart Plug energy sensor."""
+
+    coordinator: TPLinkDataUpdateCoordinator
+    entity_description: TPLinkSensorEntityDescription
 
     def __init__(
         self,
-        smartplug: SmartPlug,
-        coordinator: DataUpdateCoordinator,
-        description: SensorEntityDescription,
+        device: SmartDevice,
+        coordinator: TPLinkDataUpdateCoordinator,
+        description: TPLinkSensorEntityDescription,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator)
-        self.smartplug = smartplug
+        super().__init__(device, coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.data[CONF_ALIAS]} {description.name}"
-        self._attr_last_reset = coordinator.data[CONF_EMETER_PARAMS][
-            ATTR_LAST_RESET
-        ].get(description.key)
+        self._attr_unique_id = (
+            f"{legacy_device_id(self.device)}_{self.entity_description.key}"
+        )
 
     @property
-    def data(self) -> dict[str, Any]:
-        """Return data from DataUpdateCoordinator."""
-        return self.coordinator.data
+    def name(self) -> str:
+        """Return the name of the Smart Plug.
+
+        Overridden to include the description.
+        """
+        return f"{self.device.alias} {self.entity_description.name}"
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the sensors state."""
-        return self.data[CONF_EMETER_PARAMS][self.entity_description.key]
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{self.data[CONF_DEVICE_ID]}_{self.entity_description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return {
-            "name": self.data[CONF_ALIAS],
-            "model": self.data[CONF_MODEL],
-            "manufacturer": "TP-Link",
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.data[CONF_MAC])},
-            "sw_version": self.data[CONF_SW_VERSION],
-        }
+        return async_emeter_from_device(self.device, self.entity_description)

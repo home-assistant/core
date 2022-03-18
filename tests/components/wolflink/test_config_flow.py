@@ -5,7 +5,7 @@ from httpcore import ConnectError
 from wolf_smartset.models import Device
 from wolf_smartset.token_auth import InvalidAuth
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.wolflink.const import (
     DEVICE_GATEWAY,
     DEVICE_ID,
@@ -34,7 +34,7 @@ DEVICE = Device(CONFIG[DEVICE_ID], CONFIG[DEVICE_GATEWAY], CONFIG[DEVICE_NAME])
 
 async def test_show_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

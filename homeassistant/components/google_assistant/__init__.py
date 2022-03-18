@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
-# Typing imports
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ALIASES,
@@ -91,7 +90,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, yaml_config: dict[str, Any]):
+async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     """Activate Google Actions component."""
     if DOMAIN not in yaml_config:
         return True
@@ -106,7 +105,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: dict[str, Any]):
     if google_config.should_report_state:
         google_config.async_enable_report_state()
 
-    async def request_sync_service_handler(call: ServiceCall):
+    async def request_sync_service_handler(call: ServiceCall) -> None:
         """Handle request sync service calls."""
         agent_user_id = call.data.get("agent_user_id") or call.context.user_id
 

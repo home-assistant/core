@@ -1,9 +1,16 @@
 """Support for hunterdouglass_powerview sensors."""
 from aiopvapi.resources.shade import factory as PvShade
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
-from homeassistant.core import callback
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     COORDINATOR,
@@ -20,7 +27,9 @@ from .const import (
 from .entity import ShadeEntity
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the hunter douglas shades sensors."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]
@@ -49,10 +58,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     """Representation of an shade battery charge sensor."""
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PERCENTAGE
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def name(self):
@@ -60,17 +69,12 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
         return f"{self._shade_name} Battery"
 
     @property
-    def device_class(self):
-        """Shade battery Class."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
     def unique_id(self):
         """Shade battery Uniqueid."""
         return f"{self._unique_id}_charge"
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the current value in percentage."""
         return round(
             self._shade.raw_data[SHADE_BATTERY_LEVEL] / SHADE_BATTERY_LEVEL_MAX * 100

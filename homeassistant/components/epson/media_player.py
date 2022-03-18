@@ -1,4 +1,6 @@
 """Support for Epson projector."""
+from __future__ import annotations
+
 import logging
 
 from epson_projector.const import (
@@ -26,7 +28,7 @@ from epson_projector.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -36,13 +38,16 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
-from .const import ATTR_CMODE, DEFAULT_NAME, DOMAIN, SERVICE_SELECT_CMODE
+from .const import ATTR_CMODE, DOMAIN, SERVICE_SELECT_CMODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,16 +61,12 @@ SUPPORT_EPSON = (
     | SUPPORT_PREVIOUS_TRACK
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
-    }
-)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Epson projector from a config entry."""
     entry_id = config_entry.entry_id
     unique_id = config_entry.unique_id
@@ -82,19 +83,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SERVICE_SELECT_CMODE,
         {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
         SERVICE_SELECT_CMODE,
-    )
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Epson projector."""
-    _LOGGER.warning(
-        "Loading Espon projector via platform setup is deprecated; "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
     )
 
 
@@ -119,8 +107,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         _LOGGER.debug("Setting unique_id for projector")
         if self._unique_id:
             return False
-        uid = await self._projector.get_serial_number()
-        if uid:
+        if uid := await self._projector.get_serial_number():
             self.hass.config_entries.async_update_entry(self._entry, unique_id=uid)
             registry = async_get_entity_registry(self.hass)
             old_entity_id = registry.async_get_entity_id(
@@ -159,17 +146,17 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             self._state = STATE_OFF
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Get attributes about the device."""
         if not self._unique_id:
             return None
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "manufacturer": "Epson",
-            "name": "Epson projector",
-            "model": "Epson",
-            "via_hub": (DOMAIN, self._unique_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer="Epson",
+            model="Epson",
+            name="Epson projector",
+            via_device=(DOMAIN, self._unique_id),
+        )
 
     @property
     def name(self):

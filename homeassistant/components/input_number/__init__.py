@@ -66,7 +66,7 @@ CREATE_FIELDS = {
     vol.Required(CONF_MIN): vol.Coerce(float),
     vol.Required(CONF_MAX): vol.Coerce(float),
     vol.Optional(CONF_INITIAL): vol.Coerce(float),
-    vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
+    vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float), vol.Range(min=1e-9)),
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In([MODE_BOX, MODE_SLIDER]),
@@ -77,7 +77,7 @@ UPDATE_FIELDS = {
     vol.Optional(CONF_MIN): vol.Coerce(float),
     vol.Optional(CONF_MAX): vol.Coerce(float),
     vol.Optional(CONF_INITIAL): vol.Coerce(float),
-    vol.Optional(CONF_STEP): vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
+    vol.Optional(CONF_STEP): vol.All(vol.Coerce(float), vol.Range(min=1e-9)),
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE): vol.In([MODE_BOX, MODE_SLIDER]),
@@ -93,7 +93,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Required(CONF_MAX): vol.Coerce(float),
                     vol.Optional(CONF_INITIAL): vol.Coerce(float),
                     vol.Optional(CONF_STEP, default=1): vol.All(
-                        vol.Coerce(float), vol.Range(min=1e-3)
+                        vol.Coerce(float), vol.Range(min=1e-9)
                     ),
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -200,7 +200,7 @@ class InputNumber(RestoreEntity):
         """Initialize an input number."""
         self._config = config
         self.editable = True
-        self._current_value = config.get(CONF_INITIAL)
+        self._current_value: float | None = config.get(CONF_INITIAL)
 
     @classmethod
     def from_yaml(cls, config: dict) -> InputNumber:
@@ -306,6 +306,8 @@ class InputNumber(RestoreEntity):
         """Handle when the config is updated."""
         self._config = config
         # just in case min/max values changed
+        if self._current_value is None:
+            return
         self._current_value = min(self._current_value, self._maximum)
         self._current_value = max(self._current_value, self._minimum)
         self.async_write_ha_state()

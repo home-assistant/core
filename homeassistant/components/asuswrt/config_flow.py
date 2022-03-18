@@ -49,12 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 def _is_file(value) -> bool:
     """Validate that the value is an existing file."""
     file_in = os.path.expanduser(str(value))
-
-    if not os.path.isfile(file_in):
-        return False
-    if not os.access(file_in, os.R_OK):
-        return False
-    return True
+    return os.path.isfile(file_in) and os.access(file_in, os.R_OK)
 
 
 def _get_ip(host):
@@ -170,10 +165,6 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data=user_input,
         )
 
-    async def async_step_import(self, user_input=None):
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -222,8 +213,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-        conf_mode = self.config_entry.data[CONF_MODE]
-        if conf_mode == MODE_AP:
+        if self.config_entry.data[CONF_MODE] == MODE_AP:
             data_schema = data_schema.extend(
                 {
                     vol.Optional(

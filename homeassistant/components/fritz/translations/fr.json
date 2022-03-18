@@ -2,17 +2,18 @@
     "config": {
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
-            "already_in_progress": "Le flux de configuration est d\u00e9j\u00e0 en cours",
-            "reauth_successful": "R\u00e9-authentification r\u00e9ussie"
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9 ",
-            "already_in_progress": "Le flux de configuration est d\u00e9j\u00e0 en cours",
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "cannot_connect": "\u00c9chec de connexion",
-            "connection_error": "Erreur de connexion",
-            "invalid_auth": "Authentification invalide"
+            "connection_error": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification non valide",
+            "upnp_not_configured": "Param\u00e8tres UPnP manquants sur l'appareil."
         },
-        "flow_title": "FRITZ!Box Tools : {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {
@@ -56,7 +57,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Secondes pour consid\u00e9rer un appareil \u00e0 la 'maison'"
+                    "consider_home": "Secondes pour consid\u00e9rer un appareil \u00e0 la 'maison'",
+                    "old_discovery": "Activer l'ancienne m\u00e9thode de d\u00e9couverte"
                 }
             }
         }

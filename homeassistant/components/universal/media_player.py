@@ -67,6 +67,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_STATE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -87,13 +88,16 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_ACTIVE_CHILD = "active_child"
 
@@ -101,7 +105,7 @@ CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
 
-OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
+OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN]
 
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
@@ -121,7 +125,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the universal media players."""
     await async_setup_reload_service(hass, "universal", ["media_player"])
 
@@ -158,7 +167,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._cmds = commands
         self._attrs = {}
         for key, val in attributes.items():
-            attr = val.split("|", 1)
+            attr = list(map(str.strip, val.split("|", 1)))
             if len(attr) == 1:
                 attr.append(None)
             self._attrs[key] = attr
@@ -215,9 +224,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     def _entity_lkp(self, entity_id, state_attr=None):
         """Look up an entity state."""
-        state_obj = self.hass.states.get(entity_id)
-
-        if state_obj is None:
+        if (state_obj := self.hass.states.get(entity_id)) is None:
             return
 
         if state_attr:
@@ -255,8 +262,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             )
             return
 
-        active_child = self._child_state
-        if active_child is None:
+        if (active_child := self._child_state) is None:
             # No child to call service on
             return
 
@@ -306,8 +312,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if (master_state == STATE_OFF) or (self._state_template is not None):
             return master_state
 
-        active_child = self._child_state
-        if active_child:
+        if active_child := self._child_state:
             return active_child.state
 
         return master_state if master_state else STATE_OFF

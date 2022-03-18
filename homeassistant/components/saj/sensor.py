@@ -9,8 +9,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -18,11 +19,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     MASS_KILOGRAMS,
     POWER_WATT,
@@ -30,11 +27,13 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_HOURS,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +62,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SAJ sensors."""
 
     remove_interval_update = None
@@ -127,17 +131,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         return values
 
+    @callback
     def start_update_interval(event):
         """Start the update interval scheduling."""
         nonlocal remove_interval_update
         remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
 
+    @callback
     def stop_update_interval(event):
         """Properly cancel the scheduled update."""
         remove_interval_update()  # pylint: disable=not-callable
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
+    async_at_start(hass, start_update_interval)
 
 
 @callback
@@ -177,10 +183,10 @@ class SAJsensor(SensorEntity):
         self._serialnumber = serialnumber
         self._state = self._sensor.value
 
-        if pysaj_sensor.name in ("current_power", "total_yield", "temperature"):
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+        if pysaj_sensor.name in ("current_power", "temperature"):
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         if pysaj_sensor.name == "total_yield":
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def name(self):
@@ -191,12 +197,12 @@ class SAJsensor(SensorEntity):
         return f"saj_{self._sensor.name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return SAJ_UNIT_MAPPINGS[self._sensor.unit]
 
@@ -204,14 +210,14 @@ class SAJsensor(SensorEntity):
     def device_class(self):
         """Return the device class the sensor belongs to."""
         if self.unit_of_measurement == POWER_WATT:
-            return DEVICE_CLASS_POWER
+            return SensorDeviceClass.POWER
         if self.unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-            return DEVICE_CLASS_ENERGY
+            return SensorDeviceClass.ENERGY
         if (
             self.unit_of_measurement == TEMP_CELSIUS
             or self._sensor.unit == TEMP_FAHRENHEIT
         ):
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
 
     @property
     def should_poll(self) -> bool:

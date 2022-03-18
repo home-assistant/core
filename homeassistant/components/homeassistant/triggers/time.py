@@ -39,7 +39,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
+    trigger_data = automation_info["trigger_data"]
     entities = {}
     removes = []
     job = HassJob(action)
@@ -69,8 +69,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     def update_entity_trigger(entity_id, new_state=None):
         """Update the entity trigger for the entity_id."""
         # If a listener was already set up for entity, remove it.
-        remove = entities.pop(entity_id, None)
-        if remove:
+        if remove := entities.pop(entity_id, None):
             remove()
             remove = None
 
@@ -79,13 +78,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
         # Check state of entity. If valid, set up a listener.
         if new_state.domain == "input_datetime":
-            has_date = new_state.attributes["has_date"]
-            if has_date:
+            if has_date := new_state.attributes["has_date"]:
                 year = new_state.attributes["year"]
                 month = new_state.attributes["month"]
                 day = new_state.attributes["day"]
-            has_time = new_state.attributes["has_time"]
-            if has_time:
+            if has_time := new_state.attributes["has_time"]:
                 hour = new_state.attributes["hour"]
                 minute = new_state.attributes["minute"]
                 second = new_state.attributes["second"]
@@ -131,7 +128,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
         elif (
             new_state.domain == "sensor"
             and new_state.attributes.get(ATTR_DEVICE_CLASS)
-            == sensor.DEVICE_CLASS_TIMESTAMP
+            == sensor.SensorDeviceClass.TIMESTAMP
             and new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
         ):
             trigger_dt = dt_util.parse_datetime(new_state.state)

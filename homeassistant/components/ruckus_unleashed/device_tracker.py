@@ -6,12 +6,10 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    API_ACCESS_POINT,
     API_CLIENTS,
     API_NAME,
     COORDINATOR,
@@ -22,12 +20,12 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for Ruckus Unleashed component."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
 
-    tracked = set()
+    tracked: set[str] = set()
 
     @callback
     def router_update():
@@ -93,8 +91,8 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         self._name = name
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
+    def mac_address(self) -> str:
+        """Return a mac address."""
         return self._mac
 
     @property
@@ -116,17 +114,3 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
     def source_type(self) -> str:
         """Return the source type."""
         return SOURCE_TYPE_ROUTER
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device information."""
-        if self.is_connected:
-            return {
-                "name": self.name,
-                "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-                "via_device": (
-                    CONNECTION_NETWORK_MAC,
-                    self.coordinator.data[API_CLIENTS][self._mac][API_ACCESS_POINT],
-                ),
-            }
-        return None

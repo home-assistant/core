@@ -1,4 +1,6 @@
 """Component for controlling Pandora stations through the pianobar client."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import os
@@ -31,6 +33,9 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,10 +62,15 @@ CURRENT_SONG_PATTERN = re.compile(r'"(.*?)"\s+by\s+"(.*?)"\son\s+"(.*?)"', re.MU
 STATION_PATTERN = re.compile(r'Station\s"(.+?)"', re.MULTILINE)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Pandora media player platform."""
     if not _pianobar_exists():
-        return False
+        return
     pandora = PandoraMediaPlayer("Pandora")
 
     # Make sure we end the pandora subprocess on exit in case user doesn't
@@ -243,7 +253,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         try:
             match_idx = self._pianobar.expect(
                 [
-                    br"(\d\d):(\d\d)/(\d\d):(\d\d)",
+                    rb"(\d\d):(\d\d)/(\d\d):(\d\d)",
                     "No song playing",
                     "Select station",
                     "Receiving new playlist",
@@ -274,8 +284,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def _update_current_station(self, response):
         """Update current station."""
-        station_match = re.search(STATION_PATTERN, response)
-        if station_match:
+        if station_match := re.search(STATION_PATTERN, response):
             self._station = station_match.group(1)
             _LOGGER.debug("Got station as: %s", self._station)
         else:
@@ -283,8 +292,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def _update_current_song(self, response):
         """Update info about current song."""
-        song_match = re.search(CURRENT_SONG_PATTERN, response)
-        if song_match:
+        if song_match := re.search(CURRENT_SONG_PATTERN, response):
             (
                 self._media_title,
                 self._media_artist,
@@ -343,8 +351,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         _LOGGER.debug("Getting stations: %s", station_lines)
         self._stations = []
         for line in station_lines.split("\r\n"):
-            match = re.search(r"\d+\).....(.+)", line)
-            if match:
+            if match := re.search(r"\d+\).....(.+)", line):
                 station = match.group(1).strip()
                 _LOGGER.debug("Found station %s", station)
                 self._stations.append(station)

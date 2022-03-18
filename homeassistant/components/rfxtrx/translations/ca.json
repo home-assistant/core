@@ -23,7 +23,7 @@
             },
             "setup_serial_manual_path": {
                 "data": {
-                    "device": "Ruta del port USB del dispositiu"
+                    "device": "Ruta del dispositiu USB"
                 },
                 "title": "Ruta"
             },
@@ -35,13 +35,23 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Envia comanda: {subtype}",
+            "send_status": "Envia comanda d'estat: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Comanda rebuda: {subtype}",
+            "status": "Estat rebut: {subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "El dispositiu ja est\u00e0 configurat",
             "invalid_event_code": "Codi d'esdeveniment inv\u00e0lid",
-            "invalid_input_2262_off": "Entrada no v\u00e0lida per a l'ordre OFF",
+            "invalid_input_2262_off": "Entrada no v\u00e0lida per a l'ordre off",
             "invalid_input_2262_on": "Entrada no v\u00e0lida per a l'ordre ON",
-            "invalid_input_off_delay": "Entrada no v\u00e0lida per al retard OFF",
+            "invalid_input_off_delay": "Entrada no v\u00e0lida per al retard off",
             "unknown": "Error inesperat"
         },
         "step": {
@@ -51,18 +61,19 @@
                     "debug": "Activa la depuraci\u00f3",
                     "device": "Selecciona el dispositiu a configurar",
                     "event_code": "Introdueix el codi de l'esdeveniment a afegir",
+                    "protocols": "Protocols",
                     "remove_device": "Selecciona el dispositiu a eliminar"
                 },
                 "title": "Opcions de Rfxtrx"
             },
             "set_device_options": {
                 "data": {
-                    "command_off": "Valor dels bits de dades per a l'ordre OFF",
+                    "command_off": "Valor dels bits de dades per a l'ordre off",
                     "command_on": "Valor dels bits de dades per a l'ordre ON",
                     "data_bit": "Nombre de bits de dades",
                     "fire_event": "Activa l'esdeveniment de dispositiu",
-                    "off_delay": "Retard OFF",
-                    "off_delay_enabled": "Activa el retard OFF",
+                    "off_delay": "Retard off",
+                    "off_delay_enabled": "Activa el retard off",
                     "replace_device": "Selecciona el dispositiu a substituir",
                     "signal_repetitions": "Nombre de repeticions del senyal",
                     "venetian_blind_mode": "Mode persiana veneciana"

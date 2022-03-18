@@ -1,7 +1,8 @@
 """Generate dhcp file."""
 from __future__ import annotations
 
-import json
+import pprint
+import re
 
 from .model import Config, Integration
 
@@ -10,10 +11,11 @@ BASE = """
 
 To update, run python3 -m script.hassfest
 \"\"\"
+from __future__ import annotations
 
 # fmt: off
 
-DHCP = {}
+DHCP: list[dict[str, str | bool]] = {}
 """.strip()
 
 
@@ -24,7 +26,7 @@ def generate_and_validate(integrations: list[dict[str, str]]):
     for domain in sorted(integrations):
         integration = integrations[domain]
 
-        if not integration.manifest:
+        if not integration.manifest or not integration.config_flow:
             continue
 
         match_types = integration.manifest.get("dhcp", [])
@@ -35,7 +37,14 @@ def generate_and_validate(integrations: list[dict[str, str]]):
         for entry in match_types:
             match_list.append({"domain": domain, **entry})
 
-    return BASE.format(json.dumps(match_list, indent=4))
+    # JSON will format `True` as `true`
+    # re.sub for flake8 E128
+    formatted = pprint.pformat(match_list)
+    formatted_aligned_continuation = re.sub(r"^\[\{", "[\n {", formatted)
+    formatted_align_indent = re.sub(
+        r"(?m)^ ", "    ", formatted_aligned_continuation, flags=re.MULTILINE, count=0
+    )
+    return BASE.format(formatted_align_indent)
 
 
 def validate(integrations: dict[str, Integration], config: Config):

@@ -8,13 +8,18 @@ import hmac
 from logging import getLogger
 from typing import Any
 
-from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
-from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY, GROUP_ID_USER
-from .permissions import PermissionLookup, system_policies
+from .const import (
+    ACCESS_TOKEN_EXPIRATION,
+    GROUP_ID_ADMIN,
+    GROUP_ID_READ_ONLY,
+    GROUP_ID_USER,
+)
+from .permissions import system_policies
+from .permissions.models import PermissionLookup
 from .permissions.types import PolicyType
 
 STORAGE_VERSION = 1
@@ -40,7 +45,7 @@ class AuthStore:
         self._groups: dict[str, models.Group] | None = None
         self._perm_lookup: PermissionLookup | None = None
         self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True
+            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._lock = asyncio.Lock()
 
@@ -84,6 +89,7 @@ class AuthStore:
         system_generated: bool | None = None,
         credentials: models.Credentials | None = None,
         group_ids: list[str] | None = None,
+        local_only: bool | None = None,
     ) -> models.User:
         """Create a new user."""
         if self._users is None:
@@ -94,8 +100,7 @@ class AuthStore:
 
         groups = []
         for group_id in group_ids or []:
-            group = self._groups.get(group_id)
-            if group is None:
+            if (group := self._groups.get(group_id)) is None:
                 raise ValueError(f"Invalid group specified {group_id}")
             groups.append(group)
 
@@ -107,14 +112,14 @@ class AuthStore:
             "perm_lookup": self._perm_lookup,
         }
 
-        if is_owner is not None:
-            kwargs["is_owner"] = is_owner
-
-        if is_active is not None:
-            kwargs["is_active"] = is_active
-
-        if system_generated is not None:
-            kwargs["system_generated"] = system_generated
+        for attr_name, value in (
+            ("is_owner", is_owner),
+            ("is_active", is_active),
+            ("local_only", local_only),
+            ("system_generated", system_generated),
+        ):
+            if value is not None:
+                kwargs[attr_name] = value
 
         new_user = models.User(**kwargs)
 
@@ -151,6 +156,7 @@ class AuthStore:
         name: str | None = None,
         is_active: bool | None = None,
         group_ids: list[str] | None = None,
+        local_only: bool | None = None,
     ) -> None:
         """Update a user."""
         assert self._groups is not None
@@ -158,15 +164,18 @@ class AuthStore:
         if group_ids is not None:
             groups = []
             for grid in group_ids:
-                group = self._groups.get(grid)
-                if group is None:
+                if (group := self._groups.get(grid)) is None:
                     raise ValueError("Invalid group specified.")
                 groups.append(group)
 
             user.groups = groups
             user.invalidate_permission_cache()
 
-        for attr_name, value in (("name", name), ("is_active", is_active)):
+        for attr_name, value in (
+            ("name", name),
+            ("is_active", is_active),
+            ("local_only", local_only),
+        ):
             if value is not None:
                 setattr(user, attr_name, value)
 
@@ -417,6 +426,8 @@ class AuthStore:
                 is_active=user_dict["is_active"],
                 system_generated=user_dict["system_generated"],
                 perm_lookup=perm_lookup,
+                # New in 2021.11
+                local_only=user_dict.get("local_only", False),
             )
 
         for cred_dict in data["credentials"]:
@@ -444,16 +455,14 @@ class AuthStore:
                 )
                 continue
 
-            token_type = rt_dict.get("token_type")
-            if token_type is None:
+            if (token_type := rt_dict.get("token_type")) is None:
                 if rt_dict["client_id"] is None:
                     token_type = models.TOKEN_TYPE_SYSTEM
                 else:
                     token_type = models.TOKEN_TYPE_NORMAL
 
             # old refresh_token don't have last_used_at (pre-0.78)
-            last_used_at_str = rt_dict.get("last_used_at")
-            if last_used_at_str:
+            if last_used_at_str := rt_dict.get("last_used_at"):
                 last_used_at = dt_util.parse_datetime(last_used_at_str)
             else:
                 last_used_at = None
@@ -491,7 +500,7 @@ class AuthStore:
         self._store.async_delay_save(self._data_to_save, 1)
 
     @callback
-    def _data_to_save(self) -> dict:
+    def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return the data to store."""
         assert self._users is not None
         assert self._groups is not None
@@ -504,6 +513,7 @@ class AuthStore:
                 "is_active": user.is_active,
                 "name": user.name,
                 "system_generated": user.system_generated,
+                "local_only": user.local_only,
             }
             for user in self._users.values()
         ]

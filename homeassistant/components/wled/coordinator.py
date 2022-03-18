@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
+from collections.abc import Callable
 
 from wled import WLED, Device as WLEDDevice, WLEDConnectionClosed, WLEDError
 
@@ -25,6 +25,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     keep_master_light: bool
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -91,6 +92,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
         async def close_websocket(_) -> None:
             """Close WebSocket connection."""
+            self.unsub = None
             await self.wled.disconnect()
 
         # Clean disconnect WebSocket on Home Assistant shutdown
@@ -111,6 +113,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         # If the device supports a WebSocket, try activating it.
         if (
             device.info.websocket is not None
+            and device.info.leds.cct is not True
             and not self.wled.connected
             and not self.unsub
         ):

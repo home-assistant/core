@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections import Counter, deque
 from copy import copy
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 import logging
 from numbers import Number
@@ -15,9 +15,11 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.recorder import history
 from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -27,13 +29,16 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
 
@@ -47,7 +52,7 @@ FILTER_NAME_OUTLIER = "outlier"
 FILTER_NAME_THROTTLE = "throttle"
 FILTER_NAME_TIME_THROTTLE = "time_throttle"
 FILTER_NAME_TIME_SMA = "time_simple_moving_average"
-FILTERS = Registry()
+FILTERS: Registry[str, type[Filter]] = Registry()
 
 CONF_FILTERS = "filters"
 CONF_FILTER_NAME = "filter"
@@ -146,6 +151,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.entity_domain(INPUT_NUMBER_DOMAIN),
         ),
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_FILTERS): vol.All(
             cv.ensure_list,
             [
@@ -163,12 +169,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the template sensors."""
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name = config.get(CONF_NAME)
+    unique_id = config.get(CONF_UNIQUE_ID)
     entity_id = config.get(CONF_ENTITY_ID)
 
     filters = [
@@ -176,21 +188,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         for _filter in config[CONF_FILTERS]
     ]
 
-    async_add_entities([SensorFilter(name, entity_id, filters)])
+    async_add_entities([SensorFilter(name, unique_id, entity_id, filters)])
 
 
 class SensorFilter(SensorEntity):
     """Representation of a Filter Sensor."""
 
-    def __init__(self, name, entity_id, filters):
+    def __init__(self, name, unique_id, entity_id, filters):
         """Initialize the sensor."""
         self._name = name
+        self._attr_unique_id = unique_id
         self._entity = entity_id
         self._unit_of_measurement = None
         self._state = None
         self._filters = filters
         self._icon = None
         self._device_class = None
+        self._attr_state_class = None
 
     @callback
     def _update_filter_sensor_state_event(self, event):
@@ -247,6 +261,9 @@ class SensorFilter(SensorEntity):
             and new_state.attributes.get(ATTR_DEVICE_CLASS) in SENSOR_DEVICE_CLASSES
         ):
             self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+
+        if self._attr_state_class is None:
+            self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(
@@ -332,8 +349,11 @@ class SensorFilter(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
+        if self._device_class == SensorDeviceClass.TIMESTAMP:
+            return datetime.fromisoformat(self._state)
+
         return self._state
 
     @property
@@ -342,7 +362,7 @@ class SensorFilter(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         return self._unit_of_measurement
 
@@ -405,7 +425,7 @@ class Filter:
         :param entity: used for debugging only
         """
         if isinstance(window_size, int):
-            self.states = deque(maxlen=window_size)
+            self.states: deque = deque(maxlen=window_size)
             self.window_unit = WINDOW_SIZE_UNIT_NUMBER_EVENTS
         else:
             self.states = deque(maxlen=0)
@@ -476,7 +496,7 @@ class RangeFilter(Filter, SensorEntity):
         super().__init__(FILTER_NAME_RANGE, precision=precision, entity=entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
-        self._stats_internal = Counter()
+        self._stats_internal: Counter = Counter()
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
@@ -522,7 +542,7 @@ class OutlierFilter(Filter, SensorEntity):
         """
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
-        self._stats_internal = Counter()
+        self._stats_internal: Counter = Counter()
         self._store_raw = True
 
     def _filter_state(self, new_state):

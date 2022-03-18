@@ -52,4 +52,4 @@ MOCK_RESULTS = {
     "share": None,
 }
 
-MOCK_STATES = {"ping": "18.465", "download": "1.02", "upload": "1.02"}
+MOCK_STATES = {"ping": "18", "download": "1.02", "upload": "1.02"}

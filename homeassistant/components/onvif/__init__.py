@@ -12,10 +12,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_per_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_RTSP_TRANSPORT,
@@ -31,7 +33,7 @@ from .const import (
 from .device import ONVIFDevice
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ONVIF component."""
     # Import from yaml
     configs = {}
@@ -81,10 +83,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.unique_id] = device
 
-    platforms = ["camera"]
+    platforms = [Platform.BUTTON, Platform.CAMERA]
 
     if device.capabilities.events:
-        platforms += ["binary_sensor", "sensor"]
+        platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
 
     hass.config_entries.async_setup_platforms(entry, platforms)
 
@@ -95,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     device = hass.data[DOMAIN][entry.unique_id]

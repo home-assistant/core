@@ -1,4 +1,6 @@
 """Proxy camera platform that enables image processing of camera data."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import io
@@ -15,8 +17,11 @@ from homeassistant.components.camera import (
     async_get_still_stream,
 )
 from homeassistant.const import CONF_ENTITY_ID, CONF_MODE, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +64,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Proxy camera platform."""
     async_add_entities([ProxyCamera(hass, config)])
 
@@ -219,13 +229,17 @@ class ProxyCamera(Camera):
         self._last_image = None
         self._mode = config.get(CONF_MODE)
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return camera image."""
         return asyncio.run_coroutine_threadsafe(
             self.async_camera_image(), self.hass.loop
         ).result()
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         now = dt_util.utcnow()
 
@@ -244,13 +258,13 @@ class ProxyCamera(Camera):
             job = _resize_image
         else:
             job = _crop_image
-        image = await self.hass.async_add_executor_job(
+        image_bytes: bytes = await self.hass.async_add_executor_job(
             job, image.content, self._image_opts
         )
 
         if self._cache_images:
-            self._last_image = image
-        return image
+            self._last_image = image_bytes
+        return image_bytes
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from camera images."""

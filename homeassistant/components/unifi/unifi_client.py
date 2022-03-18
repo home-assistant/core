@@ -47,8 +47,8 @@ class UniFiClient(UniFiBase):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a client description for device registry."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.client.mac)},
-            "default_name": self.name,
-            "default_manufacturer": self.client.oui,
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.client.mac)},
+            default_manufacturer=self.client.oui,
+            default_name=self.name,
+        )

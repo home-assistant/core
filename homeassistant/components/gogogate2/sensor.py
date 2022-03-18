@@ -5,14 +5,15 @@ from itertools import chain
 
 from ismartgate.common import AbstractDoor, get_configured_doors
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import (
@@ -48,8 +49,26 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
+class DoorSensorEntity(GoGoGate2Entity, SensorEntity):
+    """Base class for door sensor entities."""
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        attrs = super().extra_state_attributes
+        door = self.door
+        if door.sensorid is not None:
+            attrs["sensor_id"] = door.sensorid
+        return attrs
+
+
+class DoorSensorBattery(DoorSensorEntity):
     """Battery sensor entity for gogogate2 door sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self,
@@ -64,30 +83,20 @@ class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
     @property
     def name(self):
         """Return the name of the door."""
-        return f"{self._get_door().name} battery"
+        return f"{self.door.name} battery"
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
-        door = self._get_door()
-        return door.voltage  # This is a percentage, not an absolute voltage
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        door = self._get_door()
-        if door.sensorid is not None:
-            return {"door_id": door.door_id, "sensor_id": door.sensorid}
-        return None
+        return self.door.voltage  # This is a percentage, not an absolute voltage
 
 
-class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
+class DoorSensorTemperature(DoorSensorEntity):
     """Temperature sensor entity for gogogate2 door sensor."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(
         self,
@@ -102,28 +111,9 @@ class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
     @property
     def name(self):
         """Return the name of the door."""
-        return f"{self._get_door().name} temperature"
+        return f"{self.door.name} temperature"
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
-        door = self._get_door()
-        return door.temperature
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit_of_measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        door = self._get_door()
-        if door.sensorid is not None:
-            return {"door_id": door.door_id, "sensor_id": door.sensorid}
-        return None
+        return self.door.temperature

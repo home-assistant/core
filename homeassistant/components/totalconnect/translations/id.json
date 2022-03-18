@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Akun sudah dikonfigurasi",
+            "no_locations": "Tidak ada lokasi yang tersedia untuk pengguna ini, periksa pengaturan TotalConnect",
             "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
@@ -11,9 +12,10 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Lokasi"
+                    "location": "Lokasi",
+                    "usercode": "Kode pengguna"
                 },
-                "description": "Masukkan kode pengguna untuk pengguna ini di lokasi ini",
+                "description": "Masukkan kode pengguna untuk pengguna ini di lokasi {location_id}",
                 "title": "Lokasi Kode Pengguna"
             },
             "reauth_confirm": {

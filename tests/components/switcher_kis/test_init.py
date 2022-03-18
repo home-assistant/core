@@ -35,7 +35,7 @@ async def test_async_setup_yaml_config(hass, mock_bridge) -> None:
 @pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_DEVICES], indirect=True)
 async def test_async_setup_user_config_flow(hass, mock_bridge) -> None:
     """Test setup started by user config flow."""
-    with patch("homeassistant.components.switcher_kis.utils.asyncio.sleep"):
+    with patch("homeassistant.components.switcher_kis.utils.DISCOVERY_TIME_SEC", 0):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )

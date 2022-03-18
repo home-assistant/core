@@ -1,4 +1,6 @@
 """Support for Pocket Casts."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,7 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +27,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the pocketcasts platform for sensors."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -33,7 +43,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([PocketCastsSensor(api)], True)
     except OSError as err:
         _LOGGER.error("Connection to server failed: %s", err)
-        return False
 
 
 class PocketCastsSensor(SensorEntity):
@@ -50,7 +59,7 @@ class PocketCastsSensor(SensorEntity):
         return SENSOR_NAME
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the sensor state."""
         return self._state
 

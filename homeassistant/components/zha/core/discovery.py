@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from homeassistant import const as ha_const
 from homeassistant.core import HomeAssistant, callback
@@ -17,6 +17,7 @@ from . import const as zha_const, registries as zha_regs, typing as zha_typing
 from .. import (  # noqa: F401 pylint: disable=unused-import,
     alarm_control_panel,
     binary_sensor,
+    button,
     climate,
     cover,
     device_tracker,
@@ -24,7 +25,9 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     light,
     lock,
     number,
+    select,
     sensor,
+    siren,
     switch,
 )
 from .channels import base
@@ -46,7 +49,8 @@ async def async_add_entities(
     """Add entities helper."""
     if not entities:
         return
-    to_add = [ent_cls(*args) for ent_cls, args in entities]
+    to_add = [ent_cls.create_entity(*args) for ent_cls, args in entities]
+    to_add = [entity for entity in to_add if entity is not None]
     _async_add_entities(to_add, update_before_add=update_before_add)
     entities.clear()
 
@@ -62,7 +66,9 @@ class ProbeEndpoint:
     def discover_entities(self, channel_pool: zha_typing.ChannelPoolType) -> None:
         """Process an endpoint on a zigpy device."""
         self.discover_by_device_type(channel_pool)
+        self.discover_multi_entities(channel_pool)
         self.discover_by_cluster_id(channel_pool)
+        zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
     def discover_by_device_type(self, channel_pool: zha_typing.ChannelPoolType) -> None:
@@ -159,11 +165,52 @@ class ProbeEndpoint:
             channel = channel_class(cluster, ep_channels)
             self.probe_single_cluster(component, channel, ep_channels)
 
+    @staticmethod
+    @callback
+    def discover_multi_entities(channel_pool: zha_typing.ChannelPoolType) -> None:
+        """Process an endpoint on and discover multiple entities."""
+
+        ep_profile_id = channel_pool.endpoint.profile_id
+        ep_device_type = channel_pool.endpoint.device_type
+        cmpt_by_dev_type = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
+        remaining_channels = channel_pool.unclaimed_channels()
+
+        matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
+            channel_pool.manufacturer, channel_pool.model, remaining_channels
+        )
+
+        channel_pool.claim_channels(claimed)
+        for component, ent_n_chan_list in matches.items():
+            for entity_and_channel in ent_n_chan_list:
+                _LOGGER.debug(
+                    "'%s' component -> '%s' using %s",
+                    component,
+                    entity_and_channel.entity_class.__name__,
+                    [ch.name for ch in entity_and_channel.claimed_channel],
+                )
+        for component, ent_n_chan_list in matches.items():
+            for entity_and_channel in ent_n_chan_list:
+                if component == cmpt_by_dev_type:
+                    # for well known device types, like thermostats we'll take only 1st class
+                    channel_pool.async_new_entity(
+                        component,
+                        entity_and_channel.entity_class,
+                        channel_pool.unique_id,
+                        entity_and_channel.claimed_channel,
+                    )
+                    break
+                first_ch = entity_and_channel.claimed_channel[0]
+                channel_pool.async_new_entity(
+                    component,
+                    entity_and_channel.entity_class,
+                    f"{channel_pool.unique_id}-{first_ch.cluster.cluster_id}",
+                    entity_and_channel.claimed_channel,
+                )
+
     def initialize(self, hass: HomeAssistant) -> None:
         """Update device overrides config."""
         zha_config = hass.data[zha_const.DATA_ZHA].get(zha_const.DATA_ZHA_CONFIG, {})
-        overrides = zha_config.get(zha_const.CONF_DEVICE_CONFIG)
-        if overrides:
+        if overrides := zha_config.get(zha_const.CONF_DEVICE_CONFIG):
             self._device_configs.update(overrides)
 
 
@@ -190,11 +237,11 @@ class GroupProbe:
             unsub()
             self._unsubs.remove(unsub)
 
+    @callback
     def _reprobe_group(self, group_id: int) -> None:
         """Reprobe a group for entities after its members change."""
         zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
-        zha_group = zha_gateway.groups.get(group_id)
-        if zha_group is None:
+        if (zha_group := zha_gateway.groups.get(group_id)) is None:
             return
         self.discover_group_entities(zha_group)
 

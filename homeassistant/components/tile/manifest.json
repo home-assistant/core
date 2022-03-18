@@ -3,7 +3,8 @@
   "name": "Tile",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tile",
-  "requirements": ["pytile==5.2.3"],
+  "requirements": ["pytile==2022.02.0"],
   "codeowners": ["@bachya"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["pytile"]
 }

@@ -3,7 +3,9 @@ from datetime import timedelta
 import logging
 
 from pybotvac import Account
+from urllib3.response import HTTPResponse
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import Throttle
 
@@ -21,23 +23,23 @@ class NeatoHub:
         self.my_neato: Account = neato
 
     @Throttle(timedelta(minutes=1))
-    def update_robots(self):
+    def update_robots(self) -> None:
         """Update the robot states."""
         _LOGGER.debug("Running HUB.update_robots %s", self._hass.data.get(NEATO_ROBOTS))
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
         self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
 
-    def download_map(self, url):
+    def download_map(self, url: str) -> HTTPResponse:
         """Download a new map image."""
         map_image_data = self.my_neato.get_map_image(url)
         return map_image_data
 
-    async def async_update_entry_unique_id(self, entry) -> str:
+    async def async_update_entry_unique_id(self, entry: ConfigEntry) -> str:
         """Update entry for unique_id."""
 
         await self._hass.async_add_executor_job(self.my_neato.refresh_userdata)
-        unique_id = self.my_neato.unique_id
+        unique_id: str = self.my_neato.unique_id
 
         if entry.unique_id == unique_id:
             return unique_id

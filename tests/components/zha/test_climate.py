@@ -3,6 +3,9 @@
 from unittest.mock import patch
 
 import pytest
+import zhaquirks.sinope.thermostat
+import zhaquirks.tuya.ts0601_trv
+import zigpy.profiles
 import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
 import zigpy.zcl.foundation as zcl_f
@@ -22,6 +25,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_LOW,
     FAN_ON,
@@ -42,88 +46,116 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.components.zha.climate import (
-    DOMAIN,
-    HVAC_MODE_2_SYSTEM,
-    SEQ_OF_OPERATION,
-)
+from homeassistant.components.zha.climate import HVAC_MODE_2_SYSTEM, SEQ_OF_OPERATION
 from homeassistant.components.zha.core.const import PRESET_COMPLEX, PRESET_SCHEDULE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNKNOWN,
+    Platform,
+)
 
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 CLIMATE = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
-        "in_clusters": [
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
             zigpy.zcl.clusters.general.Basic.cluster_id,
             zigpy.zcl.clusters.general.Identify.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
         ],
-        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
 }
 
 CLIMATE_FAN = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
-        "in_clusters": [
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
             zigpy.zcl.clusters.general.Basic.cluster_id,
             zigpy.zcl.clusters.general.Identify.cluster_id,
             zigpy.zcl.clusters.hvac.Fan.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
         ],
-        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
 }
 
 CLIMATE_SINOPE = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
-        "in_clusters": [
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
             zigpy.zcl.clusters.general.Basic.cluster_id,
             zigpy.zcl.clusters.general.Identify.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
             65281,
         ],
-        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id, 65281],
-        "profile_id": 260,
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id, 65281],
+    },
+    196: {
+        SIG_EP_PROFILE: 0xC25D,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [zigpy.zcl.clusters.general.PowerConfiguration.cluster_id],
+        SIG_EP_OUTPUT: [],
     },
 }
 
 CLIMATE_ZEN = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
-        "in_clusters": [
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
             zigpy.zcl.clusters.general.Basic.cluster_id,
             zigpy.zcl.clusters.general.Identify.cluster_id,
             zigpy.zcl.clusters.hvac.Fan.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
         ],
-        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
 }
 
 CLIMATE_MOES = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
-        "in_clusters": [
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
             zigpy.zcl.clusters.general.Basic.cluster_id,
             zigpy.zcl.clusters.general.Identify.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
             61148,
         ],
-        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
 }
+
+CLIMATE_ZONNSMART = {
+    1: {
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
+            zigpy.zcl.clusters.general.Basic.cluster_id,
+            zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
+            zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
+            61148,
+        ],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
+    }
+}
+
 MANUF_SINOPE = "Sinope Technologies"
 MANUF_ZEN = "Zen Within"
 MANUF_MOES = "_TZE200_ckud7u2l"
+MANUF_ZONNSMART = "_TZE200_hue3yfsn"
 
 ZCL_ATTR_PLUG = {
     "abs_min_heat_setpoint_limit": 800,
@@ -153,13 +185,14 @@ ZCL_ATTR_PLUG = {
 def device_climate_mock(hass, zigpy_device_mock, zha_device_joined):
     """Test regular thermostat device."""
 
-    async def _dev(clusters, plug=None, manuf=None):
+    async def _dev(clusters, plug=None, manuf=None, quirk=None):
         if plug is None:
             plugged_attrs = ZCL_ATTR_PLUG
         else:
             plugged_attrs = {**ZCL_ATTR_PLUG, **plug}
 
-        zigpy_device = zigpy_device_mock(clusters, manufacturer=manuf)
+        zigpy_device = zigpy_device_mock(clusters, manufacturer=manuf, quirk=quirk)
+        zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
         zigpy_device.endpoints[1].thermostat.PLUGGED_ATTR_READS = plugged_attrs
         zha_device = await zha_device_joined(zigpy_device)
         await async_enable_traffic(hass, [zha_device])
@@ -192,7 +225,11 @@ async def device_climate_fan(device_climate_mock):
 async def device_climate_sinope(device_climate_mock):
     """Sinope thermostat."""
 
-    return await device_climate_mock(CLIMATE_SINOPE, manuf=MANUF_SINOPE)
+    return await device_climate_mock(
+        CLIMATE_SINOPE,
+        manuf=MANUF_SINOPE,
+        quirk=zhaquirks.sinope.thermostat.SinopeTechnologiesThermostat,
+    )
 
 
 @pytest.fixture
@@ -206,7 +243,20 @@ async def device_climate_zen(device_climate_mock):
 async def device_climate_moes(device_climate_mock):
     """MOES thermostat."""
 
-    return await device_climate_mock(CLIMATE_MOES, manuf=MANUF_MOES)
+    return await device_climate_mock(
+        CLIMATE_MOES, manuf=MANUF_MOES, quirk=zhaquirks.tuya.ts0601_trv.MoesHY368_Type1
+    )
+
+
+@pytest.fixture
+async def device_climate_zonnsmart(device_climate_mock):
+    """ZONNSMART thermostat."""
+
+    return await device_climate_mock(
+        CLIMATE_ZONNSMART,
+        manuf=MANUF_ZONNSMART,
+        quirk=zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG,
+    )
 
 
 def test_sequence_mappings():
@@ -222,7 +272,7 @@ async def test_climate_local_temp(hass, device_climate):
     """Test local temperature."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
@@ -232,124 +282,162 @@ async def test_climate_local_temp(hass, device_climate):
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
 
 
-async def test_climate_hvac_action_running_state(hass, device_climate):
+async def test_climate_hvac_action_running_state(hass, device_climate_sinope):
     """Test hvac action via running state."""
 
-    thrm_cluster = device_climate.device.endpoints[1].thermostat
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    thrm_cluster = device_climate_sinope.device.endpoints[1].thermostat
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_sinope, hass)
+    sensor_entity_id = await find_entity_id(
+        Platform.SENSOR, device_climate_sinope, hass, "hvac"
+    )
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_OFF
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Off}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_OFF
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001C: Thermostat.SystemMode.Auto}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_IDLE
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Cool}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_COOL
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Heat}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_HEAT
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Off}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_IDLE
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Fan_State_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_FAN
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_FAN
 
 
 async def test_climate_hvac_action_running_state_zen(hass, device_climate_zen):
     """Test Zen hvac action via running state."""
 
     thrm_cluster = device_climate_zen.device.endpoints[1].thermostat
-    entity_id = await find_entity_id(DOMAIN, device_climate_zen, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_zen, hass)
+    sensor_entity_id = await find_entity_id(Platform.SENSOR, device_climate_zen, hass)
 
     state = hass.states.get(entity_id)
     assert ATTR_HVAC_ACTION not in state.attributes
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == "unknown"
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Cool_2nd_Stage_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_COOL
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Fan_State_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_FAN
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_FAN
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Heat_2nd_Stage_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_HEAT
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Fan_2nd_Stage_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_FAN
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_FAN
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Cool_State_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_COOL
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Fan_3rd_Stage_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_FAN
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_FAN
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Heat_State_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_HEAT
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Idle}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_OFF
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001C: Thermostat.SystemMode.Heat}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_IDLE
 
 
 async def test_climate_hvac_action_pi_demand(hass, device_climate):
     """Test hvac action based on pi_heating/cooling_demand attrs."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert ATTR_HVAC_ACTION not in state.attributes
 
     await send_attributes_report(hass, thrm_cluster, {0x0007: 10})
     state = hass.states.get(entity_id)
@@ -393,7 +481,7 @@ async def test_hvac_mode(hass, device_climate, sys_mode, hvac_mode):
     """Test HVAC modee."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
 
     state = hass.states.get(entity_id)
     assert state.state == HVAC_MODE_OFF
@@ -431,7 +519,7 @@ async def test_hvac_modes(hass, device_climate_mock, seq_of_op, modes):
     device_climate = await device_climate_mock(
         CLIMATE, {"ctrl_seqe_of_oper": seq_of_op}
     )
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
     state = hass.states.get(entity_id)
     assert set(state.attributes[ATTR_HVAC_MODES]) == modes
 
@@ -450,26 +538,22 @@ async def test_target_temperature(
 ):
     """Test target temperature property."""
 
-    with patch.object(
-        zigpy.zcl.clusters.manufacturer_specific.ManufacturerSpecificCluster,
-        "ep_attribute",
-        "sinope_manufacturer_specific",
-    ):
-        device_climate = await device_climate_mock(
-            CLIMATE_SINOPE,
-            {
-                "occupied_cooling_setpoint": 2500,
-                "occupied_heating_setpoint": 2200,
-                "system_mode": sys_mode,
-                "unoccupied_heating_setpoint": 1600,
-                "unoccupied_cooling_setpoint": 2700,
-            },
-            manuf=MANUF_SINOPE,
-        )
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    device_climate = await device_climate_mock(
+        CLIMATE_SINOPE,
+        {
+            "occupied_cooling_setpoint": 2500,
+            "occupied_heating_setpoint": 2200,
+            "system_mode": sys_mode,
+            "unoccupied_heating_setpoint": 1600,
+            "unoccupied_cooling_setpoint": 2700,
+        },
+        manuf=MANUF_SINOPE,
+        quirk=zhaquirks.sinope.thermostat.SinopeTechnologiesThermostat,
+    )
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
     if preset:
         await hass.services.async_call(
-            DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: preset},
             blocking=True,
@@ -492,24 +576,20 @@ async def test_target_temperature_high(
 ):
     """Test target temperature high property."""
 
-    with patch.object(
-        zigpy.zcl.clusters.manufacturer_specific.ManufacturerSpecificCluster,
-        "ep_attribute",
-        "sinope_manufacturer_specific",
-    ):
-        device_climate = await device_climate_mock(
-            CLIMATE_SINOPE,
-            {
-                "occupied_cooling_setpoint": 1700,
-                "system_mode": Thermostat.SystemMode.Auto,
-                "unoccupied_cooling_setpoint": unoccupied,
-            },
-            manuf=MANUF_SINOPE,
-        )
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    device_climate = await device_climate_mock(
+        CLIMATE_SINOPE,
+        {
+            "occupied_cooling_setpoint": 1700,
+            "system_mode": Thermostat.SystemMode.Auto,
+            "unoccupied_cooling_setpoint": unoccupied,
+        },
+        manuf=MANUF_SINOPE,
+        quirk=zhaquirks.sinope.thermostat.SinopeTechnologiesThermostat,
+    )
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
     if preset:
         await hass.services.async_call(
-            DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: preset},
             blocking=True,
@@ -532,24 +612,20 @@ async def test_target_temperature_low(
 ):
     """Test target temperature low property."""
 
-    with patch.object(
-        zigpy.zcl.clusters.manufacturer_specific.ManufacturerSpecificCluster,
-        "ep_attribute",
-        "sinope_manufacturer_specific",
-    ):
-        device_climate = await device_climate_mock(
-            CLIMATE_SINOPE,
-            {
-                "occupied_heating_setpoint": 2100,
-                "system_mode": Thermostat.SystemMode.Auto,
-                "unoccupied_heating_setpoint": unoccupied,
-            },
-            manuf=MANUF_SINOPE,
-        )
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    device_climate = await device_climate_mock(
+        CLIMATE_SINOPE,
+        {
+            "occupied_heating_setpoint": 2100,
+            "system_mode": Thermostat.SystemMode.Auto,
+            "unoccupied_heating_setpoint": unoccupied,
+        },
+        manuf=MANUF_SINOPE,
+        quirk=zhaquirks.sinope.thermostat.SinopeTechnologiesThermostat,
+    )
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
     if preset:
         await hass.services.async_call(
-            DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: preset},
             blocking=True,
@@ -574,13 +650,13 @@ async def test_set_hvac_mode(hass, device_climate, hvac_mode, sys_mode):
     """Test setting hvac mode."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
 
     state = hass.states.get(entity_id)
     assert state.state == HVAC_MODE_OFF
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
         blocking=True,
@@ -599,7 +675,7 @@ async def test_set_hvac_mode(hass, device_climate, hvac_mode, sys_mode):
     # turn off
     thrm_cluster.write_attributes.reset_mock()
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVAC_MODE_OFF},
         blocking=True,
@@ -615,7 +691,7 @@ async def test_set_hvac_mode(hass, device_climate, hvac_mode, sys_mode):
 async def test_preset_setting(hass, device_climate_sinope):
     """Test preset setting."""
 
-    entity_id = await find_entity_id(DOMAIN, device_climate_sinope, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_sinope, hass)
     thrm_cluster = device_climate_sinope.device.endpoints[1].thermostat
 
     state = hass.states.get(entity_id)
@@ -627,7 +703,7 @@ async def test_preset_setting(hass, device_climate_sinope):
     ]
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
         blocking=True,
@@ -644,7 +720,7 @@ async def test_preset_setting(hass, device_climate_sinope):
         zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]
     ]
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
         blocking=True,
@@ -661,7 +737,7 @@ async def test_preset_setting(hass, device_climate_sinope):
         zcl_f.WriteAttributesResponse.deserialize(b"\x01\x01\x01")[0]
     ]
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
         blocking=True,
@@ -678,7 +754,7 @@ async def test_preset_setting(hass, device_climate_sinope):
         zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]
     ]
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
         blocking=True,
@@ -693,14 +769,14 @@ async def test_preset_setting(hass, device_climate_sinope):
 async def test_preset_setting_invalid(hass, device_climate_sinope):
     """Test invalid preset setting."""
 
-    entity_id = await find_entity_id(DOMAIN, device_climate_sinope, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_sinope, hass)
     thrm_cluster = device_climate_sinope.device.endpoints[1].thermostat
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "invalid_preset"},
         blocking=True,
@@ -714,14 +790,14 @@ async def test_preset_setting_invalid(hass, device_climate_sinope):
 async def test_set_temperature_hvac_mode(hass, device_climate):
     """Test setting HVAC mode in temperature service call."""
 
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
     thrm_cluster = device_climate.device.endpoints[1].thermostat
 
     state = hass.states.get(entity_id)
     assert state.state == HVAC_MODE_OFF
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -742,30 +818,26 @@ async def test_set_temperature_hvac_mode(hass, device_climate):
 async def test_set_temperature_heat_cool(hass, device_climate_mock):
     """Test setting temperature service call in heating/cooling HVAC mode."""
 
-    with patch.object(
-        zigpy.zcl.clusters.manufacturer_specific.ManufacturerSpecificCluster,
-        "ep_attribute",
-        "sinope_manufacturer_specific",
-    ):
-        device_climate = await device_climate_mock(
-            CLIMATE_SINOPE,
-            {
-                "occupied_cooling_setpoint": 2500,
-                "occupied_heating_setpoint": 2000,
-                "system_mode": Thermostat.SystemMode.Auto,
-                "unoccupied_heating_setpoint": 1600,
-                "unoccupied_cooling_setpoint": 2700,
-            },
-            manuf=MANUF_SINOPE,
-        )
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    device_climate = await device_climate_mock(
+        CLIMATE_SINOPE,
+        {
+            "occupied_cooling_setpoint": 2500,
+            "occupied_heating_setpoint": 2000,
+            "system_mode": Thermostat.SystemMode.Auto,
+            "unoccupied_heating_setpoint": 1600,
+            "unoccupied_cooling_setpoint": 2700,
+        },
+        manuf=MANUF_SINOPE,
+        quirk=zhaquirks.sinope.thermostat.SinopeTechnologiesThermostat,
+    )
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
     thrm_cluster = device_climate.device.endpoints[1].thermostat
 
     state = hass.states.get(entity_id)
     assert state.state == HVAC_MODE_HEAT_COOL
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21},
         blocking=True,
@@ -777,7 +849,7 @@ async def test_set_temperature_heat_cool(hass, device_climate_mock):
     assert thrm_cluster.write_attributes.await_count == 0
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -799,7 +871,7 @@ async def test_set_temperature_heat_cool(hass, device_climate_mock):
     }
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
         blocking=True,
@@ -807,7 +879,7 @@ async def test_set_temperature_heat_cool(hass, device_climate_mock):
     thrm_cluster.write_attributes.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -832,30 +904,26 @@ async def test_set_temperature_heat_cool(hass, device_climate_mock):
 async def test_set_temperature_heat(hass, device_climate_mock):
     """Test setting temperature service call in heating HVAC mode."""
 
-    with patch.object(
-        zigpy.zcl.clusters.manufacturer_specific.ManufacturerSpecificCluster,
-        "ep_attribute",
-        "sinope_manufacturer_specific",
-    ):
-        device_climate = await device_climate_mock(
-            CLIMATE_SINOPE,
-            {
-                "occupied_cooling_setpoint": 2500,
-                "occupied_heating_setpoint": 2000,
-                "system_mode": Thermostat.SystemMode.Heat,
-                "unoccupied_heating_setpoint": 1600,
-                "unoccupied_cooling_setpoint": 2700,
-            },
-            manuf=MANUF_SINOPE,
-        )
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    device_climate = await device_climate_mock(
+        CLIMATE_SINOPE,
+        {
+            "occupied_cooling_setpoint": 2500,
+            "occupied_heating_setpoint": 2000,
+            "system_mode": Thermostat.SystemMode.Heat,
+            "unoccupied_heating_setpoint": 1600,
+            "unoccupied_cooling_setpoint": 2700,
+        },
+        manuf=MANUF_SINOPE,
+        quirk=zhaquirks.sinope.thermostat.SinopeTechnologiesThermostat,
+    )
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
     thrm_cluster = device_climate.device.endpoints[1].thermostat
 
     state = hass.states.get(entity_id)
     assert state.state == HVAC_MODE_HEAT
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -872,7 +940,7 @@ async def test_set_temperature_heat(hass, device_climate_mock):
     assert thrm_cluster.write_attributes.await_count == 0
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21},
         blocking=True,
@@ -888,7 +956,7 @@ async def test_set_temperature_heat(hass, device_climate_mock):
     }
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
         blocking=True,
@@ -896,7 +964,7 @@ async def test_set_temperature_heat(hass, device_climate_mock):
     thrm_cluster.write_attributes.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22},
         blocking=True,
@@ -915,30 +983,26 @@ async def test_set_temperature_heat(hass, device_climate_mock):
 async def test_set_temperature_cool(hass, device_climate_mock):
     """Test setting temperature service call in cooling HVAC mode."""
 
-    with patch.object(
-        zigpy.zcl.clusters.manufacturer_specific.ManufacturerSpecificCluster,
-        "ep_attribute",
-        "sinope_manufacturer_specific",
-    ):
-        device_climate = await device_climate_mock(
-            CLIMATE_SINOPE,
-            {
-                "occupied_cooling_setpoint": 2500,
-                "occupied_heating_setpoint": 2000,
-                "system_mode": Thermostat.SystemMode.Cool,
-                "unoccupied_cooling_setpoint": 1600,
-                "unoccupied_heating_setpoint": 2700,
-            },
-            manuf=MANUF_SINOPE,
-        )
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    device_climate = await device_climate_mock(
+        CLIMATE_SINOPE,
+        {
+            "occupied_cooling_setpoint": 2500,
+            "occupied_heating_setpoint": 2000,
+            "system_mode": Thermostat.SystemMode.Cool,
+            "unoccupied_cooling_setpoint": 1600,
+            "unoccupied_heating_setpoint": 2700,
+        },
+        manuf=MANUF_SINOPE,
+        quirk=zhaquirks.sinope.thermostat.SinopeTechnologiesThermostat,
+    )
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
     thrm_cluster = device_climate.device.endpoints[1].thermostat
 
     state = hass.states.get(entity_id)
     assert state.state == HVAC_MODE_COOL
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -955,7 +1019,7 @@ async def test_set_temperature_cool(hass, device_climate_mock):
     assert thrm_cluster.write_attributes.await_count == 0
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21},
         blocking=True,
@@ -971,7 +1035,7 @@ async def test_set_temperature_cool(hass, device_climate_mock):
     }
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
         blocking=True,
@@ -979,7 +1043,7 @@ async def test_set_temperature_cool(hass, device_climate_mock):
     thrm_cluster.write_attributes.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22},
         blocking=True,
@@ -1014,14 +1078,14 @@ async def test_set_temperature_wrong_mode(hass, device_climate_mock):
             },
             manuf=MANUF_SINOPE,
         )
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
     thrm_cluster = device_climate.device.endpoints[1].thermostat
 
     state = hass.states.get(entity_id)
     assert state.state == HVAC_MODE_DRY
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 24},
         blocking=True,
@@ -1037,14 +1101,14 @@ async def test_set_temperature_wrong_mode(hass, device_climate_mock):
 async def test_occupancy_reset(hass, device_climate_sinope):
     """Test away preset reset."""
 
-    entity_id = await find_entity_id(DOMAIN, device_climate_sinope, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_sinope, hass)
     thrm_cluster = device_climate_sinope.device.endpoints[1].thermostat
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
         blocking=True,
@@ -1064,7 +1128,7 @@ async def test_occupancy_reset(hass, device_climate_sinope):
 async def test_fan_mode(hass, device_climate_fan):
     """Test fan mode."""
 
-    entity_id = await find_entity_id(DOMAIN, device_climate_fan, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_fan, hass)
     thrm_cluster = device_climate_fan.device.endpoints[1].thermostat
 
     state = hass.states.get(entity_id)
@@ -1093,11 +1157,11 @@ async def test_fan_mode(hass, device_climate_fan):
 async def test_set_fan_mode_not_supported(hass, device_climate_fan):
     """Test fan setting unsupported mode."""
 
-    entity_id = await find_entity_id(DOMAIN, device_climate_fan, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_fan, hass)
     fan_cluster = device_climate_fan.device.endpoints[1].fan
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
         blocking=True,
@@ -1108,14 +1172,14 @@ async def test_set_fan_mode_not_supported(hass, device_climate_fan):
 async def test_set_fan_mode(hass, device_climate_fan):
     """Test fan mode setting."""
 
-    entity_id = await find_entity_id(DOMAIN, device_climate_fan, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_fan, hass)
     fan_cluster = device_climate_fan.device.endpoints[1].fan
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_FAN_MODE] == FAN_AUTO
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_ON},
         blocking=True,
@@ -1125,7 +1189,7 @@ async def test_set_fan_mode(hass, device_climate_fan):
 
     fan_cluster.write_attributes.reset_mock()
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_AUTO},
         blocking=True,
@@ -1137,14 +1201,14 @@ async def test_set_fan_mode(hass, device_climate_fan):
 async def test_set_moes_preset(hass, device_climate_moes):
     """Test setting preset for moes trv."""
 
-    entity_id = await find_entity_id(DOMAIN, device_climate_moes, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_moes, hass)
     thrm_cluster = device_climate_moes.device.endpoints[1].thermostat
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
         blocking=True,
@@ -1157,7 +1221,7 @@ async def test_set_moes_preset(hass, device_climate_moes):
 
     thrm_cluster.write_attributes.reset_mock()
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_SCHEDULE},
         blocking=True,
@@ -1173,7 +1237,7 @@ async def test_set_moes_preset(hass, device_climate_moes):
 
     thrm_cluster.write_attributes.reset_mock()
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_COMFORT},
         blocking=True,
@@ -1189,7 +1253,7 @@ async def test_set_moes_preset(hass, device_climate_moes):
 
     thrm_cluster.write_attributes.reset_mock()
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_ECO},
         blocking=True,
@@ -1205,7 +1269,7 @@ async def test_set_moes_preset(hass, device_climate_moes):
 
     thrm_cluster.write_attributes.reset_mock()
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_BOOST},
         blocking=True,
@@ -1221,7 +1285,7 @@ async def test_set_moes_preset(hass, device_climate_moes):
 
     thrm_cluster.write_attributes.reset_mock()
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_COMPLEX},
         blocking=True,
@@ -1237,7 +1301,7 @@ async def test_set_moes_preset(hass, device_climate_moes):
 
     thrm_cluster.write_attributes.reset_mock()
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
         blocking=True,
@@ -1252,7 +1316,7 @@ async def test_set_moes_preset(hass, device_climate_moes):
 async def test_set_moes_operation_mode(hass, device_climate_moes):
     """Test setting preset for moes trv."""
 
-    entity_id = await find_entity_id(DOMAIN, device_climate_moes, hass)
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_moes, hass)
     thrm_cluster = device_climate_moes.device.endpoints[1].thermostat
 
     await send_attributes_report(hass, thrm_cluster, {"operation_preset": 0})
@@ -1289,3 +1353,102 @@ async def test_set_moes_operation_mode(hass, device_climate_moes):
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_COMPLEX
+
+
+async def test_set_zonnsmart_preset(hass, device_climate_zonnsmart):
+    """Test setting preset from homeassistant for zonnsmart trv."""
+
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_zonnsmart, hass)
+    thrm_cluster = device_climate_zonnsmart.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_SCHEDULE},
+        blocking=True,
+    )
+
+    assert thrm_cluster.write_attributes.await_count == 1
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "operation_preset": 0
+    }
+
+    thrm_cluster.write_attributes.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "holiday"},
+        blocking=True,
+    )
+
+    assert thrm_cluster.write_attributes.await_count == 2
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "operation_preset": 1
+    }
+    assert thrm_cluster.write_attributes.call_args_list[1][0][0] == {
+        "operation_preset": 3
+    }
+
+    thrm_cluster.write_attributes.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "frost protect"},
+        blocking=True,
+    )
+
+    assert thrm_cluster.write_attributes.await_count == 2
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "operation_preset": 1
+    }
+    assert thrm_cluster.write_attributes.call_args_list[1][0][0] == {
+        "operation_preset": 4
+    }
+
+    thrm_cluster.write_attributes.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+        blocking=True,
+    )
+
+    assert thrm_cluster.write_attributes.await_count == 1
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "operation_preset": 1
+    }
+
+
+async def test_set_zonnsmart_operation_mode(hass, device_climate_zonnsmart):
+    """Test setting preset from trv for zonnsmart trv."""
+
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_zonnsmart, hass)
+    thrm_cluster = device_climate_zonnsmart.device.endpoints[1].thermostat
+
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": 0})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_SCHEDULE
+
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": 1})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": 2})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == "holiday"
+
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": 3})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == "holiday"
+
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": 4})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == "frost protect"

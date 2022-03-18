@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar"
         },
-        "flow_title": "{model} {host}",
+        "flow_title": "{model} {id} ({host})",
         "step": {
             "discovery_confirm": {
                 "description": "\u00bfQuieres configurar {model} ({host})?"
@@ -21,7 +21,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Si dejas la direcci\u00f3n IP vac\u00eda, se usar\u00e1 descubrimiento para encontrar dispositivos."
+                "description": "Si dejas el host vac\u00edo, se usar\u00e1 descubrimiento para encontrar dispositivos."
             }
         }
     },

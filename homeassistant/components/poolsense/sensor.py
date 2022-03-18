@@ -1,114 +1,100 @@
 """Sensor platform for the PoolSense sensor."""
-from homeassistant.components.sensor import SensorEntity
+from __future__ import annotations
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_EMAIL,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     ELECTRIC_POTENTIAL_MILLIVOLT,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PoolSenseEntity
-from .const import ATTRIBUTION, DOMAIN
+from .const import DOMAIN
 
-SENSORS = {
-    "Chlorine": {
-        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
-        "icon": "mdi:pool",
-        "name": "Chlorine",
-        "device_class": None,
-    },
-    "pH": {"unit": None, "icon": "mdi:pool", "name": "pH", "device_class": None},
-    "Battery": {
-        "unit": PERCENTAGE,
-        "icon": None,
-        "name": "Battery",
-        "device_class": DEVICE_CLASS_BATTERY,
-    },
-    "Water Temp": {
-        "unit": TEMP_CELSIUS,
-        "icon": "mdi:coolant-temperature",
-        "name": "Temperature",
-        "device_class": DEVICE_CLASS_TEMPERATURE,
-    },
-    "Last Seen": {
-        "unit": None,
-        "icon": "mdi:clock",
-        "name": "Last Seen",
-        "device_class": DEVICE_CLASS_TIMESTAMP,
-    },
-    "Chlorine High": {
-        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
-        "icon": "mdi:pool",
-        "name": "Chlorine High",
-        "device_class": None,
-    },
-    "Chlorine Low": {
-        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
-        "icon": "mdi:pool",
-        "name": "Chlorine Low",
-        "device_class": None,
-    },
-    "pH High": {
-        "unit": None,
-        "icon": "mdi:pool",
-        "name": "pH High",
-        "device_class": None,
-    },
-    "pH Low": {
-        "unit": None,
-        "icon": "mdi:pool",
-        "name": "pH Low",
-        "device_class": None,
-    },
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="Chlorine",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        icon="mdi:pool",
+        name="Chlorine",
+    ),
+    SensorEntityDescription(
+        key="pH",
+        icon="mdi:pool",
+        name="pH",
+    ),
+    SensorEntityDescription(
+        key="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        name="Battery",
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    SensorEntityDescription(
+        key="Water Temp",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon="mdi:coolant-temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="Last Seen",
+        icon="mdi:clock",
+        name="Last Seen",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="Chlorine High",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        icon="mdi:pool",
+        name="Chlorine High",
+    ),
+    SensorEntityDescription(
+        key="Chlorine Low",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        icon="mdi:pool",
+        name="Chlorine Low",
+    ),
+    SensorEntityDescription(
+        key="pH High",
+        icon="mdi:pool",
+        name="pH High",
+    ),
+    SensorEntityDescription(
+        key="pH Low",
+        icon="mdi:pool",
+        name="pH Low",
+    ),
+)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Defer sensor setup to the shared sensor module."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    sensors_list = []
-    for sensor in SENSORS:
-        sensors_list.append(
-            PoolSenseSensor(coordinator, config_entry.data[CONF_EMAIL], sensor)
-        )
+    entities = [
+        PoolSenseSensor(coordinator, config_entry.data[CONF_EMAIL], description)
+        for description in SENSOR_TYPES
+    ]
 
-    async_add_entities(sensors_list, False)
+    async_add_entities(entities, False)
 
 
 class PoolSenseSensor(PoolSenseEntity, SensorEntity):
     """Sensor representing poolsense data."""
 
     @property
-    def name(self):
-        """Return the name of the particular component."""
-        return f"PoolSense {SENSORS[self.info_type]['name']}"
-
-    @property
-    def state(self):
+    def native_value(self):
         """State of the sensor."""
-        return self.coordinator.data[self.info_type]
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return SENSORS[self.info_type]["device_class"]
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return SENSORS[self.info_type]["icon"]
-
-    @property
-    def unit_of_measurement(self):
-        """Return unit of measurement."""
-        return SENSORS[self.info_type]["unit"]
-
-    @property
-    def extra_state_attributes(self):
-        """Return device attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+        return self.coordinator.data[self.entity_description.key]

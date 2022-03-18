@@ -1,120 +1,88 @@
 # Describes the format for available RainMachine services
 disable_program:
-  name: Disable program
-  description: Disable a program.
+  name: Disable Program
+  description: Disable a program
   target:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    program_id:
-      name: Program ID
-      description: The program to disable.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
 disable_zone:
-  name: Disable zone
-  description: Disable a zone.
+  name: Disable Zone
+  description: Disable a zone
   target:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    zone_id:
-      name: Zone ID
-      description: The zone to disable.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
 enable_program:
-  name: Enable program
-  description: Enable a program.
+  name: Enable Program
+  description: Enable a program
   target:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    program_id:
-      name: Program ID
-      description: The program to enable.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
 enable_zone:
-  name: Enable zone
-  description: Enable a zone.
+  name: Enable Zone
+  description: Enable a zone
   target:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    zone_id:
-      name: Zone ID
-      description: The zone to enable.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
 pause_watering:
-  name: Pause watering
-  description: Pause all watering for a number of seconds.
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
+  name: Pause All Watering
+  description: Pause all watering activities for a number of seconds
   fields:
+    device_id:
+      name: Controller
+      description: The controller whose watering activities should be paused
+      required: true
+      selector:
+        device:
+          integration: rainmachine
     seconds:
-      name: Seconds
-      description: The time to pause.
+      name: Duration
+      description: The amount of time (in seconds) to pause watering
       required: true
       selector:
         number:
           min: 1
-          max: 86400
+          max: 43200
           unit_of_measurement: seconds
+restrict_watering:
+  name: Restrict All Watering
+  description: Restrict all watering activities from starting for a time period
+  fields:
+    device_id:
+      name: Controller
+      description: The controller whose watering activities should be restricted
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    duration:
+      name: Duration
+      description: The time period to restrict watering activities from starting
+      required: true
+      default: "01:00:00"
+      selector:
+        text:
 start_program:
-  name: Start program
-  description: Start a program.
+  name: Start Program
+  description: Start a program
   target:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    program_id:
-      name: Program ID
-      description: The program to start.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
 start_zone:
-  name: Start zone
-  description: Start a zone for a set number of seconds.
+  name: Start Zone
+  description: Start a zone
   target:
     entity:
       integration: rainmachine
       domain: switch
   fields:
-    zone_id:
-      name: Zone ID
-      description: The zone to start.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
     zone_run_time:
-      name: Zone run time
-      description: The number of seconds to run the zone.
+      name: Run Time
+      description: The amount of time (in seconds) to run the zone
       default: 600
       selector:
         number:
@@ -122,48 +90,183 @@ start_zone:
           max: 86400
           mode: box
 stop_all:
-  name: Stop all
-  description: Stop all watering activities.
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
+  name: Stop All Watering
+  description: Stop all watering activities
+  fields:
+    device_id:
+      name: Controller
+      description: The controller whose watering activities should be stopped
+      required: true
+      selector:
+        device:
+          integration: rainmachine
 stop_program:
-  name: Stop program
-  description: Stop a program.
+  name: Stop Program
+  description: Stop a program
   target:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    program_id:
-      name: Program ID
-      description: The program to stop.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
 stop_zone:
-  name: Stop zone
-  description: Stop a zone.
+  name: Stop Zone
+  description: Stop a zone
   target:
     entity:
       integration: rainmachine
       domain: switch
+unpause_watering:
+  name: Unpause All Watering
+  description: Unpause all paused watering activities
   fields:
-    zone_id:
-      name: Zone ID
-      description: The zone to stop.
+    device_id:
+      name: Controller
+      description: The controller whose watering activities should be unpaused
       required: true
       selector:
+        device:
+          integration: rainmachine
+push_weather_data:
+  name: Push Weather Data
+  description: >-
+    Push Weather Data from Home Assistant to the RainMachine device.
+
+    Local Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent.
+    Units must be sent in metric; no conversions are performed by the integraion.
+
+    See details of RainMachine API Here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post
+  fields:
+    device_id:
+      name: Controller
+      description: The controller for the weather data to be pushed.
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    timestamp:
+      name: Timestamp
+      description: UNIX Timestamp for the Weather Data. If omitted, the RainMachine device's local time at the time of the call is used.
+      selector:
+        text:
+    mintemp:
+      name: Min Temp
+      description: Minimum Temperature (°C).
+      selector:
         number:
-          min: 1
-          max: 255
-unpause_watering:
-  name: Unpause watering
-  description: Unpause all watering.
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: '°C'
+    maxtemp:
+      name: Max Temp
+      description: Maximum Temperature (°C).
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: '°C'
+    temperature:
+      name: Temperature
+      description: Current Temperature (°C).
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: '°C'
+    wind:
+      name: Wind Speed
+      description: Wind Speed (m/s)
+      selector:
+        number:
+          min: 0
+          max: 65
+          unit_of_measurement: 'm/s'
+    solarrad:
+      name: Solar Radiation
+      description: Solar Radiation (MJ/m²/h)
+      selector:
+        number:
+          min: 0
+          max: 5
+          step: 0.1
+          unit_of_measurement: 'MJ/m²/h'
+    et:
+      name: Evapotranspiration
+      description: Evapotranspiration (mm)
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: 'mm'
+    qpf:
+      name: Quantitative Precipitation Forecast
+      description: >-
+        Quantitative Precipitation Forecast (mm), or QPF. Note: QPF values shouldn't
+        be send as cumulative values but the measured/forecasted values for each hour or day.
+        The RainMachine Mixer will sum all QPF values in the current day to have the day total QPF.
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: 'mm'
+    rain:
+      name: Measured Rainfall
+      description: >-
+        Measured Rainfail (mm). Note: RAIN values shouldn't be send as cumulative values but the
+        measured/forecasted values for each hour or day. The RainMachine Mixer will sum all RAIN values
+        in the current day to have the day total RAIN.
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: 'mm'
+    minrh:
+      name: Min Relative Humidity
+      description: Min Relative Humidity (%RH)
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '%'
+    maxrh:
+      name: Max Relative Humidity
+      description: Max Relative Humidity (%RH)
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '%'
+    condition:
+      name: Weather Condition Code
+      description: Current weather condition code (WNUM).
+      selector:
+        text:
+    pressure:
+      name: Barametric Pressure
+      description: Barametric Pressure (kPa)
+      selector:
+        number:
+          min: 60
+          max: 110
+          unit_of_measurement: "kPa"
+    dewpoint:
+      name: Dew Point
+      description: Dew Point (°C).
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: '°C'
+unrestrict_watering:
+  name: Unrestrict All Watering
+  description: Unrestrict all watering activities
+  fields:
+    device_id:
+      name: Controller
+      description: The controller whose watering activities should be unrestricted
+      required: true
+      selector:
+        device:
+          integration: rainmachine

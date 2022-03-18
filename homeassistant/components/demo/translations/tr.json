@@ -1,9 +1,24 @@
 {
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "one": "Bo\u015f",
+                    "other": "Bo\u015f"
+                }
+            },
             "options_1": {
                 "data": {
-                    "constant": "Sabit"
+                    "bool": "\u0130ste\u011fe ba\u011fl\u0131 boolean",
+                    "constant": "Sabit",
+                    "int": "Say\u0131sal giri\u015f"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "\u00c7oklu se\u00e7im",
+                    "select": "Bir se\u00e7enek se\u00e7in",
+                    "string": "Dize de\u011feri"
                 }
             }
         }

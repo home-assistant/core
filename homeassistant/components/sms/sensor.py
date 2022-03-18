@@ -3,59 +3,63 @@ import logging
 
 import gammu  # pylint: disable=import-error
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, SIGNAL_STRENGTH_DECIBELS
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the GSM Signal Sensor sensor."""
     gateway = hass.data[DOMAIN][SMS_GATEWAY]
-    entities = []
     imei = await gateway.get_imei_async()
-    name = f"gsm_signal_imei_{imei}"
-    entities.append(
-        GSMSignalSensor(
-            hass,
-            gateway,
-            name,
-        )
+    async_add_entities(
+        [
+            GSMSignalSensor(
+                hass,
+                gateway,
+                imei,
+                SensorEntityDescription(
+                    key="signal",
+                    name=f"gsm_signal_imei_{imei}",
+                    device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                    native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+                    entity_registry_enabled_default=False,
+                ),
+            )
+        ],
+        True,
     )
-    async_add_entities(entities, True)
 
 
 class GSMSignalSensor(SensorEntity):
     """Implementation of a GSM Signal sensor."""
 
-    def __init__(
-        self,
-        hass,
-        gateway,
-        name,
-    ):
+    def __init__(self, hass, gateway, imei, description):
         """Initialize the GSM Signal sensor."""
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(imei))},
+            name="SMS Gateway",
+        )
+        self._attr_unique_id = str(imei)
         self._hass = hass
         self._gateway = gateway
-        self._name = name
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SIGNAL_STRENGTH_DECIBELS
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_SIGNAL_STRENGTH
+        self.entity_description = description
 
     @property
     def available(self):
@@ -63,7 +67,7 @@ class GSMSignalSensor(SensorEntity):
         return self._state is not None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state["SignalStrength"]
 
@@ -78,8 +82,3 @@ class GSMSignalSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the sensor attributes."""
         return self._state
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False

@@ -12,9 +12,9 @@
             "user": {
                 "data": {
                     "access_token": "Hozz\u00e1f\u00e9r\u00e9si token",
-                    "host": "Hoszt"
+                    "host": "C\u00edm"
                 },
-                "description": "\u00c1ll\u00edtsa be a Vilfo Router integr\u00e1ci\u00f3t. Sz\u00fcks\u00e9ge van a Vilfo Router gazdag\u00e9pnev\u00e9re/IP -c\u00edm\u00e9re \u00e9s egy API hozz\u00e1f\u00e9r\u00e9si jogkivonatra. Ha tov\u00e1bbi inform\u00e1ci\u00f3ra van sz\u00fcks\u00e9ge az integr\u00e1ci\u00f3r\u00f3l \u00e9s a r\u00e9szletekr\u0151l, l\u00e1togasson el a k\u00f6vetkez\u0151 webhelyre: https://www.home-assistant.io/integrations/vilfo",
+                "description": "\u00c1ll\u00edtsa be a Vilfo Router integr\u00e1ci\u00f3t. Sz\u00fcks\u00e9ge van a Vilfo Router g\u00e9pnev\u00e9re/IP -c\u00edm\u00e9re \u00e9s egy API hozz\u00e1f\u00e9r\u00e9si jogkivonatra. Ha tov\u00e1bbi inform\u00e1ci\u00f3ra van sz\u00fcks\u00e9ge az integr\u00e1ci\u00f3r\u00f3l \u00e9s a r\u00e9szletekr\u0151l, l\u00e1togasson el a k\u00f6vetkez\u0151 webhelyre: https://www.home-assistant.io/integrations/vilfo",
                 "title": "Csatlakoz\u00e1s a Vilfo routerhez"
             }
         }

@@ -37,10 +37,11 @@ def async_load_screenlogic_services(hass: HomeAssistant):
         return [
             entry_id
             for entry_id in await async_extract_config_entry_ids(hass, service_call)
-            if hass.config_entries.async_get_entry(entry_id).domain == DOMAIN
+            if (entry := hass.config_entries.async_get_entry(entry_id))
+            and entry.domain == DOMAIN
         ]
 
-    async def async_set_color_mode(service_call: ServiceCall):
+    async def async_set_color_mode(service_call: ServiceCall) -> None:
         if not (
             screenlogic_entry_ids := await extract_screenlogic_config_entry_ids(
                 service_call
@@ -51,7 +52,7 @@ def async_load_screenlogic_services(hass: HomeAssistant):
             )
         color_num = SUPPORTED_COLOR_MODES[service_call.data[ATTR_COLOR_MODE]]
         for entry_id in screenlogic_entry_ids:
-            coordinator = hass.data[DOMAIN][entry_id]["coordinator"]
+            coordinator = hass.data[DOMAIN][entry_id]
             _LOGGER.debug(
                 "Service %s called on %s with mode %s",
                 SERVICE_SET_COLOR_MODE,
@@ -59,13 +60,13 @@ def async_load_screenlogic_services(hass: HomeAssistant):
                 color_num,
             )
             try:
-                async with coordinator.api_lock:
-                    if not await hass.async_add_executor_job(
-                        coordinator.gateway.set_color_lights, color_num
-                    ):
-                        raise HomeAssistantError(
-                            f"Failed to call service '{SERVICE_SET_COLOR_MODE}'"
-                        )
+                if not await coordinator.gateway.async_set_color_lights(color_num):
+                    raise HomeAssistantError(
+                        f"Failed to call service '{SERVICE_SET_COLOR_MODE}'"
+                    )
+                # Debounced refresh to catch any secondary
+                # changes in the device
+                await coordinator.async_request_refresh()
             except ScreenLogicError as error:
                 raise HomeAssistantError(error) from error
 

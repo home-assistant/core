@@ -1,4 +1,6 @@
 """Support for RESTful binary sensors."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -14,8 +16,11 @@ from homeassistant.const import (
     CONF_RESOURCE_TEMPLATE,
     CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .entity import RestEntity
@@ -28,7 +33,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the REST binary sensor."""
     # Must update the sensor now (including fetching the rest resource) to
     # ensure it's updating its state.
@@ -85,13 +95,13 @@ class RestBinarySensor(RestEntity, BinarySensorEntity):
         resource_template,
     ):
         """Initialize a REST binary sensor."""
-        super().__init__(
-            coordinator, rest, name, device_class, resource_template, force_update
-        )
+        super().__init__(coordinator, rest, name, resource_template, force_update)
         self._state = False
         self._previous_data = None
         self._value_template = value_template
         self._is_on = None
+
+        self._attr_device_class = device_class
 
     @property
     def is_on(self):

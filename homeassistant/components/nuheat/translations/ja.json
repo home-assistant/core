@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "invalid_thermostat": "\u30b5\u30fc\u30e2\u30b9\u30bf\u30c3\u30c8\u306e\u30b7\u30ea\u30a2\u30eb\u756a\u53f7\u304c\u7121\u52b9\u3067\u3059\u3002",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "serial_number": "\u30b5\u30fc\u30e2\u30b9\u30bf\u30c3\u30c8\u306e\u30b7\u30ea\u30a2\u30eb\u756a\u53f7\u3002",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                },
+                "description": "https://MyNuHeat.com \u306b\u30ed\u30b0\u30a4\u30f3\u3057\u3001\u30b5\u30fc\u30e2\u30b9\u30bf\u30c3\u30c8\u3092\u9078\u629e\u3057\u3066\u3001\u30b5\u30fc\u30e2\u30b9\u30bf\u30c3\u30c8\u306e\u30b7\u30ea\u30a2\u30eb\u756a\u53f7\u307e\u305f\u306fID\u3092\u53d6\u5f97\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002",
+                "title": "NuHeat\u306b\u63a5\u7d9a"
+            }
+        }
+    }
+}

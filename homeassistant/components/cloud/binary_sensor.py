@@ -1,18 +1,29 @@
 """Support for Home Assistant Cloud binary sensors."""
+from __future__ import annotations
+
 import asyncio
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 
 WAIT_UNTIL_CHANGE = 3
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the cloud binary sensors."""
     if discovery_info is None:
         return
@@ -25,9 +36,10 @@ class CloudRemoteBinary(BinarySensorEntity):
     """Representation of an Cloud Remote UI Connection binary sensor."""
 
     _attr_name = "Remote UI"
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_should_poll = False
     _attr_unique_id = "cloud-remote-ui-connectivity"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, cloud):
         """Initialize the binary sensor."""

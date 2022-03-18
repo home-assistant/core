@@ -69,6 +69,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if error is None:
                 entry = await self.async_set_unique_id(self.unique_id)
+                assert entry
                 self.hass.config_entries.async_update_entry(entry, data=user_input)
                 return self.async_abort(reason="reauth_successful")
 

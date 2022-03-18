@@ -1,6 +1,9 @@
 """Sensor platform for the Corona virus."""
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_coordinator
@@ -14,7 +17,11 @@ SENSORS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Defer sensor setup to the shared sensor module."""
     coordinator = await get_coordinator(hass)
 
@@ -27,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class CoronavirusSensor(CoordinatorEntity, SensorEntity):
     """Sensor representing corona virus data."""
 
-    _attr_unit_of_measurement = "people"
+    _attr_native_unit_of_measurement = "people"
 
     def __init__(self, coordinator, country, info_type):
         """Initialize coronavirus sensor."""
@@ -53,13 +60,12 @@ class CoronavirusSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """State of the sensor."""
         if self.country == OPTION_WORLDWIDE:
             sum_cases = 0
             for case in self.coordinator.data.values():
-                value = getattr(case, self.info_type)
-                if value is None:
+                if (value := getattr(case, self.info_type)) is None:
                     continue
                 sum_cases += value
 

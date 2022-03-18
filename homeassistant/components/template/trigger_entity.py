@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template, update_coordinator
 
 from . import TriggerUpdateCoordinator
@@ -21,8 +22,9 @@ from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 class TriggerEntity(update_coordinator.CoordinatorEntity):
     """Template entity based on trigger data."""
 
-    domain = ""
+    domain: str
     extra_template_keys: tuple | None = None
+    extra_template_keys_complex: tuple | None = None
 
     def __init__(
         self,
@@ -35,6 +37,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
 
         entity_unique_id = config.get(CONF_UNIQUE_ID)
 
+        self._unique_id: str | None
         if entity_unique_id and coordinator.unique_id:
             self._unique_id = f"{coordinator.unique_id}-{entity_unique_id}"
         else:
@@ -43,7 +46,8 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
         self._config = config
 
         self._static_rendered = {}
-        self._to_render = []
+        self._to_render_simple = []
+        self._to_render_complex: list[str] = []
 
         for itm in (
             CONF_NAME,
@@ -57,14 +61,17 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
             if config[itm].is_static:
                 self._static_rendered[itm] = config[itm].template
             else:
-                self._to_render.append(itm)
+                self._to_render_simple.append(itm)
 
         if self.extra_template_keys is not None:
-            self._to_render.extend(self.extra_template_keys)
+            self._to_render_simple.extend(self.extra_template_keys)
+
+        if self.extra_template_keys_complex is not None:
+            self._to_render_complex.extend(self.extra_template_keys_complex)
 
         # We make a copy so our initial render is 'unknown' and not 'unavailable'
         self._rendered = dict(self._static_rendered)
-        self._parse_result = set()
+        self._parse_result = {CONF_AVAILABILITY}
 
     @property
     def name(self):
@@ -124,10 +131,16 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
         try:
             rendered = dict(self._static_rendered)
 
-            for key in self._to_render:
+            for key in self._to_render_simple:
                 rendered[key] = self._config[key].async_render(
                     self.coordinator.data["run_variables"],
                     parse_result=key in self._parse_result,
+                )
+
+            for key in self._to_render_complex:
+                rendered[key] = template.render_complex(
+                    self._config[key],
+                    self.coordinator.data["run_variables"],
                 )
 
             if CONF_ATTRIBUTES in self._config:
@@ -137,7 +150,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
                 )
 
             self._rendered = rendered
-        except template.TemplateError as err:
+        except TemplateError as err:
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )

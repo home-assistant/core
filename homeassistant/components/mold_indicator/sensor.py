@@ -1,4 +1,6 @@
 """Calculates mold growth indication from temperature and humidity."""
+from __future__ import annotations
+
 import logging
 import math
 
@@ -15,9 +17,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +49,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MoldIndicator sensor."""
     name = config.get(CONF_NAME, DEFAULT_NAME)
     indoor_temp_sensor = config.get(CONF_INDOOR_TEMP)
@@ -196,9 +205,8 @@ class MoldIndicator(SensorEntity):
             return None
 
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        temp = util.convert(state.state, float)
 
-        if temp is None:
+        if (temp := util.convert(state.state, float)) is None:
             _LOGGER.error(
                 "Unable to parse temperature sensor %s with state: %s",
                 state.entity_id,
@@ -235,10 +243,7 @@ class MoldIndicator(SensorEntity):
             )
             return None
 
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        hum = util.convert(state.state, float)
-
-        if hum is None:
+        if (hum := util.convert(state.state, float)) is None:
             _LOGGER.error(
                 "Unable to parse humidity sensor %s, state: %s",
                 state.entity_id,
@@ -246,7 +251,7 @@ class MoldIndicator(SensorEntity):
             )
             return None
 
-        if unit != PERCENTAGE:
+        if (unit := state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)) != PERCENTAGE:
             _LOGGER.error(
                 "Humidity sensor %s has unsupported unit: %s %s",
                 state.entity_id,
@@ -359,12 +364,12 @@ class MoldIndicator(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PERCENTAGE
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         return self._state
 

@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "{model} {host}",
+        "flow_title": "{modell} {id} ({host})",
         "step": {
             "discovery_confirm": {
                 "description": "Vil du sette opp {model} ( {host} )?"
@@ -29,7 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "model": "Modell (valgfritt)",
+                    "model": "Modell",
                     "nightlight_switch": "Bruk nattlysbryter",
                     "save_on_change": "Lagre status ved endring",
                     "transition": "Overgangstid (ms)",

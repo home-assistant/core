@@ -1,8 +1,8 @@
 """Common test tools."""
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
-from typing import Awaitable, Callable, cast
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from typing import cast
 from unittest.mock import patch
 
 import pytest
@@ -30,9 +30,11 @@ async def async_setup_recorder_instance(
         hass: HomeAssistant, config: ConfigType | None = None
     ) -> Recorder:
         """Setup and return recorder instance."""  # noqa: D401
-        stats = recorder.Recorder.async_hourly_statistics if enable_statistics else None
+        stats = (
+            recorder.Recorder.async_periodic_statistics if enable_statistics else None
+        )
         with patch(
-            "homeassistant.components.recorder.Recorder.async_hourly_statistics",
+            "homeassistant.components.recorder.Recorder.async_periodic_statistics",
             side_effect=stats,
             autospec=True,
         ):

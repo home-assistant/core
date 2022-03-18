@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -52,12 +55,12 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     unique_id = config_entry.unique_id
     assert unique_id is not None
-    device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, unique_id)},
-        "name": DEFAULT_NAME,
-        "manufacturer": ATTR_MANUFACTURER,
-        "model": config_entry.title,
-    }
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, unique_id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=config_entry.title,
+        name=DEFAULT_NAME,
+    )
 
     async_add_entities(
         [BraviaTVMediaPlayer(coordinator, DEFAULT_NAME, unique_id, device_info)]
@@ -68,7 +71,7 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
     coordinator: BraviaTVCoordinator
-    _attr_device_class = DEVICE_CLASS_TV
+    _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = SUPPORT_BRAVIA
 
     def __init__(

@@ -1,4 +1,7 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 import logging
 
 from pycomfoconnect import (
@@ -26,16 +29,15 @@ from pycomfoconnect import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    ATTR_ID,
     CONF_RESOURCES,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -43,8 +45,11 @@ from homeassistant.const import (
     TIME_DAYS,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
@@ -72,187 +77,221 @@ ATTR_SUPPLY_TEMPERATURE = "supply_temperature"
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_LABEL = "label"
-ATTR_MULTIPLIER = "multiplier"
-ATTR_UNIT = "unit"
 
-SENSOR_TYPES = {
-    ATTR_CURRENT_TEMPERATURE: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_LABEL: "Inside Temperature",
-        ATTR_UNIT: TEMP_CELSIUS,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_TEMPERATURE_EXTRACT,
-        ATTR_MULTIPLIER: 0.1,
-    },
-    ATTR_CURRENT_HUMIDITY: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-        ATTR_LABEL: "Inside Humidity",
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_HUMIDITY_EXTRACT,
-    },
-    ATTR_CURRENT_RMOT: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_LABEL: "Current RMOT",
-        ATTR_UNIT: TEMP_CELSIUS,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_CURRENT_RMOT,
-        ATTR_MULTIPLIER: 0.1,
-    },
-    ATTR_OUTSIDE_TEMPERATURE: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_LABEL: "Outside Temperature",
-        ATTR_UNIT: TEMP_CELSIUS,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_TEMPERATURE_OUTDOOR,
-        ATTR_MULTIPLIER: 0.1,
-    },
-    ATTR_OUTSIDE_HUMIDITY: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-        ATTR_LABEL: "Outside Humidity",
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_HUMIDITY_OUTDOOR,
-    },
-    ATTR_SUPPLY_TEMPERATURE: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_LABEL: "Supply Temperature",
-        ATTR_UNIT: TEMP_CELSIUS,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_TEMPERATURE_SUPPLY,
-        ATTR_MULTIPLIER: 0.1,
-    },
-    ATTR_SUPPLY_HUMIDITY: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-        ATTR_LABEL: "Supply Humidity",
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_HUMIDITY_SUPPLY,
-    },
-    ATTR_SUPPLY_FAN_SPEED: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_LABEL: "Supply Fan Speed",
-        ATTR_UNIT: "rpm",
-        ATTR_ICON: "mdi:fan",
-        ATTR_ID: SENSOR_FAN_SUPPLY_SPEED,
-    },
-    ATTR_SUPPLY_FAN_DUTY: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_LABEL: "Supply Fan Duty",
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: "mdi:fan",
-        ATTR_ID: SENSOR_FAN_SUPPLY_DUTY,
-    },
-    ATTR_EXHAUST_FAN_SPEED: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_LABEL: "Exhaust Fan Speed",
-        ATTR_UNIT: "rpm",
-        ATTR_ICON: "mdi:fan",
-        ATTR_ID: SENSOR_FAN_EXHAUST_SPEED,
-    },
-    ATTR_EXHAUST_FAN_DUTY: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_LABEL: "Exhaust Fan Duty",
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: "mdi:fan",
-        ATTR_ID: SENSOR_FAN_EXHAUST_DUTY,
-    },
-    ATTR_EXHAUST_TEMPERATURE: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_LABEL: "Exhaust Temperature",
-        ATTR_UNIT: TEMP_CELSIUS,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_TEMPERATURE_EXHAUST,
-        ATTR_MULTIPLIER: 0.1,
-    },
-    ATTR_EXHAUST_HUMIDITY: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-        ATTR_LABEL: "Exhaust Humidity",
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_HUMIDITY_EXHAUST,
-    },
-    ATTR_AIR_FLOW_SUPPLY: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_LABEL: "Supply airflow",
-        ATTR_UNIT: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-        ATTR_ICON: "mdi:fan",
-        ATTR_ID: SENSOR_FAN_SUPPLY_FLOW,
-    },
-    ATTR_AIR_FLOW_EXHAUST: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_LABEL: "Exhaust airflow",
-        ATTR_UNIT: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-        ATTR_ICON: "mdi:fan",
-        ATTR_ID: SENSOR_FAN_EXHAUST_FLOW,
-    },
-    ATTR_BYPASS_STATE: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_LABEL: "Bypass State",
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: "mdi:camera-iris",
-        ATTR_ID: SENSOR_BYPASS_STATE,
-    },
-    ATTR_DAYS_TO_REPLACE_FILTER: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_LABEL: "Days to replace filter",
-        ATTR_UNIT: TIME_DAYS,
-        ATTR_ICON: "mdi:calendar",
-        ATTR_ID: SENSOR_DAYS_TO_REPLACE_FILTER,
-    },
-    ATTR_POWER_CURRENT: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_LABEL: "Power usage",
-        ATTR_UNIT: POWER_WATT,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_POWER_CURRENT,
-    },
-    ATTR_POWER_TOTAL: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-        ATTR_LABEL: "Power total",
-        ATTR_UNIT: ENERGY_KILO_WATT_HOUR,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_POWER_TOTAL,
-    },
-    ATTR_PREHEATER_POWER_CURRENT: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_LABEL: "Preheater power usage",
-        ATTR_UNIT: POWER_WATT,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_PREHEATER_POWER_CURRENT,
-    },
-    ATTR_PREHEATER_POWER_TOTAL: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-        ATTR_LABEL: "Preheater power total",
-        ATTR_UNIT: ENERGY_KILO_WATT_HOUR,
-        ATTR_ICON: None,
-        ATTR_ID: SENSOR_PREHEATER_POWER_TOTAL,
-    },
-}
+@dataclass
+class ComfoconnectRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    sensor_id: int
+
+
+@dataclass
+class ComfoconnectSensorEntityDescription(
+    SensorEntityDescription, ComfoconnectRequiredKeysMixin
+):
+    """Describes Comfoconnect sensor entity."""
+
+    multiplier: float = 1
+
+
+SENSOR_TYPES = (
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_CURRENT_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Inside temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        sensor_id=SENSOR_TEMPERATURE_EXTRACT,
+        multiplier=0.1,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_CURRENT_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Inside humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        sensor_id=SENSOR_HUMIDITY_EXTRACT,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_CURRENT_RMOT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Current RMOT",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        sensor_id=SENSOR_CURRENT_RMOT,
+        multiplier=0.1,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_OUTSIDE_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Outside temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        sensor_id=SENSOR_TEMPERATURE_OUTDOOR,
+        multiplier=0.1,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_OUTSIDE_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Outside humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        sensor_id=SENSOR_HUMIDITY_OUTDOOR,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_SUPPLY_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Supply temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        sensor_id=SENSOR_TEMPERATURE_SUPPLY,
+        multiplier=0.1,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_SUPPLY_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Supply humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        sensor_id=SENSOR_HUMIDITY_SUPPLY,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_SUPPLY_FAN_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Supply fan speed",
+        native_unit_of_measurement="rpm",
+        icon="mdi:fan-plus",
+        sensor_id=SENSOR_FAN_SUPPLY_SPEED,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_SUPPLY_FAN_DUTY,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Supply fan duty",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:fan-plus",
+        sensor_id=SENSOR_FAN_SUPPLY_DUTY,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_EXHAUST_FAN_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Exhaust fan speed",
+        native_unit_of_measurement="rpm",
+        icon="mdi:fan-minus",
+        sensor_id=SENSOR_FAN_EXHAUST_SPEED,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_EXHAUST_FAN_DUTY,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Exhaust fan duty",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:fan-minus",
+        sensor_id=SENSOR_FAN_EXHAUST_DUTY,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_EXHAUST_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Exhaust temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        sensor_id=SENSOR_TEMPERATURE_EXHAUST,
+        multiplier=0.1,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_EXHAUST_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Exhaust humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        sensor_id=SENSOR_HUMIDITY_EXHAUST,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_AIR_FLOW_SUPPLY,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Supply airflow",
+        native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        icon="mdi:fan-plus",
+        sensor_id=SENSOR_FAN_SUPPLY_FLOW,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_AIR_FLOW_EXHAUST,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Exhaust airflow",
+        native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        icon="mdi:fan-minus",
+        sensor_id=SENSOR_FAN_EXHAUST_FLOW,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_BYPASS_STATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Bypass state",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:camera-iris",
+        sensor_id=SENSOR_BYPASS_STATE,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_DAYS_TO_REPLACE_FILTER,
+        name="Days to replace filter",
+        native_unit_of_measurement=TIME_DAYS,
+        icon="mdi:calendar",
+        sensor_id=SENSOR_DAYS_TO_REPLACE_FILTER,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_POWER_CURRENT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Power usage",
+        native_unit_of_measurement=POWER_WATT,
+        sensor_id=SENSOR_POWER_CURRENT,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_POWER_TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        name="Energy total",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        sensor_id=SENSOR_POWER_TOTAL,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_PREHEATER_POWER_CURRENT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Preheater power usage",
+        native_unit_of_measurement=POWER_WATT,
+        sensor_id=SENSOR_PREHEATER_POWER_CURRENT,
+    ),
+    ComfoconnectSensorEntityDescription(
+        key=ATTR_PREHEATER_POWER_TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        name="Preheater energy total",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        sensor_id=SENSOR_PREHEATER_POWER_TOTAL,
+    ),
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RESOURCES, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In([desc.key for desc in SENSOR_TYPES])]
         )
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the ComfoConnect fan platform."""
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the ComfoConnect sensor platform."""
     ccb = hass.data[DOMAIN]
 
-    sensors = []
-    for resource in config[CONF_RESOURCES]:
-        sensors.append(
-            ComfoConnectSensor(
-                name=f"{ccb.name} {SENSOR_TYPES[resource][ATTR_LABEL]}",
-                ccb=ccb,
-                sensor_type=resource,
-            )
-        )
+    sensors = [
+        ComfoConnectSensor(ccb=ccb, description=description)
+        for description in SENSOR_TYPES
+        if description.key in config[CONF_RESOURCES]
+    ]
 
     add_entities(sensors, True)
 
@@ -260,76 +299,47 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ComfoConnectSensor(SensorEntity):
     """Representation of a ComfoConnect sensor."""
 
-    def __init__(self, name, ccb: ComfoConnectBridge, sensor_type) -> None:
+    _attr_should_poll = False
+    entity_description: ComfoconnectSensorEntityDescription
+
+    def __init__(
+        self,
+        ccb: ComfoConnectBridge,
+        description: ComfoconnectSensorEntityDescription,
+    ) -> None:
         """Initialize the ComfoConnect sensor."""
         self._ccb = ccb
-        self._sensor_type = sensor_type
-        self._sensor_id = SENSOR_TYPES[self._sensor_type][ATTR_ID]
-        self._name = name
+        self.entity_description = description
+        self._attr_name = f"{ccb.name} {description.name}"
+        self._attr_unique_id = f"{ccb.unique_id}-{description.key}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
         _LOGGER.debug(
-            "Registering for sensor %s (%d)", self._sensor_type, self._sensor_id
+            "Registering for sensor %s (%d)",
+            self.entity_description.key,
+            self.entity_description.sensor_id,
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(self._sensor_id),
+                SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(
+                    self.entity_description.sensor_id
+                ),
                 self._handle_update,
             )
         )
         await self.hass.async_add_executor_job(
-            self._ccb.comfoconnect.register_sensor, self._sensor_id
+            self._ccb.comfoconnect.register_sensor, self.entity_description.sensor_id
         )
 
     def _handle_update(self, value):
         """Handle update callbacks."""
         _LOGGER.debug(
             "Handle update for sensor %s (%d): %s",
-            self._sensor_type,
-            self._sensor_id,
+            self.entity_description.key,
+            self.entity_description.sensor_id,
             value,
         )
-        self._ccb.data[self._sensor_id] = round(
-            value * SENSOR_TYPES[self._sensor_type].get(ATTR_MULTIPLIER, 1), 2
-        )
+        self._attr_native_value = round(value * self.entity_description.multiplier, 2)
         self.schedule_update_ha_state()
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        try:
-            return self._ccb.data[self._sensor_id]
-        except KeyError:
-            return None
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return f"{self._ccb.unique_id}-{self._sensor_type}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return SENSOR_TYPES[self._sensor_type][ATTR_ICON]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return SENSOR_TYPES[self._sensor_type][ATTR_UNIT]
-
-    @property
-    def device_class(self):
-        """Return the device_class."""
-        return SENSOR_TYPES[self._sensor_type][ATTR_DEVICE_CLASS]

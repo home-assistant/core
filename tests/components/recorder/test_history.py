@@ -48,10 +48,21 @@ def test_get_states(hass_recorder):
 
         wait_recording_done(hass)
 
-    # Get states returns everything before POINT
+    # Get states returns everything before POINT for all entities
     for state1, state2 in zip(
         states,
         sorted(history.get_states(hass, future), key=lambda state: state.entity_id),
+    ):
+        assert state1 == state2
+
+    # Get states returns everything before POINT for tested entities
+    entities = [f"test.point_in_time_{i % 5}" for i in range(5)]
+    for state1, state2 in zip(
+        states,
+        sorted(
+            history.get_states(hass, future, entities),
+            key=lambda state: state.entity_id,
+        ),
     ):
         assert state1 == state2
 

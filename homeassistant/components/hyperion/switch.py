@@ -31,7 +31,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -86,7 +86,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> bool:
+) -> None:
     """Set up a Hyperion platform from config entry."""
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
     server_id = config_entry.unique_id
@@ -121,11 +121,12 @@ async def async_setup_entry(
             )
 
     listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
-    return True
 
 
 class HyperionComponentSwitch(SwitchEntity):
     """ComponentBinarySwitch switch class."""
+
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
@@ -185,12 +186,13 @@ class HyperionComponentSwitch(SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._instance_name,
-            "manufacturer": HYPERION_MANUFACTURER_NAME,
-            "model": HYPERION_MODEL_NAME,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=self._instance_name,
+            configuration_url=self._client.remote_url,
+        )
 
     async def _async_send_set_component(self, value: bool) -> None:
         """Send a component control request."""

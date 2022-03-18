@@ -32,7 +32,7 @@
             "int": "Het onderstaande veld moet een geheel getal zijn.",
             "loop_range": "RF Lus moet een geheel getal zijn tussen 1 en 4.",
             "loop_rfid": "RF Lus kan niet worden gebruikt zonder RF Serieel.",
-            "relay_inclusive": "Het relais-adres en het relais-kanaal zijn codeafhankelijk en moeten samen worden opgenomen."
+            "relay_inclusive": "Het relaisadres en het relaiskanaal zijn onderling afhankelijk en moeten samen worden opgenomen."
         },
         "step": {
             "arm_settings": {
@@ -53,18 +53,18 @@
             "zone_details": {
                 "data": {
                     "zone_loop": "RF Lus",
-                    "zone_name": "Zone naam",
-                    "zone_relayaddr": "Relais Adres",
-                    "zone_relaychan": "Relais Kanaal",
+                    "zone_name": "Zonenaam",
+                    "zone_relayaddr": "Relaisadres",
+                    "zone_relaychan": "Relaiskanaal",
                     "zone_rfid": "RF Serieel",
-                    "zone_type": "Zone Type"
+                    "zone_type": "Zonetype"
                 },
-                "description": "Voer details in voor zone {zone_number}. Om zone {zone_number} te verwijderen, laat u Zone Name leeg.",
+                "description": "Voer details in voor zone {zone_number}. Om zone {zone_number} te verwijderen, laat u Zonenaam leeg.",
                 "title": "Configureer AlarmDecoder"
             },
             "zone_select": {
                 "data": {
-                    "zone_number": "Zone nummer"
+                    "zone_number": "Zonenummer"
                 },
                 "description": "Voer het zone nummer in dat u wilt toevoegen, bewerken of verwijderen.",
                 "title": "Configureer AlarmDecoder"

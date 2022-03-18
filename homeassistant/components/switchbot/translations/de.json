@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "no_unconfigured_devices": "Keine unkonfigurierten Ger\u00e4te gefunden.",
+            "switchbot_unsupported_type": "Nicht unterst\u00fctzter Switchbot-Typ.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "mac": "MAC-Adresse des Ger\u00e4ts",
+                    "name": "Name",
+                    "password": "Passwort"
+                },
+                "title": "Switchbot-Ger\u00e4t einrichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "retry_count": "Anzahl der Wiederholungen",
+                    "retry_timeout": "Zeit\u00fcberschreitung zwischen Wiederholungsversuchen",
+                    "scan_timeout": "Wie lange nach Anzeigendaten suchen",
+                    "update_time": "Zeit zwischen Aktualisierungen (Sekunden)"
+                }
+            }
+        }
+    }
+}

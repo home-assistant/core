@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchendamine nurjus",
             "not_konn_panel": "Tuvastamata Konnected.io seade",
             "unknown": "Tundmatu viga"
         },

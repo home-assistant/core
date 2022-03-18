@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Erreur de connexion",
+            "cannot_connect": "\u00c9chec de connexion",
             "invalid_auth": "Activer l'authentification dans Pr\u00e9f\u00e9rences > Authentification de m\u00fctesync",
             "unknown": "Erreur inattendue"
         },

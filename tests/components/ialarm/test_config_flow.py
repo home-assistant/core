@@ -1,7 +1,7 @@
 """Test the Antifurto365 iAlarm config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ialarm.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
@@ -14,7 +14,7 @@ TEST_MAC = "00:00:54:12:34:56"
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

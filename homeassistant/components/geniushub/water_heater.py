@@ -8,7 +8,8 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, GeniusHeatingZone
 
@@ -33,7 +34,10 @@ GH_HEATERS = ["hot water temperature"]
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Genius Hub water_heater entities."""
     if discovery_info is None:
@@ -69,7 +73,7 @@ class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
     @property
     def current_operation(self) -> str:
         """Return the current operation mode."""
-        return GH_STATE_TO_HA[self._zone.data["mode"]]
+        return GH_STATE_TO_HA[self._zone.data["mode"]]  # type: ignore[return-value]
 
     async def async_set_operation_mode(self, operation_mode) -> None:
         """Set a new operation mode for this boiler."""

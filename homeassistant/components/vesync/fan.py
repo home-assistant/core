@@ -3,8 +3,10 @@ import logging
 import math
 
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -12,13 +14,15 @@ from homeassistant.util.percentage import (
 )
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_FANS
+from .const import DOMAIN, VS_DISCOVERY, VS_FANS
 
 _LOGGER = logging.getLogger(__name__)
 
 DEV_TYPE_TO_HA = {
     "LV-PUR131S": "fan",
     "Core200S": "fan",
+    "Core300S": "fan",
+    "Core400S": "fan",
 }
 
 FAN_MODE_AUTO = "auto"
@@ -27,37 +31,45 @@ FAN_MODE_SLEEP = "sleep"
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core200S": [FAN_MODE_SLEEP],
+    "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
+    "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
 }
 SPEED_RANGE = (1, 3)  # off is not included
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the VeSync fan platform."""
 
-    async def async_discover(devices):
+    @callback
+    def discover(devices):
         """Add new devices to platform."""
-        _async_setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities)
 
-    disp = async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), async_discover)
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), discover)
+    )
 
-    _async_setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
 
 
 @callback
-def _async_setup_entities(devices, async_add_entities):
+def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
-    dev_list = []
+    entities = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) == "fan":
-            dev_list.append(VeSyncFanHA(dev))
+            entities.append(VeSyncFanHA(dev))
         else:
             _LOGGER.warning(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
             )
             continue
 
-    async_add_entities(dev_list, update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class VeSyncFanHA(VeSyncDevice, FanEntity):
@@ -76,10 +88,11 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     @property
     def percentage(self):
         """Return the current speed."""
-        if self.smartfan.mode == "manual":
-            current_level = self.smartfan.fan_level
-            if current_level is not None:
-                return ranged_value_to_percentage(SPEED_RANGE, current_level)
+        if (
+            self.smartfan.mode == "manual"
+            and (current_level := self.smartfan.fan_level) is not None
+        ):
+            return ranged_value_to_percentage(SPEED_RANGE, current_level)
         return None
 
     @property
@@ -166,7 +179,6 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
     def turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,

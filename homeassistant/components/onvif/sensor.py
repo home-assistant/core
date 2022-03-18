@@ -2,13 +2,19 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base import ONVIFBaseEntity
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a ONVIF binary sensor."""
     device = hass.data[DOMAIN][config_entry.unique_id]
 
@@ -44,7 +50,7 @@ class ONVIFSensor(ONVIFBaseEntity, SensorEntity):
         super().__init__(device)
 
     @property
-    def state(self) -> None | str | int | float:
+    def native_value(self) -> None | str | int | float:
         """Return the state of the entity."""
         return self.device.events.get_uid(self.uid).value
 
@@ -59,7 +65,7 @@ class ONVIFSensor(ONVIFBaseEntity, SensorEntity):
         return self.device.events.get_uid(self.uid).device_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         return self.device.events.get_uid(self.uid).unit_of_measurement
 

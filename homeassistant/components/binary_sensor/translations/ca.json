@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "Bateria de {entity_name} baixa",
+            "is_co": "{entity_name} est\u00e0 detectant mon\u00f2xid de carboni",
             "is_cold": "{entity_name} est\u00e0 fred",
             "is_connected": "{entity_name} est\u00e0 connectat",
             "is_gas": "{entity_name} est\u00e0 detectant gas",
@@ -11,12 +12,14 @@
             "is_moist": "{entity_name} est\u00e0 humit",
             "is_motion": "{entity_name} est\u00e0 detectant moviment",
             "is_moving": "{entity_name} s'est\u00e0 movent",
+            "is_no_co": "{entity_name} no est\u00e0 detectant mon\u00f2xid de carboni",
             "is_no_gas": "{entity_name} no detecta gas",
             "is_no_light": "{entity_name} no detecta llum",
             "is_no_motion": "{entity_name} no detecta moviment",
             "is_no_problem": "{entity_name} no est\u00e0 detectant cap problema",
             "is_no_smoke": "{entity_name} no detecta fum",
             "is_no_sound": "{entity_name} no detecta so",
+            "is_no_update": "{entity_name} est\u00e0 actualitzat/da",
             "is_no_vibration": "{entity_name} no detecta vibraci\u00f3",
             "is_not_bat_low": "Bateria de {entity_name} normal",
             "is_not_cold": "{entity_name} no est\u00e0 fred",
@@ -30,6 +33,8 @@
             "is_not_plugged_in": "{entity_name} est\u00e0 desendollat",
             "is_not_powered": "{entity_name} no est\u00e0 alimentat",
             "is_not_present": "{entity_name} no est\u00e0 present",
+            "is_not_running": "{entity_name} no est\u00e0 funcionant",
+            "is_not_tampered": "{entity_name} no detecta manipulaci\u00f3",
             "is_not_unsafe": "{entity_name} \u00e9s segur",
             "is_occupied": "{entity_name} est\u00e0 ocupat",
             "is_off": "{entity_name} est\u00e0 apagat",
@@ -39,28 +44,36 @@
             "is_powered": "{entity_name} est\u00e0 alimentat",
             "is_present": "{entity_name} est\u00e0 present",
             "is_problem": "{entity_name} est\u00e0 detectant un problema",
+            "is_running": "{entity_name} est\u00e0 funcionant",
             "is_smoke": "{entity_name} est\u00e0 detectant fum",
             "is_sound": "{entity_name} est\u00e0 detectant so",
+            "is_tampered": "{entity_name} detecta manipulaci\u00f3",
             "is_unsafe": "{entity_name} \u00e9s insegur",
+            "is_update": "{entity_name} t\u00e9 una actualitzaci\u00f3 disponible",
             "is_vibration": "{entity_name} est\u00e0 detectant vibraci\u00f3"
         },
         "trigger_type": {
             "bat_low": "Bateria de {entity_name} baixa",
+            "co": "{entity_name} ha comen\u00e7at a detectar mon\u00f2xid de carboni",
             "cold": "{entity_name} es torna fred",
             "connected": "{entity_name} est\u00e0 connectat",
             "gas": "{entity_name} ha comen\u00e7at a detectar gas",
             "hot": "{entity_name} es torna calent",
+            "is_not_tampered": "{entity_name} ha deixat de detectar manipulaci\u00f3",
+            "is_tampered": "{entity_name} ha comen\u00e7at a detectar manipulaci\u00f3",
             "light": "{entity_name} ha comen\u00e7at a detectar llum",
             "locked": "{entity_name} est\u00e0 bloquejat",
             "moist": "{entity_name} es torna humit",
             "motion": "{entity_name} ha comen\u00e7at a detectar moviment",
             "moving": "{entity_name} ha comen\u00e7at a moure's",
+            "no_co": "{entity_name} ha deixat de detectar mon\u00f2xid de carboni",
             "no_gas": "{entity_name} ha deixat de detectar gas",
             "no_light": "{entity_name} ha deixat de detectar llum",
             "no_motion": "{entity_name} ha deixat de detectar moviment",
             "no_problem": "{entity_name} ha deixat de detectar un problema",
             "no_smoke": "{entity_name} ha deixat de detectar fum",
             "no_sound": "{entity_name} ha deixat de detectar so",
+            "no_update": "{entity_name} s'ha actualitzat",
             "no_vibration": "{entity_name} ha deixat de detectar vibraci\u00f3",
             "not_bat_low": "Bateria de {entity_name} normal",
             "not_cold": "{entity_name} es torna no-fred",
@@ -74,6 +87,8 @@
             "not_plugged_in": "{entity_name} desendollat",
             "not_powered": "{entity_name} no est\u00e0 alimentat",
             "not_present": "{entity_name} no est\u00e0 present",
+            "not_running": "{entity_name} para de funcionar",
+            "not_tampered": "{entity_name} deixa de detectar manipulaci\u00f3",
             "not_unsafe": "{entity_name} es torna segur",
             "occupied": "{entity_name} s'ocupa",
             "opened": "{entity_name} s'ha obert",
@@ -81,13 +96,30 @@
             "powered": "{entity_name} alimentat",
             "present": "{entity_name} present",
             "problem": "{entity_name} ha comen\u00e7at a detectar un problema",
+            "running": "{entity_name} comen\u00e7a a funcionar",
             "smoke": "{entity_name} ha comen\u00e7at a detectar fum",
             "sound": "{entity_name} ha comen\u00e7at a detectar so",
+            "tampered": "{entity_name} comen\u00e7a a detectar manipulaci\u00f3",
             "turned_off": "{entity_name} apagat",
             "turned_on": "{entity_name} enc\u00e8s",
             "unsafe": "{entity_name} es torna insegur",
+            "update": "{entity_name} obt\u00e9 una nova actualitzaci\u00f3 disponible",
             "vibration": "{entity_name} ha comen\u00e7at a detectar vibraci\u00f3"
         }
+    },
+    "device_class": {
+        "co": "carbon_monoxide",
+        "cold": "fred",
+        "gas": "gas",
+        "heat": "calor",
+        "moisture": "humitat",
+        "motion": "moviment",
+        "occupancy": "ocupaci\u00f3",
+        "power": "pot\u00e8ncia",
+        "problem": "problema",
+        "smoke": "fum",
+        "sound": "so",
+        "vibration": "vibraci\u00f3"
     },
     "state": {
         "_": {
@@ -101,6 +133,14 @@
         "battery_charging": {
             "off": "No carregant",
             "on": "Carregant"
+        },
+        "carbon_monoxide": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "co": {
+            "off": "Lliure",
+            "on": "Detectat"
         },
         "cold": {
             "off": "Normal",
@@ -166,6 +206,10 @@
             "off": "OK",
             "on": "Problema"
         },
+        "running": {
+            "off": "No funcionant",
+            "on": "En funcionament"
+        },
         "safety": {
             "off": "Segur",
             "on": "No segur"
@@ -177,6 +221,10 @@
         "sound": {
             "off": "Lliure",
             "on": "Detectat"
+        },
+        "update": {
+            "off": "Actualitzat/da",
+            "on": "Actualitzaci\u00f3 disponible"
         },
         "vibration": {
             "off": "Lliure",

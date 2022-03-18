@@ -93,11 +93,10 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         self._state: dict[str, Any] = {}
         self._unique_id = unique_id
 
-    def update(self) -> bool:
+    def update(self) -> None:
         """Update internal status of the entity."""
         self._state = self._player.update_state()
         self.__update_title()
-        return True
 
     @property
     def state(self) -> str | None:
@@ -131,11 +130,11 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": DEFAULT_NAME,
-            "manufacturer": ATTR_MANUFACTURER,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            name=DEFAULT_NAME,
+        )
 
     @property
     def volume_level(self) -> float:

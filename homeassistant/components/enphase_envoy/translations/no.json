@@ -16,7 +16,8 @@
                     "host": "Vert",
                     "password": "Passord",
                     "username": "Brukernavn"
-                }
+                },
+                "description": "For nyere modeller, skriv inn brukernavnet \"envoy\" uten passord. For eldre modeller, skriv inn brukernavnet `installer` uten passord. For alle andre modeller, skriv inn et gyldig brukernavn og passord."
             }
         }
     }

@@ -1,6 +1,9 @@
 """Support for SolarEdge-local Monitoring API."""
+from __future__ import annotations
+
 from contextlib import suppress
-from copy import deepcopy
+from copy import copy
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import statistics
@@ -9,11 +12,15 @@ from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge_local import SolarEdge
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
-    DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
@@ -22,7 +29,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 DOMAIN = "solaredge_local"
@@ -41,120 +51,134 @@ INVERTER_MODES = (
     "IDLE",
 )
 
-# Supported sensor types:
-# Key: ['json_key', 'name', unit, icon, attribute name]
-SENSOR_TYPES = {
-    "current_AC_voltage": [
-        "gridvoltage",
-        "Grid Voltage",
-        ELECTRIC_POTENTIAL_VOLT,
-        "mdi:current-ac",
-        None,
-    ],
-    "current_DC_voltage": [
-        "dcvoltage",
-        "DC Voltage",
-        ELECTRIC_POTENTIAL_VOLT,
-        "mdi:current-dc",
-        None,
-    ],
-    "current_frequency": [
-        "gridfrequency",
-        "Grid Frequency",
-        FREQUENCY_HERTZ,
-        "mdi:current-ac",
-        None,
-        None,
-    ],
-    "current_power": [
-        "currentPower",
-        "Current Power",
-        POWER_WATT,
-        "mdi:solar-power",
-        None,
-        None,
-    ],
-    "energy_this_month": [
-        "energyThisMonth",
-        "Energy This Month",
-        ENERGY_WATT_HOUR,
-        "mdi:solar-power",
-        None,
-        None,
-    ],
-    "energy_this_year": [
-        "energyThisYear",
-        "Energy This Year",
-        ENERGY_WATT_HOUR,
-        "mdi:solar-power",
-        None,
-        None,
-    ],
-    "energy_today": [
-        "energyToday",
-        "Energy Today",
-        ENERGY_WATT_HOUR,
-        "mdi:solar-power",
-        None,
-        None,
-    ],
-    "inverter_temperature": [
-        "invertertemperature",
-        "Inverter Temperature",
-        TEMP_CELSIUS,
-        None,
-        "operating_mode",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "lifetime_energy": [
-        "energyTotal",
-        "Lifetime Energy",
-        ENERGY_WATT_HOUR,
-        "mdi:solar-power",
-        None,
-        None,
-    ],
-    "optimizer_connected": [
-        "optimizers",
-        "Optimizers Online",
-        "optimizers",
-        "mdi:solar-panel",
-        "optimizers_connected",
-        None,
-    ],
-    "optimizer_current": [
-        "optimizercurrent",
-        "Average Optimizer Current",
-        ELECTRIC_CURRENT_AMPERE,
-        "mdi:solar-panel",
-        None,
-        None,
-    ],
-    "optimizer_power": [
-        "optimizerpower",
-        "Average Optimizer Power",
-        POWER_WATT,
-        "mdi:solar-panel",
-        None,
-        None,
-    ],
-    "optimizer_temperature": [
-        "optimizertemperature",
-        "Average Optimizer Temperature",
-        TEMP_CELSIUS,
-        "mdi:solar-panel",
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "optimizer_voltage": [
-        "optimizervoltage",
-        "Average Optimizer Voltage",
-        ELECTRIC_POTENTIAL_VOLT,
-        "mdi:solar-panel",
-        None,
-        None,
-    ],
-}
+
+@dataclass
+class SolarEdgeLocalSensorEntityDescription(SensorEntityDescription):
+    """Describes SolarEdge-local sensor entity."""
+
+    extra_attribute: str | None = None
+
+
+SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
+    SolarEdgeLocalSensorEntityDescription(
+        key="gridvoltage",
+        name="Grid Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:current-ac",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="dcvoltage",
+        name="DC Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:current-dc",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="gridfrequency",
+        name="Grid Frequency",
+        native_unit_of_measurement=FREQUENCY_HERTZ,
+        icon="mdi:current-ac",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="currentPower",
+        name="Current Power",
+        native_unit_of_measurement=POWER_WATT,
+        icon="mdi:solar-power",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="energyThisMonth",
+        name="Energy This Month",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        icon="mdi:solar-power",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="energyThisYear",
+        name="Energy This Year",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        icon="mdi:solar-power",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="energyToday",
+        name="Energy Today",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        icon="mdi:solar-power",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="energyTotal",
+        name="Lifetime Energy",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        icon="mdi:solar-power",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="optimizers",
+        name="Optimizers Online",
+        native_unit_of_measurement="optimizers",
+        icon="mdi:solar-panel",
+        extra_attribute="optimizers_connected",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="optimizercurrent",
+        name="Average Optimizer Current",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        icon="mdi:solar-panel",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="optimizerpower",
+        name="Average Optimizer Power",
+        native_unit_of_measurement=POWER_WATT,
+        icon="mdi:solar-panel",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="optimizertemperature",
+        name="Average Optimizer Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon="mdi:solar-panel",
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="optimizervoltage",
+        name="Average Optimizer Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:solar-panel",
+    ),
+)
+
+SENSOR_TYPE_INVERTER_TEMPERATURE = SolarEdgeLocalSensorEntityDescription(
+    key="invertertemperature",
+    name="Inverter Temperature",
+    native_unit_of_measurement=TEMP_CELSIUS,
+    extra_attribute="operating_mode",
+    device_class=SensorDeviceClass.TEMPERATURE,
+)
+
+SENSOR_TYPES_ENERGY_IMPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
+    SolarEdgeLocalSensorEntityDescription(
+        key="currentPowerimport",
+        name="current import Power",
+        native_unit_of_measurement=POWER_WATT,
+        icon="mdi:arrow-collapse-down",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="totalEnergyimport",
+        name="total import Energy",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        icon="mdi:counter",
+    ),
+)
+
+SENSOR_TYPES_ENERGY_EXPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
+    SolarEdgeLocalSensorEntityDescription(
+        key="currentPowerexport",
+        name="current export Power",
+        native_unit_of_measurement=POWER_WATT,
+        icon="mdi:arrow-expand-up",
+    ),
+    SolarEdgeLocalSensorEntityDescription(
+        key="totalEnergyexport",
+        name="total export Energy",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        icon="mdi:counter",
+    ),
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -166,7 +190,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the SolarEdge Monitoring API sensor."""
     ip_address = config[CONF_IP_ADDRESS]
     platform_name = config[CONF_NAME]
@@ -186,77 +215,41 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
+    # Create solaredge data service which will retrieve and update the data.
+    data = SolarEdgeData(hass, api)
+
     # Changing inverter temperature unit.
-    sensors = deepcopy(SENSOR_TYPES)
+    inverter_temp_description = copy(SENSOR_TYPE_INVERTER_TEMPERATURE)
     if status.inverters.primary.temperature.units.farenheit:
-        sensors["inverter_temperature"] = [
-            "invertertemperature",
-            "Inverter Temperature",
-            TEMP_FAHRENHEIT,
-            "mdi:thermometer",
-            "operating_mode",
-            DEVICE_CLASS_TEMPERATURE,
-        ]
+        inverter_temp_description.native_unit_of_measurement = TEMP_FAHRENHEIT
+
+    # Create entities
+    entities = [
+        SolarEdgeSensor(platform_name, data, description)
+        for description in (*SENSOR_TYPES, inverter_temp_description)
+    ]
 
     try:
         if status.metersList[0]:
-            sensors["import_current_power"] = [
-                "currentPowerimport",
-                "current import Power",
-                POWER_WATT,
-                "mdi:arrow-collapse-down",
-                None,
-                None,
-            ]
-            sensors["import_meter_reading"] = [
-                "totalEnergyimport",
-                "total import Energy",
-                ENERGY_WATT_HOUR,
-                "mdi:counter",
-                None,
-                None,
-            ]
+            entities.extend(
+                [
+                    SolarEdgeSensor(platform_name, data, description)
+                    for description in SENSOR_TYPES_ENERGY_IMPORT
+                ]
+            )
     except IndexError:
         _LOGGER.debug("Import meter sensors are not created")
 
     try:
         if status.metersList[1]:
-            sensors["export_current_power"] = [
-                "currentPowerexport",
-                "current export Power",
-                POWER_WATT,
-                "mdi:arrow-expand-up",
-                None,
-                None,
-            ]
-            sensors["export_meter_reading"] = [
-                "totalEnergyexport",
-                "total export Energy",
-                ENERGY_WATT_HOUR,
-                "mdi:counter",
-                None,
-                None,
-            ]
+            entities.extend(
+                [
+                    SolarEdgeSensor(platform_name, data, description)
+                    for description in SENSOR_TYPES_ENERGY_EXPORT
+                ]
+            )
     except IndexError:
         _LOGGER.debug("Export meter sensors are not created")
-
-    # Create solaredge data service which will retrieve and update the data.
-    data = SolarEdgeData(hass, api)
-
-    # Create a new sensor for each sensor type.
-    entities = []
-    for sensor_info in sensors.values():
-        sensor = SolarEdgeSensor(
-            platform_name,
-            data,
-            sensor_info[0],
-            sensor_info[1],
-            sensor_info[2],
-            sensor_info[3],
-            sensor_info[4],
-            sensor_info[5],
-        )
-        entities.append(sensor)
 
     add_entities(entities, True)
 
@@ -264,55 +257,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SolarEdgeSensor(SensorEntity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
+    entity_description: SolarEdgeLocalSensorEntityDescription
+
     def __init__(
-        self, platform_name, data, json_key, name, unit, icon, attr, device_class
+        self,
+        platform_name,
+        data,
+        description: SolarEdgeLocalSensorEntityDescription,
     ):
         """Initialize the sensor."""
+        self.entity_description = description
         self._platform_name = platform_name
         self._data = data
-        self._state = None
-
-        self._json_key = json_key
-        self._name = name
-        self._unit_of_measurement = unit
-        self._icon = icon
-        self._attr = attr
-        self._attr_device_class = device_class
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f"{self._platform_name} ({self._name})"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
+        self._attr_name = f"{platform_name} ({description.name})"
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        if self._attr:
+        if extra_attr := self.entity_description.extra_attribute:
             try:
-                return {self._attr: self._data.info[self._json_key]}
+                return {extra_attr: self._data.info[self.entity_description.key]}
             except KeyError:
-                return None
+                pass
         return None
-
-    @property
-    def icon(self):
-        """Return the sensor icon."""
-        return self._icon
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
         self._data.update()
-        self._state = self._data.data[self._json_key]
+        self._attr_native_value = self._data.data[self.entity_description.key]
 
 
 class SolarEdgeData:

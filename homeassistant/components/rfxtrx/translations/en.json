@@ -35,6 +35,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Send command: {subtype}",
+            "send_status": "Send status update: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Received command: {subtype}",
+            "status": "Received status: {subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "Device is already configured",
@@ -51,6 +61,7 @@
                     "debug": "Enable debugging",
                     "device": "Select device to configure",
                     "event_code": "Enter event code to add",
+                    "protocols": "Protocols",
                     "remove_device": "Select device to delete"
                 },
                 "title": "Rfxtrx Options"

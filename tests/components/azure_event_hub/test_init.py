@@ -1,83 +1,30 @@
-"""The tests for the Azure Event Hub component."""
-from dataclasses import dataclass
-from unittest.mock import MagicMock, patch
+"""Test the init functions for AEH."""
+from datetime import timedelta
+import logging
+from unittest.mock import patch
 
+from azure.eventhub.exceptions import EventHubError
 import pytest
 
-import homeassistant.components.azure_event_hub as azure_event_hub
+from homeassistant.components import azure_event_hub
+from homeassistant.components.azure_event_hub.const import CONF_SEND_INTERVAL, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-AZURE_EVENT_HUB_PATH = "homeassistant.components.azure_event_hub"
-PRODUCER_PATH = f"{AZURE_EVENT_HUB_PATH}.EventHubProducerClient"
-MIN_CONFIG = {
-    "event_hub_namespace": "namespace",
-    "event_hub_instance_name": "name",
-    "event_hub_sas_policy": "policy",
-    "event_hub_sas_key": "key",
-}
+from .conftest import FilterTest
+from .const import AZURE_EVENT_HUB_PATH, BASIC_OPTIONS, CS_CONFIG_FULL, SAS_CONFIG_FULL
 
+from tests.common import MockConfigEntry, async_fire_time_changed
 
-@dataclass
-class FilterTest:
-    """Class for capturing a filter test."""
-
-    id: str
-    should_pass: bool
+_LOGGER = logging.getLogger(__name__)
 
 
-@pytest.fixture(autouse=True, name="mock_client", scope="module")
-def mock_client_fixture():
-    """Mock the azure event hub producer client."""
-    with patch(f"{PRODUCER_PATH}.send_batch") as mock_send_batch, patch(
-        f"{PRODUCER_PATH}.close"
-    ) as mock_close, patch(f"{PRODUCER_PATH}.__init__", return_value=None) as mock_init:
-        yield (
-            mock_init,
-            mock_send_batch,
-            mock_close,
-        )
-
-
-@pytest.fixture(autouse=True, name="mock_batch")
-def mock_batch_fixture():
-    """Mock batch creator and return mocked batch object."""
-    mock_batch = MagicMock()
-    with patch(f"{PRODUCER_PATH}.create_batch", return_value=mock_batch):
-        yield mock_batch
-
-
-@pytest.fixture(autouse=True, name="mock_policy")
-def mock_policy_fixture():
-    """Mock azure shared key credential."""
-    with patch(f"{AZURE_EVENT_HUB_PATH}.EventHubSharedKeyCredential") as policy:
-        yield policy
-
-
-@pytest.fixture(autouse=True, name="mock_event_data")
-def mock_event_data_fixture():
-    """Mock the azure event data component."""
-    with patch(f"{AZURE_EVENT_HUB_PATH}.EventData") as event_data:
-        yield event_data
-
-
-@pytest.fixture(autouse=True, name="mock_call_later")
-def mock_call_later_fixture():
-    """Mock async_call_later to allow queue processing on demand."""
-    with patch(f"{AZURE_EVENT_HUB_PATH}.async_call_later") as mock_call_later:
-        yield mock_call_later
-
-
-async def test_minimal_config(hass):
-    """Test the minimal config and defaults of component."""
-    config = {azure_event_hub.DOMAIN: MIN_CONFIG}
-    assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
-
-
-async def test_full_config(hass):
-    """Test the full config of component."""
+async def test_import(hass):
+    """Test the popping of the filter and further import of the config."""
     config = {
-        azure_event_hub.DOMAIN: {
+        DOMAIN: {
             "send_interval": 10,
             "max_delay": 10,
             "filter": {
@@ -90,128 +37,178 @@ async def test_full_config(hass):
             },
         }
     }
-    config[azure_event_hub.DOMAIN].update(MIN_CONFIG)
-    assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
+    config[DOMAIN].update(CS_CONFIG_FULL)
+    assert await async_setup_component(hass, DOMAIN, config)
 
 
-async def _setup(hass, mock_call_later, filter_config):
-    """Shared set up for filtering tests."""
-    config = {azure_event_hub.DOMAIN: {"filter": filter_config}}
-    config[azure_event_hub.DOMAIN].update(MIN_CONFIG)
+async def test_filter_only_config(hass):
+    """Test the popping of the filter and further import of the config."""
+    config = {
+        DOMAIN: {
+            "filter": {
+                "include_domains": ["light"],
+                "include_entity_globs": ["sensor.included_*"],
+                "include_entities": ["binary_sensor.included"],
+                "exclude_domains": ["light"],
+                "exclude_entity_globs": ["sensor.excluded_*"],
+                "exclude_entities": ["binary_sensor.excluded"],
+            },
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
 
-    assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
+
+async def test_unload_entry(hass, entry, mock_create_batch):
+    """Test being able to unload an entry.
+
+    Queue should be empty, so adding events to the batch should not be called,
+    this verifies that the unload, calls async_stop, which calls async_send and
+    shuts down the hub.
+    """
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    mock_create_batch.add.assert_not_called()
+    assert entry.state == ConfigEntryState.NOT_LOADED
+
+
+async def test_failed_test_connection(hass, mock_get_eventhub_properties):
+    """Test being able to unload an entry."""
+    entry = MockConfigEntry(
+        domain=azure_event_hub.DOMAIN,
+        data=SAS_CONFIG_FULL,
+        title="test-instance",
+        options=BASIC_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+    mock_get_eventhub_properties.side_effect = EventHubError("Test")
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_send_batch_error(hass, entry_with_one_event, mock_send_batch):
+    """Test a error in send_batch, including recovering at the next interval."""
+    mock_send_batch.reset_mock()
+    mock_send_batch.side_effect = [EventHubError("Test"), None]
+    async_fire_time_changed(
+        hass,
+        utcnow() + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
+    )
     await hass.async_block_till_done()
-    mock_call_later.assert_called_once()
-    return mock_call_later.call_args[0][2]
+    mock_send_batch.assert_called_once()
+    mock_send_batch.reset_mock()
+    hass.states.async_set("sensor.test2", STATE_ON)
+    async_fire_time_changed(
+        hass,
+        utcnow() + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
+    )
+    await hass.async_block_till_done()
+    mock_send_batch.assert_called_once()
 
 
-async def _run_filter_tests(hass, tests, process_queue, mock_batch):
-    """Run a series of filter tests on azure event hub."""
-    for test in tests:
-        hass.states.async_set(test.id, STATE_ON)
+async def test_late_event(hass, entry_with_one_event, mock_create_batch):
+    """Test the check on late events."""
+    with patch(
+        f"{AZURE_EVENT_HUB_PATH}.utcnow",
+        return_value=utcnow() + timedelta(hours=1),
+    ):
+        async_fire_time_changed(
+            hass,
+            utcnow()
+            + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
+        )
         await hass.async_block_till_done()
-        await process_queue(None)
-
-        if test.should_pass:
-            mock_batch.add.assert_called_once()
-            mock_batch.add.reset_mock()
-        else:
-            mock_batch.add.assert_not_called()
+        mock_create_batch.add.assert_not_called()
 
 
-async def test_allowlist(hass, mock_batch, mock_call_later):
-    """Test an allowlist only config."""
-    process_queue = await _setup(
+async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
+    """Test the full batch behaviour."""
+    mock_create_batch.add.side_effect = [ValueError, None]
+    async_fire_time_changed(
         hass,
-        mock_call_later,
-        {
-            "include_domains": ["light"],
-            "include_entity_globs": ["sensor.included_*"],
-            "include_entities": ["binary_sensor.included"],
-        },
+        utcnow() + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
     )
-
-    tests = [
-        FilterTest("climate.excluded", False),
-        FilterTest("light.included", True),
-        FilterTest("sensor.excluded_test", False),
-        FilterTest("sensor.included_test", True),
-        FilterTest("binary_sensor.included", True),
-        FilterTest("binary_sensor.excluded", False),
-    ]
-
-    await _run_filter_tests(hass, tests, process_queue, mock_batch)
+    await hass.async_block_till_done()
+    assert mock_create_batch.add.call_count == 2
 
 
-async def test_denylist(hass, mock_batch, mock_call_later):
-    """Test a denylist only config."""
-    process_queue = await _setup(
-        hass,
-        mock_call_later,
-        {
-            "exclude_domains": ["climate"],
-            "exclude_entity_globs": ["sensor.excluded_*"],
-            "exclude_entities": ["binary_sensor.excluded"],
-        },
-    )
+@pytest.mark.parametrize(
+    "filter_schema, tests",
+    [
+        (
+            {
+                "include_domains": ["light"],
+                "include_entity_globs": ["sensor.included_*"],
+                "include_entities": ["binary_sensor.included"],
+            },
+            [
+                FilterTest("climate.excluded", 0),
+                FilterTest("light.included", 1),
+                FilterTest("sensor.excluded_test", 0),
+                FilterTest("sensor.included_test", 1),
+                FilterTest("binary_sensor.included", 1),
+                FilterTest("binary_sensor.excluded", 0),
+            ],
+        ),
+        (
+            {
+                "exclude_domains": ["climate"],
+                "exclude_entity_globs": ["sensor.excluded_*"],
+                "exclude_entities": ["binary_sensor.excluded"],
+            },
+            [
+                FilterTest("climate.excluded", 0),
+                FilterTest("light.included", 1),
+                FilterTest("sensor.excluded_test", 0),
+                FilterTest("sensor.included_test", 1),
+                FilterTest("binary_sensor.included", 1),
+                FilterTest("binary_sensor.excluded", 0),
+            ],
+        ),
+        (
+            {
+                "include_domains": ["light"],
+                "include_entity_globs": ["*.included_*"],
+                "exclude_domains": ["climate"],
+                "exclude_entity_globs": ["*.excluded_*"],
+                "exclude_entities": ["light.excluded"],
+            },
+            [
+                FilterTest("light.included", 1),
+                FilterTest("light.excluded_test", 0),
+                FilterTest("light.excluded", 0),
+                FilterTest("sensor.included_test", 1),
+                FilterTest("climate.included_test", 0),
+            ],
+        ),
+        (
+            {
+                "include_entities": ["climate.included", "sensor.excluded_test"],
+                "exclude_domains": ["climate"],
+                "exclude_entity_globs": ["*.excluded_*"],
+                "exclude_entities": ["light.excluded"],
+            },
+            [
+                FilterTest("climate.excluded", 0),
+                FilterTest("climate.included", 1),
+                FilterTest("switch.excluded_test", 0),
+                FilterTest("sensor.excluded_test", 1),
+                FilterTest("light.excluded", 0),
+                FilterTest("light.included", 1),
+            ],
+        ),
+    ],
+    ids=["allowlist", "denylist", "filtered_allowlist", "filtered_denylist"],
+)
+async def test_filter(hass, entry, tests, mock_create_batch):
+    """Test different filters.
 
-    tests = [
-        FilterTest("climate.excluded", False),
-        FilterTest("light.included", True),
-        FilterTest("sensor.excluded_test", False),
-        FilterTest("sensor.included_test", True),
-        FilterTest("binary_sensor.included", True),
-        FilterTest("binary_sensor.excluded", False),
-    ]
-
-    await _run_filter_tests(hass, tests, process_queue, mock_batch)
-
-
-async def test_filtered_allowlist(hass, mock_batch, mock_call_later):
-    """Test an allowlist config with a filtering denylist."""
-    process_queue = await _setup(
-        hass,
-        mock_call_later,
-        {
-            "include_domains": ["light"],
-            "include_entity_globs": ["*.included_*"],
-            "exclude_domains": ["climate"],
-            "exclude_entity_globs": ["*.excluded_*"],
-            "exclude_entities": ["light.excluded"],
-        },
-    )
-
-    tests = [
-        FilterTest("light.included", True),
-        FilterTest("light.excluded_test", False),
-        FilterTest("light.excluded", False),
-        FilterTest("sensor.included_test", True),
-        FilterTest("climate.included_test", False),
-    ]
-
-    await _run_filter_tests(hass, tests, process_queue, mock_batch)
-
-
-async def test_filtered_denylist(hass, mock_batch, mock_call_later):
-    """Test a denylist config with a filtering allowlist."""
-    process_queue = await _setup(
-        hass,
-        mock_call_later,
-        {
-            "include_entities": ["climate.included", "sensor.excluded_test"],
-            "exclude_domains": ["climate"],
-            "exclude_entity_globs": ["*.excluded_*"],
-            "exclude_entities": ["light.excluded"],
-        },
-    )
-
-    tests = [
-        FilterTest("climate.excluded", False),
-        FilterTest("climate.included", True),
-        FilterTest("switch.excluded_test", False),
-        FilterTest("sensor.excluded_test", True),
-        FilterTest("light.excluded", False),
-        FilterTest("light.included", True),
-    ]
-
-    await _run_filter_tests(hass, tests, process_queue, mock_batch)
+    Filter_schema is also a fixture which is replaced by the filter_schema
+    in the parametrize and added to the entry fixture.
+    """
+    for test in tests:
+        hass.states.async_set(test.entity_id, STATE_ON)
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=entry.options[CONF_SEND_INTERVAL])
+        )
+        await hass.async_block_till_done()
+        assert mock_create_batch.add.call_count == test.expected_count
+        mock_create_batch.add.reset_mock()

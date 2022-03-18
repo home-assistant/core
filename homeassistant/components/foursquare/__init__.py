@@ -1,17 +1,15 @@
 """Support for the Foursquare (Swarm) API."""
+from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    HTTP_BAD_REQUEST,
-    HTTP_CREATED,
-    HTTP_OK,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,23 +49,23 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Foursquare component."""
     config = config[DOMAIN]
 
-    def checkin_user(call):
+    def checkin_user(call: ServiceCall) -> None:
         """Check a user in on Swarm."""
         url = f"https://api.foursquare.com/v2/checkins/add?oauth_token={config[CONF_ACCESS_TOKEN]}&v=20160802&m=swarm"
         response = requests.post(url, data=call.data, timeout=10)
 
-        if response.status_code not in (HTTP_OK, HTTP_CREATED):
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.CREATED):
             _LOGGER.exception(
                 "Error checking in user. Response %d: %s:",
                 response.status_code,
                 response.reason,
             )
 
-        hass.bus.fire(EVENT_CHECKIN, response.text)
+        hass.bus.fire(EVENT_CHECKIN, {"text": response.text})
 
     # Register our service with Home Assistant.
     hass.services.register(
@@ -95,7 +93,7 @@ class FoursquarePushReceiver(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         secret = data.pop("secret", None)
 
@@ -105,6 +103,6 @@ class FoursquarePushReceiver(HomeAssistantView):
             _LOGGER.error(
                 "Received Foursquare push with invalid push secret: %s", secret
             )
-            return self.json_message("Incorrect secret", HTTP_BAD_REQUEST)
+            return self.json_message("Incorrect secret", HTTPStatus.BAD_REQUEST)
 
         request.app["hass"].bus.async_fire(EVENT_PUSH, data)

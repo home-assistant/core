@@ -1,10 +1,9 @@
 """Preference management for cloud."""
 from __future__ import annotations
 
-from ipaddress import ip_address
-
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
+from homeassistant.components import webhook
 from homeassistant.core import callback
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.logging import async_create_catching_coro
@@ -31,11 +30,10 @@ from .const import (
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_OVERRIDE_NAME,
+    PREF_REMOTE_DOMAIN,
     PREF_SHOULD_EXPOSE,
     PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
-    InvalidTrustedNetworks,
-    InvalidTrustedProxies,
 )
 
 STORAGE_KEY = DOMAIN
@@ -54,9 +52,7 @@ class CloudPreferences:
 
     async def async_initialize(self):
         """Finish initializing the preferences."""
-        prefs = await self._store.async_load()
-
-        if prefs is None:
+        if (prefs := await self._store.async_load()) is None:
             prefs = self._empty_config("")
 
         self._prefs = prefs
@@ -65,7 +61,7 @@ class CloudPreferences:
             await self._save_prefs(
                 {
                     **self._prefs,
-                    PREF_GOOGLE_LOCAL_WEBHOOK_ID: self._hass.components.webhook.async_generate_id(),
+                    PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
                 }
             )
 
@@ -90,6 +86,7 @@ class CloudPreferences:
         alexa_default_expose=UNDEFINED,
         google_default_expose=UNDEFINED,
         tts_default_voice=UNDEFINED,
+        remote_domain=UNDEFINED,
     ):
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -108,17 +105,10 @@ class CloudPreferences:
             (PREF_ALEXA_DEFAULT_EXPOSE, alexa_default_expose),
             (PREF_GOOGLE_DEFAULT_EXPOSE, google_default_expose),
             (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
+            (PREF_REMOTE_DOMAIN, remote_domain),
         ):
             if value is not UNDEFINED:
                 prefs[key] = value
-
-        if remote_enabled is True and self._has_local_trusted_network:
-            prefs[PREF_ENABLE_REMOTE] = False
-            raise InvalidTrustedNetworks
-
-        if remote_enabled is True and self._has_local_trusted_proxies:
-            prefs[PREF_ENABLE_REMOTE] = False
-            raise InvalidTrustedProxies
 
         await self._save_prefs(prefs)
 
@@ -216,15 +206,15 @@ class CloudPreferences:
     @property
     def remote_enabled(self):
         """Return if remote is enabled on start."""
-        enabled = self._prefs.get(PREF_ENABLE_REMOTE, False)
-
-        if not enabled:
-            return False
-
-        if self._has_local_trusted_network or self._has_local_trusted_proxies:
+        if not self._prefs.get(PREF_ENABLE_REMOTE, False):
             return False
 
         return True
+
+    @property
+    def remote_domain(self):
+        """Return remote domain."""
+        return self._prefs.get(PREF_REMOTE_DOMAIN)
 
     @property
     def alexa_enabled(self):
@@ -293,60 +283,27 @@ class CloudPreferences:
         return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)
 
     async def get_cloud_user(self) -> str:
-        """Return ID from Home Assistant Cloud system user."""
+        """Return ID of Home Assistant Cloud system user."""
         user = await self._load_cloud_user()
 
         if user:
             return user.id
 
         user = await self._hass.auth.async_create_system_user(
-            "Home Assistant Cloud", [GROUP_ID_ADMIN]
+            "Home Assistant Cloud", group_ids=[GROUP_ID_ADMIN], local_only=True
         )
+        assert user is not None
         await self.async_update(cloud_user=user.id)
         return user.id
 
     async def _load_cloud_user(self) -> User | None:
         """Load cloud user if available."""
-        user_id = self._prefs.get(PREF_CLOUD_USER)
-
-        if user_id is None:
+        if (user_id := self._prefs.get(PREF_CLOUD_USER)) is None:
             return None
 
         # Fetch the user. It can happen that the user no longer exists if
         # an image was restored without restoring the cloud prefs.
         return await self._hass.auth.async_get_user(user_id)
-
-    @property
-    def _has_local_trusted_network(self) -> bool:
-        """Return if we allow localhost to bypass auth."""
-        local4 = ip_address("127.0.0.1")
-        local6 = ip_address("::1")
-
-        for prv in self._hass.auth.auth_providers:
-            if prv.type != "trusted_networks":
-                continue
-
-            for network in prv.trusted_networks:
-                if local4 in network or local6 in network:
-                    return True
-
-        return False
-
-    @property
-    def _has_local_trusted_proxies(self) -> bool:
-        """Return if we allow localhost to be a proxy and use its data."""
-        if not hasattr(self._hass, "http"):
-            return False
-
-        local4 = ip_address("127.0.0.1")
-        local6 = ip_address("::1")
-
-        if any(
-            local4 in nwk or local6 in nwk for nwk in self._hass.http.trusted_proxies
-        ):
-            return True
-
-        return False
 
     async def _save_prefs(self, prefs):
         """Save preferences to disk."""
@@ -357,7 +314,8 @@ class CloudPreferences:
             self._hass.async_create_task(async_create_catching_coro(listener(self)))
 
     @callback
-    def _empty_config(self, username):
+    @staticmethod
+    def _empty_config(username):
         """Return an empty config."""
         return {
             PREF_ALEXA_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
@@ -369,7 +327,8 @@ class CloudPreferences:
             PREF_ENABLE_REMOTE: False,
             PREF_GOOGLE_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
             PREF_GOOGLE_ENTITY_CONFIGS: {},
-            PREF_GOOGLE_LOCAL_WEBHOOK_ID: self._hass.components.webhook.async_generate_id(),
+            PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
+            PREF_REMOTE_DOMAIN: None,
             PREF_USERNAME: username,
         }

@@ -4,7 +4,7 @@ import base64
 import json
 import logging
 
-import aiobotocore
+from aiobotocore.session import AioSession
 
 from homeassistant.components.notify import (
     ATTR_TARGET,
@@ -12,6 +12,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
+from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def get_available_regions(hass, service):
     """Get available regions for a service."""
-    session = aiobotocore.get_session()
+    session = AioSession()
     return await session.get_available_regions(service)
 
 
@@ -82,12 +83,11 @@ async def async_get_service(hass, config, discovery_info=None):
             del aws_config[CONF_CREDENTIAL_NAME]
 
     if session is None:
-        profile = aws_config.get(CONF_PROFILE_NAME)
-        if profile is not None:
-            session = aiobotocore.AioSession(profile=profile)
+        if (profile := aws_config.get(CONF_PROFILE_NAME)) is not None:
+            session = AioSession(profile=profile)
             del aws_config[CONF_PROFILE_NAME]
         else:
-            session = aiobotocore.AioSession()
+            session = AioSession()
 
     aws_config[CONF_REGION] = region_name
 
@@ -167,11 +167,13 @@ class AWSSNS(AWSNotify):
             _LOGGER.error("At least one target is required")
             return
 
-        message_attributes = {
-            k: {"StringValue": json.dumps(v), "DataType": "String"}
-            for k, v in kwargs.items()
-            if v is not None
-        }
+        message_attributes = {}
+        if data := kwargs.get(ATTR_DATA):
+            message_attributes = {
+                k: {"StringValue": v, "DataType": "String"}
+                for k, v in data.items()
+                if v is not None
+            }
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         async with self.session.create_client(

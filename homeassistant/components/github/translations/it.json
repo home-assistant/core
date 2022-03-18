@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "could_not_register": "Impossibile registrare l'integrazione con GitHub"
+        },
+        "progress": {
+            "wait_for_device": "1. Apri {url}\n2. Incolla la seguente chiave per autorizzare l'integrazione:\n ```\n {code}\n ```\n"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "Seleziona i repository da tracciare."
+                },
+                "title": "Configura repository"
+            }
+        }
+    }
+}

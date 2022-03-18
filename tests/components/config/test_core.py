@@ -1,4 +1,5 @@
 """Test core config."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -33,7 +34,7 @@ async def test_validate_config_ok(hass, hass_client):
     ):
         resp = await client.post("/api/config/core/check_config")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result["result"] == "valid"
     assert result["errors"] is None
@@ -44,7 +45,7 @@ async def test_validate_config_ok(hass, hass_client):
     ):
         resp = await client.post("/api/config/core/check_config")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result["result"] == "invalid"
     assert result["errors"] == "beer"

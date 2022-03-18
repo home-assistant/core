@@ -5,6 +5,7 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_trigger
 from homeassistant.const import ATTR_MODE, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, device_registry
@@ -83,8 +84,17 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "changed_states",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -197,6 +207,30 @@ async def test_if_fires_on_state_change(hass, calls):
                         },
                     },
                 },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": "humidifier.entity",
+                        "type": "changed_states",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "turn_on_or_off {{ trigger.%s }}"
+                            % "}} - {{ trigger.".join(
+                                (
+                                    "platform",
+                                    "entity_id",
+                                    "from_state.state",
+                                    "to_state.state",
+                                    "for",
+                                )
+                            )
+                        },
+                    },
+                },
             ]
         },
     )
@@ -222,18 +256,20 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake turn off
     hass.states.async_set("humidifier.entity", STATE_OFF, {const.ATTR_HUMIDITY: 37})
     await hass.async_block_till_done()
-    assert len(calls) == 4
-    assert (
-        calls[3].data["some"] == "turn_off device - humidifier.entity - on - off - None"
-    )
+    assert len(calls) == 5
+    assert {calls[3].data["some"], calls[4].data["some"]} == {
+        "turn_off device - humidifier.entity - on - off - None",
+        "turn_on_or_off device - humidifier.entity - on - off - None",
+    }
 
     # Fake turn on
     hass.states.async_set("humidifier.entity", STATE_ON, {const.ATTR_HUMIDITY: 37})
     await hass.async_block_till_done()
-    assert len(calls) == 5
-    assert (
-        calls[4].data["some"] == "turn_on device - humidifier.entity - off - on - None"
-    )
+    assert len(calls) == 7
+    assert {calls[5].data["some"], calls[6].data["some"]} == {
+        "turn_on device - humidifier.entity - off - on - None",
+        "turn_on_or_off device - humidifier.entity - off - on - None",
+    }
 
 
 async def test_invalid_config(hass, calls):

@@ -1,4 +1,6 @@
 """Constants for the Renault component."""
+from homeassistant.const import Platform
+
 DOMAIN = "renault"
 
 CONF_LOCALE = "locale"
@@ -7,7 +9,11 @@ CONF_KAMEREON_ACCOUNT_ID = "kamereon_account_id"
 DEFAULT_SCAN_INTERVAL = 300  # 5 minutes
 
 PLATFORMS = [
-    "sensor",
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.SELECT,
+    Platform.SENSOR,
 ]
 
 DEVICE_CLASS_PLUG_STATE = "renault__plug_state"

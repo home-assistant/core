@@ -1,11 +1,26 @@
 """Support for monitoring an SABnzbd NZB client."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_SABNZBD, SENSOR_TYPES, SIGNAL_SABNZBD_UPDATED
+from . import (
+    DATA_SABNZBD,
+    SENSOR_TYPES,
+    SIGNAL_SABNZBD_UPDATED,
+    SabnzbdSensorEntityDescription,
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SABnzbd sensors."""
     if discovery_info is None:
         return
@@ -14,22 +29,27 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensors = sab_api_data.sensors
     client_name = sab_api_data.name
     async_add_entities(
-        [SabnzbdSensor(sensor, sab_api_data, client_name) for sensor in sensors]
+        [
+            SabnzbdSensor(sab_api_data, client_name, description)
+            for description in SENSOR_TYPES
+            if description.key in sensors
+        ]
     )
 
 
 class SabnzbdSensor(SensorEntity):
     """Representation of an SABnzbd sensor."""
 
-    def __init__(self, sensor_type, sabnzbd_api_data, client_name):
+    entity_description: SabnzbdSensorEntityDescription
+    _attr_should_poll = False
+
+    def __init__(
+        self, sabnzbd_api_data, client_name, description: SabnzbdSensorEntityDescription
+    ):
         """Initialize the sensor."""
-        self._client_name = client_name
-        self._field_name = SENSOR_TYPES[sensor_type][2]
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self.entity_description = description
         self._sabnzbd_api = sabnzbd_api_data
-        self._state = None
-        self._type = sensor_type
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_name = f"{client_name} {description.name}"
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
@@ -39,33 +59,15 @@ class SabnzbdSensor(SensorEntity):
             )
         )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def should_poll(self):
-        """Don't poll. Will be updated by dispatcher signal."""
-        return False
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
     def update_state(self, args):
         """Get the latest data and updates the states."""
-        self._state = self._sabnzbd_api.get_queue_field(self._field_name)
+        self._attr_native_value = self._sabnzbd_api.get_queue_field(
+            self.entity_description.field_name
+        )
 
-        if self._type == "speed":
-            self._state = round(float(self._state) / 1024, 1)
-        elif "size" in self._type:
-            self._state = round(float(self._state), 2)
+        if self.entity_description.key == "speed":
+            self._attr_native_value = round(float(self._attr_native_value) / 1024, 1)
+        elif "size" in self.entity_description.key:
+            self._attr_native_value = round(float(self._attr_native_value), 2)
 
         self.schedule_update_ha_state()

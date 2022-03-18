@@ -19,15 +19,17 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TOKEN
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import color, dt
 
 from .const import (
@@ -37,7 +39,6 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
-    MODELS_LIGHT,
     MODELS_LIGHT_BULB,
     MODELS_LIGHT_CEILING,
     MODELS_LIGHT_EYECARE,
@@ -59,15 +60,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Philips Light"
 DATA_KEY = "light.xiaomi_miio"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODEL): vol.In(MODELS_LIGHT),
-    }
-)
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -120,22 +112,11 @@ SERVICE_TO_METHOD = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Miio configuration from YAML."""
-    _LOGGER.warning(
-        "Loading Xiaomi Miio Light via platform setup is deprecated. "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Xiaomi light from a config entry."""
     entities = []
 
@@ -213,7 +194,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
             return
 
-        async def async_service_handler(service):
+        async def async_service_handler(service: ServiceCall) -> None:
             """Map services to methods on Xiaomi Philips Lights."""
             method = SERVICE_TO_METHOD.get(service.service)
             params = {
@@ -221,8 +202,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 for key, value in service.data.items()
                 if key != ATTR_ENTITY_ID
             }
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
-            if entity_ids:
+            if entity_ids := service.data.get(ATTR_ENTITY_ID):
                 target_devices = [
                     dev
                     for dev in hass.data[DATA_KEY].values()
@@ -972,11 +952,11 @@ class XiaomiGatewayLight(LightEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info of the gateway."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway_device_id)},
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._gateway_device_id)},
+        )
 
     @property
     def name(self):

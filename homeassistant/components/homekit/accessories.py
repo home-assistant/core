@@ -1,23 +1,23 @@
 """Extend the basic Accessory and Bridge functions."""
+from __future__ import annotations
+
 import logging
 
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import cover
-from homeassistant.components.cover import (
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_WINDOW,
-)
-from homeassistant.components.media_player import DEVICE_CLASS_TV
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.remote import SUPPORT_ACTIVITY
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SERVICE,
@@ -26,11 +26,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
     STATE_ON,
@@ -51,13 +46,13 @@ from .const import (
     BRIDGE_SERIAL_NUMBER,
     CHAR_BATTERY_LEVEL,
     CHAR_CHARGING_STATE,
+    CHAR_HARDWARE_REVISION,
     CHAR_STATUS_LOW_BATTERY,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
-    DEVICE_CLASS_PM25,
     DOMAIN,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
@@ -66,9 +61,9 @@ from .const import (
     MANUFACTURER,
     MAX_MANUFACTURER_LENGTH,
     MAX_MODEL_LENGTH,
-    MAX_NAME_LENGTH,
     MAX_SERIAL_LENGTH,
     MAX_VERSION_LENGTH,
+    SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
@@ -80,10 +75,11 @@ from .const import (
 )
 from .util import (
     accessory_friendly_name,
+    async_dismiss_setup_message,
+    async_show_setup_message,
+    cleanup_name_for_homekit,
     convert_to_float,
-    dismiss_setup_message,
-    format_sw_version,
-    show_setup_message,
+    format_version,
     validate_media_player_features,
 )
 
@@ -96,7 +92,7 @@ SWITCH_TYPES = {
     TYPE_SWITCH: "Switch",
     TYPE_VALVE: "Valve",
 }
-TYPES = Registry()
+TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
 
 def get_accessory(hass, driver, state, aid, config):  # noqa: C901
@@ -125,19 +121,25 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        if device_class in (DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE) and features & (
-            cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
-        ):
+        if device_class in (
+            cover.CoverDeviceClass.GARAGE,
+            cover.CoverDeviceClass.GATE,
+        ) and features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "GarageDoorOpener"
         elif (
-            device_class == DEVICE_CLASS_WINDOW
+            device_class == cover.CoverDeviceClass.WINDOW
             and features & cover.SUPPORT_SET_POSITION
         ):
             a_type = "Window"
-        elif features & (cover.SUPPORT_SET_POSITION | cover.SUPPORT_SET_TILT_POSITION):
+        elif features & cover.SUPPORT_SET_POSITION:
             a_type = "WindowCovering"
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "WindowCoveringBasic"
+        elif features & cover.SUPPORT_SET_TILT_POSITION:
+            # WindowCovering and WindowCoveringBasic both support tilt
+            # only WindowCovering can handle the covers that are missing
+            # SUPPORT_SET_POSITION, SUPPORT_OPEN, and SUPPORT_CLOSE
+            a_type = "WindowCovering"
 
     elif state.domain == "fan":
         a_type = "Fan"
@@ -155,7 +157,7 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         feature_list = config.get(CONF_FEATURE_LIST, [])
 
-        if device_class == DEVICE_CLASS_TV:
+        if device_class == MediaPlayerDeviceClass.TV:
             a_type = "TelevisionMediaPlayer"
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"
@@ -164,20 +166,33 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if device_class == DEVICE_CLASS_TEMPERATURE or unit in (
+        if device_class == SensorDeviceClass.TEMPERATURE or unit in (
             TEMP_CELSIUS,
             TEMP_FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
-        elif device_class == DEVICE_CLASS_HUMIDITY and unit == PERCENTAGE:
+        elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
             a_type = "HumiditySensor"
-        elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
+        elif (
+            device_class == SensorDeviceClass.PM10
+            or SensorDeviceClass.PM10 in state.entity_id
+        ):
+            a_type = "PM10Sensor"
+        elif (
+            device_class == SensorDeviceClass.PM25
+            or SensorDeviceClass.PM25 in state.entity_id
+        ):
+            a_type = "PM25Sensor"
+        elif (
+            device_class == SensorDeviceClass.GAS
+            or SensorDeviceClass.GAS in state.entity_id
+        ):
             a_type = "AirQualitySensor"
-        elif device_class == DEVICE_CLASS_CO:
+        elif device_class == SensorDeviceClass.CO:
             a_type = "CarbonMonoxideSensor"
-        elif device_class == DEVICE_CLASS_CO2 or "co2" in state.entity_id:
+        elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
-        elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", LIGHT_LUX):
+        elif device_class == SensorDeviceClass.ILLUMINANCE or unit in ("lm", LIGHT_LUX):
             a_type = "LightSensor"
 
     elif state.domain == "switch":
@@ -190,8 +205,19 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
         a_type = "ActivityRemote"
 
-    elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
+    elif state.domain in (
+        "automation",
+        "button",
+        "input_boolean",
+        "input_button",
+        "remote",
+        "scene",
+        "script",
+    ):
         a_type = "Switch"
+
+    elif state.domain in ("input_select", "select"):
+        a_type = "SelectSwitch"
 
     elif state.domain == "water_heater":
         a_type = "WaterHeater"
@@ -219,42 +245,74 @@ class HomeAccessory(Accessory):
         config,
         *args,
         category=CATEGORY_OTHER,
+        device_id=None,
         **kwargs,
     ):
         """Initialize a Accessory object."""
         super().__init__(
-            driver=driver, display_name=name[:MAX_NAME_LENGTH], aid=aid, *args, **kwargs
+            driver=driver,
+            display_name=cleanup_name_for_homekit(name),
+            aid=aid,
+            *args,
+            **kwargs,
         )
         self.config = config or {}
-        domain = split_entity_id(entity_id)[0].replace("_", " ")
+        if device_id:
+            self.device_id = device_id
+            serial_number = device_id
+            domain = None
+        else:
+            self.device_id = None
+            serial_number = entity_id
+            domain = split_entity_id(entity_id)[0].replace("_", " ")
 
         if self.config.get(ATTR_MANUFACTURER) is not None:
-            manufacturer = self.config[ATTR_MANUFACTURER]
+            manufacturer = str(self.config[ATTR_MANUFACTURER])
         elif self.config.get(ATTR_INTEGRATION) is not None:
             manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
-        else:
+        elif domain:
             manufacturer = f"{MANUFACTURER} {domain}".title()
-        if self.config.get(ATTR_MODEL) is not None:
-            model = self.config[ATTR_MODEL]
         else:
+            manufacturer = MANUFACTURER
+        if self.config.get(ATTR_MODEL) is not None:
+            model = str(self.config[ATTR_MODEL])
+        elif domain:
             model = domain.title()
+        else:
+            model = MANUFACTURER
         sw_version = None
         if self.config.get(ATTR_SW_VERSION) is not None:
-            sw_version = format_sw_version(self.config[ATTR_SW_VERSION])
+            sw_version = format_version(self.config[ATTR_SW_VERSION])
         if sw_version is None:
-            sw_version = __version__
+            sw_version = format_version(__version__)
+        hw_version = None
+        if self.config.get(ATTR_HW_VERSION) is not None:
+            hw_version = format_version(self.config[ATTR_HW_VERSION])
 
         self.set_info_service(
             manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
             model=model[:MAX_MODEL_LENGTH],
-            serial_number=entity_id[:MAX_SERIAL_LENGTH],
+            serial_number=serial_number[:MAX_SERIAL_LENGTH],
             firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
+        if hw_version:
+            serv_info = self.get_service(SERV_ACCESSORY_INFO)
+            char = self.driver.loader.get_char(CHAR_HARDWARE_REVISION)
+            serv_info.add_characteristic(char)
+            serv_info.configure_char(
+                CHAR_HARDWARE_REVISION, value=hw_version[:MAX_VERSION_LENGTH]
+            )
+            self.iid_manager.assign(char)
+            char.broker = self
 
         self.category = category
         self.entity_id = entity_id
         self.hass = hass
         self._subscriptions = []
+
+        if device_id:
+            return
+
         self._char_battery = None
         self._char_charging = None
         self._char_low_battery = None
@@ -389,8 +447,7 @@ class HomeAccessory(Accessory):
     @ha_callback
     def async_update_linked_battery_callback(self, event):
         """Handle linked battery sensor state change listener callback."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
         if self.linked_battery_charging_sensor:
             battery_charging_state = None
@@ -401,8 +458,7 @@ class HomeAccessory(Accessory):
     @ha_callback
     def async_update_linked_battery_charging_callback(self, event):
         """Handle linked battery charging sensor state change listener callback."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
         self.async_update_battery(None, new_state.state == STATE_ON)
 
@@ -475,8 +531,7 @@ class HomeAccessory(Accessory):
             )
         )
 
-    @ha_callback
-    def async_stop(self):
+    async def stop(self):
         """Cancel any subscriptions when the bridge is stopped."""
         while self._subscriptions:
             self._subscriptions.pop(0)()
@@ -489,7 +544,7 @@ class HomeBridge(Bridge):
         """Initialize a Bridge object."""
         super().__init__(driver, name)
         self.set_info_service(
-            firmware_revision=__version__,
+            firmware_revision=format_version(__version__),
             manufacturer=MANUFACTURER,
             model=BRIDGE_MODEL,
             serial_number=BRIDGE_SERIAL_NUMBER,
@@ -501,8 +556,7 @@ class HomeBridge(Bridge):
 
     async def async_get_snapshot(self, info):
         """Get snapshot from accessory if supported."""
-        acc = self.accessories.get(info["aid"])
-        if acc is None:
+        if (acc := self.accessories.get(info["aid"])) is None:
             raise ValueError("Requested snapshot for missing accessory")
         if not hasattr(acc, "async_get_snapshot"):
             raise ValueError(
@@ -523,13 +577,15 @@ class HomeDriver(AccessoryDriver):
         self._bridge_name = bridge_name
         self._entry_title = entry_title
 
-    def pair(self, client_uuid, client_public):
+    @pyhap_callback
+    def pair(self, client_uuid, client_public, client_permissions):
         """Override super function to dismiss setup message if paired."""
-        success = super().pair(client_uuid, client_public)
+        success = super().pair(client_uuid, client_public, client_permissions)
         if success:
-            dismiss_setup_message(self.hass, self._entry_id)
+            async_dismiss_setup_message(self.hass, self._entry_id)
         return success
 
+    @pyhap_callback
     def unpair(self, client_uuid):
         """Override super function to show setup message if unpaired."""
         super().unpair(client_uuid)
@@ -537,7 +593,7 @@ class HomeDriver(AccessoryDriver):
         if self.state.paired:
             return
 
-        show_setup_message(
+        async_show_setup_message(
             self.hass,
             self._entry_id,
             accessory_friendly_name(self._entry_title, self.accessory),

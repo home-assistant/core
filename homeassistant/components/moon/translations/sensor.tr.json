@@ -1,0 +1,14 @@
+{
+    "state": {
+        "moon__phase": {
+            "first_quarter": "\u0130lk D\u00f6rd\u00fcn",
+            "full_moon": "Dolunay",
+            "last_quarter": "Son D\u00f6rd\u00fcn",
+            "new_moon": "Yeni Ay",
+            "waning_crescent": "Azalan Hilal",
+            "waning_gibbous": "\u015ei\u015fkin Ay",
+            "waxing_crescent": "Hilal",
+            "waxing_gibbous": "\u015ei\u015fkin Ay"
+        }
+    }
+}

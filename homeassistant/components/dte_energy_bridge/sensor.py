@@ -1,4 +1,7 @@
 """Support for monitoring energy usage using the DTE energy bridge."""
+from __future__ import annotations
+
+from http import HTTPStatus
 import logging
 
 import requests
@@ -6,11 +9,14 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, HTTP_OK
+from homeassistant.const import CONF_NAME, POWER_KILO_WATT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +39,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the DTE energy bridge sensor."""
     name = config[CONF_NAME]
     ip_address = config[CONF_IP_ADDRESS]
@@ -45,7 +56,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DteEnergyBridgeSensor(SensorEntity):
     """Implementation of the DTE Energy Bridge sensors."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_icon = ICON
+    _attr_native_unit_of_measurement = POWER_KILO_WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, ip_address, name, version):
         """Initialize the sensor."""
@@ -56,29 +69,7 @@ class DteEnergyBridgeSensor(SensorEntity):
         elif self._version == 2:
             self._url = f"http://{ip_address}:8888/zigbee/se/instantaneousdemand"
 
-        self._name = name
-        self._unit_of_measurement = "kW"
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of th sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
+        self._attr_name = name
 
     def update(self):
         """Get the energy usage data from the DTE energy bridge."""
@@ -86,15 +77,15 @@ class DteEnergyBridgeSensor(SensorEntity):
             response = requests.get(self._url, timeout=5)
         except (requests.exceptions.RequestException, ValueError):
             _LOGGER.warning(
-                "Could not update status for DTE Energy Bridge (%s)", self._name
+                "Could not update status for DTE Energy Bridge (%s)", self._attr_name
             )
             return
 
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.warning(
                 "Invalid status_code from DTE Energy Bridge: %s (%s)",
                 response.status_code,
-                self._name,
+                self._attr_name,
             )
             return
 
@@ -104,7 +95,7 @@ class DteEnergyBridgeSensor(SensorEntity):
             _LOGGER.warning(
                 'Invalid response from DTE Energy Bridge: "%s" (%s)',
                 response.text,
-                self._name,
+                self._attr_name,
             )
             return
 
@@ -117,6 +108,6 @@ class DteEnergyBridgeSensor(SensorEntity):
         # values in the format 000000.000 kW, but the scaling is Watts
         # NOT kWatts
         if self._version == 1 and "." in response_split[0]:
-            self._state = val
+            self._attr_native_value = val
         else:
-            self._state = val / 1000
+            self._attr_native_value = val / 1000

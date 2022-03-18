@@ -1,8 +1,8 @@
 """Code to handle a DenonAVR receiver."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from denonavr import DenonAVR
 

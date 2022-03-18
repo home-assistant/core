@@ -5,8 +5,10 @@ import statsd
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_STATE_CHANGED
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the StatsD component."""
 
     conf = config[DOMAIN]
@@ -54,9 +56,7 @@ def setup(hass, config):
 
     def statsd_event_listener(event):
         """Listen for new messages on the bus and sends them to StatsD."""
-        state = event.data.get("new_state")
-
-        if state is None:
+        if (state := event.data.get("new_state")) is None:
             return
 
         try:

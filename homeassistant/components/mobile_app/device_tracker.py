@@ -7,13 +7,15 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -29,11 +31,12 @@ from .helpers import device_info
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up OwnTracks based off an entry."""
     entity = MobileAppEntity(entry)
     async_add_entities([entity])
-    return True
 
 
 class MobileAppEntity(TrackerEntity, RestoreEntity):
@@ -60,8 +63,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         """Return device specific attributes."""
         attrs = {}
         for key in ATTR_KEYS:
-            value = self._data.get(key)
-            if value is not None:
+            if (value := self._data.get(key)) is not None:
                 attrs[key] = value
 
         return attrs
@@ -74,9 +76,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def latitude(self):
         """Return latitude value of the device."""
-        gps = self._data.get(ATTR_GPS)
-
-        if gps is None:
+        if (gps := self._data.get(ATTR_GPS)) is None:
             return None
 
         return gps[0]
@@ -84,9 +84,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def longitude(self):
         """Return longitude value of the device."""
-        gps = self._data.get(ATTR_GPS)
-
-        if gps is None:
+        if (gps := self._data.get(ATTR_GPS)) is None:
             return None
 
         return gps[1]
@@ -124,9 +122,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         if self._data is not None:
             return
 
-        state = await self.async_get_last_state()
-
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             self._data = {}
             return
 

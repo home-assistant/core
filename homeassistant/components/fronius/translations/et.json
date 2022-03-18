@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "invalid_host": "Vigane hostinimi v\u00f5i IP aadress"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Kas soovid lisada {device} Home Assistanti?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Seadista Froniuse seadme IP-aadress v\u00f5i kohalik hostinimi.",
+                "title": "Fronius SolarNet"
+            }
+        }
+    }
+}

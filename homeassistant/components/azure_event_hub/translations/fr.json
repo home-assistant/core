@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le service est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de la connexion avec les informations d'identification du fichier configuration.yaml, veuillez le supprimer de yaml et utiliser le flux de configuration.",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible.",
+            "unknown": "La connexion avec les informations d'identification du fichier configuration.yaml a \u00e9chou\u00e9 avec une erreur inconnue, veuillez supprimer de yaml et utiliser le flux de configuration."
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "conn_string": {
+                "data": {
+                    "event_hub_connection_string": "Cha\u00eene de connexion Event Hub"
+                },
+                "description": "Veuillez saisir la cha\u00eene de connexion pour\u00a0: {event_hub_instance_name}",
+                "title": "M\u00e9thode de cha\u00eene de connexion"
+            },
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "Espace de noms Event Hub",
+                    "event_hub_sas_key": "Cl\u00e9 SAS Event Hub",
+                    "event_hub_sas_policy": "Politique SAS d'Event Hub"
+                },
+                "description": "Veuillez saisir les informations d'identification SAS (signature d'acc\u00e8s partag\u00e9) pour\u00a0: {event_hub_instance_name}",
+                "title": "M\u00e9thode des identifiants SAS"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "Nom de l'instance Event Hub",
+                    "use_connection_string": "Utiliser la cha\u00eene de connexion"
+                },
+                "title": "Configurer votre int\u00e9gration Azure Event Hub"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "send_interval": "Intervalle entre les envois de lots au hub."
+                },
+                "title": "Options pour Azure Event Hub."
+            }
+        }
+    }
+}

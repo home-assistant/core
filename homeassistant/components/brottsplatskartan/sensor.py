@@ -1,4 +1,6 @@
 """Sensor platform for Brottsplatskartan information."""
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import timedelta
 import logging
@@ -14,7 +16,10 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +63,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Brottsplatskartan platform."""
 
     area = config.get(CONF_AREA)
@@ -103,4 +113,4 @@ class BrottsplatskartanSensor(SensorEntity):
             ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION
         }
         self._attr_extra_state_attributes.update(incident_counts)
-        self._attr_state = len(incidents)
+        self._attr_native_value = len(incidents)

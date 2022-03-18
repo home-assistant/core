@@ -1,9 +1,15 @@
 """Support for Smart Meter Texas sensors."""
 from smart_meter_texas import Meter
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -20,7 +26,11 @@ from .const import (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Smart Meter Texas sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     meters = hass.data[DOMAIN][config_entry.entry_id][DATA_SMART_METER].meters
@@ -33,7 +43,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Representation of an Smart Meter Texas sensor."""
 
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the sensor."""
@@ -58,7 +70,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the latest reading."""
         return self._state
 
@@ -90,7 +102,6 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         if self.coordinator.last_update_success:
             return
 
-        last_state = await self.async_get_last_state()
-        if last_state:
+        if last_state := await self.async_get_last_state():
             self._state = last_state.state
             self._available = True

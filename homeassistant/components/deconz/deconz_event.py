@@ -1,73 +1,77 @@
 """Representation of a deCONZ remote or keypad."""
 
+from __future__ import annotations
+
 from pydeconz.sensor import (
-    ANCILLARY_CONTROL_ARMED_AWAY,
-    ANCILLARY_CONTROL_ARMED_NIGHT,
-    ANCILLARY_CONTROL_ARMED_STAY,
-    ANCILLARY_CONTROL_DISARMED,
+    ANCILLARY_CONTROL_EMERGENCY,
+    ANCILLARY_CONTROL_FIRE,
+    ANCILLARY_CONTROL_INVALID_CODE,
+    ANCILLARY_CONTROL_PANIC,
     AncillaryControl,
     Switch,
 )
 
 from homeassistant.const import (
-    CONF_CODE,
     CONF_DEVICE_ID,
     CONF_EVENT,
     CONF_ID,
     CONF_UNIQUE_ID,
     CONF_XY,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
-from .const import CONF_ANGLE, CONF_GESTURE, LOGGER, NEW_SENSOR
+from .const import CONF_ANGLE, CONF_GESTURE, LOGGER
 from .deconz_device import DeconzBase
+from .gateway import DeconzGateway
 
 CONF_DECONZ_EVENT = "deconz_event"
 CONF_DECONZ_ALARM_EVENT = "deconz_alarm_event"
 
-DECONZ_TO_ALARM_STATE = {
-    ANCILLARY_CONTROL_ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
-    ANCILLARY_CONTROL_ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
-    ANCILLARY_CONTROL_ARMED_STAY: STATE_ALARM_ARMED_HOME,
-    ANCILLARY_CONTROL_DISARMED: STATE_ALARM_DISARMED,
+SUPPORTED_DECONZ_ALARM_EVENTS = {
+    ANCILLARY_CONTROL_EMERGENCY,
+    ANCILLARY_CONTROL_FIRE,
+    ANCILLARY_CONTROL_INVALID_CODE,
+    ANCILLARY_CONTROL_PANIC,
 }
 
 
-async def async_setup_events(gateway) -> None:
+async def async_setup_events(gateway: DeconzGateway) -> None:
     """Set up the deCONZ events."""
 
     @callback
-    def async_add_sensor(sensors=gateway.api.sensors.values()):
+    def async_add_sensor(
+        sensors: AncillaryControl | Switch = gateway.api.sensors.values(),
+    ) -> None:
         """Create DeconzEvent."""
+        new_events = []
+        known_events = {event.unique_id for event in gateway.events}
+
         for sensor in sensors:
 
             if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
                 continue
 
-            if (
-                sensor.type not in Switch.ZHATYPE + AncillaryControl.ZHATYPE
-                or sensor.uniqueid in {event.unique_id for event in gateway.events}
-            ):
+            if sensor.unique_id in known_events:
                 continue
 
-            if sensor.type in Switch.ZHATYPE:
-                new_event = DeconzEvent(sensor, gateway)
+            if isinstance(sensor, Switch):
+                new_events.append(DeconzEvent(sensor, gateway))
 
-            elif sensor.type in AncillaryControl.ZHATYPE:
-                new_event = DeconzAlarmEvent(sensor, gateway)
+            elif isinstance(sensor, AncillaryControl):
+                new_events.append(DeconzAlarmEvent(sensor, gateway))
 
+        for new_event in new_events:
             gateway.hass.async_create_task(new_event.async_update_device_registry())
             gateway.events.append(new_event)
 
     gateway.config_entry.async_on_unload(
         async_dispatcher_connect(
-            gateway.hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
+            gateway.hass,
+            gateway.signal_new_sensor,
+            async_add_sensor,
         )
     )
 
@@ -75,7 +79,7 @@ async def async_setup_events(gateway) -> None:
 
 
 @callback
-def async_unload_events(gateway) -> None:
+def async_unload_events(gateway: DeconzGateway) -> None:
     """Unload all deCONZ events."""
     for event in gateway.events:
         event.async_will_remove_from_hass()
@@ -90,18 +94,22 @@ class DeconzEvent(DeconzBase):
     instead of a sensor entity in hass.
     """
 
-    def __init__(self, device, gateway):
+    def __init__(
+        self,
+        device: AncillaryControl | Switch,
+        gateway: DeconzGateway,
+    ) -> None:
         """Register callback that will be used for signals."""
         super().__init__(device, gateway)
 
         self._device.register_callback(self.async_update_callback)
 
-        self.device_id = None
+        self.device_id: str | None = None
         self.event_id = slugify(self._device.name)
         LOGGER.debug("deCONZ event created: %s", self.event_id)
 
     @property
-    def device(self):
+    def device(self) -> AncillaryControl | Switch:
         """Return Event device."""
         return self._device
 
@@ -111,7 +119,7 @@ class DeconzEvent(DeconzBase):
         self._device.remove_callback(self.async_update_callback)
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self) -> None:
         """Fire the event if reason is that state is updated."""
         if (
             self.gateway.ignore_state_updates
@@ -144,9 +152,7 @@ class DeconzEvent(DeconzBase):
         if not self.device_info:
             return
 
-        device_registry = (
-            await self.gateway.hass.helpers.device_registry.async_get_registry()
-        )
+        device_registry = dr.async_get(self.gateway.hass)
 
         entry = device_registry.async_get_or_create(
             config_entry_id=self.gateway.config_entry.entry_id, **self.device_info
@@ -155,31 +161,25 @@ class DeconzEvent(DeconzBase):
 
 
 class DeconzAlarmEvent(DeconzEvent):
-    """Alarm control panel companion event when user inputs a code."""
+    """Alarm control panel companion event when user interacts with a keypad."""
+
+    _device: AncillaryControl
 
     @callback
-    def async_update_callback(self, force_update=False):
-        """Fire the event if reason is that state is updated."""
+    def async_update_callback(self) -> None:
+        """Fire the event if reason is new action is updated."""
         if (
             self.gateway.ignore_state_updates
             or "action" not in self._device.changed_keys
+            or self._device.action not in SUPPORTED_DECONZ_ALARM_EVENTS
         ):
-            return
-
-        try:
-            state, code, _area = self._device.action.split(",")
-        except (AttributeError, ValueError):
-            return
-
-        if state not in DECONZ_TO_ALARM_STATE:
             return
 
         data = {
             CONF_ID: self.event_id,
             CONF_UNIQUE_ID: self.serial,
             CONF_DEVICE_ID: self.device_id,
-            CONF_EVENT: DECONZ_TO_ALARM_STATE[state],
-            CONF_CODE: code,
+            CONF_EVENT: self._device.action,
         }
 
         self.gateway.hass.bus.async_fire(CONF_DECONZ_ALARM_EVENT, data)

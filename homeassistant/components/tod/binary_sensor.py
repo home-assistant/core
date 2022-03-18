@@ -1,7 +1,9 @@
 """Support for representing current time of the day as binary sensors."""
+from __future__ import annotations
+
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Callable
 
 import voluptuous as vol
 
@@ -13,9 +15,11 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, event
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ToD sensors."""
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant configuration")
@@ -151,6 +160,21 @@ class TodSensor(BinarySensorEntity):
                 before_event_date += timedelta(days=1)
 
         self._time_before = before_event_date
+
+        # We are calculating the _time_after value assuming that it will happen today
+        # But that is not always true, e.g. after 23:00, before 12:00 and now is 10:00
+        # If _time_before and _time_after are ahead of nowutc:
+        # _time_before is set to 12:00 next day
+        # _time_after is set to 23:00 today
+        # nowutc is set to 10:00 today
+        if (
+            not is_sun_event(self._after)
+            and self._time_after > nowutc
+            and self._time_before > nowutc + timedelta(days=1)
+        ):
+            # remove one day from _time_before and _time_after
+            self._time_after -= timedelta(days=1)
+            self._time_before -= timedelta(days=1)
 
         # Add offset to utc boundaries according to the configuration
         self._time_after += self._after_offset

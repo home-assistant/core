@@ -1,16 +1,24 @@
 """Tests for arcam fmj receivers."""
 from math import isclose
-from unittest.mock import ANY, MagicMock, Mock, PropertyMock, patch
+from unittest.mock import ANY, MagicMock, PropertyMock, patch
 
-from arcam.fmj import DecodeMode2CH, DecodeModeMCH, IncomingAudioFormat, SourceCodes
+from arcam.fmj import DecodeMode2CH, DecodeModeMCH, SourceCodes
 import pytest
 
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
     MEDIA_TYPE_MUSIC,
     SERVICE_SELECT_SOURCE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+)
 
 from .conftest import MOCK_HOST, MOCK_NAME, MOCK_PORT, MOCK_UUID
 
@@ -30,10 +38,13 @@ async def test_properties(player, state):
     """Test standard properties."""
     assert player.unique_id == f"{MOCK_UUID}-1"
     assert player.device_info == {
-        "name": f"Arcam FMJ ({MOCK_HOST})",
-        "identifiers": {("arcam_fmj", MOCK_UUID), ("arcam_fmj", MOCK_HOST, MOCK_PORT)},
-        "model": "Arcam FMJ AVR",
-        "manufacturer": "Arcam",
+        ATTR_NAME: f"Arcam FMJ ({MOCK_HOST})",
+        ATTR_IDENTIFIERS: {
+            ("arcam_fmj", MOCK_UUID),
+            ("arcam_fmj", MOCK_HOST, MOCK_PORT),
+        },
+        ATTR_MODEL: "Arcam FMJ AVR",
+        ATTR_MANUFACTURER: "Arcam",
     }
     assert not player.should_poll
 
@@ -101,21 +112,6 @@ async def test_update(player, state):
 
 
 @pytest.mark.parametrize(
-    "fmt, result",
-    [
-        (None, True),
-        (IncomingAudioFormat.PCM, True),
-        (IncomingAudioFormat.ANALOGUE_DIRECT, True),
-        (IncomingAudioFormat.DOLBY_DIGITAL, False),
-    ],
-)
-async def test_2ch(player, state, fmt, result):
-    """Test selection of 2ch mode."""
-    state.get_incoming_audio_format.return_value = (fmt, None)
-    assert player._get_2ch() == result  # pylint: disable=W0212
-
-
-@pytest.mark.parametrize(
     "source, value",
     [("PVR", SourceCodes.PVR), ("BD", SourceCodes.BD), ("INVALID", None)],
 )
@@ -142,27 +138,16 @@ async def test_source_list(player, state):
 
 
 @pytest.mark.parametrize(
-    "mode, mode_sel, mode_2ch, mode_mch",
+    "mode",
     [
-        ("STEREO", True, DecodeMode2CH.STEREO, None),
-        ("STEREO", False, None, None),
-        ("STEREO", False, None, None),
+        ("STEREO"),
+        ("DOLBY_PL"),
     ],
 )
-async def test_select_sound_mode(player, state, mode, mode_sel, mode_2ch, mode_mch):
+async def test_select_sound_mode(player, state, mode):
     """Test selection sound mode."""
-    player._get_2ch = Mock(return_value=mode_sel)  # pylint: disable=W0212
-
     await player.async_select_sound_mode(mode)
-    if mode_2ch:
-        state.set_decode_mode_2ch.assert_called_with(mode_2ch)
-    else:
-        state.set_decode_mode_2ch.assert_not_called()
-
-    if mode_mch:
-        state.set_decode_mode_mch.assert_called_with(mode_mch)
-    else:
-        state.set_decode_mode_mch.assert_not_called()
+    state.set_decode_mode.assert_called_with(mode)
 
 
 async def test_volume_up(player, state):
@@ -180,35 +165,33 @@ async def test_volume_down(player, state):
 
 
 @pytest.mark.parametrize(
-    "mode, mode_sel, mode_2ch, mode_mch",
+    "mode, mode_enum",
     [
-        ("STEREO", True, DecodeMode2CH.STEREO, None),
-        ("STEREO_DOWNMIX", False, None, DecodeModeMCH.STEREO_DOWNMIX),
-        (None, False, None, None),
+        ("STEREO", DecodeMode2CH.STEREO),
+        ("STEREO_DOWNMIX", DecodeModeMCH.STEREO_DOWNMIX),
+        (None, None),
     ],
 )
-async def test_sound_mode(player, state, mode, mode_sel, mode_2ch, mode_mch):
+async def test_sound_mode(player, state, mode, mode_enum):
     """Test selection sound mode."""
-    player._get_2ch = Mock(return_value=mode_sel)  # pylint: disable=W0212
-    state.get_decode_mode_2ch.return_value = mode_2ch
-    state.get_decode_mode_mch.return_value = mode_mch
-
-    assert player.sound_mode == mode
+    state.get_decode_mode.return_value = mode_enum
+    data = await update(player)
+    assert data.attributes.get(ATTR_SOUND_MODE) == mode
 
 
-async def test_sound_mode_list(player, state):
+@pytest.mark.parametrize(
+    "modes, modes_enum",
+    [
+        (["STEREO", "DOLBY_PL"], [DecodeMode2CH.STEREO, DecodeMode2CH.DOLBY_PL]),
+        (["STEREO_DOWNMIX"], [DecodeModeMCH.STEREO_DOWNMIX]),
+        (None, None),
+    ],
+)
+async def test_sound_mode_list(player, state, modes, modes_enum):
     """Test sound mode list."""
-    player._get_2ch = Mock(return_value=True)  # pylint: disable=W0212
-    assert sorted(player.sound_mode_list) == sorted(x.name for x in DecodeMode2CH)
-    player._get_2ch = Mock(return_value=False)  # pylint: disable=W0212
-    assert sorted(player.sound_mode_list) == sorted(x.name for x in DecodeModeMCH)
-
-
-async def test_sound_mode_zone_x(player, state):
-    """Test second zone sound mode."""
-    state.zn = 2
-    assert player.sound_mode is None
-    assert player.sound_mode_list is None
+    state.get_decode_modes.return_value = modes_enum
+    data = await update(player)
+    assert data.attributes.get(ATTR_SOUND_MODE_LIST) == modes
 
 
 async def test_is_volume_muted(player, state):

@@ -66,60 +66,14 @@ host_shutdown:
   name: Poweroff the host system.
   description: Poweroff the host system.
 
-snapshot_full:
-  name: Create a full backup.
-  description: Create a full backup (deprecated, use backup_full instead).
-  fields:
-    name:
-      name: Name
-      description: Optional or it will be the current date and time.
-      example: "backup 1"
-      selector:
-        text:
-    password:
-      name: Password
-      description: Optional password.
-      example: "password"
-      selector:
-        text:
-
-snapshot_partial:
-  name: Create a partial backup.
-  description: Create a partial backup (deprecated, use backup_partial instead).
-  fields:
-    addons:
-      name: Add-ons
-      description: Optional list of addon slugs.
-      example: ["core_ssh", "core_samba", "core_mosquitto"]
-      selector:
-        object:
-    folders:
-      name: Folders
-      description: Optional list of directories.
-      example: ["homeassistant", "share"]
-      selector:
-        object:
-    name:
-      name: Name
-      description: Optional or it will be the current date and time.
-      example: "Partial backup 1"
-      selector:
-        text:
-    password:
-      name: Password
-      description: Optional password.
-      example: "password"
-      selector:
-        text:
-
 backup_full:
   name: Create a full backup.
   description: Create a full backup.
   fields:
     name:
       name: Name
-      description: Optional or it will be the current date and time.
-      example: "backup 1"
+      description: Optional (default = current date and time).
+      example: "Backup 1"
       selector:
         text:
     password:
@@ -133,9 +87,14 @@ backup_partial:
   name: Create a partial backup.
   description: Create a partial backup.
   fields:
+    homeassistant:
+      name: Home Assistant settings
+      description: Backup Home Assistant settings
+      selector:
+        boolean:
     addons:
       name: Add-ons
-      description: Optional list of addon slugs.
+      description: Optional list of add-on slugs.
       example: ["core_ssh", "core_samba", "core_mosquitto"]
       selector:
         object:
@@ -147,10 +106,61 @@ backup_partial:
         object:
     name:
       name: Name
-      description: Optional or it will be the current date and time.
+      description: Optional (default = current date and time).
       example: "Partial backup 1"
       selector:
         text:
+    password:
+      name: Password
+      description: Optional password.
+      example: "password"
+      selector:
+        text:
+
+restore_full:
+  name: Restore from full backup.
+  description: Restore from full backup.
+  fields:
+    slug:
+      name: Slug
+      required: true
+      description: Slug of backup to restore from.
+      selector:
+        text:
+    password:
+      name: Password
+      description: Optional password.
+      example: "password"
+      selector:
+        text:
+
+restore_partial:
+  name: Restore from partial backup.
+  description: Restore from partial backup.
+  fields:
+    slug:
+      name: Slug
+      required: true
+      description: Slug of backup to restore from.
+      selector:
+        text:
+    homeassistant:
+      name: Home Assistant settings
+      description: Restore Home Assistant
+      selector:
+        boolean:
+    folders:
+      name: Folders
+      description: Optional list of directories.
+      example: ["homeassistant", "share"]
+      selector:
+        object:
+    addons:
+      name: Add-ons
+      description: Optional list of add-on slugs.
+      example: ["core_ssh", "core_samba", "core_mosquitto"]
+      selector:
+        object:
     password:
       name: Password
       description: Optional password.

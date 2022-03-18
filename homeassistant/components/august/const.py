@@ -2,7 +2,9 @@
 
 from datetime import timedelta
 
-DEFAULT_TIMEOUT = 10
+from homeassistant.const import Platform
+
+DEFAULT_TIMEOUT = 15
 
 CONF_ACCESS_TOKEN_CACHE_FILE = "access_token_cache_file"
 CONF_LOGIN_METHOD = "login_method"
@@ -16,8 +18,6 @@ NOTIFICATION_TITLE = "August"
 MANUFACTURER = "August Home Inc."
 
 DEFAULT_AUGUST_CONFIG_FILE = ".august.conf"
-
-DATA_AUGUST = "data_august"
 
 DEFAULT_NAME = "August"
 DOMAIN = "august"
@@ -43,4 +43,10 @@ ACTIVITY_UPDATE_INTERVAL = timedelta(seconds=10)
 
 LOGIN_METHODS = ["phone", "email"]
 
-PLATFORMS = ["camera", "binary_sensor", "lock", "sensor"]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.BINARY_SENSOR,
+    Platform.LOCK,
+    Platform.SENSOR,
+]

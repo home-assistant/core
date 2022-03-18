@@ -1,12 +1,10 @@
 """Entity to track connections to websocket API."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     DATA_CONNECTIONS,
@@ -19,7 +17,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the API streams platform."""
     entity = APICount()
@@ -53,12 +51,12 @@ class APICount(SensorEntity):
         return "Connected clients"
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return current API count."""
         return self.count
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return "clients"
 

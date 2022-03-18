@@ -1,7 +1,7 @@
 """Fixtures for Forecast.Solar integration tests."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import models
@@ -16,16 +16,9 @@ from homeassistant.components.forecast_solar.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(autouse=True)
-async def mock_persistent_notification(hass: HomeAssistant) -> None:
-    """Set up component for persistent notifications."""
-    await async_setup_component(hass, "persistent_notification", {})
 
 
 @pytest.fixture
@@ -61,6 +54,7 @@ def mock_forecast_solar() -> Generator[None, MagicMock, None]:
         estimate = MagicMock(spec=models.Estimate)
         estimate.now.return_value = now
         estimate.timezone = "Europe/Amsterdam"
+        estimate.account_type.value = "public"
         estimate.energy_production_today = 100000
         estimate.energy_production_tomorrow = 200000
         estimate.power_production_now = 300000

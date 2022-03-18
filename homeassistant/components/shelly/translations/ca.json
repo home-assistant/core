@@ -33,14 +33,20 @@
             "button": "Bot\u00f3",
             "button1": "Primer bot\u00f3",
             "button2": "Segon bot\u00f3",
-            "button3": "Tercer bot\u00f3"
+            "button3": "Tercer bot\u00f3",
+            "button4": "Quart bot\u00f3"
         },
         "trigger_type": {
+            "btn_down": "Bot\u00f3 {subtype} avall",
+            "btn_up": "Bot\u00f3 {subtype} amunt",
             "double": "{subtype} clicat dues vegades",
+            "double_push": "{subtype} clicat dues vegades",
             "long": "{subtype} clicat durant una estona",
+            "long_push": "{subtype} premut durant una estona",
             "long_single": "{subtype} clicat durant una estona i despr\u00e9s r\u00e0pid",
             "single": "{subtype} clicat una vegada",
             "single_long": "{subtype} clicat r\u00e0pid i, despr\u00e9s, durant una estona",
+            "single_push": "{subtype} clicat una vegada",
             "triple": "{subtype} clicat tres vegades"
         }
     }

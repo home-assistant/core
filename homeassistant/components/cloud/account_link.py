@@ -4,9 +4,10 @@ import logging
 from typing import Any
 
 import aiohttp
+from awesomeversion import AwesomeVersion
 from hass_nabucasa import account_link
 
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_oauth2_flow, event
 
@@ -15,6 +16,8 @@ from .const import DOMAIN
 DATA_SERVICES = "cloud_account_link_services"
 CACHE_TIMEOUT = 3600
 _LOGGER = logging.getLogger(__name__)
+
+CURRENT_VERSION = AwesomeVersion(HA_VERSION)
 
 
 @callback
@@ -30,48 +33,15 @@ async def async_provide_implementation(hass: HomeAssistant, domain: str):
     services = await _get_services(hass)
 
     for service in services:
-        if service["service"] == domain and _is_older(service["min_version"]):
+        if service["service"] == domain and CURRENT_VERSION >= service["min_version"]:
             return CloudOAuth2Implementation(hass, domain)
 
     return
 
 
-@callback
-def _is_older(version: str) -> bool:
-    """Test if a version is older than the current HA version."""
-    version_parts = version.split(".")
-
-    if len(version_parts) != 3:
-        return False
-
-    try:
-        version_parts = [int(val) for val in version_parts]
-    except ValueError:
-        return False
-
-    patch_number_str = ""
-
-    for char in PATCH_VERSION:
-        if char.isnumeric():
-            patch_number_str += char
-        else:
-            break
-
-    try:
-        patch_number = int(patch_number_str)
-    except ValueError:
-        patch_number = 0
-
-    cur_version_parts = [MAJOR_VERSION, MINOR_VERSION, patch_number]
-
-    return version_parts <= cur_version_parts
-
-
 async def _get_services(hass):
     """Get the available services."""
-    services = hass.data.get(DATA_SERVICES)
-
-    if services is not None:
+    if (services := hass.data.get(DATA_SERVICES)) is not None:
         return services
 
     try:

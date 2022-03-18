@@ -12,7 +12,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +54,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensors.
 
     Login to the bank and get a list of existing accounts. Create a
@@ -72,15 +80,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     client = FinTsClient(credentials, fints_name)
     balance_accounts, holdings_accounts = client.detect_accounts()
-    accounts = []
+    accounts: list[SensorEntity] = []
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
             _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
-        account_name = account_config.get(account.iban)
-        if not account_name:
+        if not (account_name := account_config.get(account.iban)):
             account_name = f"{fints_name} - {account.iban}"
         accounts.append(FinTsAccount(client, account, account_name))
         _LOGGER.debug("Creating account %s for bank %s", account.iban, fints_name)
@@ -179,8 +186,8 @@ class FinTsAccount(SensorEntity):
         """Get the current balance and currency for the account."""
         bank = self._client.client
         balance = bank.get_balance(self._account)
-        self._attr_state = balance.amount.amount
-        self._attr_unit_of_measurement = balance.amount.currency
+        self._attr_native_value = balance.amount.amount
+        self._attr_native_unit_of_measurement = balance.amount.currency
         _LOGGER.debug("updated balance of account %s", self.name)
 
 
@@ -198,13 +205,13 @@ class FinTsHoldingsAccount(SensorEntity):
         self._account = account
         self._holdings: list[Any] = []
         self._attr_icon = ICON
-        self._attr_unit_of_measurement = "EUR"
+        self._attr_native_unit_of_measurement = "EUR"
 
     def update(self) -> None:
         """Get the current holdings for the account."""
         bank = self._client.client
         self._holdings = bank.get_holdings(self._account)
-        self._attr_state = sum(h.total_value for h in self._holdings)
+        self._attr_native_value = sum(h.total_value for h in self._holdings)
 
     @property
     def extra_state_attributes(self) -> dict:

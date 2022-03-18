@@ -59,7 +59,7 @@ def mock_all(aioclient_mock, request):
     )
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
     )
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
@@ -91,6 +91,54 @@ def mock_all(aioclient_mock, request):
         },
     )
     aioclient_mock.get(
+        "http://127.0.0.1/addons/test/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test2/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.8,
+                "memory_usage": 51941376,
+                "memory_limit": 3977146368,
+                "memory_percent": 1.31,
+                "network_rx": 31338284,
+                "network_tx": 15692900,
+                "blk_read": 740077568,
+                "blk_write": 6004736,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test3/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.8,
+                "memory_usage": 51941376,
+                "memory_limit": 3977146368,
+                "memory_percent": 1.31,
+                "network_rx": 31338284,
+                "network_tx": 15692900,
+                "blk_read": 740077568,
+                "blk_write": 6004736,
+            },
+        },
+    )
+    aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
 
@@ -117,8 +165,8 @@ async def test_setup_api_panel(hass, aioclient_mock):
 
     assert panels.get("hassio").to_response() == {
         "component_name": "custom",
-        "icon": "hass:home-assistant",
-        "title": "Supervisor",
+        "icon": None,
+        "title": None,
         "url_path": "hassio",
         "require_admin": True,
         "config": {
@@ -287,7 +335,7 @@ async def test_warn_when_cannot_connect(hass, caplog):
         assert result
 
     assert hass.components.hassio.is_hassio()
-    assert "Not connected with Hass.io / system too busy!" in caplog.text
+    assert "Not connected with the supervisor / system too busy!" in caplog.text
 
 
 async def test_service_register(hassio_env, hass):
@@ -301,8 +349,6 @@ async def test_service_register(hassio_env, hass):
     assert hass.services.has_service("hassio", "host_shutdown")
     assert hass.services.has_service("hassio", "host_reboot")
     assert hass.services.has_service("hassio", "host_reboot")
-    assert hass.services.has_service("hassio", "snapshot_full")
-    assert hass.services.has_service("hassio", "snapshot_partial")
     assert hass.services.has_service("hassio", "backup_full")
     assert hass.services.has_service("hassio", "backup_partial")
     assert hass.services.has_service("hassio", "restore_full")
@@ -351,38 +397,25 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     await hass.services.async_call(
         "hassio",
         "backup_partial",
-        {"addons": ["test"], "folders": ["ssl"], "password": "123456"},
-    )
-    await hass.services.async_call("hassio", "snapshot_full", {})
-    await hass.services.async_call(
-        "hassio",
-        "snapshot_partial",
-        {"addons": ["test"], "folders": ["ssl"]},
+        {
+            "homeassistant": True,
+            "addons": ["test"],
+            "folders": ["ssl"],
+            "password": "123456",
+        },
     )
     await hass.async_block_till_done()
-    assert (
-        "The service 'snapshot_full' is deprecated and will be removed in Home Assistant 2021.11, use 'backup_full' instead"
-        in caplog.text
-    )
-    assert (
-        "The service 'snapshot_partial' is deprecated and will be removed in Home Assistant 2021.11, use 'backup_partial' instead"
-        in caplog.text
-    )
 
-    assert aioclient_mock.call_count == 14
-    assert aioclient_mock.mock_calls[-3][2] == {
+    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "homeassistant": True,
         "addons": ["test"],
         "folders": ["ssl"],
         "password": "123456",
     }
 
     await hass.services.async_call("hassio", "restore_full", {"slug": "test"})
-    await hass.services.async_call("hassio", "restore_full", {"snapshot": "test"})
     await hass.async_block_till_done()
-    assert (
-        "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.11, use 'slug' instead"
-        in caplog.text
-    )
 
     await hass.services.async_call(
         "hassio",
@@ -397,7 +430,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 17
+    assert aioclient_mock.call_count == 14
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -466,6 +499,7 @@ async def test_device_registry_calls(hass):
         "addons": [
             {
                 "name": "test",
+                "state": "started",
                 "slug": "test",
                 "installed": True,
                 "update_available": False,
@@ -476,6 +510,7 @@ async def test_device_registry_calls(hass):
             },
             {
                 "name": "test2",
+                "state": "started",
                 "slug": "test2",
                 "installed": True,
                 "update_available": False,
@@ -510,6 +545,7 @@ async def test_device_registry_calls(hass):
         "addons": [
             {
                 "name": "test2",
+                "state": "started",
                 "slug": "test2",
                 "installed": True,
                 "update_available": False,
@@ -541,6 +577,7 @@ async def test_device_registry_calls(hass):
             {
                 "name": "test2",
                 "slug": "test2",
+                "state": "started",
                 "installed": True,
                 "update_available": False,
                 "version": "1.0.0",
@@ -550,6 +587,7 @@ async def test_device_registry_calls(hass):
             {
                 "name": "test3",
                 "slug": "test3",
+                "state": "stopped",
                 "installed": True,
                 "update_available": False,
                 "version": "1.0.0",

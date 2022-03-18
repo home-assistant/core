@@ -1,6 +1,15 @@
 """Provides device automations for deconz events."""
+
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -14,9 +23,13 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
-from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE
+from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE, DeconzAlarmEvent, DeconzEvent
+from .gateway import DeconzGateway
 
 CONF_SUBTYPE = "subtype"
 
@@ -516,6 +529,14 @@ BUSCH_JAEGER_REMOTE = {
     (CONF_LONG_RELEASE, CONF_BUTTON_8): {CONF_EVENT: 8003},
 }
 
+SONOFF_SNZB_01_1_MODEL = "WB01"
+SONOFF_SNZB_01_2_MODEL = "WB-01"
+SONOFF_SNZB_01_SWITCH = {
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_LONG_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1003},
+    (CONF_DOUBLE_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1004},
+}
+
 TRUST_ZYCT_202_MODEL = "ZYCT-202"
 TRUST_ZYCT_202_ZLL_MODEL = "ZLL-NonColorController"
 TRUST_ZYCT_202 = {
@@ -595,6 +616,8 @@ REMOTES = {
     TRUST_ZYCT_202_ZLL_MODEL: TRUST_ZYCT_202,
     UBISYS_POWER_SWITCH_S2_MODEL: UBISYS_POWER_SWITCH_S2,
     UBISYS_CONTROL_UNIT_C4_MODEL: UBISYS_CONTROL_UNIT_C4,
+    SONOFF_SNZB_01_1_MODEL: SONOFF_SNZB_01_SWITCH,
+    SONOFF_SNZB_01_2_MODEL: SONOFF_SNZB_01_SWITCH,
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -602,23 +625,30 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-def _get_deconz_event_from_device_id(hass, device_id):
-    """Resolve deconz event from device id."""
-    for gateway in hass.data.get(DOMAIN, {}).values():
-
+def _get_deconz_event_from_device(
+    hass: HomeAssistant,
+    device: dr.DeviceEntry,
+) -> DeconzAlarmEvent | DeconzEvent:
+    """Resolve deconz event from device."""
+    gateways: dict[str, DeconzGateway] = hass.data.get(DOMAIN, {})
+    for gateway in gateways.values():
         for deconz_event in gateway.events:
-
-            if device_id == deconz_event.device_id:
+            if device.id == deconz_event.device_id:
                 return deconz_event
 
-    return None
+    raise InvalidDeviceAutomationConfig(
+        f'No deconz_event tied to device "{device.name}" found'
+    )
 
 
-async def async_validate_trigger_config(hass, config):
+async def async_validate_trigger_config(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+) -> vol.Schema:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
@@ -638,47 +668,53 @@ async def async_validate_trigger_config(hass, config):
     return config
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    event_data: dict[str, int | str] = {}
 
-    trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+    device_registry = dr.async_get(hass)
+    device = device_registry.devices[config[CONF_DEVICE_ID]]
 
-    trigger = REMOTES[device.model][trigger]
+    deconz_event = _get_deconz_event_from_device(hass, device)
+    if event_id := deconz_event.serial:
+        event_data[CONF_UNIQUE_ID] = event_id
 
-    deconz_event = _get_deconz_event_from_device_id(hass, device.id)
-    if deconz_event is None:
-        raise InvalidDeviceAutomationConfig(
-            f'No deconz_event tied to device "{device.name}" found'
-        )
+    if device_model := device.model:
+        config_trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+        event_data |= REMOTES[device_model][config_trigger]
 
-    event_id = deconz_event.serial
-
-    event_config = {
+    raw_event_config = {
         event_trigger.CONF_PLATFORM: "event",
         event_trigger.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
-        event_trigger.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, **trigger},
+        event_trigger.CONF_EVENT_DATA: event_data,
     }
 
-    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
+    event_config = event_trigger.TRIGGER_SCHEMA(raw_event_config)
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant,
+    device_id: str,
+) -> list | None:
     """List device triggers.
 
     Make sure device is a supported remote model.
     Retrieve the deconz event object matching device entry.
     Generate device trigger list.
     """
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(device_id)
+    device_registry = dr.async_get(hass)
+    device = device_registry.devices[device_id]
 
     if device.model not in REMOTES:
-        return
+        return None
 
     triggers = []
     for trigger, subtype in REMOTES[device.model].keys():

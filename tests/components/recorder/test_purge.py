@@ -10,7 +10,13 @@ from sqlalchemy.orm.session import Session
 from homeassistant.components import recorder
 from homeassistant.components.recorder import PurgeTask
 from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE
-from homeassistant.components.recorder.models import Events, RecorderRuns, States
+from homeassistant.components.recorder.models import (
+    Events,
+    RecorderRuns,
+    States,
+    StatisticsRuns,
+    StatisticsShortTerm,
+)
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED
@@ -44,6 +50,7 @@ async def test_purge_old_states(
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 6
+        assert "test.recorder2" in instance._old_states
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
 
@@ -51,6 +58,7 @@ async def test_purge_old_states(
         finished = purge_old_data(instance, purge_before, repack=False)
         assert not finished
         assert states.count() == 2
+        assert "test.recorder2" in instance._old_states
 
         states_after_purge = session.query(States)
         assert states_after_purge[1].old_state_id == states_after_purge[0].state_id
@@ -59,6 +67,28 @@ async def test_purge_old_states(
         finished = purge_old_data(instance, purge_before, repack=False)
         assert finished
         assert states.count() == 2
+        assert "test.recorder2" in instance._old_states
+
+        # run purge_old_data again
+        purge_before = dt_util.utcnow()
+        finished = purge_old_data(instance, purge_before, repack=False)
+        assert not finished
+        assert states.count() == 0
+        assert "test.recorder2" not in instance._old_states
+
+    # Add some more states
+    await _add_test_states(hass, instance)
+
+    # make sure we start with 6 states
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        assert states.count() == 6
+        assert states[0].old_state_id is None
+        assert states[-1].old_state_id == states[-2].state_id
+
+        events = session.query(Events).filter(Events.event_type == "state_changed")
+        assert events.count() == 6
+        assert "test.recorder2" in instance._old_states
 
 
 async def test_purge_old_states_encouters_database_corruption(
@@ -203,6 +233,30 @@ async def test_purge_old_recorder_runs(
         assert recorder_runs.count() == 1
 
 
+async def test_purge_old_statistics_runs(
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+):
+    """Test deleting old statistics runs keeps the latest run."""
+    instance = await async_setup_recorder_instance(hass)
+
+    await _add_test_statistics_runs(hass, instance)
+
+    # make sure we start with 7 statistics runs
+    with session_scope(hass=hass) as session:
+        statistics_runs = session.query(StatisticsRuns)
+        assert statistics_runs.count() == 7
+
+        purge_before = dt_util.utcnow()
+
+        # run purge_old_data()
+        finished = purge_old_data(instance, purge_before, repack=False)
+        assert not finished
+
+        finished = purge_old_data(instance, purge_before, repack=False)
+        assert finished
+        assert statistics_runs.count() == 1
+
+
 async def test_purge_method(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
@@ -214,7 +268,9 @@ async def test_purge_method(
     service_data = {"keep_days": 4}
     await _add_test_events(hass, instance)
     await _add_test_states(hass, instance)
+    await _add_test_statistics(hass, instance)
     await _add_test_recorder_runs(hass, instance)
+    await _add_test_statistics_runs(hass, instance)
     await hass.async_block_till_done()
     await async_wait_recording_done(hass, instance)
 
@@ -226,9 +282,16 @@ async def test_purge_method(
         events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
         assert events.count() == 6
 
+        statistics = session.query(StatisticsShortTerm)
+        assert statistics.count() == 6
+
         recorder_runs = session.query(RecorderRuns)
         assert recorder_runs.count() == 7
         runs_before_purge = recorder_runs.all()
+
+        statistics_runs = session.query(StatisticsRuns)
+        assert statistics_runs.count() == 7
+        statistic_runs_before_purge = statistics_runs.all()
 
         await hass.async_block_till_done()
         await async_wait_purge_done(hass, instance)
@@ -240,9 +303,10 @@ async def test_purge_method(
         # Small wait for recorder thread
         await async_wait_purge_done(hass, instance)
 
-        # only purged old events
+        # only purged old states, events and statistics
         assert states.count() == 4
         assert events.count() == 4
+        assert statistics.count() == 4
 
         # run purge method - correct service data
         await hass.services.async_call("recorder", "purge", service_data=service_data)
@@ -251,17 +315,22 @@ async def test_purge_method(
         # Small wait for recorder thread
         await async_wait_purge_done(hass, instance)
 
-        # we should only have 2 states left after purging
+        # we should only have 2 states, events and statistics left after purging
         assert states.count() == 2
-
-        # now we should only have 2 events left
         assert events.count() == 2
+        assert statistics.count() == 2
 
         # now we should only have 3 recorder runs left
         runs = recorder_runs.all()
         assert runs[0] == runs_before_purge[0]
         assert runs[1] == runs_before_purge[5]
         assert runs[2] == runs_before_purge[6]
+
+        # now we should only have 3 statistics runs left
+        runs = statistics_runs.all()
+        assert runs[0] == statistic_runs_before_purge[0]
+        assert runs[1] == statistic_runs_before_purge[5]
+        assert runs[2] == statistic_runs_before_purge[6]
 
         assert "EVENT_TEST_PURGE" not in (event.event_type for event in events.all())
 
@@ -287,7 +356,6 @@ async def test_purge_edge_case(
                     event_type="EVENT_TEST_PURGE",
                     event_data="{}",
                     origin="LOCAL",
-                    created=timestamp,
                     time_fired=timestamp,
                 )
             )
@@ -299,7 +367,6 @@ async def test_purge_edge_case(
                     attributes="{}",
                     last_changed=timestamp,
                     last_updated=timestamp,
-                    created=timestamp,
                     event_id=1001,
                 )
             )
@@ -347,7 +414,6 @@ async def test_purge_cutoff_date(
                     event_type="KEEP",
                     event_data="{}",
                     origin="LOCAL",
-                    created=timestamp_keep,
                     time_fired=timestamp_keep,
                 )
             )
@@ -359,7 +425,6 @@ async def test_purge_cutoff_date(
                     attributes="{}",
                     last_changed=timestamp_keep,
                     last_updated=timestamp_keep,
-                    created=timestamp_keep,
                     event_id=1000,
                 )
             )
@@ -370,7 +435,6 @@ async def test_purge_cutoff_date(
                         event_type="PURGE",
                         event_data="{}",
                         origin="LOCAL",
-                        created=timestamp_purge,
                         time_fired=timestamp_purge,
                     )
                 )
@@ -382,7 +446,6 @@ async def test_purge_cutoff_date(
                         attributes="{}",
                         last_changed=timestamp_purge,
                         last_updated=timestamp_purge,
-                        created=timestamp_purge,
                         event_id=1000 + row,
                     )
                 )
@@ -450,7 +513,6 @@ async def test_purge_filtered_states(
                     attributes="{}",
                     last_changed=timestamp,
                     last_updated=timestamp,
-                    created=timestamp,
                 )
             )
             # Add states and state_changed events that should be keeped
@@ -472,7 +534,6 @@ async def test_purge_filtered_states(
                 attributes="{}",
                 last_changed=timestamp,
                 last_updated=timestamp,
-                created=timestamp,
                 old_state_id=1,
             )
             timestamp = dt_util.utcnow() - timedelta(days=4)
@@ -483,7 +544,6 @@ async def test_purge_filtered_states(
                 attributes="{}",
                 last_changed=timestamp,
                 last_updated=timestamp,
-                created=timestamp,
                 old_state_id=2,
             )
             state_3 = States(
@@ -493,7 +553,6 @@ async def test_purge_filtered_states(
                 attributes="{}",
                 last_changed=timestamp,
                 last_updated=timestamp,
-                created=timestamp,
                 old_state_id=62,  # keep
             )
             session.add_all((state_1, state_2, state_3))
@@ -504,7 +563,6 @@ async def test_purge_filtered_states(
                     event_type="EVENT_KEEP",
                     event_data="{}",
                     origin="LOCAL",
-                    created=timestamp,
                     time_fired=timestamp,
                 )
             )
@@ -583,7 +641,6 @@ async def test_purge_filtered_events(
                             event_type="EVENT_PURGE",
                             event_data="{}",
                             origin="LOCAL",
-                            created=timestamp,
                             time_fired=timestamp,
                         )
                     )
@@ -676,7 +733,6 @@ async def test_purge_filtered_events_state_changed(
                         event_type="EVENT_KEEP",
                         event_data="{}",
                         origin="LOCAL",
-                        created=timestamp,
                         time_fired=timestamp,
                     )
                 )
@@ -689,7 +745,6 @@ async def test_purge_filtered_events_state_changed(
                 attributes="{}",
                 last_changed=timestamp,
                 last_updated=timestamp,
-                created=timestamp,
                 old_state_id=1,
             )
             timestamp = dt_util.utcnow() - timedelta(days=4)
@@ -700,7 +755,6 @@ async def test_purge_filtered_events_state_changed(
                 attributes="{}",
                 last_changed=timestamp,
                 last_updated=timestamp,
-                created=timestamp,
                 old_state_id=2,
             )
             state_3 = States(
@@ -710,7 +764,6 @@ async def test_purge_filtered_events_state_changed(
                 attributes="{}",
                 last_changed=timestamp,
                 last_updated=timestamp,
-                created=timestamp,
                 old_state_id=62,  # keep
             )
             session.add_all((state_1, state_2, state_3))
@@ -872,45 +925,27 @@ async def _add_test_states(hass: HomeAssistant, instance: recorder.Recorder):
     eleven_days_ago = utcnow - timedelta(days=11)
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
-    await hass.async_block_till_done()
-    await async_wait_recording_done(hass, instance)
+    async def set_state(entity_id, state, **kwargs):
+        """Set the state."""
+        hass.states.async_set(entity_id, state, **kwargs)
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass, instance)
 
-    with recorder.session_scope(hass=hass) as session:
-        old_state_id = None
-        for event_id in range(6):
-            if event_id < 2:
-                timestamp = eleven_days_ago
-                state = "autopurgeme"
-            elif event_id < 4:
-                timestamp = five_days_ago
-                state = "purgeme"
-            else:
-                timestamp = utcnow
-                state = "dontpurgeme"
+    for event_id in range(6):
+        if event_id < 2:
+            timestamp = eleven_days_ago
+            state = f"autopurgeme_{event_id}"
+        elif event_id < 4:
+            timestamp = five_days_ago
+            state = f"purgeme_{event_id}"
+        else:
+            timestamp = utcnow
+            state = f"dontpurgeme_{event_id}"
 
-            event = Events(
-                event_type="state_changed",
-                event_data="{}",
-                origin="LOCAL",
-                created=timestamp,
-                time_fired=timestamp,
-            )
-            session.add(event)
-            session.flush()
-            state = States(
-                entity_id="test.recorder2",
-                domain="sensor",
-                state=state,
-                attributes=json.dumps(attributes),
-                last_changed=timestamp,
-                last_updated=timestamp,
-                created=timestamp,
-                event_id=event.event_id,
-                old_state_id=old_state_id,
-            )
-            session.add(state)
-            session.flush()
-            old_state_id = state.state_id
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=timestamp
+        ):
+            await set_state("test.recorder2", state, attributes=attributes)
 
 
 async def _add_test_events(hass: HomeAssistant, instance: recorder.Recorder):
@@ -940,8 +975,36 @@ async def _add_test_events(hass: HomeAssistant, instance: recorder.Recorder):
                     event_type=event_type,
                     event_data=json.dumps(event_data),
                     origin="LOCAL",
-                    created=timestamp,
                     time_fired=timestamp,
+                )
+            )
+
+
+async def _add_test_statistics(hass: HomeAssistant, instance: recorder.Recorder):
+    """Add multiple statistics to the db for testing."""
+    utcnow = dt_util.utcnow()
+    five_days_ago = utcnow - timedelta(days=5)
+    eleven_days_ago = utcnow - timedelta(days=11)
+
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass, instance)
+
+    with recorder.session_scope(hass=hass) as session:
+        for event_id in range(6):
+            if event_id < 2:
+                timestamp = eleven_days_ago
+                state = "-11"
+            elif event_id < 4:
+                timestamp = five_days_ago
+                state = "-5"
+            else:
+                timestamp = utcnow
+                state = "0"
+
+            session.add(
+                StatisticsShortTerm(
+                    start=timestamp,
+                    state=state,
                 )
             )
 
@@ -973,6 +1036,31 @@ async def _add_test_recorder_runs(hass: HomeAssistant, instance: recorder.Record
             )
 
 
+async def _add_test_statistics_runs(hass: HomeAssistant, instance: recorder.Recorder):
+    """Add a few recorder_runs for testing."""
+    utcnow = dt_util.utcnow()
+    five_days_ago = utcnow - timedelta(days=5)
+    eleven_days_ago = utcnow - timedelta(days=11)
+
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass, instance)
+
+    with recorder.session_scope(hass=hass) as session:
+        for rec_id in range(6):
+            if rec_id < 2:
+                timestamp = eleven_days_ago
+            elif rec_id < 4:
+                timestamp = five_days_ago
+            else:
+                timestamp = utcnow
+
+            session.add(
+                StatisticsRuns(
+                    start=timestamp,
+                )
+            )
+
+
 def _add_state_and_state_changed_event(
     session: Session,
     entity_id: str,
@@ -989,7 +1077,6 @@ def _add_state_and_state_changed_event(
             attributes="{}",
             last_changed=timestamp,
             last_updated=timestamp,
-            created=timestamp,
             event_id=event_id,
         )
     )
@@ -999,7 +1086,6 @@ def _add_state_and_state_changed_event(
             event_type=EVENT_STATE_CHANGED,
             event_data="{}",
             origin="LOCAL",
-            created=timestamp,
             time_fired=timestamp,
         )
     )

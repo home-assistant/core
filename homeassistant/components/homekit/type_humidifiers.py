@@ -3,14 +3,13 @@ import logging
 
 from pyhap.const import CATEGORY_HUMIDIFIER
 
+from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
 )
@@ -46,13 +45,13 @@ HC_HUMIDIFIER = 1
 HC_DEHUMIDIFIER = 2
 
 HC_HASS_TO_HOMEKIT_DEVICE_CLASS = {
-    DEVICE_CLASS_HUMIDIFIER: HC_HUMIDIFIER,
-    DEVICE_CLASS_DEHUMIDIFIER: HC_DEHUMIDIFIER,
+    HumidifierDeviceClass.HUMIDIFIER: HC_HUMIDIFIER,
+    HumidifierDeviceClass.DEHUMIDIFIER: HC_DEHUMIDIFIER,
 }
 
 HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME = {
-    DEVICE_CLASS_HUMIDIFIER: "Humidifier",
-    DEVICE_CLASS_DEHUMIDIFIER: "Dehumidifier",
+    HumidifierDeviceClass.HUMIDIFIER: "Humidifier",
+    HumidifierDeviceClass.DEHUMIDIFIER: "Dehumidifier",
 }
 
 HC_DEVICE_CLASS_TO_TARGET_CHAR = {
@@ -75,7 +74,9 @@ class HumidifierDehumidifier(HomeAccessory):
         super().__init__(*args, category=CATEGORY_HUMIDIFIER)
         self.chars = []
         state = self.hass.states.get(self.entity_id)
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS, DEVICE_CLASS_HUMIDIFIER)
+        device_class = state.attributes.get(
+            ATTR_DEVICE_CLASS, HumidifierDeviceClass.HUMIDIFIER
+        )
         self._hk_device_class = HC_HASS_TO_HOMEKIT_DEVICE_CLASS[device_class]
 
         self._target_humidity_char_name = HC_DEVICE_CLASS_TO_TARGET_CHAR[
@@ -97,6 +98,10 @@ class HumidifierDehumidifier(HomeAccessory):
             serv_humidifier_dehumidifier.configure_char(
                 CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
                 value=self._hk_device_class,
+                properties={
+                    PROP_MIN_VALUE: self._hk_device_class,
+                    PROP_MAX_VALUE: self._hk_device_class,
+                },
                 valid_values={
                     HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
                         device_class
@@ -149,10 +154,12 @@ class HumidifierDehumidifier(HomeAccessory):
         Run inside the Home Assistant event loop.
         """
         if self.linked_humidity_sensor:
-            async_track_state_change_event(
-                self.hass,
-                [self.linked_humidity_sensor],
-                self.async_update_current_humidity_event,
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_humidity_sensor],
+                    self.async_update_current_humidity_event,
+                )
             )
 
         await super().run()
@@ -183,7 +190,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 )
                 self.char_current_humidity.set_value(current_humidity)
         except ValueError as ex:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "%s: Unable to update from linked humidity sensor %s: %s",
                 self.entity_id,
                 self.linked_humidity_sensor,
@@ -224,8 +231,7 @@ class HumidifierDehumidifier(HomeAccessory):
         is_active = new_state.state == STATE_ON
 
         # Update active state
-        if self.char_active.value != is_active:
-            self.char_active.set_value(is_active)
+        self.char_active.set_value(is_active)
 
         # Set current state
         if is_active:
@@ -235,13 +241,9 @@ class HumidifierDehumidifier(HomeAccessory):
                 current_state = HC_STATE_DEHUMIDIFYING
         else:
             current_state = HC_STATE_INACTIVE
-        if self.char_current_humidifier_dehumidifier.value != current_state:
-            self.char_current_humidifier_dehumidifier.set_value(current_state)
+        self.char_current_humidifier_dehumidifier.set_value(current_state)
 
         # Update target humidity
         target_humidity = new_state.attributes.get(ATTR_HUMIDITY)
-        if (
-            isinstance(target_humidity, (int, float))
-            and self.char_target_humidity.value != target_humidity
-        ):
+        if isinstance(target_humidity, (int, float)):
             self.char_target_humidity.set_value(target_humidity)

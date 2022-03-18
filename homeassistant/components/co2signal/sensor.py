@@ -5,40 +5,20 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import cast
 
-import voluptuous as vol
-
-from homeassistant import config_entries
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    SensorEntity,
-)
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_TOKEN,
-    PERCENTAGE,
-)
-from homeassistant.helpers import config_validation as cv, update_coordinator
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import CO2SignalCoordinator, CO2SignalResponse
-from .const import ATTRIBUTION, CONF_COUNTRY_CODE, DOMAIN, MSG_LOCATION
+from .const import ATTRIBUTION, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=3)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Inclusive(CONF_LATITUDE, "coords", msg=MSG_LOCATION): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "coords", msg=MSG_LOCATION): cv.longitude,
-        vol.Optional(CONF_COUNTRY_CODE): cv.string,
-    }
-)
 
 
 @dataclass
@@ -67,16 +47,9 @@ SENSORS = (
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the CO2signal sensor."""
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=config,
-    )
-
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the CO2signal sensor."""
     coordinator: CO2SignalCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(CO2Sensor(coordinator, description) for description in SENSORS)
@@ -85,7 +58,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorEntity):
     """Implementation of the CO2Signal sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:molecule-co2"
 
     def __init__(
@@ -104,12 +77,13 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
             "country_code": coordinator.data["countryCode"],
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, coordinator.entry_id)},
-            ATTR_NAME: "CO2 signal",
-            ATTR_MANUFACTURER: "Tmrow.com",
-            "entry_type": "service",
-        }
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.electricitymap.org/",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, coordinator.entry_id)},
+            manufacturer="Tmrow.com",
+            name="CO2 signal",
+        )
         self._attr_unique_id = (
             f"{coordinator.entry_id}_{description.unique_id or description.key}"
         )
@@ -122,12 +96,14 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
         )
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return sensor state."""
-        return round(self.coordinator.data["data"][self._description.key], 2)  # type: ignore[misc]
+        if (value := self.coordinator.data["data"][self._description.key]) is None:  # type: ignore[literal-required]
+            return None
+        return round(value, 2)
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if self._description.unit_of_measurement:
             return self._description.unit_of_measurement

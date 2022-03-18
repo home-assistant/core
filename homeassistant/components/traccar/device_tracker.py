@@ -1,4 +1,7 @@
 """Support for Traccar device tracking."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 
@@ -28,8 +31,10 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 from . import DOMAIN, TRACKER_UPDATE
@@ -74,6 +79,26 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
+EVENTS = [
+    EVENT_DEVICE_MOVING,
+    EVENT_COMMAND_RESULT,
+    EVENT_DEVICE_FUEL_DROP,
+    EVENT_GEOFENCE_ENTER,
+    EVENT_DEVICE_OFFLINE,
+    EVENT_DRIVER_CHANGED,
+    EVENT_GEOFENCE_EXIT,
+    EVENT_DEVICE_OVERSPEED,
+    EVENT_DEVICE_ONLINE,
+    EVENT_DEVICE_STOPPED,
+    EVENT_MAINTENANCE,
+    EVENT_ALARM,
+    EVENT_TEXT_MESSAGE,
+    EVENT_DEVICE_UNKNOWN,
+    EVENT_IGNITION_OFF,
+    EVENT_IGNITION_ON,
+    EVENT_ALL_EVENTS,
+]
+
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
@@ -91,35 +116,15 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_EVENT, default=[]): vol.All(
             cv.ensure_list,
-            [
-                vol.Any(
-                    EVENT_DEVICE_MOVING,
-                    EVENT_COMMAND_RESULT,
-                    EVENT_DEVICE_FUEL_DROP,
-                    EVENT_GEOFENCE_ENTER,
-                    EVENT_DEVICE_OFFLINE,
-                    EVENT_DRIVER_CHANGED,
-                    EVENT_GEOFENCE_EXIT,
-                    EVENT_DEVICE_OVERSPEED,
-                    EVENT_DEVICE_ONLINE,
-                    EVENT_DEVICE_STOPPED,
-                    EVENT_MAINTENANCE,
-                    EVENT_ALARM,
-                    EVENT_TEXT_MESSAGE,
-                    EVENT_DEVICE_UNKNOWN,
-                    EVENT_IGNITION_OFF,
-                    EVENT_IGNITION_ON,
-                    EVENT_ALL_EVENTS,
-                )
-            ],
+            [vol.In(EVENTS)],
         ),
     }
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Configure a dispatcher connection based on a config entry."""
 
     @callback
@@ -158,7 +163,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: Callable[..., Awaitable[None]],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Validate the configuration and return a Traccar scanner."""
 
     session = async_get_clientsession(hass, config[CONF_VERIFY_SSL])
@@ -203,6 +213,8 @@ class TraccarScanner:
     ):
         """Initialize."""
 
+        if EVENT_ALL_EVENTS in event_types:
+            event_types = EVENTS
         self._event_types = {camelcase(evt): evt for evt in event_types}
         self._custom_attributes = custom_attributes
         self._scan_interval = scan_interval
@@ -400,8 +412,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         if self._latitude is not None or self._longitude is not None:
             return
 
-        state = await self.async_get_last_state()
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             self._latitude = None
             self._longitude = None
             self._accuracy = None

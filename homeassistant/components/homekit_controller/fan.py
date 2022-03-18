@@ -1,6 +1,10 @@
 """Support for Homekit fans."""
+from __future__ import annotations
+
+from typing import Any
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -10,7 +14,9 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -28,9 +34,9 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
     # This must be set in subclasses to the name of a boolean characteristic
     # that controls whether the fan is on or off.
-    on_characteristic = None
+    on_characteristic: str
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
             CharacteristicsTypes.SWING_MODE,
@@ -40,12 +46,12 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         ]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(self.on_characteristic) == 1
 
     @property
-    def percentage(self):
+    def percentage(self) -> int:
         """Return the current speed percentage."""
         if not self.is_on:
             return 0
@@ -53,19 +59,19 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return self.service.value(CharacteristicsTypes.ROTATION_SPEED)
 
     @property
-    def current_direction(self):
+    def current_direction(self) -> str:
         """Return the current direction of the fan."""
         direction = self.service.value(CharacteristicsTypes.ROTATION_DIRECTION)
         return HK_DIRECTION_TO_HA[direction]
 
     @property
-    def oscillating(self):
+    def oscillating(self) -> bool:
         """Return whether or not the fan is currently oscillating."""
         oscillating = self.service.value(CharacteristicsTypes.SWING_MODE)
         return oscillating == 1
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         features = 0
 
@@ -81,20 +87,20 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return features
 
     @property
-    def speed_count(self):
+    def speed_count(self) -> int:
         """Speed count for the fan."""
         return round(
             min(self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue or 100, 100)
             / max(1, self.service[CharacteristicsTypes.ROTATION_SPEED].minStep or 0)
         )
 
-    async def async_set_direction(self, direction):
+    async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self.async_put_characteristics(
             {CharacteristicsTypes.ROTATION_DIRECTION: DIRECTION_TO_HK[direction]}
         )
 
-    async def async_set_percentage(self, percentage):
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
             return await self.async_turn_off()
@@ -103,17 +109,20 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             {CharacteristicsTypes.ROTATION_SPEED: percentage}
         )
 
-    async def async_oscillate(self, oscillating: bool):
+    async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self.async_put_characteristics(
             {CharacteristicsTypes.SWING_MODE: 1 if oscillating else 0}
         )
 
     async def async_turn_on(
-        self, speed=None, percentage=None, preset_mode=None, **kwargs
-    ):
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Turn the specified fan on."""
-        characteristics = {}
+        characteristics: dict[str, Any] = {}
 
         if not self.is_on:
             characteristics[self.on_characteristic] = True
@@ -124,7 +133,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if characteristics:
             await self.async_put_characteristics(characteristics)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified fan off."""
         await self.async_put_characteristics({self.on_characteristic: False})
 
@@ -147,15 +156,18 @@ ENTITY_TYPES = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit fans."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(service):
-        entity_class = ENTITY_TYPES.get(service.short_type)
-        if not entity_class:
+    def async_add_service(service: Service) -> bool:
+        if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)

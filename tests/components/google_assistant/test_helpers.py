@@ -1,5 +1,6 @@
 """Test Google Assistant helpers."""
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -8,6 +9,9 @@ from homeassistant.components.google_assistant import helpers
 from homeassistant.components.google_assistant.const import (
     EVENT_COMMAND_RECEIVED,
     NOT_EXPOSE_LOCAL,
+    SOURCE_CLOUD,
+    SOURCE_LOCAL,
+    STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import State
@@ -26,7 +30,7 @@ from tests.common import (
 async def test_google_entity_sync_serialize_with_local_sdk(hass):
     """Test sync serialize attributes of a GoogleEntity."""
     hass.states.async_set("light.ceiling_lights", "off")
-    hass.config.api = Mock(port=1234, use_ssl=True)
+    hass.config.api = Mock(port=1234, use_ssl=False)
     await async_process_ha_core_config(
         hass,
         {"external_url": "https://hostname:1234"},
@@ -35,35 +39,37 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
     hass.http = Mock(server_port=1234)
     config = MockConfig(
         hass=hass,
-        local_sdk_webhook_id="mock-webhook-id",
-        local_sdk_user_id="mock-user-id",
+        agent_user_ids={
+            "mock-user-id": {
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: "mock-webhook-id",
+            },
+        },
     )
     entity = helpers.GoogleEntity(hass, config, hass.states.get("light.ceiling_lights"))
 
-    serialized = await entity.sync_serialize(None)
+    serialized = entity.sync_serialize(None, "mock-uuid")
     assert "otherDeviceIds" not in serialized
     assert "customData" not in serialized
 
     config.async_enable_local_sdk()
 
-    with patch("homeassistant.helpers.instance_id.async_get", return_value="abcdef"):
-        serialized = await entity.sync_serialize(None)
-        assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
-        assert serialized["customData"] == {
-            "httpPort": 1234,
-            "httpSSL": True,
-            "proxyDeviceId": None,
-            "webhookId": "mock-webhook-id",
-            "baseUrl": "https://hostname:1234",
-            "uuid": "abcdef",
-        }
+    serialized = entity.sync_serialize("mock-user-id", "abcdef")
+    assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
+    assert serialized["customData"] == {
+        "httpPort": 1234,
+        "httpSSL": False,
+        "proxyDeviceId": "mock-user-id",
+        "webhookId": "mock-webhook-id",
+        "baseUrl": "https://hostname:1234",
+        "uuid": "abcdef",
+    }
 
     for device_type in NOT_EXPOSE_LOCAL:
         with patch(
             "homeassistant.components.google_assistant.helpers.get_google_type",
             return_value=device_type,
         ):
-            serialized = await entity.sync_serialize(None)
+            serialized = entity.sync_serialize(None, "mock-uuid")
             assert "otherDeviceIds" not in serialized
             assert "customData" not in serialized
 
@@ -78,13 +84,18 @@ async def test_config_local_sdk(hass, hass_client):
 
     config = MockConfig(
         hass=hass,
-        local_sdk_webhook_id="mock-webhook-id",
-        local_sdk_user_id="mock-user-id",
+        agent_user_ids={
+            "mock-user-id": {
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: "mock-webhook-id",
+            },
+        },
     )
 
     client = await hass_client()
 
+    assert config.is_local_connected is False
     config.async_enable_local_sdk()
+    assert config.is_local_connected is False
 
     resp = await client.post(
         "/api/webhook/mock-webhook-id",
@@ -112,12 +123,20 @@ async def test_config_local_sdk(hass, hass_client):
             "requestId": "mock-req-id",
         },
     )
-    assert resp.status == 200
+
+    assert config.is_local_connected is True
+    with patch(
+        "homeassistant.components.google_assistant.helpers.utcnow",
+        return_value=dt.utcnow() + timedelta(seconds=90),
+    ):
+        assert config.is_local_connected is False
+
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result["requestId"] == "mock-req-id"
 
     assert len(command_events) == 1
-    assert command_events[0].context.user_id == config.local_sdk_user_id
+    assert command_events[0].context.user_id == "mock-user-id"
 
     assert len(turn_on_calls) == 1
     assert turn_on_calls[0].context is command_events[0].context
@@ -126,7 +145,7 @@ async def test_config_local_sdk(hass, hass_client):
 
     # Webhook is no longer active
     resp = await client.post("/api/webhook/mock-webhook-id")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.read() == b""
 
 
@@ -136,19 +155,24 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
 
     config = MockConfig(
         hass=hass,
-        local_sdk_webhook_id="mock-webhook-id",
-        local_sdk_user_id="mock-user-id",
+        agent_user_ids={
+            "mock-user-id": {
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: "mock-webhook-id",
+            },
+        },
         enabled=False,
     )
+    assert not config.is_local_sdk_active
 
     client = await hass_client()
 
     config.async_enable_local_sdk()
+    assert config.is_local_sdk_active
 
     resp = await client.post(
         "/api/webhook/mock-webhook-id", json={"requestId": "mock-req-id"}
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {
         "payload": {"errorCode": "deviceTurnedOff"},
@@ -156,10 +180,38 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
     }
 
     config.async_disable_local_sdk()
+    assert not config.is_local_sdk_active
 
     # Webhook is no longer active
     resp = await client.post("/api/webhook/mock-webhook-id")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b""
+
+
+async def test_config_local_sdk_if_ssl_enabled(hass, hass_client):
+    """Test the local SDK is not enabled when SSL is enabled."""
+    assert await async_setup_component(hass, "webhook", {})
+    hass.config.api.use_ssl = True
+
+    config = MockConfig(
+        hass=hass,
+        agent_user_ids={
+            "mock-user-id": {
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: "mock-webhook-id",
+            },
+        },
+        enabled=False,
+    )
+    assert not config.is_local_sdk_active
+
+    client = await hass_client()
+
+    config.async_enable_local_sdk()
+    assert not config.is_local_sdk_active
+
+    # Webhook should not be activated
+    resp = await client.post("/api/webhook/mock-webhook-id")
+    assert resp.status == HTTPStatus.OK
     assert await resp.read() == b""
 
 
@@ -168,34 +220,63 @@ async def test_agent_user_id_storage(hass, hass_storage):
 
     hass_storage["google_assistant"] = {
         "version": 1,
+        "minor_version": 1,
         "key": "google_assistant",
-        "data": {"agent_user_ids": {"agent_1": {}}},
+        "data": {
+            "agent_user_ids": {
+                "agent_1": {
+                    "local_webhook_id": "test_webhook",
+                }
+            },
+        },
     }
 
     store = helpers.GoogleConfigStore(hass)
-    await store.async_load()
+    await store.async_initialize()
 
     assert hass_storage["google_assistant"] == {
         "version": 1,
+        "minor_version": 1,
         "key": "google_assistant",
-        "data": {"agent_user_ids": {"agent_1": {}}},
+        "data": {
+            "agent_user_ids": {
+                "agent_1": {
+                    "local_webhook_id": "test_webhook",
+                }
+            },
+        },
     }
 
     async def _check_after_delay(data):
         async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=2))
         await hass.async_block_till_done()
 
-        assert hass_storage["google_assistant"] == {
-            "version": 1,
-            "key": "google_assistant",
-            "data": data,
-        }
+        assert (
+            list(hass_storage["google_assistant"]["data"]["agent_user_ids"].keys())
+            == data
+        )
 
     store.add_agent_user_id("agent_2")
-    await _check_after_delay({"agent_user_ids": {"agent_1": {}, "agent_2": {}}})
+    await _check_after_delay(["agent_1", "agent_2"])
 
     store.pop_agent_user_id("agent_1")
-    await _check_after_delay({"agent_user_ids": {"agent_2": {}}})
+    await _check_after_delay(["agent_2"])
+
+    hass_storage["google_assistant"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "google_assistant",
+        "data": {
+            "agent_user_ids": {"agent_1": {}},
+        },
+    }
+    store = helpers.GoogleConfigStore(hass)
+    await store.async_initialize()
+
+    assert (
+        STORE_GOOGLE_LOCAL_WEBHOOK_ID
+        in hass_storage["google_assistant"]["data"]["agent_user_ids"]["agent_1"]
+    )
 
 
 async def test_agent_user_id_connect():
@@ -250,3 +331,17 @@ def test_supported_features_string(caplog):
     )
     assert entity.is_supported() is False
     assert "Entity test.entity_id contains invalid supported_features value invalid"
+
+
+def test_request_data():
+    """Test request data properties."""
+    config = MockConfig()
+    data = helpers.RequestData(
+        config, "test_user", SOURCE_LOCAL, "test_request_id", None
+    )
+    assert data.is_local_request is True
+
+    data = helpers.RequestData(
+        config, "test_user", SOURCE_CLOUD, "test_request_id", None
+    )
+    assert data.is_local_request is False

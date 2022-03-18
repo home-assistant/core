@@ -15,7 +15,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-
     entities = await async_create_entities(
         hass,
         entry,
@@ -30,11 +29,11 @@ class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
     """Implementation of a Withings sensor."""
 
     @property
-    def state(self) -> None | str | int | float:
+    def native_value(self) -> None | str | int | float:
         """Return the state of the entity."""
         return self._state_data
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
         return self._attribute.unit_of_measurement

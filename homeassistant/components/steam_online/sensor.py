@@ -1,4 +1,6 @@
 """Sensor for Steam account status."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from time import mktime
@@ -8,9 +10,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,14 +49,19 @@ APP_LIST_KEY = "steam_online.app_list"
 BASE_INTERVAL = timedelta(minutes=1)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Steam platform."""
 
-    steam.api.key.set(config.get(CONF_API_KEY))
+    steam.api.key.set(config[CONF_API_KEY])
     # Initialize steammods app list before creating sensors
     # to benefit from internal caching of the list.
     hass.data[APP_LIST_KEY] = steam.apps.app_list()
-    entities = [SteamSensor(account, steam) for account in config.get(CONF_ACCOUNTS)]
+    entities = [SteamSensor(account, steam) for account in config[CONF_ACCOUNTS]]
     if not entities:
         return
     add_entities(entities, True)
@@ -99,7 +108,7 @@ class SteamSensor(SensorEntity):
         return f"sensor.steam_{self._account}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -145,13 +154,10 @@ class SteamSensor(SensorEntity):
 
     def _get_current_game(self):
         """Gather current game name from APP ID."""
-        game_id = self._profile.current_game[0]
-        game_extra_info = self._profile.current_game[2]
-
-        if game_extra_info:
+        if game_extra_info := self._profile.current_game[2]:
             return game_extra_info
 
-        if not game_id:
+        if not (game_id := self._profile.current_game[0]):
             return None
 
         app_list = self.hass.data[APP_LIST_KEY]
@@ -174,8 +180,7 @@ class SteamSensor(SensorEntity):
         return repr(game_id)
 
     def _get_game_info(self):
-        game_id = self._profile.current_game[0]
-        if game_id is not None:
+        if (game_id := self._profile.current_game[0]) is not None:
 
             for game in self._owned_games["response"]["games"]:
                 if game["appid"] == game_id:

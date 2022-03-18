@@ -1,7 +1,6 @@
 """The tests for the Script component."""
 # pylint: disable=protected-access
 import asyncio
-import unittest
 from unittest.mock import Mock, patch
 
 import pytest
@@ -15,117 +14,83 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
 )
-from homeassistant.core import Context, callback, split_entity_id
+from homeassistant.core import (
+    Context,
+    CoreState,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import template
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.script import (
+    SCRIPT_MODE_CHOICES,
+    SCRIPT_MODE_PARALLEL,
+    SCRIPT_MODE_QUEUED,
+    SCRIPT_MODE_RESTART,
+    SCRIPT_MODE_SINGLE,
+)
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.loader import bind_hass
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.common import async_mock_service, get_test_home_assistant
+from tests.common import async_mock_service, mock_restore_cache
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 ENTITY_ID = "script.test"
 
 
-@bind_hass
-def turn_on(hass, entity_id, variables=None, context=None):
-    """Turn script on.
+async def test_passing_variables(hass):
+    """Test different ways of passing in variables."""
+    mock_restore_cache(hass, ())
+    calls = []
+    context = Context()
 
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    _, object_id = split_entity_id(entity_id)
+    @callback
+    def record_call(service):
+        """Add recorded event to set."""
+        calls.append(service)
 
-    hass.services.call(DOMAIN, object_id, variables, context=context)
+    hass.services.async_register("test", "script", record_call)
 
-
-@bind_hass
-def turn_off(hass, entity_id):
-    """Turn script on.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def toggle(hass, entity_id):
-    """Toggle the script.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def reload(hass):
-    """Reload script component.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(DOMAIN, SERVICE_RELOAD)
-
-
-class TestScriptComponent(unittest.TestCase):
-    """Test the Script component."""
-
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-        self.addCleanup(self.tear_down_cleanup)
-
-    def tear_down_cleanup(self):
-        """Stop down everything that was started."""
-        self.hass.stop()
-
-    def test_passing_variables(self):
-        """Test different ways of passing in variables."""
-        calls = []
-        context = Context()
-
-        @callback
-        def record_call(service):
-            """Add recorded event to set."""
-            calls.append(service)
-
-        self.hass.services.register("test", "script", record_call)
-
-        assert setup_component(
-            self.hass,
-            "script",
-            {
-                "script": {
-                    "test": {
-                        "sequence": {
-                            "service": "test.script",
-                            "data_template": {"hello": "{{ greeting }}"},
-                        }
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test": {
+                    "sequence": {
+                        "service": "test.script",
+                        "data_template": {"hello": "{{ greeting }}"},
                     }
                 }
-            },
-        )
+            }
+        },
+    )
 
-        turn_on(self.hass, ENTITY_ID, {"greeting": "world"}, context=context)
+    await hass.services.async_call(
+        DOMAIN, "test", {"greeting": "world"}, context=context
+    )
 
-        self.hass.block_till_done()
+    await hass.async_block_till_done()
 
-        assert len(calls) == 1
-        assert calls[0].context is context
-        assert calls[0].data["hello"] == "world"
+    assert len(calls) == 1
+    assert calls[0].context is context
+    assert calls[0].data["hello"] == "world"
 
-        self.hass.services.call(
-            "script", "test", {"greeting": "universe"}, context=context
-        )
+    await hass.services.async_call(
+        "script", "test", {"greeting": "universe"}, context=context
+    )
 
-        self.hass.block_till_done()
+    await hass.async_block_till_done()
 
-        assert len(calls) == 2
-        assert calls[1].context is context
-        assert calls[1].data["hello"] == "universe"
+    assert len(calls) == 2
+    assert calls[1].context is context
+    assert calls[1].data["hello"] == "universe"
 
 
 @pytest.mark.parametrize("toggle", [False, True])
@@ -796,3 +761,153 @@ async def test_script_this_var_always(hass, caplog):
     # Verify this available to all templates
     assert mock_calls[0].data.get("this_template") == "script.script1"
     assert "Error rendering variables" not in caplog.text
+
+
+async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
+    """Test if last triggered is restored on start."""
+    time = dt_util.utcnow()
+    mock_restore_cache(
+        hass,
+        (
+            State("script.no_last_triggered", STATE_OFF),
+            State("script.last_triggered", STATE_OFF, {"last_triggered": time}),
+        ),
+    )
+    hass.state = CoreState.starting
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "no_last_triggered": {
+                    "sequence": [{"delay": {"seconds": 5}}],
+                },
+                "last_triggered": {
+                    "sequence": [{"delay": {"seconds": 5}}],
+                },
+            },
+        },
+    )
+
+    state = hass.states.get("script.no_last_triggered")
+    assert state
+    assert state.attributes["last_triggered"] is None
+
+    state = hass.states.get("script.last_triggered")
+    assert state
+    assert state.attributes["last_triggered"] == time
+
+
+@pytest.mark.parametrize(
+    "script_mode,warning_msg",
+    (
+        (SCRIPT_MODE_PARALLEL, "Maximum number of runs exceeded"),
+        (SCRIPT_MODE_QUEUED, "Disallowed recursion detected"),
+        (SCRIPT_MODE_RESTART, "Disallowed recursion detected"),
+        (SCRIPT_MODE_SINGLE, "Already running"),
+    ),
+)
+async def test_recursive_script(hass, script_mode, warning_msg, caplog):
+    """Test recursive script calls does not deadlock."""
+    # Make sure we cover all script modes
+    assert SCRIPT_MODE_CHOICES == [
+        SCRIPT_MODE_PARALLEL,
+        SCRIPT_MODE_QUEUED,
+        SCRIPT_MODE_RESTART,
+        SCRIPT_MODE_SINGLE,
+    ]
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script1"},
+                        {"service": "test.script"},
+                    ],
+                },
+            }
+        },
+    )
+
+    service_called = asyncio.Event()
+
+    async def async_service_handler(service):
+        service_called.set()
+
+    hass.services.async_register("test", "script", async_service_handler)
+
+    await hass.services.async_call("script", "script1")
+    await asyncio.wait_for(service_called.wait(), 1)
+
+    assert warning_msg in caplog.text
+
+
+@pytest.mark.parametrize(
+    "script_mode,warning_msg",
+    (
+        (SCRIPT_MODE_PARALLEL, "Maximum number of runs exceeded"),
+        (SCRIPT_MODE_QUEUED, "Disallowed recursion detected"),
+        (SCRIPT_MODE_RESTART, "Disallowed recursion detected"),
+        (SCRIPT_MODE_SINGLE, "Already running"),
+    ),
+)
+async def test_recursive_script_indirect(hass, script_mode, warning_msg, caplog):
+    """Test recursive script calls does not deadlock."""
+    # Make sure we cover all script modes
+    assert SCRIPT_MODE_CHOICES == [
+        SCRIPT_MODE_PARALLEL,
+        SCRIPT_MODE_QUEUED,
+        SCRIPT_MODE_RESTART,
+        SCRIPT_MODE_SINGLE,
+    ]
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script2"},
+                    ],
+                },
+                "script2": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script3"},
+                    ],
+                },
+                "script3": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script4"},
+                    ],
+                },
+                "script4": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script1"},
+                        {"service": "test.script"},
+                    ],
+                },
+            }
+        },
+    )
+
+    service_called = asyncio.Event()
+
+    async def async_service_handler(service):
+        service_called.set()
+
+    hass.services.async_register("test", "script", async_service_handler)
+
+    await hass.services.async_call("script", "script1")
+    await asyncio.wait_for(service_called.wait(), 1)
+
+    assert warning_msg in caplog.text

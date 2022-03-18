@@ -1,5 +1,14 @@
 """Reads vehicle status from StarLine API."""
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, SensorEntity
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     LENGTH_KILOMETERS,
@@ -7,54 +16,105 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
 
-SENSOR_TYPES = {
-    "battery": ["Battery", None, ELECTRIC_POTENTIAL_VOLT, None],
-    "balance": ["Balance", None, None, "mdi:cash-multiple"],
-    "ctemp": ["Interior Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
-    "etemp": ["Engine Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
-    "gsm_lvl": ["GSM Signal", None, PERCENTAGE, None],
-    "fuel": ["Fuel Volume", None, None, "mdi:fuel"],
-    "errors": ["OBD Errors", None, None, "mdi:alert-octagon"],
-    "mileage": ["Mileage", None, LENGTH_KILOMETERS, "mdi:counter"],
-}
+
+@dataclass
+class StarlineRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    name_: str
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+@dataclass
+class StarlineSensorEntityDescription(
+    SensorEntityDescription, StarlineRequiredKeysMixin
+):
+    """Describes Starline binary_sensor entity."""
+
+
+SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
+    StarlineSensorEntityDescription(
+        key="battery",
+        name_="Battery",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+    ),
+    StarlineSensorEntityDescription(
+        key="balance",
+        name_="Balance",
+        icon="mdi:cash-multiple",
+    ),
+    StarlineSensorEntityDescription(
+        key="ctemp",
+        name_="Interior Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    StarlineSensorEntityDescription(
+        key="etemp",
+        name_="Engine Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    StarlineSensorEntityDescription(
+        key="gsm_lvl",
+        name_="GSM Signal",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    StarlineSensorEntityDescription(
+        key="fuel",
+        name_="Fuel Volume",
+        icon="mdi:fuel",
+    ),
+    StarlineSensorEntityDescription(
+        key="errors",
+        name_="OBD Errors",
+        icon="mdi:alert-octagon",
+    ),
+    StarlineSensorEntityDescription(
+        key="mileage",
+        name_="Mileage",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+        icon="mdi:counter",
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the StarLine sensors."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
-    entities = []
-    for device in account.api.devices.values():
-        for key, value in SENSOR_TYPES.items():
-            sensor = StarlineSensor(account, device, key, *value)
-            if sensor.state is not None:
-                entities.append(sensor)
+    entities = [
+        sensor
+        for device in account.api.devices.values()
+        for description in SENSOR_TYPES
+        if (sensor := StarlineSensor(account, device, description)).native_value
+        is not None
+    ]
     async_add_entities(entities)
 
 
 class StarlineSensor(StarlineEntity, SensorEntity):
     """Representation of a StarLine sensor."""
 
+    entity_description: StarlineSensorEntityDescription
+
     def __init__(
         self,
         account: StarlineAccount,
         device: StarlineDevice,
-        key: str,
-        name: str,
-        device_class: str,
-        unit: str,
-        icon: str,
+        description: StarlineSensorEntityDescription,
     ) -> None:
         """Initialize StarLine sensor."""
-        super().__init__(account, device, key, name)
-        self._device_class = device_class
-        self._unit = unit
-        self._icon = icon
+        super().__init__(account, device, description.key, description.name_)
+        self.entity_description = description
 
     @property
     def icon(self):
@@ -66,10 +126,10 @@ class StarlineSensor(StarlineEntity, SensorEntity):
             )
         if self._key == "gsm_lvl":
             return icon_for_signal_level(signal_level=self._device.gsm_level_percent)
-        return self._icon
+        return self.entity_description.icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._key == "battery":
             return self._device.battery_level
@@ -90,7 +150,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Get the unit of measurement."""
         if self._key == "balance":
             return self._device.balance.get("currency") or "₽"
@@ -100,12 +160,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
                 return PERCENTAGE
             if type_value == "litres":
                 return VOLUME_LITERS
-        return self._unit
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return self._device_class
+        return self.entity_description.native_unit_of_measurement
 
     @property
     def extra_state_attributes(self):

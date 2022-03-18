@@ -1,6 +1,8 @@
 """Tests for the TotalConnect config flow."""
 from unittest.mock import patch
 
+from total_connect_client.exceptions import AuthenticationError
+
 from homeassistant import data_entry_flow
 from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
@@ -11,8 +13,11 @@ from .common import (
     CONFIG_DATA_NO_USERCODES,
     RESPONSE_AUTHENTICATE,
     RESPONSE_DISARMED,
+    RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+    RESPONSE_PARTITION_DETAILS,
     RESPONSE_SUCCESS,
     RESPONSE_USER_CODE_INVALID,
+    TOTALCONNECT_REQUEST,
     USERNAME,
 )
 
@@ -37,18 +42,14 @@ async def test_user_show_locations(hass):
     # user/pass provided, so check if valid then ask for usercodes on locations form
     responses = [
         RESPONSE_AUTHENTICATE,
+        RESPONSE_PARTITION_DETAILS,
+        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
         RESPONSE_USER_CODE_INVALID,
         RESPONSE_SUCCESS,
     ]
 
-    with patch("zeep.Client", autospec=True), patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
-        side_effect=responses,
-    ) as mock_request, patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.get_zone_details",
-        return_value=True,
-    ), patch(
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses,) as mock_request, patch(
         "homeassistant.components.totalconnect.async_setup_entry", return_value=True
     ):
 
@@ -61,8 +62,8 @@ async def test_user_show_locations(hass):
         # first it should show the locations form
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "locations"
-        # client should have sent two requests, authenticate and get status
-        assert mock_request.call_count == 2
+        # client should have sent four requests for init
+        assert mock_request.call_count == 4
 
         # user enters an invalid usercode
         result2 = await hass.config_entries.flow.async_configure(
@@ -71,8 +72,8 @@ async def test_user_show_locations(hass):
         )
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result2["step_id"] == "locations"
-        # client should have sent 3rd request to validate usercode
-        assert mock_request.call_count == 3
+        # client should have sent 5th request to validate usercode
+        assert mock_request.call_count == 5
 
         # user enters a valid usercode
         result3 = await hass.config_entries.flow.async_configure(
@@ -81,7 +82,7 @@ async def test_user_show_locations(hass):
         )
         assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         # client should have sent another request to validate usercode
-        assert mock_request.call_count == 4
+        assert mock_request.call_count == 6
 
 
 async def test_abort_if_already_setup(hass):
@@ -93,10 +94,7 @@ async def test_abort_if_already_setup(hass):
     ).add_to_hass(hass)
 
     # Should fail, same USERNAME (flow)
-    with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
-    ) as client_mock:
-        client_mock.return_value.is_valid_credentials.return_value = True
+    with patch("homeassistant.components.totalconnect.config_flow.TotalConnectClient"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -110,9 +108,9 @@ async def test_abort_if_already_setup(hass):
 async def test_login_failed(hass):
     """Test when we have errors during login."""
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
     ) as client_mock:
-        client_mock.return_value.is_valid_credentials.return_value = False
+        client_mock.side_effect = AuthenticationError()
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -139,12 +137,12 @@ async def test_reauth(hass):
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
     ) as client_mock, patch(
         "homeassistant.components.totalconnect.async_setup_entry", return_value=True
     ):
         # first test with an invalid password
-        client_mock.return_value.is_valid_credentials.return_value = False
+        client_mock.side_effect = AuthenticationError()
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}
@@ -154,7 +152,7 @@ async def test_reauth(hass):
         assert result["errors"] == {"base": "invalid_auth"}
 
         # now test with the password valid
-        client_mock.return_value.is_valid_credentials.return_value = True
+        client_mock.side_effect = None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}
@@ -164,3 +162,31 @@ async def test_reauth(hass):
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_no_locations(hass):
+    """Test with no user locations."""
+    responses = [
+        RESPONSE_AUTHENTICATE,
+        RESPONSE_PARTITION_DETAILS,
+        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+        RESPONSE_DISARMED,
+    ]
+
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses,) as mock_request, patch(
+        "homeassistant.components.totalconnect.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.get_number_locations",
+        return_value=0,
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONFIG_DATA_NO_USERCODES,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "no_locations"
+        await hass.async_block_till_done()
+
+        assert mock_request.call_count == 1

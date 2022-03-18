@@ -1,34 +1,42 @@
 """Support to serve the Home Assistant API as WSGI application."""
 from __future__ import annotations
 
-from contextvars import ContextVar
-from ipaddress import ip_network
+import datetime
+from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
 import ssl
-from typing import Any, Final, Optional, TypedDict, cast
+from tempfile import NamedTemporaryFile
+from typing import Any, Final, Optional, TypedDict, Union, cast
 
 from aiohttp import web
 from aiohttp.typedefs import StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 import voluptuous as vol
+from yarl import URL
 
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
-import homeassistant.util as hass_util
 from homeassistant.util import ssl as ssl_util
 
-from .auth import setup_auth
+from .auth import async_setup_auth
 from .ban import setup_bans
 from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
-from .request_context import setup_request_context
+from .request_context import current_request, setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView
@@ -60,7 +68,7 @@ DEFAULT_DEVELOPMENT: Final = "0"
 DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
 
-MAX_CLIENT_SIZE: Final = 1024 ** 2 * 16
+MAX_CLIENT_SIZE: Final = 1024**2 * 16
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
@@ -110,7 +118,7 @@ class ConfData(TypedDict, total=False):
     ssl_key: str
     cors_allowed_origins: list[str]
     use_x_forwarded_for: bool
-    trusted_proxies: list[str]
+    trusted_proxies: list[IPv4Network | IPv6Network]
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
@@ -166,12 +174,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_certificate=ssl_certificate,
         ssl_peer_certificate=ssl_peer_certificate,
         ssl_key=ssl_key,
+        trusted_proxies=trusted_proxies,
+        ssl_profile=ssl_profile,
+    )
+    await server.async_initialize(
         cors_origins=cors_origins,
         use_x_forwarded_for=use_x_forwarded_for,
-        trusted_proxies=trusted_proxies,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
-        ssl_profile=ssl_profile,
     )
 
     async def stop_server(event: Event) -> None:
@@ -190,7 +200,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http = server
 
-    local_ip = await hass.async_add_executor_job(hass_util.get_local_ip)
+    local_ip = await async_get_source_ip(hass)
 
     host = local_ip
     if server_host is not None:
@@ -215,34 +225,11 @@ class HomeAssistantHTTP:
         ssl_key: str | None,
         server_host: list[str] | None,
         server_port: int,
-        cors_origins: list[str],
-        use_x_forwarded_for: bool,
-        trusted_proxies: list[str],
-        login_threshold: int,
-        is_ban_enabled: bool,
+        trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
-        app = self.app = web.Application(
-            middlewares=[], client_max_size=MAX_CLIENT_SIZE
-        )
-        app[KEY_HASS] = hass
-
-        # Order matters, security filters middle ware needs to go first,
-        # forwarded middleware needs to go second.
-        setup_security_filter(app)
-
-        async_setup_forwarded(app, use_x_forwarded_for, trusted_proxies)
-
-        setup_request_context(app, current_request)
-
-        if is_ban_enabled:
-            setup_bans(hass, app, login_threshold)
-
-        setup_auth(hass, app)
-
-        setup_cors(app, cors_origins)
-
+        self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -250,13 +237,43 @@ class HomeAssistantHTTP:
         self.server_host = server_host
         self.server_port = server_port
         self.trusted_proxies = trusted_proxies
-        self.is_ban_enabled = is_ban_enabled
         self.ssl_profile = ssl_profile
-        self._handler = None
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
+        self.context: ssl.SSLContext | None = None
 
-    def register_view(self, view: HomeAssistantView) -> None:
+    async def async_initialize(
+        self,
+        *,
+        cors_origins: list[str],
+        use_x_forwarded_for: bool,
+        login_threshold: int,
+        is_ban_enabled: bool,
+    ) -> None:
+        """Initialize the server."""
+        self.app[KEY_HASS] = self.hass
+
+        # Order matters, security filters middleware needs to go first,
+        # forwarded middleware needs to go second.
+        setup_security_filter(self.app)
+
+        async_setup_forwarded(self.app, use_x_forwarded_for, self.trusted_proxies)
+
+        setup_request_context(self.app, current_request)
+
+        if is_ban_enabled:
+            setup_bans(self.hass, self.app, login_threshold)
+
+        await async_setup_auth(self.hass, self.app)
+
+        setup_cors(self.app, cors_origins)
+
+        if self.ssl_certificate:
+            self.context = await self.hass.async_add_executor_job(
+                self._create_ssl_context
+            )
+
+    def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
         """Register a view with the WSGI server.
 
         The view argument must be a class that inherits from HomeAssistantView.
@@ -298,21 +315,24 @@ class HomeAssistantHTTP:
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
             raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
 
-        self.app.router.add_route("GET", url, redirect)
+        self.app["allow_configured_cors"](
+            self.app.router.add_route("GET", url, redirect)
+        )
 
     def register_static_path(
         self, url_path: str, path: str, cache_headers: bool = True
-    ) -> web.FileResponse | None:
+    ) -> None:
         """Register a folder or file to serve as a static path."""
         if os.path.isdir(path):
             if cache_headers:
-                resource: type[
-                    CachingStaticResource | web.StaticResource
-                ] = CachingStaticResource
+                resource: CachingStaticResource | web.StaticResource = (
+                    CachingStaticResource(url_path, path)
+                )
             else:
-                resource = web.StaticResource
-            self.app.router.register_resource(resource(url_path, path))
-            return None
+                resource = web.StaticResource(url_path, path)
+            self.app.router.register_resource(resource)
+            self.app["allow_configured_cors"](resource)
+            return
 
         async def serve_file(request: web.Request) -> web.FileResponse:
             """Serve file from disk."""
@@ -320,38 +340,104 @@ class HomeAssistantHTTP:
                 return web.FileResponse(path, headers=CACHE_HEADERS)
             return web.FileResponse(path)
 
-        self.app.router.add_route("GET", url_path, serve_file)
-        return None
+        self.app["allow_configured_cors"](
+            self.app.router.add_route("GET", url_path, serve_file)
+        )
+
+    def _create_ssl_context(self) -> ssl.SSLContext | None:
+        context: ssl.SSLContext | None = None
+        assert self.ssl_certificate is not None
+        try:
+            if self.ssl_profile == SSL_INTERMEDIATE:
+                context = ssl_util.server_context_intermediate()
+            else:
+                context = ssl_util.server_context_modern()
+            context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+        except OSError as error:
+            if not self.hass.config.safe_mode:
+                raise HomeAssistantError(
+                    f"Could not use SSL certificate from {self.ssl_certificate}: {error}"
+                ) from error
+            _LOGGER.error(
+                "Could not read SSL certificate from %s: %s",
+                self.ssl_certificate,
+                error,
+            )
+            try:
+                context = self._create_emergency_ssl_context()
+            except OSError as error:
+                _LOGGER.error(
+                    "Could not create an emergency self signed ssl certificate: %s",
+                    error,
+                )
+                context = None
+            else:
+                _LOGGER.critical(
+                    "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+                )
+                return context
+
+        if self.ssl_peer_certificate:
+            if context is None:
+                raise HomeAssistantError(
+                    "Failed to create ssl context, no fallback available because a peer certificate is required."
+                )
+
+            context.verify_mode = ssl.CERT_REQUIRED
+            context.load_verify_locations(self.ssl_peer_certificate)
+
+        return context
+
+    def _create_emergency_ssl_context(self) -> ssl.SSLContext:
+        """Create an emergency ssl certificate so we can still startup."""
+        context = ssl_util.server_context_modern()
+        host: str
+        try:
+            host = cast(str, URL(get_url(self.hass, prefer_external=True)).host)
+        except NoURLAvailableError:
+            host = "homeassistant.local"
+        key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+        )
+        subject = issuer = x509.Name(
+            [
+                x509.NameAttribute(
+                    NameOID.ORGANIZATION_NAME, "Home Assistant Emergency Certificate"
+                ),
+                x509.NameAttribute(NameOID.COMMON_NAME, host),
+            ]
+        )
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(subject)
+            .issuer_name(issuer)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(datetime.datetime.utcnow())
+            .not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=30))
+            .add_extension(
+                x509.SubjectAlternativeName([x509.DNSName(host)]),
+                critical=False,
+            )
+            .sign(key, hashes.SHA256())
+        )
+        with NamedTemporaryFile() as cert_pem, NamedTemporaryFile() as key_pem:
+            cert_pem.write(cert.public_bytes(serialization.Encoding.PEM))
+            key_pem.write(
+                key.private_bytes(
+                    serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
+            )
+            cert_pem.flush()
+            key_pem.flush()
+            context.load_cert_chain(cert_pem.name, key_pem.name)
+        return context
 
     async def start(self) -> None:
         """Start the aiohttp server."""
-        context: ssl.SSLContext | None
-        if self.ssl_certificate:
-            try:
-                if self.ssl_profile == SSL_INTERMEDIATE:
-                    context = ssl_util.server_context_intermediate()
-                else:
-                    context = ssl_util.server_context_modern()
-                await self.hass.async_add_executor_job(
-                    context.load_cert_chain, self.ssl_certificate, self.ssl_key
-                )
-            except OSError as error:
-                _LOGGER.error(
-                    "Could not read SSL certificate from %s: %s",
-                    self.ssl_certificate,
-                    error,
-                )
-                return
-
-            if self.ssl_peer_certificate:
-                context.verify_mode = ssl.CERT_REQUIRED
-                await self.hass.async_add_executor_job(
-                    context.load_verify_locations, self.ssl_peer_certificate
-                )
-
-        else:
-            context = None
-
         # Aiohttp freezes apps after start so that no changes can be made.
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
@@ -363,7 +449,7 @@ class HomeAssistantHTTP:
         await self.runner.setup()
 
         self.site = HomeAssistantTCPSite(
-            self.runner, self.server_host, self.server_port, ssl_context=context
+            self.runner, self.server_host, self.server_port, ssl_context=self.context
         )
         try:
             await self.site.start()
@@ -393,12 +479,8 @@ async def start_http_server_and_save_config(
 
     if CONF_TRUSTED_PROXIES in conf:
         conf[CONF_TRUSTED_PROXIES] = [
-            str(ip.network_address) for ip in conf[CONF_TRUSTED_PROXIES]
+            str(cast(Union[IPv4Network, IPv6Network], ip).network_address)
+            for ip in conf[CONF_TRUSTED_PROXIES]
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)
-
-
-current_request: ContextVar[web.Request | None] = ContextVar(
-    "current_request", default=None
-)

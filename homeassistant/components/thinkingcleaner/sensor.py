@@ -1,22 +1,42 @@
 """Support for ThinkingCleaner sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from pythinkingcleaner import Discovery, ThinkingCleaner
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_HOST, PERCENTAGE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
-SENSOR_TYPES = {
-    "battery": ["Battery", PERCENTAGE, "mdi:battery"],
-    "state": ["State", None, None],
-    "capacity": ["Capacity", None, None],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="battery",
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:battery",
+    ),
+    SensorEntityDescription(
+        key="state",
+        name="State",
+    ),
+    SensorEntityDescription(
+        key="capacity",
+        name="Capacity",
+    ),
+)
 
 STATES = {
     "st_base": "On homebase: Not Charging",
@@ -48,11 +68,14 @@ STATES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ThinkingCleaner platform."""
-
-    host = config.get(CONF_HOST)
-    if host:
+    if host := config.get(CONF_HOST):
         devices = [ThinkingCleaner(host, "unknown")]
     else:
         discovery = Discovery()
@@ -64,53 +87,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for device_object in devices:
             device_object.update()
 
-    dev = []
-    for device in devices:
-        for type_name in SENSOR_TYPES:
-            dev.append(ThinkingCleanerSensor(device, type_name, update_devices))
+    entities = [
+        ThinkingCleanerSensor(device, update_devices, description)
+        for device in devices
+        for description in SENSOR_TYPES
+    ]
 
-    add_entities(dev)
+    add_entities(entities)
 
 
 class ThinkingCleanerSensor(SensorEntity):
     """Representation of a ThinkingCleaner Sensor."""
 
-    def __init__(self, tc_object, sensor_type, update_devices):
+    def __init__(self, tc_object, update_devices, description: SensorEntityDescription):
         """Initialize the ThinkingCleaner."""
-        self.type = sensor_type
-
+        self.entity_description = description
         self._tc_object = tc_object
         self._update_devices = update_devices
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._state = None
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._tc_object.name} {SENSOR_TYPES[self.type][0]}"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        self._attr_name = f"{tc_object.name} {description.name}"
 
     def update(self):
         """Update the sensor."""
         self._update_devices()
 
-        if self.type == "battery":
-            self._state = self._tc_object.battery
-        elif self.type == "state":
-            self._state = STATES[self._tc_object.status]
-        elif self.type == "capacity":
-            self._state = self._tc_object.capacity
+        sensor_type = self.entity_description.key
+        if sensor_type == "battery":
+            self._attr_native_value = self._tc_object.battery
+        elif sensor_type == "state":
+            self._attr_native_value = STATES[self._tc_object.status]
+        elif sensor_type == "capacity":
+            self._attr_native_value = self._tc_object.capacity

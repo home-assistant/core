@@ -9,7 +9,7 @@ from coinbase.wallet.error import AuthenticationError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
+from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
@@ -28,7 +28,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -99,7 +99,7 @@ def create_and_update_instance(entry: ConfigEntry) -> CoinbaseData:
     return instance
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle options update."""
 
     await hass.config_entries.async_reload(config_entry.entry_id)
@@ -113,11 +113,11 @@ async def update_listener(hass, config_entry):
     for entity in entities:
         currency = entity.unique_id.split("-")[-1]
         if "xe" in entity.unique_id and currency not in config_entry.options.get(
-            CONF_EXCHANGE_RATES
+            CONF_EXCHANGE_RATES, []
         ):
             registry.async_remove(entity.entity_id)
         elif "wallet" in entity.unique_id and currency not in config_entry.options.get(
-            CONF_CURRENCIES
+            CONF_CURRENCIES, []
         ):
             registry.async_remove(entity.entity_id)
 

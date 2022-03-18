@@ -4,44 +4,57 @@ from __future__ import annotations
 from typing import cast
 
 import voluptuous as vol
-from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const import CommandClass
 from zwave_js_server.model.value import ConfigurationValue
 
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
-from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_ENDPOINT,
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
+    DOMAIN,
 )
-from .helpers import async_get_node_from_device_id, get_zwave_value_from_config
+from .device_automation_helpers import (
+    CONF_SUBTYPE,
+    CONF_VALUE_ID,
+    NODE_STATUSES,
+    generate_config_parameter_subtype,
+    get_config_parameter_value_schema,
+)
+from .helpers import (
+    async_get_node_from_device_id,
+    async_is_device_config_entry_not_loaded,
+    check_type_schema_map,
+    get_zwave_value_from_config,
+    remove_keys_with_empty_values,
+)
 
-CONF_SUBTYPE = "subtype"
-CONF_VALUE_ID = "value_id"
 CONF_STATUS = "status"
 
 NODE_STATUS_TYPE = "node_status"
-NODE_STATUS_TYPES = ["asleep", "awake", "dead", "alive"]
 CONFIG_PARAMETER_TYPE = "config_parameter"
 VALUE_TYPE = "value"
 CONDITION_TYPES = {NODE_STATUS_TYPE, CONFIG_PARAMETER_TYPE, VALUE_TYPE}
 
-NODE_STATUS_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
+NODE_STATUS_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): NODE_STATUS_TYPE,
-        vol.Required(CONF_STATUS): vol.In(NODE_STATUS_TYPES),
+        vol.Required(CONF_STATUS): vol.In(NODE_STATUSES),
     }
 )
 
-CONFIG_PARAMETER_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
+CONFIG_PARAMETER_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): CONFIG_PARAMETER_TYPE,
         vol.Required(CONF_VALUE_ID): cv.string,
@@ -50,27 +63,32 @@ CONFIG_PARAMETER_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     }
 )
 
-VALUE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
+VALUE_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): VALUE_TYPE,
         vol.Required(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
         vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
         vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
         vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
-        vol.Required(ATTR_VALUE): vol.Any(
-            bool,
-            vol.Coerce(int),
-            vol.Coerce(float),
-            cv.boolean,
-            cv.string,
-        ),
+        vol.Required(ATTR_VALUE): VALUE_SCHEMA,
     }
 )
 
-CONDITION_SCHEMA = vol.Any(
-    NODE_STATUS_CONDITION_SCHEMA,
-    CONFIG_PARAMETER_CONDITION_SCHEMA,
-    VALUE_CONDITION_SCHEMA,
+TYPE_SCHEMA_MAP = {
+    NODE_STATUS_TYPE: NODE_STATUS_CONDITION_SCHEMA,
+    CONFIG_PARAMETER_TYPE: CONFIG_PARAMETER_CONDITION_SCHEMA,
+    VALUE_TYPE: VALUE_CONDITION_SCHEMA,
+}
+
+
+CONDITION_TYPE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_TYPE): vol.In(TYPE_SCHEMA_MAP)}, extra=vol.ALLOW_EXTRA
+)
+
+CONDITION_SCHEMA = vol.All(
+    remove_keys_with_empty_values,
+    CONDITION_TYPE_SCHEMA,
+    check_type_schema_map(TYPE_SCHEMA_MAP),
 )
 
 
@@ -79,9 +97,27 @@ async def async_validate_condition_config(
 ) -> ConfigType:
     """Validate config."""
     config = CONDITION_SCHEMA(config)
+
+    # We return early if the config entry for this device is not ready because we can't
+    # validate the value without knowing the state of the device
+    try:
+        device_config_entry_not_loaded = async_is_device_config_entry_not_loaded(
+            hass, config[CONF_DEVICE_ID]
+        )
+    except ValueError as err:
+        raise InvalidDeviceAutomationConfig(
+            f"Device {config[CONF_DEVICE_ID]} not found"
+        ) from err
+
+    if device_config_entry_not_loaded:
+        return config
+
     if config[CONF_TYPE] == VALUE_TYPE:
-        node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
-        get_zwave_value_from_config(node, config)
+        try:
+            node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
+            get_zwave_value_from_config(node, config)
+        except vol.Invalid as err:
+            raise InvalidDeviceAutomationConfig(err.msg) from err
 
     return config
 
@@ -111,7 +147,7 @@ async def async_get_conditions(
                 **base_condition,
                 CONF_VALUE_ID: config_value.value_id,
                 CONF_TYPE: CONFIG_PARAMETER_TYPE,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]
@@ -122,12 +158,9 @@ async def async_get_conditions(
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
-
     condition_type = config[CONF_TYPE]
     device_id = config[CONF_DEVICE_ID]
 
@@ -174,30 +207,23 @@ async def async_get_condition_capabilities(
     # Add additional fields to the automation trigger UI
     if config[CONF_TYPE] == CONFIG_PARAMETER_TYPE:
         value_id = config[CONF_VALUE_ID]
-        config_value = cast(ConfigurationValue, node.values[value_id])
-        min_ = config_value.metadata.min
-        max_ = config_value.metadata.max
-
-        if config_value.configuration_value_type in (
-            ConfigurationValueType.RANGE,
-            ConfigurationValueType.MANUAL_ENTRY,
-        ):
-            value_schema = vol.Range(min=min_, max=max_)
-        elif config_value.configuration_value_type == ConfigurationValueType.ENUMERATED:
-            value_schema = vol.In(
-                {int(k): v for k, v in config_value.metadata.states.items()}
-            )
-        else:
+        value_schema = get_config_parameter_value_schema(node, value_id)
+        if value_schema is None:
             return {}
-
         return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}
 
     if config[CONF_TYPE] == VALUE_TYPE:
+        # Only show command classes on this node and exclude Configuration CC since it
+        # is already covered
         return {
             "extra_fields": vol.Schema(
                 {
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
-                        {cc.value: cc.name for cc in CommandClass}
+                        {
+                            CommandClass(cc.id).value: cc.name
+                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
+                            if cc.id != CommandClass.CONFIGURATION
+                        }
                     ),
                     vol.Required(ATTR_PROPERTY): cv.string,
                     vol.Optional(ATTR_PROPERTY_KEY): cv.string,
@@ -210,7 +236,7 @@ async def async_get_condition_capabilities(
     if config[CONF_TYPE] == NODE_STATUS_TYPE:
         return {
             "extra_fields": vol.Schema(
-                {vol.Required(CONF_STATUS): vol.In(NODE_STATUS_TYPES)}
+                {vol.Required(CONF_STATUS): vol.In(NODE_STATUSES)}
             )
         }
 

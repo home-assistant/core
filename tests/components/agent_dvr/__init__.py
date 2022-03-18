@@ -7,6 +7,23 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+CONF_DATA = {
+    CONF_HOST: "example.local",
+    CONF_PORT: 8090,
+    SERVER_URL: "http://example.local:8090/",
+}
+
+
+def create_entry(hass: HomeAssistant):
+    """Add config entry in Home Assistant."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="c0715bba-c2d0-48ef-9e3e-bc81c9ea4447",
+        data=CONF_DATA,
+    )
+    entry.add_to_hass(hass)
+    return entry
+
 
 async def init_integration(
     hass: HomeAssistant,
@@ -25,17 +42,7 @@ async def init_integration(
         text=load_fixture("agent_dvr/objects.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="c0715bba-c2d0-48ef-9e3e-bc81c9ea4447",
-        data={
-            CONF_HOST: "example.local",
-            CONF_PORT: 8090,
-            SERVER_URL: "http://example.local:8090/",
-        },
-    )
-
-    entry.add_to_hass(hass)
+    entry = create_entry(hass)
 
     if not skip_setup:
         await hass.config_entries.async_setup(entry.entry_id)

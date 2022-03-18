@@ -20,8 +20,10 @@ from RestrictedPython.Guards import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import raise_if_invalid_filename
 import homeassistant.util.dt as dt_util
@@ -78,7 +80,7 @@ class ScriptError(HomeAssistantError):
     """When a script error occurs."""
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Python script component."""
     path = hass.config.path(FOLDER)
 
@@ -88,7 +90,7 @@ def setup(hass, config):
 
     discover_scripts(hass)
 
-    def reload_scripts_handler(call):
+    def reload_scripts_handler(call: ServiceCall) -> None:
         """Handle reload service calls."""
         discover_scripts(hass)
 
@@ -105,7 +107,7 @@ def discover_scripts(hass):
         _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
         return False
 
-    def python_script_service_handler(call):
+    def python_script_service_handler(call: ServiceCall) -> None:
         """Handle python script service calls."""
         execute_script(hass, call.service, call.data)
 
@@ -195,6 +197,7 @@ def execute(hass, filename, source, data=None):
         "sum": sum,
         "any": any,
         "all": all,
+        "enumerate": enumerate,
     }
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)

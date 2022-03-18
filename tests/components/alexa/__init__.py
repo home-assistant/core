@@ -1,4 +1,6 @@
 """Tests for the Alexa integration."""
+import re
+from unittest.mock import Mock
 from uuid import uuid4
 
 from homeassistant.components.alexa import config, smart_home
@@ -21,6 +23,11 @@ class MockConfig(config.AbstractConfig):
         "binary_sensor.test_motion_camera_event": {"display_categories": "CAMERA"},
         "camera.test": {"display_categories": "CAMERA"},
     }
+
+    def __init__(self, hass):
+        """Mock Alexa config."""
+        super().__init__(hass)
+        self._store = Mock(spec_set=config.AlexaConfigStore)
 
     @property
     def supports_auth(self):
@@ -46,6 +53,10 @@ class MockConfig(config.AbstractConfig):
         """If an entity should be exposed."""
         return True
 
+    @callback
+    def async_invalidate_access_token(self):
+        """Invalidate access token."""
+
     async def async_get_access_token(self):
         """Get an access token."""
         return "thisisnotanacesstoken"
@@ -54,7 +65,9 @@ class MockConfig(config.AbstractConfig):
         """Accept a grant."""
 
 
-DEFAULT_CONFIG = MockConfig(None)
+def get_default_config():
+    """Return a MockConfig instance."""
+    return MockConfig(None)
 
 
 def get_new_request(namespace, name, endpoint=None):
@@ -103,7 +116,9 @@ async def assert_request_calls_service(
     domain, service_name = service.split(".")
     calls = async_mock_service(hass, domain, service_name)
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(), request, context
+    )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -127,7 +142,7 @@ async def assert_request_fails(
     domain, service_name = service_not_called.split(".")
     call = async_mock_service(hass, domain, service_name)
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
     await hass.async_block_till_done()
 
     assert not call
@@ -162,7 +177,8 @@ async def assert_scene_controller_works(
     )
     assert response["event"]["payload"]["cause"]["type"] == "VOICE_INTERACTION"
     assert "timestamp" in response["event"]["payload"]
-
+    pattern = r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.0Z"
+    assert re.search(pattern, response["event"]["payload"]["timestamp"])
     if deactivate_service:
         await assert_request_calls_service(
             "Alexa.SceneController",
@@ -175,17 +191,20 @@ async def assert_scene_controller_works(
         cause_type = response["event"]["payload"]["cause"]["type"]
         assert cause_type == "VOICE_INTERACTION"
         assert "timestamp" in response["event"]["payload"]
+        assert re.search(pattern, response["event"]["payload"]["timestamp"])
 
 
-async def reported_properties(hass, endpoint):
+async def reported_properties(hass, endpoint, return_full_response=False):
     """Use ReportState to get properties and return them.
 
     The result is a ReportedProperties instance, which has methods to make
     assertions about the properties.
     """
     request = get_new_request("Alexa", "ReportState", endpoint)
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
     await hass.async_block_till_done()
+    if return_full_response:
+        return msg
     return ReportedProperties(msg["context"]["properties"])
 
 

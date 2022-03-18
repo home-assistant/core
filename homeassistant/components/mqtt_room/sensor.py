@@ -1,4 +1,6 @@
 """Support for MQTT room presence detection."""
+from __future__ import annotations
+
 from datetime import timedelta
 import json
 import logging
@@ -16,8 +18,10 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     STATE_NOT_HOME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +59,12 @@ MQTT_PAYLOAD = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MQTT room Sensor."""
     async_add_entities(
         [
@@ -139,7 +148,7 @@ class MQTTRoomSensor(SensorEntity):
         return {ATTR_DISTANCE: self._distance}
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current room of the entity."""
         return self._state
 

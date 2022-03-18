@@ -1,10 +1,19 @@
 """Support for loading picture from Neato."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pybotvac.exceptions import NeatoRobotException
+from pybotvac.robot import Robot
+from urllib3.response import HTTPResponse
 
 from homeassistant.components.camera import Camera
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     NEATO_DOMAIN,
@@ -13,6 +22,7 @@ from .const import (
     NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
 )
+from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,11 +30,13 @@ SCAN_INTERVAL = timedelta(minutes=SCAN_INTERVAL_MINUTES)
 ATTR_GENERATED_AT = "generated_at"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Neato camera with config entry."""
     dev = []
-    neato = hass.data.get(NEATO_LOGIN)
-    mapdata = hass.data.get(NEATO_MAP_DATA)
+    neato: NeatoHub = hass.data[NEATO_LOGIN]
+    mapdata: dict[str, Any] | None = hass.data.get(NEATO_MAP_DATA)
     for robot in hass.data[NEATO_ROBOTS]:
         if "maps" in robot.traits:
             dev.append(NeatoCleaningMap(neato, robot, mapdata))
@@ -39,7 +51,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NeatoCleaningMap(Camera):
     """Neato cleaning map for last clean."""
 
-    def __init__(self, neato, robot, mapdata):
+    def __init__(
+        self, neato: NeatoHub, robot: Robot, mapdata: dict[str, Any] | None
+    ) -> None:
         """Initialize Neato cleaning map."""
         super().__init__()
         self.robot = robot
@@ -47,24 +61,20 @@ class NeatoCleaningMap(Camera):
         self._mapdata = mapdata
         self._available = neato is not None
         self._robot_name = f"{self.robot.name} Cleaning Map"
-        self._robot_serial = self.robot.serial
-        self._generated_at = None
-        self._image_url = None
-        self._image = None
+        self._robot_serial: str = self.robot.serial
+        self._generated_at: str | None = None
+        self._image_url: str | None = None
+        self._image: bytes | None = None
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         self.update()
         return self._image
 
-    def update(self):
+    def update(self) -> None:
         """Check the contents of the map list."""
-        if self.neato is None:
-            _LOGGER.error("Error while updating '%s'", self.entity_id)
-            self._image = None
-            self._image_url = None
-            self._available = False
-            return
 
         _LOGGER.debug("Running camera update for '%s'", self.entity_id)
         try:
@@ -79,17 +89,16 @@ class NeatoCleaningMap(Camera):
             self._available = False
             return
 
-        image_url = None
-        map_data = self._mapdata[self._robot_serial]["maps"][0]
-        image_url = map_data["url"]
-        if image_url == self._image_url:
+        if self._mapdata:
+            map_data: dict[str, Any] = self._mapdata[self._robot_serial]["maps"][0]
+        if (image_url := map_data["url"]) == self._image_url:
             _LOGGER.debug(
                 "The map image_url for '%s' is the same as old", self.entity_id
             )
             return
 
         try:
-            image = self.neato.download_map(image_url)
+            image: HTTPResponse = self.neato.download_map(image_url)
         except NeatoRobotException as ex:
             if self._available:  # Print only once when available
                 _LOGGER.error(
@@ -102,33 +111,33 @@ class NeatoCleaningMap(Camera):
 
         self._image = image.read()
         self._image_url = image_url
-        self._generated_at = map_data["generated_at"]
+        self._generated_at = map_data.get("generated_at")
         self._available = True
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this camera."""
         return self._robot_name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID."""
         return self._robot_serial
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the robot is available."""
         return self._available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
+        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
-        data = {}
+        data: dict[str, Any] = {}
 
         if self._generated_at is not None:
             data[ATTR_GENERATED_AT] = self._generated_at

@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "bateria {entity_name} jest roz\u0142adowana",
+            "is_co": "sensor {entity_name} wykrywa tlenek w\u0119gla",
             "is_cold": "sensor {entity_name} wykrywa zimno",
             "is_connected": "sensor {entity_name} raportuje po\u0142\u0105czenie",
             "is_gas": "sensor {entity_name} wykrywa gaz",
@@ -11,12 +12,14 @@
             "is_moist": "sensor {entity_name} wykrywa wilgo\u0107",
             "is_motion": "sensor {entity_name} wykrywa ruch",
             "is_moving": "sensor {entity_name} porusza si\u0119",
+            "is_no_co": "sensor {entity_name} nie wykrywa tlenku w\u0119gla",
             "is_no_gas": "sensor {entity_name} nie wykrywa gazu",
             "is_no_light": "sensor {entity_name} nie wykrywa \u015bwiat\u0142a",
             "is_no_motion": "sensor {entity_name} nie wykrywa ruchu",
             "is_no_problem": "sensor {entity_name} nie wykrywa problemu",
             "is_no_smoke": "sensor {entity_name} nie wykrywa dymu",
             "is_no_sound": "sensor {entity_name} nie wykrywa d\u017awi\u0119ku",
+            "is_no_update": "dla {entity_name} nie ma dost\u0119pnej aktualizacji",
             "is_no_vibration": "sensor {entity_name} nie wykrywa wibracji",
             "is_not_bat_low": "bateria {entity_name} nie jest roz\u0142adowana",
             "is_not_cold": "sensor {entity_name} nie wykrywa zimna",
@@ -30,6 +33,8 @@
             "is_not_plugged_in": "sensor {entity_name} wykrywa od\u0142\u0105czenie",
             "is_not_powered": "sensor {entity_name} nie wykrywa zasilania",
             "is_not_present": "sensor {entity_name} nie wykrywa obecno\u015bci",
+            "is_not_running": "{entity_name} nie dzia\u0142a",
+            "is_not_tampered": "sensor {entity_name} nie wykrywa naruszenia",
             "is_not_unsafe": "sensor {entity_name} nie wykrywa zagro\u017cenia",
             "is_occupied": "sensor {entity_name} jest zaj\u0119ty",
             "is_off": "sensor {entity_name} jest wy\u0142\u0105czony",
@@ -39,28 +44,36 @@
             "is_powered": "sensor {entity_name} wykrywa zasilanie",
             "is_present": "sensor {entity_name} wykrywa obecno\u015b\u0107",
             "is_problem": "sensor {entity_name} wykrywa problem",
+            "is_running": "{entity_name} dzia\u0142a",
             "is_smoke": "sensor {entity_name} wykrywa dym",
             "is_sound": "sensor {entity_name} wykrywa d\u017awi\u0119k",
+            "is_tampered": "sensor {entity_name} wykrywa naruszenie",
             "is_unsafe": "sensor {entity_name} wykrywa zagro\u017cenie",
+            "is_update": "dla {entity_name} jest dost\u0119pna aktualizacja",
             "is_vibration": "sensor {entity_name} wykrywa wibracje"
         },
         "trigger_type": {
             "bat_low": "nast\u0105pi roz\u0142adowanie baterii {entity_name}",
+            "co": "sensor {entity_name} wykryje tlenek w\u0119gla",
             "cold": "sensor {entity_name} wykryje zimno",
             "connected": "nast\u0105pi pod\u0142\u0105czenie {entity_name}",
             "gas": "sensor {entity_name} wykryje gaz",
             "hot": "sensor {entity_name} wykryje gor\u0105co",
+            "is_not_tampered": "sensor {entity_name} przestanie wykrywa\u0107 naruszenie",
+            "is_tampered": "sensor {entity_name} wykryje naruszenie",
             "light": "sensor {entity_name} wykryje \u015bwiat\u0142o",
             "locked": "nast\u0105pi zamkni\u0119cie {entity_name}",
             "moist": "nast\u0105pi wykrycie wilgoci {entity_name}",
             "motion": "sensor {entity_name} wykryje ruch",
             "moving": "sensor {entity_name} zacznie porusza\u0107 si\u0119",
+            "no_co": "sensor {entity_name} przestanie wykrywa\u0107 tlenek w\u0119gla",
             "no_gas": "sensor {entity_name} przestanie wykrywa\u0107 gaz",
             "no_light": "sensor {entity_name} przestanie wykrywa\u0107 \u015bwiat\u0142o",
             "no_motion": "sensor {entity_name} przestanie wykrywa\u0107 ruch",
             "no_problem": "sensor {entity_name} przestanie wykrywa\u0107 problem",
             "no_smoke": "sensor {entity_name} przestanie wykrywa\u0107 dym",
             "no_sound": "sensor {entity_name} przestanie wykrywa\u0107 d\u017awi\u0119k",
+            "no_update": "wykonano aktualizacj\u0119 dla {entity_name}",
             "no_vibration": "sensor {entity_name} przestanie wykrywa\u0107 wibracje",
             "not_bat_low": "nast\u0105pi na\u0142adowanie baterii {entity_name}",
             "not_cold": "sensor {entity_name} przestanie wykrywa\u0107 zimno",
@@ -74,6 +87,8 @@
             "not_plugged_in": "nast\u0105pi od\u0142\u0105czenie {entity_name}",
             "not_powered": "nast\u0105pi od\u0142\u0105czenie zasilania {entity_name}",
             "not_present": "sensor {entity_name} przestanie wykrywa\u0107 obecno\u015b\u0107",
+            "not_running": "zako\u0144czy si\u0119 dzia\u0142anie {entity_name}",
+            "not_tampered": "sensor {entity_name} przestanie wykrywa\u0107 naruszenie",
             "not_unsafe": "sensor {entity_name} przestanie wykrywa\u0107 zagro\u017cenie",
             "occupied": "sensor {entity_name} stanie si\u0119 zaj\u0119ty",
             "opened": "nast\u0105pi otwarcie {entity_name}",
@@ -81,13 +96,30 @@
             "powered": "nast\u0105pi pod\u0142\u0105czenie zasilenia {entity_name}",
             "present": "sensor {entity_name} wykryje obecno\u015b\u0107",
             "problem": "sensor {entity_name} wykryje problem",
+            "running": "rozpocznie si\u0119 dzia\u0142anie {entity_name}",
             "smoke": "sensor {entity_name} wykryje dym",
             "sound": "sensor {entity_name} wykryje d\u017awi\u0119k",
+            "tampered": "sensor {entity_name} wykryje naruszenie",
             "turned_off": "nast\u0105pi wy\u0142\u0105czenie {entity_name}",
             "turned_on": "nast\u0105pi w\u0142\u0105czenie {entity_name}",
             "unsafe": "sensor {entity_name} wykryje zagro\u017cenie",
+            "update": "{entity_name} ma dost\u0119pn\u0105 aktualizacj\u0119",
             "vibration": "sensor {entity_name} wykryje wibracje"
         }
+    },
+    "device_class": {
+        "co": "tlenek_w\u0119gla",
+        "cold": "zimno",
+        "gas": "gaz",
+        "heat": "gor\u0105co",
+        "moisture": "wilgotno\u015b\u0107",
+        "motion": "ruch",
+        "occupancy": "obecno\u015b\u0107",
+        "power": "zasilanie",
+        "problem": "problem",
+        "smoke": "dym",
+        "sound": "d\u017awi\u0119k",
+        "vibration": "wibracja"
     },
     "state": {
         "_": {
@@ -101,6 +133,14 @@
         "battery_charging": {
             "off": "roz\u0142adowywanie",
             "on": "\u0142adowanie"
+        },
+        "carbon_monoxide": {
+            "off": "brak",
+            "on": "wykryto"
+        },
+        "co": {
+            "off": "brak",
+            "on": "wykryto"
         },
         "cold": {
             "off": "normalnie",
@@ -166,6 +206,10 @@
             "off": "ok",
             "on": "problem"
         },
+        "running": {
+            "off": "nie dzia\u0142a",
+            "on": "dzia\u0142a"
+        },
         "safety": {
             "off": "brak zagro\u017cenia",
             "on": "zagro\u017cenie"
@@ -177,6 +221,10 @@
         "sound": {
             "off": "brak",
             "on": "wykryto"
+        },
+        "update": {
+            "off": "brak aktualizacji",
+            "on": "dost\u0119pna aktualizacja"
         },
         "vibration": {
             "off": "brak",

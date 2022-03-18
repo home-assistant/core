@@ -83,6 +83,38 @@ SSDP = {
             "manufacturer": "DIRECTV"
         }
     ],
+    "dlna_dmr": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:1"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:2"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:3"
+        }
+    ],
+    "dlna_dms": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "st": "urn:schemas-upnp-org:device:MediaServer:1"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:2",
+            "st": "urn:schemas-upnp-org:device:MediaServer:2"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:3",
+            "st": "urn:schemas-upnp-org:device:MediaServer:3"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:4",
+            "st": "urn:schemas-upnp-org:device:MediaServer:4"
+        }
+    ],
     "fritz": [
         {
             "st": "urn:schemas-upnp-org:device:fritzbox:1"
@@ -136,6 +168,12 @@ SSDP = {
             "manufacturer": "Universal Devices Inc."
         }
     ],
+    "kaleidescape": [
+        {
+            "deviceType": "schemas-upnp-org:device:Basic:1",
+            "manufacturer": "Kaleidescape, Inc."
+        }
+    ],
     "keenetic_ndms2": [
         {
             "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
@@ -149,6 +187,32 @@ SSDP = {
     "konnected": [
         {
             "manufacturer": "konnected.io"
+        }
+    ],
+    "nanoleaf": [
+        {
+            "st": "Nanoleaf_aurora:light"
+        },
+        {
+            "st": "nanoleaf:nl29"
+        },
+        {
+            "st": "nanoleaf:nl42"
+        },
+        {
+            "st": "nanoleaf:nl52"
+        }
+    ],
+    "netgear": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "NETGEAR, Inc."
+        }
+    ],
+    "octoprint": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "The OctoPrint Project"
         }
     ],
     "roku": [
@@ -188,14 +252,30 @@ SSDP = {
     ],
     "unifi": [
         {
-            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine"
         },
         {
-            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
+        }
+    ],
+    "unifiprotect": [
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
         }
     ],
     "upnp": [
@@ -204,6 +284,11 @@ SSDP = {
         },
         {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
+        }
+    ],
+    "webostv": [
+        {
+            "st": "urn:lge-com:service:webos-second-screen:1"
         }
     ],
     "wemo": [

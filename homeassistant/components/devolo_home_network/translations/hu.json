@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "home_control": "A devolo Home Control k\u00f6zponti egys\u00e9g nem m\u0171k\u00f6dik ezzel az integr\u00e1ci\u00f3val."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{product} ({name})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP c\u00edm"
+                },
+                "description": "El szeretn\u00e9 kezdeni a be\u00e1ll\u00edt\u00e1st?"
+            },
+            "zeroconf_confirm": {
+                "description": "Szeretn\u00e9 hozz\u00e1adni a `{host_name}`nev\u0171 a devolo otthoni h\u00e1l\u00f3zati eszk\u00f6zt Home Assistanthoz?",
+                "title": "Felfedezett devolo otthoni h\u00e1l\u00f3zati eszk\u00f6z"
+            }
+        }
+    }
+}

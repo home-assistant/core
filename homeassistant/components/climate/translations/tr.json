@@ -3,6 +3,15 @@
         "action_type": {
             "set_hvac_mode": "{entity_name} \u00fczerinde HVAC modunu de\u011fi\u015ftir",
             "set_preset_mode": "{entity_name} \u00fczerindeki \u00f6n ayar\u0131 de\u011fi\u015ftir"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} , belirli bir HVAC moduna ayarland\u0131",
+            "is_preset_mode": "{entity_name} , belirli bir \u00f6n ayar moduna ayarland\u0131"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} \u00f6l\u00e7\u00fclen nem de\u011fi\u015fti",
+            "current_temperature_changed": "{entity_name} \u00f6l\u00e7\u00fclen s\u0131cakl\u0131k de\u011fi\u015fti",
+            "hvac_mode_changed": "{entity_name} HVAC modu de\u011fi\u015fti"
         }
     },
     "state": {
@@ -16,5 +25,5 @@
             "off": "Kapal\u0131"
         }
     },
-    "title": "\u0130klim"
+    "title": "\u0130klimlendirme"
 }
