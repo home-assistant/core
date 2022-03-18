@@ -505,7 +505,7 @@ class StatisticsSensor(SensorEntity):
                         native.attributes = attributes.to_native()
                     states.append(native)
         return states
-        
+
     async def _initialize_from_database(self) -> None:
         """Initialize the list of states from the database.
 
