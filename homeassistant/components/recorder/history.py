@@ -400,7 +400,6 @@ def _sorted_states_to_dict(
     axis correctly.
     """
     result = defaultdict(list)
-
     # Set all entity IDs to empty lists in result set to maintain the order
     if entity_ids is not None:
         for ent_id in entity_ids:
