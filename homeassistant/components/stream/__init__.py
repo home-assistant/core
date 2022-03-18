@@ -23,7 +23,7 @@ import secrets
 import threading
 import time
 from types import MappingProxyType
-from typing import cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -51,6 +51,7 @@ from .const import (
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from .core import PROVIDERS, IdleTimer, KeyFrameConverter, StreamOutput, StreamSettings
+from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
@@ -225,6 +226,7 @@ class Stream:
             if stream_label
             else _LOGGER
         )
+        self._diagnostics = Diagnostics()
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -259,6 +261,7 @@ class Stream:
                 self.hass, IdleTimer(self.hass, timeout, idle_callback)
             )
             self._outputs[fmt] = provider
+
         return provider
 
     def remove_provider(self, provider: StreamOutput) -> None:
@@ -310,6 +313,7 @@ class Stream:
 
     def update_source(self, new_source: str) -> None:
         """Restart the stream with a new stream source."""
+        self._diagnostics.increment("update_source")
         self._logger.debug(
             "Updating stream source %s", redact_credentials(str(new_source))
         )
@@ -323,11 +327,13 @@ class Stream:
         # pylint: disable=import-outside-toplevel
         from .worker import StreamState, StreamWorkerError, stream_worker
 
-        stream_state = StreamState(self.hass, self.outputs)
+        stream_state = StreamState(self.hass, self.outputs, self._diagnostics)
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
             self.hass.add_job(self._async_update_state, True)
+            self._diagnostics.set_value("keepalive", self.keepalive)
+            self._diagnostics.increment("start_worker")
             try:
                 stream_worker(
                     self.source,
@@ -337,6 +343,7 @@ class Stream:
                     self._thread_quit,
                 )
             except StreamWorkerError as err:
+                self._diagnostics.increment("worker_error")
                 self._logger.error("Error from stream worker: %s", str(err))
 
             stream_state.discontinuity()
@@ -358,6 +365,7 @@ class Stream:
             if time.time() - start_time > STREAM_RESTART_RESET_TIME:
                 wait_timeout = 0
             wait_timeout += STREAM_RESTART_INCREMENT
+            self._diagnostics.set_value("retry_timeout", wait_timeout)
             self._logger.debug(
                 "Restarting stream worker in %d seconds: %s",
                 wait_timeout,
@@ -446,6 +454,10 @@ class Stream:
         return await self._keyframe_converter.async_get_image(
             width=width, height=height
         )
+
+    def get_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostics information for the stream."""
+        return self._diagnostics.as_dict()
 
 
 def _should_retry() -> bool:
