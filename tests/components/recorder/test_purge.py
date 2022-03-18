@@ -20,7 +20,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -777,6 +777,70 @@ async def test_purge_filtered_states_to_empty(
         state_attributes = session.query(StateAttributes)
         assert states.count() == 60
         assert state_attributes.count() == 60
+
+        # Test with 'apply_filter' = True
+        service_data["apply_filter"] = True
+        await hass.services.async_call(
+            recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
+        )
+        await async_recorder_block_till_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
+        assert states.count() == 0
+        assert state_attributes.count() == 0
+
+        # Do it again to make sure nothing changes
+        await hass.services.async_call(
+            recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
+        )
+        await async_recorder_block_till_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
+
+
+async def test_purge_without_state_attributes_filtered_states_to_empty(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+):
+    """Test filtered legacy states without state attributes are purged all the way to an empty db."""
+    config: ConfigType = {"exclude": {"entities": ["sensor.old_format"]}}
+    instance = await async_setup_recorder_instance(hass, config)
+    assert instance.entity_filter("sensor.old_format") is False
+
+    def _add_db_entries(hass: HomeAssistant) -> None:
+        with recorder.session_scope(hass=hass) as session:
+            # Add states and state_changed events that should be purged
+            # in the legacy format
+            timestamp = dt_util.utcnow() - timedelta(days=5)
+            event_id = 1021
+            session.add(
+                States(
+                    entity_id="sensor.old_format",
+                    domain="sensor",
+                    state=STATE_ON,
+                    attributes=json.dumps({"old": "not_using_state_attributes"}),
+                    last_changed=timestamp,
+                    last_updated=timestamp,
+                    event_id=event_id,
+                    state_attributes=None,
+                )
+            )
+            session.add(
+                Events(
+                    event_id=event_id,
+                    event_type=EVENT_STATE_CHANGED,
+                    event_data="{}",
+                    origin="LOCAL",
+                    time_fired=timestamp,
+                )
+            )
+
+    service_data = {"keep_days": 10}
+    _add_db_entries(hass)
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        state_attributes = session.query(StateAttributes)
+        assert states.count() == 1
+        assert state_attributes.count() == 0
 
         # Test with 'apply_filter' = True
         service_data["apply_filter"] = True

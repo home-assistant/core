@@ -134,6 +134,15 @@ KEEPALIVE_TIME = 30
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
 
+# The number of attribute ids to cache in memory
+#
+# Based on:
+# - The number of overlapping attributes
+# - How frequently states with overlapping attributes will change
+# - How much memory our low end hardware has
+STATE_ATTRIBUTES_ID_CACHE_SIZE = 2048
+
+
 DB_LOCK_TIMEOUT = 30
 DB_LOCK_QUEUE_CHECK_TIMEOUT = 1
 
@@ -544,7 +553,7 @@ class Recorder(threading.Thread):
         self._commits_without_expire = 0
         self._keepalive_count = 0
         self._old_states: dict[str, States] = {}
-        self._state_attributes_ids: LRU = LRU(2048)
+        self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
         self._pending_state_attributes: dict[str, StateAttributes] = {}
         self._pending_expunge: list[States] = []
         self.event_session = None

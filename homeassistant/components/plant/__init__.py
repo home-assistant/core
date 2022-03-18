@@ -110,11 +110,6 @@ DOMAIN = "plant"
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
 
-# Flag for enabling/disabling the loading of the history from the database.
-# This feature is turned off right now as its tests are not 100% stable.
-ENABLE_LOAD_HISTORY = True
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Plant component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -282,7 +277,7 @@ class Plant(Entity):
 
     async def async_added_to_hass(self):
         """After being added to hass, load from history."""
-        if ENABLE_LOAD_HISTORY and "recorder" in self.hass.config.components:
+        if "recorder" in self.hass.config.components:
             # only use the database if it's configured
             await get_instance(self.hass).async_add_executor_job(
                 self._load_history_from_db
@@ -328,7 +323,6 @@ class Plant(Entity):
             )
             states = []
             if results := execute(query, to_native=False, validate_entity_ids=False):
-                # After 2023.8 make state.to_native require StateAttributes
                 for state, attributes in results:
                     native = state.to_native()
                     if not native.attributes:

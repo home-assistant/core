@@ -1,8 +1,6 @@
 """Unit tests for platform/plant.py."""
 from datetime import datetime, timedelta
 
-import pytest
-
 import homeassistant.components.plant as plant
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -147,12 +145,6 @@ async def test_state_problem_if_unavailable(hass):
     assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
 
-@pytest.mark.skipif(
-    plant.ENABLE_LOAD_HISTORY is False,
-    reason="tests for loading from DB are unstable, thus"
-    "this feature is turned of until tests become"
-    "stable",
-)
 async def test_load_from_db(hass):
     """Test bootstrapping the brightness history from the database.
 
