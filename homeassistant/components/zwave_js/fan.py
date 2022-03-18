@@ -397,4 +397,3 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
             attrs[ATTR_FAN_STATE] = state
 
         return attrs
-
