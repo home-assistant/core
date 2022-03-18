@@ -1,13 +1,14 @@
 """Http views to control the config manager."""
 from __future__ import annotations
 
+import asyncio
 from http import HTTPStatus
 
 from aiohttp import web
 import aiohttp.web_exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
@@ -48,11 +49,36 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
 
     async def get(self, request):
         """List available config entries."""
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
 
-        return self.json(
-            [entry_json(entry) for entry in hass.config_entries.async_entries()]
-        )
+        kwargs = {}
+        if "domain" in request.query:
+            kwargs["domain"] = request.query["domain"]
+
+        entries = hass.config_entries.async_entries(**kwargs)
+
+        if "type" not in request.query:
+            return self.json([entry_json(entry) for entry in entries])
+
+        integrations = {}
+        type_filter = request.query["type"]
+
+        # Fetch all the integrations so we can check their type
+        for integration in await asyncio.gather(
+            *(
+                loader.async_get_integration(hass, domain)
+                for domain in {entry.domain for entry in entries}
+            )
+        ):
+            integrations[integration.domain] = integration
+
+        entries = [
+            entry
+            for entry in entries
+            if integrations[entry.domain].integration_type == type_filter
+        ]
+
+        return self.json([entry_json(entry) for entry in entries])
 
 
 class ConfigManagerEntryResourceView(HomeAssistantView):
@@ -179,7 +205,10 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
     async def get(self, request):
         """List available flow handlers."""
         hass = request.app["hass"]
-        return self.json(await async_get_config_flows(hass))
+        kwargs = {}
+        if "type" in request.query:
+            kwargs["type_filter"] = request.query["type"]
+        return self.json(await async_get_config_flows(hass, **kwargs))
 
 
 class OptionManagerFlowIndexView(FlowManagerIndexView):
