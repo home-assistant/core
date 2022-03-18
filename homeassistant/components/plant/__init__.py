@@ -6,6 +6,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
@@ -283,7 +284,9 @@ class Plant(Entity):
         """After being added to hass, load from history."""
         if ENABLE_LOAD_HISTORY and "recorder" in self.hass.config.components:
             # only use the database if it's configured
-            await self.hass.async_add_executor_job(self._load_history_from_db)
+            await get_instance(self.hass).async_add_executor_job(
+                self._load_history_from_db
+            )
             self.async_write_ha_state()
 
         async_track_state_change_event(

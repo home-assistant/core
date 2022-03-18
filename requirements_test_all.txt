@@ -17,7 +17,7 @@ PyFlick==0.0.2
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
-PyNaCl==1.4.0
+PyNaCl==1.5.0
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.homekit
@@ -75,6 +75,9 @@ advantage_air==0.3.1
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
 
+# homeassistant.components.geo_json_events
+aio_geojson_generic_client==0.1
+
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.13
 
@@ -88,7 +91,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.0.2
+aioairzone==0.1.0
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -237,7 +240,7 @@ airtouch4pyapi==1.0.5
 ambee==0.4.0
 
 # homeassistant.components.amberelectric
-amberelectric==1.0.3
+amberelectric==1.0.4
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -259,7 +262,7 @@ arcam-fmj==0.12.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.26.0
+async-upnp-client==0.27.0
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.1.2
@@ -461,7 +464,6 @@ gTTS==2.2.4
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==3.0.0
 
-# homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.6
 
@@ -556,7 +558,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220312.0
+home-assistant-frontend==20220317.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -790,7 +792,7 @@ pilight==0.1.1
 pillow==9.0.1
 
 # homeassistant.components.plex
-plexapi==4.10.0
+plexapi==4.10.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1300,7 +1302,7 @@ radios==0.1.1
 regenmaschine==2022.01.0
 
 # homeassistant.components.renault
-renault-api==0.1.9
+renault-api==0.1.10
 
 # homeassistant.components.python_script
 restrictedpython==5.2
@@ -1333,7 +1335,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async]==2.3.0
+samsungtvws[async,encrypted]==2.4.0
 
 # homeassistant.components.dhcp
 scapy==2.4.5
@@ -1373,7 +1375,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.26.4
+soco==0.27.1
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
