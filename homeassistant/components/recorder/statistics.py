@@ -756,7 +756,7 @@ def list_statistic_ids(
         if not hasattr(platform, "list_statistic_ids"):
             continue
         platform_statistic_ids = platform.list_statistic_ids(
-            hass, statistic_ids, statistic_type
+            hass, statistic_ids=statistic_ids, statistic_type=statistic_type
         )
 
         for statistic_id, info in platform_statistic_ids.items():
