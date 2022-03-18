@@ -447,7 +447,7 @@ SENSE_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 MOTION_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="motion_last_trip_time",
-        name="Motion Last Trip Time",
+        name="Last Motion Detected",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_last_trip_value="last_motion",
     ),
