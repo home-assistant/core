@@ -601,7 +601,7 @@ def list_statistic_ids(
     statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: str | None = None,
 ) -> dict:
-    """Return statistic_ids and meta data."""
+    """Return all or filtered statistic_ids and meta data."""
     entities = _get_sensor_states(hass)
 
     result = {}
