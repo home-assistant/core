@@ -150,6 +150,7 @@ class SonosSpeaker:
         self.dialog_level: bool | None = None
         self.night_mode: bool | None = None
         self.sub_enabled: bool | None = None
+        self.sub_gain: int | None = None
         self.surround_enabled: bool | None = None
 
         # Misc features
@@ -490,7 +491,7 @@ class SonosSpeaker:
             if bool_var in variables:
                 setattr(self, bool_var, variables[bool_var] == "1")
 
-        for int_var in ("audio_delay", "bass", "treble"):
+        for int_var in ("audio_delay", "bass", "treble", "sub_gain"):
             if int_var in variables:
                 setattr(self, int_var, variables[int_var])
 
