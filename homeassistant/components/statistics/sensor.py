@@ -12,6 +12,7 @@ from typing import Any, Literal, cast
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.components.sensor import (
@@ -506,7 +507,7 @@ class StatisticsSensor(SensorEntity):
         If MaxAge is provided then query will restrict to entries younger then
         current datetime - MaxAge.
         """
-        if states := await self.hass.async_add_executor_job(
+        if states := await get_instance(self.hass).async_add_executor_job(
             self._fetch_states_from_database
         ):
             for state in reversed(states):
