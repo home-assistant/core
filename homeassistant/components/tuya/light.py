@@ -314,6 +314,24 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_temp=DPCode.TEMP_VALUE,
         ),
     ),
+    # Smart Star Projector
+    # Not documented
+    "xktyd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            color_mode=DPCode.STAR_WORK_MODE,
+            name="Projector Light White",
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.COLOUR_SWITCH,
+            name="Projector Light Color",
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.LASER_SWITCH,
+            brightness=DPCode.LASER_BRIGHT,
+            name="Projector Laser",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
