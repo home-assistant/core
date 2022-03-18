@@ -488,6 +488,14 @@ def _async_motion_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     for device in data.api.bootstrap.cameras.values():
+        for description in MOTION_TRIP_SENSORS:
+            entities.append(ProtectTripSensor(data, device, description))
+            _LOGGER.debug(
+                "Adding trip sensor entity %s for %s",
+                description.name,
+                device.name,
+            )
+
         if not device.feature_flags.has_smart_detect:
             continue
 
@@ -495,14 +503,6 @@ def _async_motion_entities(
             entities.append(ProtectEventSensor(data, device, description))
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",
-                description.name,
-                device.name,
-            )
-
-        for description in MOTION_TRIP_SENSORS:
-            entities.append(ProtectTripSensor(data, device, description))
-            _LOGGER.debug(
-                "Adding trip sensor entity %s for %s",
                 description.name,
                 device.name,
             )
