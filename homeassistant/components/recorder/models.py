@@ -533,9 +533,10 @@ class LazyState(State):
         "_last_changed",
         "_last_updated",
         "_context",
+        "_attr_cache",
     ]
 
-    def __init__(self, row):  # pylint: disable=super-init-not-called
+    def __init__(self, row, attr_cache=None):  # pylint: disable=super-init-not-called
         """Init the lazy state."""
         self._row = row
         self.entity_id = self._row.entity_id
@@ -544,12 +545,18 @@ class LazyState(State):
         self._last_changed = None
         self._last_updated = None
         self._context = None
+        self._attr_cache = attr_cache
 
     @property  # type: ignore[override]
     def attributes(self):
         """State attributes."""
         if self._attributes is None:
             source = self._row.shared_attrs or self._row.attributes
+            if self._attr_cache is not None and (
+                attributes := self._attr_cache.get(source)
+            ):
+                self._attributes = attributes
+                return attributes
             if source == EMPTY_JSON_OBJECT or source is None:
                 self._attributes = {}
                 return self._attributes
@@ -561,6 +568,8 @@ class LazyState(State):
                     "Error converting row to state attributes: %s", self._row
                 )
                 self._attributes = {}
+            if self._attr_cache is not None:
+                self._attr_cache[source] = self._attributes
         return self._attributes
 
     @attributes.setter
