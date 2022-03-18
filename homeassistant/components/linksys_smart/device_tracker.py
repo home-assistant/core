@@ -12,7 +12,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -68,14 +68,21 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             return False
         try:
             data = response.json()
-            devices = data["output"]["devices"]
+            devices = data["responses"][0]["output"]["devices"]
+            connections = data["responses"][1]["output"]["connections"]
             for device in devices:
                 if not (macs := device["knownMACAddresses"]):
                     _LOGGER.warning("Skipping device without known MAC address")
                     continue
                 mac = macs[-1]
-                if not device["connections"]:
-                    _LOGGER.debug("Device %s is not connected", mac)
+                device_found = False
+                for mac_address in macs:
+                    if any(conn["macAddress"] == mac_address for conn in connections):
+                        device_found = True
+                        break
+
+                if not device_found:
+                    _LOGGER.debug("Device %s is not connected", mac_address)
                     continue
 
                 name = None
@@ -94,12 +101,21 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
     def _make_request(self):
         # Weirdly enough, this doesn't seem to require authentication
-        headers = {
-            "X-JNAP-Action": "http://linksys.com/jnap/devicelist/GetDevices"
-        }
+        # GetDevices contains device information and GetNetworkConnections has the active connections
+        data = [
+            {
+                "request": {"sinceRevision": 0},
+                "action": "http://linksys.com/jnap/devicelist/GetDevices"
+            },
+            {
+                "request": {},
+                "action": "http://linksys.com/jnap/networkconnections/GetNetworkConnections"
+            }
+        ]
+        headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
         return requests.post(
             f"http://{self.host}/JNAP/",
             timeout=DEFAULT_TIMEOUT,
             headers=headers,
-            json={},
+            json=data,
         )
