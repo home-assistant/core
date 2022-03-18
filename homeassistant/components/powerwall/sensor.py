@@ -121,12 +121,13 @@ async def async_setup_entry(
     ]
 
     for meter in data.meters.meters:
+        if not data.meters.get_meter(meter).is_active():
+            continue
         entities.append(PowerWallExportSensor(powerwall_data, meter))
         entities.append(PowerWallImportSensor(powerwall_data, meter))
         entities.extend(
             PowerWallEnergySensor(powerwall_data, meter, description)
             for description in POWERWALL_INSTANT_SENSORS
-            if data.meters.get_meter(meter).is_active()
         )
 
     async_add_entities(entities)
