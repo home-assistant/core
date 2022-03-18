@@ -110,7 +110,7 @@ def process_plex_payload(
     """Look up Plex media using media_player.play_media service payloads."""
     plex_server = default_plex_server
 
-    if content_id.startswith(f"{PLEX_URI_SCHEME}{{"):
+    if content_id.startswith(PLEX_URI_SCHEME + "{"):
         # Handle the special payload of 'plex://{<json>}'
         content_id = content_id[len(PLEX_URI_SCHEME) :]
         content = json.loads(content_id)
