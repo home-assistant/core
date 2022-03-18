@@ -72,9 +72,8 @@ async def async_setup_entry(
     username: str = config[CONF_USERNAME]
     password: str = config[CONF_PASSWORD]
     acc = AladdinConnectClient(username, password)
-    test = await hass.async_add_executor_job(acc.login)
     try:
-        if not test:
+        if not await hass.async_add_executor_job(acc.login):
             raise ValueError("Username or Password is incorrect")
         doors = await hass.async_add_executor_job(acc.get_doors)
         add_entities(
@@ -85,7 +84,7 @@ async def async_setup_entry(
         _LOGGER.error("%s", ex)
         persistent_notification.create(
             hass,
-            "Error: {ex}<br />You will need to restart hass after fixing.",
+            "Error: {ex}<br />You will need to reload integration after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
