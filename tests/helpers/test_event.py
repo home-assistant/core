@@ -3743,7 +3743,7 @@ async def test_periodic_task_duplicate_time(hass):
 @pytest.mark.freeze_time("2021-03-28 01:28:00+01:00")
 async def test_periodic_task_entering_dst(hass, freezer):
     """Test periodic task behavior when entering dst."""
-    hass.config.set_time_zone(hass, "Europe/Vienna")
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -3792,7 +3792,7 @@ async def test_periodic_task_entering_dst_2(hass, freezer):
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
     """
-    hass.config.set_time_zone(hass, "Europe/Vienna")
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -3840,7 +3840,7 @@ async def test_periodic_task_entering_dst_2(hass, freezer):
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
 async def test_periodic_task_leaving_dst(hass, freezer):
     """Test periodic task behavior when leaving dst."""
-    hass.config.set_time_zone(hass, "Europe/Vienna")
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -3914,7 +3914,7 @@ async def test_periodic_task_leaving_dst(hass, freezer):
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
 async def test_periodic_task_leaving_dst_2(hass, freezer):
     """Test periodic task behavior when leaving dst."""
-    hass.config.set_time_zone(hass, "Europe/Vienna")
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()

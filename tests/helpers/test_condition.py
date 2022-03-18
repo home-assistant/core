@@ -2649,7 +2649,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client,
     at 7 AM and sunset at 3AM during summer
     After sunrise is true from sunrise until midnight, local time.
     """
-    hass.config.set_time_zone(hass, "America/Anchorage")
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2725,7 +2725,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, 
     at 7 AM and sunset at 3AM during summer
     Before sunrise is true from midnight until sunrise, local time.
     """
-    hass.config.set_time_zone(hass, "America/Anchorage")
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2801,7 +2801,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, 
     at 7 AM and sunset at 3AM during summer
     Before sunset is true from midnight until sunset, local time.
     """
-    hass.config.set_time_zone(hass, "America/Anchorage")
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2877,7 +2877,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, c
     at 7 AM and sunset at 3AM during summer
     After sunset is true from sunset until midnight, local time.
     """
-    hass.config.set_time_zone(hass, "America/Anchorage")
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
