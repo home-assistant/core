@@ -148,10 +148,10 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
             if CONF_NAME not in user_input:
                 user_input[CONF_NAME] = DEFAULT_NAME
-            if zone_state := async_active_zone(self.hass, latitude, longitude):
-                user_input[
-                    CONF_NAME
-                ] += f" - {zone_state.attributes[CONF_FRIENDLY_NAME]}"
+                # Append zone name if it exists and we are using the default name
+                if zone_state := async_active_zone(self.hass, latitude, longitude):
+                    zone_name = zone_state.attributes[CONF_FRIENDLY_NAME]
+                    user_input[CONF_NAME] += f" - {zone_name}"
             try:
                 await TomorrowioV4(
                     user_input[CONF_API_KEY],

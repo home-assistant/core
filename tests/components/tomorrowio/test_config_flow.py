@@ -1,6 +1,7 @@
 """Test the Tomorrow.io config flow."""
 from unittest.mock import patch
 
+import pytest
 from pytomorrowio.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
@@ -27,13 +28,25 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    CONF_RADIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .const import API_KEY, MIN_CONFIG
 
 from tests.common import MockConfigEntry
 from tests.components.climacell.const import API_V3_ENTRY_DATA
+
+
+@pytest.fixture(name="tomorrowio_entry_skip_setup", autouse=True)
+def tomorrowio_entry_skip_setup_fixture():
+    """Skip tomorrowio platform entry setup."""
+    with patch(
+        "homeassistant.components.tomorrowio.TomorrowioDataUpdateCoordinator._async_update_data",
+        return_value={},
+    ):
+        yield
 
 
 async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
@@ -55,6 +68,40 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
     assert result["data"][CONF_API_KEY] == API_KEY
     assert result["data"][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LONGITUDE] == hass.config.longitude
+
+
+async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
+    """Test user config flow with minimum fields."""
+    assert await async_setup_component(
+        hass,
+        "zone",
+        {
+            "zone": {
+                CONF_NAME: "Home",
+                CONF_LATITUDE: hass.config.latitude,
+                CONF_LONGITUDE: hass.config.longitude,
+                CONF_RADIUS: 100,
+            }
+        },
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == f"{DEFAULT_NAME} - Home"
+    assert result["data"][CONF_NAME] == f"{DEFAULT_NAME} - Home"
+    assert result["data"][CONF_API_KEY] == API_KEY
+    assert result["data"][CONF_LATITUDE] == hass.config.latitude
+    assert result["data"][CONF_LONGITUDE] == hass.config.longitude
+    assert False
 
 
 async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
