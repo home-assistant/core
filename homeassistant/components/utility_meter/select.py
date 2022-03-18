@@ -173,6 +173,10 @@ class LegacyTariffSelect(Entity):
 
     async def async_select_tariff(self, tariff):
         """Select new option."""
+        _LOGGER.warning(
+            "The 'utility_meter.select_tariff' service has been deprecated and will "
+            "be removed in HA Core 2022.7. Please use 'select.select_option' instead",
+        )
         await self.hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -183,6 +187,10 @@ class LegacyTariffSelect(Entity):
 
     async def async_next_tariff(self):
         """Offset current index."""
+        _LOGGER.warning(
+            "The 'utility_meter.next_tariff' service has been deprecated and will "
+            "be removed in HA Core 2022.7. Please use 'select.select_option' instead",
+        )
         if (
             not self.available
             or (state := self.hass.states.get(self.tracked_entity_id)) is None
