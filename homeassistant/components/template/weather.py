@@ -30,7 +30,13 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
+from .const import CONF_RESTORE
+from .template_entity import (
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
+    TemplateEntity,
+    TemplateRestoreEntity,
+    rewrite_common_legacy_to_modern_conf,
+)
 
 CONDITION_CLASSES = {
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -77,7 +83,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
-)
+).extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema)
 
 
 async def async_setup_platform(
@@ -93,7 +99,13 @@ async def async_setup_platform(
 
     async_add_entities(
         [
-            WeatherTemplate(
+            WeatherTemplateRestore(
+                hass,
+                config,
+                unique_id,
+            )
+            if config.get(CONF_RESTORE, False)
+            else WeatherTemplate(
                 hass,
                 config,
                 unique_id,
@@ -251,3 +263,7 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
                 self._forecast_template,
             )
         await super().async_added_to_hass()
+
+
+class WeatherTemplateRestore(WeatherTemplate, TemplateRestoreEntity):
+    """Representation of a restorable Template Weather."""

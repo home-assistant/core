@@ -16,6 +16,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_registry import async_get
 
+from .helpers import template_restore_state_test
+
 from tests.common import assert_setup_component, async_mock_service
 
 _TEST_BUTTON = "button.template_button"
@@ -180,6 +182,79 @@ async def test_unique_id(hass, calls):
     await hass.async_block_till_done()
 
     _verify(hass, STATE_UNKNOWN)
+
+
+@pytest.mark.parametrize("count,domain,platform", [(1, "template", "button")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "button": {
+                    "name": "{{ (states('sensor.test_state')|int(0) > 0)|iif('Restored','Not Restored') }}",
+                    "unique_id": "restore",
+                    "press": {"service": "script.press"},
+                    "icon": "{{ (states('sensor.test_state')|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                    "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            10,
+            STATE_UNKNOWN,
+            {
+                "friendly_name": "Not Restored",
+                "icon": "mdi:thumb-down",
+            },
+            {},
+        ),
+        (
+            {"restore": True},
+            10,
+            STATE_UNKNOWN,
+            {
+                "friendly_name": "Restored",
+                "icon": "mdi:thumb-up",
+            },
+            {},
+        ),
+    ],
+)
+async def test_template_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring button template."""
+
+    config = dict(config)
+    config[domain][platform].update(**extra_config)
+
+    await template_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        platform,
+        "not_restored",
+    )
 
 
 def _verify(

@@ -38,10 +38,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_RESTORE, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
     TemplateEntity,
+    TemplateRestoreEntity,
     rewrite_common_legacy_to_modern_conf,
 )
 
@@ -86,7 +88,9 @@ FAN_SCHEMA = vol.All(
             vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
+    )
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema),
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
@@ -104,14 +108,24 @@ async def _async_create_entities(hass, config):
 
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
-        fans.append(
-            TemplateFan(
-                hass,
-                object_id,
-                entity_config,
-                unique_id,
+        if entity_config.get(CONF_RESTORE, False):
+            fans.append(
+                TemplateFanRestore(
+                    hass,
+                    object_id,
+                    entity_config,
+                    unique_id,
+                )
             )
-        )
+        else:
+            fans.append(
+                TemplateFan(
+                    hass,
+                    object_id,
+                    entity_config,
+                    unique_id,
+                )
+            )
 
     return fans
 
@@ -456,3 +470,7 @@ class TemplateFan(TemplateEntity, FanEntity):
                 ", ".join(_VALID_DIRECTIONS),
             )
             self._direction = None
+
+
+class TemplateFanRestore(TemplateFan, TemplateRestoreEntity):
+    """Representation of a restorable Template Fan."""

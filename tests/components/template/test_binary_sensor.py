@@ -21,6 +21,8 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .helpers import template_restore_state_test, trigger_restore_state_test
+
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -981,6 +983,101 @@ async def test_restore_state(
     assert state.state == initial_state
 
 
+@pytest.mark.parametrize("count,domain,platform", [(1, "template", "binary_sensor")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "binary_sensor": {
+                    "name": "{{ (states('sensor.test_state')|int(0) > 0)|iif('Restored','Not Restored') }}",
+                    "unique_id": "restore",
+                    "state": "{{ is_state('sensor.test_state', '10') }}",
+                    "attributes": {
+                        "attr1": "fixed",
+                        "attr2": "{{ states('sensor.test_state')|int(0) }}",
+                        "attr3": "{{ is_state('sensor.test_state', '10') }}",
+                    },
+                    "delay_on": "{{ states('sensor.test_state')|int(0) }}",
+                    "delay_off": "{{ states('sensor.test_state')|int(0) }}",
+                    "picture": "{{ (is_state('binary_sensor.not_restored', 'on'))|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                    "icon": "{{ (is_state('binary_sensor.not_restored', 'on'))|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                    "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes,stored_attributes",
+    [
+        (
+            {"restore": False},
+            10,
+            ON,
+            {
+                "friendly_name": "Not Restored",
+                "attr1": None,
+                "attr2": None,
+                "attr3": None,
+                "entity_picture": "mdi:thumb-down",
+                "icon": "mdi:thumb-down",
+            },
+            {
+                "_delay_on": None,
+                "_delay_off": None,
+            },
+        ),
+        (
+            {"restore": True},
+            10,
+            ON,
+            {
+                "friendly_name": "Restored",
+                "attr1": "fixed",
+                "attr2": 10,
+                "attr3": True,
+                "entity_picture": "mdi:thumb-up",
+                "icon": "mdi:thumb-up",
+            },
+            {
+                "_delay_on": timedelta(seconds=10),
+                "_delay_off": timedelta(seconds=10),
+            },
+        ),
+    ],
+)
+async def test_template_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring binary sensor template."""
+
+    config = dict(config)
+    config[domain][platform].update(**extra_config)
+
+    await template_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        platform,
+        "not_restored",
+    )
+
+
 @pytest.mark.parametrize("count,domain", [(2, "template")])
 @pytest.mark.parametrize(
     "config",
@@ -1131,168 +1228,99 @@ async def test_template_with_trigger_templated_delay_on(hass, start_ha):
     assert state.state == OFF
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize("count,domain, platform", [(1, "template", "binary_sensor")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "template": {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "binary_sensor": {
-                    "name": "test",
-                    "state": "{{ trigger.event.data.beer == 2 }}",
-                    "device_class": "motion",
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "binary_sensor": [
+                        {
+                            "name": "{{ (trigger.event.data.beer|int(0) > 0)|iif('Restored','Not Restored') }}",
+                            "unique_id": "restore",
+                            "state": "{{ trigger.event.data.beer|int(0) == 10 }}",
+                            "attributes": {
+                                "attr1": "fixed",
+                                "attr2": "{{ trigger.event.data.beer|int(0) + 1 }}",
+                                "attr3": "{{ state_attr('binary_sensor.restore','attr3')|int(0) + 1 }}",
+                            },
+                            "delay_on": "{{ (trigger.event.data.beer|int(0) > 0)|iif('00:00:00','00:00:01') }}",
+                            "delay_off": "{{ (trigger.event.data.beer|int(0) > 0)|iif('00:00:00','00:00:01') }}",
+                            "picture": "{{ (trigger.event.data.beer|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                            "icon": "{{ (trigger.event.data.beer|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                            "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                        },
+                    ],
                 },
-            },
+            ],
         },
     ],
 )
 @pytest.mark.parametrize(
-    "restored_state, initial_state",
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
     [
-        (ON, ON),
-        (OFF, OFF),
-        (STATE_UNAVAILABLE, STATE_UNKNOWN),
-        (STATE_UNKNOWN, STATE_UNKNOWN),
+        (
+            {"restore": False},
+            10,
+            STATE_UNKNOWN,
+            {
+                "friendly_name": None,
+                "attr1": None,
+                "attr2": None,
+                "attr3": None,
+                "entity_picture": None,
+                "icon": None,
+            },
+            {
+                "delay_on": None,
+                "delay_off": None,
+            },
+        ),
+        (
+            {"restore": True},
+            10,
+            ON,
+            {
+                "friendly_name": "Restored",
+                "attr1": "fixed",
+                "attr2": 11,
+                "attr3": 1,
+                "entity_picture": "mdi:thumb-up",
+                "icon": "mdi:thumb-up",
+            },
+            {
+                "delay_on": "00:00:00",
+                "delay_off": "00:00:00",
+            },
+        ),
     ],
 )
-async def test_trigger_entity_restore_state(
-    hass, count, domain, config, restored_state, initial_state
+async def test_trigger_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
 ):
-    """Test restoring trigger template binary sensor."""
+    """Test restoring binary sensor trigger."""
 
-    fake_state = State(
-        "binary_sensor.test",
+    await trigger_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        extra_config,
         restored_state,
-        {},
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        platform,
+        "template_restore",
     )
-    fake_extra_data = {
-        "auto_off_time": None,
-    }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    with assert_setup_component(count, domain):
-        assert await async_setup_component(
-            hass,
-            domain,
-            config,
-        )
-
-        await hass.async_block_till_done()
-        await hass.async_start()
-        await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == initial_state
-
-
-@pytest.mark.parametrize("count,domain", [(1, "template")])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "template": {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "binary_sensor": {
-                    "name": "test",
-                    "state": "{{ trigger.event.data.beer == 2 }}",
-                    "device_class": "motion",
-                    "auto_off": '{{ ({ "seconds": 1 + 1 }) }}',
-                },
-            },
-        },
-    ],
-)
-@pytest.mark.parametrize("restored_state", [ON, OFF])
-async def test_trigger_entity_restore_state_auto_off(
-    hass, count, domain, config, restored_state, freezer
-):
-    """Test restoring trigger template binary sensor."""
-
-    freezer.move_to("2022-02-02 12:02:00+00:00")
-    fake_state = State(
-        "binary_sensor.test",
-        restored_state,
-        {},
-    )
-    fake_extra_data = {
-        "auto_off_time": {
-            "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(
-                2022, 2, 2, 12, 2, 2, tzinfo=timezone.utc
-            ).isoformat(),
-        },
-    }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    with assert_setup_component(count, domain):
-        assert await async_setup_component(
-            hass,
-            domain,
-            config,
-        )
-
-        await hass.async_block_till_done()
-        await hass.async_start()
-        await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == restored_state
-
-    # Now wait for the auto-off
-    freezer.move_to("2022-02-02 12:02:03+00:00")
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == OFF
-
-
-@pytest.mark.parametrize("count,domain", [(1, "template")])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "template": {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "binary_sensor": {
-                    "name": "test",
-                    "state": "{{ trigger.event.data.beer == 2 }}",
-                    "device_class": "motion",
-                    "auto_off": '{{ ({ "seconds": 1 + 1 }) }}',
-                },
-            },
-        },
-    ],
-)
-async def test_trigger_entity_restore_state_auto_off_expired(
-    hass, count, domain, config, freezer
-):
-    """Test restoring trigger template binary sensor."""
-
-    freezer.move_to("2022-02-02 12:02:00+00:00")
-    fake_state = State(
-        "binary_sensor.test",
-        ON,
-        {},
-    )
-    fake_extra_data = {
-        "auto_off_time": {
-            "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(
-                2022, 2, 2, 12, 2, 0, tzinfo=timezone.utc
-            ).isoformat(),
-        },
-    }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    with assert_setup_component(count, domain):
-        assert await async_setup_component(
-            hass,
-            domain,
-            config,
-        )
-
-        await hass.async_block_till_done()
-        await hass.async_start()
-        await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == OFF

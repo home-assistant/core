@@ -5,6 +5,8 @@ from homeassistant import setup
 from homeassistant.components import lock
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
+from .helpers import template_restore_state_test
+
 
 @pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
@@ -377,3 +379,73 @@ async def test_unique_id(hass, start_ha):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("lock")) == 1
+
+
+@pytest.mark.parametrize("count,domain,platform", [(1, "lock", "lock")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "lock": {
+                "platform": "template",
+                "name": "restore",
+                "unique_id": "restore",
+                "value_template": "{{ states('sensor.test_state')|int(0) > 0 }}",
+                "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
+                "unlock": {
+                    "service": "switch.turn_off",
+                    "entity_id": "switch.test_state",
+                },
+                "availability_template": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            10,
+            lock.STATE_UNLOCKED,
+            {},
+            {},
+        ),
+        (
+            {"restore": True},
+            10,
+            lock.STATE_LOCKED,
+            {},
+            {},
+        ),
+    ],
+)
+async def test_template_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring lock template."""
+
+    config = dict(config)
+    config[domain].update(**extra_config)
+
+    await template_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        platform,
+        "restore",
+    )

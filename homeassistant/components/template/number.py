@@ -24,13 +24,15 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import DOMAIN
+from .const import CONF_RESTORE, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_ICON_SCHEMA,
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
     TemplateEntity,
+    TemplateRestoreEntity,
 )
-from .trigger_entity import TriggerEntity
+from .trigger_entity import TriggerEntity, TriggerRestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +56,7 @@ NUMBER_SCHEMA = (
     )
     .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema)
 )
 
 
@@ -66,7 +69,11 @@ async def _async_create_entities(
         unique_id = definition.get(CONF_UNIQUE_ID)
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(TemplateNumber(hass, definition, unique_id))
+
+        if definition.get(CONF_RESTORE, False):
+            entities.append(TemplateNumberRestore(hass, definition, unique_id))
+        else:
+            entities.append(TemplateNumber(hass, definition, unique_id))
     return entities
 
 
@@ -85,7 +92,9 @@ async def async_setup_platform(
 
     if "coordinator" in discovery_info:
         async_add_entities(
-            TriggerNumberEntity(hass, discovery_info["coordinator"], config)
+            TriggerNumberRestoreEntity(hass, discovery_info["coordinator"], config)
+            if config.get(CONF_RESTORE, False)
+            else TriggerNumberEntity(hass, discovery_info["coordinator"], config)
             for config in discovery_info["entities"]
         )
         return
@@ -162,6 +171,10 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         )
 
 
+class TemplateNumberRestore(TemplateNumber, TemplateRestoreEntity):
+    """Representation of a restorable template number."""
+
+
 class TriggerNumberEntity(TriggerEntity, NumberEntity):
     """Number entity based on trigger data."""
 
@@ -222,3 +235,7 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         await self._command_set_value.async_run(
             {ATTR_VALUE: value}, context=self._context
         )
+
+
+class TriggerNumberRestoreEntity(TriggerNumberEntity, TriggerRestoreEntity):
+    """Representation of a restorable Trigger Sensor."""

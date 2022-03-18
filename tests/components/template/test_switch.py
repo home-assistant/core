@@ -15,6 +15,8 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 
+from .helpers import template_restore_state_test
+
 from tests.common import (
     assert_setup_component,
     async_mock_service,
@@ -722,3 +724,76 @@ async def test_unique_id(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("switch")) == 1
+
+
+@pytest.mark.parametrize("count,domain,platform", [(1, "switch", "switches")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "restore": {
+                        "value_template": "{{ is_state('sensor.test_state','10') }}",
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            10,
+            STATE_OFF,
+            {},
+            {},
+        ),
+        (
+            {"restore": True},
+            10,
+            STATE_ON,
+            {},
+            {},
+        ),
+    ],
+)
+async def test_template_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring switch template."""
+
+    config = dict(config)
+    config[domain][platform]["restore"].update(**extra_config)
+    await template_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        domain,
+        "restore",
+    )

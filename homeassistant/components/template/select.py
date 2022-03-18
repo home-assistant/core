@@ -20,13 +20,15 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import DOMAIN
+from .const import CONF_RESTORE, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_ICON_SCHEMA,
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
     TemplateEntity,
+    TemplateRestoreEntity,
 )
-from .trigger_entity import TriggerEntity
+from .trigger_entity import TriggerEntity, TriggerRestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,19 +50,23 @@ SELECT_SCHEMA = (
     )
     .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema)
 )
 
 
 async def _async_create_entities(
     hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
-) -> list[TemplateSelect]:
+) -> list[TemplateSelect | TemplateSelectRestore]:
     """Create the Template select."""
-    entities = []
+    entities: list[TemplateSelect | TemplateSelectRestore] = []
     for definition in definitions:
         unique_id = definition.get(CONF_UNIQUE_ID)
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(TemplateSelect(hass, definition, unique_id))
+        if definition.get(CONF_RESTORE, False):
+            entities.append(TemplateSelectRestore(hass, definition, unique_id))
+        else:
+            entities.append(TemplateSelect(hass, definition, unique_id))
     return entities
 
 
@@ -79,7 +85,9 @@ async def async_setup_platform(
 
     if "coordinator" in discovery_info:
         async_add_entities(
-            TriggerSelectEntity(hass, discovery_info["coordinator"], config)
+            TriggerSelectRestoreEntity(hass, discovery_info["coordinator"], config)
+            if config.get(CONF_RESTORE, False)
+            else TriggerSelectEntity(hass, discovery_info["coordinator"], config)
             for config in discovery_info["entities"]
         )
         return
@@ -138,6 +146,10 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         )
 
 
+class TemplateSelectRestore(TemplateSelect, TemplateRestoreEntity):
+    """Representation of a restorable Template Select."""
+
+
 class TriggerSelectEntity(TriggerEntity, SelectEntity):
     """Select entity based on trigger data."""
 
@@ -178,3 +190,7 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
         await self._command_select_option.async_run(
             {ATTR_OPTION: option}, context=self._context
         )
+
+
+class TriggerSelectRestoreEntity(TriggerSelectEntity, TriggerRestoreEntity):
+    """Representation of a restorable Trigger Select."""

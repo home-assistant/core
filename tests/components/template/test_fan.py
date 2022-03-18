@@ -16,6 +16,8 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
+from .helpers import template_restore_state_test
+
 from tests.common import assert_setup_component
 from tests.components.fan import common
 
@@ -862,3 +864,88 @@ async def test_implemented_preset_mode(hass, start_ha):
     attributes = state.attributes
     assert attributes.get("percentage") is None
     assert attributes.get("supported_features") & SUPPORT_PRESET_MODE
+
+
+@pytest.mark.parametrize("count,domain,platform", [(1, "fan", "fans")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "fan": {
+                "platform": "template",
+                "fans": {
+                    "restore": {
+                        "value_template": "{{ (states('sensor.test_state')|int(0) > 50)|iif('on','off') }}",
+                        "percentage_template": "{{ states('sensor.test_state')|int(0) }}",
+                        "oscillating_template": "{{ states('sensor.test_state')|int(0) > 50 }}",
+                        "direction_template": "{{ (states('sensor.test_state')|int(0) > 50)|iif('forward','reverse') }}",
+                        "availability_template": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                        "turn_on": {
+                            "service": "fan.turn_on",
+                            "entity_id": "fan.test_state",
+                        },
+                        "turn_off": {
+                            "service": "fan.turn_off",
+                            "entity_id": "fan.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            80,
+            STATE_OFF,
+            {
+                "direction": None,
+                "oscillating": None,
+                "percentage": None,
+            },
+            {},
+        ),
+        (
+            {"restore": True},
+            80,
+            STATE_ON,
+            {
+                "direction": "forward",
+                "oscillating": True,
+                "percentage": 80,
+            },
+            {},
+        ),
+    ],
+)
+async def test_template_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring fan template."""
+
+    config = dict(config)
+    config[domain][platform]["restore"].update(**extra_config)
+    await template_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        domain,
+        "restore",
+    )

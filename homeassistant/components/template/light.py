@@ -39,10 +39,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_RESTORE, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
     TemplateEntity,
+    TemplateRestoreEntity,
     rewrite_common_legacy_to_modern_conf,
 )
 
@@ -91,7 +93,9 @@ LIGHT_SCHEMA = vol.All(
             vol.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
+    )
+    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema),
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -107,14 +111,24 @@ async def _async_create_entities(hass, config):
         entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
-        lights.append(
-            LightTemplate(
-                hass,
-                object_id,
-                entity_config,
-                unique_id,
+        if entity_config.get(CONF_RESTORE, False):
+            lights.append(
+                LightRestoreTemplate(
+                    hass,
+                    object_id,
+                    entity_config,
+                    unique_id,
+                )
             )
-        )
+        else:
+            lights.append(
+                LightTemplate(
+                    hass,
+                    object_id,
+                    entity_config,
+                    unique_id,
+                )
+            )
 
     return lights
 
@@ -275,7 +289,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
         if self._max_mireds_template:
             self.add_template_attribute(
-                "_max_mireds_template",
+                "_max_mireds",
                 self._max_mireds_template,
                 None,
                 self._update_max_mireds,
@@ -283,7 +297,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
         if self._min_mireds_template:
             self.add_template_attribute(
-                "_min_mireds_template",
+                "_min_mireds",
                 self._min_mireds_template,
                 None,
                 self._update_min_mireds,
@@ -331,7 +345,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
         if self._supports_transition_template:
             self.add_template_attribute(
-                "_supports_transition_template",
+                "_supports_transition",
                 self._supports_transition_template,
                 None,
                 self._update_supports_transition,
@@ -638,3 +652,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._supports_transition = False
             return
         self._supports_transition = bool(render)
+
+
+class LightRestoreTemplate(LightTemplate, TemplateRestoreEntity):
+    """Representation of a restorable Template Light."""

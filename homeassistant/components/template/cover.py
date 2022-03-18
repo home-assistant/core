@@ -42,10 +42,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_RESTORE, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
     TemplateEntity,
+    TemplateRestoreEntity,
     rewrite_common_legacy_to_modern_conf,
 )
 
@@ -96,7 +98,9 @@ COVER_SCHEMA = vol.All(
             vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
+    )
+    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
@@ -115,14 +119,24 @@ async def _async_create_entities(hass, config):
 
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
-        covers.append(
-            CoverTemplate(
-                hass,
-                object_id,
-                entity_config,
-                unique_id,
+        if entity_config.get(CONF_RESTORE, False):
+            covers.append(
+                CoverRestoreTemplate(
+                    hass,
+                    object_id,
+                    entity_config,
+                    unique_id,
+                )
             )
-        )
+        else:
+            covers.append(
+                CoverTemplate(
+                    hass,
+                    object_id,
+                    entity_config,
+                    unique_id,
+                )
+            )
 
     return covers
 
@@ -184,12 +198,13 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._is_opening = False
         self._is_closing = False
         self._tilt_value = None
+        self._cover_state = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         if self._template:
             self.add_template_attribute(
-                "_position", self._template, None, self._update_state
+                "_cover_state", self._template, None, self._update_state
             )
         if self._position_template:
             self.add_template_attribute(
@@ -227,6 +242,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
             self._is_opening = state == STATE_OPENING
             self._is_closing = state == STATE_CLOSING
+            self._cover_state = state
         else:
             _LOGGER.error(
                 "Received invalid cover is_on state: %s. Expected: %s",
@@ -390,3 +406,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         )
         if self._tilt_optimistic:
             self.async_write_ha_state()
+
+
+class CoverRestoreTemplate(CoverTemplate, TemplateRestoreEntity):
+    """Representation of a restorable Template Cover."""

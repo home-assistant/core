@@ -26,10 +26,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_RESTORE, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
     TemplateEntity,
+    TemplateRestoreEntity,
     rewrite_common_legacy_to_modern_conf,
 )
 
@@ -39,22 +41,30 @@ CONF_UNLOCK = "unlock"
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
-).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
+PLATFORM_SCHEMA = (
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema)
+)
 
 
 async def _async_create_entities(hass, config):
     """Create the Template lock."""
     config = rewrite_common_legacy_to_modern_conf(config)
-    return [TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))]
+    return [
+        TemplateLockRestore(hass, config, config.get(CONF_UNIQUE_ID))
+        if config.get(CONF_RESTORE, False)
+        else TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))
+    ]
 
 
 async def async_setup_platform(
@@ -149,3 +159,7 @@ class TemplateLock(TemplateEntity, LockEntity):
             self._state = False
             self.async_write_ha_state()
         await self._command_unlock.async_run(context=self._context)
+
+
+class TemplateLockRestore(TemplateLock, TemplateRestoreEntity):
+    """Representation of a restorable Template Lock."""

@@ -22,6 +22,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 
+from .helpers import template_restore_state_test
+
 _LOGGER = logging.getLogger(__name__)
 
 # Represent for light's availability
@@ -1473,3 +1475,125 @@ async def test_invalid_availability_template_keeps_component_available(
 async def test_unique_id(hass, start_ha):
     """Test unique_id option only creates one light per id."""
     assert len(hass.states.async_all("light")) == 1
+
+
+@pytest.mark.parametrize("count,domain,platform", [(1, "light", "lights")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "restore": {
+                        "value_template": "{{ (states('sensor.test_state')|int(0) > 50)|iif('on','off') }}",
+                        "level_template": "{{ states('sensor.test_state')|int(0) }}",
+                        "temperature_template": "{{ states('sensor.test_state')|int(0) }}",
+                        "white_value_template": "{{ states('sensor.test_state')|int(0) }}",
+                        "color_template": "{{ (states('sensor.test_state')|int(0),states('sensor.test_state')|int(0)) }}",
+                        "supports_transition_template": "{{ states('sensor.test_state')|int(0) > 50 }}",
+                        "effect_list_template": "{{ (states('sensor.test_state')|int(0) > 50)|iif(['Disco','Pop'],['RGB','Classic']) }}",
+                        "effect_template": "{{ (states('sensor.test_state')|int(0) > 50)|iif('Disco','RGB') }}",
+                        "min_mireds_template": "{{ states('sensor.test_state')|int(0) }}",
+                        "max_mireds_template": "{{ states('sensor.test_state')|int(0) }}",
+                        "entity_picture_template": "{{ (states('sensor.test_state')|int(0) > 50)|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                        "icon_template": "{{ (states('sensor.test_state')|int(0) > 50)|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                        "availability_template": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                        "turn_on": {
+                            "service": "light.turn_on",
+                            "entity_id": "light.test_state",
+                        },
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                        "set_effect": {
+                            "service": "test.automation",
+                            "data_template": {
+                                "entity_id": "test.test_state",
+                                "effect": "{{effect}}",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            80,
+            STATE_OFF,
+            {
+                "effect_list": None,
+                "effect": None,
+                "entity_picture": "mdi:thumb-down",
+                "icon": "mdi:thumb-down",
+            },
+            {
+                "brightness": None,
+                "max_mireds": 500,
+                "min_mireds": 153,
+                "color_temp": None,
+                "white_value": None,
+                "hs_color": None,
+                "effect_list": None,
+                "effect": None,
+                "_supports_transition": False,
+            },
+        ),
+        (
+            {"restore": True},
+            80,
+            STATE_ON,
+            {
+                "effect_list": ["Disco", "Pop"],
+                "effect": "Disco",
+                "entity_picture": "mdi:thumb-up",
+                "icon": "mdi:thumb-up",
+            },
+            {
+                "brightness": 80,
+                "max_mireds": 80,
+                "min_mireds": 80,
+                "color_temp": 80,
+                "white_value": 80,
+                "hs_color": (80, 80),
+                "effect_list": ["Disco", "Pop"],
+                "effect": "Disco",
+                "_supports_transition": True,
+            },
+        ),
+    ],
+)
+async def test_template_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring light template."""
+
+    config = dict(config)
+    config[domain][platform]["restore"].update(**extra_config)
+    await template_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        domain,
+        "restore",
+    )

@@ -15,11 +15,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_RESTORE, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_ICON_SCHEMA,
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
     TemplateEntity,
+    TemplateRestoreEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,19 +42,24 @@ BUTTON_SCHEMA = (
     )
     .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema)
 )
 
 
 async def _async_create_entities(
     hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
-) -> list[TemplateButtonEntity]:
+) -> list[TemplateButtonEntity | TemplateButtonRestoreEntity]:
     """Create the Template button."""
-    entities = []
+    entities: list[TemplateButtonEntity | TemplateButtonRestoreEntity] = []
     for definition in definitions:
         unique_id = definition.get(CONF_UNIQUE_ID)
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(TemplateButtonEntity(hass, definition, unique_id))
+
+        if definition.get(CONF_RESTORE, False):
+            entities.append(TemplateButtonRestoreEntity(hass, definition, unique_id))
+        else:
+            entities.append(TemplateButtonEntity(hass, definition, unique_id))
     return entities
 
 
@@ -77,6 +84,27 @@ async def async_setup_platform(
 
 class TemplateButtonEntity(TemplateEntity, ButtonEntity):
     """Representation of a template button."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config,
+        unique_id: str | None,
+    ) -> None:
+        """Initialize the button."""
+        super().__init__(hass, config=config, unique_id=unique_id)
+        assert self._attr_name is not None
+        self._command_press = Script(hass, config[CONF_PRESS], self._attr_name, DOMAIN)
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_state = None
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self._command_press.async_run(context=self._context)
+
+
+class TemplateButtonRestoreEntity(TemplateRestoreEntity, ButtonEntity):
+    """Representation of a restorable Template Button."""
 
     def __init__(
         self,

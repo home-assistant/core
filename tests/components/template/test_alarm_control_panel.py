@@ -9,7 +9,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
+    STATE_UNKNOWN,
 )
+
+from .helpers import template_restore_state_test
 
 from tests.components.alarm_control_panel import common
 
@@ -527,3 +530,70 @@ async def test_code_config(hass, code_format, code_arm_required, start_ha):
     state = hass.states.get(TEMPLATE_NAME)
     assert state.attributes.get("code_format") == code_format
     assert state.attributes.get("code_arm_required") == code_arm_required
+
+
+@pytest.mark.parametrize(
+    "count,domain,platform", [(1, "alarm_control_panel", "panels")]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "alarm_control_panel": {
+                "platform": "template",
+                "panels": {
+                    "restore": {
+                        "value_template": f"{{{{ (is_state('sensor.test_state','10'))|iif('{STATE_ALARM_ARMED_HOME}','{STATE_ALARM_DISARMED}') }}}}",
+                    },
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            10,
+            STATE_UNKNOWN,
+            {},
+            {},
+        ),
+        (
+            {"restore": True},
+            10,
+            STATE_ALARM_ARMED_HOME,
+            {},
+            {},
+        ),
+    ],
+)
+async def test_template_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring alarm control panel template."""
+
+    config = dict(config)
+    config[domain][platform]["restore"].update(**extra_config)
+    await template_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        domain,
+        "restore",
+    )

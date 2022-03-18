@@ -12,12 +12,17 @@ from homeassistant.components.number.const import (
     ATTR_MIN,
     ATTR_STEP,
     ATTR_VALUE as NUMBER_ATTR_VALUE,
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Context
 from homeassistant.helpers.entity_registry import async_get
+
+from .helpers import template_restore_state_test, trigger_restore_state_test
 
 from tests.common import (
     assert_setup_component,
@@ -259,6 +264,95 @@ async def test_templates_with_entities(hass, calls):
     _verify(hass, 2, 2, 2, 6)
 
 
+@pytest.mark.parametrize("count,domain,platform", [(1, "template", "number")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "number": {
+                    "name": "{{ (states('sensor.test_state')|int(0) > 0)|iif('Restored','Not Restored') }}",
+                    "unique_id": "restore",
+                    "state": "{{ states('sensor.test_state')|int(-1) }}",
+                    "step": "{{ (is_state('sensor.test_state','unknown'))|iif(0,10) }}",
+                    "min": "{{ states('sensor.test_state')|int(-1) / 2 }}",
+                    "max": "{{ states('sensor.test_state')|int(-1) * 2 }}",
+                    "set_value": {
+                        "service": "input_number.set_value",
+                        "data_template": {
+                            "entity_id": _VALUE_INPUT_NUMBER,
+                            "value": "{{ value }}",
+                        },
+                    },
+                    "icon": "{{ (states('sensor.test_state')|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                    "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            10,
+            STATE_UNKNOWN,
+            {
+                "friendly_name": "Not Restored",
+                "min": None,
+                "max": None,
+                "step": None,
+                "icon": "mdi:thumb-down",
+            },
+            {},
+        ),
+        (
+            {"restore": True},
+            10,
+            "10.0",
+            {
+                "friendly_name": "Restored",
+                "min": 5,
+                "max": 20,
+                "step": 10,
+                "icon": "mdi:thumb-up",
+            },
+            {},
+        ),
+    ],
+)
+async def test_template_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring number template."""
+
+    config = dict(config)
+    config[domain][platform].update(**extra_config)
+
+    await template_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        platform,
+        "not_restored",
+    )
+
+
 async def test_trigger_number(hass):
     """Test trigger based template number."""
     events = async_capture_events(hass, "test_number_event")
@@ -454,3 +548,99 @@ async def test_icon_template_with_trigger(hass):
     state = hass.states.get(_TEST_NUMBER)
     assert float(state.state) == 51
     assert state.attributes[ATTR_ICON] == "mdi:greater"
+
+
+@pytest.mark.parametrize("count,domain,platform", [(1, "template", "number")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "number": [
+                        {
+                            "name": "{{ (trigger.event.data.beer|int(0) > 0)|iif('Restored','Not Restored') }}",
+                            "unique_id": "restore",
+                            "state": "{{ trigger.event.data.beer|int(-1) }}",
+                            "step": "{{ trigger.event.data.beer|int(0) }}",
+                            "min": "{{ trigger.event.data.beer|int(0) / 2 }}",
+                            "max": "{{ trigger.event.data.beer|int(0) * 2 }}",
+                            "set_value": {
+                                "service": "input_number.set_value",
+                                "data_template": {
+                                    "entity_id": _VALUE_INPUT_NUMBER,
+                                    "value": "{{ value }}",
+                                },
+                            },
+                            "icon": "{{ (trigger.event.data.beer|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                            "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            10,
+            STATE_UNKNOWN,
+            {
+                "friendly_name": None,
+                "min": DEFAULT_MIN_VALUE,
+                "max": DEFAULT_MAX_VALUE,
+                "step": DEFAULT_STEP,
+                "icon": None,
+            },
+            {
+                "_attr_step": None,
+                "_attr_min_value": None,
+                "_attr_max_value": None,
+            },
+        ),
+        (
+            {"restore": True},
+            10,
+            "10.0",
+            {
+                "friendly_name": "Restored",
+                "min": 5,
+                "max": 20,
+                "step": 10,
+                "icon": "mdi:thumb-up",
+            },
+            {},
+        ),
+    ],
+)
+async def test_trigger_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring number trigger."""
+
+    await trigger_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        extra_config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        platform,
+        "template_restore",
+    )

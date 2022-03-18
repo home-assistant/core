@@ -47,11 +47,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_RESTORE, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
     TemplateEntity,
+    TemplateRestoreEntity,
     rewrite_common_legacy_to_modern_conf,
 )
 
@@ -93,7 +95,8 @@ VACUUM_SCHEMA = vol.All(
         }
     )
     .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY.schema)
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema),
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
@@ -109,14 +112,24 @@ async def _async_create_entities(hass, config):
         entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
-        vacuums.append(
-            TemplateVacuum(
-                hass,
-                object_id,
-                entity_config,
-                unique_id,
+        if entity_config.get(CONF_RESTORE, False):
+            vacuums.append(
+                TemplateVacuumRestore(
+                    hass,
+                    object_id,
+                    entity_config,
+                    unique_id,
+                )
             )
-        )
+        else:
+            vacuums.append(
+                TemplateVacuum(
+                    hass,
+                    object_id,
+                    entity_config,
+                    unique_id,
+                )
+            )
 
     return vacuums
 
@@ -366,3 +379,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
                 self._fan_speed_list,
             )
             self._fan_speed = None
+
+
+class TemplateVacuumRestore(TemplateVacuum, TemplateRestoreEntity):
+    """Representation of a restorable Template Vacuum."""

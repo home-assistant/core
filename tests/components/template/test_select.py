@@ -19,6 +19,8 @@ from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Context
 from homeassistant.helpers.entity_registry import async_get
 
+from .helpers import template_restore_state_test, trigger_restore_state_test
+
 from tests.common import (
     assert_setup_component,
     async_capture_events,
@@ -353,6 +355,89 @@ async def test_template_icon_with_entities(hass, calls):
     assert state.attributes[ATTR_ICON] == "mdi:less"
 
 
+@pytest.mark.parametrize("count,domain,platform", [(1, "template", "select")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "select": {
+                    "name": "{{ (states('sensor.test_state')|int(0) > 0)|iif('Restored','Not Restored') }}",
+                    "state": "{{ states('sensor.test_state') }}",
+                    "options": "{{ ['0','10'] }}",
+                    "select_option": {
+                        "service": "input_select.select_option",
+                        "data": {
+                            "entity_id": _OPTION_INPUT_SELECT,
+                            "option": "{{ option }}",
+                        },
+                    },
+                    "optimistic": True,
+                    "unique_id": "restore",
+                    "icon": "{% if (states('select.not_restored') == '10') %}mdi:greater{% else %}mdi:less{% endif %}",
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            "10",
+            STATE_UNKNOWN,
+            {
+                "friendly_name": "Not Restored",
+                "options": [],
+                "icon": "mdi:less",
+            },
+            {},
+        ),
+        (
+            {"restore": True},
+            "10",
+            "10",
+            {
+                "friendly_name": "Restored",
+                "options": ["0", "10"],
+                "icon": "mdi:greater",
+            },
+            {},
+        ),
+    ],
+)
+async def test_template_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring select template."""
+
+    config = dict(config)
+    config[domain][platform].update(**extra_config)
+
+    await template_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        platform,
+        "not_restored",
+    )
+
+
 async def test_template_icon_with_trigger(hass):
     """Test trigger based template select."""
     with assert_setup_component(1, "input_select"):
@@ -422,3 +507,89 @@ async def test_template_icon_with_trigger(hass):
     state = hass.states.get(_TEST_SELECT)
     assert state.state == "a"
     assert state.attributes[ATTR_ICON] == "mdi:greater"
+
+
+@pytest.mark.parametrize("count,domain, platform", [(1, "template", "select")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "select": [
+                        {
+                            "name": "{{ (trigger.event.data.beer|int(0) > 0)|iif('Restored','Not Restored') }}",
+                            "unique_id": "restore",
+                            "state": "{{ trigger.event.data.beer|int(0) }}",
+                            "options": "{{ ['0','10'] }}",
+                            "select_option": {
+                                "service": "input_select.select_option",
+                                "data": {
+                                    "entity_id": _OPTION_INPUT_SELECT,
+                                    "option": "{{ option }}",
+                                },
+                            },
+                            "optimistic": True,
+                            "icon": "{{ (trigger.event.data.beer|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            "10",
+            STATE_UNKNOWN,
+            {
+                "friendly_name": None,
+                "options": [],
+                "icon": None,
+            },
+            {},
+        ),
+        (
+            {"restore": True},
+            "10",
+            "10",
+            {
+                "friendly_name": "Restored",
+                "options": ["0", "10"],
+                "icon": "mdi:thumb-up",
+            },
+            {},
+        ),
+    ],
+)
+async def test_trigger_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring select trigger."""
+
+    await trigger_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        extra_config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        platform,
+        "template_restore",
+    )

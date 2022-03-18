@@ -13,6 +13,8 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers.entity_component import async_update_entity
 
+from .helpers import template_restore_state_test
+
 from tests.common import assert_setup_component
 from tests.components.vacuum import common
 
@@ -573,3 +575,102 @@ async def _register_components(hass):
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("count,domain,platform", [(1, "vacuum", "vacuums")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuums": {
+                    "restore": {
+                        "value_template": f"{{{{ (is_state('sensor.test_state','10'))|iif('{STATE_CLEANING}','{STATE_DOCKED}') }}}}",
+                        "fan_speed_template": "{{ states('sensor.test_state')|int(0) }}",
+                        "fan_speeds": [0, 2, 4, 6, 8, 10],
+                        "battery_level_template": "{{ states('sensor.test_state')|int(0) }}",
+                        "attribute_templates": {
+                            "attr1": "fixed",
+                            "attr2": "{{ states('sensor.test_state')|int(0) }}",
+                            "attr3": "{{ states('vacuum.restore') }}",
+                        },
+                        "start": {
+                            "service": "input_select.select_option",
+                            "data": {
+                                "entity_id": _STATE_INPUT_SELECT,
+                                "option": STATE_CLEANING,
+                            },
+                        },
+                        "set_fan_speed": {
+                            "service": "input_select.select_option",
+                            "data_template": {
+                                "entity_id": _FAN_SPEED_INPUT_SELECT,
+                                "option": "{{ fan_speed }}",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    [
+        (
+            {"restore": False},
+            10,
+            STATE_UNKNOWN,
+            {
+                "fan_speed": None,
+                "battery_level": None,
+                "attr1": None,
+                "attr2": None,
+                "attr3": None,
+            },
+            {},
+        ),
+        (
+            {"restore": True},
+            10,
+            STATE_CLEANING,
+            {
+                "fan_speed": 10,
+                "battery_level": 10,
+                "attr1": "fixed",
+                "attr2": 10,
+                "attr3": STATE_CLEANING,
+            },
+            {},
+        ),
+    ],
+)
+async def test_template_restore_state(
+    hass,
+    count,
+    domain,
+    platform,
+    config,
+    extra_config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+    stored_attributes,
+):
+    """Test restoring vacuum template."""
+
+    config = dict(config)
+    config[domain][platform]["restore"].update(**extra_config)
+    await template_restore_state_test(
+        hass,
+        count,
+        domain,
+        config,
+        restored_state,
+        initial_state,
+        initial_attributes,
+        stored_attributes,
+        domain,
+        "restore",
+    )

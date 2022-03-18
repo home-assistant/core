@@ -40,8 +40,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
-from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
+from .const import CONF_RESTORE, DOMAIN
+from .template_entity import (
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
+    TemplateEntity,
+    TemplateRestoreEntity,
+    rewrite_common_legacy_to_modern_conf,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [
@@ -86,7 +91,7 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
-)
+).extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema)
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -105,14 +110,24 @@ async def _async_create_entities(hass, config):
         entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
-        alarm_control_panels.append(
-            AlarmControlPanelTemplate(
-                hass,
-                object_id,
-                entity_config,
-                unique_id,
+        if entity_config.get(CONF_RESTORE, False):
+            alarm_control_panels.append(
+                AlarmControlPanelRestoreTemplate(
+                    hass,
+                    object_id,
+                    entity_config,
+                    unique_id,
+                )
             )
-        )
+        else:
+            alarm_control_panels.append(
+                AlarmControlPanelTemplate(
+                    hass,
+                    object_id,
+                    entity_config,
+                    unique_id,
+                )
+            )
 
     return alarm_control_panels
 
@@ -256,3 +271,9 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         await self._async_alarm_arm(
             STATE_ALARM_DISARMED, script=self._disarm_script, code=code
         )
+
+
+class AlarmControlPanelRestoreTemplate(
+    AlarmControlPanelTemplate, TemplateRestoreEntity
+):
+    """Representation of a restorable Template Alarm Control Panel."""

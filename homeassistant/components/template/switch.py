@@ -22,14 +22,14 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
-    TemplateEntity,
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
+    TemplateRestoreEntity,
     rewrite_common_legacy_to_modern_conf,
 )
 
@@ -49,7 +49,9 @@ SWITCH_SCHEMA = vol.All(
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
+    )
+    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema),
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -87,7 +89,7 @@ async def async_setup_platform(
     async_add_entities(await _async_create_entities(hass, config))
 
 
-class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
+class SwitchTemplate(TemplateRestoreEntity, SwitchEntity):
     """Representation of a Template switch."""
 
     def __init__(
