@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.models import StateAttributes, States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
@@ -474,8 +474,10 @@ class StatisticsSensor(SensorEntity):
     def _fetch_states_from_database(self) -> list[State]:
         """Fetch the states from the database."""
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
+        states = []
+
         with session_scope(hass=self.hass) as session:
-            query = session.query(States).filter(
+            query = session.query(States, StateAttributes).filter(
                 States.entity_id == self._source_entity_id.lower()
             )
 
@@ -490,13 +492,20 @@ class StatisticsSensor(SensorEntity):
             else:
                 _LOGGER.debug("%s: retrieving all records", self.entity_id)
 
+            query = query.outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
             query = query.order_by(States.last_updated.desc()).limit(
                 self._samples_max_buffer_size
             )
             if results := execute(query, to_native=False, validate_entity_ids=False):
-                return [state.to_native() for state in results]
-        return []
-
+                for state, attributes in results:
+                    native = state.to_native()
+                    if not native.attributes:
+                        native.attributes = attributes.to_native()
+                    states.append(native)
+        return states
+        
     async def _initialize_from_database(self) -> None:
         """Initialize the list of states from the database.
 
