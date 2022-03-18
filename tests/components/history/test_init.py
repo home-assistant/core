@@ -17,12 +17,8 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import async_init_recorder_component, init_recorder_component
-from tests.components.recorder.common import (
-    async_wait_recording_done_without_instance,
-    trigger_db_commit,
-    wait_recording_done,
-)
+from tests.common import init_recorder_component
+from tests.components.recorder.common import trigger_db_commit, wait_recording_done
 
 
 @pytest.mark.usefixtures("hass_history")
@@ -608,36 +604,14 @@ async def test_fetch_period_api_with_use_include_order(hass, hass_client):
 
 async def test_fetch_period_api_with_minimal_response(hass, hass_client):
     """Test the fetch period view for history with minimal_response."""
-    await async_init_recorder_component(hass)
-    now = dt_util.utcnow()
+    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
-
-    hass.states.async_set("sensor.power", 0, {"attr": "any"})
-    await async_wait_recording_done_without_instance(hass)
-    hass.states.async_set("sensor.power", 50, {"attr": "any"})
-    await async_wait_recording_done_without_instance(hass)
-    hass.states.async_set("sensor.power", 23, {"attr": "any"})
-    await async_wait_recording_done_without_instance(hass)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(
-        f"/api/history/period/{now.isoformat()}?filter_entity_id=sensor.power&minimal_response"
+        f"/api/history/period/{dt_util.utcnow().isoformat()}?minimal_response"
     )
     assert response.status == HTTPStatus.OK
-    response_json = await response.json()
-    assert len(response_json[0]) == 3
-    state_list = response_json[0]
-
-    assert state_list[0]["entity_id"] == "sensor.power"
-    assert state_list[0]["attributes"] == {}
-    assert state_list[0]["state"] == "0"
-
-    assert "attributes" not in state_list[1]
-    assert "entity_id" not in state_list[1]
-    assert state_list[1]["state"] == "50"
-
-    assert state_list[2]["entity_id"] == "sensor.power"
-    assert state_list[2]["attributes"] == {}
-    assert state_list[2]["state"] == "23"
 
 
 async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
