@@ -30,10 +30,10 @@ def async_process_play_media_url(
     for_supervisor_network: bool = False,
 ) -> str:
     """Update a media URL with authentication if it points at Home Assistant."""
-    if media_content_id[0] != "/" and not is_hass_url(hass, media_content_id):
-        return media_content_id
-
     parsed = yarl.URL(media_content_id)
+
+    if parsed.is_absolute() and not is_hass_url(hass, media_content_id):
+        return media_content_id
 
     if parsed.query:
         logging.getLogger(__name__).debug(
