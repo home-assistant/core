@@ -17,7 +17,16 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.isdevice})},
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_DEVICE): cv.isdevice,
+                vol.Optional(
+                    CONF_BAUD_SPEED, default=DEFAULT_BAUD_SPEED
+                ): cv.positive_int,
+            }
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
