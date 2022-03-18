@@ -34,6 +34,8 @@ async def test_intervals(hass):
 
 async def test_states(hass):
     """Test states of sensors."""
+    hass.config.set_time_zone("UTC")
+
     now = dt_util.utc_from_timestamp(1495068856)
     device = time_date.TimeDateSensor(hass, "time")
     device._update_internal_state(now)
@@ -149,7 +151,7 @@ async def test_timezone_intervals(hass):
     "homeassistant.util.dt.utcnow",
     return_value=dt_util.parse_datetime("2017-11-14 02:47:19-00:00"),
 )
-async def test_timezone_intervals_empty_parameter(hass):
+async def test_timezone_intervals_empty_parameter(utcnow_mock, hass):
     """Test get_interval() without parameters."""
     hass.config.set_time_zone("America/Edmonton")
     device = time_date.TimeDateSensor(hass, "date")
