@@ -96,17 +96,17 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
         super().__init__(coordinator, entry, system_zone_id, zone_data)
         self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
         self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}_{description.key}"
-        self.entity_description = description
         self.attributes = description.attributes
+        self.entity_description = description
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return state attributes."""
         _state_attr = None
         if self.attributes:
-            _state_attr = {}
-            for key, val in self.attributes.items():
-                _state_attr[key] = self.get_zone_value(val)
+            _state_attr = {
+                key: self.get_zone_value(val) for key, val in self.attributes.items()
+            }
         return _state_attr
 
     @property
