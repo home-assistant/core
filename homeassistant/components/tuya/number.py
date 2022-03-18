@@ -264,7 +264,43 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             icon="mdi:thermometer-lines",
         ),
     ),
+    # Smart Lock
+    # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+    "ms": (
+        NumberEntityDescription(
+            key=DPCode.AUTO_LOCK_TIME,
+            name="Latency of Automatic Latch",
+            icon="mdi:timer-cog-outline",
+        ),
+        NumberEntityDescription(
+            key=DPCode.STAY_HOLD_TIME,
+            name="Loitering Hold Time",
+            icon="mdi:timer-cog-outline",
+        ),
+        NumberEntityDescription(
+            key=DPCode.OPEN_RATE,
+            name="Opening Percentage",
+            icon="mdi:percent",
+        ),
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            name="Alert Duration",
+            icon="mdi:timer-cog-outline",
+        ),
+    ),
 }
+
+# Lock (duplicate of 'ms')
+# https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+NUMBERS["bxx"] = NUMBERS["ms"]
+NUMBERS["gyms"] = NUMBERS["ms"]
+NUMBERS["jtmspro"] = NUMBERS["ms"]
+NUMBERS["hotelms"] = NUMBERS["ms"]
+NUMBERS["ms_category"] = NUMBERS["ms"]
+NUMBERS["jtmsbh"] = NUMBERS["ms"]
+NUMBERS["mk"] = NUMBERS["ms"]
+NUMBERS["videolock"] = NUMBERS["ms"]
+NUMBERS["photolock"] = NUMBERS["ms"]
 
 
 async def async_setup_entry(

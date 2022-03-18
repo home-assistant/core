@@ -14,6 +14,17 @@ from . import HomeAssistantTuyaData
 from .base import TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType, TuyaDeviceClass
 
+# Commonly used, that are re-used in the select down below.
+LANGUAGE_SELECT: tuple[SelectEntityDescription, ...] = (
+    SelectEntityDescription(
+        key=DPCode.LANGUAGE,
+        name="Language",
+        device_class=TuyaDeviceClass.LANGUAGE,
+        entity_category=EntityCategory.CONFIG,
+        icon="mdi:translate",
+    ),
+)
+
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
@@ -333,6 +344,155 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:timer-cog-outline",
         ),
     ),
+    # Smart Lock
+    # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+    "ms": (
+        SelectEntityDescription(
+            key=DPCode.ALARM_VOLUME,
+            name="Alert Volume",
+            device_class=TuyaDeviceClass.LOCK_ALARM_VOLUME,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:volume-high",
+        ),
+        SelectEntityDescription(
+            key=DPCode.BASIC_NIGHTVISION,
+            name="Infrared (IR) Night Vision",
+            device_class=TuyaDeviceClass.LOCK_NIGHTVISION,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:weather-night",
+        ),
+        SelectEntityDescription(
+            key=DPCode.BEEP_VOLUME,
+            name="Local Voice Volume",
+            device_class=TuyaDeviceClass.LOCK_VOLUME,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:volume-high",
+        ),
+        SelectEntityDescription(
+            key=DPCode.DOOR_UNCLOSED_TRIGGER,
+            name="Trigger Time of Unclosed",
+            device_class=TuyaDeviceClass.LOCK_DOOR_UNCLOSED_TRIGGER,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.DOORBELL_SONG,
+            name="Doorbell Ringtone",
+            device_class=TuyaDeviceClass.LOCK_DOORBEL_SONG,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:music-box-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.DOORBELL_VOLUME,
+            name="Doorbell Volume",
+            device_class=TuyaDeviceClass.LOCK_VOLUME,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:volume-high",
+        ),
+        SelectEntityDescription(
+            key=DPCode.KEY_TONE,
+            name="Volume on Keypress",
+            device_class=TuyaDeviceClass.LOCK_VOLUME,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:music-box-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.LOCK_MOTOR_DIRECTION,
+            name="Rotation Direction of Motor",
+            device_class=TuyaDeviceClass.LOCK_MOTOR_DIRECTION,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:swap-horizontal",
+        ),
+        SelectEntityDescription(
+            key=DPCode.LOW_POWER_THRESHOLD,
+            name="Low Battery Alert",
+            device_class=TuyaDeviceClass.LOCK_LOW_POWER,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:battery-alert-variant-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MOTOR_TORQUE,
+            name="Torque Force of Motor",
+            device_class=TuyaDeviceClass.LOCK_MOTOR_TORQUE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:hexagon-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.OPEN_SPEED_STATE,
+            name="Unlocking Speed",
+            device_class=TuyaDeviceClass.LOCK_OPEN_SPEED,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:speedometer",
+        ),
+        SelectEntityDescription(
+            key=DPCode.PHOTO_MODE,
+            name="Photo Mode",
+            device_class=TuyaDeviceClass.LOCK_PHOTO_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:image-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.RINGTONE,
+            name="Local Ringtone",
+            device_class=TuyaDeviceClass.LOCK_RINGTONE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:music-box-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.SOUND_MODE,
+            name="Sound Mode",
+            device_class=TuyaDeviceClass.LOCK_SOUND_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:music-box-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.STAY_ALARM_MODE,
+            name="Loitering Alert Mode",
+            device_class=TuyaDeviceClass.LOCK_STAY_ALARM_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:star-box-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.STAY_CAPTURE_MODE,
+            name="Loitering Photo Capture Mode",
+            device_class=TuyaDeviceClass.LOCK_STAY_CAPTURE_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:image-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.STAY_TRIGGER_DISTANCE,
+            name="Loitering Sensing Range",
+            device_class=TuyaDeviceClass.LOCK_STAY_TRIGGER_DISTANCE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:signal-distance-variant",
+        ),
+        SelectEntityDescription(
+            key=DPCode.UNLOCK_SWITCH,
+            name="Unlock Mode",
+            device_class=TuyaDeviceClass.LOCK_UNLOCK_SWITCH,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:shield-lock-open-outline",
+        ),
+        *LANGUAGE_SELECT,
+    ),
+    # Smart Finder
+    # Note: Not documented
+    "fdq": (
+        SelectEntityDescription(
+            key=DPCode.ALARM_VOLUME,
+            name="Volume",
+            device_class=TuyaDeviceClass.ALARM_VOLUME,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:volume-high",
+        ),
+        SelectEntityDescription(
+            key=DPCode.SOUND_MODE,
+            name="Sound",
+            device_class=TuyaDeviceClass.SOUND_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:music-box-multiple-outline",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
@@ -342,6 +502,18 @@ SELECTS["cz"] = SELECTS["kg"]
 # Power Socket (duplicate of `kg`)
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 SELECTS["pc"] = SELECTS["kg"]
+
+# Lock (duplicate of 'ms')
+# https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+SELECTS["bxx"] = SELECTS["ms"]
+SELECTS["gyms"] = SELECTS["ms"]
+SELECTS["jtmspro"] = SELECTS["ms"]
+SELECTS["hotelms"] = SELECTS["ms"]
+SELECTS["ms_category"] = SELECTS["ms"]
+SELECTS["jtmsbh"] = SELECTS["ms"]
+SELECTS["mk"] = SELECTS["ms"]
+SELECTS["videolock"] = SELECTS["ms"]
+SELECTS["photolock"] = SELECTS["ms"]
 
 
 async def async_setup_entry(
