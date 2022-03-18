@@ -2,6 +2,7 @@
 from typing import Any
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -51,7 +52,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
     def set_cover_position(self, **kwargs: Any) -> None:
         """Update the current value."""
         self.controller.zwave_api.send_command(
-            self.device.id, f"exact?level={str(round(value))}"
+            self.device.id, f"exact?level={str(round(kwargs[ATTR_POSITION]))}"
         )
 
     @property
