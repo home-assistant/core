@@ -19,11 +19,8 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
         data={},
         domain=DOMAIN,
         options={
-            "after": "absolute_time",
-            "after_offset": {"minutes": 10.0},
             "after_time": "10:00:00",
-            "before": "sunset",
-            "before_offset": {"minutes": -10.0},
+            "before_time": "18:05:00",
             "name": "My tod",
         },
         title="My tod",
@@ -39,9 +36,9 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
     state = hass.states.get(tod_entity_id)
     # Check the state of the entity is as expected
     state = hass.states.get("binary_sensor.my_tod")
-    assert state.state == "on"
-    assert state.attributes["after"] == "2022-03-16T03:10:00-07:00"
-    assert state.attributes["before"] == "2022-03-16T18:47:27.925823-07:00"
+    assert state.state == "off"
+    assert state.attributes["after"] == "2022-03-16T10:00:00-07:00"
+    assert state.attributes["before"] == "2022-03-16T18:05:00-07:00"
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)

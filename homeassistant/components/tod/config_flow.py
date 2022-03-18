@@ -6,13 +6,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_AFTER,
-    CONF_BEFORE,
-    CONF_NAME,
-    SUN_EVENT_SUNRISE,
-    SUN_EVENT_SUNSET,
-)
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
@@ -20,33 +14,12 @@ from homeassistant.helpers.helper_config_entry_flow import (
     HelperFlowMenuStep,
 )
 
-from .const import (
-    CONF_ABSOLUTE_TIME,
-    CONF_AFTER_OFFSET,
-    CONF_AFTER_TIME,
-    CONF_BEFORE_OFFSET,
-    CONF_BEFORE_TIME,
-    DOMAIN,
-)
-
-_BEFORE_AFTER_OPTIONS = [SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET, CONF_ABSOLUTE_TIME]
+from .const import CONF_AFTER_TIME, CONF_BEFORE_TIME, DOMAIN
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_AFTER): selector.selector(
-            {"select": {"options": _BEFORE_AFTER_OPTIONS}}
-        ),
         vol.Optional(CONF_AFTER_TIME): selector.selector({"time": {}}),
-        vol.Required(CONF_AFTER_OFFSET, default={"seconds": 0}): selector.selector(
-            {"duration": {}}
-        ),
-        vol.Required(CONF_BEFORE): selector.selector(
-            {"select": {"options": _BEFORE_AFTER_OPTIONS}}
-        ),
         vol.Optional(CONF_BEFORE_TIME): selector.selector({"time": {}}),
-        vol.Required(CONF_BEFORE_OFFSET, default={"seconds": 0}): selector.selector(
-            {"duration": {}}
-        ),
     }
 )
 

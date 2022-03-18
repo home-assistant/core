@@ -2,7 +2,6 @@
 
 DOMAIN = "tod"
 
-CONF_ABSOLUTE_TIME = "absolute_time"
 CONF_AFTER_TIME = "after_time"
 CONF_AFTER_OFFSET = "after_offset"
 CONF_BEFORE_TIME = "before_time"

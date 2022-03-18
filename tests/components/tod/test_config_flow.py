@@ -28,11 +28,8 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "after": "absolute_time",
-                "after_offset": {"minutes": 10},
                 "after_time": "10:00",
-                "before": "sunset",
-                "before_offset": {"minutes": -10},
+                "before_time": "18:00",
                 "name": "My tod",
             },
         )
@@ -42,11 +39,8 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert result["title"] == "My tod"
     assert result["data"] == {}
     assert result["options"] == {
-        "after": "absolute_time",
-        "after_offset": {"minutes": 10},
         "after_time": "10:00",
-        "before": "sunset",
-        "before_offset": {"minutes": -10},
+        "before_time": "18:00",
         "name": "My tod",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -54,11 +48,8 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
     assert config_entry.options == {
-        "after": "absolute_time",
-        "after_offset": {"minutes": 10},
         "after_time": "10:00",
-        "before": "sunset",
-        "before_offset": {"minutes": -10},
+        "before_time": "18:00",
         "name": "My tod",
     }
     assert config_entry.title == "My tod"
@@ -83,11 +74,8 @@ async def test_options(hass: HomeAssistant) -> None:
         data={},
         domain=DOMAIN,
         options={
-            "after": "absolute_time",
-            "after_offset": {"minutes": 10.0},
-            "after_time": "10:00:00",
-            "before": "sunset",
-            "before_offset": {"minutes": -10.0},
+            "after_time": "10:00",
+            "before_time": "18:05",
             "name": "My tod",
         },
         title="My tod",
@@ -100,41 +88,26 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
-    assert get_suggested(schema, "after") == "absolute_time"
-    assert get_suggested(schema, "after_offset") == {"minutes": 10.0}
-    assert get_suggested(schema, "after_time") == "10:00:00"
-    assert get_suggested(schema, "before") == "sunset"
-    assert get_suggested(schema, "before_offset") == {"minutes": -10.0}
-    assert get_suggested(schema, "before_time") is None
+    assert get_suggested(schema, "after_time") == "10:00"
+    assert get_suggested(schema, "before_time") == "18:05"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "after": "sunset",
-            "after_offset": {"seconds": 0.0},
-            "before": "absolute_time",
-            "before_offset": {"seconds": 0.0},
-            "before_time": "23:00",
+            "after_time": "10:00",
+            "before_time": "17:05",
         },
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        "after": "sunset",
-        "after_offset": {"seconds": 0.0},
-        "after_time": "10:00:00",
-        "before": "absolute_time",
-        "before_offset": {"seconds": 0.0},
-        "before_time": "23:00",
+        "after_time": "10:00",
+        "before_time": "17:05",
         "name": "My tod",
     }
     assert config_entry.data == {}
     assert config_entry.options == {
-        "after": "sunset",
-        "after_offset": {"seconds": 0.0},
-        "after_time": "10:00:00",
-        "before": "absolute_time",
-        "before_offset": {"seconds": 0.0},
-        "before_time": "23:00",
+        "after_time": "10:00",
+        "before_time": "17:05",
         "name": "My tod",
     }
     assert config_entry.title == "My tod"
@@ -148,5 +121,5 @@ async def test_options(hass: HomeAssistant) -> None:
     # Check the state of the entity has changed as expected
     state = hass.states.get("binary_sensor.my_tod")
     assert state.state == "off"
-    assert state.attributes["after"] == "2022-03-16T18:57:27.925823-07:00"
-    assert state.attributes["before"] == "2022-03-17T16:00:00-07:00"
+    assert state.attributes["after"] == "2022-03-16T10:00:00-07:00"
+    assert state.attributes["before"] == "2022-03-16T17:05:00-07:00"

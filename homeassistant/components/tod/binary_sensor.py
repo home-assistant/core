@@ -24,7 +24,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_ABSOLUTE_TIME,
     CONF_AFTER_OFFSET,
     CONF_AFTER_TIME,
     CONF_BEFORE_OFFSET,
@@ -58,24 +57,10 @@ async def async_setup_entry(
         _LOGGER.error("Timezone is not set in Home Assistant configuration")
         return
 
-    after = config_entry.options[CONF_AFTER]
-    if after == CONF_ABSOLUTE_TIME:
-        after = cv.time(config_entry.options[CONF_AFTER_TIME])
-    after_offset_dict = config_entry.options.get(CONF_AFTER_OFFSET)
-    after_offset = (
-        cv.time_period_dict(after_offset_dict)
-        if after_offset_dict is not None
-        else timedelta(0)
-    )
-    before = config_entry.options[CONF_BEFORE]
-    if before == CONF_ABSOLUTE_TIME:
-        before = cv.time(config_entry.options[CONF_BEFORE_TIME])
-    before_offset_dict = config_entry.options.get(CONF_BEFORE_OFFSET)
-    before_offset = (
-        cv.time_period_dict(before_offset_dict)
-        if before_offset_dict is not None
-        else timedelta(0)
-    )
+    after = cv.time(config_entry.options[CONF_AFTER_TIME])
+    after_offset = timedelta(0)
+    before = cv.time(config_entry.options[CONF_BEFORE_TIME])
+    before_offset = timedelta(0)
     name = config_entry.title
     unique_id = config_entry.entry_id
 
