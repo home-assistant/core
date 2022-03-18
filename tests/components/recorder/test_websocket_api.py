@@ -421,3 +421,115 @@ async def test_backup_end_without_start(
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "database_unlock_failed"
+
+
+async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, unit):
+    """Test get_statistics_metadata."""
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "history", {"history": {}})
+    await async_setup_component(hass, "sensor", {})
+    await async_init_recorder_component(hass)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "recorder/get_statistics_metadata"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "recorder/get_statistics_metadata",
+            "statistic_ids": ["sensor.test"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
+    ]
+
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    # Remove the state, statistics will now be fetched from the database
+    hass.states.async_remove("sensor.test")
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "recorder/get_statistics_metadata",
+            "statistic_ids": ["sensor.test"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
+    ]
+
+    await client.send_json(
+        {"id": 4, "type": "recorder/get_statistics_metadata", "statistic_type": "dogs"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    await client.send_json(
+        {"id": 5, "type": "recorder/get_statistics_metadata", "statistic_type": "mean"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
+    ]
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "recorder/get_statistics_metadata",
+            "statistic_type": "mean",
+            "statistic_ids": ["sensor.test"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
+    ]
+
+    await client.send_json(
+        {"id": 7, "type": "recorder/get_statistics_metadata", "statistic_type": "sum"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
