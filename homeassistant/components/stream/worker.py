@@ -477,9 +477,9 @@ def stream_worker(
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
     stream_state.diagnostics.set_value("container_format", container.format.name)
-    stream_state.diagnostics.set_value("video_stream", video_stream.name)
+    stream_state.diagnostics.set_value("video_codec", video_stream.name)
     if audio_stream:
-        stream_state.diagnostics.set_value("audio_stream", audio_stream.name)
+        stream_state.diagnostics.set_value("audio_codec", audio_stream.name)
 
     dts_validator = TimestampValidator()
     container_packets = PeekIterator(
