@@ -31,6 +31,7 @@ from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import (
     Events,
     RecorderRuns,
+    StateAttributes,
     States,
     StatisticsRuns,
     process_timestamp,
@@ -166,10 +167,13 @@ async def test_saving_state(
     await async_wait_recording_done(hass, instance)
 
     with session_scope(hass=hass) as session:
-        db_states = list(session.query(States))
+        db_states = []
+        for db_state, db_state_attributes in session.query(States, StateAttributes):
+            db_states.append(db_state)
+            state = db_state.to_native()
+            state.attributes = db_state_attributes.to_native()
         assert len(db_states) == 1
         assert db_states[0].event_id > 0
-        state = db_states[0].to_native()
 
     assert state == _state_empty_context(hass, entity_id)
 
@@ -400,7 +404,14 @@ def _add_entities(hass, entity_ids):
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        return [st.to_native() for st in session.query(States)]
+        states = []
+        for state, state_attributes in session.query(States, StateAttributes).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
+            native_state = state.to_native()
+            native_state.attributes = state_attributes.to_native()
+            states.append(native_state)
+        return states
 
 
 def _add_events(hass, events):
