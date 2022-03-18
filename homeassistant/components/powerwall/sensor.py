@@ -52,7 +52,7 @@ def _get_meter_power(meter: Meter) -> float:
 
 
 def _get_meter_frequency(meter: Meter) -> float:
-    """Get the current value in hZ."""
+    """Get the current value in Hz."""
     return round(meter.frequency, 1)
 
 
