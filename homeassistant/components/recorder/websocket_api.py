@@ -71,7 +71,7 @@ def ws_clear_statistics(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "recorder/get_statistics_metadata",
-        vol.Required("statistic_ids"): [str],
+        vol.Optional("statistic_ids"): [str],
         vol.Optional("statistic_type"): vol.Any("sum", "mean"),
     }
 )
