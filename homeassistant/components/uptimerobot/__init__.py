@@ -28,7 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     key: str = entry.data[CONF_API_KEY]
     if key.startswith("ur") or key.startswith("m"):
-        raise ConfigEntryAuthFailed("The provided API key is 'read-only' or 'monitor'")
+        raise ConfigEntryAuthFailed(
+            "Wrong API key type detected, use the 'main' API key"
+        )
     uptime_robot_api = UptimeRobot(key, async_get_clientsession(hass))
     dev_reg = await async_get_registry(hass)
 

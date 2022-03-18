@@ -79,7 +79,8 @@ async def test_reauthentication_trigger_key_read_only(
 
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
     assert (
-        mock_config_entry.reason == "The provided API key is 'read-only' or 'monitor'"
+        mock_config_entry.reason
+        == "Wrong API key type detected, use the 'main' API key"
     )
 
     assert len(flows) == 1

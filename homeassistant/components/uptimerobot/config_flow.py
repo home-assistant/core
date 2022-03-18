@@ -36,7 +36,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         response: UptimeRobotApiResponse | UptimeRobotApiError | None = None
         key: str = data[CONF_API_KEY]
         if key.startswith("ur") or key.startswith("m"):
-            LOGGER.error("The provided API key is 'read-only' or 'monitor'")
+            LOGGER.error("Wrong API key type detected, use the 'main' API key")
             errors["base"] = "not_main_key"
             return errors, None
         uptime_robot_api = UptimeRobot(key, async_get_clientsession(self.hass))
