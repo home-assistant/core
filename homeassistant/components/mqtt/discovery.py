@@ -66,7 +66,6 @@ PENDING_DISCOVERED = "mqtt_pending_components"
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
 DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DATA_CONFIG_FLOW_LOCK = "mqtt_discovery_config_flow_lock"
-DISCOVERY_PLATFORM_HELPER = "mqtt_discovery_platform_helper"
 DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
 INTEGRATION_UNSUBSCRIBE = "mqtt_integration_discovery_unsubscribe"
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
@@ -365,9 +364,6 @@ async def async_load_platform_helper(
         """Discover and add an MQTT notify service or tag."""
         await async_setup(discovery_payload)
 
-    helpers = hass.data.setdefault(DISCOVERY_PLATFORM_HELPER, {})
-    if platform in helpers:
-        return
-    helpers[platform] = async_dispatcher_connect(
+    async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(platform, DOMAIN), async_discover
     )
