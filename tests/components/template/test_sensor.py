@@ -1124,7 +1124,8 @@ async def test_trigger_entity_device_class_parsing_works(hass):
 
     await hass.async_block_till_done()
 
-    now = dt_util.now()
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
 
     with patch("homeassistant.util.dt.now", return_value=now):
         hass.bus.async_fire("test_event")
@@ -1184,7 +1185,8 @@ async def test_trigger_entity_device_class_errors_works(hass):
 
 async def test_entity_device_class_parsing_works(hass):
     """Test entity device class parsing works."""
-    now = dt_util.now()
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
 
     with patch("homeassistant.util.dt.now", return_value=now):
         assert await async_setup_component(
