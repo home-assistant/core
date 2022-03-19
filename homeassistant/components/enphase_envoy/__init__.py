@@ -11,7 +11,7 @@ import httpx
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -78,8 +78,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not entry.unique_id:
         try:
             serial = await envoy_reader.get_full_serial_number()
-        except httpx.HTTPError:
-            pass
+        except httpx.HTTPError as ex:
+            raise ConfigEntryNotReady(
+                f"Could not obtain serial number from envoy: {ex}"
+            ) from ex
         else:
             hass.config_entries.async_update_entry(entry, unique_id=serial)
 
