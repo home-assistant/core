@@ -1,7 +1,9 @@
 """Support for Enphase Envoy solar energy monitor."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+import datetime
 import logging
 
 from homeassistant.components.sensor import (
@@ -31,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 class EnvoyRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_idx: int
+    value_fn: Callable[[tuple[float, str]], datetime.datetime | float | None]
 
 
 @dataclass
@@ -42,19 +44,32 @@ class EnvoySensorEntityDescription(SensorEntityDescription, EnvoyRequiredKeysMix
 INVERTERS_KEY = "inverters"
 LAST_REPORTED_KEY = "last_reported"
 
+
+def _inverter_last_report_time(
+    watt_report_time: tuple[float, str]
+) -> datetime.datetime | None:
+    if (report_time := watt_report_time[1]) is None:
+        return None
+    if (last_reported_dt := dt_util.parse_datetime(report_time)) is None:
+        return None
+    if last_reported_dt.tzinfo is None:
+        return last_reported_dt.replace(tzinfo=dt_util.UTC)
+    return last_reported_dt
+
+
 INVERTER_SENSORS = (
     EnvoySensorEntityDescription(
         key=INVERTERS_KEY,
         native_unit_of_measurement=POWER_WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_idx=0,
+        value_fn=lambda watt_report_time: watt_report_time[0],
     ),
     EnvoySensorEntityDescription(
         key=LAST_REPORTED_KEY,
         name="Last Reported",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
-        value_idx=1,
+        value_fn=_inverter_last_report_time,
     ),
 )
 
@@ -172,8 +187,7 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        production = self.coordinator.data["inverters_production"]
-        val = production[self._serial_number][self.entity_description.value_idx]
-        if val is not None and self.entity_description.key == LAST_REPORTED_KEY:
-            return dt_util.as_utc(dt_util.parse_datetime(val))
-        return val
+        watt_report_time: tuple[float, str] = self.coordinator.data[
+            "inverters_production"
+        ][self._serial_number]
+        return self.entity_description.value_fn(watt_report_time)
