@@ -1,23 +1,26 @@
 """Provides tag scanning for MQTT."""
-import functools
+from __future__ import annotations
+
 import logging
+from typing import TypedDict, cast
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 
 from . import MqttValueTemplate, subscription
 from .. import mqtt
-from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC, DOMAIN
+from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
+from .discovery import MQTTConfig, cancel_discovery
 from .mixins import (
-    CONF_CONNECTIONS,
-    CONF_IDENTIFIERS,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdateService,
-    async_setup_entry_helper,
     device_info_from_config,
 )
 from .util import valid_subscribe_topic
@@ -40,41 +43,40 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(hass, config_entry):
-    """Set up MQTT tag scan dynamically through MQTT discovery."""
-    setup = functools.partial(async_setup_tag, hass, config_entry=config_entry)
-    await async_setup_entry_helper(hass, "tag", setup, PLATFORM_SCHEMA)
+class MqttTagConfig(TypedDict, total=False):
+    """Supply service parameters for MQTTTagScanner."""
+
+    topic: str
+    value_template: Template
+    device: ConfigType
 
 
-async def async_setup_tag(hass, config, config_entry, discovery_data):
+async def async_setup_tag(
+    hass: HomeAssistant,
+    discovery_info: MQTTConfig,
+) -> None:
     """Set up the MQTT tag scanner."""
-    discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+    config_entry: ConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    tag_config: MqttTagConfig
+    try:
+        tag_config = PLATFORM_SCHEMA(discovery_info)
+    except Exception:
+        cancel_discovery(hass, discovery_info)
+        raise
+
+    discovery_hash = discovery_info.discovery_data[ATTR_DISCOVERY_HASH]
     discovery_id = discovery_hash[1]
 
-    device_id = None
-    if CONF_DEVICE in config:
-        _update_device(hass, config_entry, config)
-
-        device_registry = dr.async_get(hass)
-        device = device_registry.async_get_device(
-            {(DOMAIN, id_) for id_ in config[CONF_DEVICE][CONF_IDENTIFIERS]},
-            {tuple(x) for x in config[CONF_DEVICE][CONF_CONNECTIONS]},
-        )
-
-        if device is None:
-            return
-        device_id = device.id
-
-        if TAGS not in hass.data:
-            hass.data[TAGS] = {}
-        if device_id not in hass.data[TAGS]:
-            hass.data[TAGS][device_id] = {}
+    device_id = _update_device(hass, config_entry, tag_config)
+    hass.data.setdefault(TAGS, {})
+    if device_id not in hass.data[TAGS]:
+        hass.data[TAGS][device_id] = {}
 
     tag_scanner = MQTTTagScanner(
         hass,
-        config,
-        device_id,
-        discovery_data,
+        tag_config,
+        cast(str, device_id),
+        discovery_info,
         config_entry,
     )
 
@@ -94,41 +96,28 @@ def async_has_tags(hass, device_id):
 class MQTTTagScanner(MqttDiscoveryDeviceUpdateService):
     """MQTT Tag scanner."""
 
-    def __init__(self, hass, config, device_id, discovery_data, config_entry):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: MqttTagConfig,
+        device_id: str,
+        discovery_info: MQTTConfig,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize."""
         self._config = config
         self._config_entry = config_entry
         self.device_id = device_id
-        self.discovery_data = discovery_data
+        self.discovery_data = discovery_info.discovery_data
         self.hass = hass
-        self._remove_discovery = None
-        self._remove_device_updated = None
         self._sub_state = None
         self._value_template = None
 
         self._setup_from_config(config)
 
         MqttDiscoveryDeviceUpdateService.__init__(
-            self, hass, LOG_NAME, discovery_data, device_id, config_entry
+            self, hass, discovery_info, device_id, config_entry, LOG_NAME
         )
-
-    async def async_discovery_update(
-        self,
-        discovery_payload: DiscoveryInfoType,
-    ) -> None:
-        """Update the configuration through discovery."""
-        discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
-        _LOGGER.info(
-            "Got update for tag scanner with hash: %s '%s'",
-            discovery_hash,
-            discovery_payload,
-        )
-        config = PLATFORM_SCHEMA(discovery_payload)
-        self._config = config
-        if self.device_id:
-            _update_device(self.hass, self._config_entry, config)
-        self._setup_from_config(config)
-        await self.subscribe_topics()
 
     def _setup_from_config(self, config):
         self._value_template = MqttValueTemplate(
@@ -173,12 +162,23 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateService):
             self.hass.data[TAGS][self.device_id].pop(discovery_id)
 
 
-def _update_device(hass, config_entry, config):
+def _update_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry | None,
+    config: MqttTagConfig,
+) -> str | None:
     """Update device registry."""
+    if config_entry is None or CONF_DEVICE not in config:
+        return None
+
+    device = None
     device_registry = dr.async_get(hass)
     config_entry_id = config_entry.entry_id
     device_info = device_info_from_config(config[CONF_DEVICE])
 
     if config_entry_id is not None and device_info is not None:
-        device_info["config_entry_id"] = config_entry_id
-        device_registry.async_get_or_create(**device_info)
+        update_device_info = cast(dict, device_info)
+        update_device_info["config_entry_id"] = config_entry_id
+        device = device_registry.async_get_or_create(**update_device_info)
+
+    return device.id if device else None

@@ -78,6 +78,8 @@ from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
     MQTT_DISCOVERY_UPDATED,
+    MQTTConfig,
+    async_process_discovery_payload,
     clear_discovery_hash,
     set_discovery_hash,
 )
@@ -239,10 +241,10 @@ class SetupEntity(Protocol):
 
 
 async def async_setup_entry_helper(hass, domain, async_setup, schema):
-    """Set up entity, automation or tag creation dynamically through MQTT discovery."""
+    """Set up automation trigger dynamically through MQTT discovery."""
 
     async def async_discover(discovery_payload):
-        """Discover and add an MQTT entity, automation or tag."""
+        """Discover and add automation trigger."""
         discovery_data = discovery_payload.discovery_data
         try:
             config = schema(discovery_payload)
@@ -498,8 +500,22 @@ class MqttAvailability(Entity):
         return self._available_latest
 
 
+<<<<<<< HEAD
 async def cleanup_device_registry(hass, device_id, config_entry_id):
     """Remove device registry entry if there are no remaining entities or triggers."""
+=======
+def cancel_discovery(hass: HomeAssistant, discovery_info: MQTTConfig) -> None:
+    """Cancel the discovery process."""
+    discovery_hash = discovery_info.discovery_data[ATTR_DISCOVERY_HASH]
+    clear_discovery_hash(hass, discovery_hash)
+    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+
+
+async def cleanup_device_registry(
+    hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
+) -> None:
+    """Remove device registry entry if there are no remaining entities, triggers or notify services."""
+>>>>>>> 6ea650d099 (Simplify discovery updates)
     # Local import to avoid circular dependencies
     # pylint: disable-next=import-outside-toplevel
     from . import device_trigger, tag
@@ -525,114 +541,139 @@ class MqttDiscoveryDeviceUpdateService:
     def __init__(
         self,
         hass: HomeAssistant,
-        log_name: str,
-        discovery_data: dict[str, Any] | None,
+        discovery_info: MQTTConfig | None,
         device_id: str | None,
         config_entry: ConfigEntry,
+        log_name: str,
     ) -> None:
         """Initialize the update service."""
 
         # Only activate update service id the parent class has a discover hash
-        if discovery_data is None:
+        self.hass = hass
+        self.log_name = log_name
+        self._remove_discovery = None
+        self.discovery_info = None
+
+        if discovery_info is None:
             return
 
-        self.hass = hass
+        discovery_data = discovery_info.discovery_data
+        self.discovery_hash: tuple = discovery_data[ATTR_DISCOVERY_HASH]
+
         config_entry_id = config_entry.entry_id
-        discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
         discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
-        _device_removed: bool = False
+        rediscover: bool = False
+        skip_device_removal: bool = False
 
         async def async_discovery_update(
             discovery_payload: DiscoveryInfoType | None,
         ) -> None:
             """Handle discovery update."""
-            if not discovery_payload:
-                # unregister the service through auto discovery
+            nonlocal rediscover, self
+            if (
+                discovery_payload
+                and discovery_payload != discovery_data[ATTR_DISCOVERY_PAYLOAD]
+            ):
+                rediscover = True
+            if not discovery_payload or rediscover:
+                # unregister and clean up the current discovery instance
+                self.terminate_discovery()
                 async_dispatcher_send(
-                    hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+                    hass, MQTT_DISCOVERY_DONE.format(self.discovery_hash), None
                 )
                 await _async_tear_down()
+                _LOGGER.info(
+                    "%s %s has been removed",
+                    self.log_name,
+                    self.discovery_hash,
+                )
+            else:
+                # Normal update without change
+                async_dispatcher_send(
+                    hass, MQTT_DISCOVERY_DONE.format(self.discovery_hash), None
+                )
+                _LOGGER.info(
+                    "%s %s no changes",
+                    self.log_name,
+                    self.discovery_hash,
+                )
                 return
+            if rediscover:
+                # start a new discovery service
+                await async_process_discovery_payload(
+                    hass,
+                    config_entry,
+                    self.discovery_hash[0],
+                    self.discovery_hash[1],
+                    discovery_payload,
+                )
+                _LOGGER.debug(
+                    "%s %s rediscovery initiated",
+                    self.log_name,
+                    self.discovery_hash,
+                )
 
-            # update the service through auto discovery
-            await self.async_discovery_update(discovery_payload)
-            _LOGGER.debug(
-                "%s %s update has been processed",
-                log_name,
-                discovery_hash,
-            )
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
-
-        async def async_device_removed(event):
-            """Handle the removal of a device."""
-            nonlocal _device_removed
-            if _device_removed or not async_removed_from_device(
+        async def _async_device_removed(event):
+            """Handle the manual removal of a device."""
+            nonlocal skip_device_removal, self
+            if skip_device_removal or not async_removed_from_device(
                 hass, event, device_id, config_entry_id
             ):
                 return
-            _device_removed = True
-            # Clear the discovery topic so the service is not rediscovered after a restart
+            # Avoid loop of device registry updates
+            skip_device_removal = True
+            # Unregister and clean up and publish an empty payload
+            # so the service is not rediscovered after a restart
+            self.terminate_discovery()
             publish(hass, discovery_topic, "", retain=True)
             await _async_tear_down()
 
         async def _async_tear_down() -> None:
-            """Handle the removal of the service."""
-            nonlocal _device_removed, self
+            """Handle the cleanup of the discovery service."""
+            nonlocal skip_device_removal, self
+            # Cleanup platform resources
             await self.async_tear_down()
             # remove the service for auto discovery updates and clean up the device registry
-            if not _device_removed and config_entry:
-                _device_removed = True
+            if not skip_device_removal:
+                skip_device_removal = True
                 await cleanup_device_registry(hass, device_id, config_entry_id)
-            clear_discovery_hash(hass, discovery_hash)
-            _remove_discovery()
-            _LOGGER.info(
-                "%s %s has been removed",
-                log_name,
-                discovery_hash,
-            )
-            del self
 
         @callback
         def _entry_unload(*_: Any) -> None:
             """Handle the unload of the config entry."""
             nonlocal self
-            # cleanup discovery
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
-            clear_discovery_hash(hass, discovery_hash)
-            _remove_discovery()
-            hass.async_create_task(self.async_tear_down())
+            self.terminate_discovery()
+            # cleanup platform resources
+            hass.async_create_task(_async_tear_down())
 
-        _remove_discovery = async_dispatcher_connect(
+        self._remove_discovery = async_dispatcher_connect(
             hass,
-            MQTT_DISCOVERY_UPDATED.format(discovery_hash),
+            MQTT_DISCOVERY_UPDATED.format(self.discovery_hash),
             async_discovery_update,
         )
         config_entry.async_on_unload(_entry_unload)
         if device_id is not None:
             self._remove_device_updated = hass.bus.async_listen(
-                EVENT_DEVICE_REGISTRY_UPDATED, async_device_removed
+                EVENT_DEVICE_REGISTRY_UPDATED, _async_device_removed
             )
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        async_dispatcher_send(
+            hass, MQTT_DISCOVERY_DONE.format(self.discovery_hash), None
+        )
         _LOGGER.info(
             "%s %s has been initialized",
-            log_name,
-            discovery_hash,
+            self.log_name,
+            self.discovery_hash,
         )
+
+    def terminate_discovery(self) -> None:
+        """Terminate the discovery."""
+        if self._remove_discovery:
+            self._remove_discovery()
+            self._remove_discovery = None
+            clear_discovery_hash(self.hass, self.discovery_hash)
 
     async def async_tear_down(self) -> None:
         """Handle the cleanup of platform specific parts."""
-        raise NotImplementedError()
-
-    async def async_discovery_update(
-        self,
-        discovery_payload: DiscoveryInfoType,
-    ) -> None:
-        """Update the configuration through discovery."""
-        raise NotImplementedError()
 
 
 class MqttDiscoveryUpdate(Entity):
