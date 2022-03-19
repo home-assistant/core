@@ -1,6 +1,4 @@
 """Tests for Tomorrow.io init."""
-import pytest
-
 from homeassistant.components.climacell.const import CONF_TIMESTEP, DOMAIN as CC_DOMAIN
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
@@ -21,10 +19,7 @@ from tests.components.climacell.const import API_V3_ENTRY_DATA
 NEW_NAME = "New Name"
 
 
-async def test_load_and_unload(
-    hass: HomeAssistant,
-    tomorrowio_config_entry_update: pytest.fixture,
-) -> None:
+async def test_load_and_unload(hass: HomeAssistant) -> None:
     """Test loading and unloading entry."""
     data = _get_config_schema(hass, SOURCE_USER)(MIN_CONFIG)
     data[CONF_NAME] = "test"
@@ -46,9 +41,7 @@ async def test_load_and_unload(
 
 
 async def test_climacell_migration_logic(
-    hass: HomeAssistant,
-    tomorrowio_config_entry_update: pytest.fixture,
-    climacell_config_entry_update: pytest.fixture,
+    hass: HomeAssistant, climacell_config_entry_update
 ) -> None:
     """Test that climacell config entry is properly migrated."""
     old_data = API_V3_ENTRY_DATA.copy()

@@ -5,8 +5,6 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
     _get_unique_id,
@@ -90,10 +88,7 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
     return hass.states.get("weather.tomorrow_io_daily")
 
 
-async def test_v4_weather(
-    hass: HomeAssistant,
-    tomorrowio_config_entry_update: pytest.fixture,
-) -> None:
+async def test_v4_weather(hass: HomeAssistant) -> None:
     """Test v4 weather data."""
     weather_state = await _setup(hass, API_V4_ENTRY_DATA)
     assert weather_state.state == ATTR_CONDITION_SUNNY

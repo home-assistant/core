@@ -1,7 +1,6 @@
 """Test the Tomorrow.io config flow."""
 from unittest.mock import patch
 
-import pytest
 from pytomorrowio.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
@@ -37,16 +36,6 @@ from .const import API_KEY, MIN_CONFIG
 
 from tests.common import MockConfigEntry
 from tests.components.climacell.const import API_V3_ENTRY_DATA
-
-
-@pytest.fixture(name="tomorrowio_entry_skip_setup", autouse=True)
-def tomorrowio_entry_skip_setup_fixture():
-    """Skip tomorrowio platform entry setup."""
-    with patch(
-        "homeassistant.components.tomorrowio.TomorrowioDataUpdateCoordinator._async_update_data",
-        return_value={},
-    ):
-        yield
 
 
 async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
@@ -246,9 +235,7 @@ async def test_import_flow_v4(hass: HomeAssistant) -> None:
 
 
 async def test_import_flow_v3(
-    hass: HomeAssistant,
-    tomorrowio_config_entry_update: None,
-    climacell_config_entry_update: None,
+    hass: HomeAssistant, climacell_config_entry_update
 ) -> None:
     """Test import flow for climacell v3 config entry."""
     user_config = API_V3_ENTRY_DATA

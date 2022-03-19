@@ -17,7 +17,7 @@ def tomorrowio_config_flow_connect():
         yield
 
 
-@pytest.fixture(name="tomorrowio_config_entry_update")
+@pytest.fixture(name="tomorrowio_config_entry_update", autouse=True)
 def tomorrowio_config_entry_update_fixture():
     """Mock valid tomorrowio config entry setup."""
     with patch(

@@ -5,8 +5,6 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
@@ -138,10 +136,7 @@ def check_sensor_state(hass: HomeAssistant, entity_name: str, value: str):
     assert state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
 
 
-async def test_v4_sensor(
-    hass: HomeAssistant,
-    tomorrowio_config_entry_update: pytest.fixture,
-) -> None:
+async def test_v4_sensor(hass: HomeAssistant) -> None:
     """Test v4 sensor data."""
     await _setup(hass, V4_FIELDS, API_V4_ENTRY_DATA)
     check_sensor_state(hass, O3, "94.46")
