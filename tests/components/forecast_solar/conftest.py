@@ -56,7 +56,7 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
 
         estimate = MagicMock(spec=models.Estimate)
         estimate.now.return_value = now
-        estimate.timezone = "US/Pacific"
+        estimate.timezone = "Europe/Amsterdam"
         estimate.account_type.value = "public"
         estimate.energy_production_today = 100000
         estimate.energy_production_tomorrow = 200000
