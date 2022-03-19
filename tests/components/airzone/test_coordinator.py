@@ -1,4 +1,4 @@
-"""Define tests for the Airzone init."""
+"""Define tests for the Airzone coordinator."""
 
 from unittest.mock import MagicMock, patch
 
