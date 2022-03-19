@@ -33,10 +33,11 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     siren,
     switch,
 )
-from .channels import ChannelPool, base
+from .channels import base
 
 if TYPE_CHECKING:
     from ..entity import ZhaEntity
+    from .channels import ChannelPool
     from .device import ZHADevice
     from .gateway import ZHAGateway
     from .group import ZHAGroup
