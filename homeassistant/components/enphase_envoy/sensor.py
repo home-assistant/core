@@ -153,6 +153,8 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
             name=f"Inverter {serial_number}",
+            manufacturer="Enphase",
+            model="Inverter",
             via_device=(DOMAIN, str(envoy_serial_num)),
         )
         super().__init__(coordinator)
