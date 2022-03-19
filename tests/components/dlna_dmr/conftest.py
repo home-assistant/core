@@ -5,7 +5,8 @@ from collections.abc import Iterable
 from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import Mock, create_autospec, patch, seal
 
-from async_upnp_client import UpnpDevice, UpnpFactory, UpnpService
+from async_upnp_client.client import UpnpDevice, UpnpService
+from async_upnp_client.client_factory import UpnpFactory
 import pytest
 
 from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN

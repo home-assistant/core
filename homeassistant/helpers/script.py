@@ -860,12 +860,13 @@ class _QueuedScriptRun(_ScriptRun):
                 {lock_task, stop_task}, return_when=asyncio.FIRST_COMPLETED
             )
         except asyncio.CancelledError:
-            lock_task.cancel()
             self._finish()
             raise
+        else:
+            self.lock_acquired = lock_task.done() and not lock_task.cancelled()
         finally:
+            lock_task.cancel()
             stop_task.cancel()
-        self.lock_acquired = lock_task.done() and not lock_task.cancelled()
 
         # If we've been told to stop, then just finish up. Otherwise, we've acquired the
         # lock so we can go ahead and start the run.
@@ -1246,7 +1247,7 @@ class Script:
             and id(self) in script_stack
         ):
             script_execution_set("disallowed_recursion_detected")
-            _LOGGER.warning("Disallowed recursion detected")
+            self._log("Disallowed recursion detected", level=logging.WARNING)
             return
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
