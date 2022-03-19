@@ -233,6 +233,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
     native_value: Decimal  # type: ignore[assignment]
     last_period: Decimal
     last_reset: datetime
+    status: str
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the utility sensor data."""
@@ -240,6 +241,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         data["native_value"] = str(self.native_value)
         data["last_period"] = str(self.last_period)
         data["last_reset"] = self.last_reset.isoformat()
+        data["status"] = self.status
 
         return data
 
@@ -256,8 +258,9 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         except InvalidOperation:
             last_period = Decimal(0)
         last_reset = dt_util.parse_datetime(restored["last_reset"])
+        status = restored["status"]
 
-        return cls(native_value, native_unit_of_measurement, last_period, last_reset)  # type: ignore[arg-type]
+        return cls(native_value, native_unit_of_measurement, last_period, last_reset, status)  # type: ignore[arg-type]
 
 
 class UtilityMeterSensor(RestoreSensor):
@@ -439,8 +442,11 @@ class UtilityMeterSensor(RestoreSensor):
             self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
             self._last_period = last_sensor_data.last_period
             self._last_reset = last_sensor_data.last_reset
+            if last_sensor_data.status == COLLECTING:
+                # Fake cancellation function to init the meter in similar state
+                self._collecting = lambda: None
 
-        if (state := await self.async_get_last_state()) is not None:
+        elif state := await self.async_get_last_state():
             # legacy to be removed on 2022.10 (we are keeping this to avoid utility_meter counter losses)
             try:
                 self._state = Decimal(state.state)
@@ -451,19 +457,18 @@ class UtilityMeterSensor(RestoreSensor):
                     self.name,
                 )
             else:
-                if last_sensor_data is None:
-                    self._unit_of_measurement = state.attributes.get(
-                        ATTR_UNIT_OF_MEASUREMENT
-                    )
-                    self._last_period = (
-                        Decimal(state.attributes[ATTR_LAST_PERIOD])
-                        if state.attributes.get(ATTR_LAST_PERIOD)
-                        and is_number(state.attributes[ATTR_LAST_PERIOD])
-                        else Decimal(0)
-                    )
-                    self._last_reset = dt_util.as_utc(
-                        dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
-                    )
+                self._unit_of_measurement = state.attributes.get(
+                    ATTR_UNIT_OF_MEASUREMENT
+                )
+                self._last_period = (
+                    Decimal(state.attributes[ATTR_LAST_PERIOD])
+                    if state.attributes.get(ATTR_LAST_PERIOD)
+                    and is_number(state.attributes[ATTR_LAST_PERIOD])
+                    else Decimal(0)
+                )
+                self._last_reset = dt_util.as_utc(
+                    dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
+                )
                 if state.attributes.get(ATTR_STATUS) == COLLECTING:
                     # Fake cancellation function to init the meter in similar state
                     self._collecting = lambda: None
@@ -583,6 +588,7 @@ class UtilityMeterSensor(RestoreSensor):
             self.native_unit_of_measurement,
             self._last_period,
             self._last_reset,
+            PAUSED if self._collecting is None else COLLECTING,
         )
 
     async def async_get_last_sensor_data(self) -> UtilitySensorExtraStoredData | None:

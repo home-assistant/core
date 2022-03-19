@@ -462,6 +462,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                     "native_unit_of_measurement": "kWh",
                     "last_reset": last_reset,
                     "last_period": "7",
+                    "status": "paused",
                 },
             ),
             (
@@ -486,6 +487,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                     "native_unit_of_measurement": "kWh",
                     "last_reset": last_reset,
                     "last_period": "7",
+                    "status": "collecting",
                 },
             ),
         ],
