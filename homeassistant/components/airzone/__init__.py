@@ -32,7 +32,6 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self.airzone: AirzoneLocalApi = coordinator.airzone
 
         self._attr_device_info: DeviceInfo = {
             "identifiers": {(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
