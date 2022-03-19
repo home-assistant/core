@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import COORDINATOR, DOMAIN, NAME, SENSORS
 
@@ -38,17 +39,18 @@ class EnvoySensorEntityDescription(SensorEntityDescription, EnvoyRequiredKeysMix
     """Describes an Envoy inverter sensor entity."""
 
 
-ORIGINAL_INVERTERS_KEY = "inverters"
+INVERTERS_KEY = "inverters"
+LAST_REPORTED_KEY = "last_reported"
 
 INVERTER_SENSORS = (
     EnvoySensorEntityDescription(
-        key=ORIGINAL_INVERTERS_KEY,
+        key=INVERTERS_KEY,
         native_unit_of_measurement=POWER_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_idx=0,
     ),
     EnvoySensorEntityDescription(
-        key="last_reported",
+        key=LAST_REPORTED_KEY,
         name="Last Reported",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -151,7 +153,7 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._serial_number = serial_number
         self._attr_name = name
-        if description.key == ORIGINAL_INVERTERS_KEY:
+        if description.key == INVERTERS_KEY:
             self._attr_unique_id = serial_number
         else:
             self._attr_unique_id = f"{serial_number}_{description.key}"
@@ -168,4 +170,7 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         production = self.coordinator.data["inverters_production"]
-        return production[self._serial_number][self.entity_description.value_idx]
+        val = production[self._serial_number][self.entity_description.value_idx]
+        if val is not None and self.entity_description.key == LAST_REPORTED_KEY:
+            return dt_util.parse_datetime(val)
+        return val
