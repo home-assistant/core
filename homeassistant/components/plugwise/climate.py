@@ -122,8 +122,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         return {
-            "available_schedules": self.device.get("available_schedules"),
-            "selected_schedule": self.device.get("selected_schedule"),
+            "available_schemas": self.device.get("available_schedules"),
+            "selected_schema": self.device.get("selected_schedule"),
         }
 
     @plugwise_command
