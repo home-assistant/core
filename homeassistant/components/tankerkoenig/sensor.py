@@ -1,24 +1,28 @@
 """Tankerkoenig sensor integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CURRENCY_EURO,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
+from . import TankerkoenigData
 from .const import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,18 +40,12 @@ ATTRIBUTION = "Data provided by https://creativecommons.tankerkoenig.de"
 ICON = "mdi:gas-station"
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the tankerkoenig sensors."""
 
-    if discovery_info is None:
-        return
-
-    tankerkoenig = hass.data[DOMAIN]
+    tankerkoenig: TankerkoenigData = hass.data[DOMAIN][entry.unique_id]
 
     async def async_update_data():
         """Fetch data from API endpoint."""
@@ -61,13 +59,13 @@ async def async_setup_platform(
         _LOGGER,
         name=NAME,
         update_method=async_update_data,
-        update_interval=tankerkoenig.update_interval,
+        update_interval=timedelta(minutes=tankerkoenig.update_interval),
     )
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    stations = discovery_info.values()
+    stations = tankerkoenig.stations.values()
     entities = []
     for station in stations:
         for fuel in tankerkoenig.fuel_types:
@@ -107,6 +105,7 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
         self._house_number = station["houseNumber"]
         self._postcode = station["postCode"]
         self._street = station["street"]
+        self._brand = self._station["brand"]
         self._price = station[fuel_type]
         self._show_on_map = show_on_map
 
@@ -135,6 +134,16 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._station_id}_{self._fuel_type}"
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return device info."""
+        return DeviceInfo(
+            connections={(ATTR_ID, self._station_id)},
+            name=f"{self._city} {self._street} {self._house_number} {self._brand}",
+            manufacturer=self._brand,
+            configuration_url="https://www.tankerkoenig.de",
+        )
 
     @property
     def extra_state_attributes(self):

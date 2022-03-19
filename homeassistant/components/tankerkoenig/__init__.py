@@ -1,64 +1,74 @@
 """Ask tankerkoenig.de for petrol price information."""
-from datetime import timedelta
+from __future__ import annotations
+
 import logging
 from math import ceil
 
 import pytankerkoenig
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
+    CONF_NAME,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_SHOW_ON_MAP,
+    Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_FUEL_TYPES, CONF_STATIONS, DOMAIN, FUEL_TYPES
+from .const import (
+    CONF_FUEL_TYPES,
+    CONF_STATIONS,
+    DEFAULT_RADIUS,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    FUEL_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_RADIUS = 2
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
-
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-                vol.Optional(CONF_FUEL_TYPES, default=FUEL_TYPES): vol.All(
-                    cv.ensure_list, [vol.In(FUEL_TYPES)]
-                ),
-                vol.Inclusive(
-                    CONF_LATITUDE,
-                    "coordinates",
-                    "Latitude and longitude must exist together",
-                ): cv.latitude,
-                vol.Inclusive(
-                    CONF_LONGITUDE,
-                    "coordinates",
-                    "Latitude and longitude must exist together",
-                ): cv.longitude,
-                vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.All(
-                    cv.positive_int, vol.Range(min=1)
-                ),
-                vol.Optional(CONF_STATIONS, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-                vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): cv.string,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): cv.time_period,
+                    vol.Optional(CONF_FUEL_TYPES, default=FUEL_TYPES): vol.All(
+                        cv.ensure_list, [vol.In(FUEL_TYPES)]
+                    ),
+                    vol.Inclusive(
+                        CONF_LATITUDE,
+                        "coordinates",
+                        "Latitude and longitude must exist together",
+                    ): cv.latitude,
+                    vol.Inclusive(
+                        CONF_LONGITUDE,
+                        "coordinates",
+                        "Latitude and longitude must exist together",
+                    ): cv.longitude,
+                    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.All(
+                        cv.positive_int, vol.Range(min=1)
+                    ),
+                    vol.Optional(CONF_STATIONS, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -69,87 +79,89 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     conf = config[DOMAIN]
-
-    _LOGGER.debug("Setting up integration")
-
-    tankerkoenig = TankerkoenigData(hass, conf)
-
-    latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    radius = conf[CONF_RADIUS]
-    additional_stations = conf[CONF_STATIONS]
-
-    setup_ok = await hass.async_add_executor_job(
-        tankerkoenig.setup, latitude, longitude, radius, additional_stations
-    )
-    if not setup_ok:
-        _LOGGER.error("Could not setup integration")
-        return False
-
-    hass.data[DOMAIN] = tankerkoenig
-
     hass.async_create_task(
-        async_load_platform(
-            hass,
-            SENSOR_DOMAIN,
+        hass.config_entries.flow.async_init(
             DOMAIN,
-            discovered=tankerkoenig.stations,
-            hass_config=conf,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_NAME: "Home",
+                CONF_API_KEY: conf[CONF_API_KEY],
+                CONF_FUEL_TYPES: conf[CONF_FUEL_TYPES],
+                CONF_LOCATION: {
+                    "latitude": conf.get(CONF_LATITUDE, hass.config.latitude),
+                    "longitude": conf.get(CONF_LONGITUDE, hass.config.longitude),
+                },
+                CONF_RADIUS: conf[CONF_RADIUS],
+                CONF_STATIONS: conf[CONF_STATIONS],
+                CONF_SCAN_INTERVAL: conf[CONF_SCAN_INTERVAL],
+                CONF_SHOW_ON_MAP: conf[CONF_SHOW_ON_MAP],
+            },
         )
     )
 
     return True
 
 
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set a tankerkoenig configuration entry up."""
+    tankerkoenig = TankerkoenigData(hass, entry)
+
+    setup_ok = await hass.async_add_executor_job(tankerkoenig.setup)
+    if not setup_ok:
+        _LOGGER.error("Could not setup integration")
+        return False
+
+    tankerkoenig.undo_update_listener = entry.add_update_listener(
+        _async_update_listener
+    )
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.unique_id] = tankerkoenig
+
+    hass.config_entries.async_setup_platforms(entry, [Platform.SENSOR])
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Tankerkoenig config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, [Platform.SENSOR]
+    )
+    if unload_ok:
+        entry_data: TankerkoenigData = hass.data[DOMAIN][entry.unique_id]
+        assert entry_data.undo_update_listener is not None
+        entry_data.undo_update_listener()
+        hass.data[DOMAIN].pop(entry.unique_id)
+
+    return unload_ok
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 class TankerkoenigData:
     """Get the latest data from the API."""
 
-    def __init__(self, hass, conf):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the data object."""
-        self._api_key = conf[CONF_API_KEY]
-        self.stations = {}
-        self.fuel_types = conf[CONF_FUEL_TYPES]
-        self.update_interval = conf[CONF_SCAN_INTERVAL]
-        self.show_on_map = conf[CONF_SHOW_ON_MAP]
+        self._api_key = entry.data[CONF_API_KEY]
+        self._selected_stations = entry.data[CONF_STATIONS]
         self._hass = hass
+        self.undo_update_listener: CALLBACK_TYPE | None = None
+        self.stations: dict[str, dict] = {}
+        self.fuel_types = entry.data[CONF_FUEL_TYPES]
+        self.update_interval = entry.options[CONF_SCAN_INTERVAL]
+        self.show_on_map = entry.options[CONF_SHOW_ON_MAP]
 
-    def setup(self, latitude, longitude, radius, additional_stations):
+    def setup(self):
         """Set up the tankerkoenig API.
 
         Read the initial data from the server, to initialize the list of fuel stations to monitor.
         """
-        _LOGGER.debug("Fetching data for (%s, %s) rad: %s", latitude, longitude, radius)
-        try:
-            data = pytankerkoenig.getNearbyStations(
-                self._api_key, latitude, longitude, radius, "all", "dist"
-            )
-        except pytankerkoenig.customException as err:
-            data = {"ok": False, "message": err, "exception": True}
-        _LOGGER.debug("Received data: %s", data)
-        if not data["ok"]:
-            _LOGGER.error(
-                "Setup for sensors was unsuccessful. Error occurred while fetching data from tankerkoenig.de: %s",
-                data["message"],
-            )
-            return False
-
-        # Add stations found via location + radius
-        if not (nearby_stations := data["stations"]):
-            if not additional_stations:
-                _LOGGER.error(
-                    "Could not find any station in range."
-                    "Try with a bigger radius or manually specify stations in additional_stations"
-                )
-                return False
-            _LOGGER.warning(
-                "Could not find any station in range. Will only use manually specified stations"
-            )
-        else:
-            for station in nearby_stations:
-                self.add_station(station)
-
-        # Add manually specified additional stations
-        for station_id in additional_stations:
+        for station_id in self._selected_stations:
             try:
                 additional_station_data = pytankerkoenig.getStationData(
                     self._api_key, station_id
