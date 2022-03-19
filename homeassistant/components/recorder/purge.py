@@ -127,7 +127,7 @@ def _select_unused_attributes_ids(
     if not attributes_ids:
         return set()
     to_remove = attributes_ids - {
-        state.attributes_id
+        state[0]
         for state in session.query(distinct(States.attributes_id))
         .filter(States.attributes_id.in_(attributes_ids))
         .all()
@@ -364,7 +364,9 @@ def _purge_filtered_events(
         .limit(MAX_ROWS_TO_PURGE)
         .all()
     )
-    event_ids: list[int] = [event.event_id for event in events]
+    event_ids: list[int] = [
+        event.event_id for event in events if event.event_id is not None
+    ]
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids)
     )
