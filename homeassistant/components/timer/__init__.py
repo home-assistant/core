@@ -286,7 +286,8 @@ class Timer(RestoreEntity):
             self._remaining = remaining
             self._state = STATUS_PAUSED
             self.async_start()
-        # If the timer ended before now but within the grace period, finish the timer
+        # If the timer ended before now, finish the timer. The event will indicate
+        # when the timer was expected to fire.
         else:
             self._end = end
             self.async_finish()
