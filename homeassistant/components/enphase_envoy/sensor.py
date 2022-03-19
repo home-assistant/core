@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,6 +23,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import COORDINATOR, DOMAIN, NAME, SENSORS
 
 ICON = "mdi:flash"
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -67,6 +69,7 @@ async def async_setup_entry(
     envoy_name = data[NAME]
     envoy_serial_num = config_entry.unique_id
     assert envoy_serial_num is not None
+    _LOGGER.debug("Envoy data: %s", data)
 
     entities: list[Envoy | EnvoyInverter] = []
     for description in SENSORS:
