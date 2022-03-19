@@ -172,5 +172,5 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
         production = self.coordinator.data["inverters_production"]
         val = production[self._serial_number][self.entity_description.value_idx]
         if val is not None and self.entity_description.key == LAST_REPORTED_KEY:
-            return dt_util.parse_datetime(val)
+            return dt_util.as_utc(dt_util.parse_datetime(val))
         return val
