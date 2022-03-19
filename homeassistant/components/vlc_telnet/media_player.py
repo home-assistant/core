@@ -31,7 +31,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -60,7 +60,6 @@ SUPPORT_VLC = (
 )
 
 _T = TypeVar("_T", bound="VlcDevice")
-_R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
@@ -125,6 +124,7 @@ class VlcDevice(MediaPlayerEntity):
             manufacturer="VideoLAN",
             name=name,
         )
+        self._using_addon = config_entry.source == SOURCE_HASSIO
 
     @catch_vlc_errors
     async def async_update(self) -> None:
@@ -316,7 +316,9 @@ class VlcDevice(MediaPlayerEntity):
             )
 
         # If media ID is a relative URL, we serve it from HA.
-        media_id = async_process_play_media_url(self.hass, media_id)
+        media_id = async_process_play_media_url(
+            self.hass, media_id, for_supervisor_network=self._using_addon
+        )
 
         await self._vlc.add(media_id)
         self._state = STATE_PLAYING

@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ICON_OCCUPIED, SENSOR_TYPES
+from .const import ENTITY_TYPES, ICON_OCCUPIED
 
 
 def device_from_bed(bed: SleepIQBed) -> DeviceInfo:
@@ -33,7 +33,7 @@ class SleepIQEntity(Entity):
         self._attr_device_info = device_from_bed(bed)
 
 
-class SleepIQSensor(CoordinatorEntity):
+class SleepIQBedEntity(CoordinatorEntity):
     """Implementation of a SleepIQ sensor."""
 
     _attr_icon = ICON_OCCUPIED
@@ -42,17 +42,11 @@ class SleepIQSensor(CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         bed: SleepIQBed,
-        sleeper: SleepIQSleeper,
-        name: str,
     ) -> None:
         """Initialize the SleepIQ sensor entity."""
         super().__init__(coordinator)
-        self.sleeper = sleeper
         self.bed = bed
         self._attr_device_info = device_from_bed(bed)
-
-        self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {SENSOR_TYPES[name]}"
-        self._attr_unique_id = f"{bed.id}_{sleeper.name}_{name}"
         self._async_update_attrs()
 
     @callback
@@ -67,7 +61,7 @@ class SleepIQSensor(CoordinatorEntity):
         """Update sensor attributes."""
 
 
-class SleepIQBedCoordinator(CoordinatorEntity):
+class SleepIQSleeperEntity(SleepIQBedEntity):
     """Implementation of a SleepIQ sensor."""
 
     _attr_icon = ICON_OCCUPIED
@@ -76,8 +70,12 @@ class SleepIQBedCoordinator(CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         bed: SleepIQBed,
+        sleeper: SleepIQSleeper,
+        name: str,
     ) -> None:
         """Initialize the SleepIQ sensor entity."""
-        super().__init__(coordinator)
-        self.bed = bed
-        self._attr_device_info = device_from_bed(bed)
+        self.sleeper = sleeper
+        super().__init__(coordinator, bed)
+
+        self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {ENTITY_TYPES[name]}"
+        self._attr_unique_id = f"{sleeper.sleeper_id}_{name}"

@@ -9,11 +9,13 @@ from homeassistant.components.modbus.const import (
     CONF_LAZY_ERROR,
     CONF_PRECISION,
     CONF_SCALE,
+    CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    MODBUS_DOMAIN,
     DataType,
 )
 from homeassistant.components.sensor import (
@@ -32,8 +34,10 @@ from homeassistant.const import (
     CONF_SLAVE,
     CONF_STRUCTURE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
@@ -121,6 +125,16 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_ADDRESS: 51,
                     CONF_DATA_TYPE: DataType.INT32,
                     CONF_SWAP: CONF_SWAP_WORD_BYTE,
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT32,
+                    CONF_SLAVE_COUNT: 5,
                 }
             ]
         },
@@ -543,6 +557,92 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_DATA_TYPE: DataType.UINT32,
+                    CONF_SCALE: 1,
+                    CONF_OFFSET: 0,
+                    CONF_PRECISION: 0,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words,do_exception,expected",
+    [
+        (
+            {
+                CONF_SLAVE_COUNT: 0,
+            },
+            [0x0102, 0x0304],
+            False,
+            ["16909060"],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 1,
+            },
+            [0x0102, 0x0304, 0x0403, 0x0201],
+            False,
+            ["16909060", "67305985"],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 3,
+            },
+            [
+                0x0102,
+                0x0304,
+                0x0506,
+                0x0708,
+                0x090A,
+                0x0B0C,
+                0x0D0E,
+                0x0F00,
+            ],
+            False,
+            [
+                "16909060",
+                "84281096",
+                "151653132",
+                "219025152",
+            ],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 1,
+            },
+            [0x0102, 0x0304, 0x0403, 0x0201],
+            True,
+            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 1,
+            },
+            [],
+            False,
+            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+        ),
+    ],
+)
+async def test_slave_sensor(hass, mock_do_cycle, expected):
+    """Run test for sensor."""
+    assert hass.states.get(ENTITY_ID).state == expected[0]
+
+    for i in range(1, len(expected)):
+        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i}".replace(" ", "_")
+        assert hass.states.get(entity_id).state == expected[i]
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 1,
                 },
             ],
@@ -664,7 +764,7 @@ async def test_struct_sensor(hass, mock_do_cycle, expected):
 
 @pytest.mark.parametrize(
     "mock_test_state",
-    [(State(ENTITY_ID, "117"),)],
+    [(State(ENTITY_ID, "117"), State(f"{ENTITY_ID}_1", "119"))],
     indirect=True,
 )
 @pytest.mark.parametrize(
@@ -676,6 +776,16 @@ async def test_struct_sensor(hass, mock_do_cycle, expected):
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 0,
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 0,
+                    CONF_SLAVE_COUNT: 1,
                 }
             ]
         },
@@ -712,3 +822,15 @@ async def test_service_sensor_update(hass, mock_modbus, mock_ha):
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == "32"
+
+
+async def test_no_discovery_info_sensor(hass, caplog):
+    """Test setup without discovery info."""
+    assert SENSOR_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": MODBUS_DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert SENSOR_DOMAIN in hass.config.components

@@ -35,6 +35,8 @@ from .const import (
     CHAR_LEAK_DETECTED,
     CHAR_MOTION_DETECTED,
     CHAR_OCCUPANCY_DETECTED,
+    CHAR_PM10_DENSITY,
+    CHAR_PM25_DENSITY,
     CHAR_SMOKE_DETECTED,
     PROP_CELSIUS,
     SERV_AIR_QUALITY_SENSOR,
@@ -51,7 +53,13 @@ from .const import (
     THRESHOLD_CO,
     THRESHOLD_CO2,
 )
-from .util import convert_to_float, density_to_air_quality, temperature_to_homekit
+from .util import (
+    convert_to_float,
+    density_to_air_quality,
+    density_to_air_quality_pm10,
+    density_to_air_quality_pm25,
+    temperature_to_homekit,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -156,6 +164,15 @@ class AirQualitySensor(HomeAccessory):
         """Initialize a AirQualitySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         state = self.hass.states.get(self.entity_id)
+
+        self.create_services()
+
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
+
+    def create_services(self):
+        """Initialize a AirQualitySensor accessory object."""
         serv_air_quality = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_AIR_PARTICULATE_DENSITY]
         )
@@ -163,9 +180,6 @@ class AirQualitySensor(HomeAccessory):
         self.char_density = serv_air_quality.configure_char(
             CHAR_AIR_PARTICULATE_DENSITY, value=0
         )
-        # Set the state so it is in sync on initial
-        # GET to avoid an event storm after homekit startup
-        self.async_update_state(state)
 
     @callback
     def async_update_state(self, new_state):
@@ -175,6 +189,60 @@ class AirQualitySensor(HomeAccessory):
                 self.char_density.set_value(density)
                 _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
             air_quality = density_to_air_quality(density)
+            self.char_quality.set_value(air_quality)
+            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+
+
+@TYPES.register("PM10Sensor")
+class PM10Sensor(AirQualitySensor):
+    """Generate a PM10Sensor accessory as PM 10 sensor."""
+
+    def create_services(self):
+        """Override the init function for PM 10 Sensor."""
+        serv_air_quality = self.add_preload_service(
+            SERV_AIR_QUALITY_SENSOR, [CHAR_PM10_DENSITY]
+        )
+        self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
+        self.char_density = serv_air_quality.configure_char(CHAR_PM10_DENSITY, value=0)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update accessory after state change."""
+        density = convert_to_float(new_state.state)
+        if not density:
+            return
+        if self.char_density.value != density:
+            self.char_density.set_value(density)
+            _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+        air_quality = density_to_air_quality_pm10(density)
+        if self.char_quality.value != air_quality:
+            self.char_quality.set_value(air_quality)
+            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+
+
+@TYPES.register("PM25Sensor")
+class PM25Sensor(AirQualitySensor):
+    """Generate a PM25Sensor accessory as PM 2.5 sensor."""
+
+    def create_services(self):
+        """Override the init function for PM 2.5 Sensor."""
+        serv_air_quality = self.add_preload_service(
+            SERV_AIR_QUALITY_SENSOR, [CHAR_PM25_DENSITY]
+        )
+        self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
+        self.char_density = serv_air_quality.configure_char(CHAR_PM25_DENSITY, value=0)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update accessory after state change."""
+        density = convert_to_float(new_state.state)
+        if not density:
+            return
+        if self.char_density.value != density:
+            self.char_density.set_value(density)
+            _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+        air_quality = density_to_air_quality_pm25(density)
+        if self.char_quality.value != air_quality:
             self.char_quality.set_value(air_quality)
             _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
 

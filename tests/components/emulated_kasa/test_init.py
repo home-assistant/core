@@ -9,9 +9,9 @@ from homeassistant.components.emulated_kasa.const import (
     DOMAIN,
 )
 from homeassistant.components.fan import (
-    ATTR_SPEED,
+    ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_SPEED,
+    SERVICE_SET_PERCENTAGE,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -57,15 +57,15 @@ CONFIG = {
             ENTITY_FAN: {
                 CONF_POWER: "{% if is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'low') %} "
+                + "','percentage', 33) %} "
                 + str(ENTITY_FAN_SPEED_LOW)
                 + "{% elif is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'medium') %} "
+                + "','percentage', 66) %} "
                 + str(ENTITY_FAN_SPEED_MED)
                 + "{% elif is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'high') %} "
+                + "','percentage', 100) %} "
                 + str(ENTITY_FAN_SPEED_HIGH)
                 + "{% endif %}"
             },
@@ -109,21 +109,22 @@ CONFIG_FAN = {
             ENTITY_FAN: {
                 CONF_POWER: "{% if is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'low') %} "
+                + "','percentage', 33) %} "
                 + str(ENTITY_FAN_SPEED_LOW)
                 + "{% elif is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'medium') %} "
+                + "','percentage', 66) %} "
                 + str(ENTITY_FAN_SPEED_MED)
                 + "{% elif is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'high') %} "
+                + "','percentage', 100) %} "
                 + str(ENTITY_FAN_SPEED_HIGH)
                 + "{% endif %}"
             },
         }
     }
 }
+
 
 CONFIG_SENSOR = {
     DOMAIN: {
@@ -281,8 +282,8 @@ async def test_template(hass):
     )
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_SPEED: "low"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: 33},
         blocking=True,
     )
 
@@ -299,8 +300,8 @@ async def test_template(hass):
     # Fan High:
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_SPEED: "high"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: 100},
         blocking=True,
     )
     plug_it = emulated_kasa.get_plug_devices(hass, config)
@@ -462,8 +463,8 @@ async def test_multiple_devices(hass):
     )
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_SPEED: "medium"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: 66},
         blocking=True,
     )
 

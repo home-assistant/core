@@ -17,7 +17,7 @@
                     "route_back": "Retour/Mode NAT",
                     "tunneling_type": "Type de tunnel KNX"
                 },
-                "description": "Veuillez saisir les informations de connexion de votre p\u00e9riph\u00e9rique de tunneling."
+                "description": "Veuillez saisir les informations de connexion de votre appareil de cr\u00e9ation de tunnel."
             },
             "routing": {
                 "data": {

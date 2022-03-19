@@ -1,0 +1,33 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "round": "Precision",
+                    "source": "Input sensor",
+                    "time_window": "Time window",
+                    "unit_prefix": "Metric prefix",
+                    "unit_time": "Time unit"
+                },
+                "description": "Precision controls the number of decimal digits in the output.\nIf the time window is not 0, the sensor's value is a time weighted moving average of derivatives within the window.\nThe derivative will be scaled according to the selected metric prefix and time unit of the derivative.",
+                "title": "New Derivative sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "name": "Name",
+                    "round": "Precision",
+                    "source": "Input sensor",
+                    "time_window": "Time window",
+                    "unit_prefix": "Metric prefix",
+                    "unit_time": "Time unit"
+                },
+                "description": "Precision controls the number of decimal digits in the output.\nIf the time window is not 0, the sensor's value is a time weighted moving average of derivatives within the window.\nThe derivative will be scaled according to the selected metric prefix and time unit of the derivative."
+            }
+        }
+    }
+}

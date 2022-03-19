@@ -1174,19 +1174,19 @@ async def test_resolve_entity_ids(hass, registry):
     assert entry2.entity_id == "light.milk"
 
     expected = ["light.beer", "light.milk"]
-    assert er.async_resolve_entity_ids(registry, [entry1.id, entry2.id]) == expected
+    assert er.async_validate_entity_ids(registry, [entry1.id, entry2.id]) == expected
 
     expected = ["light.beer", "light.milk"]
-    assert er.async_resolve_entity_ids(registry, ["light.beer", entry2.id]) == expected
+    assert er.async_validate_entity_ids(registry, ["light.beer", entry2.id]) == expected
 
     with pytest.raises(vol.Invalid):
-        er.async_resolve_entity_ids(registry, ["light.beer", "bad_uuid"])
+        er.async_validate_entity_ids(registry, ["light.beer", "bad_uuid"])
 
     expected = ["light.unknown"]
-    assert er.async_resolve_entity_ids(registry, ["light.unknown"]) == expected
+    assert er.async_validate_entity_ids(registry, ["light.unknown"]) == expected
 
     with pytest.raises(vol.Invalid):
-        er.async_resolve_entity_ids(registry, ["unknown_uuid"])
+        er.async_validate_entity_ids(registry, ["unknown_uuid"])
 
 
 def test_entity_registry_items():

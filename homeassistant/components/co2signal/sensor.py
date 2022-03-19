@@ -92,14 +92,15 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            super().available
-            and self.coordinator.data["data"].get(self._description.key) is not None
+            super().available and self._description.key in self.coordinator.data["data"]
         )
 
     @property
     def native_value(self) -> StateType:
         """Return sensor state."""
-        return round(self.coordinator.data["data"][self._description.key], 2)  # type: ignore[misc]
+        if (value := self.coordinator.data["data"][self._description.key]) is None:  # type: ignore[literal-required]
+            return None
+        return round(value, 2)
 
     @property
     def native_unit_of_measurement(self) -> str | None:

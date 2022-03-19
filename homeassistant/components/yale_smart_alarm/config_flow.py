@@ -5,7 +5,7 @@ from typing import Any
 
 import voluptuous as vol
 from yalesmartalarmclient.client import YaleSmartAlarmClient
-from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
+from yalesmartalarmclient.exceptions import AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -21,6 +21,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
+    YALE_BASE_ERRORS,
 )
 
 DATA_SCHEMA = vol.Schema(
@@ -81,7 +82,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationError as error:
                 LOGGER.error("Authentication failed. Check credentials %s", error)
                 errors = {"base": "invalid_auth"}
-            except (ConnectionError, TimeoutError, UnknownError) as error:
+            except YALE_BASE_ERRORS as error:
                 LOGGER.error("Connection to API failed %s", error)
                 errors = {"base": "cannot_connect"}
 
@@ -124,7 +125,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationError as error:
                 LOGGER.error("Authentication failed. Check credentials %s", error)
                 errors = {"base": "invalid_auth"}
-            except (ConnectionError, TimeoutError, UnknownError) as error:
+            except YALE_BASE_ERRORS as error:
                 LOGGER.error("Connection to API failed %s", error)
                 errors = {"base": "cannot_connect"}
 
