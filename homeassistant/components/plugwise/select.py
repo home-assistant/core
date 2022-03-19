@@ -39,13 +39,16 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         super().__init__(coordinator, device_id)
         self._attr_unique_id = f"{device_id}-select_schedule"
         self._attr_name = (f"{self.device.get('name', '')} Select Schedule").lstrip()
-        self._attr_current_option = self.device.get("selected_schedule")
-        self._attr_options = self.device.get("available_schedules", [])
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self.device.get("selected_schedule")
+
+    @property
+    def options(self) -> list[str]:
+        """Return a set of selectable options."""
+        return self.device.get("available_schedules", [])
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
