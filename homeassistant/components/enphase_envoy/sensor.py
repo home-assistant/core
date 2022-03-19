@@ -82,7 +82,6 @@ async def async_setup_entry(
             Envoy(
                 coordinator,
                 description,
-                f"{envoy_name} {description.name}",
                 envoy_name,
                 envoy_serial_num,
             )
@@ -93,7 +92,7 @@ async def async_setup_entry(
             EnvoyInverter(
                 coordinator,
                 description,
-                f"{envoy_name} Inverter {inverter} {description.name}".strip(),
+                envoy_name,
                 envoy_serial_num,
                 str(inverter),
             )
@@ -113,13 +112,12 @@ class Envoy(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         description: SensorEntityDescription,
-        name: str,
         envoy_name: str,
         envoy_serial_num: str,
     ) -> None:
         """Initialize Envoy entity."""
         self.entity_description = description
-        self._attr_name = name
+        self._attr_name = f"{envoy_name} {description.name}"
         self._attr_unique_id = f"{envoy_serial_num}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(envoy_serial_num))},
@@ -145,14 +143,19 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         description: EnvoySensorEntityDescription,
-        name: str,
+        envoy_name: str,
         envoy_serial_num: str,
         serial_number: str,
     ) -> None:
         """Initialize Envoy inverter entity."""
         self.entity_description = description
         self._serial_number = serial_number
-        self._attr_name = name
+        if description.name:
+            self._attr_name = (
+                f"{envoy_name} Inverter {serial_number} {description.name}"
+            )
+        else:
+            self._attr_name = f"{envoy_name} Inverter {serial_number}"
         if description.key == INVERTERS_KEY:
             self._attr_unique_id = serial_number
         else:
