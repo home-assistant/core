@@ -84,17 +84,17 @@ async def async_setup_entry(
         )
 
     if production := coordinator.data.get("inverters_production"):
-        for inverter in production:
-            for description in INVERTER_SENSORS:
-                entities.append(
-                    EnvoyInverter(
-                        coordinator,
-                        description,
-                        f"{envoy_name} {description.name} {inverter}",
-                        envoy_serial_num,
-                        str(inverter),
-                    )
-                )
+        entities.extend(
+            EnvoyInverter(
+                coordinator,
+                description,
+                f"{envoy_name} {description.name} {inverter}",
+                envoy_serial_num,
+                str(inverter),
+            )
+            for description in INVERTER_SENSORS
+            for inverter in production
+        )
 
     async_add_entities(entities)
 
