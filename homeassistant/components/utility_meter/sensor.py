@@ -433,11 +433,17 @@ class UtilityMeterSensor(RestoreSensor):
             )
         )
 
-        if (state := await self.async_get_last_state()) is not None and (
-            last_sensor_data := await self.async_get_last_sensor_data()
-        ) is not None:
+        if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
+            # new introduced in 2022.04
+            self._state = last_sensor_data.native_value
+            self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
+            self._last_period = last_sensor_data.last_period
+            self._last_reset = last_sensor_data.last_reset
+
+        if (state := await self.async_get_last_state()) is not None:
+            # legacy to be removed on 2022.10 (we are keeping this to avoid utility_meter counter losses)
             try:
-                self._state = last_sensor_data.native_value
+                self._state = Decimal(state.state)
             except InvalidOperation:
                 _LOGGER.error(
                     "Could not restore state <%s>. Resetting utility_meter.%s",
@@ -445,9 +451,19 @@ class UtilityMeterSensor(RestoreSensor):
                     self.name,
                 )
             else:
-                self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
-                self._last_period = last_sensor_data.last_period
-                self._last_reset = last_sensor_data.last_reset
+                if last_sensor_data is None:
+                    self._unit_of_measurement = state.attributes.get(
+                        ATTR_UNIT_OF_MEASUREMENT
+                    )
+                    self._last_period = (
+                        Decimal(state.attributes[ATTR_LAST_PERIOD])
+                        if state.attributes.get(ATTR_LAST_PERIOD)
+                        and is_number(state.attributes[ATTR_LAST_PERIOD])
+                        else Decimal(0)
+                    )
+                    self._last_reset = dt_util.as_utc(
+                        dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
+                    )
                 if state.attributes.get(ATTR_STATUS) == COLLECTING:
                     # Fake cancellation function to init the meter in similar state
                     self._collecting = lambda: None
