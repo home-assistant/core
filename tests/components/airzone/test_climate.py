@@ -11,6 +11,7 @@ from aioairzone.const import (
     API_SYSTEM_ID,
     API_ZONE_ID,
 )
+from aioairzone.exceptions import AirzoneError
 
 from homeassistant.components.airzone.const import API_TEMPERATURE_STEP
 from homeassistant.components.climate.const import (
@@ -208,3 +209,26 @@ async def test_airzone_climate_set_temp(hass):
 
         state = hass.states.get("climate.dorm_2")
         assert state.attributes.get(ATTR_TEMPERATURE) == 20.5
+
+
+async def test_airzone_climate_set_temp_error(hass):
+    """Test error when setting the target temperature."""
+
+    await async_init_integration(hass)
+
+    with patch(
+        "aioairzone.localapi_device.AirzoneLocalApi.put_hvac",
+        side_effect=AirzoneError,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "climate.dorm_2",
+                ATTR_TEMPERATURE: 20.5,
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("climate.dorm_2")
+        assert state.attributes.get(ATTR_TEMPERATURE) == 19.5
