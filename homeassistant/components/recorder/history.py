@@ -28,18 +28,18 @@ _LOGGER = logging.getLogger(__name__)
 STATE_KEY = "state"
 LAST_CHANGED_KEY = "last_changed"
 
-SIGNIFICANT_DOMAINS = (
+SIGNIFICANT_DOMAINS = {
     "climate",
     "device_tracker",
     "humidifier",
     "thermostat",
     "water_heater",
-)
+}
 SIGNIFICANT_DOMAINS_ENTITY_ID_STARTSWITH = [
     f"{domain}." for domain in SIGNIFICANT_DOMAINS
 ]
-IGNORE_DOMAINS = ("zone", "scene")
-IGNORE_DOMAINS_ENTITY_ID_STARTSWITH = [f"{domain}." for domain in SIGNIFICANT_DOMAINS]
+IGNORE_DOMAINS = {"zone", "scene"}
+IGNORE_DOMAINS_ENTITY_ID_STARTSWITH = [f"{domain}." for domain in IGNORE_DOMAINS]
 NEED_ATTRIBUTE_DOMAINS = {
     "climate",
     "humidifier",
@@ -107,9 +107,9 @@ def get_significant_states_with_session(
                     *[
                         States.entity_id.startswith(entity_domain)
                         for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_STARTSWITH
-                    ]
+                    ],
+                    (States.last_changed == States.last_updated),
                 )
-                | (States.last_changed == States.last_updated)
             )
             & (States.last_updated > bindparam("start_time"))
         )
@@ -122,9 +122,9 @@ def get_significant_states_with_session(
         )
     else:
         baked_query += lambda q: q.filter(
-            ~or_(
+            and_(
                 *[
-                    States.entity_id.startswith(entity_domain)
+                    ~States.entity_id.startswith(entity_domain)
                     for entity_domain in IGNORE_DOMAINS_ENTITY_ID_STARTSWITH
                 ]
             )
