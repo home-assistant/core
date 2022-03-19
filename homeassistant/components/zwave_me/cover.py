@@ -1,4 +1,6 @@
 """Representation of a cover."""
+from __future__ import annotations
+
 from typing import Any
 
 from homeassistant.components.cover import (
@@ -52,7 +54,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
     def set_cover_position(self, **kwargs: Any) -> None:
         """Update the current value."""
         self.controller.zwave_api.send_command(
-            self.device.id, f"exact?level={str(round(kwargs[ATTR_POSITION]))}"
+            self.device.id, f"exact?level={str(kwargs[ATTR_POSITION])}"
         )
 
     @property
