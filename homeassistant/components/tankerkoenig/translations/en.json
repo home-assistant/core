@@ -19,8 +19,7 @@
                 "data": {
                     "api_key": "API Key",
                     "fuel_types": "Fuel types",
-                    "latitude": "Latitude",
-                    "longitude": "Longitude",
+                    "location": "Location",
                     "name": "Region name",
                     "radius": "Search radius",
                     "stations": "Additional fuel stations"
