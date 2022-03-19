@@ -41,7 +41,3 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the GitHub Custom component from yaml configuration."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
