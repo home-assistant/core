@@ -28,6 +28,9 @@ from .const import COORDINATOR, DOMAIN, NAME, SENSORS
 ICON = "mdi:flash"
 _LOGGER = logging.getLogger(__name__)
 
+INVERTERS_KEY = "inverters"
+LAST_REPORTED_KEY = "last_reported"
+
 
 @dataclass
 class EnvoyRequiredKeysMixin:
@@ -39,10 +42,6 @@ class EnvoyRequiredKeysMixin:
 @dataclass
 class EnvoySensorEntityDescription(SensorEntityDescription, EnvoyRequiredKeysMixin):
     """Describes an Envoy inverter sensor entity."""
-
-
-INVERTERS_KEY = "inverters"
-LAST_REPORTED_KEY = "last_reported"
 
 
 def _inverter_last_report_time(
