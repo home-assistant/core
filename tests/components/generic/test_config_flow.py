@@ -9,7 +9,6 @@ import pytest
 import respx
 
 from homeassistant import config_entries, data_entry_flow, setup
-import homeassistant.components.generic
 from homeassistant.components.generic.const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
@@ -38,6 +37,11 @@ TESTDATA = {
     CONF_PASSWORD: "bambam",
     CONF_FRAMERATE: 5,
     CONF_VERIFY_SSL: False,
+}
+
+TESTDATA_OPTIONS = {
+    CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
+    **TESTDATA,
 }
 
 TESTDATA_YAML = {
@@ -470,17 +474,37 @@ async def test_import_other_error(hass, fakeimgbytes_png):
 # These above can be deleted after deprecation period is finished.
 
 
-@respx.mock
 async def test_unload_entry(hass, fakeimg_png, mock_av_open):
     """Test unloading the generic IP Camera entry."""
-    with mock_av_open:
-        mock_entry = MockConfigEntry(domain=DOMAIN, data=TESTDATA)
-        mock_entry.add_to_hass(hass)
-        assert await homeassistant.components.generic.async_setup_entry(
-            hass, mock_entry
-        )
-        await hass.async_block_till_done()
-        assert await homeassistant.components.generic.async_unload_entry(
-            hass, mock_entry
-        )
-        await hass.async_block_till_done()
+    mock_entry = MockConfigEntry(domain=DOMAIN, options=TESTDATA)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_entry.state is config_entries.ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+
+async def test_reload_on_title_change(hass) -> None:
+    """Test the integration gets reloaded when the title is updated."""
+
+    test_data = TESTDATA_OPTIONS
+    test_data[CONF_CONTENT_TYPE] = "image/png"
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="54321", options=test_data, title="My Title"
+    )
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_entry.state is config_entries.ConfigEntryState.LOADED
+    assert hass.states.get("camera.my_title").attributes["friendly_name"] == "My Title"
+
+    hass.config_entries.async_update_entry(mock_entry, title="New Title")
+    assert mock_entry.title == "New Title"
+    await hass.async_block_till_done()
+
+    assert hass.states.get("camera.my_title").attributes["friendly_name"] == "New Title"
