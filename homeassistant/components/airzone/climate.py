@@ -25,7 +25,6 @@ from aioairzone.const import (
     AZD_ZONES,
 )
 from aioairzone.exceptions import AirzoneError
-from aioairzone.localapi_device import AirzoneLocalApi
 from aiohttp.client_exceptions import ClientConnectorError
 
 from homeassistant.components.climate import ClimateEntity
@@ -93,13 +92,12 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
 
     async def async_update_hvac_params(self, params) -> None:
         """Send HVAC parameters to API."""
-        airzone: AirzoneLocalApi = self.coordinator.airzone  # type: ignore[attr-defined]
         try:
-            await airzone.put_hvac(params)
+            await self.coordinator.airzone.put_hvac(params)
         except (AirzoneError, ClientConnectorError) as error:
             _LOGGER.error(error)
         else:
-            self.coordinator.async_set_updated_data(airzone.data())
+            self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
