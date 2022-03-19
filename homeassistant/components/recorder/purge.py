@@ -133,7 +133,7 @@ def _select_unused_attributes_ids(
         .all(),
     )
     to_remove = attributes_ids - {
-        state.attributes_id
+        state[0]
         for state in session.query(distinct(States.attributes_id))
         .filter(States.attributes_id.in_(attributes_ids))
         .all()
