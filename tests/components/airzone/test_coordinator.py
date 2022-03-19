@@ -6,6 +6,7 @@ from aiohttp import ClientConnectorError
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -33,3 +34,6 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant):
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         mock_hvac.assert_called_once()
+
+        state = hass.states.get("sensor.despacho_temperature")
+        assert state.state == STATE_UNAVAILABLE
