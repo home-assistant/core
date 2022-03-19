@@ -279,10 +279,9 @@ class Timer(RestoreEntity):
         # If we get here, the timer must have been active so we need to decide what
         # to do based on end time and the current time
         end = cv.datetime(state.attributes[ATTR_FINISHES_AT])
-        utc_now = dt_util.utcnow().replace(microsecond=0)
         # If there is time remaining in the timer, restore the remaining time then
         # start the timer
-        if (remaining := end - utc_now) > timedelta(0):
+        if (remaining := end - dt_util.utcnow().replace(microsecond=0)) > timedelta(0):
             self._remaining = remaining
             self._state = STATUS_PAUSED
             self.async_start()
