@@ -21,7 +21,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant):
     entry.add_to_hass(hass)
 
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ) as mock_hvac:
         await hass.config_entries.async_setup(entry.entry_id)
