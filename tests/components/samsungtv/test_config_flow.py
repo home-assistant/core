@@ -6,7 +6,12 @@ import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
-from websockets.exceptions import WebSocketException, WebSocketProtocolError
+from websockets import frames
+from websockets.exceptions import (
+    ConnectionClosedError,
+    WebSocketException,
+    WebSocketProtocolError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp, zeroconf
@@ -281,6 +286,26 @@ async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
         )
         assert result["type"] == "abort"
         assert result["reason"] == RESULT_NOT_SUPPORTED
+
+
+async def test_user_websocket_access_denied(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test starting a flow by user for not supported device."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+        side_effect=ConnectionClosedError(rcvd=None, sent=frames.Close(1002, "")),
+    ):
+        # websocket device not supported
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        )
+    assert result["type"] == "abort"
+    assert result["reason"] == RESULT_NOT_SUPPORTED
+    assert "Please check the Device Connection Manager on your TV" in caplog.text
 
 
 async def test_user_not_successful(hass: HomeAssistant) -> None:

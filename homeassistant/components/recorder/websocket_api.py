@@ -40,7 +40,8 @@ async def ws_validate_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fetch a list of available statistic_id."""
-    statistic_ids = await hass.async_add_executor_job(
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    statistic_ids = await instance.async_add_executor_job(
         validate_statistics,
         hass,
     )

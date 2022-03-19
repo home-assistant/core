@@ -3,7 +3,7 @@
 bandit==1.7.4
 black==22.1.0
 codespell==2.1.0
-flake8-comprehensions==3.7.0
+flake8-comprehensions==3.8.0
 flake8-docstrings==1.6.0
 flake8-noqa==1.2.1
 flake8==4.0.1
