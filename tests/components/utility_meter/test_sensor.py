@@ -470,7 +470,13 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                     "sensor.energy_bill_midpeak",
                     "error",
                 ),
-                {},
+                {
+                    "native_value": "dog",
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "cat",
+                    "status": "collecting",
+                },
             ),
             (
                 State(

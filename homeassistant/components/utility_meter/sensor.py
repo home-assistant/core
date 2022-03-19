@@ -251,7 +251,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         try:
             native_value = Decimal(restored["native_value"])
         except InvalidOperation:
-            native_value = restored["native_value"]
+            native_value = None
         native_unit_of_measurement = restored["native_unit_of_measurement"]
         try:
             last_period = Decimal(restored["last_period"])
