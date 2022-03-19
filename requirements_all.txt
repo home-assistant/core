@@ -119,6 +119,9 @@ aio_geojson_nsw_rfs_incidents==0.4
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.5
 
+# homeassistant.components.airzone
+aioairzone==0.0.2
+
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
 
@@ -1582,6 +1585,9 @@ pyisy==3.0.1
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
 
+# homeassistant.components.kaleidescape
+pykaleidescape==1.0.1
+
 # homeassistant.components.kira
 pykira==0.1.1
 
@@ -1979,7 +1985,7 @@ pytouchline==0.7
 pytraccar==0.10.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==9.0.0
+pytradfri[async]==10.0.0
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -2137,6 +2143,9 @@ screenlogicpy==0.5.4
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
+
+# homeassistant.components.backup
+securetar==2022.2.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
