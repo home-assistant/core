@@ -184,7 +184,7 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime.datetime | float | None:
         """Return the state of the sensor."""
         watt_report_time: tuple[float, str] = self.coordinator.data[
             "inverters_production"
