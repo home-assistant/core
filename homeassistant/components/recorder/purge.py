@@ -126,12 +126,6 @@ def _select_unused_attributes_ids(
     """Return a set of attributes ids that are not used by any states in the database."""
     if not attributes_ids:
         return set()
-    _LOGGER.debug(
-        "Query results: %s",
-        session.query(distinct(States.attributes_id))
-        .filter(States.attributes_id.in_(attributes_ids))
-        .all(),
-    )
     to_remove = attributes_ids - {
         state[0]
         for state in session.query(distinct(States.attributes_id))
