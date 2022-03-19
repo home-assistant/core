@@ -156,7 +156,7 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
             self._attr_unique_id = f"{serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
-            name="Inverter {serial_number}",
+            name=f"Inverter {serial_number}",
             via_device=(DOMAIN, str(envoy_serial_num)),
         )
         super().__init__(coordinator)
