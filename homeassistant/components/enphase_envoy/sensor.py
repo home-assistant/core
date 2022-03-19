@@ -80,18 +80,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up envoy sensor platform."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = data[COORDINATOR]
-    envoy_name = data[NAME]
-    envoy_serial_num = config_entry.unique_id
+    data: dict = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: DataUpdateCoordinator = data[COORDINATOR]
     envoy_data: dict = coordinator.data
+    envoy_name: str = data[NAME]
+    envoy_serial_num = config_entry.unique_id
     assert envoy_serial_num is not None
     _LOGGER.debug("Envoy data: %s", envoy_data)
 
     entities: list[Envoy | EnvoyInverter] = []
     for description in SENSORS:
-        data = envoy_data.get(description.key)
-        if isinstance(data, str) and "not available" in data:
+        sensor_data = envoy_data.get(description.key)
+        if isinstance(sensor_data, str) and "not available" in sensor_data:
             continue
         entities.append(
             Envoy(
