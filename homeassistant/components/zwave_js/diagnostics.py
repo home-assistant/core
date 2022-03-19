@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DATA_CLIENT, DOMAIN
 from .helpers import get_home_and_node_id_from_device_entry
 
-TO_REDACT = ("homeId", "location")
+TO_REDACT = {"homeId", "location"}
 
 
 async def async_get_config_entry_diagnostics(

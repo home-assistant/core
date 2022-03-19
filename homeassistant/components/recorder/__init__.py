@@ -986,7 +986,7 @@ class Recorder(threading.Thread):
         if event.event_type == EVENT_STATE_CHANGED:
             try:
                 dbstate = States.from_event(event)
-                dbstate_attributes = StateAttributes.from_event(event)
+                shared_attrs = StateAttributes.shared_attrs_from_event(event)
             except (TypeError, ValueError) as ex:
                 _LOGGER.warning(
                     "State is not JSON serializable: %s: %s",
@@ -996,27 +996,33 @@ class Recorder(threading.Thread):
                 return
 
             dbstate.attributes = None
-            shared_attrs = dbstate_attributes.shared_attrs
             # Matching attributes found in the pending commit
             if pending_attributes := self._pending_state_attributes.get(shared_attrs):
                 dbstate.state_attributes = pending_attributes
             # Matching attributes id found in the cache
             elif attributes_id := self._state_attributes_ids.get(shared_attrs):
                 dbstate.attributes_id = attributes_id
-            # Matching attributes found in the database
-            elif (
-                attributes := self.event_session.query(StateAttributes.attributes_id)
-                .filter(StateAttributes.hash == dbstate_attributes.hash)
-                .filter(StateAttributes.shared_attrs == shared_attrs)
-                .first()
-            ):
-                dbstate.attributes_id = attributes[0]
-                self._state_attributes_ids[shared_attrs] = attributes[0]
-            # No matching attributes found, save them in the DB
             else:
-                dbstate.state_attributes = dbstate_attributes
-                self._pending_state_attributes[shared_attrs] = dbstate_attributes
-                self.event_session.add(dbstate_attributes)
+                attr_hash = StateAttributes.hash_shared_attrs(shared_attrs)
+                # Matching attributes found in the database
+                if (
+                    attributes := self.event_session.query(
+                        StateAttributes.attributes_id
+                    )
+                    .filter(StateAttributes.hash == attr_hash)
+                    .filter(StateAttributes.shared_attrs == shared_attrs)
+                    .first()
+                ):
+                    dbstate.attributes_id = attributes[0]
+                    self._state_attributes_ids[shared_attrs] = attributes[0]
+                # No matching attributes found, save them in the DB
+                else:
+                    dbstate_attributes = StateAttributes(
+                        shared_attrs=shared_attrs, hash=attr_hash
+                    )
+                    dbstate.state_attributes = dbstate_attributes
+                    self._pending_state_attributes[shared_attrs] = dbstate_attributes
+                    self.event_session.add(dbstate_attributes)
 
             if old_state := self._old_states.pop(dbstate.entity_id, None):
                 if old_state.state_id:
