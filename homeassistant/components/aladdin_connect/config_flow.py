@@ -1,4 +1,4 @@
-"""Config flow for Whirlpool Laundry integration."""
+"""Config flow for Aladdin Connect cover integration."""
 from __future__ import annotations
 
 import logging
@@ -44,7 +44,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Whirlpool Laundry."""
+    """Handle a config flow for Aladdin Connect."""
 
     VERSION = 1
 
@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(
         self, import_data: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Import blink config from configuration.yaml."""
+        """Import Aladin Connect config from configuration.yaml."""
         return await self.async_step_user(import_data)
 
 

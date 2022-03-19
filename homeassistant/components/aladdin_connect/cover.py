@@ -48,7 +48,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up aladdin_connect devices yaml depreciated."""
+    """Set up Aladdin Connect devices yaml depreciated."""
     _LOGGER.warning(
         "Loading aladdin_connect via platform setup is deprecated; Please remove it from your configuration"
     )
@@ -97,7 +97,7 @@ class AladdinDevice(CoverEntity):
     _attr_supported_features = SUPPORTED_FEATURES
 
     def __init__(self, acc: AladdinConnectClient, device: DoorDevice) -> None:
-        """Initialize the cover."""
+        """Initialize the Aladdin Connect cover."""
         self._acc = acc
         self._device_id = device["device_id"]
         self._number = device["door_number"]
