@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import collections
+from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
 import itertools
@@ -10,7 +11,7 @@ import logging
 import os
 import time
 import traceback
-from typing import TYPE_CHECKING, Any, Callable, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from serial import SerialException
 from zigpy.config import CONF_DEVICE
