@@ -33,7 +33,7 @@ async def async_get_media_browser_root_object(
         return []
     return [
         BrowseMedia(
-            title="Lovelace",
+            title="Dashboards",
             media_class=MEDIA_CLASS_APP,
             media_content_id="",
             media_content_type=DOMAIN,

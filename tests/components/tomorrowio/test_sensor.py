@@ -1,29 +1,38 @@
-"""Tests for Climacell sensor entities."""
+"""Tests for Tomorrow.io sensor entities."""
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
 from unittest.mock import patch
 
-import pytest
-
-from homeassistant.components.climacell.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.components.tomorrowio.config_flow import (
+    _get_config_schema,
+    _get_unique_id,
+)
+from homeassistant.components.tomorrowio.const import (
+    ATTRIBUTION,
+    CONF_TIMESTEP,
+    DEFAULT_NAME,
+    DEFAULT_TIMESTEP,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
-from .const import API_V3_ENTRY_DATA
+from .const import API_V4_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
-CC_SENSOR_ENTITY_ID = "sensor.climacell_{}"
+CC_SENSOR_ENTITY_ID = "sensor.tomorrow_io_{}"
 
 O3 = "ozone"
 CO = "carbon_monoxide"
 NO2 = "nitrogen_dioxide"
-SO2 = "sulfur_dioxide"
+SO2 = "sulphur_dioxide"
 PM25 = "particulate_matter_2_5_mm"
 PM10 = "particulate_matter_10_mm"
 MEP_AQI = "china_mep_air_quality_index"
@@ -101,10 +110,13 @@ async def _setup(
         "homeassistant.util.dt.utcnow",
         return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC),
     ):
+        data = _get_config_schema(hass, SOURCE_USER)(config)
+        data[CONF_NAME] = DEFAULT_NAME
         config_entry = MockConfigEntry(
             domain=DOMAIN,
-            data=config,
-            unique_id="test",
+            data=data,
+            options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
+            unique_id=_get_unique_id(hass, data),
             version=1,
         )
         config_entry.add_to_hass(hass)
@@ -117,32 +129,38 @@ async def _setup(
 
 
 def check_sensor_state(hass: HomeAssistant, entity_name: str, value: str):
-    """Check the state of a ClimaCell sensor."""
+    """Check the state of a Tomorrow.io sensor."""
     state = hass.states.get(CC_SENSOR_ENTITY_ID.format(entity_name))
     assert state
     assert state.state == value
     assert state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
 
 
-async def test_v3_sensor(
-    hass: HomeAssistant,
-    climacell_config_entry_update: pytest.fixture,
-) -> None:
-    """Test v3 sensor data."""
-    await _setup(hass, V3_FIELDS, API_V3_ENTRY_DATA)
-    check_sensor_state(hass, O3, "52.625")
-    check_sensor_state(hass, CO, "0.875")
-    check_sensor_state(hass, NO2, "14.1875")
-    check_sensor_state(hass, SO2, "2")
-    check_sensor_state(hass, PM25, "5.3125")
-    check_sensor_state(hass, PM10, "27")
-    check_sensor_state(hass, MEP_AQI, "27")
-    check_sensor_state(hass, MEP_HEALTH_CONCERN, "Good")
+async def test_v4_sensor(hass: HomeAssistant) -> None:
+    """Test v4 sensor data."""
+    await _setup(hass, V4_FIELDS, API_V4_ENTRY_DATA)
+    check_sensor_state(hass, O3, "94.46")
+    check_sensor_state(hass, CO, "0.63")
+    check_sensor_state(hass, NO2, "20.81")
+    check_sensor_state(hass, SO2, "4.47")
+    check_sensor_state(hass, PM25, "5.3")
+    check_sensor_state(hass, PM10, "20.13")
+    check_sensor_state(hass, MEP_AQI, "23")
+    check_sensor_state(hass, MEP_HEALTH_CONCERN, "good")
     check_sensor_state(hass, MEP_PRIMARY_POLLUTANT, "pm10")
-    check_sensor_state(hass, EPA_AQI, "22.3125")
-    check_sensor_state(hass, EPA_HEALTH_CONCERN, "Good")
+    check_sensor_state(hass, EPA_AQI, "24")
+    check_sensor_state(hass, EPA_HEALTH_CONCERN, "good")
     check_sensor_state(hass, EPA_PRIMARY_POLLUTANT, "pm25")
-    check_sensor_state(hass, FIRE_INDEX, "9")
-    check_sensor_state(hass, GRASS_POLLEN, "minimal_to_none")
-    check_sensor_state(hass, WEED_POLLEN, "minimal_to_none")
-    check_sensor_state(hass, TREE_POLLEN, "minimal_to_none")
+    check_sensor_state(hass, FIRE_INDEX, "10")
+    check_sensor_state(hass, GRASS_POLLEN, "none")
+    check_sensor_state(hass, WEED_POLLEN, "none")
+    check_sensor_state(hass, TREE_POLLEN, "none")
+    check_sensor_state(hass, FEELS_LIKE, "38.5")
+    check_sensor_state(hass, DEW_POINT, "22.68")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "997.97")
+    check_sensor_state(hass, GHI, "0.0")
+    check_sensor_state(hass, CLOUD_BASE, "1.19")
+    check_sensor_state(hass, CLOUD_COVER, "100")
+    check_sensor_state(hass, CLOUD_CEILING, "1.19")
+    check_sensor_state(hass, WIND_GUST, "5.65")
+    check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
