@@ -223,18 +223,30 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         hostname = discovery_info.ssdp_headers["_host"]
         self._abort_if_unique_id_configured(
-            updates={CONFIG_ENTRY_HOSTNAME: hostname}, reload_on_update=False
+            # Do reload on update, SSDP will signal header changes which are probably interesting to us...
+            updates={CONFIG_ENTRY_HOSTNAME: hostname},
+            reload_on_update=False,
         )
 
         # Handle devices changing their UDN, only allow a single host.
-        existing_entries = self._async_current_entries()
-        for config_entry in existing_entries:
+        for config_entry in self._async_current_entries():
             entry_hostname = config_entry.data.get(CONFIG_ENTRY_HOSTNAME)
             if entry_hostname == hostname:
+                udn = discovery_info.ssdp_udn
                 LOGGER.debug(
-                    "Found existing config_entry with same hostname, discovery ignored"
+                    "Found existing config_entry with same hostname, updating config entry, old udn: %s, new udn: %s",
+                    config_entry.data.get(CONFIG_ENTRY_UDN),
+                    udn,
                 )
-                return self.async_abort(reason="discovery_ignored")
+                self.hass.config_entries.async_update_entry(
+                    config_entry,
+                    unique_id=unique_id,
+                    data={**config_entry.data, CONFIG_ENTRY_UDN: udn},
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(config_entry.entry_id)
+                )
+                return self.async_abort(reason="config_entry_updated")
 
         # Store discovery.
         self._discoveries = [discovery_info]

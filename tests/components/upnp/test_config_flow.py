@@ -1,5 +1,6 @@
 """Test UPnP/IGD config flow."""
 
+from copy import deepcopy
 from datetime import timedelta
 
 import pytest
@@ -79,29 +80,42 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
     assert result["reason"] == "incomplete_discovery"
 
 
-@pytest.mark.usefixtures("mock_get_source_ip")
-async def test_flow_ssdp_discovery_ignored(hass: HomeAssistant):
-    """Test config flow: discovery through ssdp, but ignored, as hostname is used by existing config entry."""
-    # Existing entry.
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONFIG_ENTRY_UDN: TEST_UDN + "2",
-            CONFIG_ENTRY_ST: TEST_ST,
-            CONFIG_ENTRY_HOSTNAME: TEST_HOSTNAME,
-        },
-        options={CONFIG_ENTRY_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
-    )
-    config_entry.add_to_hass(hass)
-
-    # Discovered via step ssdp, but ignored.
+async def test_flow_ssdp_discovery_changed_udn(hass: HomeAssistant):
+    """Test config flow: discovery through ssdp, same device, but new UDN, matched on hostname."""
+    # Discovered via step ssdp.
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
         data=TEST_DISCOVERY,
     )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "ssdp_confirm"
+
+    # Confirm via step ssdp_confirm.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == TEST_FRIENDLY_NAME
+    assert result["data"] == {
+        CONFIG_ENTRY_ST: TEST_ST,
+        CONFIG_ENTRY_UDN: TEST_UDN,
+        CONFIG_ENTRY_HOSTNAME: TEST_HOSTNAME,
+    }
+
+    # New discovery via step ssdp.
+    new_udn = TEST_UDN + "2"
+    new_discovery = deepcopy(TEST_DISCOVERY)
+    new_discovery.ssdp_usn = f"{new_udn}::{TEST_ST}"
+    new_discovery.upnp["_udn"] = new_udn
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=new_discovery,
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "discovery_ignored"
+    assert result["reason"] == "config_entry_updated"
 
 
 @pytest.mark.usefixtures(

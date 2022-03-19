@@ -35,8 +35,9 @@ TEST_LOCATION = "http://192.168.1.1/desc.xml"
 TEST_HOSTNAME = urlparse(TEST_LOCATION).hostname
 TEST_FRIENDLY_NAME = "mock-name"
 TEST_DISCOVERY = ssdp.SsdpServiceInfo(
-    ssdp_usn=TEST_USN,
     ssdp_st=TEST_ST,
+    ssdp_udn=TEST_UDN,
+    ssdp_usn=TEST_USN,
     ssdp_location=TEST_LOCATION,
     upnp={
         "_udn": TEST_UDN,
