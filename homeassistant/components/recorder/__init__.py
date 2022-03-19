@@ -1081,8 +1081,17 @@ class Recorder(threading.Thread):
                 if dbstate in self.event_session:
                     self.event_session.expunge(dbstate)
             self._pending_expunge = []
-        self._pending_state_attributes = {}
         self.event_session.commit()
+
+        # We just committed the state attributes to the database
+        # and we now know the attributes_ids.  We can save
+        # a many selects for matching attributes by loading them
+        # into the LRU cache now.
+        for state_attr in self._pending_state_attributes.values():
+            self._state_attributes_ids[
+                state_attr.shared_attrs
+            ] = state_attr.attributes_id
+        self._pending_state_attributes = {}
 
         # Expire is an expensive operation (frequently more expensive
         # than the flush and commit itself) so we only
