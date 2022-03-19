@@ -16,8 +16,17 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
+SMS_CONFIG_SCHEMA = {vol.Required(CONF_DEVICE): cv.isdevice}
+
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.isdevice})},
+    {
+        DOMAIN: vol.Schema(
+            vol.All(
+                cv.deprecated(CONF_DEVICE),
+                SMS_CONFIG_SCHEMA,
+            ),
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
