@@ -35,11 +35,11 @@ SIGNIFICANT_DOMAINS = (
     "thermostat",
     "water_heater",
 )
-SIGNIFICANT_DOMAINS_ENTITY_ID_STARTSWITH = (
+SIGNIFICANT_DOMAINS_ENTITY_ID_STARTSWITH = [
     f"{domain}." for domain in SIGNIFICANT_DOMAINS
-)
+]
 IGNORE_DOMAINS = ("zone", "scene")
-IGNORE_DOMAINS_ENTITY_ID_STARTSWITH = (f"{domain}." for domain in SIGNIFICANT_DOMAINS)
+IGNORE_DOMAINS_ENTITY_ID_STARTSWITH = [f"{domain}." for domain in SIGNIFICANT_DOMAINS]
 NEED_ATTRIBUTE_DOMAINS = {
     "climate",
     "humidifier",
@@ -103,13 +103,11 @@ def get_significant_states_with_session(
     if significant_changes_only:
         baked_query += lambda q: q.filter(
             (
-                States.entity_id.in_(
-                    or_(
-                        *[
-                            States.entity_id.startswith(entity_domain)
-                            for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_STARTSWITH
-                        ]
-                    )
+                or_(
+                    *[
+                        States.entity_id.startswith(entity_domain)
+                        for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_STARTSWITH
+                    ]
                 )
                 | (States.last_changed == States.last_updated)
             )

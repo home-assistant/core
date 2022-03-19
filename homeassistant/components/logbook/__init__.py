@@ -66,7 +66,7 @@ ICON_JSON_EXTRACT = re.compile('"icon": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
 
 CONTINUOUS_DOMAINS = {"proximity", "sensor"}
-CONTINUOUS_ENTITY_ID_STARTSWITH = (f"{domain}." for domain in CONTINUOUS_DOMAINS)
+CONTINUOUS_ENTITY_ID_STARTSWITH = [f"{domain}." for domain in CONTINUOUS_DOMAINS]
 
 DOMAIN = "logbook"
 
@@ -562,18 +562,12 @@ def _continuous_entity_matcher():
     # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
     #
     return sqlalchemy.or_(
-        sqlalchemy.not_(
-            sqlalchemy.or_(
-                *[
-                    States.entity_id.startswith(entity_domain)
-                    for entity_domain in CONTINUOUS_ENTITY_ID_STARTSWITH
-                ]
-            )
+        *(
+            ~States.entity_id.startswith(entity_domain)
+            for entity_domain in CONTINUOUS_ENTITY_ID_STARTSWITH
         ),
-        sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON)),
-        sqlalchemy.not_(
-            StateAttributes.shared_attrs.contains(UNIT_OF_MEASUREMENT_JSON)
-        ),
+        ~States.attributes.contains(UNIT_OF_MEASUREMENT_JSON),
+        ~StateAttributes.shared_attrs.contains(UNIT_OF_MEASUREMENT_JSON),
     )
 
 
