@@ -1,6 +1,5 @@
 """Test the Remootio cover entity."""
 import logging
-from typing import List
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 from aioremootio import (
@@ -36,12 +35,12 @@ TDV_HOST = "127.0.0.1"
 TDV_CREDENTIAL = "123456789A123456789B123456789C123456789D123456789E123456789FVXYZ"
 TDV_SERIAL_NUMBER = "1234567890"
 TDV_TITLE = "remootio"
-TDV_ENTITY_ID = f"cover.{TDV_TITLE}"
+TDV_ENTITY_ID = "cover.remootio"
 
 _LOGGER = logging.getLogger(__name__)
 
-remootio_client_state_change_listeners: List[Listener[StateChange]] = []
-remootio_client_event_listeners: List[Listener[Event]] = []
+remootio_client_state_change_listeners: list[Listener[StateChange]] = []
+remootio_client_event_listeners: list[Listener[Event]] = []
 remootio_client: Mock = None
 
 

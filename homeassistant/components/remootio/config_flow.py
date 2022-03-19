@@ -27,6 +27,7 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import (
     CONF_API_AUTH_KEY,
     CONF_API_SECRET_KEY,
+    CONF_DATA,
     CONF_SERIAL_NUMBER,
     CONF_TITLE,
     DOMAIN,
@@ -86,9 +87,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         hass, connection_options, _LOGGER
     )
 
+    data[CONF_SERIAL_NUMBER] = device_serial_number
+
     return {
         CONF_TITLE: f"{DEVICE_NAME} (Host: {data[CONF_HOST]}, S/N: {device_serial_number})",
-        CONF_SERIAL_NUMBER: device_serial_number,
+        CONF_DATA: data,
     }
 
 
@@ -108,8 +111,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if len(user_input) != 0:
+            validation_result = {}
+
             try:
-                info = await validate_input(self.hass, user_input)
+                validation_result = await validate_input(self.hass, user_input)
             except UnsupportedRemootioDeviceError:
                 _LOGGER.debug("Remootio device isn't supported", exc_info=True)
                 return self.async_abort(reason="unsupported_device")
@@ -135,12 +140,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception/error")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info[CONF_SERIAL_NUMBER])
-                self._abort_if_unique_id_configured(user_input)
+                await self.async_set_unique_id(
+                    validation_result[CONF_DATA][CONF_SERIAL_NUMBER]
+                )
+                self._abort_if_unique_id_configured(validation_result[CONF_DATA])
 
-                user_input[CONF_SERIAL_NUMBER] = info[CONF_SERIAL_NUMBER]
-
-                return self.async_create_entry(title=info[CONF_TITLE], data=user_input)
+                return self.async_create_entry(
+                    title=validation_result[CONF_TITLE],
+                    data=validation_result[CONF_DATA],
+                )
 
         return self.async_show_form(
             step_id="user",
