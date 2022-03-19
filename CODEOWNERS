@@ -1026,6 +1026,8 @@ homeassistant/components/todoist/* @boralyl
 tests/components/todoist/* @boralyl
 homeassistant/components/tolo/* @MatthiasLohr
 tests/components/tolo/* @MatthiasLohr
+homeassistant/components/tomorrowio/* @raman325
+tests/components/tomorrowio/* @raman325
 homeassistant/components/totalconnect/* @austinmroczek
 tests/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey
@@ -1179,8 +1181,6 @@ tests/components/zodiac/* @JulienTant
 homeassistant/components/zone/* @home-assistant/core
 tests/components/zone/* @home-assistant/core
 homeassistant/components/zoneminder/* @rohankapoorcom
-homeassistant/components/zwave/* @home-assistant/z-wave
-tests/components/zwave/* @home-assistant/z-wave
 homeassistant/components/zwave_js/* @home-assistant/z-wave
 tests/components/zwave_js/* @home-assistant/z-wave
 homeassistant/components/zwave_me/* @lawfulchaos @Z-Wave-Me

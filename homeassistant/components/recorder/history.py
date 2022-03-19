@@ -321,7 +321,9 @@ def _get_states_with_session(
         query = query.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
-    return [LazyState(row) for row in execute(query)]
+
+    attr_cache = {}
+    return [LazyState(row, attr_cache) for row in execute(query)]
 
 
 def _get_single_entity_states_with_session(hass, session, utc_point_in_time, entity_id):
@@ -397,15 +399,17 @@ def _sorted_states_to_dict(
     for ent_id, group in groupby(states, lambda state: state.entity_id):
         domain = split_entity_id(ent_id)[0]
         ent_results = result[ent_id]
+        attr_cache = {}
+
         if not minimal_response or domain in NEED_ATTRIBUTE_DOMAINS:
-            ent_results.extend(LazyState(db_state) for db_state in group)
+            ent_results.extend(LazyState(db_state, attr_cache) for db_state in group)
 
         # With minimal response we only provide a native
         # State for the first and last response. All the states
         # in-between only provide the "state" and the
         # "last_changed".
         if not ent_results:
-            ent_results.append(LazyState(next(group)))
+            ent_results.append(LazyState(next(group), attr_cache))
 
         prev_state = ent_results[-1]
         initial_state_count = len(ent_results)
@@ -430,7 +434,7 @@ def _sorted_states_to_dict(
             # There was at least one state change
             # replace the last minimal state with
             # a full state
-            ent_results[-1] = LazyState(prev_state)
+            ent_results[-1] = LazyState(prev_state, attr_cache)
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}

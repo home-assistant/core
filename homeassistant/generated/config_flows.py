@@ -56,7 +56,6 @@ FLOWS = [
     "canary",
     "cast",
     "cert_expiry",
-    "climacell",
     "cloudflare",
     "co2signal",
     "coinbase",
@@ -68,6 +67,7 @@ FLOWS = [
     "daikin",
     "deconz",
     "denonavr",
+    "derivative",
     "devolo_home_control",
     "devolo_home_network",
     "dexcom",
@@ -341,6 +341,7 @@ FLOWS = [
     "tibber",
     "tile",
     "tolo",
+    "tomorrowio",
     "toon",
     "totalconnect",
     "tplink",
@@ -394,7 +395,6 @@ FLOWS = [
     "youless",
     "zerproc",
     "zha",
-    "zwave",
     "zwave_js",
     "zwave_me"
 ]
