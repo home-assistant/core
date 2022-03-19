@@ -36,9 +36,11 @@ class EnvoySensorEntityDescription(SensorEntityDescription, EnvoyRequiredKeysMix
     """Describes an Envoy inverter sensor entity."""
 
 
+ORIGINAL_INVERTERS_KEY = "inverters"
+
 INVERTER_SENSORS = (
     EnvoySensorEntityDescription(
-        key="inverters",
+        key=ORIGINAL_INVERTERS_KEY,
         name="Inverter",
         native_unit_of_measurement=POWER_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -146,7 +148,7 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._serial_number = serial_number
         self._attr_name = name
-        if description.key == "inverters":
+        if description.key == ORIGINAL_INVERTERS_KEY:
             self._attr_unique_id = serial_number
         else:
             self._attr_unique_id = f"{serial_number}_{description.key}"
