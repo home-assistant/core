@@ -86,6 +86,7 @@ def get_significant_states_with_session(
     include_start_time_state=True,
     significant_changes_only=True,
     minimal_response=False,
+    no_attributes=False,
 ):
     """
     Return states changes during UTC period start_time - end_time.
@@ -100,15 +101,7 @@ def get_significant_states_with_session(
     thermostat so that we get current temperature in our graphs).
     """
     timer_start = time.perf_counter()
-    need_attributes = (
-        entity_ids is None
-        or not minimal_response
-        or any(
-            split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS
-            for ent_id in entity_ids
-        )
-    )
-    query_keys = QUERY_STATES if need_attributes else QUERY_STATE_NO_ATTR
+    query_keys = QUERY_STATE_NO_ATTR if no_attributes else QUERY_STATES
     baked_query = hass.data[HISTORY_BAKERY](lambda session: session.query(*query_keys))
 
     if significant_changes_only:
@@ -134,7 +127,7 @@ def get_significant_states_with_session(
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
 
-    if need_attributes:
+    if not no_attributes:
         baked_query += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
@@ -159,7 +152,7 @@ def get_significant_states_with_session(
         filters,
         include_start_time_state,
         minimal_response,
-        need_attributes,
+        no_attributes,
     )
 
 
@@ -263,7 +256,7 @@ def _get_states_with_session(
     entity_ids=None,
     run=None,
     filters=None,
-    need_attributes=True,
+    no_attributes=False,
 ):
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
@@ -280,7 +273,7 @@ def _get_states_with_session(
 
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
-    query_keys = QUERY_STATES if need_attributes else QUERY_STATE_NO_ATTR
+    query_keys = QUERY_STATE_NO_ATTR if no_attributes else QUERY_STATES
     query = session.query(*query_keys)
 
     if entity_ids:
@@ -302,7 +295,7 @@ def _get_states_with_session(
             most_recent_state_ids,
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
-        if need_attributes:
+        if not no_attributes:
             query = query.outerjoin(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
             )
@@ -343,7 +336,7 @@ def _get_states_with_session(
         query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
         if filters:
             query = filters.apply(query)
-        if need_attributes:
+        if not no_attributes:
             query = query.outerjoin(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
             )
@@ -384,7 +377,7 @@ def _sorted_states_to_dict(
     filters=None,
     include_start_time_state=True,
     minimal_response=False,
-    need_attributes=True,
+    no_attributes=False,
 ):
     """Convert SQL results into JSON friendly data structure.
 
@@ -414,7 +407,7 @@ def _sorted_states_to_dict(
             entity_ids,
             run=run,
             filters=filters,
-            need_attributes=need_attributes,
+            no_attributes=no_attributes,
         ):
             state.last_changed = start_time
             state.last_updated = start_time
