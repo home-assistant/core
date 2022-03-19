@@ -128,9 +128,9 @@ def _select_unused_attributes_ids(
         return set()
     to_remove = attributes_ids - {
         state.attributes_id
-        for state in session.query(distinct(States.attributes_id)).filter(
-            States.attributes_id.in_(attributes_ids)
-        )
+        for state in session.query(distinct(States.attributes_id))
+        .filter(States.attributes_id.in_(attributes_ids))
+        .all()
     }
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
