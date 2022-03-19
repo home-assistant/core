@@ -87,9 +87,6 @@ aio_geojson_nsw_rfs_incidents==0.4
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.5
 
-# homeassistant.components.airzone
-aioairzone==0.0.2
-
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
 
@@ -1016,9 +1013,6 @@ pyiss==1.0.1
 # homeassistant.components.isy994
 pyisy==3.0.1
 
-# homeassistant.components.kaleidescape
-pykaleidescape==1.0.1
-
 # homeassistant.components.kira
 pykira==0.1.1
 
@@ -1344,9 +1338,6 @@ scapy==2.4.5
 # homeassistant.components.screenlogic
 screenlogicpy==0.5.4
 
-# homeassistant.components.backup
-securetar==2022.2.0
-
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense_energy==0.10.2
@@ -1448,9 +1439,6 @@ tesla-powerwall==0.3.17
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.1
-
-# homeassistant.components.todoist
-todoist-python==8.0.0
 
 # homeassistant.components.tolo
 tololib==0.1.0b3
