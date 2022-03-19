@@ -26,8 +26,8 @@ MOCK_ENTRY = MockConfigEntry(
 @pytest.fixture(name="api")
 def mock_transmission_api():
     """Mock an api."""
-    with patch("transmissionrpc.Client"):
-        yield
+    with patch("transmissionrpc.Client") as p:
+        yield p
 
 
 @pytest.fixture(name="auth_error")
@@ -123,3 +123,69 @@ async def test_unload_entry(hass, api):
         assert await transmission.async_unload_entry(hass, entry)
         assert unload_entry.call_count == 2
         assert entry.entry_id not in hass.data[transmission.DOMAIN]
+
+
+async def test_add_torrent_minimal(hass, api):
+    """Test that the service call passes no additional arguments when they are not provided."""
+    config = {
+        transmission.DOMAIN: {
+            transmission.CONF_NAME: "Transmission",
+            transmission.CONF_HOST: "0.0.0.0",
+            transmission.CONF_USERNAME: "user",
+            transmission.CONF_PASSWORD: "pass",
+            transmission.CONF_PORT: 9091,
+        },
+    }
+    assert await async_setup_component(hass, transmission.DOMAIN, config) is True
+
+    torrent_link = "magnet:..."
+
+    await hass.services.async_call(
+        transmission.DOMAIN,
+        transmission.SERVICE_ADD_TORRENT,
+        {
+            transmission.CONF_NAME: transmission.DEFAULT_NAME,
+            transmission.ATTR_TORRENT: torrent_link,
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+
+    api().add_torrent.assert_called_with(torrent_link)
+
+
+async def test_add_torrent_with_args(hass, api):
+    """Test that the service call passes the arguments to the client as expected."""
+    config = {
+        transmission.DOMAIN: {
+            transmission.CONF_NAME: "Transmission",
+            transmission.CONF_HOST: "0.0.0.0",
+            transmission.CONF_USERNAME: "user",
+            transmission.CONF_PASSWORD: "pass",
+            transmission.CONF_PORT: 9091,
+        },
+    }
+    assert await async_setup_component(hass, transmission.DOMAIN, config) is True
+
+    torrent_link = "magnet:..."
+    download_dir = "/some/path"
+    paused = True
+
+    await hass.services.async_call(
+        transmission.DOMAIN,
+        transmission.SERVICE_ADD_TORRENT,
+        {
+            transmission.CONF_NAME: transmission.DEFAULT_NAME,
+            transmission.ATTR_TORRENT: torrent_link,
+            transmission.ATTR_DOWNLOAD_DIR: download_dir,
+            transmission.ATTR_PAUSED: paused,
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+
+    api().add_torrent.assert_called_with(
+        torrent_link, download_dir=download_dir, paused=paused
+    )

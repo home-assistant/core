@@ -28,6 +28,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DELETE_DATA,
+    ATTR_DOWNLOAD_DIR,
+    ATTR_PAUSED,
     ATTR_TORRENT,
     CONF_LIMIT,
     CONF_ORDER,
@@ -53,7 +55,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SERVICE_ADD_TORRENT_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_TORRENT): cv.string, vol.Required(CONF_NAME): cv.string}
+    {
+        vol.Required(ATTR_TORRENT): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(ATTR_DOWNLOAD_DIR): cv.string,
+        vol.Optional(ATTR_PAUSED): cv.boolean,
+    }
 )
 
 SERVICE_REMOVE_TORRENT_SCHEMA = vol.Schema(
@@ -216,10 +223,15 @@ class TransmissionClient:
                 _LOGGER.error("Transmission instance is not found")
                 return
             torrent = service.data[ATTR_TORRENT]
+            args = {}
+            if ATTR_DOWNLOAD_DIR in service.data:
+                args[ATTR_DOWNLOAD_DIR] = service.data[ATTR_DOWNLOAD_DIR]
+            if ATTR_PAUSED in service.data:
+                args[ATTR_PAUSED] = service.data[ATTR_PAUSED]
             if torrent.startswith(
                 ("http", "ftp:", "magnet:")
             ) or self.hass.config.is_allowed_path(torrent):
-                tm_client.tm_api.add_torrent(torrent)
+                tm_client.tm_api.add_torrent(torrent, **args)
                 tm_client.api.update()
             else:
                 _LOGGER.warning(
