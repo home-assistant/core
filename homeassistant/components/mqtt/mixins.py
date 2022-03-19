@@ -83,7 +83,7 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import PublishPayloadType, ReceiveMessage
+from .models import MqttTypedDictConfigType, PublishPayloadType, ReceiveMessage
 from .subscription import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
@@ -991,6 +991,28 @@ class MqttEntity(
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+
+def update_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry | None,
+    config: MqttTypedDictConfigType,
+) -> str | None:
+    """Update device registry."""
+    if config_entry is None or CONF_DEVICE not in config:
+        return None
+
+    device = None
+    device_registry = dr.async_get(hass)
+    config_entry_id = config_entry.entry_id
+    device_info = device_info_from_config(config[CONF_DEVICE])
+
+    if config_entry_id is not None and device_info is not None:
+        update_device_info = cast(dict, device_info)
+        update_device_info["config_entry_id"] = config_entry_id
+        device = device_registry.async_get_or_create(**update_device_info)
+
+    return device.id if device else None
 
 
 @callback

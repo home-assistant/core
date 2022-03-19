@@ -2,17 +2,14 @@
 from __future__ import annotations
 
 import logging
-from typing import TypedDict, cast
+from typing import cast
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
 
 from . import MqttValueTemplate, subscription
 from .. import mqtt
@@ -21,8 +18,9 @@ from .discovery import MQTTConfig, cancel_discovery
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdateService,
-    device_info_from_config,
+    update_device,
 )
+from .models import MqttTagConfig
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,14 +41,6 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-class MqttTagConfig(TypedDict, total=False):
-    """Supply service parameters for MQTTTagScanner."""
-
-    topic: str
-    value_template: Template
-    device: ConfigType
-
-
 async def async_setup_tag(
     hass: HomeAssistant,
     discovery_info: MQTTConfig,
@@ -67,7 +57,7 @@ async def async_setup_tag(
     discovery_hash = discovery_info.discovery_data[ATTR_DISCOVERY_HASH]
     discovery_id = discovery_hash[1]
 
-    device_id = _update_device(hass, config_entry, tag_config)
+    device_id = update_device(hass, config_entry, tag_config)
     hass.data.setdefault(TAGS, {})
     if device_id not in hass.data[TAGS]:
         hass.data[TAGS][device_id] = {}
@@ -160,25 +150,3 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateService):
         )
         if self.device_id:
             self.hass.data[TAGS][self.device_id].pop(discovery_id)
-
-
-def _update_device(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry | None,
-    config: MqttTagConfig,
-) -> str | None:
-    """Update device registry."""
-    if config_entry is None or CONF_DEVICE not in config:
-        return None
-
-    device = None
-    device_registry = dr.async_get(hass)
-    config_entry_id = config_entry.entry_id
-    device_info = device_info_from_config(config[CONF_DEVICE])
-
-    if config_entry_id is not None and device_info is not None:
-        update_device_info = cast(dict, device_info)
-        update_device_info["config_entry_id"] = config_entry_id
-        device = device_registry.async_get_or_create(**update_device_info)
-
-    return device.id if device else None
