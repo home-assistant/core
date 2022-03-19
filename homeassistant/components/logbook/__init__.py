@@ -65,7 +65,8 @@ DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
 ICON_JSON_EXTRACT = re.compile('"icon": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
 
-CONTINUOUS_DOMAINS = ["proximity", "sensor"]
+CONTINUOUS_DOMAINS = {"proximity", "sensor"}
+CONTINUOUS_ENTITY_ID_STARTSWITH = (f"{domain}." for domain in CONTINUOUS_DOMAINS)
 
 DOMAIN = "logbook"
 
@@ -494,7 +495,6 @@ def _generate_events_query(session):
         *EVENT_COLUMNS,
         States.state,
         States.entity_id,
-        States.domain,
         States.attributes,
         StateAttributes.shared_attrs,
     )
@@ -505,7 +505,6 @@ def _generate_events_query_without_states(session):
         *EVENT_COLUMNS,
         literal(value=None, type_=sqlalchemy.String).label("state"),
         literal(value=None, type_=sqlalchemy.String).label("entity_id"),
-        literal(value=None, type_=sqlalchemy.String).label("domain"),
         literal(value=None, type_=sqlalchemy.Text).label("attributes"),
         literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
     )
@@ -563,7 +562,14 @@ def _continuous_entity_matcher():
     # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
     #
     return sqlalchemy.or_(
-        sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS)),
+        sqlalchemy.not_(
+            sqlalchemy.or_(
+                *[
+                    States.entity_id.startswith(entity_domain)
+                    for entity_domain in CONTINUOUS_ENTITY_ID_STARTSWITH
+                ]
+            )
+        ),
         sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON)),
         sqlalchemy.not_(
             StateAttributes.shared_attrs.contains(UNIT_OF_MEASUREMENT_JSON)
@@ -694,7 +700,7 @@ class LazyEventPartialState:
         "event_type",
         "entity_id",
         "state",
-        "domain",
+        "_domain",
         "context_id",
         "context_user_id",
         "context_parent_id",
@@ -707,14 +713,21 @@ class LazyEventPartialState:
         self._event_data = None
         self._time_fired_isoformat = None
         self._attributes = None
+        self._domain = None
         self.event_type = self._row.event_type
         self.entity_id = self._row.entity_id
         self.state = self._row.state
-        self.domain = self._row.domain
         self.context_id = self._row.context_id
         self.context_user_id = self._row.context_user_id
         self.context_parent_id = self._row.context_parent_id
         self.time_fired_minute = self._row.time_fired.minute
+
+    @property
+    def domain(self):
+        """Return the domain for the state."""
+        if self._domain is None:
+            self._domain = split_entity_id(self.entity_id)[0]
+        return self._domain
 
     @property
     def attributes_icon(self):
