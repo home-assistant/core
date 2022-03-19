@@ -49,9 +49,6 @@ def purge_old_data(
         state_ids, attributes_ids = _select_state_and_attributes_ids_to_purge(
             session, purge_before, event_ids
         )
-        attributes_ids = _remove_attributes_ids_used_by_newer_states(
-            session, purge_before, attributes_ids
-        )
         statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
         short_term_statistics = _select_short_term_statistics_to_purge(
             session, purge_before
@@ -60,8 +57,10 @@ def purge_old_data(
         if state_ids:
             _purge_state_ids(instance, session, state_ids)
 
-        if attributes_ids:
-            _purge_attributes_ids(instance, session, attributes_ids)
+        if unused_attribute_ids_set := _select_unused_attributes_ids(
+            session, attributes_ids
+        ):
+            _purge_attributes_ids(instance, session, unused_attribute_ids_set)
 
         if event_ids:
             _purge_event_ids(session, event_ids)
@@ -121,20 +120,18 @@ def _select_state_and_attributes_ids_to_purge(
     return state_ids, attributes_ids
 
 
-def _remove_attributes_ids_used_by_newer_states(
-    session: Session, purge_before: datetime, attributes_ids: set[int]
+def _select_unused_attributes_ids(
+    session: Session, attributes_ids: set[int]
 ) -> set[int]:
-    """Remove attributes ids that are still in use for states we are not purging yet."""
+    """Return a set of attributes ids that are not used by any states in the database."""
     if not attributes_ids:
         return set()
-    keep_attributes_ids = {
+    to_remove = attributes_ids - {
         state.attributes_id
         for state in session.query(States.attributes_id)
-        .filter(States.last_updated >= purge_before)
         .filter(States.attributes_id.in_(attributes_ids))
         .group_by(States.attributes_id)
     }
-    to_remove = attributes_ids - keep_attributes_ids
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
         len(to_remove),
@@ -187,9 +184,7 @@ def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) 
     disconnected_rows = (
         session.query(States)
         .filter(States.old_state_id.in_(state_ids))
-        .update(
-            {"old_state_id": None, "attributes_id": None}, synchronize_session=False
-        )
+        .update({"old_state_id": None}, synchronize_session=False)
     )
     _LOGGER.debug("Updated %s states to remove old_state_id", disconnected_rows)
 
@@ -332,27 +327,6 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
     return True
 
 
-def _remove_attributes_ids_used_by_other_entities(
-    session: Session, entities: list[str], attributes_ids: set[int]
-) -> set[int]:
-    """Remove attributes ids that are still in use for entitiy_ids we are not purging yet."""
-    if not attributes_ids:
-        return set()
-    keep_attributes_ids = {
-        state.attributes_id
-        for state in session.query(States.attributes_id)
-        .filter(States.entity_id.not_in(entities))
-        .filter(States.attributes_id.in_(attributes_ids))
-        .group_by(States.attributes_id)
-    }
-    to_remove = attributes_ids - keep_attributes_ids
-    _LOGGER.debug(
-        "Selected %s shared attributes to remove",
-        len(to_remove),
-    )
-    return to_remove
-
-
 def _purge_filtered_states(
     instance: Recorder, session: Session, excluded_entity_ids: list[str]
 ) -> None:
@@ -369,15 +343,15 @@ def _purge_filtered_states(
         )
     )
     event_ids = [id_ for id_ in event_ids if id_ is not None]
-    attributes_ids_set = _remove_attributes_ids_used_by_other_entities(
-        session, excluded_entity_ids, {id_ for id_ in attributes_ids if id_ is not None}
-    )
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
     )
     _purge_state_ids(instance, session, set(state_ids))
     _purge_event_ids(session, event_ids)  # type: ignore[arg-type]  # type of event_ids already narrowed to 'list[int]'
-    _purge_attributes_ids(instance, session, attributes_ids_set)
+    unused_attribute_ids_set = _select_unused_attributes_ids(
+        session, {id_ for id_ in attributes_ids if id_ is not None}
+    )
+    _purge_attributes_ids(instance, session, unused_attribute_ids_set)
 
 
 def _purge_filtered_events(
