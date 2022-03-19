@@ -488,13 +488,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
                     },
                 ),
-                {
-                    "native_value": "6",
-                    "native_unit_of_measurement": "kWh",
-                    "last_reset": last_reset,
-                    "last_period": "7",
-                    "status": "collecting",
-                },
+                {},
             ),
         ],
     )
