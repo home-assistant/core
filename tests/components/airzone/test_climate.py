@@ -135,7 +135,7 @@ async def test_airzone_climate_set_hvac_mode(hass):
         ]
     }
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.http_request",
+        "homeassistant.components.airzone.AirzoneLocalApi.http_request",
         return_value=HVAC_MOCK,
     ):
         await hass.services.async_call(
@@ -161,7 +161,7 @@ async def test_airzone_climate_set_hvac_mode(hass):
         ]
     }
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.http_request",
+        "homeassistant.components.airzone.AirzoneLocalApi.http_request",
         return_value=HVAC_MOCK_2,
     ):
         await hass.services.async_call(
@@ -194,7 +194,7 @@ async def test_airzone_climate_set_temp(hass):
     await async_init_integration(hass)
 
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.http_request",
+        "homeassistant.components.airzone.AirzoneLocalApi.http_request",
         return_value=HVAC_MOCK,
     ):
         await hass.services.async_call(
@@ -217,7 +217,7 @@ async def test_airzone_climate_set_temp_error(hass):
     await async_init_integration(hass)
 
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.put_hvac",
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
         side_effect=AirzoneError,
     ):
         await hass.services.async_call(
