@@ -378,7 +378,7 @@ class Filters:
                 or_(
                     *[
                         history_models.States.entity_id.startswith(f"{domain}.")
-                        for domain in self.included_domains
+                        for domain in self.excluded_domains
                     ]
                 )
             )
