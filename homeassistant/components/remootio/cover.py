@@ -8,19 +8,12 @@ from aioremootio import Event, EventType, Listener, RemootioClient, State, State
 
 from homeassistant.components import cover
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_SERIAL_NUMBER,
-    DOMAIN,
-    ED_ENTITY_ID,
-    ED_NAME,
-    ED_SERIAL_NUMBER,
-    REMOOTIO_CLIENT,
-)
+from .const import ATTR_SERIAL_NUMBER, CONF_SERIAL_NUMBER, DOMAIN, REMOOTIO_CLIENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,34 +128,34 @@ class RemootioCover(cover.CoverEntity):
 class RemootioCoverStateChangeListener(Listener[StateChange]):
     """Listener to be invoked when Remootio controlled garage door or gate changes its state."""
 
-    __owner: RemootioCover
+    _owner: RemootioCover
 
     def __init__(self, owner: RemootioCover) -> None:
         """Initialize an instance of this class."""
         super().__init__()
-        self.__owner = owner
+        self._owner = owner
 
     async def execute(self, client: RemootioClient, subject: StateChange) -> None:
         """Execute this listener. Tell Home Assistant that the Remootio controlled garage door or gate has changed its state."""
         _LOGGER.debug(
             "Telling Home Assistant that the Remootio controlled garage door or gate has changed its state. RemootioClientState [%s] RemootioCoverEntityId [%s] RemootioCoverUniqueId [%s] RemootioCoverState [%s]",
             client.state,
-            self.__owner.entity_id,
-            self.__owner.unique_id,
-            self.__owner.state,
+            self._owner.entity_id,
+            self._owner.unique_id,
+            self._owner.state,
         )
-        self.__owner.async_schedule_update_ha_state()
+        self._owner.async_schedule_update_ha_state()
 
 
 class RemootioCoverEventListener(Listener[Event]):
     """Listener to be invoked on an event sent by the Remmotio device."""
 
-    __owner: RemootioCover
+    _owner: RemootioCover
 
     def __init__(self, owner: RemootioCover) -> None:
         """Initialize an instance of this class."""
         super().__init__()
-        self.__owner = owner
+        self._owner = owner
 
     async def execute(self, client: RemootioClient, subject: Event) -> None:
         """Execute this listener. Fire events in Home Assistant based on events sent by the Remootio device.
@@ -177,15 +170,15 @@ class RemootioCoverEventListener(Listener[Event]):
             _LOGGER.debug(
                 "Firing event. EvenType [%s] RemootioCoverEntityId [%s] RemootioCoverUniqueId [%s]",
                 event_type,
-                self.__owner.entity_id,
-                self.__owner.unique_id,
+                self._owner.entity_id,
+                self._owner.unique_id,
             )
 
-            self.__owner.hass.bus.async_fire(
+            self._owner.hass.bus.async_fire(
                 event_type,
                 {
-                    ED_ENTITY_ID: self.__owner.entity_id,
-                    ED_SERIAL_NUMBER: self.__owner.unique_id,
-                    ED_NAME: self.__owner.name,
+                    ATTR_ENTITY_ID: self._owner.entity_id,
+                    ATTR_SERIAL_NUMBER: self._owner.unique_id,
+                    ATTR_NAME: self._owner.name,
                 },
             )
