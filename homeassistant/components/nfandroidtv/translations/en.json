@@ -13,14 +13,14 @@
                 "data": {
                     "name": "Name"
                 },
-                "description": "First, Home Assistant cannot currently distinguish Fire TVs from other Amazon devices. Select ignore if this is not a TV.\n\nThis integration requires the Notifications for Fire TV app.\n\nhttps://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK\n\nOpen the app once installed.\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable until Home Assistant finds the new IP address.",
+                "description": "This integration requires the Notifications for Fire TV app.\n\n{firetv_url}\n\nOpen the app once installed.\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable until Home Assistant finds the new IP address.",
                 "title": "Notifications for Fire TV"
             },
             "confirm_discovery_android_tv": {
                 "data": {
                     "name": "Name"
                 },
-                "description": "First, Home Assistant cannot currently distinguish Android TVs from other Android devices. Select ignore if this is not a TV.\n\nThis integration requires the Notifications for Android TV app.\n\nhttps://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\n\nOpen the app once installed.\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable until Home Assistant finds the new IP address.",
+                "description": "This integration requires the Notifications for Android TV app.\n\n{androidtv_url}\n\nOpen the app once installed.\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable until Home Assistant finds the new IP address.",
                 "title": "Notifications for Android TV"
             },
             "user": {
@@ -28,7 +28,7 @@
                     "host": "Host",
                     "name": "Name"
                 },
-                "description": "This integration requires the Notifications for Android / Fire TV app.\n\nFor Android TV: https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\nFor Fire TV: https://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK\n\nOpen the app once installed.\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable.",
+                "description": "This integration requires the Notifications for Android / Fire TV app.\n\nFor Android TV: {{androidtv_url}}\nFor Fire TV: {firetv_url}\n\nOpen the app once installed.\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable.",
                 "title": "Notifications for Android TV / Fire TV"
             }
         }

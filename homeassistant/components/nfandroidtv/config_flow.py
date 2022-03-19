@@ -4,21 +4,18 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aiohttp import ClientConnectorError
 from notifications_android_tv.notifications import ConnectError, Notifications
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import (
-    HOSTNAME,
-    IP_ADDRESS,
-    MAC_ADDRESS,
-    DhcpServiceInfo,
-)
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import ANDROID_TV_NAME, DEFAULT_NAME, DOMAIN, FIRE_TV_NAME
+from .const import ANDROID_TV_NAME, DEFAULT_NAME, DOMAIN, FIRE_TV_NAME, PLACEHOLDERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,16 +29,22 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self.ip_address = discovery_info[IP_ADDRESS]
-        mac = format_mac(discovery_info[MAC_ADDRESS])
+        self.ip_address = discovery_info.ip
+        mac = format_mac(discovery_info.macaddress)
+        _LOGGER.warning(discovery_info)
 
-        existing_entry = await self.async_set_unique_id(self.ip_address)
-        if existing_entry:
+        if existing_entry := await self.async_set_unique_id(discovery_info.ip):
             self.hass.config_entries.async_update_entry(existing_entry, unique_id=mac)
             return self.async_abort(reason="already_configured")
         await self.async_set_unique_id(mac)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
-        if "amazon-" in discovery_info[HOSTNAME]:
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        if "amazon-" in discovery_info.hostname:
+            session = async_get_clientsession(self.hass)
+            # A valid fire stick device should have this port open
+            try:
+                await session.get(f"http://{discovery_info.ip}:8009")
+            except ClientConnectorError:
+                return self.async_abort(reason="not_valid_device")
             return await self.async_step_confirm_discovery_fire_tv()
         return await self.async_step_confirm_discovery_android_tv()
 
@@ -76,6 +79,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                 }
             ),
+            description_placeholders=PLACEHOLDERS,
             errors=errors,
         )
 
@@ -107,6 +111,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                 }
             ),
+            description_placeholders=PLACEHOLDERS,
             errors=errors,
         )
 
@@ -138,6 +143,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                 }
             ),
+            description_placeholders=PLACEHOLDERS,
             errors=errors,
         )
 

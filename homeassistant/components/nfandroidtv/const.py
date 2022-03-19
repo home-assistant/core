@@ -36,3 +36,10 @@ ATTR_ICON_AUTH = "auth"
 # Any other value or absence of 'auth' lead to basic authentication being used
 ATTR_IMAGE_AUTH_DIGEST = "digest"
 ATTR_ICON_AUTH_DIGEST = "digest"
+
+ANDROIDTV_URL = "https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google"
+FIRETV_URL = (
+    "https://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK"
+)
+
+PLACEHOLDERS = {"androidtv_url": ANDROIDTV_URL, "firetv_url": FIRETV_URL}
