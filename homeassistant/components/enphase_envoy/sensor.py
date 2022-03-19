@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -142,9 +143,11 @@ class Envoy(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.coordinator.data.get(self.entity_description.key)
+        if (value := self.coordinator.data.get(self.entity_description.key)) is None:
+            return None
+        return cast(float, value)
 
 
 class EnvoyInverter(CoordinatorEntity, SensorEntity):
