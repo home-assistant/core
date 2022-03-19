@@ -68,12 +68,13 @@ async def async_setup_entry(
     coordinator = data[COORDINATOR]
     envoy_name = data[NAME]
     envoy_serial_num = config_entry.unique_id
+    envoy_data: dict = coordinator.data
     assert envoy_serial_num is not None
-    _LOGGER.debug("Envoy data: %s", data)
+    _LOGGER.debug("Envoy data: %s", envoy_data)
 
     entities: list[Envoy | EnvoyInverter] = []
     for description in SENSORS:
-        data = coordinator.data.get(description.key)
+        data = envoy_data.get(description.key)
         if isinstance(data, str) and "not available" in data:
             continue
         entities.append(
@@ -86,7 +87,7 @@ async def async_setup_entry(
             )
         )
 
-    if production := coordinator.data.get("inverters_production"):
+    if production := envoy_data.get("inverters_production"):
         entities.extend(
             EnvoyInverter(
                 coordinator,
