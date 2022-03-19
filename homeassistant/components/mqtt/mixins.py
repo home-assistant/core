@@ -500,10 +500,6 @@ class MqttAvailability(Entity):
         return self._available_latest
 
 
-<<<<<<< HEAD
-async def cleanup_device_registry(hass, device_id, config_entry_id):
-    """Remove device registry entry if there are no remaining entities or triggers."""
-=======
 def cancel_discovery(hass: HomeAssistant, discovery_info: MQTTConfig) -> None:
     """Cancel the discovery process."""
     discovery_hash = discovery_info.discovery_data[ATTR_DISCOVERY_HASH]
@@ -515,7 +511,6 @@ async def cleanup_device_registry(
     hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
 ) -> None:
     """Remove device registry entry if there are no remaining entities, triggers or notify services."""
->>>>>>> 6ea650d099 (Simplify discovery updates)
     # Local import to avoid circular dependencies
     # pylint: disable-next=import-outside-toplevel
     from . import device_trigger, tag
