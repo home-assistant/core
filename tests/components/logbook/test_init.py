@@ -711,6 +711,9 @@ async def test_filter_continuous_sensor_values(hass, hass_client):
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
 
+    import pprint
+
+    pprint.pprint(response_json)
     assert len(response_json) == 2
     assert response_json[0]["entity_id"] == entity_id_test
     assert response_json[1]["entity_id"] == entity_id_third

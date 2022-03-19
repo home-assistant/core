@@ -561,12 +561,14 @@ def _continuous_entity_matcher():
     # Prefilter out continuous domains that have
     # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
     #
-    matcher = ~States.attributes.contains(
-        UNIT_OF_MEASUREMENT_JSON
-    ) | ~StateAttributes.shared_attrs.contains(UNIT_OF_MEASUREMENT_JSON)
-    for entity_domain in CONTINUOUS_ENTITY_ID_STARTSWITH:
-        matcher = matcher | ~States.entity_id.startswith(entity_domain)
-    return matcher
+    return sqlalchemy.or_(
+        ~States.attributes.contains(UNIT_OF_MEASUREMENT_JSON),
+        ~StateAttributes.shared_attrs.contains(UNIT_OF_MEASUREMENT_JSON),
+        *[
+            ~States.entity_id.startswith(entity_domain)
+            for entity_domain in CONTINUOUS_ENTITY_ID_STARTSWITH
+        ],
+    )
 
 
 def _apply_event_time_filter(events_query, start_day, end_day):
