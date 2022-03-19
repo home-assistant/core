@@ -96,9 +96,10 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         airzone: AirzoneLocalApi = self.coordinator.airzone  # type: ignore[attr-defined]
         try:
             await airzone.put_hvac(params)
-            self.coordinator.async_set_updated_data(airzone.data())
         except (AirzoneError, ClientConnectorError) as error:
             _LOGGER.error(error)
+        else:
+            self.coordinator.async_set_updated_data(airzone.data())
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
