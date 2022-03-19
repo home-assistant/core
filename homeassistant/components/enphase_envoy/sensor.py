@@ -62,39 +62,35 @@ async def async_setup_entry(
     """Set up envoy sensor platform."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = data[COORDINATOR]
-    name = data[NAME]
+    envoy_name = data[NAME]
     envoy_serial_num = config_entry.unique_id
     assert envoy_serial_num is not None
 
     entities: list[Envoy | EnvoyInverter] = []
-    for sensor_description in SENSORS:
-        data = coordinator.data.get(sensor_description.key)
+    for description in SENSORS:
+        data = coordinator.data.get(description.key)
         if isinstance(data, str) and "not available" in data:
             continue
-
-        entity_name = f"{name} {sensor_description.name}"
         entities.append(
             Envoy(
                 coordinator,
-                sensor_description,
-                entity_name,
-                name,
+                description,
+                f"{envoy_name} {description.name}",
+                envoy_name,
                 envoy_serial_num,
             )
         )
 
     if production := coordinator.data.get("inverters_production"):
         for inverter in production:
-            entity_name = f"{name} {sensor_description.name} {inverter}"
-            serial_number = entity_name.split(" ")[-1]
             for description in INVERTER_SENSORS:
                 entities.append(
                     EnvoyInverter(
                         coordinator,
                         description,
-                        entity_name,
+                        f"{envoy_name} {description.name} {inverter}",
                         envoy_serial_num,
-                        serial_number,
+                        str(inverter),
                     )
                 )
 
@@ -111,7 +107,7 @@ class Envoy(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         description: SensorEntityDescription,
         name: str,
-        device_name: str,
+        envoy_name: str,
         envoy_serial_num: str,
     ) -> None:
         """Initialize Envoy entity."""
@@ -122,7 +118,7 @@ class Envoy(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, str(envoy_serial_num))},
             manufacturer="Enphase",
             model="Envoy",
-            name=device_name,
+            name=envoy_name,
         )
         super().__init__(coordinator)
 
