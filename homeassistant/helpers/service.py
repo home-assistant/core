@@ -527,7 +527,7 @@ def async_set_service_schema(
 
 
 @bind_hass
-async def entity_service_call(
+async def entity_service_call(  # noqa: C901
     hass: HomeAssistant,
     platforms: Iterable[EntityPlatform],
     func: str | Callable[..., Any],
@@ -646,6 +646,12 @@ async def entity_service_call(
                 for feature_set in required_features
             )
         ):
+            # If entity explicitly referenced, raise an error
+            if referenced is not None and entity.entity_id in referenced.referenced:
+                raise HomeAssistantError(
+                    f"Entity {entity.entity_id} does not support this service."
+                )
+
             continue
 
         entities.append(entity)
