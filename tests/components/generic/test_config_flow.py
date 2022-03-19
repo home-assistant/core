@@ -39,6 +39,11 @@ TESTDATA = {
     CONF_VERIFY_SSL: False,
 }
 
+TESTDATA_OPTIONS = {
+    CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
+    **TESTDATA,
+}
+
 TESTDATA_YAML = {
     CONF_NAME: "Yaml Defined Name",
     **TESTDATA,
@@ -481,6 +486,18 @@ async def test_unload_entry(hass, fakeimg_png, mock_av_open):
     await hass.config_entries.async_unload(mock_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+
+async def test_reload_on_title_change(hass) -> None:
+    """Test the integration gets reloaded when the title is updated."""
+
+    test_data = TESTDATA_OPTIONS
+    test_data[CONF_CONTENT_TYPE] = "image/png"
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="54321", options=test_data, title="My Title"
+    )
+    mock_entry.add_to_hass(hass)
+
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_entry.state is config_entries.ConfigEntryState.LOADED
@@ -488,3 +505,6 @@ async def test_unload_entry(hass, fakeimg_png, mock_av_open):
 
     hass.config_entries.async_update_entry(mock_entry, title="New Title")
     assert mock_entry.title == "New Title"
+    await hass.async_block_till_done()
+
+    assert hass.states.get("camera.my_title").attributes["friendly_name"] == "New Title"
