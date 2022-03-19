@@ -620,7 +620,7 @@ async def test_fetch_period_api_with_minimal_response(hass, hass_client):
     await async_wait_recording_done_without_instance(hass)
     client = await hass_client()
     response = await client.get(
-        f"/api/history/period/{now.isoformat()}?filter_entity_id=sensor.power&minimal_response"
+        f"/api/history/period/{now.isoformat()}?filter_entity_id=sensor.power&minimal_response&no_attributes"
     )
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
