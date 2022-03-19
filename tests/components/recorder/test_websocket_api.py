@@ -507,6 +507,12 @@ async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, 
     await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
 
+    hass.states.async_set("sensor.test2", 10, attributes=attributes)
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+
     await client.send_json(
         {
             "id": 2,
@@ -552,6 +558,18 @@ async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, 
     await client.send_json(
         {
             "id": 4,
+            "type": "recorder/get_statistics_metadata",
+            "statistic_ids": ["sensor.test"],
+            "statistic_type": "mean",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    await client.send_json(
+        {
+            "id": 5,
             "type": "recorder/get_statistics_metadata",
             "statistic_type": "sum",
             "statistic_ids": ["test:total_gas"],
