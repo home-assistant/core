@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,7 +22,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import COORDINATOR, DOMAIN, NAME, SENSORS
 
 ICON = "mdi:flash"
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -43,14 +41,13 @@ ORIGINAL_INVERTERS_KEY = "inverters"
 INVERTER_SENSORS = (
     EnvoySensorEntityDescription(
         key=ORIGINAL_INVERTERS_KEY,
-        name="Inverter",
         native_unit_of_measurement=POWER_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_idx=0,
     ),
     EnvoySensorEntityDescription(
         key="last_reported",
-        name="Inverter Last Reported",
+        name="Last Reported",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         value_idx=1,
@@ -70,7 +67,6 @@ async def async_setup_entry(
     envoy_serial_num = config_entry.unique_id
     envoy_data: dict = coordinator.data
     assert envoy_serial_num is not None
-    _LOGGER.debug("Envoy data: %s", envoy_data)
 
     entities: list[Envoy | EnvoyInverter] = []
     for description in SENSORS:
@@ -92,7 +88,7 @@ async def async_setup_entry(
             EnvoyInverter(
                 coordinator,
                 description,
-                f"{envoy_name} {description.name} {inverter}",
+                f"{envoy_name} Inverter {inverter} {description.name}".strip(),
                 envoy_serial_num,
                 str(inverter),
             )
