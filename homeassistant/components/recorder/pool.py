@@ -37,7 +37,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
 
     def shutdown(self):
         """Close the connection."""
-        if self.recorder_or_dbworker and (conn := self._conn.current()):
+        if self.recorder_or_dbworker and self._conn and (conn := self._conn.current()):
             conn.close()
 
     def dispose(self):
