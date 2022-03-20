@@ -365,7 +365,7 @@ class Filters:
                         history_models.States.entity_id.startswith(f"{domain}.")
                         for domain in self.included_domains
                     ]
-                )
+                ).self_group()
             )
         if self.included_entities:
             includes.append(history_models.States.entity_id.in_(self.included_entities))
@@ -380,7 +380,7 @@ class Filters:
                         history_models.States.entity_id.startswith(f"{domain}.")
                         for domain in self.excluded_domains
                     ]
-                )
+                ).self_group()
             )
         if self.excluded_entities:
             excludes.append(history_models.States.entity_id.in_(self.excluded_entities))
