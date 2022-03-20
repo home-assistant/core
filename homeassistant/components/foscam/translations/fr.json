@@ -5,8 +5,8 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
-            "invalid_response": "R\u00e9ponse invalide de l\u2019appareil",
+            "invalid_auth": "Authentification non valide",
+            "invalid_response": "R\u00e9ponse de l'appareil non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {

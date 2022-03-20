@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "bad_ssdp": "SSDP-data mangler en n\u00f8dvendig verdi",
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
+            "not_dms": "Enheten er ikke en st\u00f8ttet medieserver"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Vil du starte oppsettet?"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Velg en enhet \u00e5 konfigurere",
+                "title": "Oppdaget DLNA DMA-enheter"
+            }
+        }
+    }
+}

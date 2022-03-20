@@ -9,7 +9,16 @@
                 "data": {
                     "show_on_map": "Tampilkan di peta?"
                 },
-                "description": "Ingin mengonfigurasi Stasiun Luar Angkasa Internasional?"
+                "description": "Ingin mengonfigurasi Stasiun Luar Angkasa Internasional (ISS)?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Tampilkan di peta"
+                }
             }
         }
     }

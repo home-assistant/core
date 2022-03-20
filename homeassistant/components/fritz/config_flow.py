@@ -21,12 +21,15 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .common import AvmWrapper
 from .const import (
+    CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
+    ERROR_UPNP_NOT_CONFIGURED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +80,12 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
 
+        if (
+            "X_AVM-DE_UPnP1" in self.avm_wrapper.connection.services
+            and not (await self.avm_wrapper.async_get_upnp_configuration())["NewEnable"]
+        ):
+            return ERROR_UPNP_NOT_CONFIGURED
+
         return None
 
     async def async_check_configured_entry(self) -> ConfigEntry | None:
@@ -107,6 +116,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             },
             options={
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
+                CONF_OLD_DISCOVERY: DEFAULT_CONF_OLD_DISCOVERY,
             },
         )
 
@@ -296,6 +306,12 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
+                vol.Optional(
+                    CONF_OLD_DISCOVERY,
+                    default=self.config_entry.options.get(
+                        CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY
+                    ),
+                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

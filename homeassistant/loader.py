@@ -35,9 +35,7 @@ from .util.async_ import gather_with_concurrency
 if TYPE_CHECKING:
     from .core import HomeAssistant
 
-CALLABLE_T = TypeVar(  # pylint: disable=invalid-name
-    "CALLABLE_T", bound=Callable[..., Any]
-)
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,6 +56,24 @@ _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular depe
 MAX_LOAD_CONCURRENTLY = 4
 
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
+
+
+class DHCPMatcherRequired(TypedDict, total=True):
+    """Matcher for the dhcp integration for required fields."""
+
+    domain: str
+
+
+class DHCPMatcherOptional(TypedDict, total=False):
+    """Matcher for the dhcp integration for optional fields."""
+
+    macaddress: str
+    hostname: str
+    registered_devices: bool
+
+
+class DHCPMatcher(DHCPMatcherRequired, DHCPMatcherOptional):
+    """Matcher for the dhcp integration."""
 
 
 class Manifest(TypedDict, total=False):
@@ -82,7 +98,7 @@ class Manifest(TypedDict, total=False):
     mqtt: list[str]
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
-    dhcp: list[dict[str, str]]
+    dhcp: list[dict[str, bool | str]]
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
@@ -228,16 +244,16 @@ async def async_get_zeroconf(
     return zeroconf
 
 
-async def async_get_dhcp(hass: HomeAssistant) -> list[dict[str, str]]:
+async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     """Return cached list of dhcp types."""
-    dhcp: list[dict[str, str]] = DHCP.copy()
+    dhcp = cast(list[DHCPMatcher], DHCP.copy())
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.dhcp:
             continue
         for entry in integration.dhcp:
-            dhcp.append({"domain": integration.domain, **entry})
+            dhcp.append(cast(DHCPMatcher, {"domain": integration.domain, **entry}))
 
     return dhcp
 
@@ -474,7 +490,7 @@ class Integration:
         return self.manifest.get("zeroconf")
 
     @property
-    def dhcp(self) -> list[dict[str, str]] | None:
+    def dhcp(self) -> list[dict[str, str | bool]] | None:
         """Return Integration dhcp entries."""
         return self.manifest.get("dhcp")
 
@@ -681,7 +697,7 @@ def _load_file(
     Async friendly.
     """
     with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
+        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
 
     if (cache := hass.data.get(DATA_COMPONENTS)) is None:
         if not _async_mount_config_dir(hass):
@@ -787,7 +803,7 @@ class Helpers:
         return wrapped
 
 
-def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
+def bind_hass(func: _CallableT) -> _CallableT:
     """Decorate function to indicate that first argument is hass."""
     setattr(func, "__bind_hass", True)
     return func

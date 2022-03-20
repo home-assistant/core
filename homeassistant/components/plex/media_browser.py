@@ -1,4 +1,6 @@
 """Support to interface with the Plex API."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.media_player import BrowseMedia
@@ -17,6 +19,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.media_player.errors import BrowseError
 
 from .const import DOMAIN, PLEX_URI_SCHEME
+from .errors import MediaNotFound
 from .helpers import pretty_title
 
 
@@ -73,7 +76,15 @@ def browse_media(  # noqa: C901
             "can_expand": item.type in EXPANDABLES,
         }
         if hasattr(item, "thumbUrl"):
-            payload["thumbnail"] = item.thumbUrl
+            plex_server.thumbnail_cache.setdefault(str(item.ratingKey), item.thumbUrl)
+            if is_internal:
+                thumbnail = item.thumbUrl
+            else:
+                thumbnail = get_proxy_image_url(
+                    plex_server.machine_identifier,
+                    item.ratingKey,
+                )
+            payload["thumbnail"] = thumbnail
 
         return BrowseMedia(**payload)
 
@@ -105,9 +116,9 @@ def browse_media(  # noqa: C901
 
     def build_item_response(payload):
         """Create response payload for the provided media query."""
-        media = plex_server.lookup_media(**payload)
-
-        if media is None:
+        try:
+            media = plex_server.lookup_media(**payload)
+        except MediaNotFound:
             return None
 
         try:
@@ -321,3 +332,11 @@ def station_payload(station):
         can_play=True,
         can_expand=False,
     )
+
+
+def get_proxy_image_url(
+    server_id: str,
+    media_content_id: str,
+) -> str:
+    """Generate an url for a Plex media browser image."""
+    return f"/api/plex_image_proxy/{server_id}/{media_content_id}"

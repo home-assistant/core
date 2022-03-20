@@ -9,7 +9,16 @@
                 "data": {
                     "show_on_map": "Show on map?"
                 },
-                "description": "Do you want to configure the International Space Station?"
+                "description": "Do you want to configure International Space Station (ISS)?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Show on map"
+                }
             }
         }
     }

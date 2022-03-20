@@ -394,6 +394,7 @@ async def test_zeroconf_gateway_success(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host=TEST_HOST,
+            addresses=[TEST_HOST],
             hostname="mock_hostname",
             name=TEST_ZEROCONF_NAME,
             port=None,
@@ -436,6 +437,7 @@ async def test_zeroconf_unknown_device(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host=TEST_HOST,
+            addresses=[TEST_HOST],
             hostname="mock_hostname",
             name="not-a-xiaomi-miio-device",
             port=None,
@@ -455,6 +457,7 @@ async def test_zeroconf_no_data(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host=None,
+            addresses=[],
             hostname="mock_hostname",
             name=None,
             port=None,
@@ -474,6 +477,7 @@ async def test_zeroconf_missing_data(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host=TEST_HOST,
+            addresses=[TEST_HOST],
             hostname="mock_hostname",
             name=TEST_ZEROCONF_NAME,
             port=None,
@@ -771,6 +775,7 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host=TEST_HOST,
+            addresses=[TEST_HOST],
             hostname="mock_hostname",
             name=zeroconf_name_to_test,
             port=None,

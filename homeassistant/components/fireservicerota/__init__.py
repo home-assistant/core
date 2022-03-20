@@ -1,4 +1,6 @@
 """The FireServiceRota integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -195,25 +197,25 @@ class FireServiceRotaClient:
 
                 return await self._hass.async_add_executor_job(func, *args)
 
-    async def async_update(self) -> object:
+    async def async_update(self) -> dict | None:
         """Get the latest availability data."""
         data = await self.update_call(
             self.fsr.get_availability, str(self._hass.config.time_zone)
         )
 
         if not data:
-            return
+            return None
 
         self.on_duty = bool(data.get("available"))
 
         _LOGGER.debug("Updated availability data: %s", data)
         return data
 
-    async def async_response_update(self) -> object:
+    async def async_response_update(self) -> dict | None:
         """Get the latest incident response data."""
 
         if not self.incident_id:
-            return
+            return None
 
         _LOGGER.debug("Updating response data for incident id %s", self.incident_id)
 

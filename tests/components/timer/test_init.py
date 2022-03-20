@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.timer import (
     ATTR_DURATION,
+    ATTR_REMAINING,
     CONF_DURATION,
     CONF_ICON,
     CONF_NAME,
@@ -188,6 +189,46 @@ async def test_methods_and_events(hass):
             expectedEvents += 1
             assert results[-1].event_type == step["event"]
             assert len(results) == expectedEvents
+
+
+async def test_start_service(hass):
+    """Test the start/stop service."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
+
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_IDLE
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
+    assert state.attributes[ATTR_REMAINING] == "0:00:10"
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_IDLE
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
+    assert ATTR_REMAINING not in state.attributes
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 15}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+    assert state.attributes[ATTR_DURATION] == "0:00:15"
+    assert state.attributes[ATTR_REMAINING] == "0:00:15"
 
 
 async def test_wait_till_timer_expires(hass):

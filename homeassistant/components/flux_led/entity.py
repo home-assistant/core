@@ -40,7 +40,7 @@ def _async_device_info(
         ATTR_IDENTIFIERS: {(DOMAIN, entry.entry_id)},
         ATTR_MANUFACTURER: "Zengge",
         ATTR_MODEL: device.model,
-        ATTR_NAME: entry.data[CONF_NAME],
+        ATTR_NAME: entry.data.get(CONF_NAME, entry.title),
         ATTR_SW_VERSION: sw_version_str,
     }
     if hw_model := entry.data.get(CONF_MODEL):

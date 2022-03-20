@@ -11,7 +11,7 @@
             "generic": {"key": 8, "label":"Thermostat"},
             "specific": {"key": 6, "label":"Thermostat General V2"},
             "mandatorySupportedCCs": [],
-            "mandatoryControlCCs": []
+            "mandatoryControlledCCs": []
         },
         "isListening": false,
         "isFrequentListening": true,
@@ -274,5 +274,6 @@
                 }
             }
         ]
-    }
+    },
+    "replaced": false
 }

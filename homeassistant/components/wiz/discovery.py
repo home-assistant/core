@@ -17,17 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_discover_devices(
-    hass: HomeAssistant, timeout: int, address: str | None = None
+    hass: HomeAssistant, timeout: int
 ) -> list[DiscoveredBulb]:
     """Discover wiz devices."""
-    if address:
-        targets = [address]
-    else:
-        targets = [
-            str(address)
-            for address in await network.async_get_ipv4_broadcast_addresses(hass)
-        ]
-
+    broadcast_addrs = await network.async_get_ipv4_broadcast_addresses(hass)
+    targets = [str(address) for address in broadcast_addrs]
     combined_discoveries: dict[str, DiscoveredBulb] = {}
     for idx, discovered in enumerate(
         await asyncio.gather(

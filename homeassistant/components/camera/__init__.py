@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import hashlib
-import inspect
 import logging
 import os
 from random import SystemRandom
@@ -161,18 +160,9 @@ async def _async_get_image(
     """
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
         async with async_timeout.timeout(timeout):
-            # Calling inspect will be removed in 2022.1 after all
-            # custom components have had a chance to change their signature
-            sig = inspect.signature(camera.async_camera_image)
-            if "height" in sig.parameters and "width" in sig.parameters:
-                image_bytes = await camera.async_camera_image(
-                    width=width, height=height
-                )
-            else:
-                camera.async_warn_old_async_camera_image_signature()
-                image_bytes = await camera.async_camera_image()
-
-            if image_bytes:
+            if image_bytes := await camera.async_camera_image(
+                width=width, height=height
+            ):
                 content_type = camera.content_type
                 image = Image(content_type, image_bytes)
                 if (
@@ -221,7 +211,12 @@ async def async_get_mjpeg_stream(
     """Fetch an mjpeg stream from a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
 
-    return await camera.handle_async_mjpeg_stream(request)
+    try:
+        stream = await camera.handle_async_mjpeg_stream(request)
+    except ConnectionResetError:
+        stream = None
+        _LOGGER.debug("Error while writing MJPEG stream to transport")
+    return stream
 
 
 async def async_get_still_stream(
@@ -571,27 +566,9 @@ class Camera(Entity):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        sig = inspect.signature(self.camera_image)
-        # Calling inspect will be removed in 2022.1 after all
-        # custom components have had a chance to change their signature
-        if "height" in sig.parameters and "width" in sig.parameters:
-            return await self.hass.async_add_executor_job(
-                partial(self.camera_image, width=width, height=height)
-            )
-        self.async_warn_old_async_camera_image_signature()
-        return await self.hass.async_add_executor_job(self.camera_image)
-
-    # Remove in 2022.1 after all custom components have had a chance to change their signature
-    @callback
-    def async_warn_old_async_camera_image_signature(self) -> None:
-        """Warn once when calling async_camera_image with the function old signature."""
-        if self._warned_old_signature:
-            return
-        _LOGGER.warning(
-            "The camera entity %s does not support requesting width and height, please open an issue with the integration author",
-            self.entity_id,
+        return await self.hass.async_add_executor_job(
+            partial(self.camera_image, width=width, height=height)
         )
-        self._warned_old_signature = True
 
     async def handle_async_still_stream(
         self, request: web.Request, interval: float
@@ -783,7 +760,11 @@ class CameraMjpegStream(CameraView):
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
         if (interval_str := request.query.get("interval")) is None:
-            stream = await camera.handle_async_mjpeg_stream(request)
+            try:
+                stream = await camera.handle_async_mjpeg_stream(request)
+            except ConnectionResetError:
+                stream = None
+                _LOGGER.debug("Error while writing MJPEG stream to transport")
             if stream is None:
                 raise web.HTTPBadGateway()
             return stream

@@ -28,7 +28,7 @@ async def async_setup_entry(
     """Set up switches."""
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     device = cast(SmartPlug, coordinator.device)
-    if not device.is_plug and not device.is_strip:
+    if not device.is_plug and not device.is_strip and not device.is_dimmer:
         return
     entities: list = []
     if device.is_strip:
@@ -36,7 +36,7 @@ async def async_setup_entry(
         _LOGGER.debug("Initializing strip with %s sockets", len(device.children))
         for child in device.children:
             entities.append(SmartPlugSwitch(child, coordinator))
-    else:
+    elif device.is_plug:
         entities.append(SmartPlugSwitch(device, coordinator))
 
     entities.append(SmartPlugLedSwitch(device, coordinator))

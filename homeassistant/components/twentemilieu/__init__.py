@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     coordinator: DataUpdateCoordinator[
-        dict[WasteType, date | None]
+        dict[WasteType, list[date]]
     ] = DataUpdateCoordinator(
         hass,
         LOGGER,

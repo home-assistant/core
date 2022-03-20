@@ -16,14 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
-from .const import (
-    DEFAULT_PORT,
-    DEFAULT_USERNAME,
-    DOMAIN,
-    LOGGER,
-    PLATFORMS_GATEWAY,
-    SENSOR_PLATFORMS,
-)
+from .const import DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, LOGGER, PLATFORMS_GATEWAY
 from .coordinator import PlugwiseDataUpdateCoordinator
 
 
@@ -77,11 +70,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=api.smile_version[0],
     )
 
-    platforms = PLATFORMS_GATEWAY
-    if coordinator.data.gateway["single_master_thermostat"] is None:
-        platforms = SENSOR_PLATFORMS
-
-    hass.config_entries.async_setup_platforms(entry, platforms)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS_GATEWAY)
 
     return True
 

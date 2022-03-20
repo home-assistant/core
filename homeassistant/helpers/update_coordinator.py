@@ -23,14 +23,14 @@ from .debounce import Debouncer
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 
 class UpdateFailed(Exception):
     """Raised when an update has failed."""
 
 
-class DataUpdateCoordinator(Generic[T]):
+class DataUpdateCoordinator(Generic[_T]):
     """Class to manage fetching data from single endpoint."""
 
     def __init__(
@@ -40,7 +40,7 @@ class DataUpdateCoordinator(Generic[T]):
         *,
         name: str,
         update_interval: timedelta | None = None,
-        update_method: Callable[[], Awaitable[T]] | None = None,
+        update_method: Callable[[], Awaitable[_T]] | None = None,
         request_refresh_debouncer: Debouncer | None = None,
     ) -> None:
         """Initialize global data updater."""
@@ -56,7 +56,7 @@ class DataUpdateCoordinator(Generic[T]):
         # to make sure the first update was successful.
         # Set type to just T to remove annoying checks that data is not None
         # when it was already checked during setup.
-        self.data: T = None  # type: ignore[assignment]
+        self.data: _T = None  # type: ignore[assignment]
 
         self._listeners: list[CALLBACK_TYPE] = []
         self._job = HassJob(self._handle_refresh_interval)
@@ -140,7 +140,7 @@ class DataUpdateCoordinator(Generic[T]):
         """
         await self._debounced_refresh.async_call()
 
-    async def _async_update_data(self) -> T:
+    async def _async_update_data(self) -> _T:
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")
@@ -265,7 +265,7 @@ class DataUpdateCoordinator(Generic[T]):
             update_callback()
 
     @callback
-    def async_set_updated_data(self, data: T) -> None:
+    def async_set_updated_data(self, data: _T) -> None:
         """Manually update data, notify listeners and reset refresh interval."""
         if self._unsub_refresh:
             self._unsub_refresh()
@@ -295,10 +295,10 @@ class DataUpdateCoordinator(Generic[T]):
             self._unsub_refresh = None
 
 
-class CoordinatorEntity(Generic[T], entity.Entity):
+class CoordinatorEntity(Generic[_T], entity.Entity):
     """A class for entities using DataUpdateCoordinator."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator[T]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator[_T]) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         self.coordinator = coordinator
 

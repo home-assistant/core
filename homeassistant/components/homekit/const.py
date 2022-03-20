@@ -150,6 +150,8 @@ SERV_WINDOW_COVERING = "WindowCovering"
 CHAR_ACTIVE = "Active"
 CHAR_ACTIVE_IDENTIFIER = "ActiveIdentifier"
 CHAR_AIR_PARTICULATE_DENSITY = "AirParticulateDensity"
+CHAR_PM25_DENSITY = "PM2.5Density"
+CHAR_PM10_DENSITY = "PM10Density"
 CHAR_AIR_QUALITY = "AirQuality"
 CHAR_BATTERY_LEVEL = "BatteryLevel"
 CHAR_BRIGHTNESS = "Brightness"
@@ -215,6 +217,7 @@ CHAR_SWING_MODE = "SwingMode"
 CHAR_TARGET_DOOR_STATE = "TargetDoorState"
 CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"
 CHAR_TARGET_POSITION = "TargetPosition"
+CHAR_TARGET_FAN_STATE = "TargetFanState"
 CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER = "TargetHumidifierDehumidifierState"
 CHAR_TARGET_HUMIDITY = "TargetRelativeHumidity"
 CHAR_TARGET_SECURITY_STATE = "SecuritySystemTargetState"
@@ -234,7 +237,6 @@ PROP_MIN_VALUE = "minValue"
 PROP_MIN_STEP = "minStep"
 PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
 PROP_VALID_VALUES = "ValidValues"
-
 # #### Thresholds ####
 THRESHOLD_CO = 25
 THRESHOLD_CO2 = 1000

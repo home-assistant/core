@@ -5,14 +5,17 @@ from zwave_js_server.client import Client
 from zwave_js_server.dump import dump_msgs
 from zwave_js_server.model.node import NodeDataType
 
+from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DATA_CLIENT, DOMAIN
 from .helpers import get_home_and_node_id_from_device_entry
+
+TO_REDACT = {"homeId", "location"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -22,11 +25,11 @@ async def async_get_config_entry_diagnostics(
     msgs: list[dict] = await dump_msgs(
         config_entry.data[CONF_URL], async_get_clientsession(hass)
     )
-    return msgs
+    return async_redact_data(msgs, TO_REDACT)
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> NodeDataType:
     """Return diagnostics for a device."""
     client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
@@ -42,8 +45,5 @@ async def async_get_device_diagnostics(
             "minSchemaVersion": client.version.min_schema_version,
             "maxSchemaVersion": client.version.max_schema_version,
         },
-        "state": {
-            **node.data,
-            "values": [value.data for value in node.values.values()],
-        },
+        "state": async_redact_data(node.data, TO_REDACT),
     }

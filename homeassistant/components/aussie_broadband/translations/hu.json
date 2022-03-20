@@ -18,6 +18,13 @@
                 "description": "Jelsz\u00f3 friss\u00edt\u00e9se {username} sz\u00e1m\u00e1ra",
                 "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "Jelsz\u00f3 friss\u00edt\u00e9se {username} sz\u00e1m\u00e1ra",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
             "service": {
                 "data": {
                     "services": "Szolg\u00e1ltat\u00e1sok"

@@ -27,10 +27,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
+from . import MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     CONF_COMMAND_TEMPLATE,
@@ -39,10 +38,16 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    DOMAIN,
+    CONF_STATE_VALUE_TEMPLATE,
+    PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+)
 
 CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_DEVICE_CLASS = "device_class"
@@ -52,7 +57,6 @@ CONF_MODE_STATE_TOPIC = "mode_state_topic"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_PAYLOAD_RESET_MODE = "payload_reset_mode"
 CONF_PAYLOAD_RESET_HUMIDITY = "payload_reset_humidity"
-CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE = "target_humidity_command_template"
 CONF_TARGET_HUMIDITY_COMMAND_TOPIC = "target_humidity_command_topic"
 CONF_TARGET_HUMIDITY_MIN = "min_humidity"
@@ -65,8 +69,6 @@ DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_RESET = "None"
-
-PAYLOAD_NONE = "None"
 
 MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -158,8 +160,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT humidifier through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, humidifier.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(

@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
-    DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
     DeviceTuple,
     RfxtrxCommandEntity,
@@ -23,7 +22,6 @@ from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
     CONF_DATA_BITS,
-    CONF_SIGNAL_REPETITIONS,
     DEVICE_PACKET_TYPE_LIGHTING4,
 )
 
@@ -59,7 +57,6 @@ async def async_setup_entry(
             RfxtrxSwitch(
                 event.device,
                 device_id,
-                entity_info.get(CONF_SIGNAL_REPETITIONS, DEFAULT_SIGNAL_REPETITIONS),
                 entity_info.get(CONF_DATA_BITS),
                 entity_info.get(CONF_COMMAND_ON),
                 entity_info.get(CONF_COMMAND_OFF),
@@ -79,14 +76,13 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
-        signal_repetitions: int = 1,
         data_bits: int | None = None,
         cmd_on: int | None = None,
         cmd_off: int | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the RFXtrx switch."""
-        super().__init__(device, device_id, signal_repetitions, event=event)
+        super().__init__(device, device_id, event=event)
         self._data_bits = data_bits
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off

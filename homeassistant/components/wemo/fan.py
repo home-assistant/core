@@ -138,7 +138,6 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
 
     def turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

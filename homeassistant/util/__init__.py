@@ -15,8 +15,8 @@ import slugify as unicode_slug
 
 from .dt import as_local, utcnow
 
-T = TypeVar("T")
-U = TypeVar("U")  # pylint: disable=invalid-name
+_T = TypeVar("_T")
+_U = TypeVar("_U")
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
@@ -63,8 +63,8 @@ def repr_helper(inp: Any) -> str:
 
 
 def convert(
-    value: T | None, to_type: Callable[[T], U], default: U | None = None
-) -> U | None:
+    value: _T | None, to_type: Callable[[_T], _U], default: _U | None = None
+) -> _U | None:
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
@@ -137,7 +137,7 @@ class Throttle:
 
         else:
 
-            def throttled_value() -> None:  # type: ignore
+            def throttled_value() -> None:  # type: ignore[misc]
                 """Stand-in function for when real func is being throttled."""
                 return None
 
@@ -191,7 +191,7 @@ class Throttle:
                 if force or utcnow() - throttle[1] > self.min_time:
                     result = method(*args, **kwargs)
                     throttle[1] = utcnow()
-                    return result  # type: ignore
+                    return result  # type: ignore[no-any-return]
 
                 return throttled_value()
             finally:

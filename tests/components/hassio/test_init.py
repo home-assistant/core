@@ -397,12 +397,18 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     await hass.services.async_call(
         "hassio",
         "backup_partial",
-        {"addons": ["test"], "folders": ["ssl"], "password": "123456"},
+        {
+            "homeassistant": True,
+            "addons": ["test"],
+            "folders": ["ssl"],
+            "password": "123456",
+        },
     )
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 12
     assert aioclient_mock.mock_calls[-1][2] == {
+        "homeassistant": True,
         "addons": ["test"],
         "folders": ["ssl"],
         "password": "123456",

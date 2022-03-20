@@ -7,7 +7,7 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
-from aiohue.v2.models.feature import DynamicsFeatureStatus
+from aiohue.v2.models.feature import DynamicStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -42,6 +42,14 @@ ALLOWED_ERRORS = [
     'device (groupedLight) is "soft off", command (on) may not have effect',
     "device (light) has communication issues, command (on) may not have effect",
     'device (light) is "soft off", command (on) may not have effect',
+    "device (grouped_light) has communication issues, command (.on) may not have effect",
+    'device (grouped_light) is "soft off", command (.on) may not have effect'
+    "device (grouped_light) has communication issues, command (.on.on) may not have effect",
+    'device (grouped_light) is "soft off", command (.on.on) may not have effect'
+    "device (light) has communication issues, command (.on) may not have effect",
+    'device (light) is "soft off", command (.on) may not have effect',
+    "device (light) has communication issues, command (.on.on) may not have effect",
+    'device (light) is "soft off", command (.on.on) may not have effect',
 ]
 
 
@@ -283,7 +291,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                 total_brightness += dimming.brightness
             if (
                 light.dynamics
-                and light.dynamics.status == DynamicsFeatureStatus.DYNAMIC_PALETTE
+                and light.dynamics.status == DynamicStatus.DYNAMIC_PALETTE
             ):
                 lights_in_dynamic_mode += 1
 

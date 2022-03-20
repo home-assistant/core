@@ -27,7 +27,10 @@ def utcnow(request):
 def controller(hass):
     """Replace aiohomekit.Controller with an instance of aiohomekit.testing.FakeController."""
     instance = FakeController()
-    with unittest.mock.patch("aiohomekit.Controller", return_value=instance):
+    with unittest.mock.patch(
+        "homeassistant.components.homekit_controller.utils.Controller",
+        return_value=instance,
+    ):
         yield instance
 
 

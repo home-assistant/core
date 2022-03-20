@@ -12,10 +12,11 @@ from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .triggers import value_updated
+from .triggers import event, value_updated
 
 TRIGGERS = {
     "value_updated": value_updated,
+    "event": event,
 }
 
 

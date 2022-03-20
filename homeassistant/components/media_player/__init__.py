@@ -999,25 +999,7 @@ class MediaPlayerEntity(Entity):
 
     async def _async_fetch_image(self, url: str) -> tuple[bytes | None, str | None]:
         """Retrieve an image."""
-        content, content_type = (None, None)
-        websession = async_get_clientsession(self.hass)
-        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
-            response = await websession.get(url)
-            if response.status == HTTPStatus.OK:
-                content = await response.read()
-                if content_type := response.headers.get(CONTENT_TYPE):
-                    content_type = content_type.split(";")[0]
-
-        if content is None:
-            url_parts = URL(url)
-            if url_parts.user is not None:
-                url_parts = url_parts.with_user("xxxx")
-            if url_parts.password is not None:
-                url_parts = url_parts.with_password("xxxxxxxx")
-            url = str(url_parts)
-            _LOGGER.warning("Error retrieving proxied image from %s", url)
-
-        return content, content_type
+        return await async_fetch_image(_LOGGER, self.hass, url)
 
     def get_browse_image_url(
         self,
@@ -1205,3 +1187,28 @@ async def websocket_browse_media(hass, connection, msg):
         _LOGGER.warning("Browse Media should use new BrowseMedia class")
 
     connection.send_result(msg["id"], payload)
+
+
+async def async_fetch_image(
+    logger: logging.Logger, hass: HomeAssistant, url: str
+) -> tuple[bytes | None, str | None]:
+    """Retrieve an image."""
+    content, content_type = (None, None)
+    websession = async_get_clientsession(hass)
+    with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
+        response = await websession.get(url)
+        if response.status == HTTPStatus.OK:
+            content = await response.read()
+            if content_type := response.headers.get(CONTENT_TYPE):
+                content_type = content_type.split(";")[0]
+
+    if content is None:
+        url_parts = URL(url)
+        if url_parts.user is not None:
+            url_parts = url_parts.with_user("xxxx")
+        if url_parts.password is not None:
+            url_parts = url_parts.with_password("xxxxxxxx")
+        url = str(url_parts)
+        logger.warning("Error retrieving proxied image from %s", url)
+
+    return content, content_type

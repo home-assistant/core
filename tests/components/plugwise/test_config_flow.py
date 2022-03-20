@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
+    InvalidSetupError,
     PlugwiseException,
 )
 import pytest
@@ -38,6 +39,7 @@ TEST_USERNAME2 = "stretch"
 
 TEST_DISCOVERY = ZeroconfServiceInfo(
     host=TEST_HOST,
+    addresses=[TEST_HOST],
     hostname=f"{TEST_HOSTNAME}.local.",
     name="mock_name",
     port=DEFAULT_PORT,
@@ -51,6 +53,7 @@ TEST_DISCOVERY = ZeroconfServiceInfo(
 
 TEST_DISCOVERY2 = ZeroconfServiceInfo(
     host=TEST_HOST,
+    addresses=[TEST_HOST],
     hostname=f"{TEST_HOSTNAME2}.local.",
     name="mock_name",
     port=DEFAULT_PORT,
@@ -221,6 +224,7 @@ async def test_zercoconf_discovery_update_configuration(hass: HomeAssistant) -> 
     "side_effect,reason",
     [
         (InvalidAuthentication, "invalid_auth"),
+        (InvalidSetupError, "invalid_setup"),
         (ConnectionFailedError, "cannot_connect"),
         (PlugwiseException, "cannot_connect"),
         (RuntimeError, "unknown"),

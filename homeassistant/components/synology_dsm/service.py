@@ -45,8 +45,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             return
 
         if call.service in [SERVICE_REBOOT, SERVICE_SHUTDOWN]:
-            dsm_device = hass.data[DOMAIN].get(serial)
-            if not dsm_device:
+            if not (dsm_device := hass.data[DOMAIN].get(serial)):
                 LOGGER.error("DSM with specified serial %s not found", serial)
                 return
             LOGGER.debug("%s DSM with serial %s", call.service, serial)

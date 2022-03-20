@@ -3,22 +3,38 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugwise.exceptions import PlugwiseException
-
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
+from .util import plugwise_command
 
 SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
+        key="dhw_cm_switch",
+        name="DHW Comfort Mode",
+        icon="mdi:water-plus",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
+        key="lock",
+        name="Lock",
+        icon="mdi:lock",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
         key="relay",
         name="Relay",
-        icon="mdi:electric-switch",
+        device_class=SwitchDeviceClass.SWITCH,
     ),
 )
 
@@ -52,47 +68,29 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
-        self._attr_name = coordinator.data.devices[device_id].get("name")
+        self._attr_name = (f"{self.device.get('name', '')} {description.name}").lstrip()
 
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if entity is on."""
+        return self.device["switches"].get(self.entity_description.key)
+
+    @plugwise_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        try:
-            state_on = await self.coordinator.api.set_switch_state(
-                self._dev_id,
-                self.coordinator.data.devices[self._dev_id].get("members"),
-                self.entity_description.key,
-                "on",
-            )
-        except PlugwiseException:
-            LOGGER.error("Error while communicating to device")
-        else:
-            if state_on:
-                self._attr_is_on = True
-                self.async_write_ha_state()
+        await self.coordinator.api.set_switch_state(
+            self._dev_id,
+            self.device.get("members"),
+            self.entity_description.key,
+            "on",
+        )
 
+    @plugwise_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        try:
-            state_off = await self.coordinator.api.set_switch_state(
-                self._dev_id,
-                self.coordinator.data.devices[self._dev_id].get("members"),
-                self.entity_description.key,
-                "off",
-            )
-        except PlugwiseException:
-            LOGGER.error("Error while communicating to device")
-        else:
-            if state_off:
-                self._attr_is_on = False
-                self.async_write_ha_state()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if not (data := self.coordinator.data.devices.get(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._dev_id)
-            super()._handle_coordinator_update()
-            return
-
-        self._attr_is_on = data["switches"].get(self.entity_description.key)
-        super()._handle_coordinator_update()
+        await self.coordinator.api.set_switch_state(
+            self._dev_id,
+            self.device.get("members"),
+            self.entity_description.key,
+            "off",
+        )

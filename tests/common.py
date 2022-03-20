@@ -282,7 +282,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
-    hass.config.time_zone = "US/Pacific"
+    hass.config.set_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
@@ -583,6 +583,7 @@ class MockModule:
         async_migrate_entry=None,
         async_remove_entry=None,
         partial_manifest=None,
+        async_remove_config_entry_device=None,
     ):
         """Initialize the mock module."""
         self.__name__ = f"homeassistant.components.{domain}"
@@ -623,6 +624,9 @@ class MockModule:
 
         if async_remove_entry is not None:
             self.async_remove_entry = async_remove_entry
+
+        if async_remove_config_entry_device is not None:
+            self.async_remove_config_entry_device = async_remove_config_entry_device
 
     def mock_manifest(self):
         """Generate a mock manifest to represent this module."""

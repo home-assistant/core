@@ -39,7 +39,7 @@ def async_trigger_discovery(
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_DISCOVERY},
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
                 data={
                     CONF_NAME: device.alias,
                     CONF_HOST: device.host,
@@ -96,7 +96,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device: SmartDevice = hass_data[entry.entry_id].device
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass_data.pop(entry.entry_id)
-    await device.protocol.close()  # type: ignore
+    await device.protocol.close()  # type: ignore[no-untyped-call]
     return unload_ok
 
 

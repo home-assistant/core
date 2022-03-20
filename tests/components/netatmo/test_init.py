@@ -183,6 +183,8 @@ async def test_setup_with_cloud(hass, config_entry):
     with patch(
         "homeassistant.components.cloud.async_is_logged_in", return_value=True
     ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=True
+    ), patch(
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
         "homeassistant.components.cloud.async_create_cloudhook",
@@ -203,6 +205,7 @@ async def test_setup_with_cloud(hass, config_entry):
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
         assert hass.components.cloud.async_active_subscription() is True
+        assert hass.components.cloud.async_is_connected() is True
         fake_create_cloudhook.assert_called_once()
 
         assert (
@@ -245,6 +248,8 @@ async def test_setup_with_cloudhook(hass):
 
     with patch(
         "homeassistant.components.cloud.async_is_logged_in", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=True
     ), patch(
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(

@@ -106,6 +106,7 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="123.123.123.123",
+            addresses=["123.123.123.123"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -261,6 +262,7 @@ async def test_discovery_duplicate_aborted(hass):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="new-host",
+            addresses=["new-host"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -296,6 +298,7 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="123.123.123.123",
+            addresses=["123.123.123.123"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -311,6 +314,7 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="123.123.123.123",
+            addresses=["123.123.123.123"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -335,6 +339,7 @@ async def test_discovery_updates_unique_id(hass):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="some-host",
+            addresses=["some-host"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,

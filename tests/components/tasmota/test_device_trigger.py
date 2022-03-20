@@ -14,7 +14,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
-from .test_common import DEFAULT_CONFIG
+from .test_common import DEFAULT_CONFIG, remove_device
 
 from tests.common import (
     assert_lists_same,
@@ -755,9 +755,10 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
 
 
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
-    hass, device_reg, calls, mqtt_mock, setup_tasmota
+    hass, hass_ws_client, device_reg, calls, mqtt_mock, setup_tasmota
 ):
     """Test triggers not firing after removal."""
+    assert await async_setup_component(hass, "config", {})
     # Discover a device with device trigger
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["swc"][0] = 0
@@ -803,7 +804,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     assert len(calls) == 1
 
     # Remove the device
-    device_reg.async_remove_device(device_entry.id)
+    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -1037,9 +1038,10 @@ async def test_attach_remove_unknown1(hass, device_reg, mqtt_mock, setup_tasmota
 
 
 async def test_attach_unknown_remove_device_from_registry(
-    hass, device_reg, mqtt_mock, setup_tasmota
+    hass, hass_ws_client, device_reg, mqtt_mock, setup_tasmota
 ):
     """Test attach and removal of device with unknown trigger."""
+    assert await async_setup_component(hass, "config", {})
     # Discover a device without device triggers
     config1 = copy.deepcopy(DEFAULT_CONFIG)
     config1["swc"][0] = -1
@@ -1080,7 +1082,7 @@ async def test_attach_unknown_remove_device_from_registry(
     )
 
     # Remove the device
-    device_reg.async_remove_device(device_entry.id)
+    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
     await hass.async_block_till_done()
 
 
