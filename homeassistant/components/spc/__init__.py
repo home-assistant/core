@@ -1,4 +1,5 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
+import asyncio
 import logging
 
 from pyspcwebgw import SpcWebGateway
@@ -23,6 +24,9 @@ DATA_API = "spc_api"
 
 SIGNAL_UPDATE_ALARM = "spc_update_alarm_{}"
 SIGNAL_UPDATE_SENSOR = "spc_update_sensor_{}"
+
+STARTUP_RETRIES = 10
+STARTUP_RETRIES_INTERVAL = 2
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -59,7 +63,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DATA_API] = spc
 
-    if not await spc.async_load_parameters():
+    for _ in range(0, STARTUP_RETRIES):
+        if await spc.async_load_parameters():
+            break
+        _LOGGER.warning("Failed to load area/zone information from SPC, trying again")
+        await asyncio.sleep(STARTUP_RETRIES_INTERVAL)
+    else:
         _LOGGER.error("Failed to load area/zone information from SPC")
         return False
 
