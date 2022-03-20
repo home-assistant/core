@@ -64,19 +64,20 @@ def _get_config_schema(
     if source == config_entries.SOURCE_IMPORT:
         return vol.Schema(api_key_schema, extra=vol.REMOVE_EXTRA)
 
+    default_location = (
+        input_dict[CONF_LOCATION]
+        if CONF_LOCATION in input_dict
+        else {
+            CONF_LATITUDE: hass.config.latitude,
+            CONF_LONGITUDE: hass.config.longitude,
+        }
+    )
     return vol.Schema(
         {
             **api_key_schema,
             vol.Required(
                 CONF_LOCATION,
-                default={
-                    CONF_LATITUDE: input_dict.get(CONF_LOCATION, {}).get(
-                        CONF_LATITUDE, hass.config.latitude
-                    ),
-                    CONF_LONGITUDE: input_dict.get(CONF_LOCATION, {}).get(
-                        CONF_LONGITUDE, hass.config.longitude
-                    ),
-                },
+                default=default_location,
             ): selector({"location": {"radius": False}}),
         },
     )
