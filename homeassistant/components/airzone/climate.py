@@ -144,9 +144,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
             if self.get_zone_value(AZD_AIR_DEMAND) or self.get_zone_value(
                 AZD_FLOOR_DEMAND
             ):
-                action = cast(
-                    str, HVAC_ACTION_LIB_TO_HASS.get(self.get_zone_value(AZD_MODE))
-                )
+                action = HVAC_ACTION_LIB_TO_HASS[self.get_zone_value(AZD_MODE)]
             else:
                 action = CURRENT_HVAC_IDLE
         else:
