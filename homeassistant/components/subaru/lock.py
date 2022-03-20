@@ -55,7 +55,7 @@ class SubaruLock(LockEntity):
         """Initialize the locks for the vehicle."""
         self.controller = controller
         self.vehicle_info = vehicle_info
-        self.vin = vehicle_info[VEHICLE_VIN]
+        vin = vehicle_info[VEHICLE_VIN]
         self.car_name = vehicle_info[VEHICLE_NAME]
         self._attr_name = f"{self.car_name} Door Locks"
         self._attr_unique_id = f"{self.vin}_door_locks"
