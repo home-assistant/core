@@ -116,6 +116,10 @@ def execute(qry, to_native=False, validate_entity_ids=True) -> list | None:
 
     This method also retries a few times in the case of stale connections.
     """
+    _LOGGER.warning(
+        "Running query: %s",
+        str(qry.statement.compile(compile_kwargs={"literal_binds": True})),
+    )
 
     for tryno in range(0, RETRIES):
         try:
