@@ -5,6 +5,8 @@ from datetime import timedelta
 import json
 from unittest.mock import patch, sentinel
 
+import pytest
+
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.models import process_timestamp
 import homeassistant.core as ha
@@ -122,14 +124,21 @@ def test_get_states_no_attributes(hass_recorder):
     )
 
 
-def test_state_changes_during_period(hass_recorder):
+@pytest.mark.parametrize(
+    "attributes, no_attributes",
+    [
+        ({"attr": True}, False),
+        ({}, True),
+    ],
+)
+def test_state_changes_during_period(hass_recorder, attributes, no_attributes):
     """Test state change during period."""
     hass = hass_recorder()
     entity_id = "media_player.test"
 
     def set_state(state):
         """Set the state."""
-        hass.states.set(entity_id, state)
+        hass.states.set(entity_id, state, attributes)
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
@@ -153,7 +162,9 @@ def test_state_changes_during_period(hass_recorder):
         set_state("Netflix")
         set_state("Plex")
 
-    hist = history.state_changes_during_period(hass, start, end, entity_id)
+    hist = history.state_changes_during_period(
+        hass, start, end, entity_id, no_attributes
+    )
 
     assert states == hist[entity_id]
 
