@@ -142,10 +142,7 @@ async def test_entity_with_no_install(
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
 
     # Should not be able to install as the entity doesn't support that
-    with pytest.raises(
-        HomeAssistantError,
-        match="Installing updates is not supported for",
-    ):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_INSTALL,
