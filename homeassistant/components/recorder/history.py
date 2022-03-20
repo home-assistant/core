@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import datetime
 from itertools import groupby
 import logging
 import time
@@ -11,7 +12,7 @@ from sqlalchemy.ext import baked
 from sqlalchemy.sql.expression import literal
 
 from homeassistant.components import recorder
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from .models import (
@@ -158,8 +159,15 @@ def get_significant_states_with_session(
 
 
 def state_changes_during_period(
-    hass, start_time, end_time=None, entity_id=None, no_attributes=False
-):
+    hass: HomeAssistant,
+    start_time: datetime,
+    end_time: datetime | None = None,
+    entity_id: str | None = None,
+    no_attributes: bool = False,
+    descending: bool = True,
+    limit: int | None = None,
+    include_start_time_state: bool = True,
+) -> dict[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
         query_keys = QUERY_STATE_NO_ATTR if no_attributes else QUERY_STATES
@@ -185,7 +193,12 @@ def state_changes_during_period(
             baked_query += lambda q: q.outerjoin(
                 StateAttributes, States.attributes_id == StateAttributes.attributes_id
             )
-        baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
+
+        last_updated = States.last_updated.desc() if descending else States.last_updated
+        baked_query += lambda q: q.order_by(States.entity_id, last_updated)
+
+        if limit:
+            baked_query += lambda q: q.limit(limit)
 
         states = execute(
             baked_query(session).params(
@@ -195,7 +208,14 @@ def state_changes_during_period(
 
         entity_ids = [entity_id] if entity_id is not None else None
 
-        return _sorted_states_to_dict(hass, session, states, start_time, entity_ids)
+        return _sorted_states_to_dict(
+            hass,
+            session,
+            states,
+            start_time,
+            entity_ids,
+            include_start_time_state=include_start_time_state,
+        )
 
 
 def get_last_state_changes(hass, number_of_states, entity_id):
