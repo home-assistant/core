@@ -1061,9 +1061,6 @@ omit =
     homeassistant/components/smappee/sensor.py
     homeassistant/components/smappee/switch.py
     homeassistant/components/smarty/*
-    homeassistant/components/smarthab/__init__.py
-    homeassistant/components/smarthab/cover.py
-    homeassistant/components/smarthab/light.py
     homeassistant/components/sms/__init__.py
     homeassistant/components/sms/const.py
     homeassistant/components/sms/gateway.py
