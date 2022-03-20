@@ -493,7 +493,7 @@ def _get_events(
 
         query = query.order_by(Events.time_fired)
 
-        _LOGGER.debug(
+        _LOGGER.warning(
             "Running logbook query: %s",
             str(query.statement.compile(compile_kwargs={"literal_binds": True})),
         )
