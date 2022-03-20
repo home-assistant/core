@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 from aioairzone.const import (
     API_MODE,
@@ -109,7 +108,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
             params[API_ON] = 0
         else:
             if self.get_zone_value(AZD_MODES):
-                mode = HVAC_MODE_HASS_TO_LIB.get(hvac_mode)
+                mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
                 if mode != self.get_zone_value(AZD_MODE):
                     params[API_MODE] = mode
             params[API_ON] = 1
@@ -155,7 +154,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     def hvac_mode(self) -> str:
         """Return hvac operation mode."""
         if self.get_zone_value(AZD_ON):
-            mode = cast(str, HVAC_MODE_LIB_TO_HASS.get(self.get_zone_value(AZD_MODE)))
+            mode = HVAC_MODE_LIB_TO_HASS[self.get_zone_value(AZD_MODE)]
         else:
             mode = HVAC_MODE_OFF
         return mode
@@ -165,13 +164,10 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         """Return the list of available hvac operation modes."""
         res: list[str] = []
         modes = self.get_zone_value(AZD_MODES)
-        if modes:
-            for mode in modes:
-                res.append(cast(str, HVAC_MODE_LIB_TO_HASS.get(mode)))
-        else:
-            res.append(
-                cast(str, HVAC_MODE_LIB_TO_HASS.get(self.get_zone_value(AZD_MODE)))
-            )
+        if not modes:
+            modes = [self.get_zone_value(AZD_MODE)]
+        for mode in modes:
+            res.append(HVAC_MODE_LIB_TO_HASS[mode])
         if HVAC_MODE_OFF not in res:
             res.append(HVAC_MODE_OFF)
         return res
@@ -194,4 +190,4 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        return cast(str, TEMP_UNIT_LIB_TO_HASS.get(self.get_zone_value(AZD_TEMP_UNIT)))
+        return TEMP_UNIT_LIB_TO_HASS[self.get_zone_value(AZD_TEMP_UNIT)]
