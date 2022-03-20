@@ -76,7 +76,6 @@ def test_from_event_to_delete_state():
     db_state = States.from_event(event)
 
     assert db_state.entity_id == "sensor.temperature"
-    assert db_state.domain == "sensor"
     assert db_state.state == ""
     assert db_state.last_changed == event.time_fired
     assert db_state.last_updated == event.time_fired

@@ -30,11 +30,10 @@ from homeassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_EVENT_ORIGIN,
-    MAX_LENGTH_STATE_DOMAIN,
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
+from homeassistant.core import Context, Event, EventOrigin, State
 import homeassistant.util.dt as dt_util
 
 from .const import JSON_DUMP
@@ -157,7 +156,6 @@ class States(Base):  # type: ignore[misc,valid-type]
     )
     __tablename__ = TABLE_STATES
     state_id = Column(Integer, Identity(), primary_key=True)
-    domain = Column(String(MAX_LENGTH_STATE_DOMAIN))
     entity_id = Column(String(MAX_LENGTH_STATE_ENTITY_ID))
     state = Column(String(MAX_LENGTH_STATE_STATE))
     attributes = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
@@ -178,7 +176,7 @@ class States(Base):  # type: ignore[misc,valid-type]
         """Return string representation of instance for debugging."""
         return (
             f"<recorder.States("
-            f"id={self.state_id}, domain='{self.domain}', entity_id='{self.entity_id}', "
+            f"id={self.state_id}, entity_id='{self.entity_id}', "
             f"state='{self.state}', event_id='{self.event_id}', "
             f"last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}', "
             f"old_state_id={self.old_state_id}, attributes_id={self.attributes_id}"
@@ -195,11 +193,9 @@ class States(Base):  # type: ignore[misc,valid-type]
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
-            dbstate.domain = split_entity_id(entity_id)[0]
             dbstate.last_changed = event.time_fired
             dbstate.last_updated = event.time_fired
         else:
-            dbstate.domain = state.domain
             dbstate.state = state.state
             dbstate.last_changed = state.last_changed
             dbstate.last_updated = state.last_updated
