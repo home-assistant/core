@@ -6,6 +6,7 @@ import logging
 
 from aiohttp import ClientError
 from aussiebb.asyncio import AussieBB
+from aussiebb.const import FETCH_TYPES
 from aussiebb.exceptions import AuthenticationException, UnrecognisedServiceType
 
 from homeassistant.config_entries import ConfigEntry
@@ -31,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await client.login()
-        services = await client.get_services()
+        services = await client.get_services(drop_types=FETCH_TYPES)
     except AuthenticationException as exc:
         raise ConfigEntryAuthFailed() from exc
     except ClientError as exc:
