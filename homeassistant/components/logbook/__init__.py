@@ -1,6 +1,9 @@
 """Event parser and human readable log generator."""
+from __future__ import annotations
+
+from collections.abc import Iterable
 from contextlib import suppress
-from datetime import timedelta
+from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 from itertools import groupby
 import json
@@ -9,6 +12,8 @@ from typing import Any
 
 import sqlalchemy
 from sqlalchemy.orm import aliased
+from sqlalchemy.orm.query import Query
+from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
 import voluptuous as vol
 
@@ -483,14 +488,14 @@ def _get_events(
             if context_id is not None:
                 query = query.filter(Events.context_id == context_id)
 
-        query = query.order_by(Events.time_fired)
+            query = query.order_by(Events.time_fired)
 
         return list(
             humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
         )
 
 
-def _generate_events_query(session):
+def _generate_events_query(session: Session) -> Query:
     return session.query(
         *EVENT_COLUMNS,
         States.state,
@@ -500,7 +505,7 @@ def _generate_events_query(session):
     )
 
 
-def _generate_events_query_without_states(session):
+def _generate_events_query_without_states(session: Session) -> Query:
     return session.query(
         *EVENT_COLUMNS,
         literal(value=None, type_=sqlalchemy.String).label("state"),
@@ -510,13 +515,19 @@ def _generate_events_query_without_states(session):
     )
 
 
-def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
+def _generate_states_query(
+    session: Session,
+    start_day: dt,
+    end_day: dt,
+    old_state: States,
+    entity_ids: Iterable[str],
+) -> Query:
     return (
         _generate_events_query(session)
         .outerjoin(Events, (States.event_id == Events.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(_missing_state_matcher(old_state))
-        .filter(_continuous_entity_matcher())
+        .filter(_not_continuous_entity_domain_matcher() | _not_uom_attributes_matcher())
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
         .filter(
             (States.last_updated == States.last_changed)
@@ -528,7 +539,9 @@ def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
     )
 
 
-def _apply_events_types_and_states_filter(hass, query, old_state):
+def _apply_events_types_and_states_filter(
+    hass: HomeAssistant, query: Query, old_state: States
+) -> Query:
     events_query = (
         query.outerjoin(States, (Events.event_id == States.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
@@ -537,7 +550,9 @@ def _apply_events_types_and_states_filter(hass, query, old_state):
             | _missing_state_matcher(old_state)
         )
         .filter(
-            (Events.event_type != EVENT_STATE_CHANGED) | _continuous_entity_matcher()
+            (Events.event_type != EVENT_STATE_CHANGED)
+            | _not_continuous_entity_domain_matcher()
+            | _not_uom_attributes_matcher()
         )
     )
     return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES).outerjoin(
@@ -545,7 +560,7 @@ def _apply_events_types_and_states_filter(hass, query, old_state):
     )
 
 
-def _missing_state_matcher(old_state):
+def _missing_state_matcher(old_state: States) -> Any:
     # The below removes state change events that do not have
     # and old_state or the old_state is missing (newly added entities)
     # or the new_state is missing (removed entities)
@@ -556,14 +571,9 @@ def _missing_state_matcher(old_state):
     )
 
 
-def _continuous_entity_matcher():
-    #
-    # Prefilter out continuous domains that have
-    # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
-    #
+def _not_continuous_entity_domain_matcher() -> Any:
+    """Match continuous domains."""
     return sqlalchemy.or_(
-        ~States.attributes.contains(UNIT_OF_MEASUREMENT_JSON),
-        ~StateAttributes.shared_attrs.contains(UNIT_OF_MEASUREMENT_JSON),
         *[
             ~States.entity_id.startswith(entity_domain)
             for entity_domain in CONTINUOUS_ENTITY_ID_STARTSWITH
@@ -571,19 +581,31 @@ def _continuous_entity_matcher():
     )
 
 
-def _apply_event_time_filter(events_query, start_day, end_day):
+def _not_uom_attributes_matcher() -> Any:
+    """Prefilter ATTR_UNIT_OF_MEASUREMENT as its much faster in sql."""
+    return ~(
+        StateAttributes.shared_attrs.contains(UNIT_OF_MEASUREMENT_JSON)
+        | States.attributes.contains(UNIT_OF_MEASUREMENT_JSON)
+    )
+
+
+def _apply_event_time_filter(events_query: Query, start_day: dt, end_day: dt) -> Query:
     return events_query.filter(
         (Events.time_fired > start_day) & (Events.time_fired < end_day)
     )
 
 
-def _apply_event_types_filter(hass, query, event_types):
+def _apply_event_types_filter(
+    hass: HomeAssistant, query: Query, event_types: list[str]
+) -> Query:
     return query.filter(
         Events.event_type.in_(event_types + list(hass.data.get(DOMAIN, {})))
     )
 
 
-def _apply_event_entity_id_matchers(events_query, entity_ids):
+def _apply_event_entity_id_matchers(
+    events_query: Query, entity_ids: Iterable[str]
+) -> Query:
     return events_query.filter(
         sqlalchemy.or_(
             *(
