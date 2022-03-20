@@ -55,7 +55,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         """Update the current value."""
         value = kwargs[ATTR_POSITION]
         self.controller.zwave_api.send_command(
-            self.device.id, f"exact?level={str(value) if value < 100 else '99'}"
+            self.device.id, f"exact?level={str(min(value, 99))}"
         )
 
     @property
