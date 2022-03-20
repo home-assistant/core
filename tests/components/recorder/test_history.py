@@ -181,9 +181,6 @@ def test_get_significant_states(hass_recorder):
     hass = hass_recorder()
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    import pprint
-
-    pprint.pprint([hist, states])
     assert states == hist
 
 
