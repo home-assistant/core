@@ -40,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             TotalConnectClient, username, password, usercodes
         )
     except AuthenticationError as exception:
-        raise ConfigEntryAuthFailed("TotalConnect authentication failed") from exception
+        raise ConfigEntryAuthFailed(
+            "TotalConnect authentication failed during setup"
+        ) from exception
 
     coordinator = TotalConnectDataUpdateCoordinator(hass, client)
     await coordinator.async_config_entry_first_refresh()
@@ -83,7 +85,7 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
         except AuthenticationError as exception:
             # should only encounter if password changes during operation
             raise ConfigEntryAuthFailed(
-                "TotalConnect authentication failed"
+                "TotalConnect authentication failed during operation"
             ) from exception
         except TotalConnectError as exception:
             raise UpdateFailed(exception) from exception
