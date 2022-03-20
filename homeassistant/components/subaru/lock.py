@@ -58,7 +58,7 @@ class SubaruLock(LockEntity):
         vin = vehicle_info[VEHICLE_VIN]
         self.car_name = vehicle_info[VEHICLE_NAME]
         self._attr_name = f"{self.car_name} Door Locks"
-        self._attr_unique_id = f"{self.vin}_door_locks"
+        self._attr_unique_id = f"{vin}_door_locks"
         self._attr_device_info = get_device_info(vehicle_info)
 
     async def async_lock(self, **kwargs):
