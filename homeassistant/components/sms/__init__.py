@@ -53,8 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device = entry.data[CONF_DEVICE]
     connection_mode = "at"
-    baud_speed = entry.data.get(CONF_BAUD_SPEED)
-    if baud_speed is not None and str(baud_speed) != str(DEFAULT_BAUD_SPEED):
+    baud_speed = str(entry.data.get(CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED))
+    if baud_speed != str(DEFAULT_BAUD_SPEED):
         connection_mode += str(baud_speed)
     config = {"Device": device, "Connection": connection_mode}
     _LOGGER.debug("Connecting mode:%s", connection_mode)
