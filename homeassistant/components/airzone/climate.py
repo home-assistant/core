@@ -9,8 +9,7 @@ from aioairzone.const import (
     API_SET_POINT,
     API_SYSTEM_ID,
     API_ZONE_ID,
-    AZD_AIR_DEMAND,
-    AZD_FLOOR_DEMAND,
+    AZD_DEMAND,
     AZD_HUMIDITY,
     AZD_MODE,
     AZD_MODES,
@@ -140,9 +139,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
         if self.get_zone_value(AZD_ON):
-            if self.get_zone_value(AZD_AIR_DEMAND) or self.get_zone_value(
-                AZD_FLOOR_DEMAND
-            ):
+            if self.get_zone_value(AZD_DEMAND):
                 action = HVAC_ACTION_LIB_TO_HASS[self.get_zone_value(AZD_MODE)]
             else:
                 action = CURRENT_HVAC_IDLE
