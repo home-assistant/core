@@ -35,11 +35,9 @@ SIGNIFICANT_DOMAINS = {
     "thermostat",
     "water_heater",
 }
-SIGNIFICANT_DOMAINS_ENTITY_ID_STARTSWITH = [
-    f"{domain}." for domain in SIGNIFICANT_DOMAINS
-]
+SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in SIGNIFICANT_DOMAINS]
 IGNORE_DOMAINS = {"zone", "scene"}
-IGNORE_DOMAINS_ENTITY_ID_STARTSWITH = [f"{domain}." for domain in IGNORE_DOMAINS]
+IGNORE_DOMAINS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in IGNORE_DOMAINS]
 NEED_ATTRIBUTE_DOMAINS = {
     "climate",
     "humidifier",
@@ -105,8 +103,8 @@ def get_significant_states_with_session(
             (
                 or_(
                     *[
-                        States.entity_id.startswith(entity_domain)
-                        for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_STARTSWITH
+                        States.entity_id.like(entity_domain)
+                        for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE
                     ],
                     (States.last_changed == States.last_updated),
                 )
@@ -124,8 +122,8 @@ def get_significant_states_with_session(
         baked_query += lambda q: q.filter(
             and_(
                 *[
-                    ~States.entity_id.startswith(entity_domain)
-                    for entity_domain in IGNORE_DOMAINS_ENTITY_ID_STARTSWITH
+                    ~States.entity_id.like(entity_domain)
+                    for entity_domain in IGNORE_DOMAINS_ENTITY_ID_LIKE
                 ]
             )
         )
@@ -330,8 +328,8 @@ def _get_states_with_session(
             most_recent_state_ids,
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
-        for entity_domain in IGNORE_DOMAINS_ENTITY_ID_STARTSWITH:
-            query = query.filter(~States.entity_id.startswith(entity_domain))
+        for entity_domain in IGNORE_DOMAINS_ENTITY_ID_LIKE:
+            query = query.filter(~States.entity_id.like(entity_domain))
         if filters:
             query = filters.apply(query)
         query = query.outerjoin(
