@@ -49,7 +49,6 @@ NEED_ATTRIBUTE_DOMAINS = {
 }
 
 BASE_STATES = [
-    States.domain,
     States.entity_id,
     States.state,
     States.last_changed,
