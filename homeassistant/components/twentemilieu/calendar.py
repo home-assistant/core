@@ -52,7 +52,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEventDevice):
     ) -> list[dict[str, Any]]:
         """Return calendar events within a datetime range."""
         events: list[dict[str, Any]] = []
-        for waste_type in self.coordinator.data:
+        for waste_type, waste_dates in self.coordinator.data.items():
             events.extend(
                 {
                     "all_day": True,
@@ -60,7 +60,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEventDevice):
                     "end": {"date": waste_date.isoformat()},
                     "summary": WASTE_TYPE_TO_DESCRIPTION[waste_type],
                 }
-                for waste_date in self.coordinator.data[waste_type]
+                for waste_date in waste_dates
                 if start_date.date() <= waste_date <= end_date.date()
             )
 
