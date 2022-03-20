@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import json
 import logging
-from typing import TypedDict, overload
+from typing import Any, TypedDict, overload
 
 from fnvhash import fnv1a_32
 from sqlalchemy import (
@@ -34,8 +34,9 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State
-from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
+
+from .const import JSON_DUMP
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -115,8 +116,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=event_data
-            or json.dumps(event.data, cls=JSONEncoder, separators=(",", ":")),
+            event_data=event_data or JSON_DUMP(event.data),
             origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,
@@ -184,15 +184,13 @@ class States(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def from_event(event):
+    def from_event(event) -> States:
         """Create object from a state_changed event."""
         entity_id = event.data["entity_id"]
-        state = event.data.get("new_state")
+        state: State | None = event.data.get("new_state")
+        dbstate = States(entity_id=entity_id, attributes=None)
 
-        dbstate = States(entity_id=entity_id)
-        dbstate.attributes = None
-
-        # State got deleted
+        # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
             dbstate.last_changed = event.time_fired
@@ -204,7 +202,7 @@ class States(Base):  # type: ignore[misc,valid-type]
 
         return dbstate
 
-    def to_native(self, validate_entity_id=True):
+    def to_native(self, validate_entity_id: bool = True) -> State | None:
         """Convert to an HA state object."""
         try:
             return State(
@@ -217,7 +215,7 @@ class States(Base):  # type: ignore[misc,valid-type]
                 process_timestamp(self.last_updated),
                 # Join the events table on event_id to get the context instead
                 # as it will always be there for state_changed events
-                context=Context(id=None),
+                context=Context(id=None),  # type: ignore[arg-type]
                 validate_entity_id=validate_entity_id,
             )
         except ValueError:
@@ -247,23 +245,29 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def from_event(event):
+    def from_event(event: Event) -> StateAttributes:
         """Create object from a state_changed event."""
-        state = event.data.get("new_state")
-        dbstate = StateAttributes()
-        # State got deleted
-        if state is None:
-            dbstate.shared_attrs = "{}"
-        else:
-            dbstate.shared_attrs = json.dumps(
-                dict(state.attributes),
-                cls=JSONEncoder,
-                separators=(",", ":"),
-            )
-        dbstate.hash = fnv1a_32(dbstate.shared_attrs.encode("utf-8"))
+        state: State | None = event.data.get("new_state")
+        # None state means the state was removed from the state machine
+        dbstate = StateAttributes(
+            shared_attrs="{}" if state is None else JSON_DUMP(state.attributes)
+        )
+        dbstate.hash = StateAttributes.hash_shared_attrs(dbstate.shared_attrs)
         return dbstate
 
-    def to_native(self):
+    @staticmethod
+    def shared_attrs_from_event(event: Event) -> str:
+        """Create shared_attrs from a state_changed event."""
+        state: State | None = event.data.get("new_state")
+        # None state means the state was removed from the state machine
+        return "{}" if state is None else JSON_DUMP(state.attributes)
+
+    @staticmethod
+    def hash_shared_attrs(shared_attrs: str) -> int:
+        """Return the hash of json encoded shared attributes."""
+        return fnv1a_32(shared_attrs.encode("utf-8"))
+
+    def to_native(self) -> dict[str, Any]:
         """Convert to an HA state object."""
         try:
             return json.loads(self.shared_attrs)

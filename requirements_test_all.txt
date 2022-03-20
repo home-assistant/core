@@ -893,7 +893,7 @@ pyatmo==6.2.4
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.11
+pyaussiebb==0.0.14
 
 # homeassistant.components.balboa
 pybalboa==0.13
