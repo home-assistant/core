@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ridwell",
   "requirements": [
-    "aioridwell==2021.12.2"
+    "aioridwell==2022.03.0"
   ],
   "codeowners": [
     "@bachya"
