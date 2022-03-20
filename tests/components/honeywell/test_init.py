@@ -72,7 +72,7 @@ async def test_away_temps_migration(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "somecomfort.SomeComfort",
+        "homeassistant.components.honeywell.somecomfort.SomeComfort",
     ):
         legacy_config.add_to_hass(hass)
         await hass.config_entries.async_setup(legacy_config.entry_id)
