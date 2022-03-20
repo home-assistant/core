@@ -168,6 +168,7 @@ def _check_state(hass, category, entity_id):
 
 async def test_setup(hass, two_zone_alarm):  # noqa: F811
     """Test entity setup."""
+    hass.config.set_time_zone("UTC")
     registry = er.async_get(hass)
 
     for id in ENTITY_IDS.values():
