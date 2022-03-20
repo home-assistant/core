@@ -4,7 +4,11 @@ from datetime import timedelta
 import logging
 
 from total_connect_client.client import TotalConnectClient
-from total_connect_client.exceptions import AuthenticationError, TotalConnectError
+from total_connect_client.exceptions import (
+    AuthenticationError,
+    ServiceUnavailable,
+    TotalConnectError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -86,6 +90,10 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
             # should only encounter if password changes during operation
             raise ConfigEntryAuthFailed(
                 "TotalConnect authentication failed during operation"
+            ) from exception
+        except ServiceUnavailable as exception:
+            raise UpdateFailed(
+                "Error connecting to TotalConnect or the service is unavailable"
             ) from exception
         except TotalConnectError as exception:
             raise UpdateFailed(exception) from exception
