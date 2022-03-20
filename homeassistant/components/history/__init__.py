@@ -224,6 +224,7 @@ class HistoryPeriodView(HomeAssistantView):
         )
 
         minimal_response = "minimal_response" in request.query
+        no_attributes = "no_attributes" in request.query
 
         hass = request.app["hass"]
 
@@ -245,6 +246,7 @@ class HistoryPeriodView(HomeAssistantView):
                 include_start_time_state,
                 significant_changes_only,
                 minimal_response,
+                no_attributes,
             ),
         )
 
@@ -257,6 +259,7 @@ class HistoryPeriodView(HomeAssistantView):
         include_start_time_state,
         significant_changes_only,
         minimal_response,
+        no_attributes,
     ):
         """Fetch significant stats from the database as json."""
         timer_start = time.perf_counter()
@@ -272,6 +275,7 @@ class HistoryPeriodView(HomeAssistantView):
                 include_start_time_state,
                 significant_changes_only,
                 minimal_response,
+                no_attributes,
             )
 
         result = list(result.values())
