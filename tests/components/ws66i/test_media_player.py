@@ -34,13 +34,20 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import MockConfigEntry
 
-MOCK_SOURCE_DIC = {"1": "one", "2": "two", "3": "three", "4": "four"}
+MOCK_SOURCE_DIC = {
+    "1": "one",
+    "2": "two",
+    "3": "three",
+    "4": "four",
+    "5": "five",
+    "6": "six",
+}
 MOCK_CONFIG = {CONF_IP_ADDRESS: "fake ip"}
 MOCK_OPTIONS = {CONF_SOURCES: MOCK_SOURCE_DIC}
+MOCK_DEFAULT_OPTIONS = {CONF_SOURCES: INIT_OPTIONS_DEFAULT}
 
 ZONE_1_ID = "media_player.zone_11"
 ZONE_2_ID = "media_player.zone_12"
@@ -56,7 +63,11 @@ class AttrDict(dict):
 
     def __getattr__(self, item):
         """Get attribute."""
-        return self[item]
+        try:
+            return self[item]
+        except KeyError as err:
+            # The reason for doing this is because of the deepcopy in my code
+            raise AttributeError(item) from err
 
 
 class MockWs66i:
@@ -65,7 +76,9 @@ class MockWs66i:
     def __init__(self, fail_open=False, fail_zone_check=None):
         """Init mock object."""
         self.zones = defaultdict(
-            lambda: AttrDict(power=True, volume=0, mute=True, source=1)
+            lambda: AttrDict(
+                power=True, volume=0, mute=True, source=1, treble=0, bass=0, balance=10
+            )
         )
         self.fail_open = fail_open
         self.fail_zone_check = fail_zone_check
@@ -82,7 +95,6 @@ class MockWs66i:
         """Get zone status."""
         if self.fail_zone_check is not None and zone_id in self.fail_zone_check:
             return None
-
         status = self.zones[zone_id]
         status.zone = zone_id
         return AttrDict(status)
@@ -114,7 +126,9 @@ async def test_setup_success(hass):
         "homeassistant.components.ws66i.get_ws66i",
         new=lambda *a: MockWs66i(),
     ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
+        )
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -126,7 +140,9 @@ async def _setup_ws66i(hass, ws66i) -> MockConfigEntry:
         "homeassistant.components.ws66i.get_ws66i",
         new=lambda *a: ws66i,
     ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_DEFAULT_OPTIONS
+        )
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -184,7 +200,7 @@ async def test_cannot_connect_2(hass):
 
 async def test_service_calls_with_entity_id(hass):
     """Test snapshot save/restore service calls."""
-    config_entry = await _setup_ws66i_with_options(hass, MockWs66i())
+    _ = await _setup_ws66i_with_options(hass, MockWs66i())
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -193,11 +209,6 @@ async def test_service_calls_with_entity_id(hass):
     await _call_media_player_service(
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
     )
-
-    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = ws66i_data.coordinator
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
 
     # Saving existing values
     await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": ZONE_1_ID})
@@ -209,8 +220,6 @@ async def test_service_calls_with_entity_id(hass):
     await _call_media_player_service(
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
     )
-
-    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     # Restoring other media player to its previous state
@@ -245,12 +254,6 @@ async def test_service_calls_with_all_entities(hass):
     await _call_media_player_service(
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
     )
-
-    # This code is not needed for some reason
-    # ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
-    # coordinator = ws66i_data.coordinator
-    # await coordinator.async_refresh()
-    # await hass.async_block_till_done()
 
     # Saving existing values
     await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
@@ -346,8 +349,12 @@ async def test_update(hass):
 
     ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = ws66i_data.coordinator
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+
+    with patch.object(MockWs66i, "open") as method_call:
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+        assert not method_call.called
 
     state = hass.states.get(ZONE_1_ID)
 
@@ -371,15 +378,44 @@ async def test_failed_update(hass):
 
     ws66i.set_source(11, 3)
     ws66i.set_volume(11, 38)
-
     ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = ws66i_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
+    # Failed update, close called
     with patch.object(MockWs66i, "zone_status", return_value=None):
+        with patch.object(MockWs66i, "close") as method_call:
+            await coordinator.async_refresh()
+            await hass.async_block_till_done()
+
+            assert method_call.called
+
+    assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
+
+    # A connection re-attempt fails
+    with patch.object(MockWs66i, "open", side_effect=ConnectionError) as method_call:
+        with patch.object(MockWs66i, "zone_status") as method_call_2:
+            await coordinator.async_refresh()
+            await hass.async_block_till_done()
+
+            assert not method_call_2.called
+
+        assert method_call.called
+
+    # A connection re-attempt succeeds
+    with patch.object(MockWs66i, "open") as method_call:
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
-    assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
+        assert method_call.called
+
+    # confirm entity is back on
+    state = hass.states.get(ZONE_1_ID)
+
+    assert hass.states.is_state(ZONE_1_ID, STATE_ON)
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
 
 async def test_supported_features(hass):
@@ -439,19 +475,21 @@ async def test_select_source(hass):
     assert ws66i.zones[11].source == 3
 
 
-async def test_unknown_source(hass):
+async def test_source_select(hass):
     """Test behavior when device has unknown source."""
     ws66i = MockWs66i()
-    await _setup_ws66i_with_options(hass, ws66i)
+    config_entry = await _setup_ws66i_with_options(hass, ws66i)
 
     ws66i.set_source(11, 5)
 
-    await async_update_entity(hass, ZONE_1_ID)
+    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = ws66i_data.coordinator
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get(ZONE_1_ID)
 
-    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
+    assert state.attributes.get(ATTR_INPUT_SOURCE) == "five"
 
 
 async def test_turn_on_off(hass):
@@ -552,7 +590,7 @@ async def test_first_run_with_failing_zones(hass):
     registry = er.async_get(hass)
 
     entry = registry.async_get(ZONE_1_ID)
-    assert not entry.disabled
+    assert entry is None
 
     entry = registry.async_get(ZONE_7_ID)
     assert entry is None
@@ -595,8 +633,19 @@ async def test_unload_config_entry(hass):
         "homeassistant.components.ws66i.get_ws66i",
         new=lambda *a: MockWs66i(),
     ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
+        )
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+        assert hass.data[DOMAIN][config_entry.entry_id]
+
+    with patch.object(MockWs66i, "close") as method_call:
         await config_entry.async_unload(hass)
+        await hass.async_block_till_done()
+
+        assert method_call.called
+
+    assert not hass.data[DOMAIN]

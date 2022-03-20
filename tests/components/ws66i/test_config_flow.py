@@ -4,10 +4,14 @@ from unittest.mock import patch
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.ws66i.const import (
     CONF_SOURCE_1,
+    CONF_SOURCE_2,
+    CONF_SOURCE_3,
     CONF_SOURCE_4,
     CONF_SOURCE_5,
+    CONF_SOURCE_6,
     CONF_SOURCES,
     DOMAIN,
+    INIT_OPTIONS_DEFAULT,
 )
 from homeassistant.const import CONF_IP_ADDRESS
 
@@ -102,12 +106,12 @@ async def test_generic_exception(hass):
 
 async def test_options_flow(hass):
     """Test config flow options."""
-    conf = {CONF_IP_ADDRESS: "1.1.1.1", CONF_SOURCES: {"4": "four"}}
+    conf = {CONF_IP_ADDRESS: "1.1.1.1", CONF_SOURCES: INIT_OPTIONS_DEFAULT}
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=conf,
-        options={CONF_SOURCES: {"4": "four"}},
+        options={CONF_SOURCES: INIT_OPTIONS_DEFAULT},
     )
     config_entry.add_to_hass(hass)
 
@@ -122,8 +126,22 @@ async def test_options_flow(hass):
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_SOURCE_1: "one", CONF_SOURCE_4: "", CONF_SOURCE_5: "five"},
+            user_input={
+                CONF_SOURCE_1: "one",
+                CONF_SOURCE_2: "too",
+                CONF_SOURCE_3: "tree",
+                CONF_SOURCE_4: "for",
+                CONF_SOURCE_5: "feeve",
+                CONF_SOURCE_6: "roku",
+            },
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options[CONF_SOURCES] == {"1": "one", "5": "five"}
+        assert config_entry.options[CONF_SOURCES] == {
+            "1": "one",
+            "2": "too",
+            "3": "tree",
+            "4": "for",
+            "5": "feeve",
+            "6": "roku",
+        }

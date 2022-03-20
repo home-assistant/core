@@ -16,6 +16,7 @@ from .const import (
     CONF_SOURCE_6,
     CONF_SOURCES,
     DOMAIN,
+    INIT_OPTIONS_DEFAULT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +82,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title="WS66i Amp", data=info)
+                # Data is valid. Add default values for options flow.
+                return self.async_create_entry(
+                    title="WS66i Amp",
+                    data=info,
+                    options={CONF_SOURCES: INIT_OPTIONS_DEFAULT},
+                )
             except ConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -101,12 +107,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 @core.callback
 def _key_for_source(index, source, previous_sources):
-    if previous_sources is not None and str(index) in previous_sources:
-        key = vol.Optional(
-            source, description={"suggested_value": previous_sources[str(index)]}
-        )
-    else:
-        key = vol.Optional(source)
+    key = vol.Required(
+        source, description={"suggested_value": previous_sources[str(index)]}
+    )
 
     return key
 

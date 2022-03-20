@@ -30,13 +30,26 @@ class Ws66iDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self._ws66i = my_api
         self._zones = zones
+        self._con_broken = False
 
     def _update_all_zones(self) -> list[ZoneStatus]:
         """Fetch data for each of the zones."""
+        if self._con_broken:
+            # Try to re-establish a connection
+            try:
+                self._ws66i.open()
+            except ConnectionError as err:
+                raise UpdateFailed from err
+
+            # Successfully reconnected
+            self._con_broken = False
+
         data = []
         for zone_id in self._zones:
             data_zone = self._ws66i.zone_status(zone_id)
             if data_zone is None:
+                self._ws66i.close()
+                self._con_broken = True
                 raise UpdateFailed(f"Failed to update zone {zone_id}")
 
             data.append(data_zone)
@@ -46,9 +59,6 @@ class Ws66iDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> list[ZoneStatus]:
         """Fetch data for each of the zones."""
-        data = []
-        data = await self.hass.async_add_executor_job(self._update_all_zones)
-
         # HA will call my entity's _handle_coordinator_update()
         # The data I pass back here can be accessed through coordinator.data.
-        return data
+        return await self.hass.async_add_executor_job(self._update_all_zones)

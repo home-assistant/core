@@ -10,7 +10,7 @@ from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SOURCES, DOMAIN, INIT_OPTIONS_DEFAULT
+from .const import CONF_SOURCES, DOMAIN
 from .coordinator import Ws66iDataUpdateCoordinator
 from .models import SourceRep, Ws66iData
 
@@ -58,13 +58,9 @@ def _find_zones(hass: HomeAssistant, ws66i: WS66i) -> list[int]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Soundavo WS66i 6-Zone Amplifier from a config entry."""
-    # Check if options was set. If not, initialize a dict for it
+    # Get the source names from the options flow
     options: dict[str, dict[str, str]]
-    if not entry.options:
-        options = {CONF_SOURCES: INIT_OPTIONS_DEFAULT}
-        hass.config_entries.async_update_entry(entry, options=options)
-    else:
-        options = {CONF_SOURCES: entry.options[CONF_SOURCES]}
+    options = {CONF_SOURCES: entry.options[CONF_SOURCES]}
     # Get the WS66i object and open up a connection to it
     ws66i = get_ws66i(entry.data[CONF_IP_ADDRESS])
     try:
@@ -93,8 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         zones,
     )
 
-    # Fetch initial data
-    await coordinator.async_refresh()
+    # Fetch initial data, retry on failed poll
+    await coordinator.async_config_entry_first_refresh()
 
     # Create the Ws66iData data class save it to hass
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = Ws66iData(
@@ -114,7 +110,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        # hass.data[DOMAIN][entry.entry_id] is a Ws66iData dataclass
         ws66i: WS66i = hass.data[DOMAIN][entry.entry_id].device
         ws66i.close()
         hass.data[DOMAIN].pop(entry.entry_id)
