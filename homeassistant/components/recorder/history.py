@@ -109,8 +109,6 @@ def get_significant_states_with_session(
             )
         )
 
-    baked_query += lambda q: q.filter(States.last_updated > bindparam("start_time"))
-
     if entity_ids is not None:
         baked_query += lambda q: q.filter(
             States.entity_id.in_(bindparam("entity_ids", expanding=True))
@@ -127,6 +125,7 @@ def get_significant_states_with_session(
         if filters:
             filters.bake(baked_query)
 
+    baked_query += lambda q: q.filter(States.last_updated > bindparam("start_time"))
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
 
