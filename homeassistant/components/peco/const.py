@@ -13,5 +13,5 @@ COUNTY_LIST: Final = [
     "YORK",
     "TOTAL",
 ]
-SCAN_INTERVAL: Final = 1
+SCAN_INTERVAL: Final = 9
 CONF_COUNTY: Final = "county"
