@@ -6,8 +6,5 @@
   "codeowners": [],
   "iot_class": "cloud_polling",
   "loggers": ["aladdin_connect"],
-  "config_flow": true,
-  "zeroconf": [],
-  "ssdp":[],
-  "homekit":{}
+  "config_flow": true
 }
