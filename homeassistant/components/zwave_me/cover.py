@@ -53,8 +53,9 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Update the current value."""
+        value = kwargs[ATTR_POSITION]
         self.controller.zwave_api.send_command(
-            self.device.id, f"exact?level={str(kwargs[ATTR_POSITION])}"
+            self.device.id, f"exact?level={str(value) if value < 100 else '99'}"
         )
 
     @property
