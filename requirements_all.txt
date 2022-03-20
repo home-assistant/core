@@ -229,7 +229,7 @@ aiopyarr==22.2.2
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==2021.12.2
+aioridwell==2022.03.0
 
 # homeassistant.components.senseme
 aiosenseme==0.6.1
