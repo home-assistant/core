@@ -13,7 +13,7 @@ LOGGER: Logger = getLogger(__package__)
 COORDINATOR_UPDATE_INTERVAL: timedelta = timedelta(seconds=10)
 
 DOMAIN: Final = "uptimerobot"
-PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 ATTRIBUTION: Final = "Data provided by UptimeRobot"
 

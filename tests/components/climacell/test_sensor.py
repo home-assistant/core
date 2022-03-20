@@ -7,10 +7,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.climacell.config_flow import (
-    _get_config_schema,
-    _get_unique_id,
-)
 from homeassistant.components.climacell.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ATTRIBUTION
@@ -18,7 +14,7 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
-from .const import API_V3_ENTRY_DATA, API_V4_ENTRY_DATA
+from .const import API_V3_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
@@ -105,11 +101,10 @@ async def _setup(
         "homeassistant.util.dt.utcnow",
         return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC),
     ):
-        data = _get_config_schema(hass)(config)
         config_entry = MockConfigEntry(
             domain=DOMAIN,
-            data=data,
-            unique_id=_get_unique_id(hass, data),
+            data=config,
+            unique_id="test",
             version=1,
         )
         config_entry.add_to_hass(hass)
@@ -151,36 +146,3 @@ async def test_v3_sensor(
     check_sensor_state(hass, GRASS_POLLEN, "minimal_to_none")
     check_sensor_state(hass, WEED_POLLEN, "minimal_to_none")
     check_sensor_state(hass, TREE_POLLEN, "minimal_to_none")
-
-
-async def test_v4_sensor(
-    hass: HomeAssistant,
-    climacell_config_entry_update: pytest.fixture,
-) -> None:
-    """Test v4 sensor data."""
-    await _setup(hass, V4_FIELDS, API_V4_ENTRY_DATA)
-    check_sensor_state(hass, O3, "46.53")
-    check_sensor_state(hass, CO, "0.63")
-    check_sensor_state(hass, NO2, "10.67")
-    check_sensor_state(hass, SO2, "1.65")
-    check_sensor_state(hass, PM25, "5.2972")
-    check_sensor_state(hass, PM10, "20.1294")
-    check_sensor_state(hass, MEP_AQI, "23")
-    check_sensor_state(hass, MEP_HEALTH_CONCERN, "good")
-    check_sensor_state(hass, MEP_PRIMARY_POLLUTANT, "pm10")
-    check_sensor_state(hass, EPA_AQI, "24")
-    check_sensor_state(hass, EPA_HEALTH_CONCERN, "good")
-    check_sensor_state(hass, EPA_PRIMARY_POLLUTANT, "pm25")
-    check_sensor_state(hass, FIRE_INDEX, "10")
-    check_sensor_state(hass, GRASS_POLLEN, "none")
-    check_sensor_state(hass, WEED_POLLEN, "none")
-    check_sensor_state(hass, TREE_POLLEN, "none")
-    check_sensor_state(hass, FEELS_LIKE, "38.5")
-    check_sensor_state(hass, DEW_POINT, "22.6778")
-    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "997.9688")
-    check_sensor_state(hass, GHI, "0.0")
-    check_sensor_state(hass, CLOUD_BASE, "1.1909")
-    check_sensor_state(hass, CLOUD_COVER, "100")
-    check_sensor_state(hass, CLOUD_CEILING, "1.1909")
-    check_sensor_state(hass, WIND_GUST, "5.6506")
-    check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
