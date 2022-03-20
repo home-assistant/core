@@ -310,7 +310,7 @@ boschshcpy==0.2.30
 bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
-broadlink==0.18.0
+broadlink==0.18.1
 
 # homeassistant.components.brother
 brother==1.1.0
@@ -893,7 +893,7 @@ pyatmo==6.2.4
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.11
+pyaussiebb==0.0.14
 
 # homeassistant.components.balboa
 pybalboa==0.13
@@ -1352,7 +1352,7 @@ securetar==2022.2.0
 sense_energy==0.10.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.7
+sentry-sdk==1.5.8
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8

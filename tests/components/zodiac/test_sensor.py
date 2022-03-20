@@ -35,6 +35,7 @@ DAY3 = datetime(2020, 4, 21, tzinfo=dt_util.UTC)
 )
 async def test_zodiac_day(hass, now, sign, element, modality):
     """Test the zodiac sensor."""
+    hass.config.set_time_zone("UTC")
     config = {DOMAIN: {}}
 
     with patch("homeassistant.components.zodiac.sensor.utcnow", return_value=now):
