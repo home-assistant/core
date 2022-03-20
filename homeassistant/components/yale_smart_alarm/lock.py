@@ -1,7 +1,7 @@
 """Lock for Yale Alarm."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -47,14 +47,14 @@ class YaleDoorlock(YaleEntity, LockEntity):
         super().__init__(coordinator, data)
         self._attr_code_format = f"^\\d{code_format}$"
 
-    async def async_unlock(self, **kwargs: str | None) -> None:
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
         code: str | None = kwargs.get(
             ATTR_CODE, self.coordinator.entry.options.get(CONF_CODE)
         )
         return await self.async_set_lock("unlocked", code)
 
-    async def async_lock(self, **kwargs: str | None) -> None:
+    async def async_lock(self, **kwargs: Any) -> None:
         """Send lock command."""
         return await self.async_set_lock("locked", None)
 
