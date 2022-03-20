@@ -9,10 +9,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow
 from homeassistant.components.config import config_entries
-from homeassistant.config_entries import HANDLERS
+from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -94,6 +94,7 @@ async def test_get_entries(hass, client):
                 "source": "bla",
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": True,
+                "supports_remove_device": False,
                 "supports_unload": True,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -106,6 +107,7 @@ async def test_get_entries(hass, client):
                 "source": "bla2",
                 "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -118,6 +120,7 @@ async def test_get_entries(hass, client):
                 "source": "bla3",
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -190,6 +193,37 @@ async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
     assert len(hass.config_entries.async_entries()) == 1
 
 
+async def test_reload_entry_in_setup_retry(hass, client, hass_admin_user):
+    """Test reloading an entry via the API that is in setup retry."""
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=True)
+    mock_migrate_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_migrate_entry=mock_migrate_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    entry = MockConfigEntry(domain="comp", state=core_ce.ConfigEntryState.SETUP_RETRY)
+    entry.supports_unload = True
+    entry.add_to_hass(hass)
+
+    with patch.dict(HANDLERS, {"comp": ConfigFlow, "test": ConfigFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/entry/{entry.entry_id}/reload"
+        )
+        await hass.async_block_till_done()
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {"require_restart": False}
+    assert len(hass.config_entries.async_entries()) == 1
+
+
 async def test_available_flows(hass, client):
     """Test querying the available flows."""
     with patch.object(config_flows, "FLOWS", ["hello", "world"]):
@@ -250,6 +284,35 @@ async def test_initialize_flow(hass, client):
         "errors": {"username": "Should be unique."},
         "last_step": None,
     }
+
+
+async def test_initialize_flow_unmet_dependency(hass, client):
+    """Test unmet dependencies are listed."""
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    mock_integration(
+        hass, MockModule(domain="dependency_1", config_schema=config_schema)
+    )
+    # The test2 config flow should  fail because dependency_1 can't be automatically setup
+    mock_integration(
+        hass,
+        MockModule(domain="test2", partial_manifest={"dependencies": ["dependency_1"]}),
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            pass
+
+    with patch.dict(HANDLERS, {"test2": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test2", "show_advanced_options": True},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    data = await resp.text()
+    assert data == "Failed dependencies dependency_1"
 
 
 async def test_initialize_flow_unauth(hass, client, hass_admin_user):
@@ -341,6 +404,7 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_options": False,
+            "supports_remove_device": False,
             "supports_unload": False,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -414,6 +478,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -952,7 +1017,7 @@ async def test_ignore_flow(hass, hass_ws_client):
 
         async def async_step_user(self, user_input=None):
             await self.async_set_unique_id("mock-unique-id")
-            return self.async_show_form(step_id="account", data_schema=vol.Schema({}))
+            return self.async_show_form(step_id="account")
 
     ws_client = await hass_ws_client(hass)
 

@@ -20,10 +20,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from . import async_control_connect
 from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
+from .helpers import async_get_sources
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -171,17 +171,22 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.host = config_entry.data[CONF_HOST]
         self.key = config_entry.data[CONF_CLIENT_SECRET]
 
-    async def async_step_init(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         errors = {}
         if user_input is not None:
             options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
             return self.async_create_entry(title="", data=options_input)
         # Get sources
-        sources = self.options.get(CONF_SOURCES, "")
         sources_list = await async_get_sources(self.host, self.key)
         if not sources_list:
             errors["base"] = "cannot_retrieve"
+
+        sources = [s for s in self.options.get(CONF_SOURCES, []) if s in sources_list]
+        if not sources:
+            sources = sources_list
 
         options_schema = vol.Schema(
             {
@@ -195,16 +200,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init", data_schema=options_schema, errors=errors
         )
-
-
-async def async_get_sources(host: str, key: str) -> list[str]:
-    """Construct sources list."""
-    try:
-        client = await async_control_connect(host, key)
-    except WEBOSTV_EXCEPTIONS:
-        return []
-
-    return [
-        *(app["title"] for app in client.apps.values()),
-        *(app["label"] for app in client.inputs.values()),
-    ]

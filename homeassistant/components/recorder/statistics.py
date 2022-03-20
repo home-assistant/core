@@ -119,8 +119,6 @@ QUERY_STATISTIC_META_ID = [
     StatisticsMeta.statistic_id,
 ]
 
-MAX_DUPLICATES = 1000000
-
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 STATISTICS_META_BAKERY = "recorder_statistics_meta_bakery"
 STATISTICS_SHORT_TERM_BAKERY = "recorder_statistics_short_term_bakery"
@@ -292,7 +290,7 @@ def _find_duplicates(
         )
         .filter(subquery.c.is_duplicate == 1)
         .order_by(table.metadata_id, table.start, table.id.desc())
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(1000 * MAX_ROWS_TO_PURGE)
     )
     duplicates = execute(query)
     original_as_dict = {}
@@ -345,14 +343,13 @@ def _delete_duplicates_from_table(
         if not duplicate_ids:
             break
         all_non_identical_duplicates.extend(non_identical_duplicates)
-        deleted_rows = (
-            session.query(table)
-            .filter(table.id.in_(duplicate_ids))
-            .delete(synchronize_session=False)
-        )
-        total_deleted_rows += deleted_rows
-        if total_deleted_rows >= MAX_DUPLICATES:
-            break
+        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+            deleted_rows = (
+                session.query(table)
+                .filter(table.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .delete(synchronize_session=False)
+            )
+            total_deleted_rows += deleted_rows
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
@@ -387,13 +384,6 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
             len(non_identical_duplicates),
             Statistics.__tablename__,
             backup_path,
-        )
-
-    if deleted_statistics_rows >= MAX_DUPLICATES:
-        _LOGGER.warning(
-            "Found more than %s duplicated statistic rows, please report at "
-            'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+',
-            MAX_DUPLICATES - 1,
         )
 
     deleted_short_term_statistics_rows, _ = _delete_duplicates_from_table(
@@ -498,7 +488,7 @@ def compile_hourly_statistics(
         )
 
         if stats:
-            for metadata_id, group in groupby(stats, lambda stat: stat["metadata_id"]):  # type: ignore
+            for metadata_id, group in groupby(stats, lambda stat: stat["metadata_id"]):  # type: ignore[no-any-return]
                 (
                     metadata_id,
                     last_reset,
@@ -537,7 +527,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     end = start + timedelta(minutes=5)
 
     # Return if we already have 5-minute statistics for the requested period
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         if session.query(StatisticsRuns).filter_by(start=start).first():
             _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
             return True
@@ -556,7 +546,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
     # Insert collected statistics in the database
     with session_scope(
-        session=instance.get_session(),  # type: ignore
+        session=instance.get_session(),  # type: ignore[misc]
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         for stats in platform_stats:
@@ -710,7 +700,7 @@ def _configured_unit(unit: str, units: UnitSystem) -> str:
 
 def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
     """Clear statistics for a list of statistic_ids."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id.in_(statistic_ids)
         ).delete(synchronize_session=False)
@@ -720,7 +710,7 @@ def update_statistics_metadata(
     instance: Recorder, statistic_id: str, unit_of_measurement: str | None
 ) -> None:
     """Update statistics metadata for a statistic_id."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id == statistic_id
         ).update({StatisticsMeta.unit_of_measurement: unit_of_measurement})
@@ -1103,7 +1093,7 @@ def _sorted_statistics_to_dict(
 
     def no_conversion(val: Any, _: Any) -> float | None:
         """Return x."""
-        return val  # type: ignore
+        return val  # type: ignore[no-any-return]
 
     # Set all statistic IDs to empty lists in result set to maintain the order
     if statistic_ids is not None:
@@ -1111,7 +1101,7 @@ def _sorted_statistics_to_dict(
             result[stat_id] = []
 
     # Identify metadata IDs for which no data was available at the requested start time
-    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore
+    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore[no-any-return]
         first_start_time = process_timestamp(next(group).start)
         if start_time and first_start_time > start_time:
             need_stat_at_start_time.add(meta_id)
@@ -1125,12 +1115,12 @@ def _sorted_statistics_to_dict(
                 stats_at_start_time[stat.metadata_id] = (stat,)
 
     # Append all statistic entries, and optionally do unit conversion
-    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore
+    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore[no-any-return]
         unit = metadata[meta_id]["unit_of_measurement"]
         statistic_id = metadata[meta_id]["statistic_id"]
         convert: Callable[[Any, Any], float | None]
         if convert_units:
-            convert = UNIT_CONVERSIONS.get(unit, lambda x, units: x)  # type: ignore
+            convert = UNIT_CONVERSIONS.get(unit, lambda x, units: x)  # type: ignore[arg-type,no-any-return]
         else:
             convert = no_conversion
         ent_results = result[meta_id]
@@ -1259,7 +1249,7 @@ def add_external_statistics(
     """Process an add_statistics job."""
 
     with session_scope(
-        session=instance.get_session(),  # type: ignore
+        session=instance.get_session(),  # type: ignore[misc]
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         metadata_id = _update_or_add_metadata(instance.hass, session, metadata)

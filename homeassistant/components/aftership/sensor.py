@@ -149,10 +149,10 @@ class AfterShipSensor(SensorEntity):
 
         status_to_ignore = {"delivered"}
         status_counts: dict[str, int] = {}
-        trackings = []
+        parsed_trackings = []
         not_delivered_count = 0
 
-        for track in trackings:
+        for track in trackings["trackings"]:
             status = track["tag"].lower()
             name = (
                 track["tracking_number"] if track["title"] is None else track["title"]
@@ -163,7 +163,7 @@ class AfterShipSensor(SensorEntity):
                 else track["checkpoints"][-1]
             )
             status_counts[status] = status_counts.get(status, 0) + 1
-            trackings.append(
+            parsed_trackings.append(
                 {
                     "name": name,
                     "tracking_number": track["tracking_number"],
@@ -183,7 +183,7 @@ class AfterShipSensor(SensorEntity):
 
         self._attributes = {
             **status_counts,
-            ATTR_TRACKINGS: trackings,
+            ATTR_TRACKINGS: parsed_trackings,
         }
 
         self._state = not_delivered_count

@@ -142,27 +142,6 @@ def _setup(config):
     return patch_key, entity_id, config_entry
 
 
-async def test_setup_with_properties(hass):
-    """Test that setup succeeds with device properties.
-
-    the response must be a string with the following info separated with line break:
-    "manufacturer, model, serialno, version, mac_wlan0_output, mac_eth0_output"
-
-    """
-
-    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
-    config_entry.add_to_hass(hass)
-    response = "fake\nfake\n0123456\nfake\nether a1:b1:c1:d1:e1:f1 brd\nnone"
-
-    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
-        patch_key
-    ], patchers.patch_shell(response)[patch_key]:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert state is not None
-
-
 @pytest.mark.parametrize(
     "config",
     [
@@ -258,6 +237,7 @@ async def test_adb_shell_returns_none(hass, config):
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -286,6 +266,7 @@ async def test_setup_with_adbkey(hass):
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER, PATCH_ISFILE, PATCH_ACCESS:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -319,6 +300,7 @@ async def test_sources(hass, config0):
     ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -397,6 +379,7 @@ async def _test_exclude_sources(hass, config0, expected_sources):
     ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -477,6 +460,7 @@ async def _test_select_source(hass, config0, source, expected_arg, method_patch)
     ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -703,6 +687,7 @@ async def test_setup_fail(hass, config):
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is None

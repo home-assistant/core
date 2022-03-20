@@ -3,9 +3,9 @@
   "name": "Sonarr",
   "documentation": "https://www.home-assistant.io/integrations/sonarr",
   "codeowners": ["@ctalkington"],
-  "requirements": ["sonarr==0.3.0"],
+  "requirements": ["aiopyarr==22.2.2"],
   "config_flow": true,
   "quality_scale": "silver",
   "iot_class": "local_polling",
-  "loggers": ["sonarr"]
+  "loggers": ["aiopyarr"]
 }

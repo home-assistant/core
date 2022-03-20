@@ -10,7 +10,7 @@ BASE = """
 # https://github.com/blog/2392-introducing-code-owners
 
 # Home Assistant Core
-setup.py @home-assistant/core
+setup.cfg @home-assistant/core
 homeassistant/*.py @home-assistant/core
 homeassistant/helpers/* @home-assistant/core
 homeassistant/util/* @home-assistant/core

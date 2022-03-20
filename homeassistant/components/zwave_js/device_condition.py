@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_ENDPOINT,
@@ -23,12 +24,12 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
     DOMAIN,
-    VALUE_SCHEMA,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
     CONF_VALUE_ID,
     NODE_STATUSES,
+    generate_config_parameter_subtype,
     get_config_parameter_value_schema,
 )
 from .helpers import (
@@ -99,7 +100,16 @@ async def async_validate_condition_config(
 
     # We return early if the config entry for this device is not ready because we can't
     # validate the value without knowing the state of the device
-    if async_is_device_config_entry_not_loaded(hass, config[CONF_DEVICE_ID]):
+    try:
+        device_config_entry_not_loaded = async_is_device_config_entry_not_loaded(
+            hass, config[CONF_DEVICE_ID]
+        )
+    except ValueError as err:
+        raise InvalidDeviceAutomationConfig(
+            f"Device {config[CONF_DEVICE_ID]} not found"
+        ) from err
+
+    if device_config_entry_not_loaded:
         return config
 
     if config[CONF_TYPE] == VALUE_TYPE:
@@ -137,7 +147,7 @@ async def async_get_conditions(
                 **base_condition,
                 CONF_VALUE_ID: config_value.value_id,
                 CONF_TYPE: CONFIG_PARAMETER_TYPE,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]

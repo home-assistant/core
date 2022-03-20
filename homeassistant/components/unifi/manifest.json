@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifi",
   "requirements": [
-    "aiounifi==30"
+    "aiounifi==31"
   ],
   "codeowners": [
     "@Kane610"

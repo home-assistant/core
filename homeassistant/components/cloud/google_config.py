@@ -181,7 +181,11 @@ class CloudGoogleConfig(AbstractConfig):
                 self.async_disable_local_sdk()
             return
 
-        if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
+        if (
+            self.enabled
+            and GOOGLE_DOMAIN not in self.hass.config.components
+            and self.hass.is_running
+        ):
             await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
         if self.should_report_state != self.is_reporting_state:

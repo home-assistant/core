@@ -10,7 +10,7 @@
         "generic": {"key": 17, "label":"Routing Slave"},
         "specific": {"key": 1, "label":"Multilevel Power Switch"},
         "mandatorySupportedCCs": [],
-        "mandatoryControlCCs": []
+        "mandatoryControlledCCs": []
     },
     "isListening": true,
     "isFrequentListening": false,
@@ -775,5 +775,6 @@
             "value": 0,
             "ccVersion": 3
         }
-    ]
+    ],
+    "isControllerNode": false
 }

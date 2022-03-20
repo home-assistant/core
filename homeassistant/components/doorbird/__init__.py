@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import web
 from doorbirdpy import DoorBird
@@ -166,7 +167,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _async_register_events(hass, doorstation):
+async def _async_register_events(
+    hass: HomeAssistant, doorstation: ConfiguredDoorBird
+) -> bool:
     try:
         await hass.async_add_executor_job(doorstation.register_events, hass)
     except requests.exceptions.HTTPError:
@@ -184,7 +187,7 @@ async def _async_register_events(hass, doorstation):
     return True
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     config_entry_id = entry.entry_id
     doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]
@@ -243,7 +246,7 @@ class ConfiguredDoorBird:
         """Get token for device."""
         return self._token
 
-    def register_events(self, hass):
+    def register_events(self, hass: HomeAssistant) -> None:
         """Register events on device."""
         # Get the URL of this server
         hass_url = get_url(hass)
@@ -258,9 +261,10 @@ class ConfiguredDoorBird:
 
         favorites = self.device.favorites()
         for event in self.doorstation_events:
-            self._register_event(hass_url, event, favs=favorites)
-
-            _LOGGER.info("Successfully registered URL for %s on %s", event, self.name)
+            if self._register_event(hass_url, event, favs=favorites):
+                _LOGGER.info(
+                    "Successfully registered URL for %s on %s", event, self.name
+                )
 
     @property
     def slug(self):
@@ -270,21 +274,25 @@ class ConfiguredDoorBird:
     def _get_event_name(self, event):
         return f"{self.slug}_{event}"
 
-    def _register_event(self, hass_url, event, favs=None):
+    def _register_event(
+        self, hass_url: str, event: str, favs: dict[str, Any] | None = None
+    ) -> bool:
         """Add a schedule entry in the device for a sensor."""
         url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
         # Register HA URL as webhook if not already, then get the ID
         if self.webhook_is_registered(url, favs=favs):
-            return
+            return True
 
         self.device.change_favorite("http", f"Home Assistant ({event})", url)
         if not self.webhook_is_registered(url):
             _LOGGER.warning(
-                'Could not find favorite for URL "%s". ' 'Skipping sensor "%s"',
+                'Unable to set favorite URL "%s". ' 'Event "%s" will not fire',
                 url,
                 event,
             )
+            return False
+        return True
 
     def webhook_is_registered(self, url, favs=None) -> bool:
         """Return whether the given URL is registered as a device favorite."""

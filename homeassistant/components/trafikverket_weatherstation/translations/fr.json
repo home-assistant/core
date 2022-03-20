@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "invalid_station": "Impossible de trouver une station m\u00e9t\u00e9o avec le nom sp\u00e9cifi\u00e9",
             "more_stations": "Trouv\u00e9 plusieurs stations m\u00e9t\u00e9o avec le nom sp\u00e9cifi\u00e9"
         },

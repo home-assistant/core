@@ -8,11 +8,6 @@ import pytest
 
 from tests.components.homekit_controller.common import setup_test_component
 
-CURRENT_MEDIA_STATE = ("television", "current-media-state")
-TARGET_MEDIA_STATE = ("television", "target-media-state")
-REMOTE_KEY = ("television", "remote-key")
-ACTIVE_IDENTIFIER = ("television", "active-identifier")
-
 
 def create_tv_service(accessory):
     """
@@ -26,10 +21,12 @@ def create_tv_service(accessory):
 
     cur_state = tv_service.add_char(CharacteristicsTypes.CURRENT_MEDIA_STATE)
     cur_state.value = 0
+    cur_state.perms.append(CharacteristicPermissions.events)
 
     remote = tv_service.add_char(CharacteristicsTypes.REMOTE_KEY)
     remote.value = None
     remote.perms.append(CharacteristicPermissions.paired_write)
+    remote.perms.append(CharacteristicPermissions.events)
 
     # Add a HDMI 1 channel
     input_source_1 = accessory.add_service(ServicesTypes.INPUT_SOURCE)
@@ -66,16 +63,28 @@ async def test_tv_read_state(hass, utcnow):
     """Test that we can read the state of a HomeKit fan accessory."""
     helper = await setup_test_component(hass, create_tv_service)
 
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 0
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 0,
+        },
+    )
     assert state.state == "playing"
 
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 1
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 1,
+        },
+    )
     assert state.state == "paused"
 
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 2
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 2,
+        },
+    )
     assert state.state == "idle"
 
 
@@ -92,8 +101,12 @@ async def test_play_remote_key(hass, utcnow):
     """Test that we can play media on a media player."""
     helper = await setup_test_component(hass, create_tv_service)
 
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 1
-    await helper.poll_and_get_state()
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 1,
+        },
+    )
 
     await hass.services.async_call(
         "media_player",
@@ -101,28 +114,46 @@ async def test_play_remote_key(hass, utcnow):
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[REMOTE_KEY].value == 11
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.REMOTE_KEY: 11,
+        },
+    )
 
     # Second time should be a no-op
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 0
-    await helper.poll_and_get_state()
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 0,
+            CharacteristicsTypes.REMOTE_KEY: None,
+        },
+    )
 
-    helper.characteristics[REMOTE_KEY].value = None
     await hass.services.async_call(
         "media_player",
         "media_play",
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[REMOTE_KEY].value is None
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.REMOTE_KEY: None,
+        },
+    )
 
 
 async def test_pause_remote_key(hass, utcnow):
     """Test that we can pause a media player."""
     helper = await setup_test_component(hass, create_tv_service)
 
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 0
-    await helper.poll_and_get_state()
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 0,
+        },
+    )
 
     await hass.services.async_call(
         "media_player",
@@ -130,28 +161,46 @@ async def test_pause_remote_key(hass, utcnow):
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[REMOTE_KEY].value == 11
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.REMOTE_KEY: 11,
+        },
+    )
 
     # Second time should be a no-op
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 1
-    await helper.poll_and_get_state()
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 1,
+            CharacteristicsTypes.REMOTE_KEY: None,
+        },
+    )
 
-    helper.characteristics[REMOTE_KEY].value = None
     await hass.services.async_call(
         "media_player",
         "media_pause",
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[REMOTE_KEY].value is None
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.REMOTE_KEY: None,
+        },
+    )
 
 
 async def test_play(hass, utcnow):
     """Test that we can play media on a media player."""
     helper = await setup_test_component(hass, create_tv_service_with_target_media_state)
 
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 1
-    await helper.poll_and_get_state()
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 1,
+        },
+    )
 
     await hass.services.async_call(
         "media_player",
@@ -159,30 +208,48 @@ async def test_play(hass, utcnow):
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[REMOTE_KEY].value is None
-    assert helper.characteristics[TARGET_MEDIA_STATE].value == 0
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.REMOTE_KEY: None,
+            CharacteristicsTypes.TARGET_MEDIA_STATE: 0,
+        },
+    )
 
     # Second time should be a no-op
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 0
-    await helper.poll_and_get_state()
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 0,
+            CharacteristicsTypes.TARGET_MEDIA_STATE: None,
+        },
+    )
 
-    helper.characteristics[TARGET_MEDIA_STATE].value = None
     await hass.services.async_call(
         "media_player",
         "media_play",
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[REMOTE_KEY].value is None
-    assert helper.characteristics[TARGET_MEDIA_STATE].value is None
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.REMOTE_KEY: None,
+            CharacteristicsTypes.TARGET_MEDIA_STATE: None,
+        },
+    )
 
 
 async def test_pause(hass, utcnow):
     """Test that we can turn pause a media player."""
     helper = await setup_test_component(hass, create_tv_service_with_target_media_state)
 
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 0
-    await helper.poll_and_get_state()
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 0,
+        },
+    )
 
     await hass.services.async_call(
         "media_player",
@@ -190,21 +257,35 @@ async def test_pause(hass, utcnow):
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[REMOTE_KEY].value is None
-    assert helper.characteristics[TARGET_MEDIA_STATE].value == 1
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.REMOTE_KEY: None,
+            CharacteristicsTypes.TARGET_MEDIA_STATE: 1,
+        },
+    )
 
     # Second time should be a no-op
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 1
-    await helper.poll_and_get_state()
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 1,
+            CharacteristicsTypes.REMOTE_KEY: None,
+        },
+    )
 
-    helper.characteristics[REMOTE_KEY].value = None
     await hass.services.async_call(
         "media_player",
         "media_pause",
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[REMOTE_KEY].value is None
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.REMOTE_KEY: None,
+        },
+    )
 
 
 async def test_stop(hass, utcnow):
@@ -217,21 +298,35 @@ async def test_stop(hass, utcnow):
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[TARGET_MEDIA_STATE].value == 2
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.TARGET_MEDIA_STATE: 2,
+        },
+    )
 
     # Second time should be a no-op
-    helper.characteristics[CURRENT_MEDIA_STATE].value = 2
-    await helper.poll_and_get_state()
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 2,
+            CharacteristicsTypes.TARGET_MEDIA_STATE: None,
+        },
+    )
 
-    helper.characteristics[TARGET_MEDIA_STATE].value = None
     await hass.services.async_call(
         "media_player",
         "media_stop",
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[REMOTE_KEY].value is None
-    assert helper.characteristics[TARGET_MEDIA_STATE].value is None
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.REMOTE_KEY: None,
+            CharacteristicsTypes.TARGET_MEDIA_STATE: None,
+        },
+    )
 
 
 async def test_tv_set_source(hass, utcnow):
@@ -244,7 +339,12 @@ async def test_tv_set_source(hass, utcnow):
         {"entity_id": "media_player.testdevice", "source": "HDMI 2"},
         blocking=True,
     )
-    assert helper.characteristics[ACTIVE_IDENTIFIER].value == 2
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.ACTIVE_IDENTIFIER: 2,
+        },
+    )
 
     state = await helper.poll_and_get_state()
     assert state.attributes["source"] == "HDMI 2"

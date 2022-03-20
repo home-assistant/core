@@ -16,13 +16,12 @@ from homeassistant.const import (
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     POWER_WATT,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -37,19 +36,19 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         key="smr_version",
         name="DSMR Version",
         icon="mdi:counter",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="meter_model",
         name="Smart Meter Model",
         icon="mdi:gauge",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wifi_ssid",
         name="Wifi SSID",
         icon="mdi:wifi",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wifi_strength",
@@ -57,7 +56,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(

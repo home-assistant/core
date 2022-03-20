@@ -107,7 +107,7 @@ def get_poll_interval(entry: ConfigEntry) -> timedelta:
     )
 
 
-async def update_listener(hass, entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     wall_connector_data: WallConnectorData = hass.data[DOMAIN][entry.entry_id]
     wall_connector_data.update_coordinator.update_interval = get_poll_interval(entry)

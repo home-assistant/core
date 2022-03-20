@@ -2,18 +2,26 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 from typing import Any
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import get_hub
 from .base_platform import BaseStructPlatform
+from .const import CONF_SLAVE_COUNT
 from .modbus import ModbusHub
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -25,15 +33,18 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Modbus sensors."""
-    sensors = []
 
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
 
+    sensors: list[ModbusRegisterSensor | SlaveSensor] = []
+    hub = get_hub(hass, discovery_info[CONF_NAME])
     for entry in discovery_info[CONF_SENSORS]:
-        hub = get_hub(hass, discovery_info[CONF_NAME])
-        sensors.append(ModbusRegisterSensor(hub, entry))
-
+        slave_count = entry.get(CONF_SLAVE_COUNT, 0)
+        sensor = ModbusRegisterSensor(hub, entry)
+        if slave_count > 0:
+            sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
+        sensors.append(sensor)
     async_add_entities(sensors)
 
 
@@ -47,8 +58,29 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
     ) -> None:
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
+        self._coordinator: DataUpdateCoordinator[Any] | None = None
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
+
+    async def async_setup_slaves(
+        self, hass: HomeAssistant, slave_count: int, entry: dict[str, Any]
+    ) -> list[SlaveSensor]:
+        """Add slaves as needed (1 read for multiple sensors)."""
+
+        # Add a dataCoordinator for each sensor that have slaves
+        # this ensures that idx = bit position of value in result
+        # polling is done with the base class
+        name = self._attr_name if self._attr_name else "modbus_sensor"
+        self._coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=name,
+        )
+
+        slaves: list[SlaveSensor] = []
+        for idx in range(0, slave_count):
+            slaves.append(SlaveSensor(self._coordinator, idx, entry))
+        return slaves
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -60,22 +92,63 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
-        result = await self._hub.async_pymodbus_call(
+        raw_result = await self._hub.async_pymodbus_call(
             self._slave, self._address, self._count, self._input_type
         )
-        if result is None:
+        if raw_result is None:
             if self._lazy_errors:
                 self._lazy_errors -= 1
                 return
             self._lazy_errors = self._lazy_error_count
             self._attr_available = False
+            self._attr_native_value = None
+            if self._coordinator:
+                self._coordinator.async_set_updated_data(None)
             self.async_write_ha_state()
             return
 
-        self._attr_native_value = self.unpack_structure_result(result.registers)
+        result = self.unpack_structure_result(raw_result.registers)
+        if self._coordinator:
+            if result:
+                result_array = result.split(",")
+                self._attr_native_value = result_array[0]
+                self._coordinator.async_set_updated_data(result_array)
+            else:
+                self._attr_native_value = None
+                self._coordinator.async_set_updated_data(None)
+        else:
+            self._attr_native_value = result
         if self._attr_native_value is None:
             self._attr_available = False
         else:
             self._attr_available = True
         self._lazy_errors = self._lazy_error_count
         self.async_write_ha_state()
+
+
+class SlaveSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
+    """Modbus slave binary sensor."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[Any], idx: int, entry: dict[str, Any]
+    ) -> None:
+        """Initialize the Modbus binary sensor."""
+        idx += 1
+        self._idx = idx
+        self._attr_name = f"{entry[CONF_NAME]} {idx}"
+        self._attr_available = False
+        super().__init__(coordinator)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        if state := await self.async_get_last_state():
+            self._attr_native_value = state.state
+        await super().async_added_to_hass()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        result = self.coordinator.data
+        if result:
+            self._attr_native_value = result[self._idx]
+        super()._handle_coordinator_update()

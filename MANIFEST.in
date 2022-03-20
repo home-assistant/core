@@ -1,4 +1,3 @@
 include README.rst
-include LICENSE.md
 graft homeassistant
 recursive-exclude * *.py[co]

@@ -35,8 +35,7 @@ class AuroraEntity(Entity):
     @property
     def unique_id(self) -> str | None:
         """Return the unique id for this device."""
-        serial = self._data.get(ATTR_SERIAL_NUMBER)
-        if serial is None:
+        if (serial := self._data.get(ATTR_SERIAL_NUMBER)) is None:
             return None
         return f"{serial}_{self.entity_description.key}"
 

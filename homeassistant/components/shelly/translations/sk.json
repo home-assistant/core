@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "unsupported_firmware": "Zariadenie pou\u017e\u00edva nepodporovan\u00fa verziu firmv\u00e9ru."
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Chcete nastavi\u0165 {model} na {host}? \n\nZariadenia nap\u00e1jan\u00e9 z bat\u00e9rie, ktor\u00e9 s\u00fa chr\u00e1nen\u00e9 heslom, sa musia prebudi\u0165 ne\u017e budete pokra\u010dova\u0165.\nZariadenia nap\u00e1jan\u00e9 z bat\u00e9rie, ktor\u00e9 nie s\u00fa chr\u00e1nen\u00e9 heslom, sa pridaj\u00fa po prebuden\u00ed zariadenia. Teraz m\u00f4\u017eete zariadenie zobudi\u0165 pomocou tla\u010didla na \u0148om alebo po\u010dka\u0165 na \u010fal\u0161iu aktualiz\u00e1ciu \u00fadajov zo zariadenia."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                }
+            },
+            "user": {
+                "description": "Pred nastaven\u00edm musia by\u0165 zariadenia nap\u00e1jan\u00e9 z bat\u00e9rie zobuden\u00e9. Zobu\u010fte zariadenie pomocou tla\u010didla na \u0148om."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Tla\u010didlo",
+            "button1": "Prv\u00e9 tla\u010didlo",
+            "button2": "Druh\u00e9 tla\u010didlo",
+            "button3": "Tretie tla\u010didlo",
+            "button4": "\u0160tvrt\u00e9 tla\u010didlo"
+        },
+        "trigger_type": {
+            "btn_down": "{subtype} stla\u010den\u00e9 dole",
+            "btn_up": "{subtype} stla\u010den\u00e9 hore",
+            "double": "{subtype} stla\u010den\u00e9 dvakr\u00e1t",
+            "double_push": "{subtype} stla\u010den\u00e9 dvakr\u00e1t",
+            "long": "{subtype} stla\u010den\u00e9 dlho",
+            "long_push": "{subtype} stla\u010den\u00e9 dlho",
+            "long_single": "{subtype} stla\u010den\u00e9 dlho a potom raz",
+            "single": "{subtype} stla\u010den\u00e9 raz",
+            "single_long": "{subtype} stla\u010den\u00e9 raz a potom dlho",
+            "single_push": "{subtype} stla\u010den\u00e9 raz",
+            "triple": "{subtype} stla\u010den\u00e9 trikr\u00e1t"
+        }
+    }
+}

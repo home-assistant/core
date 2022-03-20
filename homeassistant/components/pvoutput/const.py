@@ -21,5 +21,3 @@ ATTR_POWER_CONSUMPTION = "power_consumption"
 ATTR_EFFICIENCY = "efficiency"
 
 CONF_SYSTEM_ID = "system_id"
-
-DEFAULT_NAME = "PVOutput"

@@ -90,11 +90,10 @@ async def async_setup_entry(
     )
 
 
-class TwenteMilieuSensor(CoordinatorEntity, SensorEntity):
+class TwenteMilieuSensor(CoordinatorEntity[dict[WasteType, list[date]]], SensorEntity):
     """Defines a Twente Milieu sensor."""
 
     entity_description: TwenteMilieuSensorDescription
-    coordinator: DataUpdateCoordinator[dict[WasteType, date | None]]
 
     def __init__(
         self,
@@ -117,4 +116,6 @@ class TwenteMilieuSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> date | None:
         """Return the state of the sensor."""
-        return self.coordinator.data.get(self.entity_description.waste_type)
+        if not (dates := self.coordinator.data[self.entity_description.waste_type]):
+            return None
+        return dates[0]

@@ -2,9 +2,15 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kasa import SmartBulb, SmartDimmer, SmartPlug, SmartStrip
+from kasa import SmartBulb, SmartDevice, SmartDimmer, SmartPlug, SmartStrip
 from kasa.exceptions import SmartDeviceException
 from kasa.protocol import TPLinkSmartHomeProtocol
+
+from homeassistant.components.tplink import CONF_HOST
+from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 MODULE = "homeassistant.components.tplink"
 MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"
@@ -22,7 +28,7 @@ def _mock_protocol() -> TPLinkSmartHomeProtocol:
 
 
 def _mocked_bulb() -> SmartBulb:
-    bulb = MagicMock(auto_spec=SmartBulb)
+    bulb = MagicMock(auto_spec=SmartBulb, name="Mocked bulb")
     bulb.update = AsyncMock()
     bulb.mac = MAC_ADDRESS
     bulb.alias = ALIAS
@@ -38,7 +44,7 @@ def _mocked_bulb() -> SmartBulb:
     bulb.device_id = MAC_ADDRESS
     bulb.valid_temperature_range.min = 4000
     bulb.valid_temperature_range.max = 9000
-    bulb.hw_info = {"sw_ver": "1.0.0"}
+    bulb.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     bulb.turn_off = AsyncMock()
     bulb.turn_on = AsyncMock()
     bulb.set_brightness = AsyncMock()
@@ -49,10 +55,10 @@ def _mocked_bulb() -> SmartBulb:
 
 
 def _mocked_dimmer() -> SmartDimmer:
-    dimmer = MagicMock(auto_spec=SmartDimmer)
+    dimmer = MagicMock(auto_spec=SmartDimmer, name="Mocked dimmer")
     dimmer.update = AsyncMock()
     dimmer.mac = MAC_ADDRESS
-    dimmer.alias = ALIAS
+    dimmer.alias = "My Dimmer"
     dimmer.model = MODEL
     dimmer.host = IP_ADDRESS
     dimmer.brightness = 50
@@ -65,18 +71,19 @@ def _mocked_dimmer() -> SmartDimmer:
     dimmer.device_id = MAC_ADDRESS
     dimmer.valid_temperature_range.min = 4000
     dimmer.valid_temperature_range.max = 9000
-    dimmer.hw_info = {"sw_ver": "1.0.0"}
+    dimmer.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     dimmer.turn_off = AsyncMock()
     dimmer.turn_on = AsyncMock()
     dimmer.set_brightness = AsyncMock()
     dimmer.set_hsv = AsyncMock()
     dimmer.set_color_temp = AsyncMock()
+    dimmer.set_led = AsyncMock()
     dimmer.protocol = _mock_protocol()
     return dimmer
 
 
 def _mocked_plug() -> SmartPlug:
-    plug = MagicMock(auto_spec=SmartPlug)
+    plug = MagicMock(auto_spec=SmartPlug, name="Mocked plug")
     plug.update = AsyncMock()
     plug.mac = MAC_ADDRESS
     plug.alias = "My Plug"
@@ -88,7 +95,7 @@ def _mocked_plug() -> SmartPlug:
     plug.is_strip = False
     plug.is_plug = True
     plug.device_id = MAC_ADDRESS
-    plug.hw_info = {"sw_ver": "1.0.0"}
+    plug.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     plug.turn_off = AsyncMock()
     plug.turn_on = AsyncMock()
     plug.set_led = AsyncMock()
@@ -97,7 +104,7 @@ def _mocked_plug() -> SmartPlug:
 
 
 def _mocked_strip() -> SmartStrip:
-    strip = MagicMock(auto_spec=SmartStrip)
+    strip = MagicMock(auto_spec=SmartStrip, name="Mocked strip")
     strip.update = AsyncMock()
     strip.mac = MAC_ADDRESS
     strip.alias = "My Strip"
@@ -109,7 +116,7 @@ def _mocked_strip() -> SmartStrip:
     strip.is_strip = True
     strip.is_plug = True
     strip.device_id = MAC_ADDRESS
-    strip.hw_info = {"sw_ver": "1.0.0"}
+    strip.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     strip.turn_off = AsyncMock()
     strip.turn_on = AsyncMock()
     strip.set_led = AsyncMock()
@@ -146,3 +153,23 @@ def _patch_single_discovery(device=None, no_device=False):
     return patch(
         "homeassistant.components.tplink.Discover.discover_single", new=_discover_single
     )
+
+
+async def initialize_config_entry_for_device(
+    hass: HomeAssistant, dev: SmartDevice
+) -> MockConfigEntry:
+    """Create a mocked configuration entry for the given device.
+
+    Note, the rest of the tests should probably be converted over to use this
+    instead of repeating the initialization routine for each test separately
+    """
+    config_entry = MockConfigEntry(
+        title="TP-Link", domain=DOMAIN, unique_id=dev.mac, data={CONF_HOST: dev.host}
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(device=dev), _patch_single_discovery(device=dev):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return config_entry

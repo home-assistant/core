@@ -9,6 +9,7 @@
   "quality_scale": "platinum",
   "iot_class": "local_polling",
   "dhcp": [
+    {"registered_devices": true},
     {
       "hostname": "k[lp]*",
       "macaddress": "60A4B7*"
@@ -25,6 +26,10 @@
       "hostname": "k[lp]*",
       "macaddress": "403F8C*"
     },    
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "C0C9E3*"
+    },
     {
       "hostname": "ep*",
       "macaddress": "E848B8*"

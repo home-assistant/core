@@ -10,7 +10,7 @@
         "generic": {"key": 21, "label":"Multilevel Sensor"},
         "specific": {"key": 1, "label":"Routing Multilevel Sensor"},
         "mandatorySupportedCCs": [],
-        "mandatoryControlCCs": []
+        "mandatoryControlledCCs": []
     },
     "isListening": true,
     "isFrequentListening": false,
@@ -1825,5 +1825,6 @@
             }
         }
     ],
-    "highestSecurityClass": 7
+    "highestSecurityClass": 7,
+    "isControllerNode": false
 }

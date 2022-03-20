@@ -177,8 +177,8 @@ async def async_setup_entry(
         [
             FluxLight(
                 coordinator,
-                entry.unique_id,
-                entry.data[CONF_NAME],
+                entry.unique_id or entry.entry_id,
+                entry.data.get(CONF_NAME, entry.title),
                 list(custom_effect_colors),
                 options.get(CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED),
                 options.get(CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL),
@@ -195,14 +195,14 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
+        base_unique_id: str,
         name: str,
         custom_effect_colors: list[tuple[int, int, int]],
         custom_effect_speed_pct: int,
         custom_effect_transition: str,
     ) -> None:
         """Initialize the light."""
-        super().__init__(coordinator, unique_id, name, None)
+        super().__init__(coordinator, base_unique_id, name, None)
         self._attr_min_mireds = color_temperature_kelvin_to_mired(self._device.max_temp)
         self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
         self._attr_supported_color_modes = _hass_color_modes(self._device)

@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
-from .coordinator import AmberUpdateCoordinator
+from .coordinator import AmberUpdateCoordinator, normalize_descriptor
 
 ICONS = {
     "general": "mdi:transmission-tower",
@@ -160,6 +160,7 @@ class AmberForecastSensor(AmberSensor):
             datum["end_time"] = interval.end_time.isoformat()
             datum["renewables"] = round(interval.renewables)
             datum["spike_status"] = interval.spike_status.value
+            datum["descriptor"] = normalize_descriptor(interval.descriptor)
 
             if interval.range is not None:
                 datum["range_min"] = format_cents_to_dollars(interval.range.min)
@@ -168,6 +169,15 @@ class AmberForecastSensor(AmberSensor):
             data["forecasts"].append(datum)
 
         return data
+
+
+class AmberPriceDescriptorSensor(AmberSensor):
+    """Amber Price Descriptor Sensor."""
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the current price descriptor."""
+        return self.coordinator.data[self.entity_description.key][self.channel_type]
 
 
 class AmberGridSensor(CoordinatorEntity, SensorEntity):
@@ -213,6 +223,16 @@ async def async_setup_entry(
             icon=ICONS[channel_type],
         )
         entities.append(AmberPriceSensor(coordinator, description, channel_type))
+
+    for channel_type in current:
+        description = SensorEntityDescription(
+            key="descriptors",
+            name=f"{entry.title} - {friendly_channel_type(channel_type)} Price Descriptor",
+            icon=ICONS[channel_type],
+        )
+        entities.append(
+            AmberPriceDescriptorSensor(coordinator, description, channel_type)
+        )
 
     for channel_type in forecasts:
         description = SensorEntityDescription(

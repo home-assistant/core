@@ -6,7 +6,9 @@
         "step": {
             "user": {
                 "data": {
-                    "hostname": "Hostnimi mille kohta DNS p\u00e4ring tehakse"
+                    "hostname": "Hostnimi mille kohta DNS p\u00e4ring tehakse",
+                    "resolver": "IPV4 otsingu lahendaja",
+                    "resolver_ipv6": "IPV6 otsingu lahendaja"
                 }
             }
         }

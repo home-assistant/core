@@ -39,11 +39,11 @@ def _gateway_descriptor(
 ) -> GatewayDescriptor:
     """Get mock gw descriptor."""
     return GatewayDescriptor(
-        "Test",
-        ip,
-        port,
-        "eth0",
-        "127.0.0.1",
+        name="Test",
+        ip_addr=ip,
+        port=port,
+        local_interface="eth0",
+        local_ip="127.0.0.1",
         supports_routing=True,
         supports_tunnelling=True,
         supports_tunnelling_tcp=supports_tunnelling_tcp,

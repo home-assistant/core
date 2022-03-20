@@ -1,8 +1,7 @@
 """Light for Shelly."""
 from __future__ import annotations
 
-import logging
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from aioshelly.block_device import Block
 
@@ -42,6 +41,7 @@ from .const import (
     KELVIN_MIN_VALUE_COLOR,
     KELVIN_MIN_VALUE_WHITE,
     LIGHT_TRANSITION_MIN_FIRMWARE_DATE,
+    LOGGER,
     MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
     RGBW_MODELS,
@@ -57,8 +57,6 @@ from .utils import (
     is_block_channel_type_light,
     is_rpc_channel_type_light,
 )
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 MIRED_MAX_VALUE_WHITE = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_WHITE)
 MIRED_MIN_VALUE = color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
@@ -336,7 +334,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 ATTR_RGBW_COLOR
             ]
 
-        if ATTR_EFFECT in kwargs:
+        if ATTR_EFFECT in kwargs and ATTR_COLOR_TEMP not in kwargs:
             # Color effect change - used only in color mode, switch device mode to color
             set_mode = "color"
             if self.wrapper.model == "SHBLB-1":
@@ -348,7 +346,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                     k for k, v in effect_dict.items() if v == kwargs[ATTR_EFFECT]
                 ][0]
             else:
-                _LOGGER.error(
+                LOGGER.error(
                     "Effect '%s' not supported by device %s",
                     kwargs[ATTR_EFFECT],
                     self.wrapper.model,

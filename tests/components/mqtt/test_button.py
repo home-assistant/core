@@ -18,6 +18,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
@@ -25,6 +26,7 @@ from .test_common import (
     help_test_entity_id_update_discovery_update,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -302,6 +304,19 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
     )
 
 
+async def test_entity_debug_info_message(hass, mqtt_mock):
+    """Test MQTT debug info."""
+    await help_test_entity_debug_info_message(
+        hass,
+        mqtt_mock,
+        button.DOMAIN,
+        DEFAULT_CONFIG,
+        button.SERVICE_PRESS,
+        command_payload="PRESS",
+        state_topic=None,
+    )
+
+
 async def test_invalid_device_class(hass, mqtt_mock):
     """Test device_class option with invalid value."""
     assert await async_setup_component(
@@ -391,3 +406,10 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     domain = button.DOMAIN
     config = DEFAULT_CONFIG[domain]
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = button.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)

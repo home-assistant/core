@@ -31,7 +31,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-SCHEMAS = Registry()
+SCHEMAS: Registry[
+    tuple[str, str], Callable[[BaseAsyncGateway, ChildSensor, ValueType], vol.Schema]
+] = Registry()
 
 
 @callback

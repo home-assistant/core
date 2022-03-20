@@ -1,19 +1,3 @@
-set_profile:
-  name: Set profile
-  description: Set the ventilation profile.
-  fields:
-    profile:
-      name: Profile
-      description: "Set profile."
-      required: true
-      selector:
-        select:
-          options:
-            - 'Away'
-            - 'Boost'
-            - 'Fireplace'
-            - 'Home'
-
 set_profile_fan_speed_home:
   name: Set profile fan speed home
   description: Set the fan speed of the Home profile.

@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
@@ -51,7 +50,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
         return CanaryOptionsFlowHandler(config_entry)
 
     async def async_step_import(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by configuration file."""
         return await self.async_step_user(user_input)

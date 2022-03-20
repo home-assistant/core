@@ -8,7 +8,7 @@ from miio.airhumidifier import LedBrightness as AirhumidifierLedBrightness
 from miio.airhumidifier_miot import LedBrightness as AirhumidifierMiotLedBrightness
 from miio.airpurifier import LedBrightness as AirpurifierLedBrightness
 from miio.airpurifier_miot import LedBrightness as AirpurifierMiotLedBrightness
-from miio.fan import LedBrightness as FanLedBrightness
+from miio.fan_common import LedBrightness as FanLedBrightness
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry

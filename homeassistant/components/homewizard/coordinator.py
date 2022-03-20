@@ -8,6 +8,7 @@ import aiohwenergy
 import async_timeout
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
@@ -28,7 +29,9 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
         """Initialize Update Coordinator."""
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
-        self.api = aiohwenergy.HomeWizardEnergy(host)
+
+        session = async_get_clientsession(hass)
+        self.api = aiohwenergy.HomeWizardEnergy(host, clientsession=session)
 
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
