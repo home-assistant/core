@@ -71,10 +71,13 @@ async def test_away_temps_migration(hass: HomeAssistant) -> None:
         options={},
     )
 
-    legacy_config.add_to_hass(hass)
-    await hass.config_entries.async_setup(legacy_config.entry_id)
-    await hass.async_block_till_done()
-    assert legacy_config.options == {
-        CONF_COOL_AWAY_TEMPERATURE: 1,
-        CONF_HEAT_AWAY_TEMPERATURE: 2,
-    }
+    with patch(
+        "somecomfort.SomeComfort",
+    ):
+        legacy_config.add_to_hass(hass)
+        await hass.config_entries.async_setup(legacy_config.entry_id)
+        await hass.async_block_till_done()
+        assert legacy_config.options == {
+            CONF_COOL_AWAY_TEMPERATURE: 1,
+            CONF_HEAT_AWAY_TEMPERATURE: 2,
+        }

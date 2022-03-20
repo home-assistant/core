@@ -12,6 +12,8 @@ from homeassistant.components.honeywell.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
+
 FAKE_CONFIG = {
     "username": "fake",
     "password": "user",
@@ -68,7 +70,9 @@ async def test_async_step_import(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
-async def test_show_option_form(hass: HomeAssistant, config_entry) -> None:
+async def test_show_option_form(
+    hass: HomeAssistant, config_entry: MockConfigEntry, location
+) -> None:
     """Test that the option form is shown."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -83,7 +87,9 @@ async def test_show_option_form(hass: HomeAssistant, config_entry) -> None:
 
 
 @patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
-async def test_create_option_entry(hass: HomeAssistant, config_entry) -> None:
+async def test_create_option_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry, location
+) -> None:
     """Test that the config entry is created."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
