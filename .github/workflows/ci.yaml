@@ -62,7 +62,7 @@ jobs:
           integrations=$(ls -Ad ./homeassistant/components/[!_]*  | xargs -n 1 basename)
           touch .integration_paths.yaml
           for integration in $integrations; do
-            echo "${integration}: [homeassistant/components/${integration}/*, tests/components/${integration}/*]" \
+            echo "${integration}: [homeassistant/components/${integration}/**, tests/components/${integration}/**]" \
               >> .integration_paths.yaml;
           done
           echo "Result:"
