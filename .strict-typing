@@ -224,6 +224,7 @@ homeassistant.components.wemo.*
 homeassistant.components.whois.*
 homeassistant.components.wiz.*
 homeassistant.components.worldclock.*
+homeassistant.components.yale_smart_alarm.*
 homeassistant.components.zodiac.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zone.*

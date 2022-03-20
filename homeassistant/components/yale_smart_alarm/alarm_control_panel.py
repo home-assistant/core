@@ -92,15 +92,15 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
         self._attr_name = coordinator.entry.data[CONF_NAME]
         self._attr_unique_id = coordinator.entry.entry_id
 
-    async def async_alarm_disarm(self, code=None) -> None:
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         return await self.async_set_alarm(YALE_STATE_DISARM, code)
 
-    async def async_alarm_arm_home(self, code=None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         return await self.async_set_alarm(YALE_STATE_ARM_PARTIAL, code)
 
-    async def async_alarm_arm_away(self, code=None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         return await self.async_set_alarm(YALE_STATE_ARM_FULL, code)
 
