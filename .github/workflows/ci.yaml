@@ -686,7 +686,7 @@ jobs:
 
   pip-check:
     runs-on: ubuntu-latest
-    if: needs.changes.outputs.requirements == 'true'
+    if: needs.changes.outputs.requirements == 'true' || github.event.inputs.full == 'true'
     needs:
       - changes
       - prepare-tests
