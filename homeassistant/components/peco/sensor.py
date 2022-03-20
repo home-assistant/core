@@ -1,8 +1,7 @@
 """Sensor component for PECO outage counter."""
 import asyncio
 from datetime import timedelta
-from types import MappingProxyType
-from typing import Any, Final, cast
+from typing import Final, cast
 
 from peco import BadJSONError, HttpError
 
@@ -22,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import CONF_COUNTY, DOMAIN, LOGGER, SCAN_INTERVAL
 
 PARALLEL_UPDATES: Final = 0
 SENSOR_LIST = (
@@ -45,17 +44,17 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     api = hass.data[DOMAIN][config_entry.entry_id]
     websession = async_get_clientsession(hass)
-    conf: MappingProxyType[str, Any] = config_entry.data
+    county: str = config_entry.data[CONF_COUNTY]
 
     async def async_update_data() -> dict[str, float]:
         """Fetch data from API."""
         try:
             data = (
                 cast(dict[str, float], await api.get_outage_totals(websession))
-                if conf["county"] == "TOTAL"
+                if county == "TOTAL"
                 else cast(
                     dict[str, float],
-                    await api.get_outage_count(conf["county"], websession),
+                    await api.get_outage_count(county, websession),
                 )
             )
         except HttpError as err:
@@ -81,10 +80,8 @@ async def async_setup_entry(
 
     await coordinator.async_config_entry_first_refresh()
 
-    county = conf["county"]
-
     async_add_entities(
-        [PecoSensor(hass, sensor, county, coordinator) for sensor in SENSOR_LIST],
+        [PecoSensor(sensor, county, coordinator) for sensor in SENSOR_LIST],
         True,
     )
     return
@@ -98,14 +95,12 @@ class PecoSensor(CoordinatorEntity[dict[str, float]], SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         description: SensorEntityDescription,
         county: str,
         coordinator: DataUpdateCoordinator[dict[str, float]],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.hass = hass
         self._attr_name = f"{county.capitalize()} {description.name}"
         self._attr_unique_id = f"{county}-{description.key}"
         self.entity_description = description

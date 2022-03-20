@@ -8,11 +8,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import COUNTY_LIST, DOMAIN
+from .const import CONF_COUNTY, COUNTY_LIST, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("county"): vol.In(COUNTY_LIST),
+        vol.Required(CONF_COUNTY): vol.In(COUNTY_LIST),
     }
 )
 
@@ -32,16 +32,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         county = user_input[
-            "county"
+            CONF_COUNTY
         ]  # Voluptuous automatically detects if the county is invalid
 
         await self.async_set_unique_id(county)
-        self._abort_if_unique_id_configured()  # this should abort if the county was already configured
-
-        # take the county name and make it all lowercase except for the first letter
-        # this is to make it easier to read in the UI
-        county_name = county.title()
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=county_name + " Outage Count", data=user_input
+            title=f"{county.title()} Outage Count", data=user_input
         )

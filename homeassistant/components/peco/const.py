@@ -1,9 +1,10 @@
 """Constants for the PECO Outage Counter integration."""
 import logging
+from typing import Final
 
-DOMAIN = "peco"
-LOGGER = logging.getLogger(__package__)
-COUNTY_LIST = [
+DOMAIN: Final = "peco"
+LOGGER: Final = logging.getLogger(__package__)
+COUNTY_LIST: Final = [
     "BUCKS",
     "CHESTER",
     "DELAWARE",
@@ -12,4 +13,5 @@ COUNTY_LIST = [
     "YORK",
     "TOTAL",
 ]
-SCAN_INTERVAL = 5
+SCAN_INTERVAL: Final = 5
+CONF_COUNTY: Final = "county"
