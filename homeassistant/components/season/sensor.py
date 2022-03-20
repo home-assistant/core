@@ -127,7 +127,7 @@ async def async_setup_entry(
     if hass.config.latitude < 0:
         hemisphere = SOUTHERN
     elif hass.config.latitude > 0:
-        hemisphere = NORTHERN        
+        hemisphere = NORTHERN
 
     if hemisphere == EQUATOR:
         _LOGGER.warning(
