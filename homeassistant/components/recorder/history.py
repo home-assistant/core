@@ -98,7 +98,13 @@ def get_significant_states_with_session(
         lambda session: session.query(*QUERY_STATES)
     )
 
-    if significant_changes_only:
+    single_signficiant_entity = (
+        entity_ids is not None
+        and len(entity_ids) == 1
+        and split_entity_id(entity_ids[0])[0] in SIGNIFICANT_DOMAINS
+    )
+
+    if significant_changes_only and not single_signficiant_entity:
         baked_query += lambda q: q.filter(
             or_(
                 *[
