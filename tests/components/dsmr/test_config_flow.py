@@ -277,6 +277,7 @@ async def test_setup_5S(com_mock, hass, dsmr_connection_send_validate_fixture):
     entry_data = {
         "port": port.device,
         "dsmr_version": "5S",
+        "protocol": "dsmr_protocol",
         "serial_id": None,
         "serial_id_gas": None,
     }
@@ -420,10 +421,18 @@ async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_f
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_timeout(
-    com_mock, hass, dsmr_connection_send_validate_fixture
+    com_mock,
+    hass,
+    dsmr_connection_send_validate_fixture,
+    rfxtrx_dsmr_connection_send_validate_fixture,
 ):
     """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+    (
+        connection_factory,
+        transport,
+        rfxtrx_protocol,
+    ) = rfxtrx_dsmr_connection_send_validate_fixture
 
     port = com_port()
 
@@ -436,6 +445,12 @@ async def test_setup_serial_timeout(
         side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
     )
     protocol.wait_closed = first_timeout_wait_closed
+
+    first_timeout_wait_closed = AsyncMock(
+        return_value=True,
+        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+    )
+    rfxtrx_protocol.wait_closed = first_timeout_wait_closed
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
