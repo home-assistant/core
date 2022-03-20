@@ -282,9 +282,9 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate dsmr connection and create data."""
         data = input_data
 
-        protocol = DSMR_PROTOCOL
         try:
             try:
+                protocol = DSMR_PROTOCOL
                 info = await _validate_dsmr_connection(self.hass, data, protocol)
             except CannotCommunicate:
                 protocol = RFXTRX_DSMR_PROTOCOL
