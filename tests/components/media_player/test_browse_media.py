@@ -68,6 +68,9 @@ async def test_process_play_media_url(hass, mock_sign_path):
         == "http://192.168.123.123:8123/path?hello=world"
     )
 
+    with pytest.raises(ValueError):
+        async_process_play_media_url(hass, "hello")
+
 
 async def test_process_play_media_url_for_addon(hass, mock_sign_path):
     """Test it uses the hostname for an addon if available."""
