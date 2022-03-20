@@ -4,8 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioairctrl import CoAPClient
 import async_timeout
+from phipsair import CoAPClient
 import voluptuous as vol
 
 from homeassistant import config_entries

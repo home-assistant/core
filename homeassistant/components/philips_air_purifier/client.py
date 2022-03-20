@@ -9,7 +9,7 @@ import enum
 import logging
 from typing import Any
 
-from aioairctrl import CoAPClient
+from phipsair import CoAPClient
 
 _LOGGER = logging.getLogger(__name__)
 
