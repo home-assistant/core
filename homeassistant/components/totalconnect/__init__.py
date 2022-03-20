@@ -93,7 +93,8 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
             ) from exception
         except ServiceUnavailable as exception:
             raise UpdateFailed(
-                "Error connecting to TotalConnect or the service is unavailable"
+                "Error connecting to TotalConnect or the service is unavailable. "
+                "Check https://status.resideo.com/ for outages."
             ) from exception
         except TotalConnectError as exception:
             raise UpdateFailed(exception) from exception
