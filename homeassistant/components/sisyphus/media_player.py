@@ -1,4 +1,6 @@
 """Support for track controls on the Sisyphus Kinetic Art Table."""
+from __future__ import annotations
+
 import aiohttp
 from sisyphus_control import Track
 
@@ -21,7 +23,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_SISYPHUS
 
@@ -40,8 +45,15 @@ SUPPORTED_FEATURES = (
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a media player entity for a Sisyphus table."""
+    if not discovery_info:
+        return
     host = discovery_info[CONF_HOST]
     try:
         table_holder = hass.data[DATA_SISYPHUS][host]
@@ -163,7 +175,7 @@ class SisyphusPlayer(MediaPlayerEntity):
         if self._table.active_track:
             return self._table.active_track.get_thumbnail_url(Track.ThumbnailSize.LARGE)
 
-        return super.media_image_url()
+        return super().media_image_url
 
     async def async_turn_on(self):
         """Wake up a sleeping table."""

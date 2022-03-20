@@ -4,8 +4,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
-from homeassistant.setup import BASE_PLATFORMS
 
 from .model import Integration
 
@@ -39,6 +39,14 @@ class ImportCollector(ast.NodeVisitor):
     def visit_ImportFrom(self, node):
         """Visit ImportFrom node."""
         if node.module is None:
+            return
+
+        # Exception: we will allow importing the sign path code.
+        if (
+            node.module == "homeassistant.components.http.auth"
+            and len(node.names) == 1
+            and node.names[0].name == "async_sign_path"
+        ):
             return
 
         if node.module.startswith("homeassistant.components."):
@@ -91,22 +99,23 @@ class ImportCollector(ast.NodeVisitor):
 
 
 ALLOWED_USED_COMPONENTS = {
+    *{platform.value for platform in Platform},
     # Internal integrations
     "alert",
     "automation",
-    "button",
     "conversation",
-    "button",
     "device_automation",
     "frontend",
     "group",
     "hassio",
     "homeassistant",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",
     "input_text",
+    "media_source",
     "onboarding",
     "persistent_notification",
     "person",
@@ -119,8 +128,6 @@ ALLOWED_USED_COMPONENTS = {
     "webhook",
     "websocket_api",
     "zone",
-    # Entity integrations with platforms
-    *BASE_PLATFORMS,
     # Other
     "mjpeg",  # base class, has no reqs or component to load.
     "stream",  # Stream cannot install on all systems, can be imported without reqs.

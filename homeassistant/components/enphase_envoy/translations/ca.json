@@ -16,7 +16,8 @@
                     "host": "Amfitri\u00f3",
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
-                }
+                },
+                "description": "Per als models m\u00e9s nous, introdueix el nom d'usuari `envoy` sense contrasenya. Per als models m\u00e9s antics, introdueix el nom d'usuari `installer` sense contrasenya. Per a la resta de models, introdueix un nom d'usuari i una contrasenya v\u00e0lids."
             }
         }
     }

@@ -27,7 +27,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -82,7 +85,11 @@ UNIT_MAP = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add climate entities for a config entry."""
     ac_capabilities = [
         Capability.air_conditioner_mode,
@@ -93,7 +100,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ]
 
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    entities = []
+    entities: list[ClimateEntity] = []
     for device in broker.devices.values():
         if not broker.any_assigned(device.device_id, CLIMATE_DOMAIN):
             continue

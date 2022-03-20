@@ -358,3 +358,66 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
     assert response["result"]["migration_in_progress"] is False
     assert response["result"]["recording"] is True
     assert response["result"]["thread_running"] is True
+
+
+async def test_backup_start_no_recorder(
+    hass, hass_ws_client, hass_supervisor_access_token
+):
+    """Test getting backup start when recorder is not present."""
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+
+    await client.send_json({"id": 1, "type": "backup/start"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_command"
+
+
+async def test_backup_start_timeout(hass, hass_ws_client, hass_supervisor_access_token):
+    """Test getting backup start when recorder is not present."""
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    await async_init_recorder_component(hass)
+
+    # Ensure there are no queued events
+    await async_wait_recording_done_without_instance(hass)
+
+    with patch.object(recorder, "DB_LOCK_TIMEOUT", 0):
+        try:
+            await client.send_json({"id": 1, "type": "backup/start"})
+            response = await client.receive_json()
+            assert not response["success"]
+            assert response["error"]["code"] == "timeout_error"
+        finally:
+            await client.send_json({"id": 2, "type": "backup/end"})
+
+
+async def test_backup_end(hass, hass_ws_client, hass_supervisor_access_token):
+    """Test backup start."""
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    await async_init_recorder_component(hass)
+
+    # Ensure there are no queued events
+    await async_wait_recording_done_without_instance(hass)
+
+    await client.send_json({"id": 1, "type": "backup/start"})
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json({"id": 2, "type": "backup/end"})
+    response = await client.receive_json()
+    assert response["success"]
+
+
+async def test_backup_end_without_start(
+    hass, hass_ws_client, hass_supervisor_access_token
+):
+    """Test backup start."""
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    await async_init_recorder_component(hass)
+
+    # Ensure there are no queued events
+    await async_wait_recording_done_without_instance(hass)
+
+    await client.send_json({"id": 1, "type": "backup/end"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "database_unlock_failed"

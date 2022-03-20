@@ -158,13 +158,6 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="edit", data_schema=self.data_schema, errors=errors
         )
 
-    async def async_step_import(self, config):
-        """Import a config flow from configuration."""
-        error = await self._validate_input(config)
-        if error:
-            return self.async_abort(reason=error)
-        return self.async_create_entry(title=config[CONF_HOST], data=config)
-
     async def async_step_integration_discovery(self, discovery_info):
         """Handle discovery of a server."""
         _LOGGER.debug("Reached server discovery flow with info: %s", discovery_info)
@@ -192,7 +185,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(
             "Reached dhcp discovery of a player with info: %s", discovery_info
         )
-        await self.async_set_unique_id(format_mac(discovery_info[dhcp.MAC_ADDRESS]))
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured()
 
         _LOGGER.debug("Configuring dhcp player with unique id: %s", self.unique_id)

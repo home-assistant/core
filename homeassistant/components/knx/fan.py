@@ -9,7 +9,7 @@ from xknx.devices import Fan as XknxFan
 
 from homeassistant import config_entries
 from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -19,7 +19,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, SupportedPlatforms
+from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
 from .schema import FanSchema
 
@@ -33,7 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up fan(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][SupportedPlatforms.FAN.value]
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.FAN]
 
     async_add_entities(KNXFan(xknx, entity_config) for entity_config in config)
 
@@ -106,7 +106,6 @@ class KNXFan(KnxEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

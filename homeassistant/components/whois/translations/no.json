@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert"
+        },
+        "error": {
+            "unexpected_response": "Uventet svar fra whois server",
+            "unknown_date_format": "Ukjent datoformat i whois-serversvar",
+            "unknown_tld": "Den gitte TLD er ukjent eller ikke tilgjengelig for denne integrasjonen",
+            "whois_command_failed": "Whois-kommando mislyktes: kunne ikke hente whois-informasjon"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "domain": "Domenenavn"
+                }
+            }
+        }
+    }
+}

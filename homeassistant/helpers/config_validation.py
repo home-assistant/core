@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable
+import contextlib
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -14,8 +15,10 @@ import logging
 from numbers import Number
 import os
 import re
-from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Dict, TypeVar, cast
+from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
+    _GLOBAL_DEFAULT_TIMEOUT,
+)
+from typing import Any, TypeVar, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -74,12 +77,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    script_variables as script_variables_helper,
-    template as template_helper,
-)
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
+
+from . import script_variables as script_variables_helper, template as template_helper
 
 # pylint: disable=invalid-name
 
@@ -101,7 +102,7 @@ sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
 # typing typevar
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 
 def path(value: Any) -> str:
@@ -164,7 +165,7 @@ def boolean(value: Any) -> bool:
             return False
     elif isinstance(value, Number):
         # type ignore: https://github.com/python/mypy/issues/3186
-        return value != 0  # type: ignore
+        return value != 0  # type: ignore[comparison-overlap]
     raise vol.Invalid(f"invalid boolean value {value}")
 
 
@@ -246,11 +247,26 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-def ensure_list(value: T | list[T] | None) -> list[T]:
+@overload
+def ensure_list(value: None) -> list[Any]:
+    ...
+
+
+@overload
+def ensure_list(value: list[_T]) -> list[_T]:
+    ...
+
+
+@overload
+def ensure_list(value: list[_T] | _T) -> list[_T]:
+    ...
+
+
+def ensure_list(value: _T | None) -> list[_T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
-    return value if isinstance(value, list) else [value]
+    return cast("list[_T]", value) if isinstance(value, list) else [value]
 
 
 def entity_id(value: Any) -> str:
@@ -262,18 +278,44 @@ def entity_id(value: Any) -> str:
     raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
-def entity_ids(value: str | list) -> list[str]:
-    """Validate Entity IDs."""
+def entity_id_or_uuid(value: Any) -> str:
+    """Validate Entity specified by entity_id or uuid."""
+    with contextlib.suppress(vol.Invalid):
+        return entity_id(value)
+    with contextlib.suppress(vol.Invalid):
+        return fake_uuid4_hex(value)
+    raise vol.Invalid(f"Entity {value} is neither a valid entity ID nor a valid UUID")
+
+
+def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
+    """Help validate entity IDs or UUIDs."""
     if value is None:
         raise vol.Invalid("Entity IDs can not be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
 
-    return [entity_id(ent_id) for ent_id in value]
+    validator = entity_id_or_uuid if allow_uuid else entity_id
+    return [validator(ent_id) for ent_id in value]
+
+
+def entity_ids(value: str | list) -> list[str]:
+    """Validate Entity IDs."""
+    return _entity_ids(value, False)
+
+
+def entity_ids_or_uuids(value: str | list) -> list[str]:
+    """Validate entities specified by entity IDs or UUIDs."""
+    return _entity_ids(value, True)
 
 
 comp_entity_ids = vol.Any(
     vol.All(vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)), entity_ids
+)
+
+
+comp_entity_ids_or_uuids = vol.Any(
+    vol.All(vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
+    entity_ids_or_uuids,
 )
 
 
@@ -381,7 +423,7 @@ def date(value: Any) -> date_sys:
 
 def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
-    if isinstance(value, int):  # type: ignore
+    if isinstance(value, int):  # type: ignore[unreachable]
         raise vol.Invalid("Make sure you wrap time values in quotes")
     if not isinstance(value, str):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
@@ -425,7 +467,7 @@ def time_period_seconds(value: float | str) -> timedelta:
 time_period = vol.Any(time_period_str, time_period_seconds, timedelta, time_period_dict)
 
 
-def match_all(value: T) -> T:
+def match_all(value: _T) -> _T:
     """Validate that matches all values."""
     return value
 
@@ -441,7 +483,7 @@ positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
 positive_time_period = vol.All(time_period, positive_timedelta)
 
 
-def remove_falsy(value: list[T]) -> list[T]:
+def remove_falsy(value: list[_T]) -> list[_T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
 
@@ -468,7 +510,7 @@ def slug(value: Any) -> str:
 
 
 def schema_with_slug_keys(
-    value_schema: T | Callable, *, slug_validator: Callable[[Any], str] = slug
+    value_schema: _T | Callable, *, slug_validator: Callable[[Any], str] = slug
 ) -> Callable:
     """Ensure dicts have slugs as keys.
 
@@ -545,7 +587,7 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    template_value = template_helper.Template(str(value))  # type: ignore
+    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
 
     try:
         template_value.ensure_valid()
@@ -563,7 +605,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
 
-    template_value = template_helper.Template(str(value))  # type: ignore
+    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
     try:
         template_value.ensure_valid()
         return template_value
@@ -682,6 +724,19 @@ def uuid4_hex(value: Any) -> str:
     return result.hex
 
 
+_FAKE_UUID_4_HEX = re.compile(r"^[0-9a-f]{32}$")
+
+
+def fake_uuid4_hex(value: Any) -> str:
+    """Validate a fake v4 UUID generated by random_uuid_hex."""
+    try:
+        if not _FAKE_UUID_4_HEX.match(value):
+            raise vol.Invalid("Invalid UUID")
+    except TypeError as exc:
+        raise vol.Invalid("Invalid UUID") from exc
+    return cast(str, value)  # Pattern.match throws if input is not a string
+
+
 def ensure_list_csv(value: Any) -> list:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):
@@ -746,7 +801,7 @@ def _deprecated_or_removed(
         """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore
+                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore[attr-defined]
             except AttributeError:
                 near = ""
             arguments: tuple[str, ...]
@@ -829,7 +884,10 @@ def removed(
 
 
 def key_value_schemas(
-    key: str, value_schemas: dict[Hashable, vol.Schema]
+    key: str,
+    value_schemas: dict[Hashable, vol.Schema],
+    default_schema: vol.Schema | None = None,
+    default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
@@ -843,10 +901,17 @@ def key_value_schemas(
         key_value = value.get(key)
 
         if isinstance(key_value, Hashable) and key_value in value_schemas:
-            return cast(Dict[Hashable, Any], value_schemas[key_value](value))
+            return cast(dict[Hashable, Any], value_schemas[key_value](value))
 
+        if default_schema:
+            with contextlib.suppress(vol.Invalid):
+                return cast(dict[Hashable, Any], default_schema(value))
+
+        alternatives = ", ".join(str(key) for key in value_schemas)
+        if default_description:
+            alternatives += ", " + default_description
         raise vol.Invalid(
-            f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(str(key) for key in value_schemas)}"
+            f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
         )
 
     return key_value_validator
@@ -877,6 +942,8 @@ def key_dependency(
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    from . import selector  # pylint: disable=import-outside-toplevel
+
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
 
@@ -888,6 +955,9 @@ def custom_serializer(schema: Any) -> Any:
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
+
+    if isinstance(schema, selector.Selector):
+        return schema.serialize()
 
     return voluptuous_serialize.UNSUPPORTED
 
@@ -909,6 +979,23 @@ ENTITY_SERVICE_FIELDS = {
     # complex template, handling it like this, keeps config validation useful.
     vol.Optional(ATTR_ENTITY_ID): vol.Any(
         comp_entity_ids, dynamic_template, vol.All(list, template_complex)
+    ),
+    vol.Optional(ATTR_DEVICE_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+    vol.Optional(ATTR_AREA_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+}
+
+TARGET_SERVICE_FIELDS = {
+    # Same as ENTITY_SERVICE_FIELDS but supports specifying entity by entity registry
+    # ID.
+    # Either accept static entity IDs, a single dynamic template or a mixed list
+    # of static and dynamic templates. While this could be solved with a single
+    # complex template, handling it like this, keeps config validation useful.
+    vol.Optional(ATTR_ENTITY_ID): vol.Any(
+        comp_entity_ids_or_uuids, dynamic_template, vol.All(list, template_complex)
     ),
     vol.Optional(ATTR_DEVICE_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
@@ -949,7 +1036,12 @@ def script_action(value: Any) -> dict:
     if not isinstance(value, dict):
         raise vol.Invalid("expected dictionary")
 
-    return ACTION_TYPE_SCHEMAS[determine_script_action(value)](value)
+    try:
+        action = determine_script_action(value)
+    except ValueError as err:
+        raise vol.Invalid(str(err))
+
+    return ACTION_TYPE_SCHEMAS[action](value)
 
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
@@ -980,7 +1072,9 @@ SERVICE_SCHEMA = vol.All(
                 template, vol.All(dict, template_complex)
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
-            vol.Optional(CONF_TARGET): vol.Any(ENTITY_SERVICE_FIELDS, dynamic_template),
+            vol.Optional(CONF_TARGET): vol.Any(TARGET_SERVICE_FIELDS, dynamic_template),
+            # The frontend stores data here. Don't use in core.
+            vol.Remove("metadata"): dict,
         }
     ),
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
@@ -997,7 +1091,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
         {
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "numeric_state",
-            vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
             vol.Optional(CONF_ATTRIBUTE): str,
             CONF_BELOW: NUMERIC_STATE_THRESHOLD_SCHEMA,
             CONF_ABOVE: NUMERIC_STATE_THRESHOLD_SCHEMA,
@@ -1010,7 +1104,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
 STATE_CONDITION_BASE_SCHEMA = {
     **CONDITION_BASE_SCHEMA,
     vol.Required(CONF_CONDITION): "state",
-    vol.Required(CONF_ENTITY_ID): entity_ids,
+    vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
     vol.Optional(CONF_ATTRIBUTE): str,
     vol.Optional(CONF_FOR): positive_time_period,
     # To support use_trigger_value in automation
@@ -1154,6 +1248,16 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
+dynamic_template_condition_action = vol.All(
+    # Wrap a shorthand template condition in a template condition
+    dynamic_template,
+    lambda config: {
+        CONF_VALUE_TEMPLATE: config,
+        CONF_CONDITION: "template",
+    },
+)
+
+
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
         key_value_schemas(
@@ -1172,17 +1276,65 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
                 "zone": ZONE_CONDITION_SCHEMA,
             },
         ),
-        dynamic_template,
+        dynamic_template_condition_action,
+    )
+)
+
+
+dynamic_template_condition_action = vol.All(
+    # Wrap a shorthand template condition action in a template condition
+    vol.Schema(
+        {**CONDITION_BASE_SCHEMA, vol.Required(CONF_CONDITION): dynamic_template}
+    ),
+    lambda config: {
+        **config,
+        CONF_VALUE_TEMPLATE: config[CONF_CONDITION],
+        CONF_CONDITION: "template",
+    },
+)
+
+
+CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
+    key_value_schemas(
+        CONF_CONDITION,
+        {
+            "and": AND_CONDITION_SCHEMA,
+            "device": DEVICE_CONDITION_SCHEMA,
+            "not": NOT_CONDITION_SCHEMA,
+            "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+            "or": OR_CONDITION_SCHEMA,
+            "state": STATE_CONDITION_SCHEMA,
+            "sun": SUN_CONDITION_SCHEMA,
+            "template": TEMPLATE_CONDITION_SCHEMA,
+            "time": TIME_CONDITION_SCHEMA,
+            "trigger": TRIGGER_CONDITION_SCHEMA,
+            "zone": ZONE_CONDITION_SCHEMA,
+        },
+        dynamic_template_condition_action,
+        "a valid template",
     )
 )
 
 TRIGGER_BASE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLATFORM): str, vol.Optional(CONF_ID): str}
+    {
+        vol.Required(CONF_PLATFORM): str,
+        vol.Optional(CONF_ID): str,
+        vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+    }
 )
 
-TRIGGER_SCHEMA = vol.All(
-    ensure_list, [TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)]
-)
+
+_base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+
+
+# This is first round of validation, we don't want to process the config here already,
+# just ensure basics as platform and ID are there.
+def _base_trigger_validator(value: Any) -> Any:
+    _base_trigger_validator_schema(value)
+    return value
+
+
+TRIGGER_SCHEMA = vol.All(ensure_list, [_base_trigger_validator])
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
@@ -1313,7 +1465,10 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_VARIABLES in action:
         return SCRIPT_ACTION_VARIABLES
 
-    return SCRIPT_ACTION_CALL_SERVICE
+    if CONF_SERVICE in action or CONF_SERVICE_TEMPLATE in action:
+        return SCRIPT_ACTION_CALL_SERVICE
+
+    raise ValueError("Unable to determine action")
 
 
 ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
@@ -1321,7 +1476,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
     SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
     SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
-    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_SCHEMA,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,

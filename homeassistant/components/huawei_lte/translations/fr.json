@@ -9,13 +9,13 @@
             "connection_timeout": "D\u00e9lai de connexion d\u00e9pass\u00e9",
             "incorrect_password": "Mot de passe incorrect",
             "incorrect_username": "Nom d'utilisateur incorrect",
-            "invalid_auth": "Authentification invalide",
-            "invalid_url": "URL invalide",
+            "invalid_auth": "Authentification non valide",
+            "invalid_url": "URL non valide",
             "login_attempts_exceeded": "Nombre maximal de tentatives de connexion d\u00e9pass\u00e9, veuillez r\u00e9essayer ult\u00e9rieurement",
             "response_error": "Erreur inconnue de l'appareil",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Huawei LTE: {nom}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

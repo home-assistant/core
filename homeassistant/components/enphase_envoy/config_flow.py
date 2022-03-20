@@ -1,6 +1,7 @@
 """Config flow for Enphase Envoy integration."""
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -10,17 +11,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util.network import is_ipv4_address
 
 from .const import DOMAIN
 
@@ -31,7 +27,7 @@ ENVOY = "Envoy"
 CONF_SERIAL = "serial"
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> EnvoyReader:
     """Validate the user input allows us to connect."""
     envoy_reader = EnvoyReader(
         data[CONF_HOST],
@@ -48,6 +44,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except (RuntimeError, httpx.HTTPError) as err:
         raise CannotConnect from err
 
+    return envoy_reader
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Enphase Envoy."""
@@ -57,9 +55,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize an envoy flow."""
         self.ip_address = None
-        self.name = None
         self.username = None
-        self.serial = None
         self._reauth_entry = None
 
     @callback
@@ -78,19 +74,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema[vol.Optional(CONF_PASSWORD, default="")] = str
         return vol.Schema(schema)
 
-    async def async_step_import(self, import_config):
-        """Handle a flow import."""
-        self.ip_address = import_config[CONF_IP_ADDRESS]
-        self.username = import_config[CONF_USERNAME]
-        self.name = import_config[CONF_NAME]
-        return await self.async_step_user(
-            {
-                CONF_HOST: import_config[CONF_IP_ADDRESS],
-                CONF_USERNAME: import_config[CONF_USERNAME],
-                CONF_PASSWORD: import_config[CONF_PASSWORD],
-            }
-        )
-
     @callback
     def _async_current_hosts(self):
         """Return a set of hosts."""
@@ -104,8 +87,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        self.serial = discovery_info.properties["serialnum"]
-        await self.async_set_unique_id(self.serial)
+        if not is_ipv4_address(discovery_info.host):
+            return self.async_abort(reason="not_ipv4_address")
+        serial = discovery_info.properties["serialnum"]
+        await self.async_set_unique_id(serial)
         self.ip_address = discovery_info.host
         self._abort_if_unique_id_configured({CONF_HOST: self.ip_address})
         for entry in self._async_current_entries(include_ignore=False):
@@ -114,9 +99,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 and CONF_HOST in entry.data
                 and entry.data[CONF_HOST] == self.ip_address
             ):
-                title = f"{ENVOY} {self.serial}" if entry.title == ENVOY else ENVOY
+                title = f"{ENVOY} {serial}" if entry.title == ENVOY else ENVOY
                 self.hass.config_entries.async_update_entry(
-                    entry, title=title, unique_id=self.serial
+                    entry, title=title, unique_id=serial
                 )
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
@@ -132,6 +117,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_user()
 
+    def _async_envoy_name(self) -> str:
+        """Return the name of the envoy."""
+        if self.unique_id:
+            return f"{ENVOY} {self.unique_id}"
+        return ENVOY
+
+    async def _async_set_unique_id_from_envoy(self, envoy_reader: EnvoyReader) -> bool:
+        """Set the unique id by fetching it from the envoy."""
+        serial = None
+        with contextlib.suppress(httpx.HTTPError):
+            serial = await envoy_reader.get_full_serial_number()
+        if serial:
+            await self.async_set_unique_id(serial)
+            return True
+        return False
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -145,7 +146,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="already_configured")
             try:
-                await validate_input(self.hass, user_input)
+                envoy_reader = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -155,21 +156,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 data = user_input.copy()
-                if self.serial:
-                    data[CONF_NAME] = f"{ENVOY} {self.serial}"
-                else:
-                    data[CONF_NAME] = self.name or ENVOY
+                data[CONF_NAME] = self._async_envoy_name()
+
                 if self._reauth_entry:
                     self.hass.config_entries.async_update_entry(
                         self._reauth_entry,
                         data=data,
                     )
                     return self.async_abort(reason="reauth_successful")
+
+                if not self.unique_id and await self._async_set_unique_id_from_envoy(
+                    envoy_reader
+                ):
+                    data[CONF_NAME] = self._async_envoy_name()
+
+                if self.unique_id:
+                    self._abort_if_unique_id_configured({CONF_HOST: data[CONF_HOST]})
+
                 return self.async_create_entry(title=data[CONF_NAME], data=data)
 
-        if self.serial:
+        if self.unique_id:
             self.context["title_placeholders"] = {
-                CONF_SERIAL: self.serial,
+                CONF_SERIAL: self.unique_id,
                 CONF_HOST: self.ip_address,
             }
         return self.async_show_form(

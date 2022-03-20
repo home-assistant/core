@@ -1,13 +1,15 @@
 """Cover platform for Advantage Air integration."""
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_DAMPER,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -19,7 +21,11 @@ from .entity import AdvantageAirEntity
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AdvantageAir cover platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
@@ -36,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     """Advantage Air Cover Class."""
 
-    _attr_device_class = DEVICE_CLASS_DAMPER
+    _attr_device_class = CoverDeviceClass.DAMPER
     _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     def __init__(self, instance, ac_key, zone_key):

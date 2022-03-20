@@ -5,8 +5,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components import zeroconf
-from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.vizio.config_flow import _get_config_schema
 from homeassistant.components.vizio.const import (
     CONF_APPS,
@@ -78,7 +77,7 @@ async def test_user_flow_minimum_fields(
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
+    assert result["data"][CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.SPEAKER
 
 
 async def test_user_flow_all_fields(
@@ -103,7 +102,7 @@ async def test_user_flow_all_fields(
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+    assert result["data"][CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert CONF_APPS not in result["data"]
 
@@ -340,7 +339,7 @@ async def test_user_tv_pairing_no_apps(
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+    assert result["data"][CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     assert CONF_APPS not in result["data"]
 
 
@@ -413,7 +412,7 @@ async def test_import_flow_minimum_fields(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data=vol.Schema(VIZIO_SCHEMA)(
-            {CONF_HOST: HOST, CONF_DEVICE_CLASS: DEVICE_CLASS_SPEAKER}
+            {CONF_HOST: HOST, CONF_DEVICE_CLASS: MediaPlayerDeviceClass.SPEAKER}
         ),
     )
 
@@ -421,7 +420,7 @@ async def test_import_flow_minimum_fields(
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
+    assert result["data"][CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.SPEAKER
     assert result["data"][CONF_VOLUME_STEP] == DEFAULT_VOLUME_STEP
 
 
@@ -441,7 +440,7 @@ async def test_import_flow_all_fields(
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+    assert result["data"][CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
 
@@ -600,7 +599,7 @@ async def test_import_needs_pairing(
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+    assert result["data"][CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
 
 
 async def test_import_with_apps_needs_pairing(
@@ -642,7 +641,7 @@ async def test_import_with_apps_needs_pairing(
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+    assert result["data"][CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     assert result["data"][CONF_APPS][CONF_INCLUDE] == [CURRENT_APP]
 
 
@@ -743,10 +742,8 @@ async def test_zeroconf_flow(
     # defaults which were set from discovery parameters
     user_input = result["data_schema"](
         {
-            CONF_HOST: f"{discovery_info[zeroconf.ATTR_HOST]}:{discovery_info[zeroconf.ATTR_PORT]}",
-            CONF_NAME: discovery_info[zeroconf.ATTR_NAME][
-                : -(len(discovery_info[zeroconf.ATTR_TYPE]) + 1)
-            ],
+            CONF_HOST: f"{discovery_info.host}:{discovery_info.port}",
+            CONF_NAME: discovery_info.name[: -(len(discovery_info.type) + 1)],
             CONF_DEVICE_CLASS: "speaker",
         }
     )
@@ -759,7 +756,7 @@ async def test_zeroconf_flow(
     assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == NAME
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
+    assert result["data"][CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.SPEAKER
 
 
 async def test_zeroconf_flow_already_configured(

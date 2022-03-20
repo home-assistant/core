@@ -19,7 +19,7 @@ async def test_binary_sensors(hass, mock_bridge_v2, v2_resources_test_data):
     sensor = hass.states.get("binary_sensor.hue_motion_sensor_motion")
     assert sensor is not None
     assert sensor.state == "off"
-    assert sensor.name == "Hue motion sensor: Motion"
+    assert sensor.name == "Hue motion sensor Motion"
     assert sensor.attributes["device_class"] == "motion"
     assert sensor.attributes["motion_valid"] is True
 

@@ -1,10 +1,11 @@
 """Entity for the opengarage.io component."""
 
-from homeassistant.components.opengarage import DOMAIN
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from . import DOMAIN
 
 
 class OpenGarageEntity(CoordinatorEntity):

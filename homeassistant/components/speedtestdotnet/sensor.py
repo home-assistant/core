@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.speedtestdotnet import SpeedTestDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
@@ -15,6 +14,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SpeedTestDataCoordinator
 from .const import (
     ATTR_BYTES_RECEIVED,
     ATTR_BYTES_SENT,

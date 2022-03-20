@@ -1,17 +1,27 @@
 """Support for Volvo heater."""
-from homeassistant.helpers.entity import ToggleEntity
+from __future__ import annotations
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_KEY, VolvoEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a Volvo switch."""
     if discovery_info is None:
         return
     async_add_entities([VolvoSwitch(hass.data[DATA_KEY], *discovery_info)])
 
 
-class VolvoSwitch(VolvoEntity, ToggleEntity):
+class VolvoSwitch(VolvoEntity, SwitchEntity):
     """Representation of a Volvo switch."""
 
     @property

@@ -13,10 +13,11 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ID, ENTITY_CATEGORY_CONFIG
+from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -29,7 +30,6 @@ from .const import (
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
     DOMAIN,
-    LOGGER,
 )
 
 ATTR_AREA = "area"
@@ -181,7 +181,7 @@ async def async_setup_entry(
                     RainMachineSwitchDescription(
                         key=f"{kind}_{uid}_enabled",
                         name=f"{data['name']} Enabled",
-                        entity_category=ENTITY_CATEGORY_CONFIG,
+                        entity_category=EntityCategory.CONFIG,
                         icon="mdi:cog",
                         uid=uid,
                     ),
@@ -214,22 +214,14 @@ class RainMachineBaseSwitch(RainMachineEntity, SwitchEntity):
         try:
             resp = await api_coro
         except RequestError as err:
-            LOGGER.error(
-                'Error while executing %s on "%s": %s',
-                api_coro.__name__,
-                self.name,
-                err,
-            )
-            return
+            raise HomeAssistantError(
+                f'Error while executing {api_coro.__name__} on "{self.name}": {err}',
+            ) from err
 
         if resp["statusCode"] != 0:
-            LOGGER.error(
-                'Error while executing %s on "%s": %s',
-                api_coro.__name__,
-                self.name,
-                resp["message"],
+            raise HomeAssistantError(
+                f'Error while executing {api_coro.__name__} on "{self.name}": {resp["message"]}',
             )
-            return
 
         # Because of how inextricably linked programs and zones are, anytime one is
         # toggled, we make sure to update the data of both coordinators:
@@ -277,6 +269,8 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if not self.coordinator.data[self.entity_description.uid]["active"]:
+            self._attr_is_on = False
+            self.async_write_ha_state()
             raise HomeAssistantError(
                 f"Cannot turn on an inactive program/zone: {self.name}"
             )
@@ -375,7 +369,7 @@ class RainMachineZone(RainMachineActivitySwitch):
 
     async def async_start_zone(self, *, zone_run_time: int) -> None:
         """Start a particular zone for a certain amount of time."""
-        await self.async_turn_off(duration=zone_run_time)
+        await self.async_turn_on(duration=zone_run_time)
 
     async def async_stop_zone(self) -> None:
         """Stop a zone."""

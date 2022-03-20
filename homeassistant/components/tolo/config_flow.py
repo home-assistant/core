@@ -10,7 +10,6 @@ from tololib.errors import ResponseTimedOutError
 import voluptuous as vol
 
 from homeassistant.components import dhcp
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
@@ -67,16 +66,16 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle a flow initialized by discovery."""
-        await self.async_set_unique_id(format_mac(discovery_info[MAC_ADDRESS]))
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info[IP_ADDRESS]})
-        self._async_abort_entries_match({CONF_HOST: discovery_info[IP_ADDRESS]})
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info.ip})
+        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
         device_available = await self.hass.async_add_executor_job(
-            self._check_device_availability, discovery_info[IP_ADDRESS]
+            self._check_device_availability, discovery_info.ip
         )
 
         if device_available:
-            self._discovered_host = discovery_info[IP_ADDRESS]
+            self._discovered_host = discovery_info.ip
             return await self.async_step_confirm()
         return self.async_abort(reason="not_tolo_device")
 

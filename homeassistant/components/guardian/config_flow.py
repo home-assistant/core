@@ -68,6 +68,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={CONF_IP_ADDRESS: self.discovery_info[CONF_IP_ADDRESS]}
             )
+            self._async_abort_entries_match(
+                {CONF_IP_ADDRESS: self.discovery_info[CONF_IP_ADDRESS]}
+            )
         else:
             self._abort_if_unique_id_configured()
 
@@ -100,9 +103,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle the configuration via dhcp."""
         self.discovery_info = {
-            CONF_IP_ADDRESS: discovery_info[dhcp.IP_ADDRESS],
+            CONF_IP_ADDRESS: discovery_info.ip,
             CONF_PORT: DEFAULT_PORT,
         }
+        await self._async_set_unique_id(
+            async_get_pin_from_uid(discovery_info.macaddress.replace(":", "").upper())
+        )
         return await self._async_handle_discovery()
 
     async def async_step_zeroconf(

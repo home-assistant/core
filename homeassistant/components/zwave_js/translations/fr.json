@@ -15,7 +15,7 @@
         "error": {
             "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS. V\u00e9rifiez la configuration.",
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_ws_url": "URL websocket invalide",
+            "invalid_ws_url": "URL websocket non valide",
             "unknown": "Erreur inattendue"
         },
         "flow_title": "{name}",
@@ -27,8 +27,13 @@
             "configure_addon": {
                 "data": {
                     "network_key": "Cl\u00e9 r\u00e9seau",
+                    "s0_legacy_key": "Cl\u00e9 S0 (h\u00e9rit\u00e9e)",
+                    "s2_access_control_key": "Cl\u00e9 de contr\u00f4le d'acc\u00e8s S2",
+                    "s2_authenticated_key": "Cl\u00e9 d'authentification S2",
+                    "s2_unauthenticated_key": "Cl\u00e9 non authentifi\u00e9e S2",
                     "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
                 },
+                "description": "Le module compl\u00e9mentaire g\u00e9n\u00e9rera des cl\u00e9s de s\u00e9curit\u00e9 si ces champs sont laiss\u00e9s vides.",
                 "title": "Entrez la configuration du module compl\u00e9mentaire Z-Wave JS"
             },
             "hassio_confirm": {
@@ -60,7 +65,12 @@
     "device_automation": {
         "action_type": {
             "clear_lock_usercode": "Effacer le code utilisateur sur {entity_name}",
-            "ping": "Pinger l'appareil"
+            "ping": "Envoyer un \u00ab\u00a0ping\u00a0\u00bb \u00e0 l'appareil",
+            "refresh_value": "Actualiser la ou les valeurs de {entity_name}",
+            "reset_meter": "R\u00e9initialiser les compteurs sur {subtype}",
+            "set_config_parameter": "D\u00e9finir la valeur du param\u00e8tre de configuration {subtype}",
+            "set_lock_usercode": "D\u00e9finir un code utilisateur sur {entity_name}",
+            "set_value": "D\u00e9finir la valeur d'une valeur Z-Wave"
         },
         "condition_type": {
             "config_parameter": "Valeur du param\u00e8tre de configuration {subtype}",
@@ -87,11 +97,11 @@
             "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS.",
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "cannot_connect": "\u00c9chec de connexion",
-            "different_device": "Le p\u00e9riph\u00e9rique USB connect\u00e9 n'est pas le m\u00eame que pr\u00e9c\u00e9demment configur\u00e9 pour cette entr\u00e9e de configuration. Veuillez plut\u00f4t cr\u00e9er une nouvelle entr\u00e9e de configuration pour le nouveau p\u00e9riph\u00e9rique."
+            "different_device": "Le p\u00e9riph\u00e9rique USB connect\u00e9 n'est pas le m\u00eame que celui qui \u00e9tait pr\u00e9c\u00e9demment configur\u00e9 pour cette entr\u00e9e de configuration. Veuillez \u00e0 la place cr\u00e9er une nouvelle entr\u00e9e de configuration pour le nouveau p\u00e9riph\u00e9rique."
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_ws_url": "URL websocket invalide",
+            "invalid_ws_url": "URL websocket non valide",
             "unknown": "Erreur inattendue"
         },
         "progress": {
@@ -104,9 +114,13 @@
                     "emulate_hardware": "\u00c9muler le mat\u00e9riel",
                     "log_level": "Niveau du journal",
                     "network_key": "Cl\u00e9 r\u00e9seau",
+                    "s0_legacy_key": "Cl\u00e9 S0 (h\u00e9rit\u00e9e)",
+                    "s2_access_control_key": "Cl\u00e9 de contr\u00f4le d'acc\u00e8s S2",
                     "s2_authenticated_key": "Cl\u00e9 d'authentification S2",
+                    "s2_unauthenticated_key": "Cl\u00e9 non authentifi\u00e9e S2",
                     "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
                 },
+                "description": "Le module compl\u00e9mentaire g\u00e9n\u00e9rera des cl\u00e9s de s\u00e9curit\u00e9 si ces champs sont laiss\u00e9s vides.",
                 "title": "Entrer dans la configuration du module compl\u00e9mentaire Z-Wave JS"
             },
             "install_addon": {

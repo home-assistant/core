@@ -8,6 +8,7 @@ from dsmr_parser.obis_references import (
     EQUIPMENT_IDENTIFIER_GAS,
     LUXEMBOURG_EQUIPMENT_IDENTIFIER,
     P1_MESSAGE_TIMESTAMP,
+    Q3D_EQUIPMENT_IDENTIFIER,
 )
 from dsmr_parser.objects import CosemObject
 import pytest
@@ -62,6 +63,12 @@ async def dsmr_connection_send_validate_fixture(hass):
         if args[1] == "5S":
             protocol.telegram = {
                 P1_MESSAGE_TIMESTAMP: CosemObject([{"value": "12345678", "unit": ""}]),
+            }
+        if args[1] == "Q3D":
+            protocol.telegram = {
+                Q3D_EQUIPMENT_IDENTIFIER: CosemObject(
+                    [{"value": "12345678", "unit": ""}]
+                ),
             }
 
         return (transport, protocol)

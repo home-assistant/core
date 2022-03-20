@@ -20,6 +20,7 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
     PRESET_SLEEP,
 )
+from homeassistant.const import Platform
 
 DOMAIN: Final = "knx"
 
@@ -33,6 +34,7 @@ CONF_KNX_CONNECTION_TYPE: Final = "connection_type"
 CONF_KNX_AUTOMATIC: Final = "automatic"
 CONF_KNX_ROUTING: Final = "routing"
 CONF_KNX_TUNNELING: Final = "tunneling"
+CONF_KNX_TUNNELING_TCP: Final = "tunneling_tcp"
 CONF_PAYLOAD: Final = "payload"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
 CONF_RESET_AFTER: Final = "reset_after"
@@ -41,7 +43,10 @@ CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
 CONF_KNX_INITIAL_CONNECTION_TYPES: Final = [CONF_KNX_TUNNELING, CONF_KNX_ROUTING]
 
+# yaml config merged with config entry data
 DATA_KNX_CONFIG: Final = "knx_config"
+# original hass yaml config
+DATA_HASS_CONFIG: Final = "knx_hass_config"
 
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
@@ -54,23 +59,21 @@ class ColorTempModes(Enum):
     RELATIVE = "DPT-5.001"
 
 
-class SupportedPlatforms(Enum):
-    """Supported platforms."""
-
-    BINARY_SENSOR = "binary_sensor"
-    BUTTON = "button"
-    CLIMATE = "climate"
-    COVER = "cover"
-    FAN = "fan"
-    LIGHT = "light"
-    NOTIFY = "notify"
-    NUMBER = "number"
-    SCENE = "scene"
-    SELECT = "select"
-    SENSOR = "sensor"
-    SWITCH = "switch"
-    WEATHER = "weather"
-
+SUPPORTED_PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.NOTIFY,
+    Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.WEATHER,
+]
 
 # Map KNX controller modes to HA modes. This list might not be complete.
 CONTROLLER_MODES: Final = {

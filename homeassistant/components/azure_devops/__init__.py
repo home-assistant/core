@@ -12,6 +12,7 @@ from aioazuredevops.core import DevOpsProject
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -26,7 +27,7 @@ from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 BUILDS_QUERY: Final = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
 
@@ -122,7 +123,7 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
         """Return device information about this Azure DevOps instance."""
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._organization, self._project_name)},  # type: ignore
+            identifiers={(DOMAIN, self._organization, self._project_name)},  # type: ignore[arg-type]
             manufacturer=self._organization,
             name=self._project_name,
         )

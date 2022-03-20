@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections import OrderedDict, defaultdict
 import json
 
+from homeassistant.loader import async_process_zeroconf_match_dict
+
 from .model import Config, Integration
 
 BASE = """
@@ -42,9 +44,7 @@ def generate_and_validate(integrations: dict[str, Integration]):
             data = {"domain": domain}
             if isinstance(entry, dict):
                 typ = entry["type"]
-                entry_without_type = entry.copy()
-                del entry_without_type["type"]
-                data.update(entry_without_type)
+                data.update(async_process_zeroconf_match_dict(entry))
             else:
                 typ = entry
 

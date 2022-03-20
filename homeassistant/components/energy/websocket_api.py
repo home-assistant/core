@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import functools
 from itertools import chain
 from types import ModuleType
-from typing import Any, Awaitable, Callable, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -303,6 +304,8 @@ async def ws_get_fossil_energy_consumption(
         """Reduce hourly deltas to daily or monthly deltas."""
         result: list[dict[str, Any]] = []
         deltas: list[float] = []
+        if not stat_list:
+            return result
         prev_stat: dict[str, Any] = stat_list[0]
 
         # Loop over the hourly deltas + a fake entry to end the period

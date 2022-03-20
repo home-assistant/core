@@ -94,7 +94,7 @@ set_light_brightness_tracked_state:
 
 start_increasing_brightness:
   name: Start increasing brightness
-  description: "Start increasing the brightness of the light."
+  description: "Start increasing the brightness of the light. (deprecated)"
   target:
     entity:
       integration: bond
@@ -102,7 +102,7 @@ start_increasing_brightness:
 
 start_decreasing_brightness:
   name: Start decreasing brightness
-  description: "Start decreasing the brightness of the light."
+  description: "Start decreasing the brightness of the light. (deprecated)"
   target:
     entity:
       integration: bond
@@ -110,7 +110,7 @@ start_decreasing_brightness:
 
 stop:
   name: Stop
-  description: "Stop any in-progress action and empty the queue."
+  description: "Stop any in-progress action and empty the queue. (deprecated)"
   target:
     entity:
       integration: bond

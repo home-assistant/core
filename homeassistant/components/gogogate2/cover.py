@@ -9,10 +9,9 @@ from ismartgate.common import (
 )
 
 from homeassistant.components.cover import (
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -44,7 +43,7 @@ async def async_setup_entry(
 
 
 class DeviceCover(GoGoGate2Entity, CoverEntity):
-    """Cover entity for goggate2."""
+    """Cover entity for gogogate2."""
 
     def __init__(
         self,
@@ -57,7 +56,7 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
         self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
         self._attr_device_class = (
-            DEVICE_CLASS_GATE if self.door.gate else DEVICE_CLASS_GARAGE
+            CoverDeviceClass.GATE if self.door.gate else CoverDeviceClass.GARAGE
         )
 
     @property

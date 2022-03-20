@@ -10,15 +10,16 @@ from sqlalchemy import and_, bindparam, func
 from sqlalchemy.ext import baked
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.models import (
-    States,
-    process_timestamp_to_utc_isoformat,
-)
-from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 
-from .models import LazyState
+from .models import (
+    LazyState,
+    StateAttributes,
+    States,
+    process_timestamp_to_utc_isoformat,
+)
+from .util import execute, session_scope
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -50,6 +51,7 @@ QUERY_STATES = [
     States.attributes,
     States.last_changed,
     States.last_updated,
+    StateAttributes.shared_attrs,
 ]
 
 HISTORY_BAKERY = "recorder_history_bakery"
@@ -118,6 +120,9 @@ def get_significant_states_with_session(
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
 
+    baked_query += lambda q: q.outerjoin(
+        StateAttributes, States.attributes_id == StateAttributes.attributes_id
+    )
     baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
 
     states = execute(
@@ -163,6 +168,9 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
             baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
             entity_id = entity_id.lower()
 
+        baked_query += lambda q: q.outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
         baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
 
         states = execute(
@@ -190,6 +198,9 @@ def get_last_state_changes(hass, number_of_states, entity_id):
             baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
             entity_id = entity_id.lower()
 
+        baked_query += lambda q: q.outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
         baked_query += lambda q: q.order_by(
             States.entity_id, States.last_updated.desc()
         )
@@ -267,6 +278,8 @@ def _get_states_with_session(
         query = query.join(
             most_recent_state_ids,
             States.state_id == most_recent_state_ids.c.max_state_id,
+        ).outerjoin(
+            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
     else:
         # We did not get an include-list of entities, query all states in the inner
@@ -305,8 +318,12 @@ def _get_states_with_session(
         query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
         if filters:
             query = filters.apply(query)
+        query = query.outerjoin(
+            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+        )
 
-    return [LazyState(row) for row in execute(query)]
+    attr_cache = {}
+    return [LazyState(row, attr_cache) for row in execute(query)]
 
 
 def _get_single_entity_states_with_session(hass, session, utc_point_in_time, entity_id):
@@ -318,6 +335,9 @@ def _get_single_entity_states_with_session(hass, session, utc_point_in_time, ent
     baked_query += lambda q: q.filter(
         States.last_updated < bindparam("utc_point_in_time"),
         States.entity_id == bindparam("entity_id"),
+    )
+    baked_query += lambda q: q.outerjoin(
+        StateAttributes, States.attributes_id == StateAttributes.attributes_id
     )
     baked_query += lambda q: q.order_by(States.last_updated.desc())
     baked_query += lambda q: q.limit(1)
@@ -379,15 +399,17 @@ def _sorted_states_to_dict(
     for ent_id, group in groupby(states, lambda state: state.entity_id):
         domain = split_entity_id(ent_id)[0]
         ent_results = result[ent_id]
+        attr_cache = {}
+
         if not minimal_response or domain in NEED_ATTRIBUTE_DOMAINS:
-            ent_results.extend(LazyState(db_state) for db_state in group)
+            ent_results.extend(LazyState(db_state, attr_cache) for db_state in group)
 
         # With minimal response we only provide a native
         # State for the first and last response. All the states
         # in-between only provide the "state" and the
         # "last_changed".
         if not ent_results:
-            ent_results.append(LazyState(next(group)))
+            ent_results.append(LazyState(next(group), attr_cache))
 
         prev_state = ent_results[-1]
         initial_state_count = len(ent_results)
@@ -412,7 +434,7 @@ def _sorted_states_to_dict(
             # There was at least one state change
             # replace the last minimal state with
             # a full state
-            ent_results[-1] = LazyState(prev_state)
+            ent_results[-1] = LazyState(prev_state, attr_cache)
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}

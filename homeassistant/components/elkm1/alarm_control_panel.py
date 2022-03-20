@@ -1,4 +1,6 @@
 """Each ElkM1 area will be created as a separate alarm_control_panel."""
+from __future__ import annotations
+
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
 from elkm1_lib.util import username
 import voluptuous as vol
@@ -13,6 +15,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -22,8 +25,10 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import ElkAttachedEntity, create_elk_entities
@@ -53,11 +58,15 @@ SERVICE_ALARM_BYPASS = "alarm_bypass"
 SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the ElkM1 alarm platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
     elk = elk_data["elk"]
-    entities = []
+    entities: list[ElkArea] = []
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities, True)
 

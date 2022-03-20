@@ -17,6 +17,7 @@ from ismartgate.common import (
 )
 
 from homeassistant.components.gogogate2.const import DEVICE_TYPE_ISMARTGATE, DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -25,8 +26,6 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_USERNAME,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_TEMPERATURE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -296,11 +295,11 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.door3_temperature") is None
     assert (
         hass.states.get("sensor.door1_battery").attributes[ATTR_DEVICE_CLASS]
-        == DEVICE_CLASS_BATTERY
+        == SensorDeviceClass.BATTERY
     )
     assert (
         hass.states.get("sensor.door1_temperature").attributes[ATTR_DEVICE_CLASS]
-        == DEVICE_CLASS_TEMPERATURE
+        == SensorDeviceClass.TEMPERATURE
     )
     assert (
         hass.states.get("sensor.door1_temperature").attributes[ATTR_UNIT_OF_MEASUREMENT]

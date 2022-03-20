@@ -17,13 +17,14 @@ from operator import attrgetter
 import random
 import re
 import statistics
+from struct import error as StructError, pack, unpack_from
 import sys
 from typing import Any, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
 import jinja2
-from jinja2 import pass_context
+from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
@@ -44,22 +45,18 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    area_registry,
-    device_registry,
-    entity_registry,
-    location as loc_helper,
-)
-from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import (
     convert,
-    convert_to_int,
     dt as dt_util,
     location as loc_util,
+    slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
+
+from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -114,18 +111,25 @@ def attach(hass: HomeAssistant, obj: Any) -> None:
 
 
 def render_complex(
-    value: Any, variables: TemplateVarsType = None, limited: bool = False
+    value: Any,
+    variables: TemplateVarsType = None,
+    limited: bool = False,
+    parse_result: bool = True,
 ) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
-        return [render_complex(item, variables) for item in value]
+        return [
+            render_complex(item, variables, limited, parse_result) for item in value
+        ]
     if isinstance(value, collections.abc.Mapping):
         return {
-            render_complex(key, variables): render_complex(item, variables)
+            render_complex(key, variables, limited, parse_result): render_complex(
+                item, variables, limited, parse_result
+            )
             for key, item in value.items()
         }
     if isinstance(value, Template):
-        return value.async_render(variables, limited=limited)
+        return value.async_render(variables, limited=limited, parse_result=parse_result)
 
     return value
 
@@ -832,7 +836,7 @@ def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
 def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     state = hass.states.get(entity_id)
     if state is None and not valid_entity_id(entity_id):
-        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore
+        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore[arg-type]
     return _get_template_state_from_state(hass, entity_id, state)
 
 
@@ -874,9 +878,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
     try:
         # Import here, not at top-level to avoid circular import
-        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-            config_validation as cv,
-        )
+        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
         return cv.boolean(template_result)
     except vol.Invalid:
@@ -944,7 +946,7 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
 
     # fallback to just returning all entities for a domain
     # pylint: disable=import-outside-toplevel
-    from homeassistant.helpers.entity import entity_sources
+    from .entity import entity_sources
 
     return [
         entity_id
@@ -1006,9 +1008,7 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-        config_validation as cv,
-    )
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
     try:
         cv.entity_id(lookup_value)
@@ -1046,9 +1046,7 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-        config_validation as cv,
-    )
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
     try:
         cv.entity_id(lookup_value)
@@ -1304,7 +1302,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
     """Filter to round a value."""
     try:
         # support rounding methods like jinja
-        multiplier = float(10 ** precision)
+        multiplier = float(10**precision)
         if method == "ceil":
             value = math.ceil(float(value) * multiplier) / multiplier
         elif method == "floor":
@@ -1527,6 +1525,30 @@ def fail_when_undefined(value):
     return value
 
 
+def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
+    """
+    Convert a built-in min/max Jinja filter to a global function.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+
+    @pass_environment
+    @wraps(builtin_filter)
+    def wrapper(environment: jinja2.Environment, *args: Any, **kwargs: Any) -> Any:
+        if len(args) == 0:
+            raise TypeError(f"{name} expected at least 1 argument, got 0")
+
+        if len(args) == 1:
+            if isinstance(args[0], Iterable):
+                return builtin_filter(environment, args[0], **kwargs)
+
+            raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+
+        return builtin_filter(environment, args, **kwargs)
+
+    return pass_environment(wrapper)
+
+
 def average(*args: Any) -> float:
     """
     Filter and function to calculate the arithmetic mean of an iterable or of two or more arguments.
@@ -1567,15 +1589,8 @@ def forgiving_float_filter(value, default=_SENTINEL):
         return default
 
 
-def forgiving_int(value, default=_SENTINEL, base=10, little_endian=False):
+def forgiving_int(value, default=_SENTINEL, base=10):
     """Try to convert value to an int, and warn if it fails."""
-    if isinstance(value, bytes) and value:
-        if base != 10:
-            _LOGGER.warning(
-                "Template warning: 'int' got 'bytes' type input, ignoring base=%s parameter",
-                base,
-            )
-        return convert_to_int(value, little_endian=little_endian)
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
         warn_no_default("int", value, value)
@@ -1583,15 +1598,8 @@ def forgiving_int(value, default=_SENTINEL, base=10, little_endian=False):
     return result
 
 
-def forgiving_int_filter(value, default=_SENTINEL, base=10, little_endian=False):
+def forgiving_int_filter(value, default=_SENTINEL, base=10):
     """Try to convert value to an int, and warn if it fails."""
-    if isinstance(value, bytes) and value:
-        if base != 10:
-            _LOGGER.warning(
-                "Template warning: 'int' got 'bytes' type input, ignoring base=%s parameter",
-                base,
-            )
-        return convert_to_int(value, little_endian=little_endian)
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
         warn_no_default("int", value, 0)
@@ -1648,18 +1656,42 @@ def regex_findall(value, find="", ignorecase=False):
     return re.findall(find, value, flags)
 
 
-def bitwise_and(first_value, second_value, little_endian=False):
+def bitwise_and(first_value, second_value):
     """Perform a bitwise and operation."""
-    return convert_to_int(first_value, little_endian=little_endian) & convert_to_int(
-        second_value, little_endian=little_endian
-    )
+    return first_value & second_value
 
 
-def bitwise_or(first_value, second_value, little_endian=False):
+def bitwise_or(first_value, second_value):
     """Perform a bitwise or operation."""
-    return convert_to_int(first_value, little_endian=little_endian) | convert_to_int(
-        second_value, little_endian=little_endian
-    )
+    return first_value | second_value
+
+
+def struct_pack(value: Any | None, format_string: str) -> bytes | None:
+    """Pack an object into a bytes object."""
+    try:
+        return pack(format_string, value)
+    except StructError:
+        _LOGGER.warning(
+            "Template warning: 'pack' unable to pack object '%s' with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information",
+            str(value),
+            type(value).__name__,
+            format_string,
+        )
+        return None
+
+
+def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | None:
+    """Unpack an object from bytes an return the first native object."""
+    try:
+        return unpack_from(format_string, value, offset)[0]
+    except StructError:
+        _LOGGER.warning(
+            "Template warning: 'unpack' unable to unpack object '%s' with format_string '%s' and offset %s see https://docs.python.org/3/library/struct.html for more information",
+            value,
+            format_string,
+            offset,
+        )
+        return None
 
 
 def base64_encode(value):
@@ -1738,6 +1770,30 @@ def relative_time(value):
 def urlencode(value):
     """Urlencode dictionary and return as UTF-8 string."""
     return urllib_urlencode(value).encode("utf-8")
+
+
+def slugify(value, separator="_"):
+    """Convert a string into a slug, such as what is used for entity ids."""
+    return slugify_util(value, separator=separator)
+
+
+def iif(
+    value: Any, if_true: Any = True, if_false: Any = False, if_none: Any = _SENTINEL
+) -> Any:
+    """Immediate if function/filter that allow for common if/else constructs.
+
+    https://en.wikipedia.org/wiki/IIf
+
+    Examples:
+        {{ is_state("device_tracker.frenck", "home") | iif("yes", "no") }}
+        {{ iif(1==2, "yes", "no") }}
+        {{ (1 == 1) | iif("yes", "no") }}
+    """
+    if value is None and if_none is not _SENTINEL:
+        return if_none
+    if bool(value):
+        return if_true
+    return if_false
 
 
 @contextmanager
@@ -1833,8 +1889,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["average"] = average
-        self.filters["max"] = max
-        self.filters["min"] = min
         self.filters["random"] = random_every_time
         self.filters["base64_encode"] = base64_encode
         self.filters["base64_decode"] = base64_decode
@@ -1846,10 +1900,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
+        self.filters["pack"] = struct_pack
+        self.filters["unpack"] = struct_unpack
         self.filters["ord"] = ord
         self.filters["is_number"] = is_number
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
+        self.filters["relative_time"] = relative_time
+        self.filters["slugify"] = slugify
+        self.filters["iif"] = iif
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1872,10 +1931,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         self.globals["average"] = average
-        self.globals["max"] = max
-        self.globals["min"] = min
+        self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
+        self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
         self.globals["int"] = forgiving_int
+        self.globals["pack"] = struct_pack
+        self.globals["unpack"] = struct_unpack
+        self.globals["slugify"] = slugify
+        self.globals["iif"] = iif
+        self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 

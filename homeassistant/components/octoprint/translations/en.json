@@ -21,7 +21,8 @@
                     "path": "Application Path",
                     "port": "Port Number",
                     "ssl": "Use SSL",
-                    "username": "Username"
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
                 }
             }
         }

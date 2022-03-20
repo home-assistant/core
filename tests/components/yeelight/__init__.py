@@ -1,14 +1,13 @@
 """Tests for the Yeelight integration."""
 import asyncio
 from datetime import timedelta
-from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SsdpSearchListener
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
-from homeassistant.components import zeroconf
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -42,6 +41,7 @@ ID_DECIMAL = f"{int(ID, 16):08d}"
 
 ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host=IP_ADDRESS,
+    addresses=[IP_ADDRESS],
     port=54321,
     hostname=f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
     type="_miio._udp.local.",
@@ -153,15 +153,15 @@ def _mocked_bulb(cannot_connect=False):
     bulb.async_set_power_mode = AsyncMock()
     bulb.async_set_scene = AsyncMock()
     bulb.async_set_default = AsyncMock()
-    bulb.start_music = MagicMock()
+    bulb.async_start_music = AsyncMock()
     return bulb
 
 
-def _patched_ssdp_listener(info, *args, **kwargs):
+def _patched_ssdp_listener(info: ssdp.SsdpHeaders, *args, **kwargs):
     listener = SsdpSearchListener(*args, **kwargs)
 
     async def _async_callback(*_):
-        if kwargs["source_ip"] == IPv4Address(FAIL_TO_BIND_IP):
+        if kwargs["source"][0] == FAIL_TO_BIND_IP:
             raise OSError
         await listener.async_connect_callback()
 
@@ -179,11 +179,10 @@ def _patch_discovery(no_device=False, capabilities=None):
     YeelightScanner._scanner = None  # Clear class scanner to reset hass
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
-        return _patched_ssdp_listener(
-            None if no_device else capabilities or CAPABILITIES,
-            *args,
-            **kwargs,
-        )
+        info = None
+        if not no_device:
+            info = capabilities or CAPABILITIES
+        return _patched_ssdp_listener(info, *args, **kwargs)
 
     return patch(
         "homeassistant.components.yeelight.scanner.SsdpSearchListener",

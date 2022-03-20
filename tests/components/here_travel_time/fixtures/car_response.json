@@ -294,6 +294,15 @@
                 }
             }
         ],
-        "language": "en-us"
+        "language": "en-us",
+        "sourceAttribution": {
+            "attribution": "With the support of <span class=\"company\"><a href=\"https://transit.api.here.com/r?appId=Mt1bOYh3m9uxE7r3wuUx&u=https://wego.here.com\">HERE Technologies</a></span>. All information is provided without warranty of any kind.",
+            "supplier": [
+                {
+                    "title": "HERE Technologies",
+                    "href": "https://transit.api.here.com/r?appId=Mt1bOYh3m9uxE7r3wuUx&u=https://wego.here.com"
+                }
+            ]
+        }
     }
 }

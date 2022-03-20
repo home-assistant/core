@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.deconz.const import (
     CONF_BRIDGE_ID,
+    CONF_MASTER_GATEWAY,
     DOMAIN as DECONZ_DOMAIN,
 )
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
@@ -187,6 +188,26 @@ async def test_configure_service_with_faulty_entity(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 0
 
 
+async def test_calling_service_with_no_master_gateway_fails(hass, aioclient_mock):
+    """Test that service call fails when no master gateway exist."""
+    await setup_deconz_integration(
+        hass, aioclient_mock, options={CONF_MASTER_GATEWAY: False}
+    )
+    aioclient_mock.clear_requests()
+
+    data = {
+        SERVICE_FIELD: "/lights/1",
+        SERVICE_DATA: {"on": True},
+    }
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
+    )
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+
 async def test_service_refresh_devices(hass, aioclient_mock):
     """Test that service can refresh devices."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
@@ -233,7 +254,7 @@ async def test_service_refresh_devices(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
 
 
 async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_mock):
@@ -296,7 +317,7 @@ async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_m
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     assert len(captured_events) == 0
 
 

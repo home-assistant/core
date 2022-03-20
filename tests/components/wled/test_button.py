@@ -13,12 +13,12 @@ from homeassistant.components.button import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ENTITY_CATEGORY_CONFIG,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import MockConfigEntry
 
@@ -37,7 +37,7 @@ async def test_button_restart(
     entry = entity_registry.async_get("button.wled_rgb_light_restart")
     assert entry
     assert entry.unique_id == "aabbccddeeff_restart"
-    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -111,7 +111,7 @@ async def test_button_update_stay_stable(
     entry = entity_registry.async_get("button.wled_rgb_light_update")
     assert entry
     assert entry.unique_id == "aabbccddeeff_update"
-    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
     state = hass.states.get("button.wled_rgb_light_update")
     assert state

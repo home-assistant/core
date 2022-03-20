@@ -4,12 +4,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import logging
-from typing import TypeVar
+from typing import Final, TypeVar
 
 from pyfronius import Fronius, FroniusError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST
+from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -22,14 +22,15 @@ from .coordinator import (
     FroniusInverterUpdateCoordinator,
     FroniusLoggerUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
+    FroniusOhmpilotUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
 )
 
-_LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[str] = ["sensor"]
+_LOGGER: Final = logging.getLogger(__name__)
+PLATFORMS: Final = [Platform.SENSOR]
 
-FroniusCoordinatorType = TypeVar("FroniusCoordinatorType", bound=FroniusCoordinatorBase)
+_FroniusCoordinatorT = TypeVar("_FroniusCoordinatorT", bound=FroniusCoordinatorBase)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -41,8 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = solar_net
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    # reload on config_entry update
-    entry.async_on_unload(entry.add_update_listener(async_update_entry))
     return True
 
 
@@ -55,11 +54,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             solar_net.cleanup_callbacks.pop()()
 
     return unload_ok
-
-
-async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update a given config entry."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class FroniusSolarNet:
@@ -83,6 +77,7 @@ class FroniusSolarNet:
         self.inverter_coordinators: list[FroniusInverterUpdateCoordinator] = []
         self.logger_coordinator: FroniusLoggerUpdateCoordinator | None = None
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
+        self.ohmpilot_coordinator: FroniusOhmpilotUpdateCoordinator | None = None
         self.power_flow_coordinator: FroniusPowerFlowUpdateCoordinator | None = None
         self.storage_coordinator: FroniusStorageUpdateCoordinator | None = None
 
@@ -121,6 +116,15 @@ class FroniusSolarNet:
             )
         )
 
+        self.ohmpilot_coordinator = await self._init_optional_coordinator(
+            FroniusOhmpilotUpdateCoordinator(
+                hass=self.hass,
+                solar_net=self,
+                logger=_LOGGER,
+                name=f"{DOMAIN}_ohmpilot_{self.host}",
+            )
+        )
+
         self.power_flow_coordinator = await self._init_optional_coordinator(
             FroniusPowerFlowUpdateCoordinator(
                 hass=self.hass,
@@ -149,7 +153,10 @@ class FroniusSolarNet:
         )
         if self.logger_coordinator:
             _logger_info = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM]
-            solar_net_device[ATTR_MODEL] = _logger_info["product_type"]["value"]
+            # API v0 doesn't provide product_type
+            solar_net_device[ATTR_MODEL] = _logger_info.get("product_type", {}).get(
+                "value", "Datalogger Web"
+            )
             solar_net_device[ATTR_SW_VERSION] = _logger_info["software_version"][
                 "value"
             ]
@@ -192,8 +199,8 @@ class FroniusSolarNet:
 
     @staticmethod
     async def _init_optional_coordinator(
-        coordinator: FroniusCoordinatorType,
-    ) -> FroniusCoordinatorType | None:
+        coordinator: _FroniusCoordinatorT,
+    ) -> _FroniusCoordinatorT | None:
         """Initialize an update coordinator and return it if devices are found."""
         try:
             await coordinator.async_config_entry_first_refresh()

@@ -1,71 +1,116 @@
 """Helper methods for common tasks."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
+from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
+from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import SONOS_SPEAKER_ACTIVITY
-from .exception import SpeakerUnavailable
+from .exception import SonosUpdateError
 
 if TYPE_CHECKING:
     from .entity import SonosEntity
+    from .household_coordinator import SonosHouseholdCoordinator
+    from .media import SonosMedia
     from .speaker import SonosSpeaker
 
 UID_PREFIX = "RINCON_"
 UID_POSTFIX = "01400"
 
-WrapFuncType = TypeVar("WrapFuncType", bound=Callable[..., Any])
-
 _LOGGER = logging.getLogger(__name__)
+
+_T = TypeVar(
+    "_T", bound="SonosSpeaker | SonosMedia | SonosEntity | SonosHouseholdCoordinator"
+)
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+
+
+@overload
+def soco_error(
+    errorcodes: None = ...,
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R]
+]:
+    ...
+
+
+@overload
+def soco_error(
+    errorcodes: list[str],
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
+]:
+    ...
 
 
 def soco_error(
-    errorcodes: list[str] | None = None, raise_on_err: bool = True
-) -> Callable:
+    errorcodes: list[str] | None = None,
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
+]:
     """Filter out specified UPnP errors and raise exceptions for service calls."""
 
-    def decorator(funct: WrapFuncType) -> WrapFuncType:
+    def decorator(
+        funct: Callable[Concatenate[_T, _P], _R]  # type: ignore[misc]
+    ) -> Callable[Concatenate[_T, _P], _R | None]:  # type: ignore[misc]
         """Decorate functions."""
 
-        def wrapper(self: SonosSpeaker | SonosEntity, *args: Any, **kwargs: Any) -> Any:
+        def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
             """Wrap for all soco UPnP exception."""
+            args_soco = next((arg for arg in args if isinstance(arg, SoCo)), None)  # type: ignore[attr-defined]
             try:
                 result = funct(self, *args, **kwargs)
-            except SpeakerUnavailable:
-                return None
             except (OSError, SoCoException, SoCoUPnPException) as err:
                 error_code = getattr(err, "error_code", None)
-                function = funct.__name__
+                function = funct.__qualname__
                 if errorcodes and error_code in errorcodes:
                     _LOGGER.debug(
                         "Error code %s ignored in call to %s", error_code, function
                     )
                     return None
 
-                # Prefer the entity_id if available, zone name as a fallback
-                # Needed as SonosSpeaker instances are not entities
-                zone_name = getattr(self, "speaker", self).zone_name
-                target = getattr(self, "entity_id", zone_name)
+                if (target := _find_target_identifier(self, args_soco)) is None:
+                    raise RuntimeError("Unexpected use of soco_error") from err
+
                 message = f"Error calling {function} on {target}: {err}"
-                if raise_on_err:
-                    raise HomeAssistantError(message) from err
+                raise SonosUpdateError(message) from err
 
-                _LOGGER.warning(message)
-                return None
-
+            dispatch_soco = args_soco or self.soco  # type: ignore[union-attr]
             dispatcher_send(
-                self.hass, f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}", funct.__name__
+                self.hass,
+                f"{SONOS_SPEAKER_ACTIVITY}-{dispatch_soco.uid}",
+                funct.__qualname__,
             )
             return result
 
-        return cast(WrapFuncType, wrapper)
+        return wrapper
 
     return decorator
+
+
+def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | None:
+    """Extract the the best available target identifier from the provided instance object."""
+    if entity_id := getattr(instance, "entity_id", None):
+        # SonosEntity instance
+        return entity_id
+    if zone_name := getattr(instance, "zone_name", None):
+        # SonosSpeaker instance
+        return zone_name
+    if speaker := getattr(instance, "speaker", None):
+        # Holds a SonosSpeaker instance attribute
+        return speaker.zone_name
+    if soco := getattr(instance, "soco", fallback_soco):
+        # Holds a SoCo instance attribute
+        # Only use attributes with no I/O
+        return soco._player_name or soco.ip_address  # pylint: disable=protected-access
+    return None
 
 
 def hostname_to_uid(hostname: str) -> str:

@@ -6,9 +6,13 @@ from datetime import date
 
 from twentemilieu import WasteType
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, DEVICE_CLASS_DATE
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -37,32 +41,39 @@ class TwenteMilieuSensorDescription(
 
 SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (
     TwenteMilieuSensorDescription(
+        key="tree",
+        waste_type=WasteType.TREE,
+        name="Christmas Tree Pickup",
+        icon="mdi:pine-tree",
+        device_class=SensorDeviceClass.DATE,
+    ),
+    TwenteMilieuSensorDescription(
         key="Non-recyclable",
         waste_type=WasteType.NON_RECYCLABLE,
         name="Non-recyclable Waste Pickup",
         icon="mdi:delete-empty",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Organic",
         waste_type=WasteType.ORGANIC,
         name="Organic Waste Pickup",
         icon="mdi:delete-empty",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Paper",
         waste_type=WasteType.PAPER,
         name="Paper Waste Pickup",
         icon="mdi:delete-empty",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Plastic",
         waste_type=WasteType.PACKAGES,
         name="Packages Waste Pickup",
         icon="mdi:delete-empty",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
     ),
 )
 
@@ -79,11 +90,10 @@ async def async_setup_entry(
     )
 
 
-class TwenteMilieuSensor(CoordinatorEntity, SensorEntity):
+class TwenteMilieuSensor(CoordinatorEntity[dict[WasteType, list[date]]], SensorEntity):
     """Defines a Twente Milieu sensor."""
 
     entity_description: TwenteMilieuSensorDescription
-    coordinator: DataUpdateCoordinator[dict[WasteType, date | None]]
 
     def __init__(
         self,
@@ -106,4 +116,6 @@ class TwenteMilieuSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> date | None:
         """Return the state of the sensor."""
-        return self.coordinator.data.get(self.entity_description.waste_type)
+        if not (dates := self.coordinator.data[self.entity_description.waste_type]):
+            return None
+        return dates[0]

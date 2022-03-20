@@ -8,6 +8,7 @@ from velbusaio.exceptions import VelbusConnectionFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import usb
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -32,6 +33,8 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the velbus config flow."""
         self._errors: dict[str, str] = {}
+        self._device: str = ""
+        self._title: str = ""
 
     def _create_device(self, name: str, prt: str) -> FlowResult:
         """Create an entry async."""
@@ -50,9 +53,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _prt_in_configuration_exists(self, prt: str) -> bool:
         """Return True if port exists in configuration."""
-        if prt in velbus_entries(self.hass):
-            return True
-        return False
+        return prt in velbus_entries(self.hass)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -81,4 +82,37 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=self._errors,
+        )
+
+    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+        """Handle USB Discovery."""
+        await self.async_set_unique_id(
+            f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
+        )
+        dev_path = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
+        # check if this device is not already configured
+        if self._prt_in_configuration_exists(dev_path):
+            return self.async_abort(reason="already_configured")
+        # check if we can make a valid velbus connection
+        if not await self._test_connection(dev_path):
+            return self.async_abort(reason="cannot_connect")
+        # store the data for the config step
+        self._device = dev_path
+        self._title = "Velbus USB"
+        # call the config step
+        self._set_confirm_only()
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle Discovery confirmation."""
+        if user_input is not None:
+            return self._create_device(self._title, self._device)
+
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={CONF_NAME: self._title},
         )

@@ -1,14 +1,15 @@
 """Support for Coinbase sensors."""
+from __future__ import annotations
+
 import logging
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     API_ACCOUNT_AMOUNT,
@@ -42,11 +43,15 @@ DEFAULT_COIN_ICON = "mdi:cash"
 ATTRIBUTION = "Data provided by coinbase.com"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Coinbase sensor platform."""
     instance = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[SensorEntity] = []
 
     provided_currencies = [
         account[API_ACCOUNT_CURRENCY]
@@ -110,7 +115,7 @@ class AccountSensor(SensorEntity):
                     API_ACCOUNT_CURRENCY
                 ]
                 break
-        self._attr_state_class = STATE_CLASS_TOTAL
+        self._attr_state_class = SensorStateClass.TOTAL
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.coinbase.com/settings/api",
             entry_type=DeviceEntryType.SERVICE,
@@ -183,7 +188,7 @@ class ExchangeRateSensor(SensorEntity):
             1 / float(self._coinbase_data.exchange_rates[API_RATES][self.currency]), 2
         )
         self._unit_of_measurement = exchange_base
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.coinbase.com/settings/api",
             entry_type=DeviceEntryType.SERVICE,

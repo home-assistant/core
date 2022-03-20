@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 import pyatmo
 
@@ -22,8 +21,11 @@ from .const import (
     SIGNAL_NAME,
     TYPE_ENERGY,
 )
-from .data_handler import HOMEDATA_DATA_CLASS_NAME, NetatmoDataHandler
-from .helper import get_all_home_ids, update_climate_schedules
+from .data_handler import (
+    CLIMATE_STATE_CLASS_NAME,
+    CLIMATE_TOPOLOGY_CLASS_NAME,
+    NetatmoDataHandler,
+)
 from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,28 +37,36 @@ async def async_setup_entry(
     """Set up the Netatmo energy platform schedule selector."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    await data_handler.register_data_class(
-        HOMEDATA_DATA_CLASS_NAME, HOMEDATA_DATA_CLASS_NAME, None
-    )
-    home_data = data_handler.data.get(HOMEDATA_DATA_CLASS_NAME)
+    climate_topology = data_handler.data.get(CLIMATE_TOPOLOGY_CLASS_NAME)
 
-    if not home_data or home_data.raw_data == {}:
+    if not climate_topology or climate_topology.raw_data == {}:
         raise PlatformNotReady
 
-    hass.data[DOMAIN][DATA_SCHEDULES].update(
-        update_climate_schedules(
-            home_ids=get_all_home_ids(home_data),
-            schedules=data_handler.data[HOMEDATA_DATA_CLASS_NAME].schedules,
+    entities = []
+    for home_id in climate_topology.home_ids:
+        signal_name = f"{CLIMATE_STATE_CLASS_NAME}-{home_id}"
+
+        await data_handler.register_data_class(
+            CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
         )
-    )
+
+        if (climate_state := data_handler.data[signal_name]) is None:
+            continue
+
+        climate_topology.register_handler(home_id, climate_state.process_topology)
+
+        hass.data[DOMAIN][DATA_SCHEDULES][home_id] = climate_state.homes[
+            home_id
+        ].schedules
 
     entities = [
         NetatmoScheduleSelect(
             data_handler,
             home_id,
-            list(hass.data[DOMAIN][DATA_SCHEDULES][home_id].values()),
+            [schedule.name for schedule in schedules.values()],
         )
-        for home_id in hass.data[DOMAIN][DATA_SCHEDULES]
+        for home_id, schedules in hass.data[DOMAIN][DATA_SCHEDULES].items()
+        if schedules
     ]
 
     _LOGGER.debug("Adding climate schedule select entities %s", entities)
@@ -75,16 +85,28 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
 
         self._home_id = home_id
 
+        self._climate_state_class = f"{CLIMATE_STATE_CLASS_NAME}-{self._home_id}"
+        self._climate_state: pyatmo.AsyncClimate = data_handler.data[
+            self._climate_state_class
+        ]
+
+        self._home = self._climate_state.homes[self._home_id]
+
         self._data_classes.extend(
             [
                 {
-                    "name": HOMEDATA_DATA_CLASS_NAME,
-                    SIGNAL_NAME: HOMEDATA_DATA_CLASS_NAME,
+                    "name": CLIMATE_TOPOLOGY_CLASS_NAME,
+                    SIGNAL_NAME: CLIMATE_TOPOLOGY_CLASS_NAME,
+                },
+                {
+                    "name": CLIMATE_STATE_CLASS_NAME,
+                    "home_id": self._home_id,
+                    SIGNAL_NAME: self._climate_state_class,
                 },
             ]
         )
 
-        self._device_name = self._data.homes[home_id]["name"]
+        self._device_name = self._home.name
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
 
         self._model: str = "NATherm1"
@@ -92,9 +114,7 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
 
         self._attr_unique_id = f"{self._home_id}-schedule-select"
 
-        self._attr_current_option = self._data._get_selected_schedule(
-            home_id=self._home_id
-        ).get("name")
+        self._attr_current_option = getattr(self._home.get_selected_schedule(), "name")
         self._attr_options = options
 
     async def async_added_to_hass(self) -> None:
@@ -119,23 +139,20 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
             return
 
         if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            self._attr_current_option = self.hass.data[DOMAIN][DATA_SCHEDULES][
-                self._home_id
-            ].get(data["schedule_id"])
+            self._attr_current_option = getattr(
+                self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].get(
+                    data["schedule_id"]
+                ),
+                "name",
+            )
             self.async_write_ha_state()
-
-    @property
-    def _data(self) -> pyatmo.AsyncHomeData:
-        """Return data for this entity."""
-        return cast(
-            pyatmo.AsyncHomeData,
-            self.data_handler.data[self._data_classes[0]["name"]],
-        )
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        for sid, name in self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].items():
-            if name != option:
+        for sid, schedule in self.hass.data[DOMAIN][DATA_SCHEDULES][
+            self._home_id
+        ].items():
+            if schedule.name != option:
                 continue
             _LOGGER.debug(
                 "Setting %s schedule to %s (%s)",
@@ -143,25 +160,17 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
                 option,
                 sid,
             )
-            await self._data.async_switch_home_schedule(
-                home_id=self._home_id, schedule_id=sid
-            )
+            await self._climate_state.async_switch_home_schedule(schedule_id=sid)
             break
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_current_option = (
-            self._data._get_selected_schedule(  # pylint: disable=protected-access
-                home_id=self._home_id
-            ).get("name")
-        )
-        self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id] = {
-            schedule_id: schedule_data.get("name")
-            for schedule_id, schedule_data in (
-                self._data.schedules[self._home_id].items()
-            )
-        }
-        self._attr_options = list(
-            self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].values()
-        )
+        self._attr_current_option = getattr(self._home.get_selected_schedule(), "name")
+        self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id] = self._home.schedules
+        self._attr_options = [
+            schedule.name
+            for schedule in self.hass.data[DOMAIN][DATA_SCHEDULES][
+                self._home_id
+            ].values()
+        ]

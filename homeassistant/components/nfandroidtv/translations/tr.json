@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "name": "Ad"
                 },
                 "description": "Bu entegrasyon, Android TV i\u00e7in Bildirimler uygulamas\u0131n\u0131 gerektirir. \n\n Android TV i\u00e7in: https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\n Fire TV i\u00e7in: https://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK \n\n Y\u00f6nlendiricinizde DHCP rezervasyonu (y\u00f6nlendiricinizin kullan\u0131m k\u0131lavuzuna bak\u0131n) veya cihazda statik bir IP adresi ayarlamal\u0131s\u0131n\u0131z. Aksi takdirde, cihaz sonunda kullan\u0131lamaz hale gelecektir.",

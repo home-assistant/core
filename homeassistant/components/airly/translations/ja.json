@@ -22,7 +22,7 @@
     },
     "system_health": {
         "info": {
-            "can_reach_server": "Airly\u30b5\u30fc\u30d0\u30fc\u306b\u5230\u9054",
+            "can_reach_server": "Airly\u30b5\u30fc\u30d0\u30fc\u3078\u306e\u30a2\u30af\u30bb\u30b9",
             "requests_per_day": "1\u65e5\u3042\u305f\u308a\u306e\u8a31\u53ef\u3055\u308c\u305f\u30ea\u30af\u30a8\u30b9\u30c8",
             "requests_remaining": "\u6b8b\u308a\u306e\u8a31\u53ef\u3055\u308c\u305f\u30ea\u30af\u30a8\u30b9\u30c8"
         }

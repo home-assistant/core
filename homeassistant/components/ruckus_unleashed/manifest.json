@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ruckus_unleashed",
   "requirements": ["pyruckus==0.12"],
   "codeowners": ["@gabe565"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pexpect", "pyruckus"]
 }

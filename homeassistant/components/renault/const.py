@@ -1,9 +1,5 @@
 """Constants for the Renault component."""
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import Platform
 
 DOMAIN = "renault"
 
@@ -13,11 +9,11 @@ CONF_KAMEREON_ACCOUNT_ID = "kamereon_account_id"
 DEFAULT_SCAN_INTERVAL = 300  # 5 minutes
 
 PLATFORMS = [
-    BINARY_SENSOR_DOMAIN,
-    BUTTON_DOMAIN,
-    DEVICE_TRACKER_DOMAIN,
-    SELECT_DOMAIN,
-    SENSOR_DOMAIN,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.SELECT,
+    Platform.SENSOR,
 ]
 
 DEVICE_CLASS_PLUG_STATE = "renault__plug_state"

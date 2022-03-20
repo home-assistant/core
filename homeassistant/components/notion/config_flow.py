@@ -11,7 +11,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 
@@ -74,7 +73,7 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=self._username, data=data)
 
-    async def async_step_reauth(self, config: ConfigType) -> FlowResult:
+    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._username = config[CONF_USERNAME]
         return await self.async_step_reauth_confirm()

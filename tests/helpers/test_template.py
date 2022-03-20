@@ -21,6 +21,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr, entity, template
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -252,7 +253,7 @@ def test_float_filter(hass):
     assert render(hass, "{{ 'bad' | float(default=1) }}") == 1
 
 
-def test_int_filter(hass, caplog):
+def test_int_filter(hass):
     """Test int filter."""
     hass.states.async_set("sensor.temperature", "12.2")
     assert render(hass, "{{ states.sensor.temperature.state | int }}") == 12
@@ -265,25 +266,8 @@ def test_int_filter(hass, caplog):
     assert render(hass, "{{ 'bad' | int(1) }}") == 1
     assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
 
-    # Test with bytes based integer
-    variables = {"value": b"\xde\xad\xbe\xef"}
-    assert (render(hass, "{{ value | int }}", variables=variables)) == 0xDEADBEEF
-    assert (
-        render(hass, "{{ value | int(little_endian=True) }}", variables=variables)
-        == 0xEFBEADDE
-    )
 
-    # Test with base and base parameter set
-    assert (
-        render(hass, "{{ value | int(base=16) }}", variables=variables)
-    ) == 0xDEADBEEF
-    assert (
-        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter"
-        in caplog.text
-    )
-
-
-def test_int_function(hass, caplog):
+def test_int_function(hass):
     """Test int filter."""
     hass.states.async_set("sensor.temperature", "12.2")
     assert render(hass, "{{ int(states.sensor.temperature.state) }}") == 12
@@ -295,22 +279,6 @@ def test_int_function(hass, caplog):
     assert render(hass, "{{ int('bad') }}") == "bad"
     assert render(hass, "{{ int('bad', 1) }}") == 1
     assert render(hass, "{{ int('bad', default=1) }}") == 1
-
-    # Test with base and base parameter set
-    variables = {"value": b"\xde\xad\xbe\xef"}
-    assert (render(hass, "{{ int(value) }}", variables=variables)) == 0xDEADBEEF
-    assert (
-        render(hass, "{{ int(value, little_endian=True) }}", variables=variables)
-        == 0xEFBEADDE
-    )
-
-    assert (
-        render(hass, "{{ int(value, base=16) }}", variables=variables)
-    ) == 0xDEADBEEF
-    assert (
-        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter"
-        in caplog.text
-    )
 
 
 @pytest.mark.parametrize(
@@ -342,6 +310,12 @@ def test_isnumber(hass, value, expected):
     )
     assert (
         template.Template("{{ value | is_number }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+    assert (
+        template.Template("{{ value is is_number }}", hass).async_render(
             {"value": value}
         )
         == expected
@@ -867,12 +841,97 @@ def test_min(hass):
     assert template.Template("{{ min([1, 2, 3]) }}", hass).async_render() == 1
     assert template.Template("{{ min(1, 2, 3) }}", hass).async_render() == 1
 
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | min }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ min() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ min(1) }}", hass).async_render()
+
 
 def test_max(hass):
     """Test the max filter."""
     assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == 3
     assert template.Template("{{ max([1, 2, 3]) }}", hass).async_render() == 3
     assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | max }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ max() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ max(1) }}", hass).async_render()
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    (
+        "a",
+        "b",
+        "c",
+    ),
+)
+def test_min_max_attribute(hass, attribute):
+    """Test the min and max filters with attribute."""
+    hass.states.async_set(
+        "test.object",
+        "test",
+        {
+            "objects": [
+                {
+                    "a": 1,
+                    "b": 2,
+                    "c": 3,
+                },
+                {
+                    "a": 2,
+                    "b": 1,
+                    "c": 2,
+                },
+                {
+                    "a": 3,
+                    "b": 3,
+                    "c": 1,
+                },
+            ],
+        },
+    )
+    assert (
+        template.Template(
+            "{{ (state_attr('test.object', 'objects') | min(attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            "{{ (min(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            "{{ (state_attr('test.object', 'objects') | max(attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 3
+    )
+    assert (
+        template.Template(
+            "{{ (max(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 3
+    )
 
 
 def test_ord(hass):
@@ -895,6 +954,26 @@ def test_base64_decode(hass):
             '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode }}', hass
         ).async_render()
         == "homeassistant"
+    )
+
+
+def test_slugify(hass):
+    """Test the slugify filter."""
+    assert (
+        template.Template('{{ slugify("Home Assistant") }}', hass).async_render()
+        == "home_assistant"
+    )
+    assert (
+        template.Template('{{ "Home Assistant" | slugify }}', hass).async_render()
+        == "home_assistant"
+    )
+    assert (
+        template.Template('{{ slugify("Home Assistant", "-") }}', hass).async_render()
+        == "home-assistant"
+    )
+    assert (
+        template.Template('{{ "Home Assistant" | slugify("-") }}', hass).async_render()
+        == "home-assistant"
     )
 
 
@@ -1512,24 +1591,6 @@ def test_bitwise_and(hass):
     )
     assert tpl.async_render() == 8 & 2
 
-    tpl = template.Template(
-        """
-{{ ( value_a ) | bitwise_and(value_b) }}
-            """,
-        hass,
-    )
-    variables = {"value_a": b"\x9b\xc2", "value_b": 0xFF00}
-    assert tpl.async_render(variables=variables) == 0x9B00
-
-    tpl = template.Template(
-        """
-{{ ( value_a ) | bitwise_and(value_b, little_endian=True) }}
-            """,
-        hass,
-    )
-    variables = {"value_a": b"\xc2\x9b", "value_b": 0xFFFF}
-    assert tpl.async_render(variables=variables) == 0x9BC2
-
 
 def test_bitwise_or(hass):
     """Test bitwise_or method."""
@@ -1555,53 +1616,139 @@ def test_bitwise_or(hass):
     )
     assert tpl.async_render() == 8 | 2
 
-    tpl = template.Template(
-        """
-{{ value_a | bitwise_or(value_b) }}
-            """,
-        hass,
-    )
-    variables = {
-        "value_a": b"\xc2\x9b",
-        "value_b": 0xFFFF,
-    }
-    assert tpl.async_render(variables=variables) == 65535  # 39874
 
-    tpl = template.Template(
-        """
-{{ ( value_a ) | bitwise_or(value_b) }}
-            """,
-        hass,
-    )
-    variables = {
-        "value_a": 0xFF00,
-        "value_b": b"\xc2\x9b",
-    }
-    assert tpl.async_render(variables=variables) == 0xFF9B
+def test_pack(hass, caplog):
+    """Test struct pack method."""
 
+    # render as filter
     tpl = template.Template(
         """
-{{ ( value_a ) | bitwise_or(value_b) }}
+{{ value | pack('>I') }}
             """,
         hass,
     )
     variables = {
-        "value_a": b"\xc2\x9b",
-        "value_b": 0x0000,
+        "value": 0xDEADBEEF,
     }
-    assert tpl.async_render(variables=variables) == 0xC29B
+    assert tpl.async_render(variables=variables) == b"\xde\xad\xbe\xef"
 
+    # render as function
     tpl = template.Template(
         """
-{{ ( value_a ) | bitwise_or(value_b, little_endian=True) }}
+{{ pack(value, '>I') }}
             """,
         hass,
     )
     variables = {
-        "value_a": b"\xc2\x9b",
-        "value_b": 0,
+        "value": 0xDEADBEEF,
     }
-    assert tpl.async_render(variables=variables) == 0x9BC2
+    assert tpl.async_render(variables=variables) == b"\xde\xad\xbe\xef"
+
+    # test with None value
+    tpl = template.Template(
+        """
+{{ pack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": None,
+    }
+    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'pack' unable to pack object 'None' with type 'NoneType' and format_string '>I' see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
+
+    # test with invalid filter
+    tpl = template.Template(
+        """
+{{ pack(value, 'invalid filter') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": 0xDEADBEEF,
+    }
+    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'pack' unable to pack object '3735928559' with type 'int' and format_string 'invalid filter' see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
+
+
+def test_unpack(hass, caplog):
+    """Test struct unpack method."""
+
+    # render as filter
+    tpl = template.Template(
+        """
+{{ value | unpack('>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"\xde\xad\xbe\xef",
+    }
+    assert tpl.async_render(variables=variables) == 0xDEADBEEF
+
+    # render as function
+    tpl = template.Template(
+        """
+{{ unpack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"\xde\xad\xbe\xef",
+    }
+    assert tpl.async_render(variables=variables) == 0xDEADBEEF
+
+    # unpack with offset
+    tpl = template.Template(
+        """
+{{ unpack(value, '>H', offset=2) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"\xde\xad\xbe\xef",
+    }
+    assert tpl.async_render(variables=variables) == 0xBEEF
+
+    # test with an empty bytes object
+    tpl = template.Template(
+        """
+{{ unpack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"",
+    }
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'unpack' unable to unpack object 'b''' with format_string '>I' and offset 0 see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
+
+    # test with invalid filter
+    tpl = template.Template(
+        """
+{{ unpack(value, 'invalid filter') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"",
+    }
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'unpack' unable to unpack object 'b''' with format_string 'invalid filter' and offset 0 see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
 
 
 def test_distance_function_with_1_state(hass):
@@ -3035,15 +3182,47 @@ def test_render_complex_handling_non_template_values(hass):
 def test_urlencode(hass):
     """Test the urlencode method."""
     tpl = template.Template(
-        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"),
+        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}"),
         hass,
     )
     assert tpl.async_render() == "foo=x%26y&bar=42"
     tpl = template.Template(
-        ("{% set string = 'the quick brown fox = true' %}" "{{ string | urlencode }}"),
+        ("{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}"),
         hass,
     )
     assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
+
+
+def test_iif(hass: HomeAssistant) -> None:
+    """Test the immediate if function/filter."""
+    tpl = template.Template("{{ (1 == 1) | iif }}", hass)
+    assert tpl.async_render() is True
+
+    tpl = template.Template("{{ (1 == 2) | iif }}", hass)
+    assert tpl.async_render() is False
+
+    tpl = template.Template("{{ (1 == 1) | iif('yes') }}", hass)
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template("{{ (1 == 2) | iif('yes') }}", hass)
+    assert tpl.async_render() is False
+
+    tpl = template.Template("{{ (1 == 2) | iif('yes', 'no') }}", hass)
+    assert tpl.async_render() == "no"
+
+    tpl = template.Template("{{ not_exists | default(None) | iif('yes', 'no') }}", hass)
+    assert tpl.async_render() == "no"
+
+    tpl = template.Template(
+        "{{ not_exists | default(None) | iif('yes', 'no', 'unknown') }}", hass
+    )
+    assert tpl.async_render() == "unknown"
+
+    tpl = template.Template("{{ iif(1 == 1) }}", hass)
+    assert tpl.async_render() is True
+
+    tpl = template.Template("{{ iif(1 == 2, 'yes', 'no') }}", hass)
+    assert tpl.async_render() == "no"
 
 
 async def test_cache_garbage_collection():

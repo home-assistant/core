@@ -1,0 +1,9 @@
+{
+  "domain": "diagnostics",
+  "name": "Diagnostics",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/diagnostics",
+  "dependencies": ["http"],
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

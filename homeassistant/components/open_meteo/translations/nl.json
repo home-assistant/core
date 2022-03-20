@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "zone": "Zone"
+                },
+                "description": "Kies locatie om te gebruiken voor weersvoorspelling"
+            }
+        }
+    }
+}

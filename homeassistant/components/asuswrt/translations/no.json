@@ -36,7 +36,7 @@
                     "dnsmasq": "Plasseringen i ruteren til dnsmasq.leases-filene",
                     "interface": "Grensesnittet du vil ha statistikk fra (f.eks. Eth0, eth1 osv.)",
                     "require_ip": "Enheter m\u00e5 ha IP (for tilgangspunktmodus)",
-                    "track_unknown": "Spor ukjente / ikke-navngitte enheter"
+                    "track_unknown": "Spor ukjente/ikke navngitte enheter"
                 },
                 "title": "AsusWRT-alternativer"
             }

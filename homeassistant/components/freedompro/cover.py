@@ -5,36 +5,36 @@ from pyfreedompro import put_state
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_WINDOW,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
 DEVICE_CLASS_MAP = {
-    "windowCovering": DEVICE_CLASS_BLIND,
-    "gate": DEVICE_CLASS_GATE,
-    "garageDoor": DEVICE_CLASS_GARAGE,
-    "door": DEVICE_CLASS_DOOR,
-    "window": DEVICE_CLASS_WINDOW,
+    "windowCovering": CoverDeviceClass.BLIND,
+    "gate": CoverDeviceClass.GATE,
+    "garageDoor": CoverDeviceClass.GARAGE,
+    "door": CoverDeviceClass.DOOR,
+    "window": CoverDeviceClass.WINDOW,
 }
 
 SUPPORTED_SENSORS = {"windowCovering", "gate", "garageDoor", "door", "window"}
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Freedompro cover."""
     api_key = entry.data[CONF_API_KEY]
     coordinator = hass.data[DOMAIN][entry.entry_id]

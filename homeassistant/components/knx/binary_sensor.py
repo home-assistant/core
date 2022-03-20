@@ -15,19 +15,14 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_COUNTER,
-    ATTR_SOURCE,
-    DATA_KNX_CONFIG,
-    DOMAIN,
-    SupportedPlatforms,
-)
+from .const import ATTR_COUNTER, ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxEntity
 from .schema import BinarySensorSchema
 
@@ -43,7 +38,7 @@ async def async_setup_entry(
 
     async_add_entities(
         KNXBinarySensor(xknx, entity_config)
-        for entity_config in config[SupportedPlatforms.BINARY_SENSOR.value]
+        for entity_config in config[Platform.BINARY_SENSOR]
     )
 
 

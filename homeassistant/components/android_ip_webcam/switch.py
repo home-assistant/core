@@ -1,5 +1,10 @@
 """Support for Android IP Webcam settings."""
+from __future__ import annotations
+
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_HOST,
@@ -12,7 +17,12 @@ from . import (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the IP Webcam switch platform."""
     if discovery_info is None:
         return
@@ -39,22 +49,12 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
 
         self._setting = setting
         self._mapped_name = KEY_MAP.get(self._setting, self._setting)
-        self._name = f"{name} {self._mapped_name}"
-        self._state = False
-
-    @property
-    def name(self):
-        """Return the name of the node."""
-        return self._name
+        self._attr_name = f"{name} {self._mapped_name}"
+        self._attr_is_on = False
 
     async def async_update(self):
         """Get the updated status of the switch."""
-        self._state = bool(self._ipcam.current_settings.get(self._setting))
-
-    @property
-    def is_on(self):
-        """Return the boolean response if the node is on."""
-        return self._state
+        self._attr_is_on = bool(self._ipcam.current_settings.get(self._setting))
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
@@ -66,7 +66,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
             await self._ipcam.record(record=True)
         else:
             await self._ipcam.change_setting(self._setting, True)
-        self._state = True
+        self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
@@ -79,7 +79,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
             await self._ipcam.record(record=False)
         else:
             await self._ipcam.change_setting(self._setting, False)
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     @property

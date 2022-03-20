@@ -9,11 +9,6 @@ from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_UDN,
-)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
@@ -121,11 +116,11 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by discovery."""
-        host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
+        host = urlparse(discovery_info.ssdp_location).hostname
         assert isinstance(host, str)
         self.context[CONF_HOST] = host
 
-        if uuid := discovery_info.get(ATTR_UPNP_UDN):
+        if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             if uuid.startswith("uuid:"):
                 uuid = uuid[5:]
             await self.async_set_unique_id(uuid)
@@ -143,7 +138,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         self._host = host
-        self._name = str(discovery_info.get(ATTR_UPNP_FRIENDLY_NAME) or host)
+        self._name = str(discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME) or host)
 
         self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_confirm()

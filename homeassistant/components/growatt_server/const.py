@@ -1,4 +1,6 @@
 """Define constants for the Growatt Server component."""
+from homeassistant.const import Platform
+
 CONF_PLANT_ID = "plant_id"
 
 DEFAULT_PLANT_ID = "0"
@@ -15,6 +17,6 @@ DEFAULT_URL = SERVER_URLS[0]
 
 DOMAIN = "growatt_server"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 LOGIN_INVALID_AUTH_CODE = "502"

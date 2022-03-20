@@ -4,10 +4,13 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import schemas
 
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.components.select.const import ATTR_OPTION, SERVICE_SELECT_OPTION
+from homeassistant.components.select.const import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -26,7 +29,7 @@ pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicle
 @pytest.fixture(autouse=True)
 def override_platforms():
     """Override PLATFORMS."""
-    with patch("homeassistant.components.renault.PLATFORMS", [SELECT_DOMAIN]):
+    with patch("homeassistant.components.renault.PLATFORMS", [Platform.SELECT]):
         yield
 
 
@@ -44,7 +47,7 @@ async def test_selects(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[SELECT_DOMAIN]
+    expected_entities = mock_vehicle[Platform.SELECT]
     assert len(entity_registry.entities) == len(expected_entities)
 
     check_entities(hass, entity_registry, expected_entities)
@@ -64,7 +67,7 @@ async def test_select_empty(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[SELECT_DOMAIN]
+    expected_entities = mock_vehicle[Platform.SELECT]
     assert len(entity_registry.entities) == len(expected_entities)
     check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
 
@@ -83,7 +86,7 @@ async def test_select_errors(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[SELECT_DOMAIN]
+    expected_entities = mock_vehicle[Platform.SELECT]
     assert len(entity_registry.entities) == len(expected_entities)
 
     check_entities_unavailable(hass, entity_registry, expected_entities)

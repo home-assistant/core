@@ -9,7 +9,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -53,6 +53,8 @@ async def async_setup_entry(
 
 class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
     """Representation of a Plenticore Select."""
+
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,

@@ -5,10 +5,8 @@ import logging
 import async_timeout
 from pyatag import AtagException, AtagOne
 
-from homeassistant.components.climate import DOMAIN as CLIMATE
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.water_heater import DOMAIN as WATER_HEATER
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -21,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "atag"
-PLATFORMS = [CLIMATE, WATER_HEATER, SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.WATER_HEATER, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -58,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Atag config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

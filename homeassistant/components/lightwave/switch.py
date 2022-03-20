@@ -1,11 +1,21 @@
 """Support for LightwaveRF switches."""
+from __future__ import annotations
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import LIGHTWAVE_LINK
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Find and return LightWave switches."""
     if not discovery_info:
         return
@@ -23,36 +33,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class LWRFSwitch(SwitchEntity):
     """Representation of a LightWaveRF switch."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, device_id, lwlink):
         """Initialize LWRFSwitch entity."""
-        self._name = name
+        self._attr_name = name
         self._device_id = device_id
-        self._state = None
         self._lwlink = lwlink
-
-    @property
-    def should_poll(self):
-        """No polling needed for a LightWave light."""
-        return False
-
-    @property
-    def name(self):
-        """Lightwave switch name."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Lightwave switch is on state."""
-        return self._state
 
     async def async_turn_on(self, **kwargs):
         """Turn the LightWave switch on."""
-        self._state = True
-        self._lwlink.turn_on_switch(self._device_id, self._name)
+        self._attr_is_on = True
+        self._lwlink.turn_on_switch(self._device_id, self._attr_name)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the LightWave switch off."""
-        self._state = False
-        self._lwlink.turn_off(self._device_id, self._name)
+        self._attr_is_on = False
+        self._lwlink.turn_off(self._device_id, self._attr_name)
         self.async_write_ha_state()

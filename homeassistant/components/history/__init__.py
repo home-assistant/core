@@ -12,9 +12,13 @@ from aiohttp import web
 from sqlalchemy import not_, or_
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import history, models as history_models
+from homeassistant.components.recorder import (
+    get_instance,
+    history,
+    models as history_models,
+)
 from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
     statistics_during_period,
@@ -28,6 +32,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
 )
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -88,7 +93,7 @@ def get_state(hass, utc_point_in_time, entity_id, run=None):
     return history.get_state(hass, utc_point_in_time, entity_id, run=None)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     conf = config.get(DOMAIN, {})
 
@@ -97,13 +102,9 @@ async def async_setup(hass, config):
     use_include_order = conf.get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
-    hass.components.frontend.async_register_built_in_panel(
-        "history", "history", "hass:chart-box"
-    )
-    hass.components.websocket_api.async_register_command(
-        ws_get_statistics_during_period
-    )
-    hass.components.websocket_api.async_register_command(ws_get_list_statistic_ids)
+    frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
+    websocket_api.async_register_command(hass, ws_get_statistics_during_period)
+    websocket_api.async_register_command(hass, ws_get_list_statistic_ids)
 
     return True
 
@@ -145,7 +146,7 @@ async def ws_get_statistics_during_period(
     else:
         end_time = None
 
-    statistics = await hass.async_add_executor_job(
+    statistics = await get_instance(hass).async_add_executor_job(
         statistics_during_period,
         hass,
         start_time,
@@ -167,7 +168,7 @@ async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fetch a list of available statistic_id."""
-    statistic_ids = await hass.async_add_executor_job(
+    statistic_ids = await get_instance(hass).async_add_executor_job(
         list_statistic_ids,
         hass,
         msg.get("statistic_type"),
@@ -182,7 +183,7 @@ class HistoryPeriodView(HomeAssistantView):
     name = "api:history:view-period"
     extra_urls = ["/api/history/period/{datetime}"]
 
-    def __init__(self, filters, use_include_order):
+    def __init__(self, filters: Filters | None, use_include_order: bool) -> None:
         """Initialize the history period view."""
         self.filters = filters
         self.use_include_order = use_include_order
@@ -235,7 +236,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         return cast(
             web.Response,
-            await hass.async_add_executor_job(
+            await get_instance(hass).async_add_executor_job(
                 self._sorted_significant_states_json,
                 hass,
                 start_time,
@@ -294,7 +295,7 @@ class HistoryPeriodView(HomeAssistantView):
         return self.json(result)
 
 
-def sqlalchemy_filter_from_include_exclude_conf(conf):
+def sqlalchemy_filter_from_include_exclude_conf(conf: ConfigType) -> Filters | None:
     """Build a sql filter from config."""
     filters = Filters()
     if exclude := conf.get(CONF_EXCLUDE):
@@ -312,15 +313,15 @@ def sqlalchemy_filter_from_include_exclude_conf(conf):
 class Filters:
     """Container for the configured include and exclude filters."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise the include and exclude filters."""
-        self.excluded_entities = []
-        self.excluded_domains = []
-        self.excluded_entity_globs = []
+        self.excluded_entities: list[str] = []
+        self.excluded_domains: list[str] = []
+        self.excluded_entity_globs: list[str] = []
 
-        self.included_entities = []
-        self.included_domains = []
-        self.included_entity_globs = []
+        self.included_entities: list[str] = []
+        self.included_domains: list[str] = []
+        self.included_entity_globs: list[str] = []
 
     def apply(self, query):
         """Apply the entity filter."""

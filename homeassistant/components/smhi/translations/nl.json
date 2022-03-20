@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
         "error": {
             "name_exists": "Naam bestaat al",
             "wrong_location": "Locatie alleen Zweden"

@@ -1,15 +1,14 @@
 """The Modem Caller ID integration."""
 from phone_modem import PhoneModem
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DATA_KEY_API, DOMAIN, EXCEPTIONS
 
-PLATFORMS = [SENSOR_DOMAIN]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

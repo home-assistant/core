@@ -7,10 +7,9 @@ from typing import Any, cast
 
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_CHANNELS,
+    MEDIA_CLASS_APP,
+    MEDIA_TYPE_APP,
+    MEDIA_TYPE_APPS,
 )
 from homeassistant.core import HomeAssistant, callback
 
@@ -58,25 +57,29 @@ class MediaSourceItem:
             base = BrowseMediaSource(
                 domain=None,
                 identifier=None,
-                media_class=MEDIA_CLASS_DIRECTORY,
-                media_content_type=MEDIA_TYPE_CHANNELS,
+                media_class=MEDIA_CLASS_APP,
+                media_content_type=MEDIA_TYPE_APPS,
                 title="Media Sources",
                 can_play=False,
                 can_expand=True,
-                children_media_class=MEDIA_CLASS_CHANNEL,
+                children_media_class=MEDIA_CLASS_APP,
             )
-            base.children = [
-                BrowseMediaSource(
-                    domain=source.domain,
-                    identifier=None,
-                    media_class=MEDIA_CLASS_CHANNEL,
-                    media_content_type=MEDIA_TYPE_CHANNEL,
-                    title=source.name,
-                    can_play=False,
-                    can_expand=True,
-                )
-                for source in self.hass.data[DOMAIN].values()
-            ]
+            base.children = sorted(
+                (
+                    BrowseMediaSource(
+                        domain=source.domain,
+                        identifier=None,
+                        media_class=MEDIA_CLASS_APP,
+                        media_content_type=MEDIA_TYPE_APP,
+                        thumbnail=f"https://brands.home-assistant.io/_/{source.domain}/logo.png",
+                        title=source.name,
+                        can_play=False,
+                        can_expand=True,
+                    )
+                    for source in self.hass.data[DOMAIN].values()
+                ),
+                key=lambda item: item.title,
+            )
             return base
 
         return await self.async_media_source().async_browse_media(self)

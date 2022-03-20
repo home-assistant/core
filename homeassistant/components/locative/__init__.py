@@ -7,24 +7,28 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+from homeassistant.components import webhook
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_WEBHOOK_ID,
     STATE_NOT_HOME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "locative"
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
-PLATFORMS = [DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 ATTR_DEVICE_ID = "device"
 ATTR_TRIGGER = "trigger"
@@ -57,7 +61,7 @@ WEBHOOK_SCHEMA = vol.All(
 )
 
 
-async def async_setup(hass, hass_config):
+async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Locative component."""
     hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
     return True
@@ -82,7 +86,7 @@ async def handle_webhook(hass, webhook_id, request):
         return web.Response(text=f"Setting location to {location_name}")
 
     if direction == "exit":
-        current_state = hass.states.get(f"{DEVICE_TRACKER}.{device}")
+        current_state = hass.states.get(f"{Platform.DEVICE_TRACKER}.{device}")
 
         if current_state is None or current_state.state == location_name:
             location_name = STATE_NOT_HOME
@@ -111,19 +115,19 @@ async def handle_webhook(hass, webhook_id, request):
     )
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.components.webhook.async_register(
-        DOMAIN, "Locative", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    webhook.async_register(
+        hass, DOMAIN, "Locative", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
