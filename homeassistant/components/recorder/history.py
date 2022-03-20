@@ -49,16 +49,17 @@ BASE_STATES = [
     States.domain,
     States.entity_id,
     States.state,
-    States.attributes,
     States.last_changed,
     States.last_updated,
 ]
 QUERY_STATE_NO_ATTR = [
     *BASE_STATES,
+    literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
 ]
 QUERY_STATES = [
     *BASE_STATES,
+    States.attributes,
     StateAttributes.shared_attrs,
 ]
 
@@ -156,11 +157,14 @@ def get_significant_states_with_session(
     )
 
 
-def state_changes_during_period(hass, start_time, end_time=None, entity_id=None):
+def state_changes_during_period(
+    hass, start_time, end_time=None, entity_id=None, no_attributes=False
+):
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
+        query_keys = QUERY_STATE_NO_ATTR if no_attributes else QUERY_STATES
         baked_query = hass.data[HISTORY_BAKERY](
-            lambda session: session.query(*QUERY_STATES)
+            lambda session: session.query(*query_keys)
         )
 
         baked_query += lambda q: q.filter(
@@ -177,9 +181,10 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
             baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
             entity_id = entity_id.lower()
 
-        baked_query += lambda q: q.outerjoin(
-            StateAttributes, States.attributes_id == StateAttributes.attributes_id
-        )
+        if not no_attributes:
+            baked_query += lambda q: q.outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
         baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
 
         states = execute(
@@ -234,7 +239,14 @@ def get_last_state_changes(hass, number_of_states, entity_id):
         )
 
 
-def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None):
+def get_states(
+    hass,
+    utc_point_in_time,
+    entity_ids=None,
+    run=None,
+    filters=None,
+    no_attributes=False,
+):
     """Return the states at a specific point in time."""
     if run is None:
         run = recorder.run_information_from_instance(hass, utc_point_in_time)
@@ -245,7 +257,7 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
 
     with session_scope(hass=hass) as session:
         return _get_states_with_session(
-            hass, session, utc_point_in_time, entity_ids, run, filters
+            hass, session, utc_point_in_time, entity_ids, run, filters, no_attributes
         )
 
 
@@ -261,7 +273,7 @@ def _get_states_with_session(
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
         return _get_single_entity_states_with_session(
-            hass, session, utc_point_in_time, entity_ids[0]
+            hass, session, utc_point_in_time, entity_ids[0], no_attributes
         )
 
     if run is None:
@@ -345,19 +357,21 @@ def _get_states_with_session(
     return [LazyState(row, attr_cache) for row in execute(query)]
 
 
-def _get_single_entity_states_with_session(hass, session, utc_point_in_time, entity_id):
+def _get_single_entity_states_with_session(
+    hass, session, utc_point_in_time, entity_id, no_attributes=False
+):
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
-    baked_query = hass.data[HISTORY_BAKERY](
-        lambda session: session.query(*QUERY_STATES)
-    )
+    query_keys = QUERY_STATE_NO_ATTR if no_attributes else QUERY_STATES
+    baked_query = hass.data[HISTORY_BAKERY](lambda session: session.query(*query_keys))
     baked_query += lambda q: q.filter(
         States.last_updated < bindparam("utc_point_in_time"),
         States.entity_id == bindparam("entity_id"),
     )
-    baked_query += lambda q: q.outerjoin(
-        StateAttributes, States.attributes_id == StateAttributes.attributes_id
-    )
+    if not no_attributes:
+        baked_query += lambda q: q.outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
     baked_query += lambda q: q.order_by(States.last_updated.desc())
     baked_query += lambda q: q.limit(1)
 
