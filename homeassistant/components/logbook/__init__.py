@@ -493,6 +493,11 @@ def _get_events(
 
         query = query.order_by(Events.time_fired)
 
+        _LOGGER.debug(
+            "Running logbook query: %s",
+            str(query.statement.compile(compile_kwargs={"literal_binds": True})),
+        )
+
         return list(
             humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
         )
