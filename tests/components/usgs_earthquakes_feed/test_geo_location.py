@@ -90,7 +90,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass):
+async def test_setup(hass, legacy_patchable_time):
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -185,7 +185,7 @@ async def test_setup(hass):
             }
             assert round(abs(float(state.state) - 25.5), 7) == 0
 
-            # Simulate an update - one existing, one new entry,
+            # Simulate an update - two existing, one new entry,
             # one outdated entry
             mock_feed_update.return_value = (
                 "OK",
