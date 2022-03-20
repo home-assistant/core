@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "protect_version": "La version minimale requise est la v1.20.0. Veuillez mettre \u00e0 jour UniFi Protect, puis r\u00e9essayer.",
             "unknown": "Erreur inattendue"
         },

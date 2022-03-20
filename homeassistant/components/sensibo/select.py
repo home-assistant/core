@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboBaseEntity
+from .entity import SensiboDeviceBaseEntity
 
 
 @dataclass
@@ -58,11 +58,11 @@ async def async_setup_entry(
         SensiboSelect(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
         for description in SELECT_TYPES
-        if device_data["hvac_modes"] and description.key in device_data["full_features"]
+        if description.key in device_data["full_features"]
     )
 
 
-class SensiboSelect(SensiboBaseEntity, SelectEntity):
+class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
     """Representation of a Sensibo Select."""
 
     entity_description: SensiboSelectEntityDescription

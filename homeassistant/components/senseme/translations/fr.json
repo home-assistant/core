@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_host": "Nom d'h\u00f4te ou adresse IP invalide"
+            "invalid_host": "Nom d'h\u00f4te ou adresse IP non valide"
         },
         "flow_title": "{name} - {model} ({host})",
         "step": {

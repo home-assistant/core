@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboBaseEntity
+from .entity import SensiboDeviceBaseEntity
 
 
 @dataclass
@@ -66,11 +66,10 @@ async def async_setup_entry(
         SensiboNumber(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
         for description in NUMBER_TYPES
-        if device_data["hvac_modes"] and device_data["temp"]
     )
 
 
-class SensiboNumber(SensiboBaseEntity, NumberEntity):
+class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
     """Representation of a Sensibo numbers."""
 
     entity_description: SensiboNumberEntityDescription

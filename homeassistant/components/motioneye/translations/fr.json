@@ -6,8 +6,8 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
-            "invalid_url": "URL invalide",
+            "invalid_auth": "Authentification non valide",
+            "invalid_url": "URL non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {

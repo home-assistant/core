@@ -4,7 +4,7 @@
             "binary_sensor": {
                 "data": {
                     "all": "Minden entit\u00e1s",
-                    "entities": "Csoporttagok",
+                    "entities": "A csoport tagjai",
                     "name": "N\u00e9v"
                 },
                 "description": "Ha \u201eMinden entit\u00e1s\u201d enged\u00e9lyezve van, a csoport \u00e1llapota csak akkor van bekapcsolva, ha minden tag \u00e1llapota bekapcsolt. Ha \u201eMinden entit\u00e1s\u201d le van tiltva, a csoport \u00e1llapota akkor van bekapcsolva, ha b\u00e1rmelyik tag bekapcsolt \u00e1llapotban van.",
@@ -85,27 +85,27 @@
             "binary_sensor_options": {
                 "data": {
                     "all": "Minden entit\u00e1s",
-                    "entities": "Csoporttagok"
+                    "entities": "A csoport tagjai"
                 }
             },
             "cover_options": {
                 "data": {
-                    "entities": "Csoporttagok"
+                    "entities": "A csoport tagjai"
                 }
             },
             "fan_options": {
                 "data": {
-                    "entities": "Csoporttagok"
+                    "entities": "A csoport tagjai"
                 }
             },
             "light_options": {
                 "data": {
-                    "entities": "Csoporttagok"
+                    "entities": "A csoport tagjai"
                 }
             },
             "media_player_options": {
                 "data": {
-                    "entities": "Csoporttagok"
+                    "entities": "A csoport tagjai"
                 }
             }
         }

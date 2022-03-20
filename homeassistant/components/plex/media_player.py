@@ -50,6 +50,7 @@ from .const import (
     SERVERS,
     TRANSIENT_DEVICE_MODELS,
 )
+from .errors import MediaNotFound
 from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
@@ -510,7 +511,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             try:
                 playqueue = self.plex_server.get_playqueue(playqueue_id)
             except plexapi.exceptions.NotFound as err:
-                raise HomeAssistantError(
+                raise MediaNotFound(
                     f"PlayQueue '{playqueue_id}' could not be found"
                 ) from err
         else:
@@ -518,9 +519,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
             offset = src.pop("offset", 0) * 1000
             resume = src.pop("resume", False)
             media = self.plex_server.lookup_media(media_type, **src)
-
-            if media is None:
-                raise HomeAssistantError(f"Media could not be found: {media_id}")
 
             if resume and not offset:
                 offset = media.viewOffset

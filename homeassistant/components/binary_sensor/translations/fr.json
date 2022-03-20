@@ -49,7 +49,7 @@
             "is_sound": "{entity_name} d\u00e9tecte du son",
             "is_tampered": "{entity_name} d\u00e9tecte une manipulation",
             "is_unsafe": "{entity_name} est dangereux",
-            "is_update": "{entity_name} a une mise \u00e0 jour disponible",
+            "is_update": "Une mise \u00e0 jour est disponible pour {entity_name}",
             "is_vibration": "{entity_name} d\u00e9tecte une vibration"
         },
         "trigger_type": {
@@ -88,7 +88,7 @@
             "not_powered": "{entity_name} non aliment\u00e9",
             "not_present": "{entity_name} non pr\u00e9sent",
             "not_running": "{entity_name} n'est plus en cours d'ex\u00e9cution",
-            "not_tampered": "{entity_name} a cess\u00e9 de d\u00e9tecter la falsification",
+            "not_tampered": "{entity_name} a cess\u00e9 de d\u00e9tecter une manipulation",
             "not_unsafe": "{entity_name} est devenu s\u00fbr",
             "occupied": "{entity_name} est devenu occup\u00e9",
             "opened": "{entity_name} ouvert",
@@ -99,11 +99,11 @@
             "running": "{entity_name} commenc\u00e9 \u00e0 s'ex\u00e9cuter",
             "smoke": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter la fum\u00e9e",
             "sound": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter le son",
-            "tampered": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter une falsification",
+            "tampered": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter une manipulation",
             "turned_off": "{entity_name} est d\u00e9sactiv\u00e9",
             "turned_on": "{entity_name} est activ\u00e9",
             "unsafe": "{entity_name} est devenu dangereux",
-            "update": "{entity_name} a une mise \u00e0 jour disponible",
+            "update": "Une mise \u00e0 jour est disponible pour {entity_name}",
             "vibration": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter les vibrations"
         }
     },

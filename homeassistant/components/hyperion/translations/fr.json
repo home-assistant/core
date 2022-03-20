@@ -20,7 +20,7 @@
                     "create_token": "Cr\u00e9er automatiquement un nouveau jeton",
                     "token": "Ou fournir un jeton pr\u00e9existant"
                 },
-                "description": "Configurer l'autorisation sur votre serveur Hyperion Ambilight"
+                "description": "Configurez l'autorisation vers votre serveur Hyperion Ambilight"
             },
             "confirm": {
                 "description": "Voulez-vous ajouter cet Hyperion Ambilight \u00e0 Home Assistant\u00a0?\n\n**H\u00f4te\u00a0:** {host}\n**Port\u00a0:** {port}\n**ID\u00a0:** {id}",
