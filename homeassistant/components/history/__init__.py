@@ -362,7 +362,7 @@ class Filters:
             includes.append(
                 or_(
                     *[
-                        history_models.States.entity_id.startswith(f"{domain}.")
+                        history_models.States.entity_id.like(f"{domain}.%")
                         for domain in self.included_domains
                     ]
                 ).self_group()
@@ -377,7 +377,7 @@ class Filters:
             excludes.append(
                 or_(
                     *[
-                        history_models.States.entity_id.startswith(f"{domain}.")
+                        history_models.States.entity_id.like(f"{domain}.%")
                         for domain in self.excluded_domains
                     ]
                 ).self_group()
