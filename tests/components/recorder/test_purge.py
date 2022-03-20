@@ -710,9 +710,9 @@ async def test_purge_filtered_states(
         assert states_sensor_excluded.count() == 0
 
         assert session.query(States).get(72).old_state_id is None
-        assert session.query(States).get(72).attributes_id is None
+        assert session.query(States).get(72).attributes_id == 71
         assert session.query(States).get(73).old_state_id is None
-        assert session.query(States).get(73).attributes_id is None
+        assert session.query(States).get(73).attributes_id == 71
 
         final_keep_state = session.query(States).get(74)
         assert final_keep_state.old_state_id == 62  # should have been kept

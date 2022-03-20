@@ -421,7 +421,7 @@ boto3==1.20.24
 bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
-broadlink==0.18.0
+broadlink==0.18.1
 
 # homeassistant.components.brother
 brother==1.1.0
@@ -1353,7 +1353,7 @@ pyatome==0.1.1
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.11
+pyaussiebb==0.0.14
 
 # homeassistant.components.balboa
 pybalboa==0.13
@@ -1915,7 +1915,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.29
+python-smarttub==0.0.30
 
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
@@ -1943,6 +1943,9 @@ pythonegardia==1.0.40
 
 # homeassistant.components.tile
 pytile==2022.02.0
+
+# homeassistant.components.tomorrowio
+pytomorrowio==0.1.0
 
 # homeassistant.components.touchline
 pytouchline==0.7
@@ -2115,7 +2118,7 @@ sendgrid==6.8.2
 sense_energy==0.10.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.7
+sentry-sdk==1.5.8
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
