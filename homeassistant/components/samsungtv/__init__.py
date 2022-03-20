@@ -1,6 +1,7 @@
 """The Samsung TV integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
 import socket
 from typing import Any
@@ -16,7 +17,6 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
-    CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -25,13 +25,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .bridge import (
-    SamsungTVBridge,
-    SamsungTVLegacyBridge,
-    SamsungTVWSBridge,
-    async_get_device_info,
-    mac_from_device_info,
-)
+from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     CONF_MODEL,
     CONF_ON_ACTION,
@@ -101,14 +95,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @callback
 def _async_get_device_bridge(
     hass: HomeAssistant, data: dict[str, Any]
-) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
+) -> SamsungTVBridge:
     """Get device bridge."""
     return SamsungTVBridge.get_bridge(
         hass,
         data[CONF_METHOD],
         data[CONF_HOST],
         data[CONF_PORT],
-        data.get(CONF_TOKEN),
+        data,
     )
 
 
@@ -118,15 +112,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Initialize bridge
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
 
-    # Ensure new token gets saved against the config_entry
+    # Ensure updates get saved against the config_entry
     @callback
-    def _update_token() -> None:
+    def _update_config_entry(updates: Mapping[str, Any]) -> None:
         """Update config entry with the new token."""
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_TOKEN: bridge.token}
-        )
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
-    bridge.register_new_token_callback(_update_token)
+    bridge.register_update_config_entry_callback(_update_config_entry)
 
     async def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
@@ -144,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: ConfigEntry
-) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
+) -> SamsungTVBridge:
     """Create a bridge object and update any missing data in the config entry."""
     updated_data: dict[str, str | int] = {}
     host: str = entry.data[CONF_HOST]

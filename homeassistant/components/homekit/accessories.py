@@ -174,8 +174,18 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
         elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
             a_type = "HumiditySensor"
         elif (
+            device_class == SensorDeviceClass.PM10
+            or SensorDeviceClass.PM10 in state.entity_id
+        ):
+            a_type = "PM10Sensor"
+        elif (
             device_class == SensorDeviceClass.PM25
             or SensorDeviceClass.PM25 in state.entity_id
+        ):
+            a_type = "PM25Sensor"
+        elif (
+            device_class == SensorDeviceClass.GAS
+            or SensorDeviceClass.GAS in state.entity_id
         ):
             a_type = "AirQualitySensor"
         elif device_class == SensorDeviceClass.CO:

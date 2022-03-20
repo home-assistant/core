@@ -62,7 +62,7 @@ jobs:
           integrations=$(ls -Ad ./homeassistant/components/[!_]*  | xargs -n 1 basename)
           touch .integration_paths.yaml
           for integration in $integrations; do
-            echo "${integration}: [homeassistant/components/${integration}/*, tests/components/${integration}/*]" \
+            echo "${integration}: [homeassistant/components/${integration}/**, tests/components/${integration}/**]" \
               >> .integration_paths.yaml;
           done
           echo "Result:"
@@ -686,7 +686,7 @@ jobs:
 
   pip-check:
     runs-on: ubuntu-latest
-    if: needs.changes.outputs.requirements == 'true'
+    if: needs.changes.outputs.requirements == 'true' || github.event.inputs.full == 'true'
     needs:
       - changes
       - prepare-tests
@@ -807,22 +807,6 @@ jobs:
             --cov homeassistant.components.${{ matrix.group }} \
             --cov-report=xml \
             --cov-report=term-missing \
-            -o console_output_style=count \
-            --durations=0 \
-            --durations-min=1 \
-            -p no:sugar \
-            tests/components/${{ matrix.group }}
-      - name: Run pytest (partially); no coverage
-        if: needs.changes.outputs.test_full_suite == 'false'
-        timeout-minutes: 10
-        run: |
-          . venv/bin/activate
-          python --version
-          python3 -X dev -m pytest \
-            -qq \
-            --timeout=9 \
-            --durations=10 \
-            -n auto \
             -o console_output_style=count \
             --durations=0 \
             --durations-min=1 \

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Sequence
 from contextlib import asynccontextmanager, suppress
+from contextvars import ContextVar
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -109,6 +110,7 @@ ATTR_MAX = "max"
 
 DATA_SCRIPTS = "helpers.script"
 DATA_SCRIPT_BREAKPOINTS = "helpers.script_breakpoints"
+DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED = "helpers.script_not_allowed"
 RUN_ID_ANY = "*"
 NODE_ANY = "*"
 
@@ -125,6 +127,8 @@ ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated action
 SCRIPT_BREAKPOINT_HIT = "script_breakpoint_hit"
 SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
+
+script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", default=None)
 
 
 def action_trace_append(variables, path):
@@ -340,6 +344,12 @@ class _ScriptRun:
 
     async def async_run(self) -> None:
         """Run script."""
+        # Push the script to the script execution stack
+        if (script_stack := script_stack_cv.get()) is None:
+            script_stack = []
+            script_stack_cv.set(script_stack)
+        script_stack.append(id(self._script))
+
         try:
             self._log("Running %s", self._script.running_description)
             for self._step, self._action in enumerate(self._script.sequence):
@@ -355,6 +365,8 @@ class _ScriptRun:
             script_execution_set("error")
             raise
         finally:
+            # Pop the script from the script execution stack
+            script_stack.pop()
             self._finish()
 
     async def _async_step(self, log_exceptions):
@@ -848,12 +860,13 @@ class _QueuedScriptRun(_ScriptRun):
                 {lock_task, stop_task}, return_when=asyncio.FIRST_COMPLETED
             )
         except asyncio.CancelledError:
-            lock_task.cancel()
             self._finish()
             raise
+        else:
+            self.lock_acquired = lock_task.done() and not lock_task.cancelled()
         finally:
+            lock_task.cancel()
             stop_task.cancel()
-        self.lock_acquired = lock_task.done() and not lock_task.cancelled()
 
         # If we've been told to stop, then just finish up. Otherwise, we've acquired the
         # lock so we can go ahead and start the run.
@@ -872,6 +885,7 @@ class _QueuedScriptRun(_ScriptRun):
 
 async def _async_stop_scripts_after_shutdown(hass, point_in_time):
     """Stop running Script objects started after shutdown."""
+    hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
         script for script in hass.data[DATA_SCRIPTS] if script["instance"].is_running
     ]
@@ -1181,6 +1195,12 @@ class Script:
             )
             context = Context()
 
+        # Prevent spawning new script runs when Home Assistant is shutting down
+        if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
+            self._log("Home Assistant is shutting down, starting script blocked")
+            return
+
+        # Prevent spawning new script runs if not allowed by script mode
         if self.is_running:
             if self.script_mode == SCRIPT_MODE_SINGLE:
                 if self._max_exceeded != "SILENT":
@@ -1217,6 +1237,18 @@ class Script:
             variables["context"] = context
         else:
             variables = cast(dict, run_variables)
+
+        # Prevent non-allowed recursive calls which will cause deadlocks when we try to
+        # stop (restart) or wait for (queued) our own script run.
+        script_stack = script_stack_cv.get()
+        if (
+            self.script_mode in (SCRIPT_MODE_RESTART, SCRIPT_MODE_QUEUED)
+            and (script_stack := script_stack_cv.get()) is not None
+            and id(self) in script_stack
+        ):
+            script_execution_set("disallowed_recursion_detected")
+            self._log("Disallowed recursion detected", level=logging.WARNING)
+            return
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun

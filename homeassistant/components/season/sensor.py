@@ -1,4 +1,4 @@
-"""Support for tracking which astronomical or meteorological season it is."""
+"""Support for Season sensors."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -12,19 +12,18 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_TYPE, TIME_DAYS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import as_local, get_time_zone, utcnow
 
+from .const import DEFAULT_NAME, DOMAIN, TYPE_ASTRONOMICAL, VALID_TYPES
+
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Season"
-
-DEVICE_CLASS_SEASON = "season__season"
 
 EQUATOR = "equator"
 NORTHERN = "northern"
@@ -36,20 +35,12 @@ STATE_SPRING = "spring"
 STATE_SUMMER = "summer"
 STATE_WINTER = "winter"
 
-TYPE_ASTRONOMICAL = "astronomical"
-TYPE_METEOROLOGICAL = "meteorological"
-
-ENTITY_SEASON = "season"
+ENTITY_SEASON = DOMAIN
 ENTITY_DAYS_LEFT = "days_left"
 ENTITY_DAYS_IN = "days_in"
 ENTITY_NEXT_SEASON = "next_season"
 
 ATTR_LAST_UPDATED = "last_updated"
-
-VALID_TYPES = [
-    TYPE_ASTRONOMICAL,
-    TYPE_METEOROLOGICAL,
-]
 
 HEMISPHERE_SEASON_SWAP = {
     STATE_WINTER: STATE_SUMMER,
@@ -78,9 +69,9 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=25)
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ENTITY_SEASON,
-        name="Season",
+        name=DEFAULT_NAME,
         icon=ICON_DEFAULT,
-        device_class=DEVICE_CLASS_SEASON,
+        device_class="season__season",
     ),
     SensorEntityDescription(
         key=ENTITY_DAYS_LEFT,
@@ -116,94 +107,45 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Display the current season."""
-    _type: str = config[CONF_TYPE]
-    name: str = config[CONF_NAME]
+    """Set up the season sensor platform."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the platform from config entry."""
+    hemisphere = EQUATOR
     if hass.config.latitude < 0:
         hemisphere = SOUTHERN
     elif hass.config.latitude > 0:
-        hemisphere = NORTHERN
-    else:
-        hemisphere = EQUATOR
+        hemisphere = NORTHERN        
 
     if hemisphere == EQUATOR:
         _LOGGER.warning(
             "Season cannot be determined for equator, 'unknown' state will be shown"
         )
 
-    _LOGGER.debug(_type)
-
-    season_data = SeasonData(hemisphere, _type, hass.config.time_zone)
+    season_data = SeasonData(entry, hemisphere, hass.config.time_zone)
 
     await season_data.async_update()
 
     entities = []
     for description in SENSOR_TYPES:
-        if description.key in ENTITY_SEASON:
-            entities.append(Season(season_data, description, name))
-        elif hemisphere not in EQUATOR:
-            entities.append(Season(season_data, description, name))
+        if description.key == ENTITY_SEASON:
+            entities.append(SeasonSensorEntity(season_data, description, entry))
+        elif hemisphere != EQUATOR:
+            entities.append(SeasonSensorEntity(season_data, description, entry))
 
     async_add_entities(entities, True)
-
-
-class Season(SensorEntity):
-    """Representation of the current season."""
-
-    def __init__(
-        self,
-        season_data,
-        description: SensorEntityDescription,
-        name,
-    ):
-        """Initialize the sensor."""
-        self.entity_description = description
-        if name in DEFAULT_NAME and description.key != ENTITY_SEASON:
-            self._attr_name = f"{name} {description.name}"
-        else:
-            self._attr_name = f"{description.name}"
-        self.season_data = season_data
-        self.datetime = None
-
-    async def async_update(self):
-        """Get the latest data from Season and update the state."""
-        await self.season_data.async_update()
-        if self.entity_description.key in self.season_data.data:
-            self._attr_native_value = self.season_data.data[self.entity_description.key]
-            if self.entity_description.key in ENTITY_SEASON:
-                self._attr_icon = SEASON_ICONS[
-                    self.season_data.data[self.entity_description.key]
-                ]
-                self._attr_extra_state_attributes = {
-                    ATTR_LAST_UPDATED: self.season_data.data[ATTR_LAST_UPDATED]
-                }
-
-
-class SeasonData:
-    """Calculate the current season."""
-
-    def __init__(self, hemisphere, _type, time_zone):
-        """Initialize the data object."""
-
-        self.hemisphere = hemisphere
-        self.time_zone = time_zone
-        self.type = _type
-        self.datetime = None
-        self._data = {}
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
-        """Get the latest data from season."""
-        # Update data
-        self._data = get_season(
-            self,
-            utcnow().replace(tzinfo=None),
-            self.hemisphere,
-            self.type,
-            self.time_zone,
-            self._data,
-        )
 
 
 def get_season(
@@ -287,3 +229,66 @@ def get_season(
         }
 
     return data
+
+
+class SeasonData:
+    """Calculate the current season."""
+
+    def __init__(self, entry: ConfigEntry, hemisphere: str, time_zone: str) -> None:
+        """Initialize the data object."""
+        self.hemisphere = hemisphere
+        self.time_zone = time_zone
+        self.type = entry.data[CONF_TYPE]
+        self.datetime = None
+        self._data = {}
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def async_update(self):
+        """Get the latest data for season."""
+        # Update data
+        self._data = get_season(
+            self,
+            utcnow().replace(tzinfo=None),
+            self.hemisphere,
+            self.type,
+            self.time_zone,
+            self._data,
+        )
+
+
+class SeasonSensorEntity(SensorEntity):
+    """Representation of the current season."""
+
+    def __init__(
+        self,
+        season_data,
+        description: SensorEntityDescription,
+        entry: ConfigEntry,
+    ):
+        """Initialize the sensor."""
+        name = entry.title
+        unique_id = entry.entry_id
+        self.entity_description = description
+        if description.key == ENTITY_SEASON:
+            self._attr_name = f"{name}"
+            self._attr_unique_id = f"{unique_id}"
+        else:
+            self._attr_name = f"{name} {description.name}"
+            self._attr_unique_id = f"{unique_id}_{description.key}"
+        self.season_data = season_data
+        self.datetime = None
+
+    async def async_update(self):
+        """Get the latest data from Season and update the states."""
+        await self.season_data.async_update()
+        if self.entity_description.key in self.season_data.data:
+            self._attr_native_value = self.season_data.data[self.entity_description.key]
+            if self.entity_description.key in ENTITY_SEASON:
+                self._attr_icon = ICON_DEFAULT
+                if self._attr_native_value:
+                    self._attr_icon = SEASON_ICONS[
+                        self.season_data.data[self.entity_description.key]
+                    ]
+                self._attr_extra_state_attributes = {
+                    ATTR_LAST_UPDATED: self.season_data.data[ATTR_LAST_UPDATED]
+                }

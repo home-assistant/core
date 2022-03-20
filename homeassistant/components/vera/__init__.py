@@ -214,14 +214,14 @@ def map_vera_device(
     )
 
 
-DeviceType = TypeVar("DeviceType", bound=veraApi.VeraDevice)
+_DeviceTypeT = TypeVar("_DeviceTypeT", bound=veraApi.VeraDevice)
 
 
-class VeraDevice(Generic[DeviceType], Entity):
+class VeraDevice(Generic[_DeviceTypeT], Entity):
     """Representation of a Vera device entity."""
 
     def __init__(
-        self, vera_device: DeviceType, controller_data: ControllerData
+        self, vera_device: _DeviceTypeT, controller_data: ControllerData
     ) -> None:
         """Initialize the device."""
         self.vera_device = vera_device
@@ -242,7 +242,7 @@ class VeraDevice(Generic[DeviceType], Entity):
         """Subscribe to updates."""
         self.controller.register(self.vera_device, self._update_callback)
 
-    def _update_callback(self, _device: DeviceType) -> None:
+    def _update_callback(self, _device: _DeviceTypeT) -> None:
         """Update the state."""
         self.schedule_update_ha_state(True)
 
