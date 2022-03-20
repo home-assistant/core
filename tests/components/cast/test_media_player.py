@@ -39,6 +39,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, network
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -1225,15 +1226,18 @@ async def test_entity_control(hass: HomeAssistant):
     chromecast.media_controller.pause.assert_called_once_with()
 
     # Media previous
-    await common.async_media_previous_track(hass, entity_id)
+    with pytest.raises(HomeAssistantError):
+        await common.async_media_previous_track(hass, entity_id)
     chromecast.media_controller.queue_prev.assert_not_called()
 
     # Media next
-    await common.async_media_next_track(hass, entity_id)
+    with pytest.raises(HomeAssistantError):
+        await common.async_media_next_track(hass, entity_id)
     chromecast.media_controller.queue_next.assert_not_called()
 
     # Media seek
-    await common.async_media_seek(hass, 123, entity_id)
+    with pytest.raises(HomeAssistantError):
+        await common.async_media_seek(hass, 123, entity_id)
     chromecast.media_controller.seek.assert_not_called()
 
     # Enable support for queue and seek

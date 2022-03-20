@@ -27,6 +27,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -233,11 +234,19 @@ async def _test_service_call(
 
 
 async def _test_no_service_call(
-    hass, service, method, entity_id, partition_id, **kwargs
+    hass, service, method, entity_id, partition_id, expect_ha_error=False, **kwargs
 ):
-    with patch(f"homeassistant.components.risco.RiscoAPI.{method}") as set_mock:
-        await _call_alarm_service(hass, service, entity_id, **kwargs)
-        set_mock.assert_not_awaited()
+    try:
+        with patch(f"homeassistant.components.risco.RiscoAPI.{method}") as set_mock:
+            await _call_alarm_service(hass, service, entity_id, **kwargs)
+            set_mock.assert_not_awaited()
+    except HomeAssistantError:
+        if expect_ha_error:
+            return
+        else:
+            raise
+
+    assert not expect_ha_error, "Expected Home Assistant error"
 
 
 async def _call_alarm_service(hass, service, entity_id, **kwargs):
@@ -338,7 +347,13 @@ async def test_sets_with_correct_code(hass, two_part_alarm):
         hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_ENTITY_ID, 1, "C", **code
     )
     await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "partial_arm", FIRST_ENTITY_ID, 0, **code
+        hass,
+        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        "partial_arm",
+        FIRST_ENTITY_ID,
+        0,
+        expect_ha_error=True,
+        **code,
     )
     await _test_no_service_call(
         hass,
@@ -346,6 +361,7 @@ async def test_sets_with_correct_code(hass, two_part_alarm):
         "partial_arm",
         SECOND_ENTITY_ID,
         1,
+        expect_ha_error=True,
         **code,
     )
 
@@ -380,7 +396,13 @@ async def test_sets_with_incorrect_code(hass, two_part_alarm):
         hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_ENTITY_ID, 1, **code
     )
     await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "partial_arm", FIRST_ENTITY_ID, 0, **code
+        hass,
+        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        "partial_arm",
+        FIRST_ENTITY_ID,
+        0,
+        expect_ha_error=True,
+        **code,
     )
     await _test_no_service_call(
         hass,
@@ -388,5 +410,6 @@ async def test_sets_with_incorrect_code(hass, two_part_alarm):
         "partial_arm",
         SECOND_ENTITY_ID,
         1,
+        expect_ha_error=True,
         **code,
     )
