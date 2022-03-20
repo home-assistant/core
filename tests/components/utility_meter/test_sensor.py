@@ -655,7 +655,7 @@ async def test_non_net_consumption(hass, yaml_config, config_entry_config):
         ),
     ),
 )
-async def test_delta_values(hass, yaml_config, config_entry_config):
+async def test_delta_values(hass, yaml_config, config_entry_config, caplog):
     """Test utility meter "delta_values" mode."""
     now = dt_util.utcnow()
     with alter_time(now):
@@ -685,6 +685,18 @@ async def test_delta_values(hass, yaml_config, config_entry_config):
 
     state = hass.states.get("sensor.energy_bill")
     assert state.attributes.get("status") == PAUSED
+
+    now += timedelta(seconds=30)
+    with alter_time(now):
+        async_fire_time_changed(hass, now)
+        hass.states.async_set(
+            entity_id,
+            None,
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+    assert "Invalid adjustment of None" in caplog.text
 
     now += timedelta(seconds=30)
     with alter_time(now):
