@@ -46,14 +46,6 @@ from tests.common import async_fire_time_changed
 DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
 
-@pytest.fixture(autouse=True)
-def teardown():
-    """Stop everything that was started."""
-    yield
-
-    dt_util.set_default_time_zone(DEFAULT_TIME_ZONE)
-
-
 async def test_track_point_in_time(hass):
     """Test track point in time."""
     before_birthday = datetime(1985, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
@@ -3751,8 +3743,7 @@ async def test_periodic_task_duplicate_time(hass):
 @pytest.mark.freeze_time("2021-03-28 01:28:00+01:00")
 async def test_periodic_task_entering_dst(hass, freezer):
     """Test periodic task behavior when entering dst."""
-    timezone = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(timezone)
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -3801,8 +3792,7 @@ async def test_periodic_task_entering_dst_2(hass, freezer):
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
     """
-    timezone = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(timezone)
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -3850,8 +3840,7 @@ async def test_periodic_task_entering_dst_2(hass, freezer):
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
 async def test_periodic_task_leaving_dst(hass, freezer):
     """Test periodic task behavior when leaving dst."""
-    timezone = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(timezone)
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -3925,8 +3914,7 @@ async def test_periodic_task_leaving_dst(hass, freezer):
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
 async def test_periodic_task_leaving_dst_2(hass, freezer):
     """Test periodic task behavior when leaving dst."""
-    timezone = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(timezone)
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -4188,8 +4176,8 @@ async def test_async_track_point_in_time_cancel(hass):
     """Test cancel of async track point in time."""
 
     times = []
+    hass.config.set_time_zone("US/Hawaii")
     hst_tz = dt_util.get_time_zone("US/Hawaii")
-    dt_util.set_default_time_zone(hst_tz)
 
     @ha.callback
     def run_callback(local_time):
