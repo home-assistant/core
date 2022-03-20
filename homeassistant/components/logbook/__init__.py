@@ -528,7 +528,7 @@ def _generate_states_query(
         .outerjoin(Events, (States.event_id == Events.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(_missing_state_matcher(old_state))
-        .filter(_not_continous_entity_matcher())
+        .filter(_not_continuous_entity_matcher())
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
         .filter(
             (States.last_updated == States.last_changed)
@@ -551,7 +551,8 @@ def _apply_events_types_and_states_filter(
             | _missing_state_matcher(old_state)
         )
         .filter(
-            (Events.event_type != EVENT_STATE_CHANGED) | _not_continous_entity_matcher()
+            (Events.event_type != EVENT_STATE_CHANGED)
+            | _not_continuous_entity_matcher()
         )
     )
     return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES).outerjoin(
@@ -570,13 +571,13 @@ def _missing_state_matcher(old_state: States) -> Any:
     )
 
 
-def _not_continous_entity_matcher() -> Any:
+def _not_continuous_entity_matcher() -> Any:
     """Match non continuous entities."""
-    return (
-        _not_continuous_domain_matcher()
-        | sqlalchemy.and_(
+    return sqlalchemy.or_(
+        _not_continuous_domain_matcher(),
+        sqlalchemy.and_(
             _continuous_domain_matcher, _not_uom_attributes_matcher()
-        ).self_group()
+        ).self_group(),
     )
 
 
