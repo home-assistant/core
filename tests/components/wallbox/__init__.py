@@ -12,6 +12,7 @@ from homeassistant.components.wallbox.const import (
     CONF_CHARGING_SPEED_KEY,
     CONF_CURRENT_VERSION_KEY,
     CONF_DATA_KEY,
+    CONF_LOCKED_UNLOCKED_KEY,
     CONF_MAX_AVAILABLE_POWER_KEY,
     CONF_MAX_CHARGING_CURRENT_KEY,
     CONF_NAME_KEY,
@@ -32,12 +33,13 @@ test_response = json.loads(
         {
             CONF_CHARGING_POWER_KEY: 0,
             CONF_MAX_AVAILABLE_POWER_KEY: 25.2,
-            CONF_CHARGING_SPEED_KEY: 0,
+            CONF_CHARGING_SPEED_KEY: "YYY",
             CONF_ADDED_RANGE_KEY: 150,
             CONF_ADDED_ENERGY_KEY: 44.697,
             CONF_NAME_KEY: "WallboxName",
             CONF_DATA_KEY: {
                 CONF_MAX_CHARGING_CURRENT_KEY: 24,
+                CONF_LOCKED_UNLOCKED_KEY: False,
                 CONF_SERIAL_NUMBER_KEY: "20000",
                 CONF_PART_NUMBER_KEY: "PLP1-0-2-4-9-002-E",
                 CONF_SOFTWARE_KEY: {CONF_CURRENT_VERSION_KEY: "5.5.10"},
