@@ -39,5 +39,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=f"{county.title()} Outage Count", data=user_input
+            title=f"{county.capitalize()} Outage Count", data=user_input
         )
