@@ -64,14 +64,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-ENTITY_ID_JSON_TEMPLATE = '"entity_id":"{}"'
+ENTITY_ID_JSON_TEMPLATE = '%"entity_id":"{}"%'
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
 ICON_JSON_EXTRACT = re.compile('"icon": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
 
 CONTINUOUS_DOMAINS = {"proximity", "sensor"}
-CONTINUOUS_ENTITY_ID_STARTSWITH = [f"{domain}." for domain in CONTINUOUS_DOMAINS]
+CONTINUOUS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in CONTINUOUS_DOMAINS]
 
 DOMAIN = "logbook"
 
@@ -79,7 +79,7 @@ GROUP_BY_MINUTES = 15
 
 EMPTY_JSON_OBJECT = "{}"
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
-
+UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}._"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -489,6 +489,7 @@ def _get_events(
                 query = query.filter(Events.context_id == context_id)
 
             query = query.order_by(Events.time_fired)
+        print(str(query.statement.compile(compile_kwargs={"literal_binds": True})))
 
         return list(
             humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
@@ -527,7 +528,7 @@ def _generate_states_query(
         .outerjoin(Events, (States.event_id == Events.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(_missing_state_matcher(old_state))
-        .filter(_not_continuous_entity_domain_matcher() | _not_uom_attributes_matcher())
+        .filter(_not_continous_entity_matcher())
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
         .filter(
             (States.last_updated == States.last_changed)
@@ -550,9 +551,7 @@ def _apply_events_types_and_states_filter(
             | _missing_state_matcher(old_state)
         )
         .filter(
-            (Events.event_type != EVENT_STATE_CHANGED)
-            | _not_continuous_entity_domain_matcher()
-            | _not_uom_attributes_matcher()
+            (Events.event_type != EVENT_STATE_CHANGED) | _not_continous_entity_matcher()
         )
     )
     return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES).outerjoin(
@@ -571,22 +570,41 @@ def _missing_state_matcher(old_state: States) -> Any:
     )
 
 
-def _not_continuous_entity_domain_matcher() -> Any:
+def _not_continous_entity_matcher() -> Any:
+    """Match non continuous entities."""
+    return (
+        _not_continuous_domain_matcher()
+        | sqlalchemy.and_(
+            _continuous_domain_matcher, _not_uom_attributes_matcher()
+        ).self_group()
+    )
+
+
+def _not_continuous_domain_matcher() -> Any:
+    """Match not continuous domains."""
+    return sqlalchemy.and_(
+        *[
+            ~States.entity_id.like(entity_domain)
+            for entity_domain in CONTINUOUS_ENTITY_ID_LIKE
+        ],
+    ).self_group()
+
+
+def _continuous_domain_matcher() -> Any:
     """Match continuous domains."""
     return sqlalchemy.or_(
         *[
-            ~States.entity_id.startswith(entity_domain)
-            for entity_domain in CONTINUOUS_ENTITY_ID_STARTSWITH
+            States.entity_id.like(entity_domain)
+            for entity_domain in CONTINUOUS_ENTITY_ID_LIKE
         ],
-    )
+    ).self_group()
 
 
 def _not_uom_attributes_matcher() -> Any:
     """Prefilter ATTR_UNIT_OF_MEASUREMENT as its much faster in sql."""
-    return ~(
-        StateAttributes.shared_attrs.contains(UNIT_OF_MEASUREMENT_JSON)
-        | States.attributes.contains(UNIT_OF_MEASUREMENT_JSON)
-    )
+    return ~StateAttributes.shared_attrs.like(
+        UNIT_OF_MEASUREMENT_JSON_LIKE
+    ) | ~States.attributes.like(UNIT_OF_MEASUREMENT_JSON_LIKE)
 
 
 def _apply_event_time_filter(events_query: Query, start_day: dt, end_day: dt) -> Query:
@@ -609,7 +627,7 @@ def _apply_event_entity_id_matchers(
     return events_query.filter(
         sqlalchemy.or_(
             *(
-                Events.event_data.contains(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
+                Events.event_data.like(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
                 for entity_id in entity_ids
             )
         )
