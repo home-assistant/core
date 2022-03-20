@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import SERVICE_LOCK, SERVICE_UNLOCK
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import entity_platform
 
 from . import DOMAIN, get_device_info
 from .const import (
@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     platform.async_register_entity_service(
         SERVICE_UNLOCK_SPECIFIC_DOOR,
-        {vol.Required(ATTR_DOOR): cv.string},
+        {vol.Required(ATTR_DOOR): vol.In(UNLOCK_VALID_DOORS)},
         "async_unlock_specific_door",
     )
 
@@ -83,10 +83,9 @@ class SubaruLock(LockEntity):
     async def async_unlock_specific_door(self, door):
         """Send the unlock command for a specified door."""
         _LOGGER.debug("Unlocking %s door for: %s", door, self.car_name)
-        if door in UNLOCK_VALID_DOORS:
-            await async_call_remote_service(
-                self.controller,
-                SERVICE_UNLOCK,
-                self.vehicle_info,
-                UNLOCK_VALID_DOORS[door],
-            )
+        await async_call_remote_service(
+            self.controller,
+            SERVICE_UNLOCK,
+            self.vehicle_info,
+            UNLOCK_VALID_DOORS[door],
+        )
