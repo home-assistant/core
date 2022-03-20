@@ -20,8 +20,6 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed, async_mock_service, mock_component
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
-
 
 @pytest.fixture
 def calls(hass):
@@ -33,18 +31,9 @@ def calls(hass):
 def setup_comp(hass):
     """Initialize components."""
     mock_component(hass, "group")
-    hass.config.set_time_zone(hass.config.time_zone)
     hass.loop.run_until_complete(
         async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
     )
-
-
-@pytest.fixture(autouse=True)
-def teardown():
-    """Restore."""
-    yield
-
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
 
 async def test_sunset_trigger(hass, calls, legacy_patchable_time):
