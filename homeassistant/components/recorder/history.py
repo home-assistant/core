@@ -100,19 +100,16 @@ def get_significant_states_with_session(
 
     if significant_changes_only:
         baked_query += lambda q: q.filter(
-            (
-                or_(
-                    *[
-                        States.entity_id.like(entity_domain)
-                        for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE
-                    ],
-                    (States.last_changed == States.last_updated),
-                )
+            or_(
+                *[
+                    States.entity_id.like(entity_domain)
+                    for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE
+                ],
+                (States.last_changed == States.last_updated),
             )
-            & (States.last_updated > bindparam("start_time"))
         )
-    else:
-        baked_query += lambda q: q.filter(States.last_updated > bindparam("start_time"))
+
+    baked_query += lambda q: q.filter(States.last_updated > bindparam("start_time"))
 
     if entity_ids is not None:
         baked_query += lambda q: q.filter(
