@@ -480,7 +480,7 @@ def _sorted_states_to_dict(
     return {key: val for key, val in result.items() if val}
 
 
-def get_state(hass, utc_point_in_time, entity_id, run=None):
+def get_state(hass, utc_point_in_time, entity_id, run=None, no_attributes=False):
     """Return a state at a specific point in time."""
-    states = get_states(hass, utc_point_in_time, (entity_id,), run)
+    states = get_states(hass, utc_point_in_time, (entity_id,), run, None, no_attributes)
     return states[0] if states else None
