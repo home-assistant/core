@@ -34,8 +34,8 @@ async def get_imei_from_config(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     device = data[CONF_DEVICE]
-    baud_speed = str(data[CONF_BAUD_SPEED])
     connection_mode = "at"
+    baud_speed = str(data[CONF_BAUD_SPEED])
     if baud_speed != str(DEFAULT_BAUD_SPEED):
         connection_mode += baud_speed
     config = {"Device": device, "Connection": connection_mode}

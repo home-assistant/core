@@ -52,10 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure Gammu state machine."""
 
     device = entry.data[CONF_DEVICE]
-    baud_speed = str(entry.data.get(CONF_BAUD_SPEED))
     connection_mode = "at"
-    if baud_speed != "None" and baud_speed != str(DEFAULT_BAUD_SPEED):
-        connection_mode += baud_speed
+    baud_speed = entry.data.get(CONF_BAUD_SPEED)
+    if baud_speed is not None and str(baud_speed) != str(DEFAULT_BAUD_SPEED):
+        connection_mode += str(baud_speed)
     config = {"Device": device, "Connection": connection_mode}
     _LOGGER.debug("Connecting mode:%s", connection_mode)
     gateway = await create_sms_gateway(config, hass)
