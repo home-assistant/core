@@ -128,6 +128,7 @@ other: &other
 requirements: &requirements
   - .github/workflows/**
   - homeassistant/package_constraints.txt
+  - script/pip_check
   - requirements*.txt
   - setup.cfg
 

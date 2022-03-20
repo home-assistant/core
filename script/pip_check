@@ -3,7 +3,7 @@ PIP_CACHE=$1
 
 # Number of existing dependency conflicts
 # Update if a PR resolve one!
-DEPENDENCY_CONFLICTS=4
+DEPENDENCY_CONFLICTS=7
 
 PIP_CHECK=$(pip check --cache-dir=$PIP_CACHE)
 LINE_COUNT=$(echo "$PIP_CHECK" | wc -l)
@@ -14,6 +14,7 @@ then
     echo "------"
     echo "Requirements change added another dependency conflict."
     echo "Make sure to check the 'pip check' output above!"
+    echo "Expected $DEPENDENCY_CONFLICTS conflicts, got $LINE_COUNT."
     exit 1
 elif [[ $((LINE_COUNT)) -lt $DEPENDENCY_CONFLICTS ]]
 then
