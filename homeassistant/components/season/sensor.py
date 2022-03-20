@@ -240,7 +240,7 @@ class SeasonData:
         self.time_zone = time_zone
         self.type = entry.data[CONF_TYPE]
         self.datetime = None
-        self._data = {}
+        self._data: dict  = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
