@@ -125,13 +125,15 @@ def test_get_states_no_attributes(hass_recorder):
 
 
 @pytest.mark.parametrize(
-    "attributes, no_attributes",
+    "attributes, no_attributes, limit",
     [
-        ({"attr": True}, False),
-        ({}, True),
+        ({"attr": True}, False, 5000),
+        ({}, True, 5000),
+        ({"attr": True}, False, 3),
+        ({}, True, 3),
     ],
 )
-def test_state_changes_during_period(hass_recorder, attributes, no_attributes):
+def test_state_changes_during_period(hass_recorder, attributes, no_attributes, limit):
     """Test state change during period."""
     hass = hass_recorder()
     entity_id = "media_player.test"
@@ -163,10 +165,10 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes):
         set_state("Plex")
 
     hist = history.state_changes_during_period(
-        hass, start, end, entity_id, no_attributes
+        hass, start, end, entity_id, no_attributes, limit=limit
     )
 
-    assert states == hist[entity_id]
+    assert states[:limit] == hist[entity_id]
 
 
 def test_get_last_state_changes(hass_recorder):

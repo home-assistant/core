@@ -164,7 +164,7 @@ def state_changes_during_period(
     end_time: datetime | None = None,
     entity_id: str | None = None,
     no_attributes: bool = False,
-    descending: bool = True,
+    descending: bool = False,
     limit: int | None = None,
     include_start_time_state: bool = True,
 ) -> dict[str, list[State]]:
