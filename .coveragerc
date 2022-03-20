@@ -1470,6 +1470,7 @@ omit =
     homeassistant/components/zwave_me/__init__.py
     homeassistant/components/zwave_me/binary_sensor.py
     homeassistant/components/zwave_me/button.py
+    homeassistant/components/zwave_me/cover.py
     homeassistant/components/zwave_me/climate.py
     homeassistant/components/zwave_me/helpers.py
     homeassistant/components/zwave_me/light.py
