@@ -31,6 +31,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     ATTRIBUTION,
+    CONF_LOCATION,
     CONF_TIMESTEP,
     DOMAIN,
     INTEGRATION_NAME,
@@ -194,8 +195,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api = TomorrowioV4(
         entry.data[CONF_API_KEY],
-        entry.data[CONF_LATITUDE],
-        entry.data[CONF_LONGITUDE],
+        entry.data[CONF_LOCATION][CONF_LATITUDE],
+        entry.data[CONF_LOCATION][CONF_LONGITUDE],
         session=async_get_clientsession(hass),
     )
 

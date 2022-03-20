@@ -18,6 +18,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
 )
 
+CONF_LOCATION = "location"
 CONF_TIMESTEP = "timestep"
 FORECAST_TYPES = [DAILY, HOURLY, NOWCAST]
 
