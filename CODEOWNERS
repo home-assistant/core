@@ -908,8 +908,6 @@ homeassistant/components/smappee/* @bsmappee
 tests/components/smappee/* @bsmappee
 homeassistant/components/smart_meter_texas/* @grahamwetzler
 tests/components/smart_meter_texas/* @grahamwetzler
-homeassistant/components/smarthab/* @outadoc
-tests/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
 tests/components/smartthings/* @andrewsayre
 homeassistant/components/smarttub/* @mdz
@@ -1026,6 +1024,8 @@ homeassistant/components/todoist/* @boralyl
 tests/components/todoist/* @boralyl
 homeassistant/components/tolo/* @MatthiasLohr
 tests/components/tolo/* @MatthiasLohr
+homeassistant/components/tomorrowio/* @raman325
+tests/components/tomorrowio/* @raman325
 homeassistant/components/totalconnect/* @austinmroczek
 tests/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey

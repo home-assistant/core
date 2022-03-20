@@ -371,17 +371,18 @@ class Stream:
                 wait_timeout,
                 redact_credentials(str(self.source)),
             )
-        self._worker_finished()
-
-    def _worker_finished(self) -> None:
-        """Schedule cleanup of all outputs."""
 
         @callback
-        def remove_outputs() -> None:
+        def worker_finished() -> None:
+            # The worker is no checking availability of the stream and can no longer track
+            # availability so mark it as available, otherwise the frontend may not be able to
+            # interact with the stream.
+            if not self.available:
+                self._async_update_state(True)
             for provider in self.outputs().values():
                 self.remove_provider(provider)
 
-        self.hass.loop.call_soon_threadsafe(remove_outputs)
+        self.hass.loop.call_soon_threadsafe(worker_finished)
 
     def stop(self) -> None:
         """Remove outputs and access token."""
