@@ -227,6 +227,13 @@ async def test_options_flow(hass: HomeAssistant):
     )
     mock_config.add_to_hass(hass)
 
+    with patch(
+        "homeassistant.components.tankerkoenig.async_setup_entry"
+    ) as mock_setup_entry:
+        await mock_config.async_setup(hass)
+        await hass.async_block_till_done()
+        assert mock_setup_entry.called
+
     result = await hass.config_entries.options.async_init(mock_config.entry_id)
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
