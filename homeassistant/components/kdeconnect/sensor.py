@@ -60,13 +60,11 @@ async def async_setup_entry(
     device = cast(KdeConnectDevice, hass.data[DOMAIN][DATA_KEY_DEVICES][entry.entry_id])
     plugin_registry = client.plugin_registry
 
-    entities = [
+    async_add_entities(
         KdeConnectSensor(device, plugin_registry, description)
         for description in SENSOR_TYPES
         if plugin_registry.is_plugin_compatible(device, description.plugin_type)
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class KdeConnectSensor(KdeConnectPluginEntity, SensorEntity):
