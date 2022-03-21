@@ -25,7 +25,8 @@ class WallboxLockEntityDescription(LockEntityDescription):
 
 LOCK_TYPES: dict[str, WallboxLockEntityDescription] = {
     CONF_LOCKED_UNLOCKED_KEY: WallboxLockEntityDescription(
-        key=CONF_LOCKED_UNLOCKED_KEY, name="Locked/Unlocked"
+        key=CONF_LOCKED_UNLOCKED_KEY,
+        name="Locked/Unlocked",
     ),
 }
 
