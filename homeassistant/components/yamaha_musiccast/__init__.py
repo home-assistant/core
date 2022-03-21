@@ -120,10 +120,8 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
         return self.musiccast.data
 
 
-class MusicCastEntity(CoordinatorEntity):
+class MusicCastEntity(CoordinatorEntity[MusicCastDataUpdateCoordinator]):
     """Defines a base MusicCast entity."""
-
-    coordinator: MusicCastDataUpdateCoordinator
 
     def __init__(
         self,
