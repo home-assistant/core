@@ -126,7 +126,7 @@ async def test_no_update_available(
 
     assert ATTR_ICON not in state.attributes
 
-    entry = entity_registry.async_get("binary_sensor.wled_websocket_firmware")
+    entry = entity_registry.async_get("update.wled_websocket_firmware")
     assert entry
     assert entry.unique_id == "aabbccddeeff_update"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
@@ -164,7 +164,7 @@ async def test_update_stay_stable(
 
     There is both an update for beta and stable available, however, the device
     is currently running a stable version. Therefore, the update entity should
-    update the the next stable (even though beta is newer).
+    update to the next stable (even though beta is newer).
     """
     state = hass.states.get("update.wled_rgb_light_firmware")
     assert state
@@ -191,7 +191,7 @@ async def test_update_beta_to_stable(
 ) -> None:
     """Test the update entity.
 
-    There is both an update for beta and stable available the device
+    There is both an update for beta and stable available and the device
     is currently a beta, however, a newer stable is available. Therefore, the
     update entity should update to the next stable.
     """
