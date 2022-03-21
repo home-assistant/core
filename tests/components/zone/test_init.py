@@ -617,21 +617,3 @@ async def test_state_2(hass):
     await hass.async_block_till_done()
     assert hass.states.get("zone.test_zone").state == "0"
     assert hass.states.get("zone.home").state == "0"
-
-    # Person entity enters home without coordinates
-    hass.states.async_set(
-        "person.person1",
-        "home",
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "0"
-    assert hass.states.get("zone.home").state == "1"
-
-    # Person entity enters home without coordinates
-    hass.states.async_set(
-        "person.person1",
-        "home",
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "0"
-    assert hass.states.get("zone.home").state == "1"
