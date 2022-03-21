@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import Counter
 import itertools
 import logging
-from typing import Any, cast
+from typing import Any, Optional, cast
 
 import voluptuous as vol
 
@@ -139,7 +139,7 @@ class LightGroup(GroupEntity, LightEntity):
 
     _attr_available = False
     _attr_icon = "mdi:lightbulb-group"
-    _attr_is_on = False
+    _attr_is_on = False  # type: Optional[bool]
     _attr_max_mireds = 500
     _attr_min_mireds = 154
     _attr_should_poll = False
