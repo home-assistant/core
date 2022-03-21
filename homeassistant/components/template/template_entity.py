@@ -102,6 +102,9 @@ LEGACY_FIELDS = {
     CONF_FRIENDLY_NAME: CONF_NAME,
 }
 
+TEMPLATES = "templates"
+ADDITIONAL_ATTRIBUTES = "additional_attributes"
+
 
 def rewrite_common_legacy_to_modern_conf(
     entity_cfg: dict[str, Any], extra_legacy_fields: dict[str, str] = None
@@ -256,14 +259,12 @@ class TemplateEntity(Entity):
             self._icon_template = icon_template
             self._entity_picture_template = entity_picture_template
             self._friendly_name_template = None
-            self._restore = False
         else:
             self._attribute_templates = config.get(CONF_ATTRIBUTES)
             self._availability_template = config.get(CONF_AVAILABILITY)
             self._icon_template = config.get(CONF_ICON)
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
-            self._restore = config.get(CONF_RESTORE)
 
         # Try to render the name as it can influence the entity ID
         self._attr_name = fallback_name
@@ -458,9 +459,27 @@ class TemplateEntity(Entity):
 class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
     """Template Entity that restores data."""
 
+    def __init__(self, *args, restore_additional_data: bool = False, **kwargs) -> None:
+        """Template Restore Entity init."""
+
+        super().__init__(*args, **kwargs)
+
+        self._restore = restore_additional_data
+        self._additional_data: list[str] = []
+
+    def add_template_attribute(self, attribute: str, *args, **kwargs):
+        """Store attribute to allow restore and setup template."""
+
+        super().__init__(attribute, *args, **kwargs)
+        self.additional_data(attribute)
+
+    def additional_data(self, attribute: str) -> None:
+        """Add additional attributes to store."""
+        self._additional_data.append(attribute)
+
     async def restore_entity(
         self,
-    ) -> tuple[State | None, dict[Template, Any] | None]:
+    ) -> tuple[State | None, dict[str, Any] | None]:
         """Restore the entity."""
 
         if not self._restore:
@@ -477,14 +496,24 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
         if self._attribute_templates is not None:
             for key in self._attribute_templates:
                 try:
-                    self._attr_extra_state_attributes.update(
-                        {key: last_sensor_state.attributes[key]}
-                    )
-                    _LOGGER.debug(
-                        "Restored attribute %s for entity %s", key, self.entity_id
-                    )
+                    value = last_sensor_state.attributes[key]
                 except KeyError:
-                    pass
+                    _LOGGER.debug(
+                        "No value stored for attribute %s for entity %s",
+                        key,
+                        self.entity_id,
+                    )
+                    continue
+
+                self._attr_extra_state_attributes.update(
+                    {key: last_sensor_state.attributes[key]}
+                )
+                _LOGGER.debug(
+                    "Restored attribute %s for entity %s to value %s",
+                    key,
+                    self.entity_id,
+                    value,
+                )
 
         # Restore extra data
         if (last_sensor_data := await self.async_get_last_template_data()) is None:
@@ -493,48 +522,33 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
             )
             return last_sensor_state, None
 
-        for template, attributes in self._template_attrs.items():
+        for attribute in self._additional_data:
             try:
-                template_attr = last_sensor_data[template]
+                value = last_sensor_data[attribute]
             except KeyError:
                 _LOGGER.debug(
-                    "Unable to find template key %s for entity %s",
-                    template,
+                    "No value stored for attribute %s for entity %s",
+                    attribute,
                     self.entity_id,
                 )
                 continue
 
-            for attribute in attributes:
-                try:
-                    value = template_attr[attribute.attribute]
-                except KeyError:
-                    _LOGGER.debug(
-                        "Unable to find attribute %s for template key %s for entity %s",
-                        attribute.attribute,
-                        template,
-                        self.entity_id,
-                    )
-                    continue
-
-                if attribute.on_update is None:
-                    try:
-                        setattr(self, attribute.attribute, value)
-                    except AttributeError:
-                        _LOGGER.debug(
-                            "Attribute %s does not exist in entity %s, unable to restore",
-                            attribute.attribute,
-                            self.entity_id,
-                        )
-                        continue
-                else:
-                    attribute.on_update(value)
-
+            try:
+                setattr(self, attribute, value)
+            except AttributeError:
                 _LOGGER.debug(
-                    "Attribute %s restored to value %s for entity %s",
-                    attribute.attribute,
-                    value,
+                    "Attribute %s does not exist in entity %s, unable to restore",
+                    attribute,
                     self.entity_id,
                 )
+                continue
+
+            _LOGGER.debug(
+                "Attribute %s restored to value %s for entity %s",
+                attribute,
+                value,
+                self.entity_id,
+            )
 
         return (last_sensor_state, last_sensor_data)
 
@@ -542,19 +556,19 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
     def extra_restore_state_data(self) -> TemplateExtraStoredData | None:
         """Return sensor specific state data to be restored."""
         return (
-            TemplateExtraStoredData(self, self._template_attrs)
+            TemplateExtraStoredData(self, self._additional_data)
             if self._restore
-            else TemplateExtraStoredData(self, {})
+            else TemplateExtraStoredData(self, [])
         )
 
-    async def async_get_last_template_data(self) -> dict[Template, Any] | None:
+    async def async_get_last_template_data(self) -> dict[str, Any] | None:
         """Restore native_value and native_unit_of_measurement."""
         if not self._restore:
             return None
 
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
-        return TemplateExtraStoredData(self, self._template_attrs).from_dict(
+        return TemplateExtraStoredData(self, self._additional_data).from_dict(
             restored_last_extra_data.as_dict()
         )
 
@@ -579,46 +593,40 @@ class TemplateExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
 
     template_entity: TemplateEntity
-    template_attrs: dict[Template, list[_TemplateAttribute]]
+    additional_data: list[str]
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
-        template_values: dict[str, Any] = {}
-        for template, attributes in self.template_attrs.items():
-            for attribute in attributes:
-                try:
-                    value = convert_attribute_to_string(
-                        getattr(self.template_entity, attribute.attribute)
-                    )
-                except AttributeError:
-                    continue
-
-                _LOGGER.debug(
-                    "Storing attribute %s for template %s with value %s",
-                    attribute.attribute,
-                    template,
-                    value,
+        store_attributes: dict[str, Any] = {}
+        for attribute in self.additional_data:
+            try:
+                value = convert_attribute_to_string(
+                    getattr(self.template_entity, attribute)
                 )
-                template_values.update({attribute.attribute: value})
+            except AttributeError:
+                continue
 
-        return template_values
+            _LOGGER.debug(
+                "Storing additional attribute %s with value %s",
+                attribute,
+                value,
+            )
+            store_attributes.update({attribute: value})
 
-    def from_dict(self, restored: dict[str, Any]) -> dict[Template, dict[str, Any]]:
+        return store_attributes
+
+    @staticmethod
+    def from_dict(restored: dict[str, Any]) -> dict[str, Any]:
         """Initialize a stored sensor state from a dict."""
-        template_values: dict[Template, Any] = {}
-        for template, attributes in self.template_attrs.items():
-            for attribute in attributes:
-                try:
-                    value = convert_attribute_from_string(restored[attribute.attribute])
-                except KeyError:
-                    continue
+        store_attributes: dict[str, Any] = {}
+        for attribute, value in restored.items():
+            value = convert_attribute_from_string(value)
 
-                _LOGGER.debug(
-                    "Retrieved attribute %s for template %s with value %s",
-                    attribute.attribute,
-                    template,
-                    value,
-                )
-                template_values.setdefault(template, {})
-                template_values[template].update({attribute.attribute: value})
-        return template_values
+            _LOGGER.debug(
+                "Retrieved additional attribute %s with value %s",
+                attribute,
+                value,
+            )
+            store_attributes.update({attribute: value})
+
+        return store_attributes

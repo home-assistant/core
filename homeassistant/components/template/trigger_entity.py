@@ -175,6 +175,13 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
 class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
     """Trigger Entity that restores data."""
 
+    def __init__(self, *args, restore_additional_data: bool = False, **kwargs) -> None:
+        """Trigger Restore Entity Init."""
+
+        super().__init__(*args, **kwargs)
+
+        self._restore = restore_additional_data
+
     async def restore_entity(
         self,
     ) -> tuple[State | None, dict[str, Any] | None]:
@@ -200,7 +207,9 @@ class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
             "Restoring entity %s", self.entity_id
         )
 
-        for key in self._to_render_simple:
+        def restore_rendered(self, last_sensor_data: dict[str, Any], key: str) -> None:
+            """Update self._rendered with stored value."""
+
             try:
                 value = last_sensor_data[key]
             except KeyError:
@@ -211,7 +220,7 @@ class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
                     key,
                     self.entity_id,
                 )
-                continue
+                return
 
             self._rendered[key] = value
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
@@ -220,27 +229,12 @@ class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
                 value,
                 self.entity_id,
             )
+
+        for key in self._to_render_simple:
+            restore_rendered(self, last_sensor_data, key)
 
         for key in self._to_render_complex:
-            try:
-                value = last_sensor_data[key]
-            except KeyError:
-                logging.getLogger(
-                    f"{__package__}.{self.entity_id.split('.')[0]}"
-                ).debug(
-                    "Did not retrieve value for attribute %s for entity %s",
-                    key,
-                    self.entity_id,
-                )
-                continue
-
-            self._rendered[key] = value
-            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
-                "Restored attribute %s with value %s for entity %s",
-                key,
-                value,
-                self.entity_id,
-            )
+            restore_rendered(self, last_sensor_data, key)
 
         if CONF_ATTRIBUTES in last_sensor_data:
             for key in self._config.get(CONF_ATTRIBUTES, {}):
