@@ -151,8 +151,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_validate_ip_and_continue(self, host: str) -> FlowResult:
         """Validate local config and continue."""
         self._async_abort_entries_match({CONF_HOST: host})
-        serial = await validate_host_input(host)
-        await self.async_set_unique_id(serial, raise_on_progress=False)
+        self._serial = await validate_host_input(host)
+        await self.async_set_unique_id(self._serial, raise_on_progress=False)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         # Store current data and jump to next stage
         self._host = host
@@ -234,15 +234,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_HOST: host})
         try:
-            serial = await validate_host_input(host)
+            self._serial = await validate_host_input(host)
         except (ConnectionError, ClientConnectionError):
             return self.async_abort(reason="not_intellifire_device")
 
-        await self.async_set_unique_id(serial)
+        await self.async_set_unique_id(self._serial)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-        self._discovered_host = DiscoveredHostInfo(ip=host, serial=serial)
+        self._discovered_host = DiscoveredHostInfo(ip=host, serial=self._serial)
 
-        placeholders = {CONF_HOST: host, "serial": serial}
+        placeholders = {CONF_HOST: host, "serial": self._serial}
         self.context["title_placeholders"] = placeholders
         self._set_confirm_only()
 
