@@ -316,7 +316,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed from error
 
 
-class TomorrowioEntity(CoordinatorEntity):
+class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
     """Base Tomorrow.io Entity."""
 
     def __init__(
