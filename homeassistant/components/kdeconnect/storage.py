@@ -75,12 +75,12 @@ class HomeAssistantStorage(AbstractStorage):
     def remove_device(self, device: KdeConnectDevice) -> None:
         """Remove information on a device."""
         if device.device_id in self._devices:
-            del self._devices[device.device_id]
+            self._devices.pop(device.device_id)
 
     def remove_device_by_id(self, device_id: str) -> None:
         """Remove information on a device using its device id."""
         if device_id in self._devices:
-            del self._devices[device_id]
+            self._devices.pop(device_id)
 
     def load_device(self, device_id: str) -> KdeConnectDevice | None:
         """Load a device from the storage."""
