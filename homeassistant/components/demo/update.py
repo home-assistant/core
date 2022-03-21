@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.components.update.const import (
@@ -18,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
+
+FAKE_INSTALL_SLEEP_TIME = 0.5
 
 
 async def async_setup_platform(
@@ -89,6 +92,11 @@ async def async_setup_entry(
     await async_setup_platform(hass, {}, async_add_entities)
 
 
+async def _fake_install() -> None:
+    """Fake install an update."""
+    await asyncio.sleep(FAKE_INSTALL_SLEEP_TIME)
+
+
 class DemoUpdate(UpdateEntity):
     """Representation of a demo update entity."""
 
@@ -132,16 +140,17 @@ class DemoUpdate(UpdateEntity):
         self,
         version: str | None = None,
         backup: bool | None = None,
+        **kwargs: Any,
     ) -> None:
         """Install an update."""
         if self.supported_features & SUPPORT_PROGRESS:
             for progress in range(0, 100, 10):
                 self._attr_in_progress = progress
-                await self.async_update_ha_state()
-                await asyncio.sleep(0.5)
+                self.async_write_ha_state()
+                await _fake_install()
 
         self._attr_in_progress = False
         self._attr_current_version = (
             version if version is not None else self.latest_version
         )
-        await self.async_update_ha_state()
+        self.async_write_ha_state()

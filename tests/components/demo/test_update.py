@@ -14,6 +14,7 @@ from homeassistant.components.update.const import (
 )
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 
@@ -90,11 +91,13 @@ async def test_update_with_progress(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
     events = []
-    hass.helpers.event.async_track_state_change_event(
-        "update.demo_update_with_progress", callback(lambda event: events.append(event))
+    async_track_state_change_event(
+        hass,
+        "update.demo_update_with_progress",
+        callback(lambda event: events.append(event)),
     )
 
-    with patch("homeassistant.components.demo.update.asyncio.sleep") as fake_sleep:
+    with patch("homeassistant.components.demo.update.FAKE_INSTALL_SLEEP_TIME", new=0):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_INSTALL,
@@ -102,7 +105,6 @@ async def test_update_with_progress(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    assert fake_sleep.call_count == 10
     assert len(events) == 10
     assert events[0].data["new_state"].state == STATE_ON
     assert events[0].data["new_state"].attributes[ATTR_IN_PROGRESS] == 10
@@ -131,7 +133,7 @@ async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.demo.update.asyncio.sleep",
+        "homeassistant.components.demo.update._fake_install",
         side_effect=[None, None, None, None, RuntimeError],
     ) as fake_sleep, pytest.raises(RuntimeError):
         await hass.services.async_call(

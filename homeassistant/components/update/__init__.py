@@ -43,7 +43,6 @@ from .const import (
 )
 
 SCAN_INTERVAL = timedelta(minutes=15)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
@@ -250,6 +249,7 @@ class UpdateEntity(RestoreEntity):
         self,
         version: str | None = None,
         backup: bool | None = None,
+        **kwargs: Any,
     ) -> None:
         """Install an update.
 
@@ -265,6 +265,7 @@ class UpdateEntity(RestoreEntity):
         self,
         version: str | None = None,
         backup: bool | None = None,
+        **kwargs: Any,
     ) -> None:
         """Install an update.
 
