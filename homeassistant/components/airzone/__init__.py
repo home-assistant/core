@@ -20,7 +20,7 @@ from .coordinator import AirzoneUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-class AirzoneEntity(CoordinatorEntity):
+class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
     """Define an Airzone entity."""
 
     def __init__(

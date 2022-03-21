@@ -14,10 +14,8 @@ from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 from .coordinator import MotionSensor, SensiboDataUpdateCoordinator
 
 
-class SensiboBaseEntity(CoordinatorEntity):
+class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
     """Representation of a Sensibo entity."""
-
-    coordinator: SensiboDataUpdateCoordinator
 
     def __init__(
         self,
