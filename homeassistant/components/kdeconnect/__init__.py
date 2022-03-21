@@ -81,8 +81,8 @@ class KdeConnectEntity(RestoreEntity, ABC):
         self.device = device
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device.device_id)},
-            name=self.device.device_name,
+            identifiers={(DOMAIN, device.device_id)},
+            name=device.device_name,
             manufacturer="KDE Connect",
         )
 
