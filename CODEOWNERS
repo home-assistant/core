@@ -353,6 +353,8 @@ homeassistant/components/garages_amsterdam/* @klaasnicolaas
 tests/components/garages_amsterdam/* @klaasnicolaas
 homeassistant/components/gdacs/* @exxamalte
 tests/components/gdacs/* @exxamalte
+homeassistant/components/generic/* @davet2001
+tests/components/generic/* @davet2001
 homeassistant/components/generic_hygrostat/* @Shulyaka
 tests/components/generic_hygrostat/* @Shulyaka
 homeassistant/components/geniushub/* @zxdavb
