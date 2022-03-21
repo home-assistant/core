@@ -128,8 +128,8 @@ async def test_no_update_available(
 
     entry = entity_registry.async_get("update.wled_websocket_firmware")
     assert entry
-    assert entry.unique_id == "aabbccddeeff_update"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert entry.unique_id == "aabbccddeeff"
+    assert entry.entity_category is EntityCategory.CONFIG
 
 
 async def test_update_error(
