@@ -21,6 +21,7 @@ from homeassistant.components.update.const import (
     ATTR_RELEASE_URL,
     ATTR_SKIPPED_VERSION,
     ATTR_TITLE,
+    UpdateEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -53,7 +54,7 @@ async def test_update(hass: HomeAssistant) -> None:
     update._attr_release_url = "https://example.com"
     update._attr_title = "Title"
 
-    assert update.entity_category is EntityCategory.CONFIG
+    assert update.entity_category is EntityCategory.DIAGNOSTIC
     assert update.current_version == "1.0.0"
     assert update.latest_version == "1.0.1"
     assert update.release_summary == "Summary"
@@ -86,7 +87,12 @@ async def test_update(hass: HomeAssistant) -> None:
     update._attr_latest_version = None
     assert update.state is None
 
+    # Test entity category becomes config when its possible to install
+    update._attr_supported_features = UpdateEntityFeature.INSTALL
+    assert update.entity_category is EntityCategory.CONFIG
+
     # UpdateEntityDescription was set
+    update._attr_supported_features = 0
     update.entity_description = UpdateEntityDescription(key="F5 - Its very refreshing")
     assert update.device_class is None
     assert update.entity_category is EntityCategory.CONFIG
