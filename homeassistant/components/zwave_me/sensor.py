@@ -14,9 +14,9 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    PERCENTAGE,
     LIGHT_LUX,
+    PERCENTAGE,
+    POWER_WATT,
     PRESSURE_KPA,
     TEMP_CELSIUS,
 )
@@ -28,34 +28,10 @@ from . import ZWaveMeController, ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
 
 SENSORS_MAP: dict[str, SensorEntityDescription] = {
-    "meterElectric_ampere": SensorEntityDescription(
-        key="meterElectric_ampere",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "meterElectric_voltage": SensorEntityDescription(
-        key="meterElectric_voltage",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "meterElectric_kilowatt_hour": SensorEntityDescription(
-        key="meterElectric_kilowatt_hour",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    "meterElectric_watt": SensorEntityDescription(
-        key="meterElectric_watt",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "meterElectric_power_factor": SensorEntityDescription(
-        key="meterElectric_power_factor",
-        device_class=SensorDeviceClass.POWER_FACTOR,
-        native_unit_of_measurement="PF",
+    "barometer": SensorEntityDescription(
+        key="barometer",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=PRESSURE_KPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co": SensorEntityDescription(
@@ -76,10 +52,34 @@ SENSORS_MAP: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "barometer": SensorEntityDescription(
-        key="barometer",
-        device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_KPA,
+    "meterElectric_ampere": SensorEntityDescription(
+        key="meterElectric_ampere",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "meterElectric_kilowatt_hour": SensorEntityDescription(
+        key="meterElectric_kilowatt_hour",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "meterElectric_power_factor": SensorEntityDescription(
+        key="meterElectric_power_factor",
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        native_unit_of_measurement="PF",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "meterElectric_voltage": SensorEntityDescription(
+        key="meterElectric_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "meterElectric_watt": SensorEntityDescription(
+        key="meterElectric_watt",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "temperature": SensorEntityDescription(
@@ -88,8 +88,6 @@ SENSORS_MAP: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-
-
     "generic": SensorEntityDescription(
         key="generic",
     ),
