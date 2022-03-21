@@ -193,6 +193,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.has_chime",
         ufp_value="last_ring",
+        entity_registry_enabled_default=True,
     ),
 )
 
@@ -265,18 +266,21 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Last Open",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_value="open_status_changed_at",
+        entity_registry_enabled_default=True,
     ),
     ProtectSensorEntityDescription(
         key="motion_last_trip_time",
         name="Last Motion Detected",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_value="motion_detected_at",
+        entity_registry_enabled_default=True,
     ),
     ProtectSensorEntityDescription(
         key="tampering_last_trip_time",
         name="Last Tampering Detected",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_value="tampering_detected_at",
+        entity_registry_enabled_default=True,
     ),
 )
 
@@ -431,6 +435,7 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Last Motion Detected",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_value="last_motion",
+        entity_registry_enabled_default=True,
     ),
 )
 
@@ -440,6 +445,7 @@ MOTION_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Last Motion Detected",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_value="last_motion",
+        entity_registry_enabled_default=True,
     ),
 )
 
