@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Union
 
 from pyeight.eight import EightSleep
 from pyeight.user import EightUser
@@ -227,7 +228,11 @@ class EightSleepUserDataCoordinator(DataUpdateCoordinator):
         await self.api.update_user_data()
 
 
-class EightSleepBaseEntity(CoordinatorEntity):
+class EightSleepBaseEntity(
+    CoordinatorEntity[
+        Union[EightSleepUserDataCoordinator, EightSleepHeatDataCoordinator]
+    ]
+):
     """The base Eight Sleep entity class."""
 
     def __init__(
