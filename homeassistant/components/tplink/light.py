@@ -203,6 +203,6 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        if effect := self.device.effect:
+        if (effect := self.device.effect) and effect["enable"]:
             return cast(str, effect["name"])
         return None
