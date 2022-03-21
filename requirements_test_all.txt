@@ -850,9 +850,6 @@ py-synologydsm-api==1.0.6
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
 
-# homeassistant.components.samsungtv
-py3rijndael==0.3.3
-
 # homeassistant.components.control4
 pyControl4==0.0.6
 
@@ -922,9 +919,6 @@ pycomfoconnect==0.4
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
-
-# homeassistant.components.samsungtv
-pycryptodome==3.12.0
 
 # homeassistant.components.daikin
 pydaikin==2.7.0
@@ -1223,6 +1217,9 @@ python-izone==1.2.3
 
 # homeassistant.components.juicenet
 python-juicenet==1.1.0
+
+# homeassistant.components.tplink
+python-kasa==0.4.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.11
