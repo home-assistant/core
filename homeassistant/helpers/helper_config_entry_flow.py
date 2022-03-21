@@ -97,15 +97,15 @@ class HelperCommonFlowHandler:
         if user_input:
             options.update(user_input)
         if (data_schema := self._flow[next_step_id].schema) and data_schema.schema:
-            # Copy the schema, then set suggested field values to saved options
-            schema = dict(data_schema.schema)
-            for key in list(schema):
+            # Make a copy of the schema with suggested values set to saved options
+            schema = {}
+            for key, val in data_schema.schema.items():
+                new_key = key
                 if key in options and isinstance(key, vol.Marker):
                     # Copy the marker to not modify the flow schema
                     new_key = copy.copy(key)
                     new_key.description = {"suggested_value": options[key]}
-                    val = schema.pop(key)
-                    schema[new_key] = val
+                schema[new_key] = val
             data_schema = vol.Schema(schema)
 
         errors = {"base": str(error)} if error else None
