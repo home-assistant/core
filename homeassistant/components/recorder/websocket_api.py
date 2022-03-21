@@ -72,7 +72,6 @@ def ws_clear_statistics(
     {
         vol.Required("type"): "recorder/get_statistics_metadata",
         vol.Optional("statistic_ids"): [str],
-        vol.Optional("statistic_type"): vol.Any("sum", "mean"),
     }
 )
 @websocket_api.async_response
@@ -81,10 +80,7 @@ async def ws_get_statistics_metadata(
 ) -> None:
     """Get statistics for a list of statistic_ids."""
     statistic_ids = await hass.async_add_executor_job(
-        list_statistic_ids,
-        hass,
-        msg.get("statistic_ids"),
-        msg.get("statistic_type"),
+        list_statistic_ids, hass, msg.get("statistic_ids")
     )
     connection.send_result(msg["id"], statistic_ids)
 
