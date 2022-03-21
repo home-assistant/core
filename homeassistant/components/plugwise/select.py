@@ -61,5 +61,4 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
             )
         ):
             raise HomeAssistantError(f"Failed to change to schedule {option}")
-        LOGGER.debug("Change schedule to %s was successful", option)
         await self.coordinator.async_request_refresh()
