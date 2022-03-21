@@ -398,3 +398,8 @@ FLOWS = [
     "zwave_js",
     "zwave_me"
 ]
+    "helper": [
+        "derivative"
+    ]
+}
+

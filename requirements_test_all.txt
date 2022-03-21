@@ -192,7 +192,7 @@ aiopyarr==22.2.2
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==2021.12.2
+aioridwell==2022.03.0
 
 # homeassistant.components.senseme
 aiosenseme==0.6.1
@@ -313,7 +313,7 @@ boschshcpy==0.2.30
 bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
-broadlink==0.18.0
+broadlink==0.18.1
 
 # homeassistant.components.brother
 brother==1.1.0
@@ -896,7 +896,7 @@ pyatmo==6.2.4
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.11
+pyaussiebb==0.0.14
 
 # homeassistant.components.balboa
 pybalboa==0.13
@@ -1364,16 +1364,13 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.02.1
+simplisafe-python==2022.03.0
 
 # homeassistant.components.slack
 slackclient==2.5.0
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
-
-# homeassistant.components.smarthab
-smarthab==0.21
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.15
@@ -1602,4 +1599,4 @@ zigpy==0.43.0
 zwave-js-server-python==0.35.2
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.2.2
+zwave_me_ws==0.2.3
