@@ -37,7 +37,7 @@ from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import ALL, DOMAIN, LOGGER
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboBaseEntity
+from .entity import SensiboDeviceBaseEntity
 
 SERVICE_ASSUME_STATE = "assume_state"
 
@@ -103,8 +103,6 @@ async def async_setup_entry(
     entities = [
         SensiboClimate(coordinator, device_id)
         for device_id, device_data in coordinator.data.parsed.items()
-        # Remove none climate devices
-        if device_data["hvac_modes"] and device_data["temp"]
     ]
 
     async_add_entities(entities)
@@ -119,7 +117,7 @@ async def async_setup_entry(
     )
 
 
-class SensiboClimate(SensiboBaseEntity, ClimateEntity):
+class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     """Representation of a Sensibo device."""
 
     def __init__(

@@ -6,6 +6,10 @@ DATA = {
         "title": "Config Flow",
         "docs": "https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html",
     },
+    "config_flow_helper": {
+        "title": "Helper Config Flow",
+        "docs": "https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html#helper",
+    },
     "config_flow_discovery": {
         "title": "Discoverable Config Flow",
         "docs": "https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html#discoverable-integrations-that-require-no-authentication",

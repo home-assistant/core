@@ -60,6 +60,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -896,9 +897,10 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
 async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None:
     """Test turn on."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
+        )
     # nothing called as not supported feature
     assert remote.control.call_count == 0
 
@@ -1066,3 +1068,40 @@ async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
     assert len(commands) == 1
     assert isinstance(commands[0], ChannelEmitCommand)
     assert commands[0].params["data"]["appId"] == "3201608010191"
+
+
+async def test_websocket_unsupported_remote_control(
+    hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for turn_off."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=[OSError("Boom"), DEFAULT_MOCK],
+    ):
+        await setup_samsungtv(hass, MOCK_CONFIGWS)
+
+    remotews.send_command.reset_mock()
+
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    remotews.raise_mock_ws_event_callback(
+        "ms.error",
+        {
+            "event": "ms.error",
+            "data": {"message": "unrecognized method value : ms.remote.control"},
+        },
+    )
+
+    # key called
+    assert remotews.send_command.call_count == 1
+    commands = remotews.send_command.call_args_list[0].args[0]
+    assert len(commands) == 1
+    assert isinstance(commands[0], SendRemoteKey)
+    assert commands[0].params["DataOfCmd"] == "KEY_POWER"
+
+    # error logged
+    assert (
+        "Your TV seems to be unsupported by SamsungTVWSBridge and may need a PIN: "
+        "'unrecognized method value : ms.remote.control'" in caplog.text
+    )

@@ -1,5 +1,9 @@
 """Fixtures for Samsung TV."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 from datetime import datetime
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -48,14 +52,27 @@ def rest_api_fixture() -> Mock:
 @pytest.fixture(name="remotews")
 def remotews_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
+    remotews = Mock(SamsungTVWSAsyncRemote)
+    remotews.__aenter__ = AsyncMock(return_value=remotews)
+    remotews.__aexit__ = AsyncMock()
+    remotews.app_list.return_value = SAMPLE_APP_LIST
+    remotews.token = "FAKE_TOKEN"
+
+    def _start_listening(
+        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None
+    ):
+        remotews.ws_event_callback = ws_event_callback
+
+    def _mock_ws_event_callback(event: str, response: Any):
+        if remotews.ws_event_callback:
+            remotews.ws_event_callback(event, response)
+
+    remotews.start_listening.side_effect = _start_listening
+    remotews.raise_mock_ws_event_callback = Mock(side_effect=_mock_ws_event_callback)
+
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
     ) as remotews_class:
-        remotews = Mock(SamsungTVWSAsyncRemote)
-        remotews.__aenter__ = AsyncMock(return_value=remotews)
-        remotews.__aexit__ = AsyncMock()
-        remotews.app_list.return_value = SAMPLE_APP_LIST
-        remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
         yield remotews
 
