@@ -75,7 +75,7 @@ class WallboxLock(WallboxEntity, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return the status of the lock."""
-        return self._coordinator.data[CONF_LOCKED_UNLOCKED_KEY]  # type: ignore[no-any-return]
+        return self.coordinator.data[CONF_LOCKED_UNLOCKED_KEY]  # type: ignore[no-any-return]
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock charger."""
