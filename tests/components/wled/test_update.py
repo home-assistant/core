@@ -1,4 +1,4 @@
-"""Tests for the WLED binary update platform."""
+"""Tests for the WLED update platform."""
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
