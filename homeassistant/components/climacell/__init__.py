@@ -273,7 +273,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
         return data
 
 
-class ClimaCellEntity(CoordinatorEntity):
+class ClimaCellEntity(CoordinatorEntity[ClimaCellDataUpdateCoordinator]):
     """Base ClimaCell Entity."""
 
     def __init__(
