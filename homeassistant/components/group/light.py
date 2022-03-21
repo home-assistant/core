@@ -139,7 +139,6 @@ class LightGroup(GroupEntity, LightEntity):
 
     _attr_available = False
     _attr_icon = "mdi:lightbulb-group"
-    _attr_is_on = False  # type: Optional[bool]
     _attr_max_mireds = 500
     _attr_min_mireds = 154
     _attr_should_poll = False
