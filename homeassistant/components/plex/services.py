@@ -16,6 +16,7 @@ from .const import (
     SERVICE_REFRESH_LIBRARY,
     SERVICE_SCAN_CLIENTS,
 )
+from .errors import MediaNotFound
 
 REFRESH_LIBRARY_SCHEMA = vol.Schema(
     {vol.Optional("server_name"): str, vol.Required("library_name"): str}
@@ -115,15 +116,13 @@ def lookup_plex_media(hass, content_type, content_id):
         try:
             playqueue = plex_server.get_playqueue(playqueue_id)
         except NotFound as err:
-            raise HomeAssistantError(
+            raise MediaNotFound(
                 f"PlayQueue '{playqueue_id}' could not be found"
             ) from err
         return playqueue
 
     shuffle = content.pop("shuffle", 0)
     media = plex_server.lookup_media(content_type, **content)
-    if media is None:
-        raise HomeAssistantError(f"Plex media not found using payload: '{content_id}'")
 
     if shuffle:
         return plex_server.create_playqueue(media, shuffle=shuffle)

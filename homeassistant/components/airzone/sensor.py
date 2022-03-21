@@ -1,7 +1,7 @@
 """Support for the Airzone sensors."""
 from __future__ import annotations
 
-from typing import Final
+from typing import Any, Final
 
 from aioairzone.const import AZD_HUMIDITY, AZD_NAME, AZD_TEMP, AZD_TEMP_UNIT, AZD_ZONES
 
@@ -50,8 +50,6 @@ async def async_setup_entry(
 
     sensors = []
     for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
-        zone_name = zone_data[AZD_NAME]
-
         for description in SENSOR_TYPES:
             if description.key in zone_data:
                 sensors.append(
@@ -60,7 +58,7 @@ async def async_setup_entry(
                         description,
                         entry,
                         system_zone_id,
-                        zone_name,
+                        zone_data,
                     )
                 )
 
@@ -76,11 +74,11 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
         description: SensorEntityDescription,
         entry: ConfigEntry,
         system_zone_id: str,
-        zone_name: str,
+        zone_data: dict[str, Any],
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, system_zone_id, zone_name)
-        self._attr_name = f"{zone_name} {description.name}"
+        super().__init__(coordinator, entry, system_zone_id, zone_data)
+        self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
         self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}_{description.key}"
         self.entity_description = description
 

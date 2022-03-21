@@ -29,7 +29,7 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED, HASSIO_USER_NAME
 from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
-from homeassistant.util import location
+from homeassistant.util import dt as dt_util, location
 
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
@@ -249,6 +249,8 @@ def load_registries():
 def hass(loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
+    orig_tz = dt_util.DEFAULT_TIME_ZONE
+
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
         # Most of these contexts will contain an exception, but not all.
@@ -273,6 +275,10 @@ def hass(loop, load_registries, hass_storage, request):
     yield hass
 
     loop.run_until_complete(hass.async_stop(force=True))
+
+    # Restore timezone, it is set when creating the hass object
+    dt_util.DEFAULT_TIME_ZONE = orig_tz
+
     for ex in exceptions:
         if (
             request.module.__name__,
@@ -778,13 +784,28 @@ def enable_statistics():
 
 
 @pytest.fixture
-def hass_recorder(enable_statistics, hass_storage):
+def enable_nightly_purge():
+    """Fixture to control enabling of recorder's nightly purge job.
+
+    To enable nightly purgin, tests can be marked with:
+    @pytest.mark.parametrize("enable_nightly_purge", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     with patch(
         "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         side_effect=stats,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        side_effect=nightly,
         autospec=True,
     ):
 

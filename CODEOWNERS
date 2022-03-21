@@ -910,8 +910,6 @@ homeassistant/components/smappee/* @bsmappee
 tests/components/smappee/* @bsmappee
 homeassistant/components/smart_meter_texas/* @grahamwetzler
 tests/components/smart_meter_texas/* @grahamwetzler
-homeassistant/components/smarthab/* @outadoc
-tests/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
 tests/components/smartthings/* @andrewsayre
 homeassistant/components/smarttub/* @mdz
@@ -1028,6 +1026,8 @@ homeassistant/components/todoist/* @boralyl
 tests/components/todoist/* @boralyl
 homeassistant/components/tolo/* @MatthiasLohr
 tests/components/tolo/* @MatthiasLohr
+homeassistant/components/tomorrowio/* @raman325
+tests/components/tomorrowio/* @raman325
 homeassistant/components/totalconnect/* @austinmroczek
 tests/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey
@@ -1061,6 +1061,8 @@ tests/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli @fabaff
 homeassistant/components/upcloud/* @scop
 tests/components/upcloud/* @scop
+homeassistant/components/update/* @home-assistant/core
+tests/components/update/* @home-assistant/core
 homeassistant/components/updater/* @home-assistant/core
 tests/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23
@@ -1181,8 +1183,6 @@ tests/components/zodiac/* @JulienTant
 homeassistant/components/zone/* @home-assistant/core
 tests/components/zone/* @home-assistant/core
 homeassistant/components/zoneminder/* @rohankapoorcom
-homeassistant/components/zwave/* @home-assistant/z-wave
-tests/components/zwave/* @home-assistant/z-wave
 homeassistant/components/zwave_js/* @home-assistant/z-wave
 tests/components/zwave_js/* @home-assistant/z-wave
 homeassistant/components/zwave_me/* @lawfulchaos @Z-Wave-Me

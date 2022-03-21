@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
@@ -72,7 +73,7 @@ async def test_get_triggers(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
@@ -171,7 +172,7 @@ async def test_get_triggers_for_alarm_event(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:00")}
     )
@@ -248,7 +249,7 @@ async def test_get_triggers_manage_unsupported_remotes(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
@@ -293,7 +294,7 @@ async def test_functional_device_trigger(
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
@@ -370,7 +371,7 @@ async def test_validate_trigger_unsupported_device(hass, aioclient_mock):
     """Test unsupported device doesn't return a trigger config."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")},
@@ -407,7 +408,7 @@ async def test_validate_trigger_unsupported_trigger(hass, aioclient_mock):
     """Test unsupported trigger does not return a trigger config."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")},
@@ -446,7 +447,7 @@ async def test_attach_trigger_no_matching_event(hass, aioclient_mock):
     """Test no matching event for device doesn't return a trigger config."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")},

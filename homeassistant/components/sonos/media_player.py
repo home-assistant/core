@@ -574,11 +574,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             else:
                 shuffle = False
             media = lookup_plex_media(self.hass, media_type, json.dumps(payload))
-            if not kwargs.get(ATTR_MEDIA_ENQUEUE):
-                soco.clear_queue()
             if shuffle:
                 self.set_shuffle(True)
-            plex_plugin.play_now(media)
+            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+                plex_plugin.add_to_queue(media)
+            else:
+                soco.clear_queue()
+                plex_plugin.add_to_queue(media)
+                soco.play_from_queue(0)
             return
 
         share_link = self.coordinator.share_link

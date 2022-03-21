@@ -78,7 +78,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class TradfriGroup(CoordinatorEntity, LightEntity):
+class TradfriGroup(CoordinatorEntity[TradfriGroupDataUpdateCoordinator], LightEntity):
     """The platform class for light groups required by hass."""
 
     _attr_supported_features = SUPPORTED_GROUP_FEATURES

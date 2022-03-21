@@ -3203,6 +3203,37 @@ async def test_script_mode_queued_cancel(hass):
         raise
 
 
+async def test_script_mode_queued_stop(hass):
+    """Test stopping with a queued run."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA({"wait_template": "{{ false }}"}),
+        "Test Name",
+        "test_domain",
+        script_mode="queued",
+        max_runs=3,
+    )
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.wait_for(wait_started_flag.wait(), 1)
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.sleep(0)
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.sleep(0)
+
+    assert script_obj.is_running
+    assert script_obj.runs == 3
+
+    await script_obj.async_stop()
+
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+
+
 async def test_script_logging(hass, caplog):
     """Test script logging."""
     script_obj = script.Script(hass, [], "Script with % Name", "test_domain")

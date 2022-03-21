@@ -1,7 +1,10 @@
 """The Tesla Powerwall integration base entity."""
 
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     DOMAIN,
@@ -13,7 +16,7 @@ from .const import (
 from .models import PowerwallData, PowerwallRuntimeData
 
 
-class PowerWallEntity(CoordinatorEntity[PowerwallData]):
+class PowerWallEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
     """Base class for powerwall entities."""
 
     def __init__(self, powerwall_data: PowerwallRuntimeData) -> None:
