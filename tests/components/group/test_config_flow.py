@@ -18,7 +18,8 @@ from tests.common import MockConfigEntry
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
         ("fan", "on", "on", {}, {}, {}, {}),
-        ("light", "on", "on", {}, {}, {}, {}),
+        ("light", "on", "on", {}, {}, {"all": False}, {}),
+        ("light", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
     ),
 )
@@ -108,7 +109,7 @@ def get_suggested(schema, key):
         ("binary_sensor", "on", {"all": False}),
         ("cover", "open", {}),
         ("fan", "on", {}),
-        ("light", "on", {}),
+        ("light", "on", {"all": False}),
         ("media_player", "on", {}),
     ),
 )
