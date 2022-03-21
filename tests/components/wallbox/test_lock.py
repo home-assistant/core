@@ -52,6 +52,9 @@ async def test_wallbox_lock_class(hass):
             status_code=200,
         )
 
+        state = hass.states.get(CONF_MOCK_LOCK_ENTITY_ID)
+        assert state.state == "unlocked"
+
         await hass.services.async_call(
             "lock",
             SERVICE_LOCK,
@@ -117,19 +120,8 @@ async def test_wallbox_lock_class_authentication_error(hass):
 
     await setup_integration_read_only(hass)
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
-            json=authorisation_response,
-            status_code=200,
-        )
-        mock_request.put(
-            "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CONF_LOCKED_UNLOCKED_KEY: False})),
-            status_code=401,
-        )
-        state = hass.states.get(CONF_MOCK_LOCK_ENTITY_ID)
+    state = hass.states.get(CONF_MOCK_LOCK_ENTITY_ID)
 
-        assert state is None
+    assert state is None
 
     await hass.config_entries.async_unload(entry.entry_id)

@@ -71,6 +71,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
+    async def async_validate_input(self) -> None:
+        """Get new sensor data for Wallbox component."""
+        await self.hass.async_add_executor_job(self._validate)
+
     def _get_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
         try:
@@ -88,6 +92,11 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             raise ConnectionError from wallbox_connection_error
 
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Get new sensor data for Wallbox component."""
+        data = await self.hass.async_add_executor_job(self._get_data)
+        return data
+
     def _set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
         try:
@@ -97,6 +106,13 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
+
+    async def async_set_charging_current(self, charging_current: float) -> None:
+        """Set maximum charging current for Wallbox."""
+        await self.hass.async_add_executor_job(
+            self._set_charging_current, charging_current
+        )
+        await self.async_request_refresh()
 
     def _set_lock_unlock(self, lock: bool) -> None:
         """Set wallbox to locked or unlocked."""
@@ -115,22 +131,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Set wallbox to locked or unlocked."""
         await self.hass.async_add_executor_job(self._set_lock_unlock, lock)
         await self.async_request_refresh()
-
-    async def async_set_charging_current(self, charging_current: float) -> None:
-        """Set maximum charging current for Wallbox."""
-        await self.hass.async_add_executor_job(
-            self._set_charging_current, charging_current
-        )
-        await self.async_request_refresh()
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Get new sensor data for Wallbox component."""
-        data = await self.hass.async_add_executor_job(self._get_data)
-        return data
-
-    async def async_validate_input(self) -> None:
-        """Get new sensor data for Wallbox component."""
-        await self.hass.async_add_executor_job(self._validate)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

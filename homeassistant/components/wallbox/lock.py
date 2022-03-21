@@ -1,7 +1,6 @@
 """Home Assistant component for accessing the Wallbox Portal API. The lock component creates a lock entity."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
@@ -17,14 +16,8 @@ from .const import (
     DOMAIN,
 )
 
-
-@dataclass
-class WallboxLockEntityDescription(LockEntityDescription):
-    """Describes Wallbox sensor entity."""
-
-
-LOCK_TYPES: dict[str, WallboxLockEntityDescription] = {
-    CONF_LOCKED_UNLOCKED_KEY: WallboxLockEntityDescription(
+LOCK_TYPES: dict[str, LockEntityDescription] = {
+    CONF_LOCKED_UNLOCKED_KEY: LockEntityDescription(
         key=CONF_LOCKED_UNLOCKED_KEY,
         name="Locked/Unlocked",
     ),
@@ -56,14 +49,14 @@ async def async_setup_entry(
 class WallboxLock(WallboxEntity, LockEntity):
     """Representation of the Wallbox portal."""
 
-    entity_description: WallboxLockEntityDescription
+    entity_description: LockEntityDescription
     coordinator: WallboxCoordinator
 
     def __init__(
         self,
         coordinator: WallboxCoordinator,
         entry: ConfigEntry,
-        description: WallboxLockEntityDescription,
+        description: LockEntityDescription,
     ) -> None:
         """Initialize a Wallbox lock."""
 
