@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import TankerkoenigData
-from .const import DOMAIN, NAME
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ async def async_setup_entry(
         _LOGGER,
         name=NAME,
         update_method=async_update_data,
-        update_interval=timedelta(minutes=tankerkoenig.update_interval),
+        update_interval=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
     )
 
     # Fetch initial data so we have data when entities subscribe

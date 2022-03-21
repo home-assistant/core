@@ -14,34 +14,16 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
     CONF_SHOW_ON_MAP,
     CONF_UNIT_OF_MEASUREMENT,
     LENGTH_KILOMETERS,
-    TIME_MINUTES,
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import selector
 
-from .const import (
-    CONF_FUEL_TYPES,
-    CONF_STATIONS,
-    DEFAULT_RADIUS,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    FUEL_TYPES,
-)
-
-SCHEMA_OPTIONS = vol.Schema(
-    {
-        vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-            vol.Coerce(int), vol.Clamp(min=5, max=60)
-        ),
-        vol.Required(CONF_SHOW_ON_MAP, default=True): bool,
-    }
-)
+from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_RADIUS, DOMAIN, FUEL_TYPES
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -90,7 +72,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_STATIONS: selected_station_ids,
             },
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_SHOW_ON_MAP: config[CONF_SHOW_ON_MAP],
             },
         )
@@ -142,7 +123,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._create_entry(
             data={**self._data, **user_input},
-            options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL, CONF_SHOW_ON_MAP: True},
+            options={CONF_SHOW_ON_MAP: True},
         )
 
     def _show_form_user(
@@ -238,19 +219,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_SCAN_INTERVAL,
-                        default=self.config_entry.options[CONF_SCAN_INTERVAL],
-                    ): selector(
-                        {
-                            "number": {
-                                "min": 5,
-                                "max": 240,
-                                "step": 1,
-                                CONF_UNIT_OF_MEASUREMENT: TIME_MINUTES,
-                            }
-                        }
-                    ),
                     vol.Required(
                         CONF_SHOW_ON_MAP,
                         default=self.config_entry.options[CONF_SHOW_ON_MAP],

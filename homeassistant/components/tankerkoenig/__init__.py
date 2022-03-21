@@ -93,7 +93,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 },
                 CONF_RADIUS: conf[CONF_RADIUS],
                 CONF_STATIONS: conf[CONF_STATIONS],
-                CONF_SCAN_INTERVAL: conf[CONF_SCAN_INTERVAL],
                 CONF_SHOW_ON_MAP: conf[CONF_SHOW_ON_MAP],
             },
         )
@@ -153,7 +152,6 @@ class TankerkoenigData:
         self.undo_update_listener: CALLBACK_TYPE | None = None
         self.stations: dict[str, dict] = {}
         self.fuel_types = entry.data[CONF_FUEL_TYPES]
-        self.update_interval = entry.options[CONF_SCAN_INTERVAL]
         self.show_on_map = entry.options[CONF_SHOW_ON_MAP]
 
     def setup(self):

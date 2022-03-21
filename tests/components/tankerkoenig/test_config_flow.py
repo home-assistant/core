@@ -6,7 +6,6 @@ from pytankerkoenig import customException
 from homeassistant.components.tankerkoenig.const import (
     CONF_FUEL_TYPES,
     CONF_STATIONS,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -17,7 +16,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
     CONF_SHOW_ON_MAP,
 )
 from homeassistant.core import HomeAssistant
@@ -112,7 +110,6 @@ async def test_user(hass: HomeAssistant):
             "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8",
             "36b4b812-xxxx-xxxx-xxxx-c51735325858",
         ]
-        assert result["options"][CONF_SCAN_INTERVAL] == 30
         assert result["options"][CONF_SHOW_ON_MAP]
 
         await hass.async_block_till_done()
@@ -208,7 +205,6 @@ async def test_import(hass: HomeAssistant):
             "3bcd61da-yyyy-yyyy-yyyy-19d5523a7ae8",
             "36b4b812-yyyy-yyyy-yyyy-c51735325858",
         ]
-        assert result["options"][CONF_SCAN_INTERVAL] == 30
         assert result["options"][CONF_SHOW_ON_MAP]
 
         await hass.async_block_till_done()
@@ -222,7 +218,7 @@ async def test_options_flow(hass: HomeAssistant):
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_USER_DATA,
-        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL, CONF_SHOW_ON_MAP: True},
+        options={CONF_SHOW_ON_MAP: True},
         unique_id=f"{DOMAIN}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LATITUDE]}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LONGITUDE]}",
     )
     mock_config.add_to_hass(hass)
@@ -239,8 +235,7 @@ async def test_options_flow(hass: HomeAssistant):
     assert result["step_id"] == "init"
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 37, CONF_SHOW_ON_MAP: False},
+        user_input={CONF_SHOW_ON_MAP: False},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert mock_config.options[CONF_SCAN_INTERVAL] == 37
     assert not mock_config.options[CONF_SHOW_ON_MAP]
