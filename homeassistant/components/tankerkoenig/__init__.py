@@ -155,10 +155,7 @@ class TankerkoenigData:
         self.show_on_map = entry.options[CONF_SHOW_ON_MAP]
 
     def setup(self):
-        """Set up the tankerkoenig API.
-
-        Read the initial data from the server, to initialize the list of fuel stations to monitor.
-        """
+        """Set up the tankerkoenig API."""
         for station_id in self._selected_stations:
             try:
                 additional_station_data = pytankerkoenig.getStationData(
