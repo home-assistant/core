@@ -6,7 +6,7 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "location": "Location"
+          "location": "[%key:common::config_flow::data::location%]"
         }
       }
     },
