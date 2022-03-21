@@ -7,8 +7,6 @@ from typing import Any
 from plugwise.exceptions import InvalidAuthentication, PlugwiseException
 from plugwise.smile import Smile
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -94,16 +92,6 @@ def async_migrate_entity_entry(entry: RegistryEntry) -> dict[str, Any] | None:
     """
     if entry.domain == SWITCH_DOMAIN and entry.unique_id.endswith("-plug"):
         return {"new_unique_id": entry.unique_id.replace("-plug", "-relay")}
-    if entry.domain == BINARY_SENSOR_DOMAIN and "auxiliary" in entry.unique_id:
-        return {"new_unique_id": entry.unique_id.replace("-auxiliary", "-opentherm")}
-    if entry.domain == SENSOR_DOMAIN and entry.unique_id.endswith(
-        "-outdoor_temperature"
-    ):
-        return {
-            "new_unique_id": entry.unique_id.replace(
-                "-outdoor_temperature", "-outdoor_air_temperature"
-            )
-        }
 
     # No migration needed
     return None
