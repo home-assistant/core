@@ -272,13 +272,13 @@ DISCOVERY_SCHEMAS = [
     # Leviton ZW4SF fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
         platform="fan",
-        hint="configured_fan_speed",
+        hint="has_fan_value_mapping",
         manufacturer_id={0x001D},
         product_id={0x0002},
         product_type={0x0038},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-        data_template=FixedFanSpeedDataTemplate(
-            speeds=[25, 50, 75, 99],
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 25), (26, 50), (51, 75), (76, 99)]),
         ),
     ),
     # Inovelli LZW36 light / fan controller combo using switch multilevel CC
