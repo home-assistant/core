@@ -18,6 +18,7 @@ from homeassistant.data_entry_flow import (
 from .common import (
     MOCK_UPTIMEROBOT_ACCOUNT,
     MOCK_UPTIMEROBOT_API_KEY,
+    MOCK_UPTIMEROBOT_API_KEY_READ_ONLY,
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
     MOCK_UPTIMEROBOT_UNIQUE_ID,
     MockApiResponseKey,
@@ -54,6 +55,29 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["title"] == MOCK_UPTIMEROBOT_ACCOUNT["email"]
     assert result2["data"] == {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY}
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_read_only(hass: HomeAssistant) -> None:
+    """Test we get the form."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY_READ_ONLY},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"]["base"] == "not_main_key"
 
 
 @pytest.mark.parametrize(

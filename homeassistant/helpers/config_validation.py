@@ -1316,12 +1316,25 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
 )
 
 TRIGGER_BASE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLATFORM): str, vol.Optional(CONF_ID): str}
+    {
+        vol.Required(CONF_PLATFORM): str,
+        vol.Optional(CONF_ID): str,
+        vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+    }
 )
 
-TRIGGER_SCHEMA = vol.All(
-    ensure_list, [TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)]
-)
+
+_base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+
+
+# This is first round of validation, we don't want to process the config here already,
+# just ensure basics as platform and ID are there.
+def _base_trigger_validator(value: Any) -> Any:
+    _base_trigger_validator_schema(value)
+    return value
+
+
+TRIGGER_SCHEMA = vol.All(ensure_list, [_base_trigger_validator])
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
