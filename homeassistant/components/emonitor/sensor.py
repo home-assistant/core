@@ -105,10 +105,9 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     def _paired_attr(self, attr_name: str) -> float:
         """Cumulative attributes for channel and paired channel."""
         channel_data = self.channels[self.channel_number]
-        paired_channel_data = self.channels[channel_data.paired_with_channel]
         attr_val = getattr(channel_data, attr_name)
-        if channel_data.paired_with_channel:
-            attr_val += getattr(paired_channel_data, attr_name)
+        if paired_channel := channel_data.paired_with_channel:
+            attr_val += getattr(self.channels[paired_channel], attr_name)
         return attr_val
 
     @property
