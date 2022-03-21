@@ -186,7 +186,9 @@ class UpdateEntity(RestoreEntity):
             return self._attr_entity_category
         if hasattr(self, "entity_description"):
             return self.entity_description.entity_category
-        return EntityCategory.CONFIG
+        if self.supported_features & UpdateEntityFeature.INSTALL:
+            return EntityCategory.CONFIG
+        return EntityCategory.DIAGNOSTIC
 
     @property
     def in_progress(self) -> bool | int | None:
