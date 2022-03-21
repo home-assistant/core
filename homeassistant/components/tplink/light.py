@@ -43,12 +43,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    device = cast(SmartBulb, coordinator.device)
-    if device.is_bulb or device.is_dimmer:
-        async_add_entities([TPLinkSmartBulb(device, coordinator)])
-    elif device.is_light_strip:
+    if coordinator.device.is_bulb or coordinator.device.is_dimmer:
         async_add_entities(
-            [TPLinkSmartLightStrip(cast(SmartLightStrip, device), coordinator)]
+            [TPLinkSmartBulb(cast(SmartBulb, coordinator.device), coordinator)]
+        )
+    elif coordinator.device.is_light_strip:
+        async_add_entities(
+            [
+                TPLinkSmartLightStrip(
+                    cast(SmartLightStrip, coordinator.device), coordinator
+                )
+            ]
         )
 
 
