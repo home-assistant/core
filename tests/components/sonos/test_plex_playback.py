@@ -11,11 +11,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.components.plex.const import (
-    DOMAIN as PLEX_DOMAIN,
-    PLEX_URI_SCHEME,
-    SERVERS,
-)
+from homeassistant.components.plex.const import DOMAIN as PLEX_DOMAIN, PLEX_URI_SCHEME
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 
@@ -103,18 +99,20 @@ async def test_plex_play_media(hass, async_autosetup_sonos):
         server_id = "unique_id_123"
         plex_item_key = 300
 
-        hass.data[PLEX_DOMAIN] = {SERVERS: {server_id: mock_plex_server}}
-
-        assert await hass.services.async_call(
-            MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: media_player,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-                ATTR_MEDIA_CONTENT_ID: f"{PLEX_URI_SCHEME}{server_id}/{plex_item_key}?shuffle=1",
-            },
-            blocking=True,
-        )
+        with patch(
+            "homeassistant.components.plex.services.get_plex_server",
+            return_value=mock_plex_server,
+        ):
+            assert await hass.services.async_call(
+                MP_DOMAIN,
+                SERVICE_PLAY_MEDIA,
+                {
+                    ATTR_ENTITY_ID: media_player,
+                    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                    ATTR_MEDIA_CONTENT_ID: f"{PLEX_URI_SCHEME}{server_id}/{plex_item_key}?shuffle=1",
+                },
+                blocking=True,
+            )
 
         assert len(mock_lookup.mock_calls) == 1
         assert len(mock_add_to_queue.mock_calls) == 1

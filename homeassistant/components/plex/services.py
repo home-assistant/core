@@ -76,13 +76,16 @@ def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
     library.update()
 
 
-def get_plex_server(hass, plex_server_name=None):
+def get_plex_server(hass, plex_server_name=None, plex_server_id=None):
     """Retrieve a configured Plex server by name."""
     if DOMAIN not in hass.data:
         raise HomeAssistantError("Plex integration not configured")
     plex_servers = hass.data[DOMAIN][SERVERS].values()
     if not plex_servers:
         raise HomeAssistantError("No Plex servers available")
+
+    if plex_server_id:
+        return hass.data[DOMAIN][SERVERS][plex_server_id]
 
     if plex_server_name:
         plex_server = next(
@@ -125,7 +128,7 @@ def process_plex_payload(
                 # For "special" items like radio stations
                 content = plex_url.path
             server_id = plex_url.host
-            plex_server = hass.data[DOMAIN][SERVERS][server_id]
+            plex_server = get_plex_server(hass, plex_server_id=server_id)
         else:
             # Handle legacy payloads without server_id in URL host position
             content = int(plex_url.host)  # type: ignore[arg-type]
