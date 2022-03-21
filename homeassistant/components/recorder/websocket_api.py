@@ -79,7 +79,7 @@ def ws_clear_statistics(
 async def ws_get_statistics_metadata(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Get statistics for a list of statistic_ids."""
+    """Get statistics metadata for a list of statistic_ids."""
     statistic_ids = await hass.async_add_executor_job(
         list_statistic_ids, hass, msg.get("statistic_ids")
     )
