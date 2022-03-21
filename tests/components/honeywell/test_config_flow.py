@@ -9,7 +9,7 @@ from homeassistant.components.honeywell.const import (
     CONF_HEAT_AWAY_TEMPERATURE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -52,18 +52,6 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == FAKE_CONFIG
-
-
-async def test_async_step_import(hass: HomeAssistant) -> None:
-    """Test that the import step works."""
-    with patch(
-        "somecomfort.SomeComfort",
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=FAKE_CONFIG
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
