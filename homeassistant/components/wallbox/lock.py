@@ -69,7 +69,6 @@ class WallboxLock(WallboxEntity, LockEntity):
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
         self._attr_unique_id = f"{description.key}-{coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY]}"
 
