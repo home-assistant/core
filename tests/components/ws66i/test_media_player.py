@@ -2,6 +2,8 @@
 from collections import defaultdict
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -33,6 +35,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -224,8 +227,9 @@ async def test_service_calls_with_entity_id(hass):
 
     # Restoring other media player to its previous state
     # The zone should not be restored
-    await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_2_ID})
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_2_ID})
+        await hass.async_block_till_done()
 
     # Checking that values were not (!) restored
     state = hass.states.get(ZONE_1_ID)
@@ -325,8 +329,9 @@ async def test_restore_without_snapshot(hass):
     await _setup_ws66i(hass, MockWs66i())
 
     with patch.object(MockWs66i, "restore_zone") as method_call:
-        await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
-        await hass.async_block_till_done()
+        with pytest.raises(HomeAssistantError):
+            await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
+            await hass.async_block_till_done()
 
         assert not method_call.called
 
@@ -463,14 +468,6 @@ async def test_select_source(hass):
         hass,
         SERVICE_SELECT_SOURCE,
         {"entity_id": ZONE_1_ID, ATTR_INPUT_SOURCE: "three"},
-    )
-    assert ws66i.zones[11].source == 3
-
-    # Trying to set unknown source
-    await _call_media_player_service(
-        hass,
-        SERVICE_SELECT_SOURCE,
-        {"entity_id": ZONE_1_ID, ATTR_INPUT_SOURCE: "no name"},
     )
     assert ws66i.zones[11].source == 3
 
@@ -649,3 +646,64 @@ async def test_unload_config_entry(hass):
         assert method_call.called
 
     assert not hass.data[DOMAIN]
+
+
+async def test_restore_snapshot_on_reconnect(hass):
+    """Test restoring a saved snapshot when reconnecting to amp."""
+    ws66i = MockWs66i()
+    config_entry = await _setup_ws66i_with_options(hass, ws66i)
+
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
+    )
+
+    # Save a snapshot
+    await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": ZONE_1_ID})
+
+    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = ws66i_data.coordinator
+
+    # Failed update, close called
+    with patch.object(MockWs66i, "zone_status", return_value=None):
+        with patch.object(MockWs66i, "close") as method_call:
+            await coordinator.async_refresh()
+            await hass.async_block_till_done()
+
+            assert method_call.called
+
+    assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
+
+    # A connection re-attempt succeeds
+    with patch.object(MockWs66i, "open") as method_call:
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+        assert method_call.called
+
+    # confirm entity is back on
+    state = hass.states.get(ZONE_1_ID)
+
+    assert hass.states.is_state(ZONE_1_ID, STATE_ON)
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
+
+    # Change states
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "six"}
+    )
+
+    # Now confirm that the snapshot before the disconnect works
+    await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ZONE_1_ID)
+
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "one"

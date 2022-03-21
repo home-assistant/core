@@ -1,4 +1,6 @@
 """Coordinator for WS66i."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 

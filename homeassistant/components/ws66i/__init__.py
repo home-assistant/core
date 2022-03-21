@@ -69,13 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Amplifier is probably turned off
         raise ConfigEntryNotReady("Could not connect to WS66i Amp. Is it off?") from err
 
-    def close(event):
-        """Close the WS66i connection to the amplifier."""
-        ws66i.close()
-
-    entry.async_on_unload(entry.add_update_listener(_update_listener))
-    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close))
-
     # Create the zone Representation dataclass
     source_rep: SourceRep = _get_sources_from_dict(options)
 
@@ -99,6 +92,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sources=source_rep,
         coordinator=coordinator,
         zones=zones,
+    )
+
+    def shutdown(event):
+        """Close the WS66i connection to the amplifier and save snapshots."""
+        ws66i.close()
+
+    entry.async_on_unload(entry.add_update_listener(_update_listener))
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
