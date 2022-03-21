@@ -1,5 +1,6 @@
 {
   "domain": "derivative",
+  "integration_type": "helper",
   "name": "Derivative",
   "documentation": "https://www.home-assistant.io/integrations/derivative",
   "codeowners": [
