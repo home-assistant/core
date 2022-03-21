@@ -297,7 +297,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-async def migrate_sensor_entity(hass: HomeAssistant, coordinator, device_id, device):
+async def migrate_sensor_entity(
+    hass: HomeAssistant,
+    coordinator: PlugwiseDataUpdateCoordinator,
+    device_id: str,
+    device: dict,
+):
     """Migrate Sensors if needed."""
     ent_reg = entity_registry.async_get(hass)
 
