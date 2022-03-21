@@ -82,6 +82,6 @@ def is_ipv6_address(address: str) -> bool:
 def normalize_url(address: str) -> str:
     """Normalize a given URL."""
     url = yarl.URL(address.rstrip("/"))
-    if url.is_default_port():
+    if url.is_absolute() and url.is_default_port():
         return str(url.with_port(None))
     return str(url)
