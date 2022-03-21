@@ -529,10 +529,10 @@ async def test_state(hass):
     assert hass.states.get("zone.test_zone").state == "1"
     assert hass.states.get("zone.home").state == "0"
 
-    # Person entity enters zone
+    # Person entity enters zone (case insensitive)
     hass.states.async_set(
         "person.person2",
-        "Test Zone",
+        "TEST zone",
     )
     await hass.async_block_till_done()
     assert hass.states.get("zone.test_zone").state == "2"
