@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "county": "County"
+                },
+                "description": "Please choose your county below.",
+                "title": "PECO Outage Counter"
+            }
+        }
+    }
+}
