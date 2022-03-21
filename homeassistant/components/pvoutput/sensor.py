@@ -133,10 +133,11 @@ async def async_setup_entry(
     )
 
 
-class PVOutputSensorEntity(CoordinatorEntity, SensorEntity):
+class PVOutputSensorEntity(
+    CoordinatorEntity[PVOutputDataUpdateCoordinator], SensorEntity
+):
     """Representation of a PVOutput sensor."""
 
-    coordinator: PVOutputDataUpdateCoordinator
     entity_description: PVOutputSensorEntityDescription
 
     def __init__(

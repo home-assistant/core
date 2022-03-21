@@ -44,14 +44,17 @@ async def async_setup_entry(
     """Set up switches."""
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     device = cast(SmartBulb, coordinator.device)
-    if device.is_bulb or device.is_light_strip or device.is_dimmer:
-        async_add_entities([TPLinkSmartBulb(cast(SmartBulb, device), coordinator)])
+    if device.is_bulb or device.is_dimmer:
+        async_add_entities([TPLinkSmartBulb(device, coordinator)])
+    elif device.is_light_strip:
+        async_add_entities(
+            [TPLinkSmartLightStrip(cast(SmartLightStrip, device), coordinator)]
+        )
 
 
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
-    coordinator: TPLinkDataUpdateCoordinator
     device: SmartBulb
 
     def __init__(
@@ -151,9 +154,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        if self.device.has_effects:
-            assert isinstance(self.device, SmartLightStrip)
-            return SUPPORT_TRANSITION | SUPPORT_EFFECT
         return SUPPORT_TRANSITION
 
     @property
@@ -184,19 +184,27 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
         return COLOR_MODE_BRIGHTNESS
 
+
+class TPLinkSmartLightStrip(TPLinkSmartBulb):
+    """Representation of a TPLink Smart Light Strip."""
+
+    device: SmartLightStrip
+
     @property
-    def effect(self) -> str | None:
-        """Return the current effect."""
-        if not self.device.has_effects:
-            return None
-        assert isinstance(self.device, SmartLightStrip)
-        return cast(str, self.device.effect["name"])
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return super().supported_features | SUPPORT_EFFECT
 
     @property
     def effect_list(self) -> list[str] | None:
         """Return the list of available effects."""
-        if not self.device.has_effects:
-            return None
-        assert isinstance(self.device, SmartLightStrip)
-        effect_list: list[str] = self.device.effect_list
-        return effect_list
+        if effect_list := self.device.effect_list:
+            return cast(list[str], effect_list)
+        return None
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if effect := self.device.effect:
+            return cast(str, effect["name"])
+        return None
