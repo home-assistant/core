@@ -4,12 +4,13 @@ import os
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.sql.const import DOMAIN
 from homeassistant.components.sql.sensor import validate_sql_select
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from tests.common import get_test_config_dir
+from tests.common import get_test_config_dir, MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -24,67 +25,45 @@ def remove_file():
 async def test_query(hass: HomeAssistant) -> None:
     """Test the SQL sensor."""
     config = {
-        "sensor": {
-            "platform": "sql",
-            "db_url": "sqlite://",
-            "queries": [
-                {
-                    "name": "count_tables",
-                    "query": "SELECT 5 as value",
-                    "column": "value",
-                }
-            ],
-        }
+        "db_url": "sqlite://",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "name": "Select value SQL query",
     }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=config,
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "sensor", config)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.count_tables")
+    state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes["value"] == 5
-
-
-async def test_query_no_db(hass: HomeAssistant) -> None:
-    """Test the SQL sensor."""
-    config = {
-        "sensor": {
-            "platform": "sql",
-            "queries": [
-                {
-                    "name": "count_tables",
-                    "query": "SELECT 5 as value",
-                    "column": "value",
-                }
-            ],
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.count_tables")
-    assert state.state == "5"
 
 
 async def test_query_value_template(hass: HomeAssistant) -> None:
     """Test the SQL sensor."""
     config = {
-        "sensor": {
-            "platform": "sql",
-            "db_url": "sqlite://",
-            "queries": [
-                {
-                    "name": "count_tables",
-                    "query": "SELECT 5.01 as value",
-                    "column": "value",
-                    "value_template": "{{ value | int }}",
-                }
-            ],
-        }
+        "db_url": "sqlite://",
+        "query": "SELECT 5.01 as value",
+        "column": "value",
+        "name": "count_tables",
+        "value_template": "{{ value | int }}",
     }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=config,
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "sensor", config)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.count_tables")
@@ -94,23 +73,24 @@ async def test_query_value_template(hass: HomeAssistant) -> None:
 async def test_query_limit(hass: HomeAssistant) -> None:
     """Test the SQL sensor with a query containing 'LIMIT' in lowercase."""
     config = {
-        "sensor": {
-            "platform": "sql",
-            "db_url": "sqlite://",
-            "queries": [
-                {
-                    "name": "count_tables",
-                    "query": "SELECT 5 as value limit 1",
-                    "column": "value",
-                }
-            ],
-        }
+        "db_url": "sqlite://",
+        "query": "SELECT 5 as value limit 1",
+        "column": "value",
+        "name": "Select value SQL query",
     }
 
-    assert await async_setup_component(hass, "sensor", config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=config,
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.count_tables")
+    state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes["value"] == 5
 
@@ -120,20 +100,21 @@ async def test_query_no_value(
 ) -> None:
     """Test the SQL sensor with a query that returns no value."""
     config = {
-        "sensor": {
-            "platform": "sql",
-            "db_url": "sqlite://",
-            "queries": [
-                {
-                    "name": "count_tables",
-                    "query": "SELECT 5 as value where 1=2",
-                    "column": "value",
-                }
-            ],
-        }
+        "db_url": "sqlite://",
+        "query": "SELECT 5 as value where 1=2",
+        "column": "value",
+        "name": "count_tables",
     }
 
-    assert await async_setup_component(hass, "sensor", config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=config,
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.count_tables")
@@ -149,48 +130,25 @@ async def test_invalid_query(hass: HomeAssistant) -> None:
         validate_sql_select("DROP TABLE *")
 
     config = {
-        "sensor": {
-            "platform": "sql",
-            "db_url": "sqlite://",
-            "queries": [
-                {
-                    "name": "count_tables",
-                    "query": "SELECT * value FROM sqlite_master;",
-                    "column": "value",
-                }
-            ],
-        }
+        "db_url": "sqlite://",
+        "query": "SELECT * value FROM sqlite_master;",
+        "column": "value",
+        "name": "count_tables",
     }
 
-    assert await async_setup_component(hass, "sensor", config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=config,
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == STATE_UNKNOWN
-
-
-async def test_value_float_and_date(hass: HomeAssistant) -> None:
-    """Test the SQL sensor with a query has float as value."""
-    config = {
-        "sensor": {
-            "platform": "sql",
-            "db_url": "sqlite://",
-            "queries": [
-                {
-                    "name": "float_value",
-                    "query": "SELECT 5 as value, cast(5.01 as decimal(10,2)) as value2",
-                    "column": "value",
-                },
-            ],
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.float_value")
-    assert state.state == "5"
-    assert isinstance(state.attributes["value2"], float)
 
 
 @pytest.mark.parametrize(
@@ -217,20 +175,21 @@ async def test_invalid_url(
 ):
     """Test credentials in url is not logged."""
     config = {
-        "sensor": {
-            "platform": "sql",
-            "db_url": url,
-            "queries": [
-                {
-                    "name": "count_tables",
-                    "query": "SELECT 5 as value",
-                    "column": "value",
-                }
-            ],
-        }
+        "db_url": url,
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "name": "count_tables",
     }
 
-    assert await async_setup_component(hass, "sensor", config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=config,
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     for pattern in not_expected_patterns:
