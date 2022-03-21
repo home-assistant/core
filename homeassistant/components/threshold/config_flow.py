@@ -18,10 +18,10 @@ from .const import CONF_HYSTERESIS, CONF_LOWER, CONF_UPPER, DEFAULT_HYSTERESIS, 
 
 
 def _validate_mode(data: Any) -> Any:
-    """Validate the threshold mode."""
-    if data[CONF_LOWER] is None and data[CONF_UPPER] is None:
+    """Validate the threshold mode, and set limits to None if not set."""
+    if CONF_LOWER not in data and CONF_UPPER not in data:
         raise HelperFlowError("need_lower_upper")
-    return data
+    return {CONF_LOWER: None, CONF_UPPER: None, **data}
 
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -29,12 +29,8 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): selector.selector(
             {"number": {"mode": "box"}}
         ),
-        vol.Required(CONF_LOWER, default=None): selector.selector(
-            {"number": {"mode": "box"}}
-        ),
-        vol.Required(CONF_UPPER, default=None): selector.selector(
-            {"number": {"mode": "box"}}
-        ),
+        vol.Optional(CONF_LOWER): selector.selector({"number": {"mode": "box"}}),
+        vol.Optional(CONF_UPPER): selector.selector({"number": {"mode": "box"}}),
     }
 )
 
