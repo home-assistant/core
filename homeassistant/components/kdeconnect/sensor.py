@@ -83,7 +83,7 @@ class KdeConnectSensor(KdeConnectPluginEntity, SensorEntity):
         self.entity_description = description
         self.restore_type = description.sensor_restore_type
         self._attr_name = f"{device.device_name} {description.name}"
-        self._attr_unique_id = f"{device.device_id}/{description.key}"
+        self._attr_unique_id = f"{device.device_id}_{description.key}"
 
         if description.key == "battery_charge":
             self.plugin.register_charge_changed_callback(self.on_value_changed)
