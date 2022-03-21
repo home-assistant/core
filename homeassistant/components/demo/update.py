@@ -5,12 +5,7 @@ import asyncio
 from typing import Any
 
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
-from homeassistant.components.update.const import (
-    SUPPORT_BACKUP,
-    SUPPORT_INSTALL,
-    SUPPORT_PROGRESS,
-    SUPPORT_SPECIFIC_VERSION,
-)
+from homeassistant.components.update.const import UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
@@ -131,10 +126,12 @@ class DemoUpdate(UpdateEntity):
         )
         if support_install:
             self._attr_supported_features |= (
-                SUPPORT_INSTALL | SUPPORT_BACKUP | SUPPORT_SPECIFIC_VERSION
+                UpdateEntityFeature.INSTALL
+                | UpdateEntityFeature.BACKUP
+                | UpdateEntityFeature.SPECIFIC_VERSION
             )
         if support_progress:
-            self._attr_supported_features |= SUPPORT_PROGRESS
+            self._attr_supported_features |= UpdateEntityFeature.PROGRESS
 
     async def async_install(
         self,
@@ -143,7 +140,7 @@ class DemoUpdate(UpdateEntity):
         **kwargs: Any,
     ) -> None:
         """Install an update."""
-        if self.supported_features & SUPPORT_PROGRESS:
+        if self.supported_features & UpdateEntityFeature.PROGRESS:
             for progress in range(0, 100, 10):
                 self._attr_in_progress = progress
                 self.async_write_ha_state()

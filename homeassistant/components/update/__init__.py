@@ -36,10 +36,7 @@ from .const import (
     DOMAIN,
     SERVICE_INSTALL,
     SERVICE_SKIP,
-    SUPPORT_BACKUP,
-    SUPPORT_INSTALL,
-    SUPPORT_PROGRESS,
-    SUPPORT_SPECIFIC_VERSION,
+    UpdateEntityFeature,
 )
 
 SCAN_INTERVAL = timedelta(minutes=15)
@@ -67,13 +64,10 @@ __all__ = [
     "PLATFORM_SCHEMA",
     "SERVICE_INSTALL",
     "SERVICE_SKIP",
-    "SUPPORT_BACKUP",
-    "SUPPORT_INSTALL",
-    "SUPPORT_PROGRESS",
-    "SUPPORT_SPECIFIC_VERSION",
     "UpdateDeviceClass",
     "UpdateEntity",
     "UpdateEntityDescription",
+    "UpdateEntityFeature",
 ]
 
 
@@ -91,7 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_BACKUP): cv.boolean,
         },
         async_install,
-        [SUPPORT_INSTALL],
+        [UpdateEntityFeature.INSTALL],
     )
 
     component.async_register_entity_service(
@@ -124,7 +118,10 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         raise HomeAssistantError(f"No update available for {entity.name}")
 
     # If version is specified, but not supported by the entity.
-    if version is not None and not entity.supported_features & SUPPORT_SPECIFIC_VERSION:
+    if (
+        version is not None
+        and not entity.supported_features & UpdateEntityFeature.SPECIFIC_VERSION
+    ):
         raise HomeAssistantError(
             f"Installing a specific version is not supported for {entity.name}"
         )
@@ -132,7 +129,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     # If backup is requested, but not supported by the entity.
     if (
         backup := service_call.data.get(ATTR_BACKUP)
-    ) and not entity.supported_features & SUPPORT_BACKUP:
+    ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
         raise HomeAssistantError(f"Backup is not supported for {entity.name}")
 
     # Update is already in progress.
@@ -195,7 +192,7 @@ class UpdateEntity(RestoreEntity):
     def in_progress(self) -> bool | int | None:
         """Update installation progress.
 
-        Needs SUPPORT_PROGRESS flag to be set for it to be used.
+        Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
 
         Can either return a boolean (True if in progress, False if not)
         or an integer to indicate the progress in from 0 to 100%.
@@ -299,7 +296,7 @@ class UpdateEntity(RestoreEntity):
 
         # If entity supports progress, return the in_progress value.
         # Otherwise, we use the internal progress value.
-        if self.supported_features & SUPPORT_PROGRESS:
+        if self.supported_features & UpdateEntityFeature.PROGRESS:
             in_progress = self.in_progress
         else:
             in_progress = self.__in_progress
@@ -333,7 +330,7 @@ class UpdateEntity(RestoreEntity):
         Handles setting the in_progress state in case the entity doesn't
         support it natively.
         """
-        if not self.supported_features & SUPPORT_PROGRESS:
+        if not self.supported_features & UpdateEntityFeature.PROGRESS:
             self.__in_progress = True
             self.async_write_ha_state()
 

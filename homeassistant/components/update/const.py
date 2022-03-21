@@ -1,15 +1,20 @@
 """Constants for the update component."""
 from __future__ import annotations
 
+from enum import IntEnum
 from typing import Final
 
 DOMAIN: Final = "update"
 
-# Bitfield of features supported by the update entity
-SUPPORT_INSTALL: Final = 1
-SUPPORT_SPECIFIC_VERSION: Final = 2
-SUPPORT_PROGRESS: Final = 4
-SUPPORT_BACKUP: Final = 8
+
+class UpdateEntityFeature(IntEnum):
+    """Supported features of the update entity."""
+
+    INSTALL = 1
+    SPECIFIC_VERSION = 2
+    PROGRESS = 4
+    BACKUP = 8
+
 
 SERVICE_INSTALL: Final = "install"
 SERVICE_SKIP: Final = "skip"
