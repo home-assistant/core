@@ -164,18 +164,28 @@ async def test_lookup_media_for_other_integrations(
         hass, MEDIA_TYPE_MUSIC, CONTENT_ID, supports_playqueues=False
     )
     assert isinstance(result.media, plexapi.audio.Artist)
+    assert not result.shuffle
 
     # Test media key payload without playqueue
     result = process_plex_payload(
         hass, MEDIA_TYPE_MUSIC, CONTENT_ID_KEY, supports_playqueues=False
     )
     assert isinstance(result.media, plexapi.audio.Track)
+    assert not result.shuffle
 
     # Test with specified server without playqueue
     result = process_plex_payload(
         hass, MEDIA_TYPE_MUSIC, CONTENT_ID_SERVER, supports_playqueues=False
     )
     assert isinstance(result.media, plexapi.audio.Artist)
+    assert not result.shuffle
+
+    # Test shuffle without playqueue
+    result = process_plex_payload(
+        hass, MEDIA_TYPE_MUSIC, CONTENT_ID_SHUFFLE, supports_playqueues=False
+    )
+    assert isinstance(result.media, plexapi.audio.Artist)
+    assert result.shuffle
 
     # Test with media not found
     with patch("plexapi.library.LibrarySection.search", return_value=None):
