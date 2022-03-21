@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import cast
 
 from pykdeconnect.client import KdeConnectClient
 from pykdeconnect.devices import KdeConnectDevice
@@ -97,7 +97,7 @@ class KdeConnectSensor(KdeConnectPluginEntity, SensorEntity):
         else:
             assert False  # pragma: no cover
 
-    async def on_value_changed(self, value: Any) -> None:
+    async def on_value_changed(self, value: int) -> None:
         """Handle a sensor update."""
         self._attr_native_value = value
         self.async_schedule_update_ha_state()
