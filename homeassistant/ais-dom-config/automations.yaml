@@ -44,14 +44,6 @@
     - service: ais_usb.stop_devices
     - service: mqtt.publish
       data:
-        payload: 1
-        topic: dom/cmnd/SetOption19
-    - service: mqtt.publish
-      data:
-        payload: 1
-        topic: cmnd/dom/SetOption19
-    - service: mqtt.publish
-      data:
         payload: 0
         topic: dom/cmnd/state
     - service: mqtt.publish
@@ -229,22 +221,6 @@
     entity_id: input_boolean.ais_remote_access
   action:
     - service: ais_shell_command.change_remote_access
-
-- id: '201994281100123'
-  alias: 'AIS Discovery info to dom devices'
-  initial_state: true
-  trigger:
-    platform: time_pattern
-    minutes: '/59'
-  action:
-    - service: mqtt.publish
-      data:
-        payload: 1
-        topic: dom/cmnd/SetOption19
-    - service: mqtt.publish
-      data:
-        payload: 1
-        topic: cmnd/dom/SetOption19
 
 - id: '201905201824123'
   alias: 'AIS Check WiFi Connection'
