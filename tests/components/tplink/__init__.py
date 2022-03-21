@@ -40,6 +40,8 @@ def _mocked_bulb() -> SmartBulb:
     bulb.is_strip = False
     bulb.is_plug = False
     bulb.is_dimmer = False
+    bulb.effect = None
+    bulb.effect_list = None
     bulb.hsv = (10, 30, 5)
     bulb.device_id = MAC_ADDRESS
     bulb.valid_temperature_range.min = 4000
@@ -67,6 +69,8 @@ def _mocked_dimmer() -> SmartDimmer:
     dimmer.is_strip = False
     dimmer.is_plug = False
     dimmer.is_dimmer = True
+    dimmer.effect = None
+    dimmer.effect_list = None
     dimmer.hsv = (10, 30, 5)
     dimmer.device_id = MAC_ADDRESS
     dimmer.valid_temperature_range.min = 4000
