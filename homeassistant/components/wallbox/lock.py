@@ -79,7 +79,7 @@ class WallboxLock(WallboxEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock charger."""
-        await self._coordinator.async_set_lock_unlock(True)
+        await self.coordinator.async_set_lock_unlock(True)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock charger."""
