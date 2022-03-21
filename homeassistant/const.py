@@ -50,6 +50,7 @@ class Platform(StrEnum):
     SWITCH = "switch"
     TTS = "tts"
     VACUUM = "vacuum"
+    UPDATE = "update"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
 

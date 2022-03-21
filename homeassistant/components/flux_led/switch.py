@@ -52,7 +52,9 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class FluxSwitch(FluxOnOffEntity, CoordinatorEntity, SwitchEntity):
+class FluxSwitch(
+    FluxOnOffEntity, CoordinatorEntity[FluxLedUpdateCoordinator], SwitchEntity
+):
     """Representation of a Flux switch."""
 
     async def _async_turn_on(self, **kwargs: Any) -> None:

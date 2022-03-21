@@ -51,7 +51,6 @@ async def async_setup_entry(
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
-    coordinator: TPLinkDataUpdateCoordinator
     device: SmartBulb
 
     def __init__(

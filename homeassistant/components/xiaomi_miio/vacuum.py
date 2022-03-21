@@ -203,13 +203,19 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=True)
 
 
-class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
+class MiroboVacuum(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[VacuumCoordinatorData]],
+    StateVacuumEntity,
+):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
-    coordinator: DataUpdateCoordinator[VacuumCoordinatorData]
-
     def __init__(
-        self, name, device, entry, unique_id, coordinator: DataUpdateCoordinator
+        self,
+        name,
+        device,
+        entry,
+        unique_id,
+        coordinator: DataUpdateCoordinator[VacuumCoordinatorData],
     ):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         super().__init__(name, device, entry, unique_id, coordinator)

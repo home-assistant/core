@@ -84,10 +84,8 @@ async def async_setup_entry(
     async_add_entities([SharkVacuumEntity(d, coordinator) for d in devices])
 
 
-class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
+class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuumEntity):
     """Shark IQ vacuum entity."""
-
-    coordinator: SharkIqUpdateCoordinator
 
     def __init__(
         self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator

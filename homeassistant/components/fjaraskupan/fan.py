@@ -70,7 +70,7 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Fan(CoordinatorEntity[State], FanEntity):
+class Fan(CoordinatorEntity[DataUpdateCoordinator[State]], FanEntity):
     """Fan entity."""
 
     def __init__(
