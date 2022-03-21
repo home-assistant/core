@@ -11,7 +11,7 @@ from . import DOMAIN, HassioDataUpdateCoordinator
 from .const import ATTR_SLUG, DATA_KEY_ADDONS, DATA_KEY_OS
 
 
-class HassioAddonEntity(CoordinatorEntity):
+class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
     """Base entity for a Hass.io add-on."""
 
     def __init__(
@@ -38,7 +38,7 @@ class HassioAddonEntity(CoordinatorEntity):
         )
 
 
-class HassioOSEntity(CoordinatorEntity):
+class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
     """Base Entity for Hass.io OS."""
 
     def __init__(

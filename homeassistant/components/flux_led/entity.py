@@ -66,10 +66,8 @@ class FluxBaseEntity(Entity):
         self._attr_device_info = _async_device_info(self._device, entry)
 
 
-class FluxEntity(CoordinatorEntity):
+class FluxEntity(CoordinatorEntity[FluxLedUpdateCoordinator]):
     """Representation of a Flux entity with a coordinator."""
-
-    coordinator: FluxLedUpdateCoordinator
 
     def __init__(
         self,

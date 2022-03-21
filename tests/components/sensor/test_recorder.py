@@ -2176,6 +2176,8 @@ def test_compile_statistics_hourly_daily_monthly_summary(
         "homeassistant.components.recorder.models.dt_util.utcnow", return_value=zero
     ):
         hass = hass_recorder()
+        # Remove this after dropping the use of the hass_recorder fixture
+        hass.config.set_time_zone("America/Regina")
     recorder = hass.data[DATA_INSTANCE]
     recorder._db_supports_row_number = db_supports_row_number
     setup_component(hass, "sensor", {})

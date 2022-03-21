@@ -37,6 +37,8 @@ import homeassistant.util.dt as dt_util
 from tests.common import get_test_home_assistant, mock_registry
 from tests.components.recorder.common import wait_recording_done
 
+ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
+
 
 def test_compile_hourly_statistics(hass_recorder):
     """Test compiling hourly statistics."""
@@ -841,6 +843,7 @@ def test_delete_duplicates(caplog, tmpdir):
                 session.add(recorder.models.Statistics.from_stats(3, stat))
 
         hass.stop()
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
@@ -849,6 +852,7 @@ def test_delete_duplicates(caplog, tmpdir):
     wait_recording_done(hass)
     wait_recording_done(hass)
     hass.stop()
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Found non identical" not in caplog.text
@@ -1014,6 +1018,7 @@ def test_delete_duplicates_many(caplog, tmpdir):
                 session.add(recorder.models.Statistics.from_stats(3, stat))
 
         hass.stop()
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
@@ -1022,6 +1027,7 @@ def test_delete_duplicates_many(caplog, tmpdir):
     wait_recording_done(hass)
     wait_recording_done(hass)
     hass.stop()
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "Deleted 3002 duplicated statistics rows" in caplog.text
     assert "Found non identical" not in caplog.text
@@ -1149,6 +1155,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
                 session.add(recorder.models.Statistics.from_stats(2, stat))
 
         hass.stop()
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
@@ -1158,6 +1165,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     wait_recording_done(hass)
     wait_recording_done(hass)
     hass.stop()
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Deleted 1 non identical" in caplog.text
@@ -1249,6 +1257,7 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
             )
 
         hass.stop()
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
@@ -1258,6 +1267,7 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
     wait_recording_done(hass)
     wait_recording_done(hass)
     hass.stop()
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text

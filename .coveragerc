@@ -898,6 +898,7 @@ omit =
     homeassistant/components/plaato/sensor.py
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/view.py
+    homeassistant/components/plugwise/select.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/__init__.py
@@ -1061,9 +1062,6 @@ omit =
     homeassistant/components/smappee/sensor.py
     homeassistant/components/smappee/switch.py
     homeassistant/components/smarty/*
-    homeassistant/components/smarthab/__init__.py
-    homeassistant/components/smarthab/cover.py
-    homeassistant/components/smarthab/light.py
     homeassistant/components/sms/__init__.py
     homeassistant/components/sms/const.py
     homeassistant/components/sms/gateway.py
@@ -1469,6 +1467,7 @@ omit =
     homeassistant/components/zwave_me/__init__.py
     homeassistant/components/zwave_me/binary_sensor.py
     homeassistant/components/zwave_me/button.py
+    homeassistant/components/zwave_me/cover.py
     homeassistant/components/zwave_me/climate.py
     homeassistant/components/zwave_me/helpers.py
     homeassistant/components/zwave_me/light.py

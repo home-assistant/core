@@ -43,8 +43,11 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_forecast_solar() -> Generator[None, MagicMock, None]:
-    """Return a mocked Forecast.Solar client."""
+def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
+    """Return a mocked Forecast.Solar client.
+
+    hass fixture included because it sets the time zone.
+    """
     with patch(
         "homeassistant.components.forecast_solar.ForecastSolar", autospec=True
     ) as forecast_solar_mock:
