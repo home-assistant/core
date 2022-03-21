@@ -8,6 +8,7 @@ from asyncsleepiq import (
     SleepIQBed,
     SleepIQFoundation,
     SleepIQLight,
+    SleepIQPreset,
     SleepIQSleeper,
 )
 import pytest
@@ -28,6 +29,8 @@ SLEEPER_L_NAME = "SleeperL"
 SLEEPER_R_NAME = "Sleeper R"
 SLEEPER_L_NAME_LOWER = SLEEPER_L_NAME.lower().replace(" ", "_")
 SLEEPER_R_NAME_LOWER = SLEEPER_R_NAME.lower().replace(" ", "_")
+PRESET_L_STATE = "Watch TV"
+PRESET_R_STATE = "Flat"
 
 SLEEPIQ_CONFIG = {
     CONF_USERNAME: "user@email.com",
@@ -95,6 +98,18 @@ def mock_asyncsleepiq():
         actuator_f.actuator = "F"
         actuator_f.actuator_full = "Foot"
         actuator_f.position = 10
+
+        preset_l = create_autospec(SleepIQPreset)
+        preset_r = create_autospec(SleepIQPreset)
+        bed.foundation.presets = [preset_l, preset_r]
+
+        preset_l.preset = PRESET_L_STATE
+        preset_l.side = "L"
+        preset_l.side_full = "Left"
+
+        preset_r.preset = PRESET_R_STATE
+        preset_r.side = "R"
+        preset_r.side_full = "Right"
 
         yield client
 
