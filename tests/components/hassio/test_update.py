@@ -1,4 +1,4 @@
-"""The tests for the hassio sensors."""
+"""The tests for the hassio update entities."""
 
 import os
 from unittest.mock import patch
@@ -6,7 +6,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.hassio import DOMAIN
-from homeassistant.helpers import entity_registry
+from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -54,7 +55,14 @@ def mock_all(aioclient_mock, request):
     )
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
+        json={
+            "result": "ok",
+            "data": {
+                "version_latest": "1.0.0",
+                "version": "1.0.0",
+                "update_available": False,
+            },
+        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
@@ -70,7 +78,8 @@ def mock_all(aioclient_mock, request):
                         "state": "started",
                         "slug": "test",
                         "installed": True,
-                        "update_available": False,
+                        "update_available": True,
+                        "icon": False,
                         "version": "2.0.0",
                         "version_latest": "2.0.1",
                         "repository": "core",
@@ -82,8 +91,9 @@ def mock_all(aioclient_mock, request):
                         "slug": "test2",
                         "installed": True,
                         "update_available": False,
+                        "icon": False,
                         "version": "3.1.0",
-                        "version_latest": "3.2.0",
+                        "version_latest": "3.1.0",
                         "repository": "core",
                         "url": "https://github.com",
                     },
@@ -117,20 +127,15 @@ def mock_all(aioclient_mock, request):
 @pytest.mark.parametrize(
     "entity_id,expected",
     [
-        ("sensor.home_assistant_operating_system_version", "1.0.0"),
-        ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),
-        ("sensor.test_version", "2.0.0"),
-        ("sensor.test_newest_version", "2.0.1"),
-        ("sensor.test2_version", "3.1.0"),
-        ("sensor.test2_newest_version", "3.2.0"),
-        ("sensor.test_cpu_percent", "0.99"),
-        ("sensor.test2_cpu_percent", "unavailable"),
-        ("sensor.test_memory_percent", "4.59"),
-        ("sensor.test2_memory_percent", "unavailable"),
+        ("update.home_assistant_operating_system_update", "off"),
+        ("update.home_assistant_supervisor_update", "off"),
+        ("update.home_assistant_core_update", "off"),
+        ("update.test_update", "on"),
+        ("update.test2_update", "off"),
     ],
 )
-async def test_sensor(hass, entity_id, expected, aioclient_mock):
-    """Test hassio OS and addons sensor."""
+async def test_update_entities(hass, entity_id, expected, aioclient_mock):
+    """Test update entities."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
@@ -143,15 +148,61 @@ async def test_sensor(hass, entity_id, expected, aioclient_mock):
         assert result
     await hass.async_block_till_done()
 
-    # Verify that the entity is disabled by default.
-    assert hass.states.get(entity_id) is None
-
-    # Enable the entity.
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
     assert state.state == expected
+
+
+async def test_update(hass, aioclient_mock):
+    """Test updating update entities."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    aioclient_mock.post(
+        "http://127.0.0.1/addons/test/update",
+        json={"result": "ok", "data": {}},
+    )
+
+    assert await hass.services.async_call(
+        "update",
+        "install",
+        {"entity_id": "update.test_update"},
+        blocking=True,
+    )
+
+
+async def test_update_with_error(hass, aioclient_mock):
+    """Test updating update entities with error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    aioclient_mock.post(
+        "http://127.0.0.1/addons/test/update",
+        exc=HassioAPIError,
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.test_update"},
+            blocking=True,
+        )
