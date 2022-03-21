@@ -88,13 +88,9 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         # Handle turning to temp mode
         if ATTR_COLOR_TEMP in kwargs:
             # Handle temp conversion mireds -> kelvin being slightly outside of valid range
-            color_tmp = max(
-                self.device.valid_temperature_range.min,
-                min(
-                    self.device.valid_temperature_range.max,
-                    mired_to_kelvin(int(kwargs[ATTR_COLOR_TEMP])),
-                ),
-            )
+            kelvin = mired_to_kelvin(int(kwargs[ATTR_COLOR_TEMP]))
+            kelvin_range = self.device.valid_temperature_range
+            color_tmp = max(kelvin_range.min, min(kelvin_range.max, kelvin))
             _LOGGER.debug("Changing color temp to %s", color_tmp)
             await self.device.set_color_temp(
                 color_tmp, brightness=brightness, transition=transition
