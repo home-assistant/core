@@ -554,34 +554,3 @@ async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, 
             "unit_of_measurement": unit,
         }
     ]
-
-    await client.send_json(
-        {
-            "id": 4,
-            "type": "recorder/get_statistics_metadata",
-            "statistic_ids": ["sensor.test"],
-            "statistic_type": "mean",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == []
-
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "recorder/get_statistics_metadata",
-            "statistic_type": "sum",
-            "statistic_ids": ["test:total_gas"],
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == [
-        {
-            "statistic_id": "test:total_gas",
-            "name": "Total imported energy",
-            "source": "test",
-            "unit_of_measurement": unit,
-        }
-    ]
