@@ -29,6 +29,7 @@ from .const import (
 
 CONF_FIELDS = "fields"
 NOTIFY_SERVICES = "notify_services"
+NOTIFY_DISCOVERY = "notify_discovery"
 
 
 async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
@@ -114,7 +115,10 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
         """Handle for discovered platform."""
         await async_setup_platform(platform, discovery_info=info)
 
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
+    # Avoid setting up duplicate listeners after a reload
+    if not hass.data.setdefault(NOTIFY_DISCOVERY, False):
+        discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
+        hass.data[NOTIFY_DISCOVERY] = True
 
 
 @callback
