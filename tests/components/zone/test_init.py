@@ -585,11 +585,10 @@ async def test_state_2(hass):
     assert hass.states.get("zone.test_zone").state == "1"
     assert hass.states.get("zone.home").state == "0"
 
-    # Person entity enters zone
+    # Person entity enters zone, without coordinates
     hass.states.async_set(
         "person.person2",
         "Test Zone",
-        {"latitude": 32.880837, "longitude": -117.237561, "gps_accuracy": 0},
     )
     await hass.async_block_till_done()
     assert hass.states.get("zone.test_zone").state == "2"
@@ -599,7 +598,6 @@ async def test_state_2(hass):
     hass.states.async_set(
         "person.person1",
         "home",
-        {"latitude": 32.87336, "longitude": -117.22743, "gps_accuracy": 0},
     )
     await hass.async_block_till_done()
     assert hass.states.get("zone.test_zone").state == "1"
@@ -607,6 +605,33 @@ async def test_state_2(hass):
 
     # Person entity removed
     hass.states.async_remove("person.person2")
+    await hass.async_block_till_done()
+    assert hass.states.get("zone.test_zone").state == "0"
+    assert hass.states.get("zone.home").state == "1"
+
+    # Person entity enters not_home
+    hass.states.async_set(
+        "person.person1",
+        "not_home",
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("zone.test_zone").state == "0"
+    assert hass.states.get("zone.home").state == "0"
+
+    # Person entity enters home without coordinates
+    hass.states.async_set(
+        "person.person1",
+        "home",
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("zone.test_zone").state == "0"
+    assert hass.states.get("zone.home").state == "1"
+
+    # Person entity enters home without coordinates
+    hass.states.async_set(
+        "person.person1",
+        "home",
+    )
     await hass.async_block_till_done()
     assert hass.states.get("zone.test_zone").state == "0"
     assert hass.states.get("zone.home").state == "1"
