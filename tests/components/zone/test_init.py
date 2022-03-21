@@ -524,68 +524,12 @@ async def test_state(hass):
     hass.states.async_set(
         "person.person1",
         "Test Zone",
-        {"latitude": 32.880837, "longitude": -117.237561, "gps_accuracy": 0},
     )
     await hass.async_block_till_done()
     assert hass.states.get("zone.test_zone").state == "1"
     assert hass.states.get("zone.home").state == "0"
 
     # Person entity enters zone
-    hass.states.async_set(
-        "person.person2",
-        "Test Zone",
-        {"latitude": 32.880837, "longitude": -117.237561, "gps_accuracy": 0},
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "2"
-    assert hass.states.get("zone.home").state == "0"
-
-    # Person entity enters another zone
-    hass.states.async_set(
-        "person.person1",
-        "home",
-        {"latitude": 32.87336, "longitude": -117.22743, "gps_accuracy": 0},
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "1"
-    assert hass.states.get("zone.home").state == "1"
-
-    # Person entity removed
-    hass.states.async_remove("person.person2")
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "0"
-    assert hass.states.get("zone.home").state == "1"
-
-
-async def test_state_2(hass):
-    """Test the state of a zone."""
-    hass.states.async_set("person.person1", "unknown")
-    hass.states.async_set("person.person2", "unknown")
-
-    info = {
-        "name": "Test Zone",
-        "latitude": 32.880837,
-        "longitude": -117.237561,
-        "radius": 250,
-        "passive": False,
-    }
-    assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
-
-    assert len(hass.states.async_entity_ids("zone")) == 2
-    state = hass.states.get("zone.test_zone")
-    assert state.state == "0"
-
-    # Person entity enters zone
-    hass.states.async_set(
-        "person.person1",
-        "Test Zone",
-        {"latitude": 32.880837, "longitude": -117.237561, "gps_accuracy": 0},
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "1"
-    assert hass.states.get("zone.home").state == "0"
-
-    # Person entity enters zone, without coordinates
     hass.states.async_set(
         "person.person2",
         "Test Zone",
@@ -601,12 +545,6 @@ async def test_state_2(hass):
     )
     await hass.async_block_till_done()
     assert hass.states.get("zone.test_zone").state == "1"
-    assert hass.states.get("zone.home").state == "1"
-
-    # Person entity removed
-    hass.states.async_remove("person.person2")
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "0"
     assert hass.states.get("zone.home").state == "1"
 
     # Person entity enters not_home
@@ -614,6 +552,12 @@ async def test_state_2(hass):
         "person.person1",
         "not_home",
     )
+    await hass.async_block_till_done()
+    assert hass.states.get("zone.test_zone").state == "1"
+    assert hass.states.get("zone.home").state == "0"
+
+    # Person entity removed
+    hass.states.async_remove("person.person2")
     await hass.async_block_till_done()
     assert hass.states.get("zone.test_zone").state == "0"
     assert hass.states.get("zone.home").state == "0"
