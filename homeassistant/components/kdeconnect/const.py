@@ -1,23 +1,24 @@
 """Constants for the KDEConnect integration."""
+from typing import Final
 
 from pykdeconnect.const import KdeConnectDeviceType
 
-DOMAIN = "kdeconnect"
+DOMAIN: Final = "kdeconnect"
 
-DATA_KEY_CLIENT = "instance"
-DATA_KEY_STORAGE = "storage"
-DATA_KEY_NAMES = "device_names"
-DATA_KEY_DEVICES = "devices"
+DATA_KEY_CLIENT: Final = "instance"
+DATA_KEY_STORAGE: Final = "storage"
+DATA_KEY_NAMES: Final = "device_names"
+DATA_KEY_DEVICES: Final = "devices"
 
-DEVICE_NAME = "Home Assistant"
-DEVICE_TYPE = KdeConnectDeviceType.UNKNOWN
+DEVICE_NAME: Final = "Home Assistant"
+DEVICE_TYPE: Final = KdeConnectDeviceType.UNKNOWN
 
-CONF_DEVICE_NAME = "device_name"
-CONF_DEVICE_TYPE = "device_type"
-CONF_DEVICE_CERT = "device_cert"
-CONF_DEVICE_INCOMING_CAPS = "device_incoming_capabilities"
-CONF_DEVICE_OUTGOING_CAPS = "device_outgoing_capabilities"
+CONF_DEVICE_NAME: Final = "device_name"
+CONF_DEVICE_TYPE: Final = "device_type"
+CONF_DEVICE_CERT: Final = "device_cert"
+CONF_DEVICE_INCOMING_CAPS: Final = "device_incoming_capabilities"
+CONF_DEVICE_OUTGOING_CAPS: Final = "device_outgoing_capabilities"
 
-CONF_REFRESH = "Refresh"
+CONF_REFRESH: Final = "Refresh"
 
-CONNECT_TIMEOUT = 2
+CONNECT_TIMEOUT: Final = 2
