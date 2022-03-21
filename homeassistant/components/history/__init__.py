@@ -14,7 +14,11 @@ import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import history, models as history_models
+from homeassistant.components.recorder import (
+    get_instance,
+    history,
+    models as history_models,
+)
 from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
     statistics_during_period,
@@ -142,7 +146,7 @@ async def ws_get_statistics_during_period(
     else:
         end_time = None
 
-    statistics = await hass.async_add_executor_job(
+    statistics = await get_instance(hass).async_add_executor_job(
         statistics_during_period,
         hass,
         start_time,
@@ -164,7 +168,7 @@ async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fetch a list of available statistic_id."""
-    statistic_ids = await hass.async_add_executor_job(
+    statistic_ids = await get_instance(hass).async_add_executor_job(
         list_statistic_ids,
         hass,
         msg.get("statistic_type"),
@@ -220,6 +224,7 @@ class HistoryPeriodView(HomeAssistantView):
         )
 
         minimal_response = "minimal_response" in request.query
+        no_attributes = "no_attributes" in request.query
 
         hass = request.app["hass"]
 
@@ -232,7 +237,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         return cast(
             web.Response,
-            await hass.async_add_executor_job(
+            await get_instance(hass).async_add_executor_job(
                 self._sorted_significant_states_json,
                 hass,
                 start_time,
@@ -241,6 +246,7 @@ class HistoryPeriodView(HomeAssistantView):
                 include_start_time_state,
                 significant_changes_only,
                 minimal_response,
+                no_attributes,
             ),
         )
 
@@ -253,6 +259,7 @@ class HistoryPeriodView(HomeAssistantView):
         include_start_time_state,
         significant_changes_only,
         minimal_response,
+        no_attributes,
     ):
         """Fetch significant stats from the database as json."""
         timer_start = time.perf_counter()
@@ -268,6 +275,7 @@ class HistoryPeriodView(HomeAssistantView):
                 include_start_time_state,
                 significant_changes_only,
                 minimal_response,
+                no_attributes,
             )
 
         result = list(result.values())
@@ -355,7 +363,14 @@ class Filters:
         """Generate the entity filter query."""
         includes = []
         if self.included_domains:
-            includes.append(history_models.States.domain.in_(self.included_domains))
+            includes.append(
+                or_(
+                    *[
+                        history_models.States.entity_id.like(f"{domain}.%")
+                        for domain in self.included_domains
+                    ]
+                ).self_group()
+            )
         if self.included_entities:
             includes.append(history_models.States.entity_id.in_(self.included_entities))
         for glob in self.included_entity_globs:
@@ -363,7 +378,14 @@ class Filters:
 
         excludes = []
         if self.excluded_domains:
-            excludes.append(history_models.States.domain.in_(self.excluded_domains))
+            excludes.append(
+                or_(
+                    *[
+                        history_models.States.entity_id.like(f"{domain}.%")
+                        for domain in self.excluded_domains
+                    ]
+                ).self_group()
+            )
         if self.excluded_entities:
             excludes.append(history_models.States.entity_id.in_(self.excluded_entities))
         for glob in self.excluded_entity_globs:

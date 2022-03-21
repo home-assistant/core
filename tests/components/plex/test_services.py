@@ -168,7 +168,7 @@ async def test_lookup_media_for_other_integrations(
     with patch("plexapi.library.LibrarySection.search", return_value=None):
         with pytest.raises(HomeAssistantError) as excinfo:
             lookup_plex_media(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_BAD_MEDIA)
-        assert "Plex media not found" in str(excinfo.value)
+        assert f"No {MEDIA_TYPE_MUSIC} results in 'Music' for" in str(excinfo.value)
 
     # Test with playqueue
     requests_mock.get("https://1.2.3.4:32400/playQueues/1234", text=playqueue_1234)

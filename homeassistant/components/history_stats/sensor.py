@@ -7,7 +7,7 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.components.recorder import history
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -225,7 +225,7 @@ class HistoryStatsSensor(SensorEntity):
             # Don't compute anything as the value cannot have changed
             return
 
-        await self.hass.async_add_executor_job(
+        await get_instance(self.hass).async_add_executor_job(
             self._update, start, end, now_timestamp, start_timestamp, end_timestamp
         )
 

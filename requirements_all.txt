@@ -94,6 +94,9 @@ afsapi==0.0.4
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
 
+# homeassistant.components.geo_json_events
+aio_geojson_generic_client==0.1
+
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.13
 
@@ -226,7 +229,7 @@ aiopyarr==22.2.2
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==2021.12.2
+aioridwell==2022.03.0
 
 # homeassistant.components.senseme
 aiosenseme==0.6.1
@@ -280,7 +283,7 @@ alpha_vantage==2.3.1
 ambee==0.4.0
 
 # homeassistant.components.amberelectric
-amberelectric==1.0.3
+amberelectric==1.0.4
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -326,7 +329,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.26.0
+async-upnp-client==0.27.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -418,7 +421,7 @@ boto3==1.20.24
 bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
-broadlink==0.18.0
+broadlink==0.18.1
 
 # homeassistant.components.brother
 brother==1.1.0
@@ -648,6 +651,7 @@ flipr-api==1.4.2
 flux_led==0.28.27
 
 # homeassistant.components.homekit
+# homeassistant.components.recorder
 fnvhash==0.1.0
 
 # homeassistant.components.foobot
@@ -678,7 +682,6 @@ garages-amsterdam==3.0.0
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
 
-# homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.6
 
@@ -806,10 +809,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220316.0
-
-# homeassistant.components.zwave
-# homeassistant-pyozw==0.1.10
+home-assistant-frontend==20220317.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -949,6 +949,9 @@ logi_circle==0.2.2
 
 # homeassistant.components.london_underground
 london-tube-status==0.2
+
+# homeassistant.components.recorder
+lru-dict==1.1.7
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.2
@@ -1205,7 +1208,7 @@ pillow==9.0.1
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.10.0
+plexapi==4.10.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1350,7 +1353,7 @@ pyatome==0.1.1
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.11
+pyaussiebb==0.0.14
 
 # homeassistant.components.balboa
 pybalboa==0.13
@@ -1417,9 +1420,6 @@ pydelijn==1.0.0
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
-
-# homeassistant.components.zwave
-pydispatcher==2.0.5
 
 # homeassistant.components.doods
 pydoods==1.0.2
@@ -1915,7 +1915,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.29
+python-smarttub==0.0.30
 
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
@@ -1943,6 +1943,9 @@ pythonegardia==1.0.40
 
 # homeassistant.components.tile
 pytile==2022.02.0
+
+# homeassistant.components.tomorrowio
+pytomorrowio==0.1.0
 
 # homeassistant.components.touchline
 pytouchline==0.7
@@ -2033,7 +2036,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2022.01.0
 
 # homeassistant.components.renault
-renault-api==0.1.9
+renault-api==0.1.10
 
 # homeassistant.components.python_script
 restrictedpython==5.2
@@ -2087,7 +2090,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async]==2.3.0
+samsungtvws[async,encrypted]==2.4.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
@@ -2115,7 +2118,7 @@ sendgrid==6.8.2
 sense_energy==0.10.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.7
+sentry-sdk==1.5.8
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2133,7 +2136,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.02.1
+simplisafe-python==2022.03.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
@@ -2149,9 +2152,6 @@ slixmpp==1.8.0.1
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
-
-# homeassistant.components.smarthab
-smarthab==0.21
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.15
@@ -2494,4 +2494,4 @@ zm-py==0.5.2
 zwave-js-server-python==0.35.2
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.2.2
+zwave_me_ws==0.2.3
