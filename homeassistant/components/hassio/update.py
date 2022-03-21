@@ -90,11 +90,15 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     @property
     def title(self) -> str | None:
         """Return the title of the update."""
+        if not self.available:
+            return None
         return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_NAME]
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
+        if not self.available:
+            return None
         return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][
             ATTR_VERSION_LATEST
         ]
@@ -102,6 +106,8 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     @property
     def current_version(self) -> str | None:
         """Version currently in use."""
+        if not self.available:
+            return None
         return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_VERSION]
 
     @property
@@ -109,11 +115,15 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         """Release summary for the add-on."""
         if self.current_version == self.latest_version:
             return None
+        if not self.available:
+            return None
         return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_CHANGELOG]
 
     @property
     def entity_picture(self) -> str | None:
         """Return the icon of the add-on if any."""
+        if not self.available:
+            return None
         if self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_ICON]:
             return f"/api/hassio/addons/{self._addon_slug}/icon"
         return None

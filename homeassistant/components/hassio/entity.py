@@ -39,8 +39,9 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         """Return True if entity is available."""
         return (
             super().available
+            and DATA_KEY_ADDONS in self.coordinator.data
             and self.entity_description.key
-            in self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug]
+            in self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})
         )
 
 
@@ -64,6 +65,7 @@ class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         """Return True if entity is available."""
         return (
             super().available
+            and DATA_KEY_OS in self.coordinator.data
             and self.entity_description.key in self.coordinator.data[DATA_KEY_OS]
         )
 
@@ -88,6 +90,7 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         """Return True if entity is available."""
         return (
             super().available
+            and DATA_KEY_OS in self.coordinator.data
             and self.entity_description.key
             in self.coordinator.data[DATA_KEY_SUPERVISOR]
         )
@@ -113,5 +116,6 @@ class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         """Return True if entity is available."""
         return (
             super().available
+            and DATA_KEY_CORE in self.coordinator.data
             and self.entity_description.key in self.coordinator.data[DATA_KEY_CORE]
         )
