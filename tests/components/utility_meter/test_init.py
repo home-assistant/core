@@ -1,6 +1,10 @@
 """The tests for the utility_meter component."""
+from __future__ import annotations
+
 from datetime import timedelta
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.select.const import (
     DOMAIN as SELECT_DOMAIN,
@@ -22,12 +26,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     Platform,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import mock_restore_cache
+from tests.common import MockConfigEntry, mock_restore_cache
 
 
 async def test_restore_state(hass):
@@ -327,3 +332,59 @@ async def test_legacy_support(hass):
     await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
     await hass.async_block_till_done()
     assert reset_calls == ["select.energy_bill"]
+
+
+@pytest.mark.parametrize(
+    "tariffs,expected_entities",
+    (
+        (
+            "",
+            ["sensor.electricity_meter"],
+        ),
+        (
+            "high,low",
+            [
+                "sensor.electricity_meter_low",
+                "sensor.electricity_meter_high",
+                "select.electricity_meter",
+            ],
+        ),
+    ),
+)
+async def test_setup_and_remove_config_entry(
+    hass: HomeAssistant, tariffs: str, expected_entities: list[str]
+) -> None:
+    """Test setting up and removing a config entry."""
+    input_sensor_entity_id = "sensor.input"
+    registry = er.async_get(hass)
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "name": "Electricity meter",
+            "offset": {"seconds": 0},
+            "source": input_sensor_entity_id,
+            "tariffs": tariffs,
+        },
+        title="Electricity meter",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == len(expected_entities)
+    assert len(registry.entities) == len(expected_entities)
+    for entity in expected_entities:
+        assert hass.states.get(entity)
+        assert entity in registry.entities
+
+    # Remove the config entry
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the state and entity registry entry are removed
+    assert len(hass.states.async_all()) == 0
+    assert len(registry.entities) == 0

@@ -7,9 +7,10 @@ import voluptuous as vol
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -100,6 +101,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DATA_UTILITY] = {}
 
+    if DOMAIN not in config:
+        return True
+
     for meter, conf in config[DOMAIN].items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
 
@@ -151,3 +155,85 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Utility Meter from a config entry."""
+    entity_registry = er.async_get(hass)
+    hass.data[DATA_UTILITY][entry.entry_id] = {}
+    hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS] = []
+
+    try:
+        er.async_validate_entity_id(entity_registry, entry.options[CONF_SOURCE_SENSOR])
+    except vol.Invalid:
+        # The entity is identified by an unknown entity registry ID
+        _LOGGER.error(
+            "Failed to setup utility_meter for unknown entity %s",
+            entry.options[CONF_SOURCE_SENSOR],
+        )
+        return False
+
+    # Remove when frontend list selector is available
+    if not entry.options.get(CONF_TARIFFS):
+        tariffs = []
+    else:
+        tariffs = entry.options[CONF_TARIFFS].split(",")
+
+    # Clean up no longer needed entities
+    sensors = []
+    if not tariffs:
+        sensors.append(entry.entry_id)
+    else:
+        for tariff in tariffs:
+            sensors.append(f"{entry.entry_id}_{tariff}")
+
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    for entity_entry in entity_entries:
+        if entity_entry.domain == Platform.SELECT and not tariffs:
+            _LOGGER.debug("Removing unneeded select %s", entity_entry.entity_id)
+            entity_registry.async_remove(entity_entry.entity_id)
+        if (
+            entity_entry.domain == Platform.SENSOR
+            and entity_entry.unique_id not in sensors
+        ):
+            _LOGGER.debug("Removing unneeded sensor %s", entity_entry.entity_id)
+            entity_registry.async_remove(entity_entry.entity_id)
+
+    if not entry.options.get(CONF_TARIFFS):
+        # Only a single meter sensor is required
+        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = None
+        hass.config_entries.async_setup_platforms(entry, (Platform.SENSOR,))
+    else:
+        # Create tariff selection + one meter sensor for each tariff
+        entity_entry = entity_registry.async_get_or_create(
+            Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
+        )
+        hass.data[DATA_UTILITY][entry.entry_id][
+            CONF_TARIFF_ENTITY
+        ] = entity_entry.entity_id
+        hass.config_entries.async_setup_platforms(
+            entry, (Platform.SELECT, Platform.SENSOR)
+        )
+
+    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
+
+    return True
+
+
+async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update listener, called when the config entry options are changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry,
+        (
+            Platform.SELECT,
+            Platform.SENSOR,
+        ),
+    ):
+        hass.data[DATA_UTILITY].pop(entry.entry_id)
+
+    return unload_ok
