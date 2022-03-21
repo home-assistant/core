@@ -105,6 +105,7 @@ async def test_setup_network_rfxtrx(
                 "dsmr_version": "2.2",
             },
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "host": "10.10.0.1",
