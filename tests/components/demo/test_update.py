@@ -128,8 +128,10 @@ async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
     events = []
-    hass.helpers.event.async_track_state_change_event(
-        "update.demo_update_with_progress", callback(lambda event: events.append(event))
+    async_track_state_change_event(
+        hass,
+        "update.demo_update_with_progress",
+        callback(lambda event: events.append(event)),
     )
 
     with patch(

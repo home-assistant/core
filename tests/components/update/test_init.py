@@ -32,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
@@ -485,8 +486,8 @@ async def test_entity_without_progress_support(
     await hass.async_block_till_done()
 
     events = []
-    hass.helpers.event.async_track_state_change_event(
-        "update.update_available", callback(lambda event: events.append(event))
+    async_track_state_change_event(
+        hass, "update.update_available", callback(lambda event: events.append(event))
     )
 
     await hass.services.async_call(
@@ -524,8 +525,8 @@ async def test_entity_without_progress_support_raising(
     await hass.async_block_till_done()
 
     events = []
-    hass.helpers.event.async_track_state_change_event(
-        "update.update_available", callback(lambda event: events.append(event))
+    async_track_state_change_event(
+        hass, "update.update_available", callback(lambda event: events.append(event))
     )
 
     with patch(
