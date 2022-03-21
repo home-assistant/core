@@ -76,9 +76,10 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         mac_address = self.emonitor_status.network.mac_address
         if description.name:
             self._attr_name = f"{self.channel_data.label} {description.name}"
+            self._attr_unique_id = f"{mac_address}_{channel_number}_{description.key}"
         else:
             self._attr_name = self.channel_data.label
-        self._attr_unique_id = f"{mac_address}_{channel_number}"
+            self._attr_unique_id = f"{mac_address}_{channel_number}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
             manufacturer="Powerhouse Dynamics, Inc.",
