@@ -417,11 +417,11 @@ async def test_add_event_date_time(
             "description": "Description",
             "start": {
                 "dateTime": start_datetime.isoformat(timespec="seconds"),
-                "timeZone": "CST",
+                "timeZone": "America/Regina",
             },
             "end": {
                 "dateTime": end_datetime.isoformat(timespec="seconds"),
-                "timeZone": "CST",
+                "timeZone": "America/Regina",
             },
         },
     )
