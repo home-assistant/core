@@ -87,7 +87,9 @@ async def async_setup_entry(
     return
 
 
-class PecoSensor(CoordinatorEntity[dict[str, float]], SensorEntity):
+class PecoSensor(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, float]]], SensorEntity
+):
     """PECO outage counter sensor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
