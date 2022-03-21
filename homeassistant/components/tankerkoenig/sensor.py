@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import TankerkoenigData
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, NAME
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, FUEL_TYPES, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +78,6 @@ async def async_setup_entry(
                 fuel,
                 station,
                 coordinator,
-                f"{NAME}_{station['name']}_{fuel}",
                 tankerkoenig.show_on_map,
             )
             entities.append(sensor)
@@ -92,13 +91,12 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
-    def __init__(self, fuel_type, station, coordinator, name, show_on_map):
+    def __init__(self, fuel_type, station, coordinator, show_on_map):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._station = station
         self._station_id = station["id"]
         self._fuel_type = fuel_type
-        self._name = name
         self._latitude = station["lat"]
         self._longitude = station["lng"]
         self._city = station["place"]
@@ -112,7 +110,7 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return f"{self._city} {self._street} {self._house_number} {self._brand} {FUEL_TYPES[self._fuel_type]}"
 
     @property
     def icon(self):
@@ -141,7 +139,7 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
         return DeviceInfo(
             connections={(ATTR_ID, self._station_id)},
             name=f"{self._city} {self._street} {self._house_number} {self._brand}",
-            manufacturer=self._brand,
+            model=self._brand,
             configuration_url="https://www.tankerkoenig.de",
         )
 
