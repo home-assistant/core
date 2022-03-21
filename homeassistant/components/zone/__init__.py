@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_GPS_ACCURACY,
+    ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_ICON,
@@ -21,6 +21,8 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
+    STATE_HOME,
+    STATE_NOT_HOME,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
@@ -340,19 +342,15 @@ class Zone(entity.Entity):
 
     @callback
     def _person_state_change_listener(self, evt: Event) -> None:
-        person_entity_id = evt.data["entity_id"]
+        person_entity_id = evt.data[ATTR_ENTITY_ID]
         cur_count = len(self._persons_in_zone)
         if (
-            (state := evt.data["new_state"])
-            and (latitude := state.attributes.get(ATTR_LATITUDE)) is not None
-            and (longitude := state.attributes.get(ATTR_LONGITUDE)) is not None
-            and (accuracy := state.attributes.get(ATTR_GPS_ACCURACY)) is not None
+            (state := evt.data.get("new_state"))
+            and state.state != STATE_NOT_HOME
             and (
-                zone_state := async_active_zone(
-                    self.hass, latitude, longitude, accuracy
-                )
+                state.state == self.name
+                or (state.state == STATE_HOME and self.entity_id == ENTITY_ID_HOME)
             )
-            and zone_state.entity_id == self.entity_id
         ):
             self._persons_in_zone.add(person_entity_id)
         elif person_entity_id in self._persons_in_zone:
@@ -369,14 +367,13 @@ class Zone(entity.Entity):
         for person in persons:
             state = self.hass.states.get(person)
             if (
-                state is None
-                or (latitude := state.attributes.get(ATTR_LATITUDE)) is None
-                or (longitude := state.attributes.get(ATTR_LONGITUDE)) is None
-                or (accuracy := state.attributes.get(ATTR_GPS_ACCURACY)) is None
+                state
+                and state.state != STATE_NOT_HOME
+                and (
+                    state.state == self.name
+                    or (state.state == STATE_HOME and self.entity_id == ENTITY_ID_HOME)
+                )
             ):
-                continue
-            zone_state = async_active_zone(self.hass, latitude, longitude, accuracy)
-            if zone_state is not None and zone_state.entity_id == self.entity_id:
                 self._persons_in_zone.add(person)
 
         self.async_on_remove(
