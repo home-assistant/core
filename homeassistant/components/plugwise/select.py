@@ -7,7 +7,7 @@ from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, THERMOSTAT_CLASSES
+from .const import DOMAIN, LOGGER, THERMOSTAT_CLASSES
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
@@ -52,9 +52,13 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.coordinator.api.set_schedule_state(
+        result = await self.coordinator.api.set_schedule_state(
             self.device.get("location"),
             option,
             STATE_ON,
         )
-        await self.coordinator.async_request_refresh()
+        if result:
+            LOGGER.debug("Change schedule to %s was successful", option)
+            await self.coordinator.async_request_refresh()
+        else:
+            LOGGER.error("Failed changing schedule")
