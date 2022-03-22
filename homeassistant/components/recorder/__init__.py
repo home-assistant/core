@@ -464,6 +464,31 @@ class ExternalStatisticsTask(RecorderTask):
 
 
 @dataclass
+class AdjustStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run an adjust statistics task."""
+
+    statistic_id: str
+    start_time: datetime
+    sum_adjustment: float
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics task."""
+        if statistics.adjust_statistics(
+            instance,
+            self.statistic_id,
+            self.start_time,
+            self.sum_adjustment,
+        ):
+            return
+        # Schedule a new adjust statistics task if this one didn't finish
+        instance.queue.put(
+            AdjustStatisticsTask(
+                self.statistic_id, self.start_time, self.sum_adjustment
+            )
+        )
+
+
+@dataclass
 class WaitTask(RecorderTask):
     """An object to insert into the recorder queue to tell it set the _queue_watch event."""
 
@@ -761,6 +786,11 @@ class Recorder(threading.Thread):
         """Trigger the hourly statistics run."""
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
+
+    @callback
+    def async_adjust_statistics(self, statistic_id, start_time, sum_adjustment):
+        """Adjust statistics."""
+        self.queue.put(AdjustStatisticsTask(statistic_id, start_time, sum_adjustment))
 
     @callback
     def async_clear_statistics(self, statistic_ids):
