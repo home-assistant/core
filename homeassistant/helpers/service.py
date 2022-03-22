@@ -218,9 +218,12 @@ def async_prepare_call_from_config(
 
             if CONF_ENTITY_ID in target:
                 registry = entity_registry.async_get(hass)
-                target[CONF_ENTITY_ID] = entity_registry.async_validate_entity_ids(
-                    registry, cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
-                )
+                entity_ids = cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
+                if entity_ids not in (ENTITY_MATCH_ALL, ENTITY_MATCH_NONE):
+                    entity_ids = entity_registry.async_validate_entity_ids(
+                        registry, entity_ids
+                    )
+                target[CONF_ENTITY_ID] = entity_ids
         except TemplateError as ex:
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"
