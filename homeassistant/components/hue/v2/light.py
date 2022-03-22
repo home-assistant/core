@@ -123,7 +123,6 @@ class HueLight(HueBaseEntity, LightEntity):
         # fallback to on_off
         return COLOR_MODE_ONOFF
 
-
     @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color."""
@@ -164,11 +163,6 @@ class HueLight(HueBaseEntity, LightEntity):
             "mode": self.resource.mode.value,
             "dynamics": self.resource.dynamics.status.value,
         }
-
-    @callback
-    def on_update(self) -> None:
-        """Call on update event."""
-        self._set_color_mode()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -224,4 +218,3 @@ class HueLight(HueBaseEntity, LightEntity):
             id=self.resource.id,
             short=flash == FLASH_SHORT,
         )
-
