@@ -26,8 +26,12 @@ from .const import DOMAIN
 
 SENSORS = (
     SensorEntityDescription(key="inst_power"),
-    SensorEntityDescription(key="avg_power", name="Average"),
-    SensorEntityDescription(key="max_power", name="Max"),
+    SensorEntityDescription(
+        key="avg_power", name="Average", entity_registry_enabled_default=False
+    ),
+    SensorEntityDescription(
+        key="max_power", name="Max", entity_registry_enabled_default=False
+    ),
 )
 
 
@@ -74,16 +78,18 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         self.channel_number = channel_number
         super().__init__(coordinator)
         mac_address = self.emonitor_status.network.mac_address
+        device_name = name_short_mac(mac_address[-6:])
+        label = self.channel_data.label or f"{device_name} {channel_number}"
         if description.name:
-            self._attr_name = f"{self.channel_data.label} {description.name}"
+            self._attr_name = f"{label} {description.name}"
             self._attr_unique_id = f"{mac_address}_{channel_number}_{description.key}"
         else:
-            self._attr_name = self.channel_data.label
+            self._attr_name = label
             self._attr_unique_id = f"{mac_address}_{channel_number}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
             manufacturer="Powerhouse Dynamics, Inc.",
-            name=name_short_mac(mac_address[-6:]),
+            name=device_name,
             sw_version=self.emonitor_status.hardware.firmware_version,
         )
 
