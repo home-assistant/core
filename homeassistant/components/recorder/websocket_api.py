@@ -113,7 +113,7 @@ def ws_update_statistics_metadata(
         vol.Required("type"): "recorder/adjust_sum_statistics",
         vol.Required("statistic_id"): str,
         vol.Required("start_time"): str,
-        vol.Required("adjustment"): float,
+        vol.Required("adjustment"): vol.Any(float, int),
     }
 )
 @callback
@@ -126,7 +126,7 @@ def ws_adjust_sum_statistics(
     if start_time := dt_util.parse_datetime(start_time_str):
         start_time = dt_util.as_utc(start_time)
     else:
-        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start time")
         return
 
     hass.data[DATA_INSTANCE].async_adjust_statistics(
