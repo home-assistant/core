@@ -10,6 +10,18 @@ light:
       - light.outside_patio_lights
       - light.outside_patio_lights_2
 
+switch:
+  - platform: group
+    name: Master Switches G
+    entities:
+      - switch.master_switch
+      - switch.master_switch_2
+  - platform: group
+    name: Outside Switches G
+    entities:
+      - switch.outside_switch
+      - switch.outside_switch_2
+
 notify:
   - platform: group
     name: new_group_notify
