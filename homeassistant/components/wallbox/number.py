@@ -59,7 +59,6 @@ class WallboxNumber(WallboxEntity, NumberEntity):
     """Representation of the Wallbox portal."""
 
     entity_description: WallboxNumberEntityDescription
-    coordinator: WallboxCoordinator
 
     def __init__(
         self,

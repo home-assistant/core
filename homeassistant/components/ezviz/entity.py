@@ -10,7 +10,7 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import EzvizDataUpdateCoordinator
 
 
-class EzvizEntity(CoordinatorEntity, Entity):
+class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
     """Generic entity encapsulating common features of Ezviz device."""
 
     def __init__(
