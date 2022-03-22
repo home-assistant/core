@@ -51,15 +51,18 @@ def mock_all(aioclient_mock, request):
     )
     aioclient_mock.get(
         "http://127.0.0.1/core/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
+        json={
+            "result": "ok",
+            "data": {"version_latest": "1.0.0dev222", "version": "1.0.0dev221"},
+        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
         json={
             "result": "ok",
             "data": {
-                "version_latest": "1.0.0",
-                "version": "1.0.0",
+                "version_latest": "1.0.0dev2222",
+                "version": "1.0.0dev2221",
                 "update_available": False,
             },
         },
@@ -71,7 +74,7 @@ def mock_all(aioclient_mock, request):
             "data": {
                 "result": "ok",
                 "version": "1.0.0",
-                "version_latest": "1.0.1",
+                "version_latest": "1.0.1dev222",
                 "addons": [
                     {
                         "name": "test",
@@ -127,10 +130,9 @@ def mock_all(aioclient_mock, request):
 @pytest.mark.parametrize(
     "entity_id,expected",
     [
-        ("update.home_assistant_operating_system_update", "off"),
+        ("update.home_assistant_operating_system_update", "on"),
         ("update.home_assistant_supervisor_update", "on"),
-        ("update.home_assistant_core_update", "off"),
-        ("update.home_assistant_operating_system_update", "off"),
+        ("update.home_assistant_core_update", "on"),
         ("update.test_update", "on"),
         ("update.test2_update", "off"),
     ],
@@ -203,7 +205,7 @@ async def test_update_os(hass, aioclient_mock):
     assert await hass.services.async_call(
         "update",
         "install",
-        {"entity_id": "update.home_assistant_os_update"},
+        {"entity_id": "update.home_assistant_operating_system_update"},
         blocking=True,
     )
 

@@ -374,7 +374,7 @@ async def async_update_core(
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
-    command = "/supervisor/update"
+    command = "/core/update"
     return await hassio.send_command(
         command,
         payload={"version": version, "backup": backup},

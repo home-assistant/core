@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from awesomeversion import AwesomeVersion
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
     UpdateEntity,
@@ -162,9 +162,8 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        if (version := self.latest_version) is None:
-            return None
-        if "dev" in version:
+        version = AwesomeVersion(self.latest_version)
+        if version.dev or version.strategy == AwesomeVersionStrategy.UNKNOWN:
             return "https://github.com/home-assistant/operating-system/commits/dev"
         return (
             f"https://github.com/home-assistant/operating-system/releases/tag/{version}"
@@ -204,9 +203,8 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        if (version := self.latest_version) is None:
-            return None
-        if "dev" in version:
+        version = AwesomeVersion(self.latest_version)
+        if version.dev or version.strategy == AwesomeVersionStrategy.UNKNOWN:
             return "https://github.com/home-assistant/supervisor/commits/main"
         return f"https://github.com/home-assistant/supervisor/releases/tag/{version}"
 
@@ -261,9 +259,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         version = AwesomeVersion(self.latest_version)
         if version.dev:
             return "https://github.com/home-assistant/core/commits/dev"
-        if version.beta:
-            return "https://rc.home-assistant.io/latest-release-notes/"
-        return "https://www.home-assistant.io/latest-release-notes/"
+        return f"https://{'rc' if version.beta else 'www'}.home-assistant.io/latest-release-notes/"
 
     async def async_install(
         self,
