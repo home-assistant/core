@@ -7,7 +7,7 @@ from itertools import groupby
 import logging
 import time
 
-from sqlalchemy import Text, and_, bindparam, func
+from sqlalchemy import Text, and_, bindparam, func, or_
 from sqlalchemy.ext import baked
 from sqlalchemy.sql.expression import literal
 
@@ -30,14 +30,16 @@ _LOGGER = logging.getLogger(__name__)
 STATE_KEY = "state"
 LAST_CHANGED_KEY = "last_changed"
 
-SIGNIFICANT_DOMAINS = (
+SIGNIFICANT_DOMAINS = {
     "climate",
     "device_tracker",
     "humidifier",
     "thermostat",
     "water_heater",
-)
-IGNORE_DOMAINS = ("zone", "scene")
+}
+SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in SIGNIFICANT_DOMAINS]
+IGNORE_DOMAINS = {"zone", "scene"}
+IGNORE_DOMAINS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in IGNORE_DOMAINS]
 NEED_ATTRIBUTE_DOMAINS = {
     "climate",
     "humidifier",
@@ -47,7 +49,6 @@ NEED_ATTRIBUTE_DOMAINS = {
 }
 
 BASE_STATES = [
-    States.domain,
     States.entity_id,
     States.state,
     States.last_changed,
@@ -106,26 +107,42 @@ def get_significant_states_with_session(
     query_keys = QUERY_STATE_NO_ATTR if no_attributes else QUERY_STATES
     baked_query = hass.data[HISTORY_BAKERY](lambda session: session.query(*query_keys))
 
-    if significant_changes_only:
-        baked_query += lambda q: q.filter(
-            (
-                States.domain.in_(SIGNIFICANT_DOMAINS)
-                | (States.last_changed == States.last_updated)
+    if entity_ids is not None and len(entity_ids) == 1:
+        if (
+            significant_changes_only
+            and split_entity_id(entity_ids[0])[0] not in SIGNIFICANT_DOMAINS
+        ):
+            baked_query += lambda q: q.filter(
+                States.last_changed == States.last_updated
             )
-            & (States.last_updated > bindparam("start_time"))
+    elif significant_changes_only:
+        baked_query += lambda q: q.filter(
+            or_(
+                *[
+                    States.entity_id.like(entity_domain)
+                    for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE
+                ],
+                (States.last_changed == States.last_updated),
+            )
         )
-    else:
-        baked_query += lambda q: q.filter(States.last_updated > bindparam("start_time"))
 
     if entity_ids is not None:
         baked_query += lambda q: q.filter(
             States.entity_id.in_(bindparam("entity_ids", expanding=True))
         )
     else:
-        baked_query += lambda q: q.filter(~States.domain.in_(IGNORE_DOMAINS))
+        baked_query += lambda q: q.filter(
+            and_(
+                *[
+                    ~States.entity_id.like(entity_domain)
+                    for entity_domain in IGNORE_DOMAINS_ENTITY_ID_LIKE
+                ]
+            )
+        )
         if filters:
             filters.bake(baked_query)
 
+    baked_query += lambda q: q.filter(States.last_updated > bindparam("start_time"))
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
 
@@ -365,7 +382,8 @@ def _get_states_with_session(
             most_recent_state_ids,
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
-        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
+        for entity_domain in IGNORE_DOMAINS_ENTITY_ID_LIKE:
+            query = query.filter(~States.entity_id.like(entity_domain))
         if filters:
             query = filters.apply(query)
         if not no_attributes:

@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Light(CoordinatorEntity[State], LightEntity):
+class Light(CoordinatorEntity[DataUpdateCoordinator[State]], LightEntity):
     """Light device."""
 
     def __init__(

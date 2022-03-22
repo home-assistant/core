@@ -375,7 +375,6 @@ async def test_purge_edge_case(
             session.add(
                 States(
                     entity_id="test.recorder2",
-                    domain="sensor",
                     state="purgeme",
                     attributes="{}",
                     last_changed=timestamp,
@@ -444,7 +443,6 @@ async def test_purge_cutoff_date(
             session.add(
                 States(
                     entity_id="test.cutoff",
-                    domain="sensor",
                     state="keep",
                     attributes="{}",
                     last_changed=timestamp_keep,
@@ -473,7 +471,6 @@ async def test_purge_cutoff_date(
                 session.add(
                     States(
                         entity_id="test.cutoff",
-                        domain="sensor",
                         state="purge",
                         attributes="{}",
                         last_changed=timestamp_purge,
@@ -592,7 +589,6 @@ async def test_purge_filtered_states(
             session.add(
                 States(
                     entity_id="sensor.excluded",
-                    domain="sensor",
                     state="purgeme",
                     attributes="{}",
                     last_changed=timestamp,
@@ -619,7 +615,6 @@ async def test_purge_filtered_states(
             )
             state_1 = States(
                 entity_id="sensor.linked_old_state_id",
-                domain="sensor",
                 state="keep",
                 attributes="{}",
                 last_changed=timestamp,
@@ -630,7 +625,6 @@ async def test_purge_filtered_states(
             timestamp = dt_util.utcnow() - timedelta(days=4)
             state_2 = States(
                 entity_id="sensor.linked_old_state_id",
-                domain="sensor",
                 state="keep",
                 attributes="{}",
                 last_changed=timestamp,
@@ -640,7 +634,6 @@ async def test_purge_filtered_states(
             )
             state_3 = States(
                 entity_id="sensor.linked_old_state_id",
-                domain="sensor",
                 state="keep",
                 attributes="{}",
                 last_changed=timestamp,
@@ -814,7 +807,6 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
             session.add(
                 States(
                     entity_id="sensor.old_format",
-                    domain="sensor",
                     state=STATE_ON,
                     attributes=json.dumps({"old": "not_using_state_attributes"}),
                     last_changed=timestamp,
@@ -979,7 +971,6 @@ async def test_purge_filtered_events_state_changed(
             timestamp = dt_util.utcnow() - timedelta(days=0)
             state_1 = States(
                 entity_id="sensor.linked_old_state_id",
-                domain="sensor",
                 state="keep",
                 attributes="{}",
                 last_changed=timestamp,
@@ -989,7 +980,6 @@ async def test_purge_filtered_events_state_changed(
             timestamp = dt_util.utcnow() - timedelta(days=4)
             state_2 = States(
                 entity_id="sensor.linked_old_state_id",
-                domain="sensor",
                 state="keep",
                 attributes="{}",
                 last_changed=timestamp,
@@ -998,7 +988,6 @@ async def test_purge_filtered_events_state_changed(
             )
             state_3 = States(
                 entity_id="sensor.linked_old_state_id",
-                domain="sensor",
                 state="keep",
                 attributes="{}",
                 last_changed=timestamp,
@@ -1318,7 +1307,6 @@ def _add_state_and_state_changed_event(
     session.add(
         States(
             entity_id=entity_id,
-            domain="sensor",
             state=state,
             attributes=None,
             last_changed=timestamp,
