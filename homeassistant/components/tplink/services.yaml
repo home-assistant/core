@@ -15,7 +15,7 @@ sequence_effect:
       selector:
         object:
     segments:
-      description: List of Segments
+      description: List of Segments (0 for all)
       example: 0, 2, 4, 6, 8
       default: 0
       required: false
@@ -97,7 +97,7 @@ random_effect:
       selector:
         object:
     segments:
-      description: List of segments
+      description: List of segments (0 for all)
       example: 0, 2, 4, 6, 8
       default: 0
       required: false
