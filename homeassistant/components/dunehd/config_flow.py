@@ -77,9 +77,10 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle configuration by yaml file."""
         _LOGGER.warning(
-            "Dune yaml configuration has been deprecated in 2022.4, has been "
-            "automatically imported, and will be removed in a future version of "
-            " Home Assistant. Please remove it from your configuration.yaml"
+            "Configuration of the Dune HD integration in YAML is deprecated and will be "
+            "removed in Home Assistant 2022.6; Your existing configuration "
+            "has been imported into the UI automatically and can be safely removed "
+            "from your configuration.yaml file"
         )
         assert user_input is not None
         host: str = user_input[CONF_HOST]
