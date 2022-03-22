@@ -20,15 +20,23 @@ from .helpers import ZwaveValueID, get_home_and_node_id_from_device_entry
 
 KEYS_TO_REDACT = {"homeId", "location"}
 
-VALUES_TO_REDACT = (ZwaveValueID("userCode", CommandClass.USER_CODE),)
+VALUES_TO_REDACT = (
+    ZwaveValueID(property_="userCode", command_class=CommandClass.USER_CODE),
+)
 
 
 def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
     """Redact value of a Z-Wave value."""
     for value_to_redact in VALUES_TO_REDACT:
         if (
-            zwave_value["commandClass"] == value_to_redact.command_class
-            and zwave_value["property"] == value_to_redact.property_
+            (
+                value_to_redact.command_class is None
+                or zwave_value["commandClass"] == value_to_redact.command_class
+            )
+            and (
+                value_to_redact.property_ is None
+                or zwave_value["property"] == value_to_redact.property_
+            )
             and (
                 value_to_redact.endpoint is None
                 or zwave_value["endpoint"] == value_to_redact.endpoint

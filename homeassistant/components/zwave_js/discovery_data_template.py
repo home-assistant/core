@@ -477,7 +477,7 @@ class ConfigurableFanValueMappingDataTemplate(
           ...
           data_template=ConfigurableFanValueMappingDataTemplate(
             configuration_option=ZwaveValueID(
-                5, CommandClass.CONFIGURATION, endpoint=0
+                property_=5, command_class=CommandClass.CONFIGURATION, endpoint=0
             ),
             configuration_value_to_fan_value_mapping={
                 0: FanValueMapping(speeds=[(1,33), (34,66), (67,99)]),

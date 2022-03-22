@@ -307,7 +307,7 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=ConfigurableFanValueMappingDataTemplate(
             configuration_option=ZwaveValueID(
-                5, CommandClass.CONFIGURATION, endpoint=0
+                property_=5, command_class=CommandClass.CONFIGURATION, endpoint=0
             ),
             configuration_value_to_fan_value_mapping={
                 0: FanValueMapping(speeds=[(1, 33), (34, 66), (67, 99)]),
@@ -325,8 +325,8 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=CoverTiltDataTemplate(
             tilt_value_id=ZwaveValueID(
-                "fibaro",
-                CommandClass.MANUFACTURER_PROPRIETARY,
+                property_="fibaro",
+                command_class=CommandClass.MANUFACTURER_PROPRIETARY,
                 endpoint=0,
                 property_key="venetianBlindsTilt",
             )
