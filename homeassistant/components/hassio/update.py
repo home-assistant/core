@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from awesomeversion import AwesomeVersion
+
 from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityDescription,
@@ -26,6 +28,7 @@ from .const import (
     ATTR_VERSION,
     ATTR_VERSION_LATEST,
     DATA_KEY_ADDONS,
+    DATA_KEY_CORE,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
 )
@@ -90,15 +93,11 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     @property
     def title(self) -> str | None:
         """Return the title of the update."""
-        if not self.available:
-            return None
         return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_NAME]
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        if not self.available:
-            return None
         return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][
             ATTR_VERSION_LATEST
         ]
@@ -106,17 +105,11 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     @property
     def current_version(self) -> str | None:
         """Version currently in use."""
-        if not self.available:
-            return None
         return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_VERSION]
 
     @property
     def release_summary(self) -> str | None:
         """Release summary for the add-on."""
-        if self.current_version == self.latest_version:
-            return None
-        if not self.available:
-            return None
         return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_CHANGELOG]
 
     @property
@@ -250,12 +243,12 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
     @property
     def latest_version(self) -> str:
         """Return native value of entity."""
-        return self.coordinator.data[DATA_KEY_SUPERVISOR][ATTR_VERSION_LATEST]
+        return self.coordinator.data[DATA_KEY_CORE][ATTR_VERSION_LATEST]
 
     @property
     def current_version(self) -> str:
         """Return native value of entity."""
-        return self.coordinator.data[DATA_KEY_SUPERVISOR][ATTR_VERSION]
+        return self.coordinator.data[DATA_KEY_CORE][ATTR_VERSION]
 
     @property
     def entity_picture(self) -> str | None:
@@ -265,11 +258,10 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        if (version := self.latest_version) is None:
-            return None
-        if "dev" in version:
+        version = AwesomeVersion(self.latest_version)
+        if version.dev:
             return "https://github.com/home-assistant/core/commits/dev"
-        if "b" in version:
+        if version.beta:
             return "https://rc.home-assistant.io/latest-release-notes/"
         return "https://www.home-assistant.io/latest-release-notes/"
 

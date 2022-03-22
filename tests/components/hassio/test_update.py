@@ -71,7 +71,7 @@ def mock_all(aioclient_mock, request):
             "data": {
                 "result": "ok",
                 "version": "1.0.0",
-                "version_latest": "1.0.0",
+                "version_latest": "1.0.1",
                 "addons": [
                     {
                         "name": "test",
@@ -91,7 +91,7 @@ def mock_all(aioclient_mock, request):
                         "slug": "test2",
                         "installed": True,
                         "update_available": False,
-                        "icon": False,
+                        "icon": True,
                         "version": "3.1.0",
                         "version_latest": "3.1.0",
                         "repository": "core",
@@ -128,7 +128,7 @@ def mock_all(aioclient_mock, request):
     "entity_id,expected",
     [
         ("update.home_assistant_operating_system_update", "off"),
-        ("update.home_assistant_supervisor_update", "off"),
+        ("update.home_assistant_supervisor_update", "on"),
         ("update.home_assistant_core_update", "off"),
         ("update.test_update", "on"),
         ("update.test2_update", "off"),
@@ -153,8 +153,8 @@ async def test_update_entities(hass, entity_id, expected, aioclient_mock):
     assert state.state == expected
 
 
-async def test_update(hass, aioclient_mock):
-    """Test updating update entities."""
+async def test_update_addon(hass, aioclient_mock):
+    """Test updating addon update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
@@ -176,6 +176,87 @@ async def test_update(hass, aioclient_mock):
         "update",
         "install",
         {"entity_id": "update.test_update"},
+        blocking=True,
+    )
+
+
+async def test_update_os(hass, aioclient_mock):
+    """Test updating OS update entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    aioclient_mock.post(
+        "http://127.0.0.1/os/update",
+        json={"result": "ok", "data": {}},
+    )
+
+    assert await hass.services.async_call(
+        "update",
+        "install",
+        {"entity_id": "update.home_assistant_os_update"},
+        blocking=True,
+    )
+
+
+async def test_update_core(hass, aioclient_mock):
+    """Test updating core update entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    aioclient_mock.post(
+        "http://127.0.0.1/core/update",
+        json={"result": "ok", "data": {}},
+    )
+
+    assert await hass.services.async_call(
+        "update",
+        "install",
+        {"entity_id": "update.home_assistant_os_update"},
+        blocking=True,
+    )
+
+
+async def test_update_supervisor(hass, aioclient_mock):
+    """Test updating supervisor update entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    aioclient_mock.post(
+        "http://127.0.0.1/supervisor/update",
+        json={"result": "ok", "data": {}},
+    )
+
+    assert await hass.services.async_call(
+        "update",
+        "install",
+        {"entity_id": "update.home_assistant_supervisor_update"},
         blocking=True,
     )
 
