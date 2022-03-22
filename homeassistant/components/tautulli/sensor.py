@@ -101,8 +101,6 @@ async def async_setup_entry(
 class TautulliSensor(TautulliEntity, SensorEntity):
     """Representation of a Tautulli sensor."""
 
-    coordinator: TautulliDataUpdateCoordinator
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""

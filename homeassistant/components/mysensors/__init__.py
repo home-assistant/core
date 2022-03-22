@@ -124,27 +124,30 @@ GATEWAY_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            vol.All(
-                deprecated(CONF_DEBUG),
-                deprecated(CONF_OPTIMISTIC),
-                deprecated(CONF_PERSISTENCE),
-                {
-                    vol.Required(CONF_GATEWAYS): vol.All(
-                        cv.ensure_list,
-                        set_default_persistence_file,
-                        has_all_unique_files,
-                        [GATEWAY_SCHEMA],
-                    ),
-                    vol.Optional(CONF_RETAIN, default=True): cv.boolean,
-                    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
-                    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
-                    vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
-                },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                vol.All(
+                    deprecated(CONF_DEBUG),
+                    deprecated(CONF_OPTIMISTIC),
+                    deprecated(CONF_PERSISTENCE),
+                    {
+                        vol.Required(CONF_GATEWAYS): vol.All(
+                            cv.ensure_list,
+                            set_default_persistence_file,
+                            has_all_unique_files,
+                            [GATEWAY_SCHEMA],
+                        ),
+                        vol.Optional(CONF_RETAIN, default=True): cv.boolean,
+                        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
+                        vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+                        vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
+                    },
+                )
             )
-        )
-    },
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 

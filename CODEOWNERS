@@ -741,6 +741,8 @@ homeassistant/components/panel_custom/* @home-assistant/frontend
 tests/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
 tests/components/panel_iframe/* @home-assistant/frontend
+homeassistant/components/peco/* @IceBotYT
+tests/components/peco/* @IceBotYT
 homeassistant/components/persistent_notification/* @home-assistant/core
 tests/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
@@ -908,8 +910,6 @@ homeassistant/components/smappee/* @bsmappee
 tests/components/smappee/* @bsmappee
 homeassistant/components/smart_meter_texas/* @grahamwetzler
 tests/components/smart_meter_texas/* @grahamwetzler
-homeassistant/components/smarthab/* @outadoc
-tests/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
 tests/components/smartthings/* @andrewsayre
 homeassistant/components/smarttub/* @mdz
@@ -1027,6 +1027,8 @@ homeassistant/components/todoist/* @boralyl
 tests/components/todoist/* @boralyl
 homeassistant/components/tolo/* @MatthiasLohr
 tests/components/tolo/* @MatthiasLohr
+homeassistant/components/tomorrowio/* @raman325
+tests/components/tomorrowio/* @raman325
 homeassistant/components/totalconnect/* @austinmroczek
 tests/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey
@@ -1060,6 +1062,8 @@ tests/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli @fabaff
 homeassistant/components/upcloud/* @scop
 tests/components/upcloud/* @scop
+homeassistant/components/update/* @home-assistant/core
+tests/components/update/* @home-assistant/core
 homeassistant/components/updater/* @home-assistant/core
 tests/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23

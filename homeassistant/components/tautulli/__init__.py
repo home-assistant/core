@@ -43,10 +43,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class TautulliEntity(CoordinatorEntity):
+class TautulliEntity(CoordinatorEntity[TautulliDataUpdateCoordinator]):
     """Defines a base Tautulli entity."""
-
-    coordinator: TautulliDataUpdateCoordinator
 
     def __init__(
         self,
