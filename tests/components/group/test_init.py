@@ -1435,7 +1435,7 @@ async def test_setup_and_remove_config_entry(
         ("binary_sensor", {"all": False}),
         ("cover", {}),
         ("fan", {}),
-        ("light", {}),
+        ("light", {"all": False}),
         ("media_player", {}),
     ),
 )
