@@ -16,8 +16,7 @@ from homeassistant.helpers.helper_config_entry_flow import (
 
 from . import DOMAIN
 from .binary_sensor import CONF_ALL
-
-CONF_HIDE_MEMBERS = "hide_members"
+from .const import CONF_HIDE_MEMBERS
 
 
 def basic_group_options_schema(domain: str) -> vol.Schema:
