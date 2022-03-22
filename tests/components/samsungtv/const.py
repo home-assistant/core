@@ -1,4 +1,6 @@
 """Constants for the samsungtv tests."""
+from samsungtvws.event import ED_INSTALLED_APP_EVENT
+
 from homeassistant.components.samsungtv.const import CONF_SESSION_ID
 from homeassistant.const import (
     CONF_HOST,
@@ -23,30 +25,6 @@ MOCK_ENTRYDATA_ENCRYPTED_WS = {
     CONF_TOKEN: "037739871315caef138547b03e348b72",
     CONF_SESSION_ID: "2",
 }
-
-SAMPLE_APP_LIST = [
-    {
-        "appId": "111299001912",
-        "app_type": 2,
-        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/111299001912/250x250.png",
-        "is_lock": 0,
-        "name": "YouTube",
-    },
-    {
-        "appId": "3201608010191",
-        "app_type": 2,
-        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/3201608010191/250x250.png",
-        "is_lock": 0,
-        "name": "Deezer",
-    },
-    {
-        "appId": "3201606009684",
-        "app_type": 2,
-        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/3201606009684/250x250.png",
-        "is_lock": 0,
-        "name": "Spotify - Music and Podcasts",
-    },
-]
 
 SAMPLE_DEVICE_INFO_WIFI = {
     "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -126,4 +104,34 @@ SAMPLE_DEVICE_INFO_UE48JU6400 = {
     },
     "type": "Samsung SmartTV",
     "uri": "https://1.2.3.4:8002/api/v2/",
+}
+
+SAMPLE_EVENT_ED_INSTALLED_APP = {
+    "event": ED_INSTALLED_APP_EVENT,
+    "from": "host",
+    "data": {
+        "data": [
+            {
+                "appId": "111299001912",
+                "app_type": 2,
+                "icon": "/opt/share/webappservice/apps_icon/FirstScreen/111299001912/250x250.png",
+                "is_lock": 0,
+                "name": "YouTube",
+            },
+            {
+                "appId": "3201608010191",
+                "app_type": 2,
+                "icon": "/opt/share/webappservice/apps_icon/FirstScreen/3201608010191/250x250.png",
+                "is_lock": 0,
+                "name": "Deezer",
+            },
+            {
+                "appId": "3201606009684",
+                "app_type": 2,
+                "icon": "/opt/share/webappservice/apps_icon/FirstScreen/3201606009684/250x250.png",
+                "is_lock": 0,
+                "name": "Spotify - Music and Podcasts",
+            },
+        ]
+    },
 }

@@ -13,7 +13,7 @@ from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 
 import homeassistant.util.dt as dt_util
 
-from .const import SAMPLE_APP_LIST, SAMPLE_DEVICE_INFO_WIFI
+from .const import SAMPLE_DEVICE_INFO_WIFI
 
 
 @pytest.fixture(autouse=True)
@@ -56,7 +56,6 @@ def remotews_fixture() -> Mock:
     remotews = Mock(SamsungTVWSAsyncRemote)
     remotews.__aenter__ = AsyncMock(return_value=remotews)
     remotews.__aexit__ = AsyncMock()
-    remotews.app_list.return_value = SAMPLE_APP_LIST
     remotews.token = "FAKE_TOKEN"
 
     def _start_listening(

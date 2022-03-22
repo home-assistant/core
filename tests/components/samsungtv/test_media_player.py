@@ -9,6 +9,7 @@ from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
 from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
+from samsungtvws.event import ED_INSTALLED_APP_EVENT
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -70,11 +71,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import setup_samsungtv_entry
-from .const import (
-    MOCK_ENTRYDATA_ENCRYPTED_WS,
-    SAMPLE_APP_LIST,
-    SAMPLE_DEVICE_INFO_FRAME,
-)
+from .const import MOCK_ENTRYDATA_ENCRYPTED_WS, SAMPLE_DEVICE_INFO_FRAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -175,7 +172,6 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock()
-        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.token = "123456789"
         remote_class.return_value = remote
 
@@ -213,7 +209,6 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock()
-        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.token = "987654321"
         remote_class.return_value = remote
         assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
@@ -744,6 +739,31 @@ async def test_turn_off_websocket(
     ):
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
+    remotews.raise_mock_ws_event_callback(
+        ED_INSTALLED_APP_EVENT,
+        {
+            "event": "ed.installedApp.get",
+            "from": "host",
+            "data": {
+                "data": [
+                    {
+                        "appId": "111299001912",
+                        "app_type": 2,
+                        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/111299001912/250x250.png",
+                        "is_lock": 0,
+                        "name": "YouTube",
+                    },
+                    {
+                        "appId": "3201608010191",
+                        "app_type": 2,
+                        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/3201608010191/250x250.png",
+                        "is_lock": 0,
+                        "name": "Deezer",
+                    },
+                ]
+            },
+        },
+    )
     remotews.send_commands.reset_mock()
 
     assert await hass.services.async_call(
@@ -1179,6 +1199,31 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
 async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
     """Test for select_source."""
     await setup_samsungtv(hass, MOCK_CONFIGWS)
+    remotews.raise_mock_ws_event_callback(
+        ED_INSTALLED_APP_EVENT,
+        {
+            "event": "ed.installedApp.get",
+            "from": "host",
+            "data": {
+                "data": [
+                    {
+                        "appId": "111299001912",
+                        "app_type": 2,
+                        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/111299001912/250x250.png",
+                        "is_lock": 0,
+                        "name": "YouTube",
+                    },
+                    {
+                        "appId": "3201608010191",
+                        "app_type": 2,
+                        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/3201608010191/250x250.png",
+                        "is_lock": 0,
+                        "name": "Deezer",
+                    },
+                ]
+            },
+        },
+    )
     remotews.send_commands.reset_mock()
 
     assert await hass.services.async_call(
