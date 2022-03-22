@@ -145,9 +145,20 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._end_of_power_off: datetime | None = None
         self._bridge = bridge
         self._auth_failed = False
-        self._bridge.register_reauth_callback(self.access_denied)
+        self._bridge.register_reauth_callback(self._access_denied)
+        self._bridge.register_app_list_callback(self._app_list_callback)
 
-    def access_denied(self) -> None:
+    def _update_sources(self) -> None:
+        self._attr_source_list = list(SOURCES)
+        if app_list := self._app_list:
+            self._attr_source_list.extend(app_list)
+
+    def _app_list_callback(self, app_list: dict[str, str]) -> None:
+        """App list callback."""
+        self._app_list = app_list
+        self._update_sources()
+
+    def _access_denied(self) -> None:
         """Access denied callback."""
         LOGGER.debug("Access denied in getting remote object")
         self._auth_failed = True
@@ -172,15 +183,6 @@ class SamsungTVDevice(MediaPlayerEntity):
             self._attr_state = (
                 STATE_ON if await self._bridge.async_is_on() else STATE_OFF
             )
-
-        if self._attr_state == STATE_ON and self._app_list is None:
-            self._app_list = {}  # Ensure that we don't update it twice in parallel
-            await self._async_update_app_list()
-
-    async def _async_update_app_list(self) -> None:
-        self._app_list = await self._bridge.async_get_app_list()
-        if self._app_list is not None:
-            self._attr_source_list.extend(self._app_list)
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
