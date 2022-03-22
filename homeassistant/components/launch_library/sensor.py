@@ -179,13 +179,14 @@ async def async_setup_entry(
     )
 
 
-class LaunchLibrarySensor(CoordinatorEntity, SensorEntity):
+class LaunchLibrarySensor(
+    CoordinatorEntity[DataUpdateCoordinator[LaunchLibraryData]], SensorEntity
+):
     """Representation of the next launch sensors."""
 
     _attr_attribution = "Data provided by Launch Library."
     _next_event: Launch | Event | None = None
     entity_description: LaunchLibrarySensorEntityDescription
-    coordinator: DataUpdateCoordinator[LaunchLibraryData]
 
     def __init__(
         self,
