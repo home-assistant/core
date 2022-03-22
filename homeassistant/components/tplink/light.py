@@ -66,9 +66,9 @@ BASE_EFFECT_DICT: Final = {
 SEQUENCE_EFFECT_DICT: Final = {
     **BASE_EFFECT_DICT,
     vol.Required("sequence"): vol.All(
-        cv.ensure_list_csv,
+        cv.ensure_list,
         vol.Length(min=1, max=16),
-        [vol.All(cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE)],
+        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
     ),
     vol.Optional("spread", default=1): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=16)
@@ -104,9 +104,9 @@ RANDOM_EFFECT_DICT: Final = {
         vol.Coerce(int), vol.Range(min=1, max=100)
     ),
     vol.Required("backgrounds"): vol.All(
-        cv.ensure_list_csv,
+        cv.ensure_list,
         vol.Length(min=1, max=16),
-        [vol.All(cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE)],
+        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
     ),
 }
 
@@ -347,6 +347,9 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             effect["saturation_range"] = saturation_range
         if brightness_range:
             effect["brightness_range"] = brightness_range
+            effect["brightness"] = min(
+                brightness_range[1], max(brightness, brightness_range[0])
+            )
         if transition_range:
             effect["transition_range"] = transition_range
             effect["transition"] = 0
