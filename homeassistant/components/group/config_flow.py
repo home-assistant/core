@@ -46,9 +46,19 @@ BINARY_SENSOR_OPTIONS_SCHEMA = basic_group_options_schema("binary_sensor").exten
     }
 )
 
+LIGHT_OPTIONS_SCHEMA = basic_group_options_schema("light").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.selector({"boolean": {}}),
+    }
+)
+
 BINARY_SENSOR_CONFIG_SCHEMA = vol.Schema(
     {vol.Required("name"): selector.selector({"text": {}})}
 ).extend(BINARY_SENSOR_OPTIONS_SCHEMA.schema)
+
+LIGHT_CONFIG_SCHEMA = vol.Schema(
+    {vol.Required("name"): selector.selector({"text": {}})}
+).extend(LIGHT_OPTIONS_SCHEMA.schema)
 
 
 INITIAL_STEP_SCHEMA = vol.Schema(
@@ -81,7 +91,7 @@ CONFIG_FLOW = {
     "binary_sensor": HelperFlowStep(BINARY_SENSOR_CONFIG_SCHEMA),
     "cover": HelperFlowStep(basic_group_config_schema("cover")),
     "fan": HelperFlowStep(basic_group_config_schema("fan")),
-    "light": HelperFlowStep(basic_group_config_schema("light")),
+    "light": HelperFlowStep(LIGHT_CONFIG_SCHEMA),
     "media_player": HelperFlowStep(basic_group_config_schema("media_player")),
 }
 
@@ -91,7 +101,7 @@ OPTIONS_FLOW = {
     "binary_sensor": HelperFlowStep(BINARY_SENSOR_OPTIONS_SCHEMA),
     "cover": HelperFlowStep(basic_group_options_schema("cover")),
     "fan": HelperFlowStep(basic_group_options_schema("fan")),
-    "light": HelperFlowStep(basic_group_options_schema("light")),
+    "light": HelperFlowStep(LIGHT_OPTIONS_SCHEMA),
     "media_player": HelperFlowStep(basic_group_options_schema("media_player")),
 }
 
