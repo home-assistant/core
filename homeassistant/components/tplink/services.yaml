@@ -47,17 +47,6 @@ sequence_effect:
           step: 1
           max: 6000
           unit_of_measurement: "ms"
-    fadeoff:
-      description: Fade Off (0-3000)
-      example: 2000
-      default: 0
-      required: false
-      selector:
-        number:
-          min: 0
-          step: 1
-          max: 3000
-          unit_of_measurement: "ms"
     segments:
       description: List of Segments
       example: [0, 2, 4, 6, 8]
@@ -75,3 +64,13 @@ sequence_effect:
           min: 0
           step: 1
           max: 16
+    direction:
+      description: Direction
+      example: 1
+      default: 4
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
+          max: 4

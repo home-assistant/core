@@ -56,13 +56,10 @@ BASE_EFFECT_DICT: Final = {
         vol.Coerce(int), vol.Range(min=0, max=5000)
     ),
     vol.Optional("transition", default=0): vol.All(vol.Coerce(int), TRANSITION),
-    vol.Optional("fadeoff", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=3000)
-    ),
     vol.Optional("segments", default=[0]): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=80),
-        [vol.All(vol.Coerce(tuple), vol.Range(min=0, max=80))],
+        [vol.All(vol.Coerce(int), vol.Range(min=0, max=80))],
     ),
 }
 
@@ -71,31 +68,35 @@ SEQUENCE_EFFECT_DICT: Final = {
     vol.Required("sequence"): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
+        [vol.All(vol.Coerce(list), HSV_SEQUENCE)],
     ),
     vol.Optional("spread", default=1): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=16)
+    ),
+    vol.Optional("direction", default=4): vol.All(
+        vol.Coerce(int), vol.Range(min=1, max=4)
     ),
 }
 
 RANDOM_EFFECT_DICT: Final = {
     **BASE_EFFECT_DICT,
-    vol.Optional("hue_range"): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((HUE, HUE))
+    vol.Optional("fadeoff", default=0): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=3000)
     ),
+    vol.Optional("hue_range"): vol.All(vol.Coerce(list), vol.ExactSequence((HUE, HUE))),
     vol.Optional("saturation_range"): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((SAT, SAT))
+        vol.Coerce(list), vol.ExactSequence((SAT, SAT))
     ),
     vol.Optional("brightness_range"): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((VAL, VAL))
+        vol.Coerce(list), vol.ExactSequence((VAL, VAL))
     ),
     vol.Optional("transition_range"): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((TRANSITION, TRANSITION))
+        vol.Coerce(list), vol.ExactSequence((TRANSITION, TRANSITION))
     ),
     vol.Required("init_states"): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=1),
-        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
+        [vol.All(vol.Coerce(list), HSV_SEQUENCE)],
     ),
     vol.Optional("random_seed", default=100): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=100)
@@ -103,7 +104,7 @@ RANDOM_EFFECT_DICT: Final = {
     vol.Required("backgrounds"): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
+        [vol.All(vol.Coerce(list), HSV_SEQUENCE)],
     ),
 }
 
@@ -113,7 +114,6 @@ def _async_build_base_effect(
     brightness: int,
     duration: int,
     transition: int,
-    fadeoff: int,
     segments: list[int],
 ) -> dict[str, Any]:
     return {
@@ -126,7 +126,6 @@ def _async_build_base_effect(
         "enable": 1,
         "duration": duration,
         "transition": transition,
-        "fadeoff": fadeoff,
     }
 
 
@@ -332,14 +331,14 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     ) -> None:
         """Set a random effect."""
         effect: dict[str, Any] = {
-            **_async_build_base_effect(
-                brightness, duration, transition, fadeoff, segments
-            ),
+            **_async_build_base_effect(brightness, duration, transition, segments),
             "type": "random",
             "init_states": init_states,
             "random_seed": random_seed,
             "backgrounds": backgrounds,
         }
+        if fadeoff:
+            effect["fadeoff"] = fadeoff
         if hue_range:
             effect["hue_range"] = hue_range
         if saturation_range:
@@ -348,6 +347,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             effect["brightness_range"] = brightness_range
         if transition_range:
             effect["transition_range"] = transition_range
+        _LOGGER.warning("Calling effect: %s", effect)
         await self.device.set_custom_effect(effect)
 
     async def async_set_sequence_effect(
@@ -355,18 +355,19 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         brightness: int,
         duration: int,
         transition: int,
-        fadeoff: int,
         segments: list[int],
         sequence: Sequence[tuple[int, int, int]],
         spread: int,
+        direction: int,
     ) -> None:
         """Set a sequence effect."""
         effect: dict[str, Any] = {
-            **_async_build_base_effect(
-                brightness, duration, transition, fadeoff, segments
-            ),
+            **_async_build_base_effect(brightness, duration, transition, segments),
             "type": "sequence",
             "sequence": sequence,
+            "repeat_times": 0,
             "spread": spread,
+            "direction": direction,
         }
+        _LOGGER.warning("Calling effect: %s", effect)
         await self.device.set_custom_effect(effect)
