@@ -130,6 +130,7 @@ def mock_all(aioclient_mock, request):
         ("update.home_assistant_operating_system_update", "off"),
         ("update.home_assistant_supervisor_update", "on"),
         ("update.home_assistant_core_update", "off"),
+        ("update.home_assistant_operating_system_update", "off"),
         ("update.test_update", "on"),
         ("update.test2_update", "off"),
     ],
@@ -261,18 +262,17 @@ async def test_update_supervisor(hass, aioclient_mock):
     )
 
 
-async def test_update_with_error(hass, aioclient_mock):
-    """Test updating update entities with error."""
+async def test_update_addon_with_error(hass, aioclient_mock):
+    """Test updating addon update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(
+        assert await async_setup_component(
             hass,
             "hassio",
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
-        assert result
     await hass.async_block_till_done()
 
     aioclient_mock.post(
@@ -281,9 +281,90 @@ async def test_update_with_error(hass, aioclient_mock):
     )
 
     with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
+        assert not await hass.services.async_call(
             "update",
             "install",
             {"entity_id": "update.test_update"},
+            blocking=True,
+        )
+
+
+async def test_update_os_with_error(hass, aioclient_mock):
+    """Test updating OS update entity with error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    aioclient_mock.post(
+        "http://127.0.0.1/os/update",
+        exc=HassioAPIError,
+    )
+
+    with pytest.raises(HomeAssistantError):
+        assert not await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.home_assistant_operating_system_update"},
+            blocking=True,
+        )
+
+
+async def test_update_supervisor_with_error(hass, aioclient_mock):
+    """Test updating supervisor update entity with error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    aioclient_mock.post(
+        "http://127.0.0.1/supervisor/update",
+        exc=HassioAPIError,
+    )
+
+    with pytest.raises(HomeAssistantError):
+        assert not await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.home_assistant_supervisor_update"},
+            blocking=True,
+        )
+
+
+async def test_update_core_with_error(hass, aioclient_mock):
+    """Test updating core update entity with error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    aioclient_mock.post(
+        "http://127.0.0.1/core/update",
+        exc=HassioAPIError,
+    )
+
+    with pytest.raises(HomeAssistantError):
+        assert not await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.home_assistant_core_update"},
             blocking=True,
         )
