@@ -1309,7 +1309,7 @@ def adjust_statistics(
 ) -> bool:
     """Process an add_statistics job."""
 
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         metadata = get_metadata_with_session(
             instance.hass, session, statistic_ids=(statistic_id,)
         )
