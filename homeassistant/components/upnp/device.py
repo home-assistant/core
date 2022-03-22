@@ -6,10 +6,11 @@ from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlparse
 
-from async_upnp_client import UpnpDevice, UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
+from async_upnp_client.client import UpnpDevice
+from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import UpnpError
-from async_upnp_client.profiles.igd import IgdDevice
+from async_upnp_client.profiles.igd import IgdDevice, StatusInfo
 
 from homeassistant.components import ssdp
 from homeassistant.components.ssdp import SsdpChange, SsdpServiceInfo
@@ -49,7 +50,7 @@ class Device:
         """Initialize UPnP/IGD device."""
         self.hass = hass
         self._igd_device = igd_device
-        self.coordinator: DataUpdateCoordinator = None
+        self.coordinator: DataUpdateCoordinator | None = None
 
     @classmethod
     async def async_create_device(
@@ -129,7 +130,7 @@ class Device:
         return self.usn
 
     @property
-    def hostname(self) -> str:
+    def hostname(self) -> str | None:
         """Get the hostname."""
         url = self._igd_device.device.device_url
         parsed = urlparse(url)
@@ -177,7 +178,9 @@ class Device:
             self._igd_device.async_get_external_ip_address(),
             return_exceptions=True,
         )
-        result = []
+        status_info: StatusInfo | None = None
+        ip_address: str | None = None
+
         for idx, value in enumerate(values):
             if isinstance(value, UpnpError):
                 # Not all routers support some of these items although based
@@ -188,16 +191,18 @@ class Device:
                     self,
                     str(value),
                 )
-                result.append(None)
                 continue
 
             if isinstance(value, Exception):
                 raise value
 
-            result.append(value)
+            if isinstance(value, StatusInfo):
+                status_info = value
+            elif isinstance(value, str):
+                ip_address = value
 
         return {
-            WAN_STATUS: result[0][0] if result[0] is not None else None,
-            ROUTER_UPTIME: result[0][2] if result[0] is not None else None,
-            ROUTER_IP: result[1],
+            WAN_STATUS: status_info[0] if status_info is not None else None,
+            ROUTER_UPTIME: status_info[2] if status_info is not None else None,
+            ROUTER_IP: ip_address,
         }

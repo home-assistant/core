@@ -10,7 +10,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_INSTANCE, MAX_QUEUE_BACKLOG
-from .statistics import validate_statistics
+from .statistics import list_statistic_ids, validate_statistics
 from .util import async_migration_in_progress
 
 if TYPE_CHECKING:
@@ -24,6 +24,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the recorder websocket API."""
     websocket_api.async_register_command(hass, ws_validate_statistics)
     websocket_api.async_register_command(hass, ws_clear_statistics)
+    websocket_api.async_register_command(hass, ws_get_statistics_metadata)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_backup_start)
@@ -40,7 +41,8 @@ async def ws_validate_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fetch a list of available statistic_id."""
-    statistic_ids = await hass.async_add_executor_job(
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    statistic_ids = await instance.async_add_executor_job(
         validate_statistics,
         hass,
     )
@@ -65,6 +67,23 @@ def ws_clear_statistics(
     """
     hass.data[DATA_INSTANCE].async_clear_statistics(msg["statistic_ids"])
     connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/get_statistics_metadata",
+        vol.Optional("statistic_ids"): [str],
+    }
+)
+@websocket_api.async_response
+async def ws_get_statistics_metadata(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Get metadata for a list of statistic_ids."""
+    statistic_ids = await hass.async_add_executor_job(
+        list_statistic_ids, hass, msg.get("statistic_ids")
+    )
+    connection.send_result(msg["id"], statistic_ids)
 
 
 @websocket_api.require_admin

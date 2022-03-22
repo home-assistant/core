@@ -20,12 +20,11 @@ from homeassistant.helpers.event import async_call_later
 
 from . import (
     DEFAULT_OFF_DELAY,
-    DEFAULT_SIGNAL_REPETITIONS,
     DeviceTuple,
     RfxtrxCommandEntity,
     async_setup_platform_entry,
 )
-from .const import CONF_OFF_DELAY, CONF_SIGNAL_REPETITIONS
+from .const import CONF_OFF_DELAY
 
 SUPPORT_RFXTRX = SUPPORT_TURN_ON | SUPPORT_TONES
 
@@ -76,9 +75,6 @@ async def async_setup_entry(
                 RfxtrxChime(
                     event.device,
                     device_id,
-                    entity_info.get(
-                        CONF_SIGNAL_REPETITIONS, DEFAULT_SIGNAL_REPETITIONS
-                    ),
                     entity_info.get(CONF_OFF_DELAY, DEFAULT_OFF_DELAY),
                     auto,
                 )
@@ -92,9 +88,6 @@ async def async_setup_entry(
                     RfxtrxSecurityPanic(
                         event.device,
                         device_id,
-                        entity_info.get(
-                            CONF_SIGNAL_REPETITIONS, DEFAULT_SIGNAL_REPETITIONS
-                        ),
                         entity_info.get(CONF_OFF_DELAY, DEFAULT_OFF_DELAY),
                         auto,
                     )
@@ -138,11 +131,9 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
 
     _device: rfxtrxmod.ChimeDevice
 
-    def __init__(
-        self, device, device_id, signal_repetitions=1, off_delay=None, event=None
-    ):
+    def __init__(self, device, device_id, off_delay=None, event=None):
         """Initialize the entity."""
-        super().__init__(device, device_id, signal_repetitions, event)
+        super().__init__(device, device_id, event)
         self._attr_available_tones = list(self._device.COMMANDS.values())
         self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TONES
         self._default_tone = next(iter(self._device.COMMANDS))
@@ -191,11 +182,9 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
 
     _device: rfxtrxmod.SecurityDevice
 
-    def __init__(
-        self, device, device_id, signal_repetitions=1, off_delay=None, event=None
-    ):
+    def __init__(self, device, device_id, off_delay=None, event=None):
         """Initialize the entity."""
-        super().__init__(device, device_id, signal_repetitions, event)
+        super().__init__(device, device_id, event)
         self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
         self._on_value = get_first_key(self._device.STATUS, SECURITY_PANIC_ON)
         self._off_value = get_first_key(self._device.STATUS, SECURITY_PANIC_OFF)

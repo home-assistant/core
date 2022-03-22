@@ -73,6 +73,155 @@ async def test_form_user_with_secure_elk_no_discovery(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_user_with_insecure_elk_skip_discovery(hass):
+    """Test we can setup a insecure elk with skipping discovery."""
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    with _patch_discovery(no_device=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "manual_connection"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "protocol": "non-secure",
+                "address": "1.2.3.4",
+                "username": "test-username",
+                "password": "test-password",
+                "prefix": "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "ElkM1"
+    assert result2["data"] == {
+        "auto_configure": True,
+        "host": "elk://1.2.3.4",
+        "password": "test-password",
+        "prefix": "",
+        "username": "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_user_with_insecure_elk_no_discovery(hass):
+    """Test we can setup a insecure elk."""
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    with _patch_discovery(no_device=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "manual_connection"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "protocol": "non-secure",
+                "address": "1.2.3.4",
+                "username": "test-username",
+                "password": "test-password",
+                "prefix": "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "ElkM1"
+    assert result2["data"] == {
+        "auto_configure": True,
+        "host": "elk://1.2.3.4",
+        "password": "test-password",
+        "prefix": "",
+        "username": "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_user_with_insecure_elk_times_out(hass):
+    """Test we can setup a insecure elk that times out."""
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    with _patch_discovery(no_device=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "manual_connection"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=False)
+
+    with patch(
+        "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
+        0,
+    ), patch(
+        "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT", 0
+    ), _patch_discovery(), _patch_elk(
+        elk=mocked_elk
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "protocol": "non-secure",
+                "address": "1.2.3.4",
+                "username": "test-username",
+                "password": "test-password",
+                "prefix": "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
 async def test_form_user_with_secure_elk_no_discovery_ip_already_configured(hass):
     """Test we abort when we try to configure the same ip."""
     config_entry = MockConfigEntry(
@@ -262,7 +411,7 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_disco
     assert result3["title"] == "ElkM1 ddeeff"
     assert result3["data"] == {
         "auto_configure": True,
-        "host": "elks://127.0.0.1:2601",
+        "host": "elks://127.0.0.1",
         "password": "test-password",
         "prefix": "",
         "username": "test-username",
@@ -434,7 +583,7 @@ async def test_form_cannot_connect(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {CONF_HOST: "cannot_connect"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_unknown_exception(hass):
