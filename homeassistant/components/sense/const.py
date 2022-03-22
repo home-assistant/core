@@ -4,7 +4,7 @@ import asyncio
 import socket
 
 from sense_energy import SenseAPITimeoutException
-from sense_energy.sense_exceptions import SenseWebsocketException
+from sense_energy.sense_exceptions import SenseAPIException, SenseWebsocketException
 
 DOMAIN = "sense"
 DEFAULT_TIMEOUT = 10
@@ -38,7 +38,11 @@ SOLAR_POWERED_ID = "solar_powered"
 
 ICON = "mdi:flash"
 
-SENSE_TIMEOUT_EXCEPTIONS = (asyncio.TimeoutError, SenseAPITimeoutException)
+SENSE_TIMEOUT_EXCEPTIONS = (
+    asyncio.TimeoutError,
+    SenseAPITimeoutException,
+    SenseAPIException,
+)
 SENSE_EXCEPTIONS = (socket.gaierror, SenseWebsocketException)
 
 MDI_ICONS = {
