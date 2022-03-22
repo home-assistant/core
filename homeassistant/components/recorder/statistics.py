@@ -718,21 +718,22 @@ def update_statistics_metadata(
 
 def list_statistic_ids(
     hass: HomeAssistant,
+    statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
 ) -> list[dict | None]:
-    """Return all statistic_ids and unit of measurement.
+    """Return all statistic_ids (or filtered one) and unit of measurement.
 
     Queries the database for existing statistic_ids, as well as integrations with
     a recorder platform for statistic_ids which will be added in the next statistics
     period.
     """
     units = hass.config.units
-    statistic_ids = {}
+    result = {}
 
     # Query the database
     with session_scope(hass=hass) as session:
         metadata = get_metadata_with_session(
-            hass, session, statistic_type=statistic_type
+            hass, session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
 
         for _, meta in metadata.values():
@@ -741,7 +742,7 @@ def list_statistic_ids(
                 unit = _configured_unit(unit, units)
             meta["unit_of_measurement"] = unit
 
-        statistic_ids = {
+        result = {
             meta["statistic_id"]: {
                 "name": meta["name"],
                 "source": meta["source"],
@@ -754,7 +755,9 @@ def list_statistic_ids(
     for platform in hass.data[DOMAIN].values():
         if not hasattr(platform, "list_statistic_ids"):
             continue
-        platform_statistic_ids = platform.list_statistic_ids(hass, statistic_type)
+        platform_statistic_ids = platform.list_statistic_ids(
+            hass, statistic_ids=statistic_ids, statistic_type=statistic_type
+        )
 
         for statistic_id, info in platform_statistic_ids.items():
             if (unit := info["unit_of_measurement"]) is not None:
@@ -763,7 +766,7 @@ def list_statistic_ids(
             platform_statistic_ids[statistic_id]["unit_of_measurement"] = unit
 
         for key, value in platform_statistic_ids.items():
-            statistic_ids.setdefault(key, value)
+            result.setdefault(key, value)
 
     # Return a list of statistic_id + metadata
     return [
@@ -773,7 +776,7 @@ def list_statistic_ids(
             "source": info["source"],
             "unit_of_measurement": info["unit_of_measurement"],
         }
-        for _id, info in statistic_ids.items()
+        for _id, info in result.items()
     ]
 
 

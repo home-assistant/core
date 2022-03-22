@@ -1,13 +1,19 @@
 """Event parser and human readable log generator."""
+from __future__ import annotations
+
+from collections.abc import Iterable
 from contextlib import suppress
-from datetime import timedelta
+from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 from itertools import groupby
 import json
 import re
+from typing import Any
 
 import sqlalchemy
 from sqlalchemy.orm import aliased
+from sqlalchemy.orm.query import Query
+from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
 import voluptuous as vol
 
@@ -15,8 +21,10 @@ from homeassistant.components import frontend
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.history import sqlalchemy_filter_from_include_exclude_conf
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
     Events,
+    StateAttributes,
     States,
     process_timestamp_to_utc_isoformat,
 )
@@ -56,13 +64,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-ENTITY_ID_JSON_TEMPLATE = '"entity_id":"{}"'
+ENTITY_ID_JSON_TEMPLATE = '%"entity_id":"{}"%'
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
 ICON_JSON_EXTRACT = re.compile('"icon": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
 
-CONTINUOUS_DOMAINS = ["proximity", "sensor"]
+CONTINUOUS_DOMAINS = {"proximity", "sensor"}
+CONTINUOUS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in CONTINUOUS_DOMAINS]
 
 DOMAIN = "logbook"
 
@@ -70,7 +79,7 @@ GROUP_BY_MINUTES = 15
 
 EMPTY_JSON_OBJECT = "{}"
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
-
+UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}._"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -254,7 +263,7 @@ class LogbookView(HomeAssistantView):
                 )
             )
 
-        return await hass.async_add_executor_job(json_events)
+        return await get_instance(hass).async_add_executor_job(json_events)
 
 
 def humanify(hass, events, entity_attr_cache, context_lookup):
@@ -486,42 +495,53 @@ def _get_events(
         )
 
 
-def _generate_events_query(session):
+def _generate_events_query(session: Session) -> Query:
     return session.query(
         *EVENT_COLUMNS,
         States.state,
         States.entity_id,
-        States.domain,
         States.attributes,
+        StateAttributes.shared_attrs,
     )
 
 
-def _generate_events_query_without_states(session):
+def _generate_events_query_without_states(session: Session) -> Query:
     return session.query(
         *EVENT_COLUMNS,
         literal(value=None, type_=sqlalchemy.String).label("state"),
         literal(value=None, type_=sqlalchemy.String).label("entity_id"),
-        literal(value=None, type_=sqlalchemy.String).label("domain"),
         literal(value=None, type_=sqlalchemy.Text).label("attributes"),
+        literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
     )
 
 
-def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
+def _generate_states_query(
+    session: Session,
+    start_day: dt,
+    end_day: dt,
+    old_state: States,
+    entity_ids: Iterable[str],
+) -> Query:
     return (
         _generate_events_query(session)
         .outerjoin(Events, (States.event_id == Events.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(_missing_state_matcher(old_state))
-        .filter(_continuous_entity_matcher())
+        .filter(_not_continuous_entity_matcher())
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
         .filter(
             (States.last_updated == States.last_changed)
             & States.entity_id.in_(entity_ids)
         )
+        .outerjoin(
+            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+        )
     )
 
 
-def _apply_events_types_and_states_filter(hass, query, old_state):
+def _apply_events_types_and_states_filter(
+    hass: HomeAssistant, query: Query, old_state: States
+) -> Query:
     events_query = (
         query.outerjoin(States, (Events.event_id == States.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
@@ -530,13 +550,16 @@ def _apply_events_types_and_states_filter(hass, query, old_state):
             | _missing_state_matcher(old_state)
         )
         .filter(
-            (Events.event_type != EVENT_STATE_CHANGED) | _continuous_entity_matcher()
+            (Events.event_type != EVENT_STATE_CHANGED)
+            | _not_continuous_entity_matcher()
         )
     )
-    return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES)
+    return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES).outerjoin(
+        StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+    )
 
 
-def _missing_state_matcher(old_state):
+def _missing_state_matcher(old_state: States) -> Any:
     # The below removes state change events that do not have
     # and old_state or the old_state is missing (newly added entities)
     # or the new_state is missing (removed entities)
@@ -547,34 +570,64 @@ def _missing_state_matcher(old_state):
     )
 
 
-def _continuous_entity_matcher():
-    #
-    # Prefilter out continuous domains that have
-    # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
-    #
+def _not_continuous_entity_matcher() -> Any:
+    """Match non continuous entities."""
     return sqlalchemy.or_(
-        sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS)),
-        sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON)),
+        _not_continuous_domain_matcher(),
+        sqlalchemy.and_(
+            _continuous_domain_matcher, _not_uom_attributes_matcher()
+        ).self_group(),
     )
 
 
-def _apply_event_time_filter(events_query, start_day, end_day):
+def _not_continuous_domain_matcher() -> Any:
+    """Match not continuous domains."""
+    return sqlalchemy.and_(
+        *[
+            ~States.entity_id.like(entity_domain)
+            for entity_domain in CONTINUOUS_ENTITY_ID_LIKE
+        ],
+    ).self_group()
+
+
+def _continuous_domain_matcher() -> Any:
+    """Match continuous domains."""
+    return sqlalchemy.or_(
+        *[
+            States.entity_id.like(entity_domain)
+            for entity_domain in CONTINUOUS_ENTITY_ID_LIKE
+        ],
+    ).self_group()
+
+
+def _not_uom_attributes_matcher() -> Any:
+    """Prefilter ATTR_UNIT_OF_MEASUREMENT as its much faster in sql."""
+    return ~StateAttributes.shared_attrs.like(
+        UNIT_OF_MEASUREMENT_JSON_LIKE
+    ) | ~States.attributes.like(UNIT_OF_MEASUREMENT_JSON_LIKE)
+
+
+def _apply_event_time_filter(events_query: Query, start_day: dt, end_day: dt) -> Query:
     return events_query.filter(
         (Events.time_fired > start_day) & (Events.time_fired < end_day)
     )
 
 
-def _apply_event_types_filter(hass, query, event_types):
+def _apply_event_types_filter(
+    hass: HomeAssistant, query: Query, event_types: list[str]
+) -> Query:
     return query.filter(
         Events.event_type.in_(event_types + list(hass.data.get(DOMAIN, {})))
     )
 
 
-def _apply_event_entity_id_matchers(events_query, entity_ids):
+def _apply_event_entity_id_matchers(
+    events_query: Query, entity_ids: Iterable[str]
+) -> Query:
     return events_query.filter(
         sqlalchemy.or_(
             *(
-                Events.event_data.contains(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
+                Events.event_data.like(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
                 for entity_id in entity_ids
             )
         )
@@ -681,7 +734,7 @@ class LazyEventPartialState:
         "event_type",
         "entity_id",
         "state",
-        "domain",
+        "_domain",
         "context_id",
         "context_user_id",
         "context_parent_id",
@@ -694,22 +747,30 @@ class LazyEventPartialState:
         self._event_data = None
         self._time_fired_isoformat = None
         self._attributes = None
+        self._domain = None
         self.event_type = self._row.event_type
         self.entity_id = self._row.entity_id
         self.state = self._row.state
-        self.domain = self._row.domain
         self.context_id = self._row.context_id
         self.context_user_id = self._row.context_user_id
         self.context_parent_id = self._row.context_parent_id
         self.time_fired_minute = self._row.time_fired.minute
 
     @property
+    def domain(self):
+        """Return the domain for the state."""
+        if self._domain is None:
+            self._domain = split_entity_id(self.entity_id)[0]
+        return self._domain
+
+    @property
     def attributes_icon(self):
         """Extract the icon from the decoded attributes or json."""
         if self._attributes:
             return self._attributes.get(ATTR_ICON)
-
-        result = ICON_JSON_EXTRACT.search(self._row.attributes)
+        result = ICON_JSON_EXTRACT.search(
+            self._row.shared_attrs or self._row.attributes
+        )
         return result and result.group(1)
 
     @property
@@ -733,14 +794,12 @@ class LazyEventPartialState:
     @property
     def attributes(self):
         """State attributes."""
-        if not self._attributes:
-            if (
-                self._row.attributes is None
-                or self._row.attributes == EMPTY_JSON_OBJECT
-            ):
+        if self._attributes is None:
+            source = self._row.shared_attrs or self._row.attributes
+            if source == EMPTY_JSON_OBJECT or source is None:
                 self._attributes = {}
             else:
-                self._attributes = json.loads(self._row.attributes)
+                self._attributes = json.loads(source)
         return self._attributes
 
     @property
@@ -771,12 +830,12 @@ class EntityAttributeCache:
     that are expected to change state.
     """
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Init the cache."""
         self._hass = hass
-        self._cache = {}
+        self._cache: dict[str, dict[str, Any]] = {}
 
-    def get(self, entity_id, attribute, event):
+    def get(self, entity_id: str, attribute: str, event: LazyEventPartialState) -> Any:
         """Lookup an attribute for an entity or get it from the cache."""
         if entity_id in self._cache:
             if attribute in self._cache[entity_id]:

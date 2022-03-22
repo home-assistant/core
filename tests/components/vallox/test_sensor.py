@@ -12,44 +12,29 @@ from .conftest import patch_metrics
 
 from tests.common import MockConfigEntry
 
-ORIG_TZ = dt.DEFAULT_TIME_ZONE
-
-
-@pytest.fixture(autouse=True)
-def reset_tz():
-    """Restore the default TZ after test runs."""
-    yield
-    dt.DEFAULT_TIME_ZONE = ORIG_TZ
-
 
 @pytest.fixture
 def set_tz(request):
     """Set the default TZ to the one requested."""
-    return request.getfixturevalue(request.param)
+    request.getfixturevalue(request.param)
 
 
 @pytest.fixture
-def utc() -> tzinfo:
+def utc(hass: HomeAssistant) -> None:
     """Set the default TZ to UTC."""
-    tz = dt.get_time_zone("UTC")
-    dt.set_default_time_zone(tz)
-    return tz
+    hass.config.set_time_zone("UTC")
 
 
 @pytest.fixture
-def helsinki() -> tzinfo:
+def helsinki(hass: HomeAssistant) -> None:
     """Set the default TZ to Europe/Helsinki."""
-    tz = dt.get_time_zone("Europe/Helsinki")
-    dt.set_default_time_zone(tz)
-    return tz
+    hass.config.set_time_zone("Europe/Helsinki")
 
 
 @pytest.fixture
-def new_york() -> tzinfo:
+def new_york(hass: HomeAssistant) -> None:
     """Set the default TZ to America/New_York."""
-    tz = dt.get_time_zone("America/New_York")
-    dt.set_default_time_zone(tz)
-    return tz
+    hass.config.set_time_zone("America/New_York")
 
 
 def _sensor_to_datetime(sensor):

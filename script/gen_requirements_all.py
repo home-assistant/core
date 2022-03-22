@@ -23,7 +23,6 @@ COMMENT_REQUIREMENTS = (
     "decora_wifi",
     "evdev",
     "face_recognition",
-    "homeassistant-pyozw",
     "opencv-python-headless",
     "pybluez",
     "pycups",

@@ -1,6 +1,7 @@
 """Tests for light platform."""
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import PropertyMock
 
 import pytest
@@ -10,6 +11,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
@@ -20,14 +23,21 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from . import MAC_ADDRESS, _mocked_bulb, _patch_discovery, _patch_single_discovery
+from . import (
+    MAC_ADDRESS,
+    _mocked_bulb,
+    _mocked_smart_light_strip,
+    _patch_discovery,
+    _patch_single_discovery,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_light_unique_id(hass: HomeAssistant) -> None:
@@ -375,3 +385,48 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     )
     bulb.turn_on.assert_called_once_with(transition=1)
     bulb.turn_on.reset_mock()
+
+
+async def test_smart_strip_effects(hass: HomeAssistant) -> None:
+    """Test smart strip effects."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    strip = _mocked_smart_light_strip()
+
+    with _patch_discovery(device=strip), _patch_single_discovery(device=strip):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_EFFECT] == "Effect1"
+    assert state.attributes[ATTR_EFFECT_LIST] == ["Effect1", "Effect2"]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Effect2"},
+        blocking=True,
+    )
+    strip.set_effect.assert_called_once_with("Effect2")
+    strip.set_effect.reset_mock()
+
+    strip.effect = {"name": "Effect1", "enable": 0}
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert ATTR_EFFECT not in state.attributes
+
+    strip.effect_list = None
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_EFFECT_LIST] is None

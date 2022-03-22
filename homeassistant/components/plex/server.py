@@ -42,7 +42,12 @@ from .const import (
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
-from .errors import NoServersFound, ServerNotSpecified, ShouldUpdateConfigEntry
+from .errors import (
+    MediaNotFound,
+    NoServersFound,
+    ServerNotSpecified,
+    ShouldUpdateConfigEntry,
+)
 from .media_search import search_media
 from .models import PlexSession
 
@@ -619,37 +624,34 @@ class PlexServer:
             key = kwargs["plex_key"]
             try:
                 return self.fetch_item(key)
-            except NotFound:
-                _LOGGER.error("Media for key %s not found", key)
-                return None
+            except NotFound as err:
+                raise MediaNotFound(f"Media for key {key} not found") from err
 
         if media_type == MEDIA_TYPE_PLAYLIST:
             try:
                 playlist_name = kwargs["playlist_name"]
                 return self.playlist(playlist_name)
-            except KeyError:
-                _LOGGER.error("Must specify 'playlist_name' for this search")
-                return None
-            except NotFound:
-                _LOGGER.error(
-                    "Playlist '%s' not found",
-                    playlist_name,
-                )
-                return None
+            except KeyError as err:
+                raise MediaNotFound(
+                    "Must specify 'playlist_name' for this search"
+                ) from err
+            except NotFound as err:
+                raise MediaNotFound(f"Playlist '{playlist_name}' not found") from err
 
         try:
             library_name = kwargs.pop("library_name")
             library_section = self.library.section(library_name)
-        except KeyError:
-            _LOGGER.error("Must specify 'library_name' for this search")
-            return None
-        except NotFound:
+        except KeyError as err:
+            raise MediaNotFound("Must specify 'library_name' for this search") from err
+        except NotFound as err:
             library_sections = [section.title for section in self.library.sections()]
-            _LOGGER.error(
-                "Library '%s' not found in %s", library_name, library_sections
-            )
-            return None
+            raise MediaNotFound(
+                f"Library '{library_name}' not found in {library_sections}"
+            ) from err
 
+        _LOGGER.debug(
+            "Searching for %s in %s using: %s", media_type, library_section, kwargs
+        )
         return search_media(media_type, library_section, **kwargs)
 
     @property
