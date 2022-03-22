@@ -23,8 +23,6 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
     """Define an Airzone entity."""
 
-    coordinator: AirzoneUpdateCoordinator
-
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
