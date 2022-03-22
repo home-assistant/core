@@ -32,6 +32,7 @@ class HassioBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 COMMON_ENTITY_DESCRIPTIONS = (
     HassioBinarySensorEntityDescription(
+        # Deprecated, scheduled to be removed in 2022.6
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_registry_enabled_default=False,
         key=ATTR_UPDATE_AVAILABLE,
