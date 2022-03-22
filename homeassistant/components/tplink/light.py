@@ -42,6 +42,12 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_RANDOM_EFFECT = "random_effect"
 SERVICE_SEQUENCE_EFFECT = "sequence_effect"
 
+HUE = vol.Range(min=0, max=360)
+SAT = vol.Range(min=0, max=100)
+VAL = vol.Range(min=0, max=100)
+TRANSITION = vol.Range(min=0, max=6000)
+HSV_SEQUENCE = vol.ExactSequence((HUE, SAT, VAL))
+
 BASE_EFFECT_DICT: Final = {
     vol.Optional("brightness", default=100): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=100)
@@ -49,9 +55,7 @@ BASE_EFFECT_DICT: Final = {
     vol.Optional("duration", default=0): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=5000)
     ),
-    vol.Optional("transition", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=6000)
-    ),
+    vol.Optional("transition", default=0): vol.All(vol.Coerce(int), TRANSITION),
     vol.Optional("fadeoff", default=0): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=3000)
     ),
@@ -67,7 +71,7 @@ SEQUENCE_EFFECT_DICT: Final = {
     vol.Required("sequence"): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), vol.ExactSequence((int, int, int)))],
+        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
     ),
     vol.Optional("spread", default=1): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=16)
@@ -77,21 +81,21 @@ SEQUENCE_EFFECT_DICT: Final = {
 RANDOM_EFFECT_DICT: Final = {
     **BASE_EFFECT_DICT,
     vol.Optional("hue_range"): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((int, int))
+        vol.Coerce(tuple), vol.ExactSequence((HUE, HUE))
     ),
     vol.Optional("saturation_range"): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((int, int))
+        vol.Coerce(tuple), vol.ExactSequence((SAT, SAT))
     ),
     vol.Optional("brightness_range"): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((int, int))
+        vol.Coerce(tuple), vol.ExactSequence((VAL, VAL))
     ),
     vol.Optional("transition_range"): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((int, int))
+        vol.Coerce(tuple), vol.ExactSequence((TRANSITION, TRANSITION))
     ),
     vol.Required("init_states"): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=1),
-        [vol.All(vol.Coerce(tuple), vol.ExactSequence((int, int, int)))],
+        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
     ),
     vol.Optional("random_seed", default=100): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=100)
@@ -99,7 +103,7 @@ RANDOM_EFFECT_DICT: Final = {
     vol.Required("backgrounds"): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), vol.ExactSequence((int, int, int)))],
+        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
     ),
 }
 
