@@ -13,11 +13,7 @@ from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledRespo
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.command import SamsungTVCommand
-from samsungtvws.encrypted.command import SamsungTVEncryptedCommand
-from samsungtvws.encrypted.remote import (
-    SamsungTVEncryptedWSAsyncRemote,
-    SendRemoteKey as SendEncryptedRemoteKey,
-)
+from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.event import MS_ERROR_EVENT
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
@@ -683,17 +679,6 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
 
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using websocket protocol."""
-        await self._async_send_commands(
-            [SendEncryptedRemoteKey.click(key) for key in keys]
-        )
-
-    # pylint:disable=[no-self-use]
-    async def _async_send_commands(
-        self, commands: list[SamsungTVEncryptedCommand]
-    ) -> None:
-        """Send the commands using websocket protocol."""
-        # pylint:disable=[fixme]
-        # TODO: remove log entry once the functionality is stabilised
         LOGGER.warning("Sending commands to encrypted TVs is not yet supported")
 
     async def _async_get_remote(self) -> SamsungTVEncryptedWSAsyncRemote | None:
@@ -741,9 +726,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
 
     async def async_power_off(self) -> None:
         """Send power off command to remote."""
-        await self._async_send_commands([SendEncryptedRemoteKey.click("KEY_POWEROFF")])
-        # Force closing of remote session to provide instant UI feedback
-        await self.async_close_remote()
+        LOGGER.warning("Sending commands to encrypted TVs is not yet supported")
 
     async def async_close_remote(self) -> None:
         """Close remote object."""
