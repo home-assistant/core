@@ -55,9 +55,9 @@ from . import setup_samsungtv_entry
 from .const import (
     MOCK_CONFIG_ENCRYPTED_WS,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
-    SAMPLE_APP_LIST,
     SAMPLE_DEVICE_INFO_FRAME,
 )
+from .const import SAMPLE_DEVICE_INFO_FRAME
 
 from tests.common import MockConfigEntry
 
@@ -910,7 +910,6 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock(return_value=False)
-        remote.app_list.return_value = SAMPLE_APP_LIST
         rest_api_class.return_value.rest_device_info = AsyncMock(
             return_value={
                 "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -957,7 +956,6 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock(return_value=False)
-        remote.app_list.return_value = SAMPLE_APP_LIST
         rest_api_class.return_value.rest_device_info = AsyncMock(
             return_value={
                 "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
