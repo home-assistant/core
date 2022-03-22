@@ -118,7 +118,7 @@ def _async_build_base_effect(
 ) -> dict[str, Any]:
     return {
         "custom": 1,
-        "id": "custom",
+        "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
         "brightness": brightness,
         "name": "Custom",
         "segments": segments,
