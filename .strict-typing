@@ -151,6 +151,7 @@ homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openuv.*
+homeassistant.components.peco.*
 homeassistant.components.overkiz.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
@@ -207,6 +208,7 @@ homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
+homeassistant.components.update.*
 homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*

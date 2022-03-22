@@ -235,10 +235,9 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
         }
 
 
-class UpnpEntity(CoordinatorEntity):
+class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):
     """Base class for UPnP/IGD entities."""
 
-    coordinator: UpnpDataUpdateCoordinator
     entity_description: UpnpSensorEntityDescription | UpnpBinarySensorEntityDescription
 
     def __init__(

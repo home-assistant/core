@@ -8,6 +8,7 @@ import pytest
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
+from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -29,6 +30,9 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
     DOMAIN as SAMSUNGTV_DOMAIN,
+    ENCRYPTED_WEBSOCKET_PORT,
+    METHOD_ENCRYPTED_WEBSOCKET,
+    METHOD_WEBSOCKET,
     TIMEOUT_WEBSOCKET,
 )
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
@@ -65,7 +69,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .const import SAMPLE_APP_LIST, SAMPLE_DEVICE_INFO_FRAME
+from . import setup_samsungtv_entry
+from .const import (
+    MOCK_ENTRYDATA_ENCRYPTED_WS,
+    SAMPLE_APP_LIST,
+    SAMPLE_DEVICE_INFO_FRAME,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -118,6 +127,7 @@ MOCK_ENTRY_WS_WITH_MAC = {
     CONF_PORT: 8002,
     CONF_TOKEN: "123456789",
 }
+
 
 ENTITY_ID_NOTURNON = f"{DOMAIN}.fake_noturnon"
 MOCK_CONFIG_NOTURNON = {
@@ -219,6 +229,30 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
     state = hass.states.get(entity_id)
     assert state
     remote_class.assert_called_once_with(**MOCK_CALLS_WS)
+
+
+async def test_setup_encrypted_websocket(
+    hass: HomeAssistant, mock_now: datetime
+) -> None:
+    """Test setup of platform from config entry."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote"
+    ) as remote_class:
+        remote = Mock(SamsungTVEncryptedWSAsyncRemote)
+        remote.__aenter__ = AsyncMock(return_value=remote)
+        remote.__aexit__ = AsyncMock()
+        remote_class.return_value = remote
+
+        await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    remote_class.assert_called_once()
 
 
 @pytest.mark.usefixtures("remote")
@@ -341,6 +375,30 @@ async def test_update_off_ws_with_power_state(
     assert state.state == STATE_OFF
 
     remotews.start_listening.assert_not_called()
+
+
+async def test_update_off_encryptedws(
+    hass: HomeAssistant, remoteencws: Mock, rest_api: Mock, mock_now: datetime
+) -> None:
+    """Testing update tv off."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+
+    rest_api.rest_device_info.assert_called_once()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+
+    remoteencws.start_listening = Mock(side_effect=WebSocketException("Boom"))
+    remoteencws.is_alive.return_value = False
+
+    next_update = mock_now + timedelta(minutes=5)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+    rest_api.rest_device_info.assert_called_once()
 
 
 @pytest.mark.usefixtures("remote")
@@ -543,6 +601,21 @@ async def test_send_key_websocketexception(hass: HomeAssistant, remotews: Mock) 
     assert state.state == STATE_ON
 
 
+async def test_send_key_websocketexception_encrypted(
+    hass: HomeAssistant, remoteencws: Mock
+) -> None:
+    """Testing unhandled response exception."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    remoteencws.send_commands = Mock(side_effect=WebSocketException("Boom"))
+    with pytest.raises(HomeAssistantError) as exc_info:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert exc_info.match("media_player.fake does not support this service.")
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+
+
 async def test_send_key_os_error_ws(hass: HomeAssistant, remotews: Mock) -> None:
     """Testing unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIGWS)
@@ -550,6 +623,21 @@ async def test_send_key_os_error_ws(hass: HomeAssistant, remotews: Mock) -> None
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+
+
+async def test_send_key_os_error_ws_encrypted(
+    hass: HomeAssistant, remoteencws: Mock
+) -> None:
+    """Testing unhandled response exception."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    remoteencws.send_commands = Mock(side_effect=OSError("Boom"))
+    with pytest.raises(HomeAssistantError) as exc_info:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert exc_info.match("media_player.fake does not support this service.")
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
@@ -714,6 +802,28 @@ async def test_turn_off_websocket_frame(
     assert commands[2].params["DataOfCmd"] == "KEY_POWER"
 
 
+async def test_turn_off_encrypted_websocket(
+    hass: HomeAssistant, remoteencws: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for turn_off."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+
+    remoteencws.send_commands.reset_mock()
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert exc_info.match("media_player.fake does not support this service.")
+
+    # commands not sent : power off in progress
+    with pytest.raises(HomeAssistantError) as exc_info:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert exc_info.match("media_player.fake does not support this service.")
+
+
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
     """Test for turn_off."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
@@ -749,6 +859,20 @@ async def test_turn_off_ws_os_error(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert "Error closing connection" in caplog.text
+
+
+async def test_turn_off_encryptedws_os_error(
+    hass: HomeAssistant, remoteencws: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for turn_off with OSError."""
+    caplog.set_level(logging.DEBUG)
+    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    remoteencws.close = Mock(side_effect=OSError("BOOM"))
+    with pytest.raises(HomeAssistantError) as exc_info:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert exc_info.match("media_player.fake does not support this service.")
 
 
 async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:
@@ -1074,11 +1198,10 @@ async def test_websocket_unsupported_remote_control(
     hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[OSError("Boom"), DEFAULT_MOCK],
-    ):
-        await setup_samsungtv(hass, MOCK_CONFIGWS)
+    entry = await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+
+    assert entry.data[CONF_METHOD] == METHOD_WEBSOCKET
+    assert entry.data[CONF_PORT] == 8001
 
     remotews.send_command.reset_mock()
 
@@ -1102,6 +1225,18 @@ async def test_websocket_unsupported_remote_control(
 
     # error logged
     assert (
-        "Your TV seems to be unsupported by SamsungTVWSBridge and may need a PIN: "
+        "Your TV seems to be unsupported by SamsungTVWSBridge and needs a PIN: "
         "'unrecognized method value : ms.remote.control'" in caplog.text
     )
+
+    # ensure reauth triggered, and method/port updated
+    await hass.async_block_till_done()
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert entry.data[CONF_METHOD] == METHOD_ENCRYPTED_WEBSOCKET
+    assert entry.data[CONF_PORT] == ENCRYPTED_WEBSOCKET_PORT
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNAVAILABLE
