@@ -353,7 +353,6 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         if transition_range:
             effect["transition_range"] = transition_range
             effect["transition"] = 0
-        _LOGGER.warning("Calling effect: %s", effect)
         await self.device.set_custom_effect(effect)
 
     async def async_set_sequence_effect(
@@ -375,5 +374,4 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             "spread": spread,
             "direction": direction,
         }
-        _LOGGER.warning("Calling effect: %s", effect)
         await self.device.set_custom_effect(effect)
