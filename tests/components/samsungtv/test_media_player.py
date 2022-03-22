@@ -8,10 +8,7 @@ import pytest
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
-from samsungtvws.encrypted.remote import (
-    SamsungTVEncryptedCommand,
-    SamsungTVEncryptedWSAsyncRemote,
-)
+from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -812,12 +809,9 @@ async def test_turn_off_encrypted_websocket(
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key called
-    assert remoteencws.send_commands.call_count == 1
-    commands = remoteencws.send_commands.call_args_list[0].args[0]
-    assert len(commands) == 1
-    assert isinstance(commands[0], SamsungTVEncryptedCommand)
-    assert commands[0].body["param3"] == "KEY_POWEROFF"
+    # key not called
+    remoteencws.send_commands.assert_not_called()
+    assert "Sending commands to encrypted TVs is not yet supported" in caplog.text
 
     # commands not sent : power off in progress
     remoteencws.send_commands.reset_mock()
