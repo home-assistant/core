@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from samsungctl import Remote
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
+from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 
 import homeassistant.util.dt as dt_util
 
@@ -75,6 +76,32 @@ def remotews_fixture() -> Mock:
     ) as remotews_class:
         remotews_class.return_value = remotews
         yield remotews
+
+
+@pytest.fixture(name="remoteencws")
+def remoteencws_fixture() -> Mock:
+    """Patch the samsungtvws SamsungTVEncryptedWSAsyncRemote."""
+    remoteencws = Mock(SamsungTVEncryptedWSAsyncRemote)
+    remoteencws.__aenter__ = AsyncMock(return_value=remoteencws)
+    remoteencws.__aexit__ = AsyncMock()
+
+    def _start_listening(
+        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None
+    ):
+        remoteencws.ws_event_callback = ws_event_callback
+
+    def _mock_ws_event_callback(event: str, response: Any):
+        if remoteencws.ws_event_callback:
+            remoteencws.ws_event_callback(event, response)
+
+    remoteencws.start_listening.side_effect = _start_listening
+    remoteencws.raise_mock_ws_event_callback = Mock(side_effect=_mock_ws_event_callback)
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote",
+    ) as remotews_class:
+        remotews_class.return_value = remoteencws
+        yield remoteencws
 
 
 @pytest.fixture(name="delay")
