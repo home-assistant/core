@@ -49,7 +49,6 @@ async def async_setup_entry(
 class WallboxLock(WallboxEntity, LockEntity):
     """Representation of the Wallbox portal."""
 
-    entity_description: LockEntityDescription
     coordinator: WallboxCoordinator
 
     def __init__(
