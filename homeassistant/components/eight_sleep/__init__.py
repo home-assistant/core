@@ -42,9 +42,6 @@ USER_ENTITY = "user"
 HEAT_SCAN_INTERVAL = timedelta(seconds=60)
 USER_SCAN_INTERVAL = timedelta(seconds=300)
 
-SIGNAL_UPDATE_HEAT = "eight_heat_update"
-SIGNAL_UPDATE_USER = "eight_user_update"
-
 NAME_MAP = {
     "left_current_sleep": "Left Sleep Session",
     "left_current_sleep_fitness": "Left Sleep Fitness",
