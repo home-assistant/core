@@ -83,14 +83,14 @@ random_effect:
   fields:
     init_states:
       description: Initial HSV sequence
-      example: [340, 20, 50]
+      example: [199, 99, 96]
       required: true
       selector:
         object:
     backgrounds:
       description: List of HSV sequences (Max 16)
       example: |
-        - [340, 20, 50]
+        - [199, 89, 50]
         - [20, 50, 50]
         - [0, 100, 50]
       required: true
@@ -149,25 +149,25 @@ random_effect:
           unit_of_measurement: "ms"
     hue_range:
       description: Range of hue
-      example: [0, 360]
+      example: [340, 360]
       required: false
       selector:
         object:
     saturation_range:
       description: Range of saturation
-      example: [0, 100]
+      example: [40, 95]
       required: false
       selector:
         object:
     brightness_range:
       description: Range of brightness
-      example: [0, 100]
+      example: [90, 100]
       required: false
       selector:
         object:
     transition_range:
       description: Range of transition
-      example: [0, 6000]
+      example: [2000, 6000]
       required: false
       selector:
         object:

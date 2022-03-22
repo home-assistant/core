@@ -57,7 +57,7 @@ BASE_EFFECT_DICT: Final = {
     ),
     vol.Optional("transition", default=0): vol.All(vol.Coerce(int), TRANSITION),
     vol.Optional("segments", default=[0]): vol.All(
-        cv.ensure_list,
+        cv.ensure_list_csv,
         vol.Length(min=1, max=80),
         [vol.All(vol.Coerce(int), vol.Range(min=0, max=80))],
     ),
@@ -66,9 +66,9 @@ BASE_EFFECT_DICT: Final = {
 SEQUENCE_EFFECT_DICT: Final = {
     **BASE_EFFECT_DICT,
     vol.Required("sequence"): vol.All(
-        cv.ensure_list,
+        cv.ensure_list_csv,
         vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(list), HSV_SEQUENCE)],
+        [vol.All(cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE)],
     ),
     vol.Optional("spread", default=1): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=16)
@@ -83,28 +83,30 @@ RANDOM_EFFECT_DICT: Final = {
     vol.Optional("fadeoff", default=0): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=3000)
     ),
-    vol.Optional("hue_range"): vol.All(vol.Coerce(list), vol.ExactSequence((HUE, HUE))),
+    vol.Optional("hue_range"): vol.All(
+        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((HUE, HUE))
+    ),
     vol.Optional("saturation_range"): vol.All(
-        vol.Coerce(list), vol.ExactSequence((SAT, SAT))
+        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((SAT, SAT))
     ),
     vol.Optional("brightness_range"): vol.All(
-        vol.Coerce(list), vol.ExactSequence((VAL, VAL))
+        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((VAL, VAL))
     ),
     vol.Optional("transition_range"): vol.All(
-        vol.Coerce(list), vol.ExactSequence((TRANSITION, TRANSITION))
+        cv.ensure_list_csv,
+        [vol.Coerce(int)],
+        vol.ExactSequence((TRANSITION, TRANSITION)),
     ),
     vol.Required("init_states"): vol.All(
-        cv.ensure_list,
-        vol.Length(min=1, max=1),
-        [vol.All(vol.Coerce(list), HSV_SEQUENCE)],
+        cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE
     ),
     vol.Optional("random_seed", default=100): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=100)
     ),
     vol.Required("backgrounds"): vol.All(
-        cv.ensure_list,
+        cv.ensure_list_csv,
         vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(list), HSV_SEQUENCE)],
+        [vol.All(cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE)],
     ),
 }
 
@@ -319,21 +321,21 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         brightness: int,
         duration: int,
         transition: int,
-        fadeoff: int,
         segments: list[int],
-        hue_range: tuple[int, int] | None,
-        saturation_range: tuple[int, int] | None,
-        brightness_range: tuple[int, int] | None,
-        transition_range: tuple[int, int] | None,
-        init_states: tuple[int, int, int] | None,
+        fadeoff: int,
+        init_states: tuple[int, int, int],
         random_seed: int,
         backgrounds: Sequence[tuple[int, int, int]],
+        hue_range: tuple[int, int] | None = None,
+        saturation_range: tuple[int, int] | None = None,
+        brightness_range: tuple[int, int] | None = None,
+        transition_range: tuple[int, int] | None = None,
     ) -> None:
         """Set a random effect."""
         effect: dict[str, Any] = {
             **_async_build_base_effect(brightness, duration, transition, segments),
             "type": "random",
-            "init_states": init_states,
+            "init_states": [init_states],
             "random_seed": random_seed,
             "backgrounds": backgrounds,
         }
@@ -347,6 +349,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             effect["brightness_range"] = brightness_range
         if transition_range:
             effect["transition_range"] = transition_range
+            effect["transition"] = 0
         _LOGGER.warning("Calling effect: %s", effect)
         await self.device.set_custom_effect(effect)
 
