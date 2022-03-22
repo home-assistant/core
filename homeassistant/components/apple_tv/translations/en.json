@@ -7,6 +7,7 @@
             "device_did_not_pair": "No attempt to finish pairing process was made from the device.",
             "device_not_found": "Device was not found during discovery, please try adding it again.",
             "inconsistent_device": "Expected protocols were not found during discovery. This normally indicates a problem with multicast DNS (Zeroconf). Please try adding the device again.",
+            "ipv6_not_supported": "IPv6 is not supported.",
             "no_devices_found": "No devices found on the network",
             "reauth_successful": "Re-authentication was successful",
             "setup_failed": "Failed to set up device.",
