@@ -22,7 +22,7 @@ sequence_effect:
       selector:
         object:
     brightness:
-      description: Initial brightness (0-100).
+      description: Initial brightness
       example: 80
       default: 100
       required: false
@@ -33,7 +33,7 @@ sequence_effect:
           max: 100
           unit_of_measurement: "%"
     duration:
-      description: Duration (0-5000).
+      description: Duration
       example: 80
       default: 0
       required: false
@@ -55,7 +55,7 @@ sequence_effect:
           max: 6000
           unit_of_measurement: "ms"
     spread:
-      description: Speed of Spread
+      description: Speed of spread
       example: 1
       default: 0
       required: false
@@ -97,14 +97,14 @@ random_effect:
       selector:
         object:
     segments:
-      description: List of Segments
+      description: List of segments
       example: [0, 2, 4, 6, 8]
       default: [0]
       required: false
       selector:
         object:
     brightness:
-      description: Initial brightness (0-100).
+      description: Initial brightness
       example: 80
       default: 100
       required: false
@@ -115,7 +115,7 @@ random_effect:
           max: 100
           unit_of_measurement: "%"
     duration:
-      description: Duration (0-5000).
+      description: Duration
       example: 80
       default: 0
       required: false
@@ -126,7 +126,7 @@ random_effect:
           max: 5000
           unit_of_measurement: "ms"
     transition:
-      description: Transition (0-6000).
+      description: Transition
       example: 2000
       default: 0
       required: false
@@ -137,7 +137,7 @@ random_effect:
           max: 6000
           unit_of_measurement: "ms"
     fadeoff:
-      description: Fade Off (0-3000).
+      description: Fade off
       example: 2000
       default: 0
       required: false
@@ -148,31 +148,31 @@ random_effect:
           max: 3000
           unit_of_measurement: "ms"
     hue_range:
-      description: Range of Hue values (0-360)
+      description: Range of hue
       example: [0, 360]
       required: false
       selector:
         object:
     saturation_range:
-      description: Range of Saturation values (0-100)
+      description: Range of saturation
       example: [0, 100]
       required: false
       selector:
         object:
     brightness_range:
-      description: Range of Brightness values (0-100)
+      description: Range of brightness
       example: [0, 100]
       required: false
       selector:
         object:
     transition_range:
-      description: Range of Transition values (0-6000)
+      description: Range of transition
       example: [0, 6000]
       required: false
       selector:
         object:
     random_seed:
-      description: Random Seed
+      description: Random seed
       example: 80
       default: 100
       required: false
