@@ -51,6 +51,17 @@ class ZwaveValueID:
     endpoint: int | None = None
     property_key: str | int | None = None
 
+    def __post_init__(self) -> None:
+        """Post initialization check."""
+        if (
+            self.property_
+            == self.command_class
+            == self.endpoint
+            == self.property_key
+            is None
+        ):
+            raise ValueError("At least one of the fields must be set.")
+
 
 @callback
 def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
