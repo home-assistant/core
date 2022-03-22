@@ -217,6 +217,8 @@ class LightGroup(GroupEntity, LightEntity):
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
+
+        # filtered_states are members currently in the state machine
         filtered_states: list[str] = [x.state for x in all_states if x is not None]
 
         valid_state = self.mode(
@@ -224,8 +226,10 @@ class LightGroup(GroupEntity, LightEntity):
         )
 
         if not valid_state:
+            # Set as unknown if any / all member is unknown or unavailable
             self._attr_is_on = None
         else:
+            # Set as ON if any / all member is ON
             self._attr_is_on = self.mode(
                 list(map(lambda x: x == STATE_ON, filtered_states))
             )
