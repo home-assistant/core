@@ -57,7 +57,6 @@ from .const import (
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_FRAME,
 )
-from .const import SAMPLE_DEVICE_INFO_FRAME
 
 from tests.common import MockConfigEntry
 
