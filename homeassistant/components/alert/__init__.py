@@ -71,7 +71,7 @@ ALERT_SCHEMA = vol.Schema(
         vol.Optional(CONF_DONE_MESSAGE): cv.template,
         vol.Optional(CONF_TITLE): cv.template,
         vol.Optional(CONF_DATA): dict,
-        vol.Required(CONF_NOTIFIERS): cv.ensure_list,
+        vol.Required(CONF_NOTIFIERS): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -89,7 +89,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component."""
-    entities = []
+    entities: list[Alert] = []
 
     for object_id, cfg in config[DOMAIN].items():
         if not cfg:
@@ -183,7 +183,7 @@ class Alert(ToggleEntity):
         name: str,
         watched_entity_id: str,
         state: str,
-        repeat: list[int],
+        repeat: list[float],
         skip_first: bool,
         message_template: Template | None,
         done_message_template: Template | None,
@@ -299,7 +299,7 @@ class Alert(ToggleEntity):
             await self._send_notification_message(message)
         await self._schedule_notify()
 
-    async def _notify_done_message(self, *args: Any) -> None:
+    async def _notify_done_message(self) -> None:
         """Send notification of complete alert."""
         _LOGGER.info("Alerting: %s", self._done_message_template)
         self._send_done_message = False
