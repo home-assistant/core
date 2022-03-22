@@ -234,27 +234,17 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             return
         await self.device.turn_on(transition=transition)  # type: ignore[arg-type]
 
-    async def _async_turn_on_color_temp_or_hsv(
-        self, brightness: int | None, transition: int | None, **kwargs: Any
-    ) -> bool:
-        # Handle turning to temp mode
-        if ATTR_COLOR_TEMP in kwargs:
-            await self._async_set_color_temp(
-                int(kwargs[ATTR_COLOR_TEMP]), brightness, transition
-            )
-            return True
-        if ATTR_HS_COLOR in kwargs:
-            await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
-            return True
-        return False
-
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
-        if await self._async_turn_on_color_temp_or_hsv(
-            brightness, transition, **kwargs
-        ):
+        if ATTR_COLOR_TEMP in kwargs:
+            await self._async_set_color_temp(
+                int(kwargs[ATTR_COLOR_TEMP]), brightness, transition
+            )
+            return
+        if ATTR_HS_COLOR in kwargs:
+            await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
             return
         await self._async_turn_on_with_brightness(brightness, transition)
 
@@ -362,9 +352,13 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
-        if await self._async_turn_on_color_temp_or_hsv(
-            brightness, transition, **kwargs
-        ):
+        if ATTR_COLOR_TEMP in kwargs:
+            await self._async_set_color_temp(
+                int(kwargs[ATTR_COLOR_TEMP]), brightness, transition
+            )
+            return
+        if ATTR_HS_COLOR in kwargs:
+            await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
             return
         if ATTR_EFFECT in kwargs:
             await self.device.set_effect(kwargs[ATTR_EFFECT])
