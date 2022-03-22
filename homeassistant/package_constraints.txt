@@ -100,6 +100,6 @@ multidict>=6.0.2
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
 
-# AIS dom
+# AIS
 pyinotify>=0.9.6
 aisapi>=0.1.0
