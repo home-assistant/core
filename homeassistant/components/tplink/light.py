@@ -370,8 +370,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             elif self._last_custom_effect:
                 await self.device.set_custom_effect(self._last_custom_effect)
             # The device does not remember custom effects
-            # so we must set a default value or it can never turn
-            # back on
+            # so we must set a default value or it can never turn back on
             else:
                 await self.device.set_hsv(0, 0, 100, transition=transition)
         else:
