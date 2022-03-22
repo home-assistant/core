@@ -31,6 +31,7 @@ SLEEPER_L_NAME_LOWER = SLEEPER_L_NAME.lower().replace(" ", "_")
 SLEEPER_R_NAME_LOWER = SLEEPER_R_NAME.lower().replace(" ", "_")
 PRESET_L_STATE = "Watch TV"
 PRESET_R_STATE = "Flat"
+PRESET_SINGLE_STATE = "Favorite"
 
 SLEEPIQ_CONFIG = {
     CONF_USERNAME: "user@email.com",
@@ -38,8 +39,8 @@ SLEEPIQ_CONFIG = {
 }
 
 
-@pytest.fixture
-def mock_asyncsleepiq():
+@pytest.fixture(params=["single", "split"])
+def mock_asyncsleepiq(request):
     """Mock an AsyncSleepIQ object."""
     with patch("homeassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
         client = mock.return_value
@@ -99,17 +100,27 @@ def mock_asyncsleepiq():
         actuator_f.actuator_full = "Foot"
         actuator_f.position = 10
 
-        preset_l = create_autospec(SleepIQPreset)
-        preset_r = create_autospec(SleepIQPreset)
-        bed.foundation.presets = [preset_l, preset_r]
+        client.type = request.param
 
-        preset_l.preset = PRESET_L_STATE
-        preset_l.side = "L"
-        preset_l.side_full = "Left"
+        if client.type == "split":
+            preset_l = create_autospec(SleepIQPreset)
+            preset_r = create_autospec(SleepIQPreset)
+            bed.foundation.presets = [preset_l, preset_r]
 
-        preset_r.preset = PRESET_R_STATE
-        preset_r.side = "R"
-        preset_r.side_full = "Right"
+            preset_l.preset = PRESET_L_STATE
+            preset_l.side = "L"
+            preset_l.side_full = "Left"
+
+            preset_r.preset = PRESET_R_STATE
+            preset_r.side = "R"
+            preset_r.side_full = "Right"
+        else:
+            preset_single = create_autospec(SleepIQPreset)
+            bed.foundation.presets = [preset_single]
+
+            preset_single.preset = PRESET_SINGLE_STATE
+            preset_single.side = None
+            preset_single.side_full = None
 
         yield client
 

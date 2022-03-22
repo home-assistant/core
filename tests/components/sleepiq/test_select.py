@@ -17,52 +17,75 @@ from tests.components.sleepiq.conftest import (
     BED_NAME_LOWER,
     PRESET_L_STATE,
     PRESET_R_STATE,
+    PRESET_SINGLE_STATE,
     setup_platform,
 )
 
 
 async def test_foundation_preset(hass: HomeAssistant, mock_asyncsleepiq):
-    """Test the SleepIQ select entity for foundation presets."""
+    """Test the SleepIQ select entity for split foundation presets."""
     entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_right"
-    )
-    assert state.state == PRESET_R_STATE
-    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"SleepNumber {BED_NAME} Foundation Preset Right"
-    )
+    if mock_asyncsleepiq.type == "split":
+        state = hass.states.get(
+            f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_right"
+        )
+        assert state.state == PRESET_R_STATE
+        assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+        assert (
+            state.attributes.get(ATTR_FRIENDLY_NAME)
+            == f"SleepNumber {BED_NAME} Foundation Preset Right"
+        )
 
-    entry = entity_registry.async_get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_right"
-    )
-    assert entry
-    assert entry.unique_id == f"{BED_ID}_preset_R"
+        entry = entity_registry.async_get(
+            f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_right"
+        )
+        assert entry
+        assert entry.unique_id == f"{BED_ID}_preset_R"
 
-    state = hass.states.get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_left"
-    )
-    assert state.state == PRESET_L_STATE
-    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"SleepNumber {BED_NAME} Foundation Preset Left"
-    )
+        state = hass.states.get(
+            f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_left"
+        )
+        assert state.state == PRESET_L_STATE
+        assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+        assert (
+            state.attributes.get(ATTR_FRIENDLY_NAME)
+            == f"SleepNumber {BED_NAME} Foundation Preset Left"
+        )
 
-    entry = entity_registry.async_get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_left"
-    )
-    assert entry
-    assert entry.unique_id == f"{BED_ID}_preset_L"
+        entry = entity_registry.async_get(
+            f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_left"
+        )
+        assert entry
+        assert entry.unique_id == f"{BED_ID}_preset_L"
+    else:
+        state = hass.states.get(
+            f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset"
+        )
+        assert state.state == PRESET_SINGLE_STATE
+        assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+        assert (
+            state.attributes.get(ATTR_FRIENDLY_NAME)
+            == f"SleepNumber {BED_NAME} Foundation Preset"
+        )
+
+        entry = entity_registry.async_get(
+            f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset"
+        )
+        assert entry
+        assert entry.unique_id == f"{BED_ID}_preset"
+
+    if mock_asyncsleepiq.type == "split":
+        entity_id = f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_left"
+    else:
+        entity_id = f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset"
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_left",
+            ATTR_ENTITY_ID: entity_id,
             ATTR_OPTION: "Zero G",
         },
         blocking=True,
