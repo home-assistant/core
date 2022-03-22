@@ -66,16 +66,25 @@ class StoredState:
         state: State,
         extra_data: ExtraStoredData | None,
         last_seen: datetime,
+        full: bool = True,
     ) -> None:
         """Initialize a new stored state."""
         self.extra_data = extra_data
         self.last_seen = last_seen
         self.state = state
+        self.full = full
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the stored state."""
+        state = cast(dict[str, Any], self.state.as_dict())  # as_dict is cached
+        if not self.full:
+            state = {
+                "state": state["state"],
+                "entity_id": state["entity_id"],
+                "last_changed": state["last_changed"],
+            }
         result = {
-            "state": self.state.as_dict(),
+            "state": state,
             "extra_data": self.extra_data.as_dict() if self.extra_data else None,
             "last_seen": self.last_seen,
         }
@@ -163,15 +172,15 @@ class RestoreStateData:
         }
 
         # Start with the currently registered states
-        stored_states = [
-            StoredState(
-                state, self.entities[state.entity_id].extra_restore_state_data, now
-            )
-            for state in all_states
-            if state.entity_id in self.entities and
-            # Ignore all states that are entity registry placeholders
-            not state.attributes.get(ATTR_RESTORED)
-        ]
+        stored_states: list[StoredState] = []
+        for state in all_states:
+            if state.attributes.get(ATTR_RESTORED):
+                continue
+            if state.entity_id in self.entities:
+                extra = self.entities[state.entity_id].extra_restore_state_data
+                stored_states.append(StoredState(state, extra, now))
+            else:
+                stored_states.append(StoredState(state, None, now, False))
         expiration_time = now - STATE_EXPIRATION
 
         for entity_id, stored_state in self.last_states.items():
@@ -248,7 +257,7 @@ class RestoreStateData:
             state = State.from_dict(_encode_complex(state.as_dict()))
         if state is not None:
             self.last_states[entity_id] = StoredState(
-                state, extra_data, dt_util.utcnow()
+                state, extra_data, dt_util.utcnow(), True
             )
 
         self.entities.pop(entity_id)

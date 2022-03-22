@@ -91,6 +91,7 @@ if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
+    from .helpers.restore_state import RestoreStateData
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -1153,6 +1154,12 @@ class StateMachine:
         self._reservations: set[str] = set()
         self._bus = bus
         self._loop = loop
+        self._restore_state: RestoreStateData | None = None
+
+    @callback
+    def async_set_restore_state(self, restore_state: RestoreStateData) -> None:
+        """Enable restoring last_changed when adding entities."""
+        self._restore_state = restore_state
 
     def entity_ids(self, domain_filter: str | None = None) -> list[str]:
         """List of entity ids that are being tracked."""
@@ -1342,9 +1349,18 @@ class StateMachine:
         new_state = str(new_state)
         attributes = attributes or {}
         if (old_state := self._states.get(entity_id)) is None:
-            same_state = False
             same_attr = False
-            last_changed = None
+            if (
+                not force_update
+                and self._restore_state
+                and (restored_state := self._restore_state.last_states.get(entity_id))
+                and restored_state.state.state == new_state
+            ):
+                same_state = True
+                last_changed = restored_state.state.last_changed
+            else:
+                same_state = False
+                last_changed = None
         else:
             same_state = old_state.state == new_state and not force_update
             same_attr = old_state.attributes == attributes

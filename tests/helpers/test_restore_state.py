@@ -246,19 +246,32 @@ async def test_dump_data(hass):
     args = mock_write_data.mock_calls[0][1]
     written_states = args[0]
 
-    # b0 should not be written, since it didn't extend RestoreEntity
-    # b1 should be written, since it is present in the current run
-    # b2 should not be written, since it is not registered with the helper
-    # b3 should be written, since it is still not expired
-    # b4 should not be written, since it is now expired
-    # b5 should be written, since current state is restored by entity registry
-    assert len(written_states) == 3
-    assert written_states[0]["state"]["entity_id"] == "input_boolean.b1"
+    # b0 should be partially written, since it didn't extend RestoreEntity
+    # b1 should be fully written, since it is present in the current run
+    # b2 should be partially written, since it is not registered with the helper
+    # b3 should be fully written, since it is still not expired
+    # b4 should be not be written, since it is now expired
+    # b5 should be fully written, since current state is restored by entity registry
+    assert len(written_states) == 5
+    assert written_states[0]["state"]["entity_id"] == "input_boolean.b0"
     assert written_states[0]["state"]["state"] == "on"
-    assert written_states[1]["state"]["entity_id"] == "input_boolean.b3"
-    assert written_states[1]["state"]["state"] == "off"
-    assert written_states[2]["state"]["entity_id"] == "input_boolean.b5"
-    assert written_states[2]["state"]["state"] == "off"
+    assert "attributes" not in written_states[0]["state"]
+
+    assert written_states[1]["state"]["entity_id"] == "input_boolean.b1"
+    assert written_states[1]["state"]["state"] == "on"
+    assert "attributes" in written_states[1]["state"]
+
+    assert written_states[2]["state"]["entity_id"] == "input_boolean.b2"
+    assert written_states[2]["state"]["state"] == "on"
+    assert "attributes" not in written_states[2]["state"]
+
+    assert written_states[3]["state"]["entity_id"] == "input_boolean.b3"
+    assert written_states[3]["state"]["state"] == "off"
+    assert "attributes" in written_states[3]["state"]
+
+    assert written_states[4]["state"]["entity_id"] == "input_boolean.b5"
+    assert written_states[4]["state"]["state"] == "off"
+    assert "attributes" in written_states[4]["state"]
 
     # Test that removed entities are not persisted
     await entity.async_remove()
@@ -271,11 +284,26 @@ async def test_dump_data(hass):
     assert mock_write_data.called
     args = mock_write_data.mock_calls[0][1]
     written_states = args[0]
-    assert len(written_states) == 2
-    assert written_states[0]["state"]["entity_id"] == "input_boolean.b3"
-    assert written_states[0]["state"]["state"] == "off"
-    assert written_states[1]["state"]["entity_id"] == "input_boolean.b5"
-    assert written_states[1]["state"]["state"] == "off"
+    assert len(written_states) == 5
+    assert written_states[0]["state"]["entity_id"] == "input_boolean.b0"
+    assert written_states[0]["state"]["state"] == "on"
+    assert "attributes" not in written_states[0]["state"]
+
+    assert written_states[1]["state"]["entity_id"] == "input_boolean.b1"
+    assert written_states[1]["state"]["state"] == "on"
+    assert "attributes" not in written_states[1]["state"]
+
+    assert written_states[2]["state"]["entity_id"] == "input_boolean.b2"
+    assert written_states[2]["state"]["state"] == "on"
+    assert "attributes" not in written_states[2]["state"]
+
+    assert written_states[3]["state"]["entity_id"] == "input_boolean.b3"
+    assert written_states[3]["state"]["state"] == "off"
+    assert "attributes" in written_states[3]["state"]
+
+    assert written_states[4]["state"]["entity_id"] == "input_boolean.b5"
+    assert written_states[4]["state"]["state"] == "off"
+    assert "attributes" in written_states[4]["state"]
 
 
 async def test_dump_error(hass):

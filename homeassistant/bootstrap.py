@@ -25,6 +25,7 @@ from .const import (
 from .exceptions import HomeAssistantError
 from .helpers import area_registry, device_registry, entity_registry
 from .helpers.dispatcher import async_dispatcher_send
+from .helpers.restore_state import RestoreStateData
 from .helpers.typing import ConfigType
 from .setup import (
     DATA_SETUP,
@@ -540,11 +541,17 @@ async def _async_set_up_integrations(
 
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
+    async def _async_set_restore_state() -> None:
+        hass.states.async_set_restore_state(
+            await RestoreStateData.async_get_instance(hass)
+        )
+
     # Load the registries
     await asyncio.gather(
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
         area_registry.async_load(hass),
+        _async_set_restore_state(),
     )
 
     # Start setup
