@@ -148,6 +148,7 @@ from .const import (
     ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_VOLTAGE,
 )
+from .helpers import ZwaveValueID
 
 METER_DEVICE_CLASS_MAP: dict[str, set[MeterScaleType]] = {
     ENTITY_DESC_KEY_CURRENT: CURRENT_METER_TYPES,
@@ -224,16 +225,6 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
 }
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class ZwaveValueID:
-    """Class to represent a value ID."""
-
-    property_: str | int
-    command_class: int
-    endpoint: int | None = None
-    property_key: str | int | None = None
 
 
 @dataclass

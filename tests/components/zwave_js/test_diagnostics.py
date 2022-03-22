@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from zwave_js_server.event import Event
 
+from homeassistant.components.diagnostics.const import REDACTED
 from homeassistant.components.zwave_js.diagnostics import async_get_device_diagnostics
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.helpers.device_registry import async_get
@@ -16,15 +17,30 @@ from tests.components.diagnostics import (
 )
 
 
-async def test_config_entry_diagnostics(hass, hass_client, integration):
+async def test_config_entry_diagnostics(
+    hass, hass_client, integration, config_entry_diagnostics
+):
     """Test the config entry level diagnostics data dump."""
     with patch(
         "homeassistant.components.zwave_js.diagnostics.dump_msgs",
-        return_value=[{"hello": "world"}, {"second": "msg"}],
+        return_value=config_entry_diagnostics,
     ):
-        assert await get_diagnostics_for_config_entry(
+        diagnostics = await get_diagnostics_for_config_entry(
             hass, hass_client, integration
-        ) == [{"hello": "world"}, {"second": "msg"}]
+        )
+        assert len(diagnostics) == 3
+        assert diagnostics[0]["homeId"] == REDACTED
+        nodes = diagnostics[2]["result"]["state"]["nodes"]
+        for node in nodes:
+            if node["nodeId"] == 29:
+                for value in node["values"]:
+                    if value["commandClass"] == 99 and value["property"] == "userCode":
+                        assert value["value"] == REDACTED
+                    else:
+                        assert value.get("value") != REDACTED
+            else:
+                for value in node["values"]:
+                    assert value.get("value") != REDACTED
 
 
 async def test_device_diagnostics(

@@ -55,8 +55,8 @@ from .discovery_data_template import (
     FanValueMapping,
     FixedFanValueMappingDataTemplate,
     NumericSensorDataTemplate,
-    ZwaveValueID,
 )
+from .helpers import ZwaveValueID
 
 
 class DataclassMustHaveAtLeastOne:

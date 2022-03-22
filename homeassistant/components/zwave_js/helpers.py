@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any, cast
 
 import voluptuous as vol
@@ -39,6 +40,16 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+
+@dataclass
+class ZwaveValueID:
+    """Class to represent a value ID."""
+
+    property_: str | int
+    command_class: int
+    endpoint: int | None = None
+    property_key: str | int | None = None
 
 
 @callback
