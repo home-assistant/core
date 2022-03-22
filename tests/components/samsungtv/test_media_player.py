@@ -71,7 +71,11 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import setup_samsungtv_entry
-from .const import MOCK_ENTRYDATA_ENCRYPTED_WS, SAMPLE_DEVICE_INFO_FRAME
+from .const import (
+    MOCK_ENTRYDATA_ENCRYPTED_WS,
+    SAMPLE_DEVICE_INFO_FRAME,
+    SAMPLE_EVENT_ED_INSTALLED_APP,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -741,28 +745,7 @@ async def test_turn_off_websocket(
 
     remotews.raise_mock_ws_event_callback(
         ED_INSTALLED_APP_EVENT,
-        {
-            "event": "ed.installedApp.get",
-            "from": "host",
-            "data": {
-                "data": [
-                    {
-                        "appId": "111299001912",
-                        "app_type": 2,
-                        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/111299001912/250x250.png",
-                        "is_lock": 0,
-                        "name": "YouTube",
-                    },
-                    {
-                        "appId": "3201608010191",
-                        "app_type": 2,
-                        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/3201608010191/250x250.png",
-                        "is_lock": 0,
-                        "name": "Deezer",
-                    },
-                ]
-            },
-        },
+        SAMPLE_EVENT_ED_INSTALLED_APP,
     )
     remotews.send_commands.reset_mock()
 
@@ -1201,28 +1184,7 @@ async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
     await setup_samsungtv(hass, MOCK_CONFIGWS)
     remotews.raise_mock_ws_event_callback(
         ED_INSTALLED_APP_EVENT,
-        {
-            "event": "ed.installedApp.get",
-            "from": "host",
-            "data": {
-                "data": [
-                    {
-                        "appId": "111299001912",
-                        "app_type": 2,
-                        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/111299001912/250x250.png",
-                        "is_lock": 0,
-                        "name": "YouTube",
-                    },
-                    {
-                        "appId": "3201608010191",
-                        "app_type": 2,
-                        "icon": "/opt/share/webappservice/apps_icon/FirstScreen/3201608010191/250x250.png",
-                        "is_lock": 0,
-                        "name": "Deezer",
-                    },
-                ]
-            },
-        },
+        SAMPLE_EVENT_ED_INSTALLED_APP,
     )
     remotews.send_commands.reset_mock()
 
