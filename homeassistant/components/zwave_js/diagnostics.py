@@ -29,24 +29,26 @@ def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
     """Redact value of a Z-Wave value."""
     for value_to_redact in VALUES_TO_REDACT:
         if (
-            (
-                value_to_redact.command_class is None
-                or zwave_value["commandClass"] == value_to_redact.command_class
-            )
-            and (
-                value_to_redact.property_ is None
-                or zwave_value["property"] == value_to_redact.property_
-            )
-            and (
-                value_to_redact.endpoint is None
-                or zwave_value["endpoint"] == value_to_redact.endpoint
-            )
-            and (
-                value_to_redact.property_key is None
-                or zwave_value["propertyKey"] == value_to_redact.property_key
-            )
+            value_to_redact.command_class is not None
+            and zwave_value["commandClass"] != value_to_redact.command_class
         ):
-            return {**zwave_value, "value": REDACTED}
+            continue
+        if (
+            value_to_redact.property_ is not None
+            and zwave_value["property"] != value_to_redact.property_
+        ):
+            continue
+        if (
+            value_to_redact.endpoint is not None
+            and zwave_value["endpoint"] != value_to_redact.endpoint
+        ):
+            continue
+        if (
+            value_to_redact.property_key is not None
+            and zwave_value["propertyKey"] != value_to_redact.property_key
+        ):
+            continue
+        return {**zwave_value, "value": REDACTED}
     return zwave_value
 
 
