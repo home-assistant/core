@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import PropertyMock
+from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 
@@ -23,7 +23,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -57,14 +57,17 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
     assert entity_registry.async_get(entity_id).unique_id == "AABBCCDDEEFF"
 
 
-@pytest.mark.parametrize("transition", [2.0, None])
-async def test_color_light(hass: HomeAssistant, transition: float | None) -> None:
+@pytest.mark.parametrize(
+    "bulb, transition", [(_mocked_bulb(), 2.0), (_mocked_smart_light_strip(), None)]
+)
+async def test_color_light(
+    hass: HomeAssistant, bulb: MagicMock, transition: float | None
+) -> None:
     """Test a color light and that all transitions are correctly passed."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
     bulb.color_temp = None
     with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -194,14 +197,17 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     bulb.set_hsv.reset_mock()
 
 
-@pytest.mark.parametrize("is_color", [True, False])
-async def test_color_temp_light(hass: HomeAssistant, is_color: bool) -> None:
+@pytest.mark.parametrize(
+    "bulb, is_color", [(_mocked_bulb(), True), (_mocked_smart_light_strip(), False)]
+)
+async def test_color_temp_light(
+    hass: HomeAssistant, bulb: MagicMock, is_color: bool
+) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
     bulb.is_color = is_color
     bulb.color_temp = 4000
     bulb.is_variable_color_temp = True
@@ -415,7 +421,7 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     strip.set_effect.assert_called_once_with("Effect2")
     strip.set_effect.reset_mock()
 
-    strip.effect = {"name": "Effect1", "enable": 0}
+    strip.effect = {"name": "Effect1", "enable": 0, "custom": 0}
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
 
@@ -423,10 +429,63 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     assert ATTR_EFFECT not in state.attributes
 
-    strip.effect_list = None
+    strip.is_off = True
+    strip.is_on = False
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    assert ATTR_EFFECT not in state.attributes
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    strip.set_effect.assert_called_once_with("Effect1")
+    strip.set_effect.reset_mock()
+
+    strip.is_off = False
+    strip.is_on = True
+    strip.effect_list = None
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_EFFECT_LIST] is None
+
+
+async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) -> None:
+    """Test smart strip custom random effects at startup."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    strip = _mocked_smart_light_strip()
+    strip.effect = {
+        "custom": 1,
+        "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+        "brightness": 100,
+        "name": "Custom",
+        "enable": 0,
+    }
+    with _patch_discovery(device=strip), _patch_single_discovery(device=strip):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    # fallback to set HSV when custom effect is not know so it does turn back on
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    strip.set_hsv.assert_called_with(0, 0, 100, transition=None)
+    strip.set_hsv.reset_mock()
