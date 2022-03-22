@@ -896,6 +896,7 @@ omit =
     homeassistant/components/plaato/const.py
     homeassistant/components/plaato/entity.py
     homeassistant/components/plaato/sensor.py
+    homeassistant/components/plex/cast.py
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/view.py
     homeassistant/components/plugwise/select.py

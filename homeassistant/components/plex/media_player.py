@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from functools import wraps
-import json
 import logging
 
 import plexapi.exceptions
@@ -46,12 +45,11 @@ from .const import (
     PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
-    PLEX_URI_SCHEME,
     SERVERS,
     TRANSIENT_DEVICE_MODELS,
 )
-from .errors import MediaNotFound
 from .media_browser import browse_media
+from .services import process_plex_payload
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -483,51 +481,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 f"Client is not currently accepting playback controls: {self.name}"
             )
 
-        if not self.plex_server.has_token:
-            _LOGGER.warning(
-                "Plex integration configured without a token, playback may fail"
-            )
-
-        if media_id.startswith(PLEX_URI_SCHEME):
-            media_id = media_id[len(PLEX_URI_SCHEME) :]
-
-        if media_type == "station":
-            playqueue = self.plex_server.create_station_playqueue(media_id)
-            try:
-                self.device.playMedia(playqueue)
-            except requests.exceptions.ConnectTimeout as exc:
-                raise HomeAssistantError(
-                    f"Request failed when playing on {self.name}"
-                ) from exc
-            return
-
-        src = json.loads(media_id)
-        if isinstance(src, int):
-            src = {"plex_key": src}
-
-        offset = 0
-
-        if playqueue_id := src.pop("playqueue_id", None):
-            try:
-                playqueue = self.plex_server.get_playqueue(playqueue_id)
-            except plexapi.exceptions.NotFound as err:
-                raise MediaNotFound(
-                    f"PlayQueue '{playqueue_id}' could not be found"
-                ) from err
-        else:
-            shuffle = src.pop("shuffle", 0)
-            offset = src.pop("offset", 0) * 1000
-            resume = src.pop("resume", False)
-            media = self.plex_server.lookup_media(media_type, **src)
-
-            if resume and not offset:
-                offset = media.viewOffset
-
-            _LOGGER.debug("Attempting to play %s on %s", media, self.name)
-            playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
+        result = process_plex_payload(
+            self.hass, media_type, media_id, default_plex_server=self.plex_server
+        )
+        _LOGGER.debug("Attempting to play %s on %s", result.media, self.name)
 
         try:
-            self.device.playMedia(playqueue, offset=offset)
+            self.device.playMedia(result.media, offset=result.offset)
         except requests.exceptions.ConnectTimeout as exc:
             raise HomeAssistantError(
                 f"Request failed when playing on {self.name}"
@@ -578,7 +538,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         is_internal = is_internal_request(self.hass)
         return await self.hass.async_add_executor_job(
             browse_media,
-            self.plex_server,
+            self.hass,
             is_internal,
             media_content_type,
             media_content_id,
