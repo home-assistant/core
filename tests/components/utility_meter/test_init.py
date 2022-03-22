@@ -364,7 +364,9 @@ async def test_setup_and_remove_config_entry(
         domain=DOMAIN,
         options={
             "cycle": "monthly",
+            "delta_values": False,
             "name": "Electricity meter",
+            "net_consumption": False,
             "offset": {"seconds": 0},
             "source": input_sensor_entity_id,
             "tariffs": tariffs,

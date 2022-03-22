@@ -8,10 +8,11 @@ import voluptuous as vol
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, Platform
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -31,6 +32,8 @@ from .const import (
     DATA_UTILITY,
     DOMAIN,
     METER_TYPES,
+    SERVICE_RESET,
+    SIGNAL_RESET_METER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,6 +103,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_LEGACY_COMPONENT] = EntityComponent(_LOGGER, DOMAIN, hass)
 
     hass.data[DATA_UTILITY] = {}
+
+    async def async_reset_meters(service_call):
+        """Reset all sensors of a meter."""
+        entity_id = service_call.data["entity_id"]
+
+        domain = split_entity_id(entity_id)[0]
+        if domain == DOMAIN:
+            for entity in hass.data[DATA_LEGACY_COMPONENT].entities:
+                if entity_id == entity.entity_id:
+                    _LOGGER.debug(
+                        "forward reset meter from %s to %s",
+                        entity_id,
+                        entity.tracked_entity_id,
+                    )
+                    entity_id = entity.tracked_entity_id
+
+        _LOGGER.debug("reset meter %s", entity_id)
+        async_dispatcher_send(hass, SIGNAL_RESET_METER, entity_id)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESET,
+        async_reset_meters,
+        vol.Schema({ATTR_ENTITY_ID: cv.entity_id}),
+    )
 
     if DOMAIN not in config:
         return True
@@ -172,32 +200,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.options[CONF_SOURCE_SENSOR],
         )
         return False
-
-    # Remove when frontend list selector is available
-    if not entry.options.get(CONF_TARIFFS):
-        tariffs = []
-    else:
-        tariffs = entry.options[CONF_TARIFFS].split(",")
-
-    # Clean up no longer needed entities
-    sensors = []
-    if not tariffs:
-        sensors.append(entry.entry_id)
-    else:
-        for tariff in tariffs:
-            sensors.append(f"{entry.entry_id}_{tariff}")
-
-    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    for entity_entry in entity_entries:
-        if entity_entry.domain == Platform.SELECT and not tariffs:
-            _LOGGER.debug("Removing unneeded select %s", entity_entry.entity_id)
-            entity_registry.async_remove(entity_entry.entity_id)
-        if (
-            entity_entry.domain == Platform.SENSOR
-            and entity_entry.unique_id not in sensors
-        ):
-            _LOGGER.debug("Removing unneeded sensor %s", entity_entry.entity_id)
-            entity_registry.async_remove(entity_entry.entity_id)
 
     if not entry.options.get(CONF_TARIFFS):
         # Only a single meter sensor is required

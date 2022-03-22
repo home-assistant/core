@@ -113,11 +113,13 @@ async def async_setup_entry(
     )
 
     cron_pattern = None
-    delta_values = False
+    delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = cv.time_period_dict(config_entry.options[CONF_METER_OFFSET])
     meter_type = config_entry.options[CONF_METER_TYPE]
+    if meter_type == "none":
+        meter_type = None
     name = config_entry.title
-    net_consumption = False
+    net_consumption = config_entry.options[CONF_METER_NET_CONSUMPTION]
     tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
 
     meters = []
@@ -158,13 +160,21 @@ async def async_setup_entry(
                 parent_meter=entry_id,
                 source_entity=source_entity_id,
                 tariff_entity=tariff_entity,
-                tariff=None,
+                tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
             )
             meters.append(meter_sensor)
             hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
 
     async_add_entities(meters)
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_CALIBRATE_METER,
+        {vol.Required(ATTR_VALUE): vol.Coerce(Decimal)},
+        "async_calibrate",
+    )
 
 
 async def async_setup_platform(

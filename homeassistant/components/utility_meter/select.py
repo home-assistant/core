@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -28,11 +27,8 @@ from .const import (
     CONF_METER,
     CONF_TARIFFS,
     DATA_LEGACY_COMPONENT,
-    DOMAIN,
-    SERVICE_RESET,
     SERVICE_SELECT_NEXT_TARIFF,
     SERVICE_SELECT_TARIFF,
-    SIGNAL_RESET_METER,
     TARIFF_ICON,
 )
 
@@ -71,31 +67,6 @@ async def async_setup_platform(hass, conf, async_add_entities, discovery_info=No
                 None,
             )
         ]
-    )
-
-    async def async_reset_meters(service_call):
-        """Reset all sensors of a meter."""
-        entity_id = service_call.data["entity_id"]
-
-        domain = split_entity_id(entity_id)[0]
-        if domain == DOMAIN:
-            for entity in legacy_component.entities:
-                if entity_id == entity.entity_id:
-                    _LOGGER.debug(
-                        "forward reset meter from %s to %s",
-                        entity_id,
-                        entity.tracked_entity_id,
-                    )
-                    entity_id = entity.tracked_entity_id
-
-        _LOGGER.debug("reset meter %s", entity_id)
-        async_dispatcher_send(hass, SIGNAL_RESET_METER, entity_id)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_RESET,
-        async_reset_meters,
-        vol.Schema({ATTR_ENTITY_ID: cv.entity_id}),
     )
 
     legacy_component.async_register_entity_service(
