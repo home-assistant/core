@@ -12,7 +12,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT, DOMAIN, SENSE_TIMEOUT_EXCEPTIONS
+from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT, DOMAIN, SENSE_CONNECT_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.validate_input(user_input)
         except SenseMFARequiredException:
             return await self.async_step_validation()
-        except SENSE_TIMEOUT_EXCEPTIONS:
+        except SENSE_CONNECT_EXCEPTIONS:
             errors["base"] = "cannot_connect"
         except SenseAuthenticationException:
             errors["base"] = "invalid_auth"
@@ -93,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             try:
                 await self._gateway.validate_mfa(user_input[CONF_CODE])
-            except SENSE_TIMEOUT_EXCEPTIONS:
+            except SENSE_CONNECT_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             except SenseAuthenticationException:
                 errors["base"] = "invalid_auth"
