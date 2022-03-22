@@ -1221,7 +1221,7 @@ python-izone==1.2.3
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa==0.4.1
+python-kasa==0.4.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.11
@@ -1352,7 +1352,7 @@ securetar==2022.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.10.2
+sense_energy==0.10.3
 
 # homeassistant.components.sentry
 sentry-sdk==1.5.8
