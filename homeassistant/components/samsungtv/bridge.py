@@ -606,10 +606,6 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
         self._remote: SamsungTVEncryptedWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
 
-    async def async_get_app_list(self) -> dict[str, str]:
-        """Get installed app list."""
-        return {}
-
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
         LOGGER.debug("Checking if TV %s is on using websocket", self.host)
