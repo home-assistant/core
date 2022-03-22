@@ -8,10 +8,7 @@ import pytest
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
-from samsungtvws.encrypted.remote import (
-    SamsungTVEncryptedCommand,
-    SamsungTVEncryptedWSAsyncRemote,
-)
+from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -610,9 +607,11 @@ async def test_send_key_websocketexception_encrypted(
     """Testing unhandled response exception."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
     remoteencws.send_commands = Mock(side_effect=WebSocketException("Boom"))
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
+    with pytest.raises(HomeAssistantError) as exc_info:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert exc_info.match("media_player.fake does not support this service.")
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
@@ -634,9 +633,11 @@ async def test_send_key_os_error_ws_encrypted(
     """Testing unhandled response exception."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
     remoteencws.send_commands = Mock(side_effect=OSError("Boom"))
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
+    with pytest.raises(HomeAssistantError) as exc_info:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert exc_info.match("media_player.fake does not support this service.")
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
@@ -809,23 +810,18 @@ async def test_turn_off_encrypted_websocket(
 
     remoteencws.send_commands.reset_mock()
 
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    # key called
-    assert remoteencws.send_commands.call_count == 1
-    commands = remoteencws.send_commands.call_args_list[0].args[0]
-    assert len(commands) == 1
-    assert isinstance(commands[0], SamsungTVEncryptedCommand)
-    assert commands[0].body["param3"] == "KEY_POWEROFF"
+    with pytest.raises(HomeAssistantError) as exc_info:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert exc_info.match("media_player.fake does not support this service.")
 
     # commands not sent : power off in progress
-    remoteencws.send_commands.reset_mock()
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    assert "TV is powering off, not sending keys: ['KEY_VOLUP']" in caplog.text
-    remoteencws.send_commands.assert_not_called()
+    with pytest.raises(HomeAssistantError) as exc_info:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert exc_info.match("media_player.fake does not support this service.")
 
 
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
@@ -872,10 +868,11 @@ async def test_turn_off_encryptedws_os_error(
     caplog.set_level(logging.DEBUG)
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
     remoteencws.close = Mock(side_effect=OSError("BOOM"))
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    assert "Error closing connection" in caplog.text
+    with pytest.raises(HomeAssistantError) as exc_info:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert exc_info.match("media_player.fake does not support this service.")
 
 
 async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:

@@ -1,3 +1,3 @@
 """Constants for the Group integration."""
 
-DOMAIN = "group"
+CONF_HIDE_MEMBERS = "hide_members"
