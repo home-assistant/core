@@ -88,7 +88,7 @@ class SmartThingsAcceleration(ZigbeeChannel):
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFC31)
 @registries.CLIENT_CHANNELS_REGISTRY.register(0xFC31)
-class Inovelli_Cluster(ZigbeeChannel):
+class InovelliCluster(ZigbeeChannel):
     """Inovelli Button Press Event channel."""
 
     REPORT_CONFIG = []
