@@ -38,6 +38,7 @@ from homeassistant.exceptions import (
     MaxLengthExceeded,
     ServiceNotFound,
 )
+from homeassistant.helpers.restore_state import STORAGE_KEY, RestoreStateData
 import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -1616,3 +1617,52 @@ async def test_state_change_events_match_state_time(hass):
     state = hass.states.get("light.bedroom")
 
     assert state.last_updated == events[0].time_fired
+
+
+async def test_restore_last_changed(hass, hass_storage):
+    """Test last_changed is restored if the entity is added before start."""
+    entity_id = "light.restore"
+    last_changed = dt_util.utcnow()
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "key": STORAGE_KEY,
+        "data": [
+            {
+                "state": {
+                    "entity_id": entity_id,
+                    "state": "off",
+                    "last_changed": last_changed.isoformat(),
+                },
+                "last_seen": dt_util.utcnow().isoformat(),
+            }
+        ],
+    }
+    hass.states.async_set_restore_state(await RestoreStateData.async_get_instance(hass))
+    # Verify last_change restored if it matches the saved state
+    hass.states.async_set("light.restore", "off")
+    await hass.async_block_till_done()
+    state = hass.states.get("light.restore")
+    assert state.last_changed == last_changed
+
+    # Verify last_change not restored if it does not match the saved state
+    hass.states.async_remove("light.restore")
+    hass.states.async_set("light.restore", "on")
+    await hass.async_block_till_done()
+    state = hass.states.get("light.restore")
+    assert state.last_changed != last_changed
+
+    # Verify last_change restored if it matches the saved state
+    hass.states.async_remove("light.restore")
+    hass.states.async_set("light.restore", "off")
+    await hass.async_block_till_done()
+    state = hass.states.get("light.restore")
+    assert state.last_changed == last_changed
+
+    # Verify last_change not restored after the start event
+    hass.states.async_remove("light.restore")
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.states.async_set("light.restore", "off")
+    await hass.async_block_till_done()
+    state = hass.states.get("light.restore")
+    assert state.last_changed != last_changed

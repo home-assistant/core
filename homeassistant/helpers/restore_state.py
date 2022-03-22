@@ -7,8 +7,12 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, TypeVar, cast
 
-from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
+from homeassistant.const import (
+    ATTR_RESTORED,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Event, HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
@@ -107,6 +111,8 @@ class StoredState:
 
 class RestoreStateData:
     """Helper class for managing the helper saved data."""
+
+    restore_last_changed = True
 
     @staticmethod
     @singleton(DATA_RESTORE_STATE_TASK)
@@ -236,6 +242,14 @@ class RestoreStateData:
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop
         )
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, self._async_disable_last_changed_restore
+        )
+
+    @callback
+    def _async_disable_last_changed_restore(self, event: Event) -> None:
+        """Disable restoring of last changed."""
+        self.restore_last_changed = False
 
     @callback
     def async_restore_entity_added(self, entity: RestoreEntity) -> None:

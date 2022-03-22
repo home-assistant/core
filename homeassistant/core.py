@@ -1353,6 +1353,7 @@ class StateMachine:
             if (
                 not force_update
                 and self._restore_state
+                and self._restore_state.restore_last_changed
                 and (restored_state := self._restore_state.last_states.get(entity_id))
                 and restored_state.state.state == new_state
             ):
