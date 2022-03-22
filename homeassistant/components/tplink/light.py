@@ -204,7 +204,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             # except when transition is defined, so we leverage that here for now.
             transition = 1
 
-        return transition, brightness
+        return brightness, transition
 
     async def _async_set_color_temp(
         self, color_temp_mireds: int, brightness: int | None, transition: int | None
