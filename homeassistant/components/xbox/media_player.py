@@ -78,7 +78,7 @@ async def async_setup_entry(
     )
 
 
-class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
+class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntity):
     """Representation of an Xbox Media Player."""
 
     def __init__(

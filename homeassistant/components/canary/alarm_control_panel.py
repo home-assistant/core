@@ -48,10 +48,11 @@ async def async_setup_entry(
     async_add_entities(alarms, True)
 
 
-class CanaryAlarm(CoordinatorEntity, AlarmControlPanelEntity):
+class CanaryAlarm(
+    CoordinatorEntity[CanaryDataUpdateCoordinator], AlarmControlPanelEntity
+):
     """Representation of a Canary alarm control panel."""
 
-    coordinator: CanaryDataUpdateCoordinator
     _attr_supported_features = (
         SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
     )

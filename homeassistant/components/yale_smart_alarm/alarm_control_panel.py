@@ -81,8 +81,6 @@ async def async_setup_entry(
 class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
-    coordinator: YaleDataUpdateCoordinator
-
     _attr_code_arm_required = False
     _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 

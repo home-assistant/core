@@ -28,6 +28,7 @@ homeassistant.util.unit_system
 
 # --- Add components below this line ---
 homeassistant.components
+homeassistant.components.alert.*
 homeassistant.components.abode.*
 homeassistant.components.acer_projector.*
 homeassistant.components.accuweather.*
@@ -151,6 +152,7 @@ homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openuv.*
+homeassistant.components.peco.*
 homeassistant.components.overkiz.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
