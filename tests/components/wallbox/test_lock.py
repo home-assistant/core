@@ -7,6 +7,7 @@ import requests_mock
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.components.wallbox import CONF_LOCKED_UNLOCKED_KEY
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 
 from tests.components.wallbox import (
     entry,
@@ -35,7 +36,7 @@ authorisation_response = json.loads(
 )
 
 
-async def test_wallbox_lock_class(hass):
+async def test_wallbox_lock_class(hass: HomeAssistant):
     """Test wallbox lock class."""
 
     await setup_integration(hass)
@@ -76,7 +77,7 @@ async def test_wallbox_lock_class(hass):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_wallbox_lock_class_connection_error(hass):
+async def test_wallbox_lock_class_connection_error(hass: HomeAssistant):
     """Test wallbox lock class connection error."""
 
     await setup_integration(hass)
@@ -102,7 +103,7 @@ async def test_wallbox_lock_class_connection_error(hass):
                 },
                 blocking=True,
             )
-
+        with pytest.raises(ConnectionError):
             await hass.services.async_call(
                 "lock",
                 SERVICE_UNLOCK,
@@ -115,7 +116,7 @@ async def test_wallbox_lock_class_connection_error(hass):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_wallbox_lock_class_authentication_error(hass):
+async def test_wallbox_lock_class_authentication_error(hass: HomeAssistant):
     """Test wallbox lock not loaded on authentication error."""
 
     await setup_integration_read_only(hass)

@@ -94,8 +94,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
-        data = await self.hass.async_add_executor_job(self._get_data)
-        return data
+        return await self.hass.async_add_executor_job(self._get_data)
 
     def _set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
