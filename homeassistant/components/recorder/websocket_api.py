@@ -23,14 +23,14 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the recorder websocket API."""
-    websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
-    websocket_api.async_register_command(hass, ws_backup_end)
-    websocket_api.async_register_command(hass, ws_backup_start)
+    websocket_api.async_register_command(hass, ws_validate_statistics)
     websocket_api.async_register_command(hass, ws_clear_statistics)
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_info)
-    websocket_api.async_register_command(hass, ws_validate_statistics)
+    websocket_api.async_register_command(hass, ws_backup_end)
+    websocket_api.async_register_command(hass, ws_backup_start)
+    websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
 
 
 @websocket_api.websocket_command(

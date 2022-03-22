@@ -89,6 +89,7 @@ _LOGGER = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
+
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
 SERVICE_ENABLE = "enable"
