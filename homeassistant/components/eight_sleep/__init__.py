@@ -29,8 +29,6 @@ from homeassistant.helpers.update_coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PARTNER = "partner"
-
 DATA_EIGHT = "eight_sleep"
 DATA_HEAT = "heat"
 DATA_USER = "user"
