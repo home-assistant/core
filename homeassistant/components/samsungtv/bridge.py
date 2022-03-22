@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
@@ -679,7 +680,9 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
 
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using websocket protocol."""
-        LOGGER.warning("Sending commands to encrypted TVs is not yet supported")
+        raise HomeAssistantError(
+            "Sending commands to encrypted TVs is not yet supported"
+        )
 
     async def _async_get_remote(self) -> SamsungTVEncryptedWSAsyncRemote | None:
         """Create or return a remote control instance."""
@@ -726,7 +729,9 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
 
     async def async_power_off(self) -> None:
         """Send power off command to remote."""
-        LOGGER.warning("Sending commands to encrypted TVs is not yet supported")
+        raise HomeAssistantError(
+            "Sending commands to encrypted TVs is not yet supported"
+        )
 
     async def async_close_remote(self) -> None:
         """Close remote object."""
