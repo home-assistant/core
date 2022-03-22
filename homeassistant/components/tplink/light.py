@@ -242,11 +242,10 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             await self._async_set_color_temp(
                 int(kwargs[ATTR_COLOR_TEMP]), brightness, transition
             )
-            return
         if ATTR_HS_COLOR in kwargs:
             await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
-            return
-        await self._async_turn_on_with_brightness(brightness, transition)
+        else:
+            await self._async_turn_on_with_brightness(brightness, transition)
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -356,17 +355,18 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             await self._async_set_color_temp(
                 int(kwargs[ATTR_COLOR_TEMP]), brightness, transition
             )
-            return
-        if ATTR_HS_COLOR in kwargs:
+        elif ATTR_HS_COLOR in kwargs:
             await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
-            return
-        if ATTR_EFFECT in kwargs:
+        elif ATTR_EFFECT in kwargs:
             await self.device.set_effect(kwargs[ATTR_EFFECT])
-            return
-        effect = self.device.effect
-        if self.device.is_off and effect and effect["enable"] == 0 and effect["name"]:
-            if not effect["custom"]:
-                await self.device.set_effect(effect["name"])
+        elif (
+            self.device.is_off
+            and self.device.effect
+            and self.device.effect["enable"] == 0
+            and self.device.effect["name"]
+        ):
+            if not self.device.effect["custom"]:
+                await self.device.set_effect(self.device.effect["name"])
             elif self._last_custom_effect:
                 await self.device.set_custom_effect(self._last_custom_effect)
             # The device does not remember custom effects
@@ -374,8 +374,8 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             # back on
             else:
                 await self.device.set_hsv(0, 0, 100, transition=transition)
-            return
-        await self._async_turn_on_with_brightness(brightness, transition)
+        else:
+            await self._async_turn_on_with_brightness(brightness, transition)
 
     async def async_set_random_effect(
         self,
