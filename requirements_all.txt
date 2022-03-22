@@ -1180,7 +1180,7 @@ openevsewifi==1.1.0
 openhomedevice==2.0.1
 
 # homeassistant.components.opensensemap
-opensensemap-api==0.1.5
+opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
 openwebifpy==3.2.7
@@ -2097,7 +2097,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2022.01.0
 
 # homeassistant.components.renault
-renault-api==0.1.9
+renault-api==0.1.10
 
 # homeassistant.components.python_script
 restrictedpython==5.2
