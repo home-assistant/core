@@ -32,14 +32,10 @@ async def test_config_entry_diagnostics(
         assert diagnostics[0]["homeId"] == REDACTED
         nodes = diagnostics[2]["result"]["state"]["nodes"]
         for node in nodes:
-            if node["nodeId"] == 29:
-                for value in node["values"]:
-                    if value["commandClass"] == 99 and value["property"] == "userCode":
-                        assert value["value"] == REDACTED
-                    else:
-                        assert value.get("value") != REDACTED
-            else:
-                for value in node["values"]:
+            for value in node["values"]:
+                if value["commandClass"] == 99 and value["property"] == "userCode":
+                    assert value["value"] == REDACTED
+                else:
                     assert value.get("value") != REDACTED
 
 
