@@ -308,11 +308,11 @@ async def migrate_sensor_entity(
 
     # Migrating opentherm_outdoor_temperature to opentherm_outdoor_air_temperature sensor
     if device["class"] == "heater_central":
-        old_unique_id = f"{device_id}-outdoor_temperature"
+        old_unique_id = f"{device_id}_outdoor_temperature"
         if entity_id := ent_reg.async_get_entity_id(
             Platform.SENSOR, DOMAIN, old_unique_id
         ):
-            new_unique_id = f"{device_id}-outdoor_air_temperature"
+            new_unique_id = f"{device_id}_outdoor_air_temperature"
             LOGGER.debug(
                 "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
                 entity_id,
