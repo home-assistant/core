@@ -49,10 +49,6 @@ async def async_setup_entry(
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
 
-    # to prevent race conditions (groupedlight is created before zone/room)
-    # we create groupedlights from the room/zone and actually use the
-    # underlying grouped_light resource for control
-
     @callback
     def async_add_light(event_type: EventType, resource: GroupedLight) -> None:
         """Add Grouped Light for Hue Room/Zone."""
