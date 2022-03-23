@@ -691,10 +691,9 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
 ]
 
 
-class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
+class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEntity):
     """Defines a Fronius coordinator entity."""
 
-    coordinator: FroniusCoordinatorBase
     entity_descriptions: list[SensorEntityDescription]
     _entity_id_prefix: str
 

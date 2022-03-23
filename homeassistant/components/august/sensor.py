@@ -52,19 +52,19 @@ def _retrieve_linked_keypad_battery_state(detail: KeypadDetail) -> int | None:
     return detail.battery_percentage
 
 
-T = TypeVar("T", LockDetail, KeypadDetail)
+_T = TypeVar("_T", LockDetail, KeypadDetail)
 
 
 @dataclass
-class AugustRequiredKeysMixin(Generic[T]):
+class AugustRequiredKeysMixin(Generic[_T]):
     """Mixin for required keys."""
 
-    value_fn: Callable[[T], int | None]
+    value_fn: Callable[[_T], int | None]
 
 
 @dataclass
 class AugustSensorEntityDescription(
-    SensorEntityDescription, AugustRequiredKeysMixin[T]
+    SensorEntityDescription, AugustRequiredKeysMixin[_T]
 ):
     """Describes August sensor entity."""
 
@@ -255,10 +255,10 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         return f"{self._device_id}_lock_operator"
 
 
-class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[T]):
+class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
     """Representation of an August sensor."""
 
-    entity_description: AugustSensorEntityDescription[T]
+    entity_description: AugustSensorEntityDescription[_T]
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -267,7 +267,7 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[T]):
         data: AugustData,
         device,
         old_device,
-        description: AugustSensorEntityDescription[T],
+        description: AugustSensorEntityDescription[_T],
     ):
         """Initialize the sensor."""
         super().__init__(data, device)

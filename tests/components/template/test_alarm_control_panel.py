@@ -129,38 +129,6 @@ async def test_optimistic_states(hass, start_ha):
         assert hass.states.get(TEMPLATE_NAME).state == set_state
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "alarm_control_panel": {
-                "platform": "template",
-                "panels": {
-                    "test_template_panel": {
-                        "value_template": "{{ states('alarm_control_panel.test') }}",
-                    }
-                },
-            }
-        },
-    ],
-)
-async def test_no_action_scripts(hass, start_ha):
-    """Test no action scripts per state."""
-    hass.states.async_set("alarm_control_panel.test", STATE_ALARM_ARMED_AWAY)
-    await hass.async_block_till_done()
-
-    for func, set_state in [
-        (common.async_alarm_arm_away, STATE_ALARM_ARMED_AWAY),
-        (common.async_alarm_arm_home, STATE_ALARM_ARMED_AWAY),
-        (common.async_alarm_arm_night, STATE_ALARM_ARMED_AWAY),
-        (common.async_alarm_disarm, STATE_ALARM_ARMED_AWAY),
-    ]:
-        await func(hass, entity_id=TEMPLATE_NAME)
-        await hass.async_block_till_done()
-        assert hass.states.get(TEMPLATE_NAME).state == set_state
-
-
 @pytest.mark.parametrize("count,domain", [(0, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config,msg",
