@@ -165,9 +165,8 @@ class SamsungTVBridge(ABC):
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
 
-    async def async_request_app_list(self) -> None:  # pylint:disable=[no-self-use]
+    async def async_request_app_list(self) -> None:
         """Request app list."""
-        return
 
     @abstractmethod
     async def async_is_on(self) -> bool:
