@@ -190,7 +190,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._device_path = device_path
         if "efr32" in radio_type:
-            self._radio_type = RadioType.ezscp.name
+            self._radio_type = RadioType.ezsp.name
         elif "zigate" in radio_type:
             self._radio_type = RadioType.zigate.name 
         else:
