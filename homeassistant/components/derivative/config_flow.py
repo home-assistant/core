@@ -18,8 +18,8 @@ from homeassistant.const import (
 from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
+    HelperFlowFormStep,
     HelperFlowMenuStep,
-    HelperFlowStep,
 )
 
 from .const import (
@@ -78,12 +78,12 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
-    "user": HelperFlowStep(CONFIG_SCHEMA)
+CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
+    "user": HelperFlowFormStep(CONFIG_SCHEMA)
 }
 
-OPTIONS_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
-    "init": HelperFlowStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
+    "init": HelperFlowFormStep(OPTIONS_SCHEMA)
 }
 
 

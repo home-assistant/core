@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
+    HelperFlowFormStep,
     HelperFlowMenuStep,
-    HelperFlowStep,
 )
 
 from . import DOMAIN
@@ -82,29 +82,29 @@ def set_group_type(group_type: str) -> Callable[[dict[str, Any]], dict[str, Any]
     return _set_group_type
 
 
-CONFIG_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
+CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
     "user": HelperFlowMenuStep(GROUP_TYPES),
-    "binary_sensor": HelperFlowStep(
+    "binary_sensor": HelperFlowFormStep(
         BINARY_SENSOR_CONFIG_SCHEMA, set_group_type("binary_sensor")
     ),
-    "cover": HelperFlowStep(
+    "cover": HelperFlowFormStep(
         basic_group_config_schema("cover"), set_group_type("cover")
     ),
-    "fan": HelperFlowStep(basic_group_config_schema("fan"), set_group_type("fan")),
-    "light": HelperFlowStep(LIGHT_CONFIG_SCHEMA, set_group_type("light")),
-    "media_player": HelperFlowStep(
+    "fan": HelperFlowFormStep(basic_group_config_schema("fan"), set_group_type("fan")),
+    "light": HelperFlowFormStep(LIGHT_CONFIG_SCHEMA, set_group_type("light")),
+    "media_player": HelperFlowFormStep(
         basic_group_config_schema("media_player"), set_group_type("media_player")
     ),
 }
 
 
-OPTIONS_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
-    "init": HelperFlowStep(None, next_step=choose_options_step),
-    "binary_sensor": HelperFlowStep(BINARY_SENSOR_OPTIONS_SCHEMA),
-    "cover": HelperFlowStep(basic_group_options_schema("cover")),
-    "fan": HelperFlowStep(basic_group_options_schema("fan")),
-    "light": HelperFlowStep(LIGHT_OPTIONS_SCHEMA),
-    "media_player": HelperFlowStep(basic_group_options_schema("media_player")),
+OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
+    "init": HelperFlowFormStep(None, next_step=choose_options_step),
+    "binary_sensor": HelperFlowFormStep(BINARY_SENSOR_OPTIONS_SCHEMA),
+    "cover": HelperFlowFormStep(basic_group_options_schema("cover")),
+    "fan": HelperFlowFormStep(basic_group_options_schema("fan")),
+    "light": HelperFlowFormStep(LIGHT_OPTIONS_SCHEMA),
+    "media_player": HelperFlowFormStep(basic_group_options_schema("media_player")),
 }
 
 
