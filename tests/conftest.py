@@ -797,6 +797,8 @@ def enable_nightly_purge():
 @pytest.fixture
 def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     """Home Assistant fixture with in-memory recorder."""
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
     hass = get_test_home_assistant()
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
@@ -820,6 +822,9 @@ def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
 
         yield setup_recorder
         hass.stop()
+
+    # Restore timezone, it is set when creating the hass object
+    dt_util.DEFAULT_TIME_ZONE = original_tz
 
 
 @pytest.fixture
