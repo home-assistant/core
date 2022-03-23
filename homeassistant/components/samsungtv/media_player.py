@@ -1,6 +1,7 @@
 """Support for interface with an Samsung TV."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -75,6 +76,9 @@ SCAN_INTERVAL_PLUS_OFF_TIME = entity_component.DEFAULT_SCAN_INTERVAL + timedelta
     seconds=5
 )
 
+# Max delay waiting for app_list to return, as some TVs simply ignore the request
+APP_LIST_DELAY = 3
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -119,6 +123,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
         self._app_list: dict[str, str] | None = None
+        self._app_list_event: asyncio.Event = asyncio.Event()
 
         if config_entry.data.get(CONF_METHOD) != METHOD_ENCRYPTED_WEBSOCKET:
             # Encrypted websockets currently only support ON/OFF status
@@ -157,6 +162,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         """App list callback."""
         self._app_list = app_list
         self._update_sources()
+        self._app_list_event.set()
 
     def access_denied(self) -> None:
         """Access denied callback."""
@@ -184,9 +190,16 @@ class SamsungTVDevice(MediaPlayerEntity):
                 STATE_ON if await self._bridge.async_is_on() else STATE_OFF
             )
 
-        if self._attr_state == STATE_ON and self._app_list is None:
-            self._app_list = {}  # Ensure that we don't update it twice in parallel
+        if self._attr_state == STATE_ON and not self._app_list_event.is_set():
             await self._bridge.async_request_app_list()
+            try:
+                await asyncio.wait_for(self._app_list_event.wait(), APP_LIST_DELAY)
+            except asyncio.TimeoutError as err:
+                # No need to try again
+                self._app_list_event.set()
+                LOGGER.debug(
+                    "Failed to load app list from %s: %s", self._host, err.__repr__()
+                )
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""

@@ -32,7 +32,7 @@ def fake_host_fixture() -> None:
 @pytest.fixture(autouse=True)
 def app_list_delay_fixture() -> None:
     """Patch APP_LIST_DELAY."""
-    with patch("homeassistant.components.samsungtv.bridge.APP_LIST_DELAY", 0):
+    with patch("homeassistant.components.samsungtv.media_player.APP_LIST_DELAY", 0):
         yield
 
 
