@@ -658,7 +658,7 @@ fnvhash==0.1.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast_solar==2.1.0
+forecast_solar==2.2.0
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -809,7 +809,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220317.0
+home-assistant-frontend==20220322.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -2093,7 +2093,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async,encrypted]==2.4.0
+samsungtvws[async,encrypted]==2.5.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
@@ -2118,7 +2118,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.10.2
+sense_energy==0.10.3
 
 # homeassistant.components.sentry
 sentry-sdk==1.5.8

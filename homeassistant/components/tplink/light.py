@@ -324,7 +324,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         device: SmartLightStrip,
         coordinator: TPLinkDataUpdateCoordinator,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the smart light strip."""
         super().__init__(device, coordinator)
         self._last_custom_effect: dict[str, Any] = {}
 

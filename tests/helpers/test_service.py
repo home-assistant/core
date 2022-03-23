@@ -421,6 +421,22 @@ async def test_service_call_entry_id(hass):
     assert dict(calls[0].data) == {"entity_id": ["hello.world"]}
 
 
+@pytest.mark.parametrize("target", ("all", "none"))
+async def test_service_call_all_none(hass, target):
+    """Test service call targeting all."""
+    calls = async_mock_service(hass, "test_domain", "test_service")
+
+    config = {
+        "service": "test_domain.test_service",
+        "target": {"entity_id": target},
+    }
+
+    await service.async_call_from_config(hass, config)
+    await hass.async_block_till_done()
+
+    assert dict(calls[0].data) == {"entity_id": target}
+
+
 async def test_extract_entity_ids(hass):
     """Test extract_entity_ids method."""
     hass.states.async_set("light.Bowl", STATE_ON)
