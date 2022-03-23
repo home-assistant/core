@@ -27,7 +27,7 @@ LOCK_TYPES: dict[str, LockEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Create wallbox sensor entities in HASS."""
+    """Create wallbox lock entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
     # Check if the user is authorized to lock, if so, add lock component
     try:
