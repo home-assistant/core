@@ -22,7 +22,7 @@ class HelperFlowError(Exception):
 
 
 @dataclass
-class HelperFlowStep:
+class HelperFlowFormStep:
     """Define a helper config or options flow step."""
 
     # Optional schema for requesting and validating user input. If schema validation
@@ -57,7 +57,7 @@ class HelperCommonFlowHandler:
     def __init__(
         self,
         handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
-        flow: dict[str, HelperFlowStep | HelperFlowMenuStep],
+        flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep],
         config_entry: config_entries.ConfigEntry | None,
     ) -> None:
         """Initialize a common handler."""
@@ -69,7 +69,7 @@ class HelperCommonFlowHandler:
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a step."""
-        if isinstance(self._flow[step_id], HelperFlowStep):
+        if isinstance(self._flow[step_id], HelperFlowFormStep):
             return await self._async_form_step(step_id, user_input)
         return await self._async_menu_step(step_id, user_input)
 
@@ -77,7 +77,7 @@ class HelperCommonFlowHandler:
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a form step."""
-        form_step: HelperFlowStep = cast(HelperFlowStep, self._flow[step_id])
+        form_step: HelperFlowFormStep = cast(HelperFlowFormStep, self._flow[step_id])
 
         if user_input is not None and form_step.schema is not None:
             # Do extra validation of user input
@@ -109,7 +109,9 @@ class HelperCommonFlowHandler:
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show form for next step."""
-        form_step: HelperFlowStep = cast(HelperFlowStep, self._flow[next_step_id])
+        form_step: HelperFlowFormStep = cast(
+            HelperFlowFormStep, self._flow[next_step_id]
+        )
 
         options = dict(self._options)
         if user_input:
@@ -147,8 +149,8 @@ class HelperCommonFlowHandler:
 class HelperConfigFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow for helper integrations."""
 
-    config_flow: dict[str, HelperFlowStep | HelperFlowMenuStep]
-    options_flow: dict[str, HelperFlowStep | HelperFlowMenuStep] | None = None
+    config_flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep]
+    options_flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep] | None = None
 
     VERSION = 1
 
