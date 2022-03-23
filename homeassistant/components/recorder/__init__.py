@@ -463,6 +463,31 @@ class ExternalStatisticsTask(RecorderTask):
 
 
 @dataclass
+class AdjustStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run an adjust statistics task."""
+
+    statistic_id: str
+    start_time: datetime
+    sum_adjustment: float
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics task."""
+        if statistics.adjust_statistics(
+            instance,
+            self.statistic_id,
+            self.start_time,
+            self.sum_adjustment,
+        ):
+            return
+        # Schedule a new adjust statistics task if this one didn't finish
+        instance.queue.put(
+            AdjustStatisticsTask(
+                self.statistic_id, self.start_time, self.sum_adjustment
+            )
+        )
+
+
+@dataclass
 class WaitTask(RecorderTask):
     """An object to insert into the recorder queue to tell it set the _queue_watch event."""
 
@@ -760,6 +785,11 @@ class Recorder(threading.Thread):
         """Trigger the hourly statistics run."""
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
+
+    @callback
+    def async_adjust_statistics(self, statistic_id, start_time, sum_adjustment):
+        """Adjust statistics."""
+        self.queue.put(AdjustStatisticsTask(statistic_id, start_time, sum_adjustment))
 
     @callback
     def async_clear_statistics(self, statistic_ids):
@@ -1086,8 +1116,17 @@ class Recorder(threading.Thread):
                 if dbstate in self.event_session:
                     self.event_session.expunge(dbstate)
             self._pending_expunge = []
-        self._pending_state_attributes = {}
         self.event_session.commit()
+
+        # We just committed the state attributes to the database
+        # and we now know the attributes_ids.  We can save
+        # a many selects for matching attributes by loading them
+        # into the LRU cache now.
+        for state_attr in self._pending_state_attributes.values():
+            self._state_attributes_ids[
+                state_attr.shared_attrs
+            ] = state_attr.attributes_id
+        self._pending_state_attributes = {}
 
         # Expire is an expensive operation (frequently more expensive
         # than the flush and commit itself) so we only

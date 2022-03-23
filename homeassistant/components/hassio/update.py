@@ -170,10 +170,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
         )
 
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         try:
@@ -214,10 +211,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
         return "https://brands.home-assistant.io/hassio/icon.png"
 
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         try:
@@ -262,10 +256,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         return f"https://{'rc' if version.beta else 'www'}.home-assistant.io/latest-release-notes/"
 
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         try:
