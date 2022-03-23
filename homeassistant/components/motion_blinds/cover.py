@@ -49,6 +49,7 @@ POSITION_DEVICE_MAP = {
     BlindType.Curtain: CoverDeviceClass.CURTAIN,
     BlindType.CurtainLeft: CoverDeviceClass.CURTAIN,
     BlindType.CurtainRight: CoverDeviceClass.CURTAIN,
+    BlindType.SkylightBlind: CoverDeviceClass.SHADE,
 }
 
 TILT_DEVICE_MAP = {
@@ -57,6 +58,7 @@ TILT_DEVICE_MAP = {
     BlindType.DoubleRoller: CoverDeviceClass.SHADE,
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
+    BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
 }
 
 TDBU_DEVICE_MAP = {
@@ -138,7 +140,7 @@ async def async_setup_entry(
 
         else:
             _LOGGER.warning(
-                "Blind type '%s' not yet supported, " "assuming RollerBlind",
+                "Blind type '%s' not yet supported, assuming RollerBlind",
                 blind.blind_type,
             )
             entities.append(
