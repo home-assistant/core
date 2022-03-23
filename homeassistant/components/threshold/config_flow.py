@@ -11,6 +11,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
     HelperFlowError,
+    HelperFlowMenuStep,
     HelperFlowStep,
 )
 
@@ -43,11 +44,11 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW = {
+CONFIG_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
     "user": HelperFlowStep(CONFIG_SCHEMA, validate_user_input=_validate_mode)
 }
 
-OPTIONS_FLOW = {
+OPTIONS_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
     "init": HelperFlowStep(OPTIONS_SCHEMA, validate_user_input=_validate_mode)
 }
 
