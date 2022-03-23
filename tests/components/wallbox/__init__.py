@@ -33,7 +33,7 @@ test_response = json.loads(
         {
             CONF_CHARGING_POWER_KEY: 0,
             CONF_MAX_AVAILABLE_POWER_KEY: 25.2,
-            CONF_CHARGING_SPEED_KEY: "YYY",
+            CONF_CHARGING_SPEED_KEY: 0,
             CONF_ADDED_RANGE_KEY: 150,
             CONF_ADDED_ENERGY_KEY: 44.697,
             CONF_NAME_KEY: "WallboxName",
