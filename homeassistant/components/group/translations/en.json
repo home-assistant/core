@@ -41,8 +41,13 @@
                 }
             },
             "user": {
-                "data": {
-                    "group_type": "Group type"
+                "description": "Select group type",
+                "menu_options": {
+                    "binary_sensor": "Binary sensor group",
+                    "cover": "Cover group",
+                    "fan": "Fan group",
+                    "light": "Light group",
+                    "media_player": "Media player group"
                 },
                 "title": "New Group"
             }
