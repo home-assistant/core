@@ -480,7 +480,7 @@ async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) ->
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    # fallback to set HSV when custom effect is not know so it does turn back on
+    # fallback to set HSV when custom effect is not known so it does turn back on
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
