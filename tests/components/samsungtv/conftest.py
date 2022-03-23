@@ -91,7 +91,7 @@ def remotews_fixture() -> Mock:
             remotews.ws_event_callback(event, response)
 
     remotews.start_listening.side_effect = _start_listening
-    remotews.send_command.side_effect = _send_commands
+    remotews.send_commands.side_effect = _send_commands
     remotews.raise_mock_ws_event_callback = Mock(side_effect=_mock_ws_event_callback)
 
     with patch(
