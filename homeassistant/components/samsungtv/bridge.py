@@ -763,7 +763,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
 
     async def async_power_off(self) -> None:
         """Send power off command to remote."""
-        await self._async_send_commands([SendEncryptedRemoteKey.click("KEY_POWEROFF")])
+        await self._async_send_commands([SendEncryptedRemoteKey.click("KEY_POWER")])
         # Force closing of remote session to provide instant UI feedback
         await self.async_close_remote()
 
