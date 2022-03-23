@@ -19,10 +19,13 @@ from tests.common import MockPlatform, mock_platform
 class MockNotifyPlatform(MockPlatform):
     """Help to set up test notify service."""
 
-    def __init__(self, async_get_service):
+    def __init__(self, async_get_service=None, get_service=None):
         """Return the notify service."""
         super().__init__()
-        self.async_get_service = async_get_service
+        if async_get_service:
+            self.async_get_service = async_get_service
+        if get_service:
+            self.get_service = get_service
 
 
 async def test_same_targets(hass: HomeAssistant):
@@ -136,7 +139,7 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
         targetlist = {"a": 1, "b": 2}
         return NotificationService(hass, targetlist, "testnotify")
 
-    async def async_get_service2(hass, config, discovery_info=None):
+    def get_service2(hass, config, discovery_info=None):
         """Get notify service for mocked platform."""
         get_service_called(config, discovery_info)
         targetlist = {"c": 3, "d": 4}
@@ -154,7 +157,7 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
     integration.file_path = tmp_path
 
     # Initialize a second platform
-    loaded_platform2 = MockNotifyPlatform(async_get_service=async_get_service2)
+    loaded_platform2 = MockNotifyPlatform(get_service=get_service2)
     mock_platform(hass, "testnotify2.notify", loaded_platform2)
 
     # Setup the testnotify platform
