@@ -1,4 +1,5 @@
 """Support for Motion Blinds using their WLAN API."""
+from datetime import timedelta
 import logging
 
 from motionblinds import DEVICE_TYPES_WIFI, BlindType
@@ -11,7 +12,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -19,7 +20,9 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_point_in_time, track_point_in_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_ABSOLUTE_POSITION,
@@ -31,6 +34,7 @@ from .const import (
     KEY_VERSION,
     MANUFACTURER,
     SERVICE_SET_ABSOLUTE_POSITION,
+    UPDATE_INTERVAL_MOVING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -172,6 +176,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
         self._blind = blind
         self._config_entry = config_entry
+        self._requesting_position = False
+        self._previous_positions = []
 
         if blind.device_type in DEVICE_TYPES_WIFI:
             via_device = ()
@@ -236,23 +242,69 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self._blind.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()
 
+    async def async_scheduled_update_request(self, *_):
+        """Request a state update from the blind at a scheduled point in time."""
+        # add the last position to the list and keep the list at max 2 items
+        self._previous_positions.append(self.current_cover_position)
+        if len(self._previous_positions) > 2:
+            del self._previous_positions[: len(self._previous_positions) - 2]
+
+        await self.hass.async_add_executor_job(self._blind.Update_trigger)
+        self.async_write_ha_state()
+
+        if len(self._previous_positions) < 2 or not all(
+            self.current_cover_position == prev_position
+            for prev_position in self._previous_positions
+        ):
+            # keep updating the position @UPDATE_INTERVAL_MOVING until the position does not change.
+            async_track_point_in_time(
+                self.hass,
+                self.async_scheduled_update_request,
+                dt_util.utcnow() + timedelta(seconds=UPDATE_INTERVAL_MOVING),
+            )
+        else:
+            self._previous_positions = []
+            self._requesting_position = False
+
+    @callback
+    def async_scheduled_update_request_callback(self, now):
+        """Request a state update from the blind at a scheduled point in time using async_scheduled_update_request."""
+        self.hass.loop.create_task(self.async_scheduled_update_request())
+
+    def request_position_till_stop(self):
+        """Request the position of the blind every UPDATE_INTERVAL_MOVING seconds until it stops moving."""
+        self._previous_positions = []
+        if self._requesting_position or self.current_cover_position is None:
+            return
+
+        self._requesting_position = True
+        track_point_in_time(
+            self.hass,
+            self.async_scheduled_update_request_callback,
+            dt_util.utcnow() + timedelta(seconds=UPDATE_INTERVAL_MOVING),
+        )
+
     def open_cover(self, **kwargs):
         """Open the cover."""
         self._blind.Open()
+        self.request_position_till_stop()
 
     def close_cover(self, **kwargs):
         """Close cover."""
         self._blind.Close()
+        self.request_position_till_stop()
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         self._blind.Set_position(100 - position)
+        self.request_position_till_stop()
 
     def set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
         self._blind.Set_position(100 - position)
+        self.request_position_till_stop()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -345,15 +397,18 @@ class MotionTDBUDevice(MotionPositionDevice):
     def open_cover(self, **kwargs):
         """Open the cover."""
         self._blind.Open(motor=self._motor_key)
+        self.request_position_till_stop()
 
     def close_cover(self, **kwargs):
         """Close cover."""
         self._blind.Close(motor=self._motor_key)
+        self.request_position_till_stop()
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific scaled position."""
         position = kwargs[ATTR_POSITION]
         self._blind.Set_scaled_position(100 - position, motor=self._motor_key)
+        self.request_position_till_stop()
 
     def set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position."""
@@ -363,6 +418,8 @@ class MotionTDBUDevice(MotionPositionDevice):
         self._blind.Set_position(
             100 - position, motor=self._motor_key, width=target_width
         )
+
+        self.request_position_till_stop()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
