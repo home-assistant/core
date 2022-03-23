@@ -468,7 +468,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        await remote.send_command(commands)
+                        await remote.send_commands(commands)
                     break
                 except (
                     BrokenPipeError,
