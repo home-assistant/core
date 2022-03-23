@@ -27,7 +27,6 @@ from homeassistant.components.androidtv.const import (
     CONF_GET_SOURCES,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
-    CONF_TURN_OFF_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
     DEVICE_ANDROIDTV,
