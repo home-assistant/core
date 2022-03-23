@@ -443,6 +443,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Send the launch_app command using websocket protocol."""
         await self._async_send_commands([ChannelEmitCommand.launch_app(app_id)])
 
+    async def async_request_app_list(self) -> None:
+        """Send the get_installed_app command using websocket protocol."""
+        await self._async_send_commands([ChannelEmitCommand.get_installed_app()])
+
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using websocket protocol."""
         await self._async_send_commands([SendRemoteKey.click(key) for key in keys])
@@ -519,7 +523,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 self._remote = None
             else:
                 LOGGER.debug("Created SamsungTVWSBridge for %s", self.host)
-                await self._remote.send_command(ChannelEmitCommand.get_installed_app())
                 if self._device_info is None:
                     # Initialise device info on first connect
                     await self.async_device_info()
