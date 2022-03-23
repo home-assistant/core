@@ -135,7 +135,7 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
             return HERERoutingData(
                 {
                     ATTR_ATTRIBUTION: attribution,
-                    ATTR_DURATION: summary["baseTime"] / 60,  # type: ignore
+                    ATTR_DURATION: summary["baseTime"] / 60,  # type: ignore[misc]
                     ATTR_DURATION_IN_TRAFFIC: traffic_time / 60,
                     ATTR_DISTANCE: distance,
                     ATTR_ROUTE: response.route_short,
