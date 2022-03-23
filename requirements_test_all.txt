@@ -147,7 +147,7 @@ aiohomekit==0.7.16
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.3.0
+aiohue==4.4.1
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -677,7 +677,7 @@ minio==5.0.10
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.1
+motionblinds==0.6.2
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
