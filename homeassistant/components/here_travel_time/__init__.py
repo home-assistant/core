@@ -77,11 +77,14 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
             here_formatted_destination = destination.split(",")
             here_formatted_origin = origin.split(",")
             arrival: str | None = None
-            departure: str | None = "now"
+            departure: str | None = None
             if self.config.arrival is not None:
                 arrival = convert_time_to_isodate(self.config.arrival)
             if self.config.departure is not None:
                 departure = convert_time_to_isodate(self.config.departure)
+
+            if arrival is None and departure is None:
+                departure = "now"
 
             _LOGGER.debug(
                 "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s, arrival: %s, departure: %s",
