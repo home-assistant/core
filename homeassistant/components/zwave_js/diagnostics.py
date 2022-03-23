@@ -1,6 +1,7 @@
 """Provides diagnostics for Z-Wave JS."""
 from __future__ import annotations
 
+from dataclasses import astuple
 from typing import Any
 
 from zwave_js_server.client import Client
@@ -32,22 +33,16 @@ VALUES_TO_REDACT = (
 def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
     """Redact value of a Z-Wave value."""
     for value_to_redact in VALUES_TO_REDACT:
-        if (
-            (
-                value_to_redact.command_class is None
-                or zwave_value["commandClass"] == value_to_redact.command_class
-            )
-            and (
-                value_to_redact.property_ is None
-                or zwave_value["property"] == value_to_redact.property_
-            )
-            and (
-                value_to_redact.endpoint is None
-                or zwave_value["endpoint"] == value_to_redact.endpoint
-            )
-            and (
-                value_to_redact.property_key is None
-                or zwave_value["propertyKey"] == value_to_redact.property_key
+        zwave_value_id = ZwaveValueID(
+            property_=zwave_value["property"],
+            command_class=CommandClass(zwave_value["commandClass"]),
+            endpoint=zwave_value["endpoint"],
+            property_key=zwave_value.get("propertyKey"),
+        )
+        if all(
+            redacted_field_val is None or redacted_field_val == zwave_value_field_val
+            for redacted_field_val, zwave_value_field_val in zip(
+                astuple(value_to_redact), astuple(zwave_value_id)
             )
         ):
             return {**zwave_value, "value": REDACTED}

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import astuple, dataclass
 from typing import Any, cast
 
 import voluptuous as vol
@@ -53,10 +53,7 @@ class ZwaveValueID:
 
     def __post_init__(self) -> None:
         """Post initialization check."""
-        # If this returns None, all values are None
-        if (
-            self.property_ or self.command_class or self.endpoint or self.property_key
-        ) is None:
+        if all(val is None for val in astuple(self)):
             raise ValueError("At least one of the fields must be set.")
 
 
