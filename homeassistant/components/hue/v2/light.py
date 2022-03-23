@@ -36,15 +36,6 @@ from .helpers import (
     normalize_hue_transition,
 )
 
-ALLOWED_ERRORS = [
-    "device (light) has communication issues, command (on) may not have effect",
-    'device (light) is "soft off", command (on) may not have effect',
-    "device (light) has communication issues, command (.on) may not have effect",
-    'device (light) is "soft off", command (.on) may not have effect',
-    "device (light) has communication issues, command (.on.on) may not have effect",
-    'device (light) is "soft off", command (.on.on) may not have effect',
-]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -188,7 +179,6 @@ class HueLight(HueBaseEntity, LightEntity):
             color_xy=xy_color,
             color_temp=color_temp,
             transition_time=transition,
-            allowed_errors=ALLOWED_ERRORS,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -208,7 +198,6 @@ class HueLight(HueBaseEntity, LightEntity):
             id=self.resource.id,
             on=False,
             transition_time=transition,
-            allowed_errors=ALLOWED_ERRORS,
         )
 
     async def async_set_flash(self, flash: str) -> None:
