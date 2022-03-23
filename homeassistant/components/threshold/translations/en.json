@@ -1,0 +1,39 @@
+{
+    "config": {
+        "error": {
+            "need_lower_upper": "Lower and upper limits can't both be empty"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Input sensor",
+                    "hysteresis": "Hysteresis",
+                    "lower": "Lower limit",
+                    "mode": "Threshold mode",
+                    "name": "Name",
+                    "upper": "Upper limit"
+                },
+                "description": "Configure when the sensor should turn on and off.\n\nOnly lower limit configured - Turn on when the input sensor's value is less than the lower limit.\nOnly upper limit configured - Turn on when the input sensor's value is greater than the upper limit.\nBoth lower and upper limit configured - Turn on when the input sensor's value is in the range [lower limit .. upper limit].",
+                "title": "New Threshold Sensor"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "need_lower_upper": "Lower and upper limits can't both be empty"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Input sensor",
+                    "hysteresis": "Hysteresis",
+                    "lower": "Lower limit",
+                    "mode": "Threshold mode",
+                    "name": "Name",
+                    "upper": "Upper limit"
+                },
+                "description": "Configure when the sensor should turn on and off.\n\nOnly lower limit configured - Turn on when the input sensor's value is less than the lower limit.\nOnly upper limit configured - Turn on when the input sensor's value is greater than the upper limit.\nBoth lower and upper limit configured - Turn on when the input sensor's value is in the range [lower limit .. upper limit]."
+            }
+        }
+    }
+}

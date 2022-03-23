@@ -61,7 +61,7 @@ def main():
         if not args.template.startswith("config_flow"):
             if info.helper:
                 template = "config_flow_helper"
-            if info.oauth2:
+            elif info.oauth2:
                 template = "config_flow_oauth2"
             elif info.authentication or not info.discoverable:
                 template = "config_flow"
