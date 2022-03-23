@@ -12,7 +12,6 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_PORT,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_NIGHT,
@@ -24,16 +23,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import (
-    CONF_ACCOUNT,
-    CONF_ACCOUNTS,
-    CONF_PING_INTERVAL,
-    CONF_ZONES,
-    KEY_ALARM,
-    PREVIOUS_STATE,
-    SIA_NAME_FORMAT,
-    SIA_UNIQUE_ID_FORMAT_ALARM,
-)
+from .const import CONF_ACCOUNT, CONF_ACCOUNTS, CONF_ZONES, KEY_ALARM, PREVIOUS_STATE
 from .sia_entity_base import SIABaseEntity, SIAEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,17 +76,7 @@ async def async_setup_entry(
     """Set up SIA alarm_control_panel(s) from a config entry."""
     async_add_entities(
         SIAAlarmControlPanel(
-            port=entry.data[CONF_PORT],
-            account=account_data[CONF_ACCOUNT],
-            zone=zone,
-            ping_interval=account_data[CONF_PING_INTERVAL],
-            entity_description=ENTITY_DESCRIPTION_ALARM,
-            unique_id=SIA_UNIQUE_ID_FORMAT_ALARM.format(
-                entry.entry_id, account_data[CONF_ACCOUNT], zone
-            ),
-            name=SIA_NAME_FORMAT.format(
-                entry.data[CONF_PORT], account_data[CONF_ACCOUNT], zone, "alarm"
-            ),
+            entry, account_data[CONF_ACCOUNT], zone, ENTITY_DESCRIPTION_ALARM
         )
         for account_data in entry.data[CONF_ACCOUNTS]
         for zone in range(
@@ -114,23 +94,17 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
 
     def __init__(
         self,
-        port: int,
+        entry: ConfigEntry,
         account: str,
-        zone: int | None,
-        ping_interval: int,
+        zone: int,
         entity_description: SIAAlarmControlPanelEntityDescription,
-        unique_id: str,
-        name: str,
     ) -> None:
         """Create SIAAlarmControlPanel object."""
         super().__init__(
-            port,
+            entry,
             account,
             zone,
-            ping_interval,
             entity_description,
-            unique_id,
-            name,
         )
 
         self._attr_state: StateType = None
@@ -144,7 +118,10 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             self._attr_available = False
 
     def update_state(self, sia_event: SIAEvent) -> bool:
-        """Update the state of the alarm control panel."""
+        """Update the state of the alarm control panel.
+
+        Return True if the event was relevant for this entity.
+        """
         new_state = self.entity_description.code_consequences.get(sia_event.code)
         if new_state is None:
             return False

@@ -61,6 +61,7 @@
                     "debug": "Habilitar a depura\u00e7\u00e3o",
                     "device": "Selecione o dispositivo para configurar",
                     "event_code": "Insira o c\u00f3digo do evento para adicionar",
+                    "protocols": "Protocolos",
                     "remove_device": "Selecione o dispositivo para excluir"
                 },
                 "title": "Op\u00e7\u00f5es de Rfxtrx"

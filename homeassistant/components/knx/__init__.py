@@ -225,9 +225,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf = hass.data.get(DATA_KNX_CONFIG)
     # `conf` is None when reloading the integration or no `knx` key in configuration.yaml
-    if conf is None:
+    if (conf := hass.data.get(DATA_KNX_CONFIG)) is None:
         _conf = await async_integration_yaml_config(hass, DOMAIN)
         if not _conf or DOMAIN not in _conf:
             _LOGGER.warning(

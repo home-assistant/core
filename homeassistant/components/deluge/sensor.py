@@ -95,8 +95,6 @@ async def async_setup_entry(
 class DelugeSensor(DelugeEntity, SensorEntity):
     """Representation of a Deluge sensor."""
 
-    coordinator: DelugeDataUpdateCoordinator
-
     def __init__(
         self,
         coordinator: DelugeDataUpdateCoordinator,
@@ -106,7 +104,7 @@ class DelugeSensor(DelugeEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{coordinator.config_entry.title} {description.name}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}/{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
     def native_value(self) -> StateType:

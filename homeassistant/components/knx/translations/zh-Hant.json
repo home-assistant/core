@@ -15,7 +15,7 @@
                     "local_ip": "Home Assistant \u672c\u5730\u7aef IP\uff08\u4fdd\u7559\u7a7a\u767d\u4ee5\u81ea\u52d5\u5075\u6e2c\uff09",
                     "port": "\u901a\u8a0a\u57e0",
                     "route_back": "\u8def\u7531\u8fd4\u56de / NAT \u6a21\u5f0f",
-                    "tunneling_type": "KNX \u901a\u9053\u985e\u578b"
+                    "tunneling_type": "KNX \u901a\u9053\u985e\u5225"
                 },
                 "description": "\u8acb\u8f38\u5165\u901a\u9053\u88dd\u7f6e\u7684\u9023\u7dda\u8cc7\u8a0a\u3002"
             },
@@ -36,9 +36,9 @@
             },
             "type": {
                 "data": {
-                    "connection_type": "KNX \u9023\u7dda\u985e\u578b"
+                    "connection_type": "KNX \u9023\u7dda\u985e\u5225"
                 },
-                "description": "\u8acb\u8f38\u5165 KNX \u9023\u7dda\u6240\u4f7f\u7528\u4e4b\u9023\u7dda\u985e\u578b\u3002 \n \u81ea\u52d5\uff08AUTOMATIC\uff09 - \u6574\u5408\u81ea\u52d5\u85c9\u7531\u9598\u9053\u5668\u6383\u63cf\u5f8c\u8655\u7406\u9023\u7dda\u554f\u984c\u3002\n \u901a\u9053\uff08TUNNELING\uff09 - \u6574\u5408\u5c07\u6703\u900f\u904e\u901a\u9053\u65b9\u5f0f\u8207 KNX Bus \u9032\u884c\u9023\u7dda\u3002\n \u8def\u7531\uff08ROUTING\uff09 - \u6574\u5408\u5c07\u6703\u900f\u904e\u8def\u7531\u65b9\u5f0f\u8207 KNX Bus \u9032\u884c\u9023\u7dda\u3002"
+                "description": "\u8acb\u8f38\u5165 KNX \u9023\u7dda\u6240\u4f7f\u7528\u4e4b\u9023\u7dda\u985e\u5225\u3002 \n \u81ea\u52d5\uff08AUTOMATIC\uff09 - \u6574\u5408\u81ea\u52d5\u85c9\u7531\u9598\u9053\u5668\u6383\u63cf\u5f8c\u8655\u7406\u9023\u7dda\u554f\u984c\u3002\n \u901a\u9053\uff08TUNNELING\uff09 - \u6574\u5408\u5c07\u6703\u900f\u904e\u901a\u9053\u65b9\u5f0f\u8207 KNX Bus \u9032\u884c\u9023\u7dda\u3002\n \u8def\u7531\uff08ROUTING\uff09 - \u6574\u5408\u5c07\u6703\u900f\u904e\u8def\u7531\u65b9\u5f0f\u8207 KNX Bus \u9032\u884c\u9023\u7dda\u3002"
             }
         }
     },
@@ -46,11 +46,11 @@
         "step": {
             "init": {
                 "data": {
-                    "connection_type": "KNX \u9023\u7dda\u985e\u578b",
+                    "connection_type": "KNX \u9023\u7dda\u985e\u5225",
                     "individual_address": "\u9810\u8a2d\u500b\u5225\u4f4d\u5740",
                     "local_ip": "Home Assistant \u672c\u5730\u7aef IP\uff08\u586b\u5165 0.0.0.0 \u555f\u7528\u81ea\u52d5\u5075\u6e2c\uff09",
-                    "multicast_group": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u63a2\u7d22\u7684 Multicast \u7fa4\u7d44",
-                    "multicast_port": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u63a2\u7d22\u7684 Multicast \u901a\u8a0a\u57e0",
+                    "multicast_group": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u641c\u7d22\u7684 Multicast \u7fa4\u7d44",
+                    "multicast_port": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u641c\u7d22\u7684 Multicast \u901a\u8a0a\u57e0",
                     "rate_limit": "\u6700\u5927\u6bcf\u79d2\u767c\u51fa Telegram",
                     "state_updater": "\u7531 KNX Bus \u8b80\u53d6\u72c0\u614b\u5168\u555f\u7528"
                 }
@@ -61,7 +61,7 @@
                     "local_ip": "\u672c\u5730\u7aef IP\uff08\u5047\u5982\u4e0d\u78ba\u5b9a\uff0c\u4fdd\u7559\u7a7a\u767d\uff09",
                     "port": "\u901a\u8a0a\u57e0",
                     "route_back": "\u8def\u7531\u8fd4\u56de / NAT \u6a21\u5f0f",
-                    "tunneling_type": "KNX \u901a\u9053\u985e\u578b"
+                    "tunneling_type": "KNX \u901a\u9053\u985e\u5225"
                 }
             }
         }

@@ -3,15 +3,16 @@ from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
 
-import pytest
-from sonarr.models import (
-    Application,
-    CommandItem,
-    Episode,
-    QueueItem,
-    SeriesItem,
-    WantedResults,
+from aiopyarr import (
+    Command,
+    Diskspace,
+    SonarrCalendar,
+    SonarrQueue,
+    SonarrSeries,
+    SonarrWantedMissing,
+    SystemStatus,
 )
+import pytest
 
 from homeassistant.components.sonarr.const import (
     CONF_BASE_PATH,
@@ -33,34 +34,46 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_fixture
 
 
-def sonarr_calendar():
+def sonarr_calendar() -> list[SonarrCalendar]:
     """Generate a response for the calendar method."""
     results = json.loads(load_fixture("sonarr/calendar.json"))
-    return [Episode.from_dict(result) for result in results]
+    return [SonarrCalendar(result) for result in results]
 
 
-def sonarr_commands():
+def sonarr_commands() -> list[Command]:
     """Generate a response for the commands method."""
     results = json.loads(load_fixture("sonarr/command.json"))
-    return [CommandItem.from_dict(result) for result in results]
+    return [Command(result) for result in results]
 
 
-def sonarr_queue():
+def sonarr_diskspace() -> list[Diskspace]:
+    """Generate a response for the diskspace method."""
+    results = json.loads(load_fixture("sonarr/diskspace.json"))
+    return [Diskspace(result) for result in results]
+
+
+def sonarr_queue() -> SonarrQueue:
     """Generate a response for the queue method."""
     results = json.loads(load_fixture("sonarr/queue.json"))
-    return [QueueItem.from_dict(result) for result in results]
+    return SonarrQueue(results)
 
 
-def sonarr_series():
+def sonarr_series() -> list[SonarrSeries]:
     """Generate a response for the series method."""
     results = json.loads(load_fixture("sonarr/series.json"))
-    return [SeriesItem.from_dict(result) for result in results]
+    return [SonarrSeries(result) for result in results]
 
 
-def sonarr_wanted():
+def sonarr_system_status() -> SystemStatus:
+    """Generate a response for the system status method."""
+    result = json.loads(load_fixture("sonarr/system-status.json"))
+    return SystemStatus(result)
+
+
+def sonarr_wanted() -> SonarrWantedMissing:
     """Generate a response for the wanted method."""
     results = json.loads(load_fixture("sonarr/wanted-missing.json"))
-    return WantedResults.from_dict(results)
+    return SonarrWantedMissing(results)
 
 
 @pytest.fixture
@@ -95,54 +108,38 @@ def mock_setup_entry() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_sonarr_config_flow(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
+def mock_sonarr_config_flow() -> Generator[None, MagicMock, None]:
     """Return a mocked Sonarr client."""
-    fixture: str = "sonarr/app.json"
-    if hasattr(request, "param") and request.param:
-        fixture = request.param
-
-    app = Application(json.loads(load_fixture(fixture)))
     with patch(
-        "homeassistant.components.sonarr.config_flow.Sonarr", autospec=True
+        "homeassistant.components.sonarr.config_flow.SonarrClient", autospec=True
     ) as sonarr_mock:
         client = sonarr_mock.return_value
-        client.host = "192.168.1.189"
-        client.port = 8989
-        client.base_path = "/api"
-        client.tls = False
-        client.app = app
-        client.update.return_value = app
-        client.calendar.return_value = sonarr_calendar()
-        client.commands.return_value = sonarr_commands()
-        client.queue.return_value = sonarr_queue()
-        client.series.return_value = sonarr_series()
-        client.wanted.return_value = sonarr_wanted()
+        client.async_get_calendar.return_value = sonarr_calendar()
+        client.async_get_commands.return_value = sonarr_commands()
+        client.async_get_diskspace.return_value = sonarr_diskspace()
+        client.async_get_queue.return_value = sonarr_queue()
+        client.async_get_series.return_value = sonarr_series()
+        client.async_get_system_status.return_value = sonarr_system_status()
+        client.async_get_wanted.return_value = sonarr_wanted()
+
         yield client
 
 
 @pytest.fixture
-def mock_sonarr(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
+def mock_sonarr() -> Generator[None, MagicMock, None]:
     """Return a mocked Sonarr client."""
-    fixture: str = "sonarr/app.json"
-    if hasattr(request, "param") and request.param:
-        fixture = request.param
-
-    app = Application(json.loads(load_fixture(fixture)))
-    with patch("homeassistant.components.sonarr.Sonarr", autospec=True) as sonarr_mock:
+    with patch(
+        "homeassistant.components.sonarr.SonarrClient", autospec=True
+    ) as sonarr_mock:
         client = sonarr_mock.return_value
-        client.host = "192.168.1.189"
-        client.port = 8989
-        client.base_path = "/api"
-        client.tls = False
-        client.app = app
-        client.update.return_value = app
-        client.calendar.return_value = sonarr_calendar()
-        client.commands.return_value = sonarr_commands()
-        client.queue.return_value = sonarr_queue()
-        client.series.return_value = sonarr_series()
-        client.wanted.return_value = sonarr_wanted()
+        client.async_get_calendar.return_value = sonarr_calendar()
+        client.async_get_commands.return_value = sonarr_commands()
+        client.async_get_diskspace.return_value = sonarr_diskspace()
+        client.async_get_queue.return_value = sonarr_queue()
+        client.async_get_series.return_value = sonarr_series()
+        client.async_get_system_status.return_value = sonarr_system_status()
+        client.async_get_wanted.return_value = sonarr_wanted()
+
         yield client
 
 

@@ -19,8 +19,6 @@ MANUFACTURER = "August Home Inc."
 
 DEFAULT_AUGUST_CONFIG_FILE = ".august.conf"
 
-DATA_AUGUST = "data_august"
-
 DEFAULT_NAME = "August"
 DOMAIN = "august"
 
@@ -46,6 +44,7 @@ ACTIVITY_UPDATE_INTERVAL = timedelta(seconds=10)
 LOGIN_METHODS = ["phone", "email"]
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.CAMERA,
     Platform.BINARY_SENSOR,
     Platform.LOCK,

@@ -138,6 +138,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
+            key=DPCode.SWITCH_7,
+            name="Switch 7",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_8,
+            name="Switch 8",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
             name="USB 1",
         ),
@@ -288,6 +298,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.SWITCH,
             name="Socket",
             device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
+    # Unknown product with switch capabilities
+    # Fond in some diffusers, plugs and PIR flood lights
+    # Not documented
+    "qjdcz": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Switch",
         ),
     ),
     # Heater

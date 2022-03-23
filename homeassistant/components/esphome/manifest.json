@@ -3,7 +3,7 @@
   "name": "ESPHome",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/esphome",
-  "requirements": ["aioesphomeapi==10.8.1"],
+  "requirements": ["aioesphomeapi==10.8.2"],
   "zeroconf": ["_esphomelib._tcp.local."],
   "codeowners": ["@OttoWinter", "@jesserockz"],
   "after_dependencies": ["zeroconf", "tag"],

@@ -92,7 +92,8 @@
         ],
         "sucNodeId": 1,
         "supportsTimers": false,
-        "isHealNetworkActive": false
+        "isHealNetworkActive": false,
+        "inclusionState": 0
     },
     "nodes": [
     ]

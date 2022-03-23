@@ -3,20 +3,22 @@ from contextlib import contextmanager
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.components.select.const import (
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
 from homeassistant.components.utility_meter.const import (
-    ATTR_TARIFF,
     ATTR_VALUE,
     DAILY,
     DOMAIN,
     HOURLY,
     QUARTER_HOURLY,
     SERVICE_CALIBRATE_METER,
-    SERVICE_SELECT_TARIFF,
 )
 from homeassistant.components.utility_meter.sensor import (
     ATTR_LAST_RESET,
@@ -117,9 +119,9 @@ async def test_state(hass):
     assert state.attributes.get("status") == PAUSED
 
     await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SELECT_TARIFF,
-        {ATTR_ENTITY_ID: "utility_meter.energy_bill", ATTR_TARIFF: "offpeak"},
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.energy_bill", "option": "offpeak"},
         blocking=True,
     )
 
@@ -305,6 +307,10 @@ async def test_restore_state(hass):
                 },
             ),
             State(
+                "sensor.energy_bill_midpeak",
+                "error",
+            ),
+            State(
                 "sensor.energy_bill_offpeak",
                 "6",
                 attributes={
@@ -326,6 +332,9 @@ async def test_restore_state(hass):
     assert state.attributes.get("last_reset") == last_reset
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
 
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state.state == STATE_UNKNOWN
+
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state.state == "6"
     assert state.attributes.get("status") == COLLECTING
@@ -336,7 +345,7 @@ async def test_restore_state(hass):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    state = hass.states.get("utility_meter.energy_bill")
+    state = hass.states.get("select.energy_bill")
     assert state.state == "onpeak"
 
     state = hass.states.get("sensor.energy_bill_onpeak")
@@ -530,7 +539,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.attributes.get("last_reset") == now.isoformat()
         assert state.state == "3"
     else:
-        assert state.attributes.get("last_period") == 0
+        assert state.attributes.get("last_period") == "0"
         assert state.state == "5"
         start_time_str = dt_util.parse_datetime(start_time).isoformat()
         assert state.attributes.get("last_reset") == start_time_str
@@ -559,7 +568,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.attributes.get("last_period") == "2"
         assert state.state == "7"
     else:
-        assert state.attributes.get("last_period") == 0
+        assert state.attributes.get("last_period") == "0"
         assert state.state == "9"
 
 

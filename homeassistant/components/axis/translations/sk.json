@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "invalid_auth": "Neplatn\u00e9 overenie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

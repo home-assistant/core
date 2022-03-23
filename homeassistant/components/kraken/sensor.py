@@ -11,7 +11,10 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import KrakenData
 from .const import (
@@ -86,7 +89,9 @@ async def async_setup_entry(
     )
 
 
-class KrakenSensor(CoordinatorEntity[Optional[KrakenResponse]], SensorEntity):
+class KrakenSensor(
+    CoordinatorEntity[DataUpdateCoordinator[Optional[KrakenResponse]]], SensorEntity
+):
     """Define a Kraken sensor."""
 
     entity_description: KrakenSensorEntityDescription

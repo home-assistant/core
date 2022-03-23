@@ -48,7 +48,7 @@ class ZWaveBaseEntity(Entity):
         # Entity class attributes
         self._attr_name = self.generate_name()
         self._attr_unique_id = get_unique_id(
-            self.client.driver.controller.home_id, self.info.primary_value.value_id
+            self.client, self.info.primary_value.value_id
         )
         self._attr_entity_registry_enabled_default = (
             self.info.entity_registry_enabled_default

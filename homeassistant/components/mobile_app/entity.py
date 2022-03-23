@@ -1,4 +1,6 @@
 """A entity class for mobile_app."""
+from __future__ import annotations
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ICON,
@@ -8,7 +10,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -33,10 +34,9 @@ def unique_id(webhook_id, sensor_unique_id):
 class MobileAppEntity(RestoreEntity):
     """Representation of an mobile app entity."""
 
-    def __init__(self, config: dict, device: DeviceEntry, entry: ConfigEntry) -> None:
+    def __init__(self, config: dict, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         self._config = config
-        self._device = device
         self._entry = entry
         self._registration = entry.data
         self._unique_id = config[CONF_UNIQUE_ID]

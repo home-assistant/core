@@ -172,7 +172,7 @@ class EntityPlatform:
         def async_create_setup_task() -> Coroutine:
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
-                return platform.async_setup_platform(  # type: ignore
+                return platform.async_setup_platform(  # type: ignore[no-any-return,union-attr]
                     hass,
                     platform_config,
                     self._async_schedule_add_entities,
@@ -183,7 +183,7 @@ class EntityPlatform:
             # we don't want to track this task in case it blocks startup.
             return hass.loop.run_in_executor(  # type: ignore[return-value]
                 None,
-                platform.setup_platform,  # type: ignore
+                platform.setup_platform,  # type: ignore[union-attr]
                 hass,
                 platform_config,
                 self._schedule_add_entities,
@@ -478,7 +478,7 @@ class EntityPlatform:
                     "via_device",
                 ):
                     if key in device_info:
-                        processed_dev_info[key] = device_info[key]  # type: ignore[misc]
+                        processed_dev_info[key] = device_info[key]  # type: ignore[literal-required]
 
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:

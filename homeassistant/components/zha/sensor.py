@@ -25,7 +25,6 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -699,7 +698,7 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 
     _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     @classmethod

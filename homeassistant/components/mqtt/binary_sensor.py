@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_VALUE_TEMPLATE,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -28,20 +29,20 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import PLATFORMS, MqttValueTemplate, subscription
+from . import MqttValueTemplate, subscription
 from .. import mqtt
-from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, DOMAIN
+from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
+    async_setup_platform_helper,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +53,6 @@ DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_FORCE_UPDATE = False
 CONF_EXPIRE_AFTER = "expire_after"
-PAYLOAD_NONE = "None"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
     {
@@ -76,8 +76,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT binary sensor through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, binary_sensor.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
@@ -106,7 +107,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT binary sensor."""
-        self._state = None
+        self._state: bool | None = None
         self._expiration_trigger = None
         self._delay_listener = None
         expire_after = config.get(CONF_EXPIRE_AFTER)
@@ -125,6 +126,9 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             and expire_after > 0
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            # We might have set up a trigger already after subscribing from
+            # super().async_added_to_hass(), then we should not restore state
+            and not self._expiration_trigger
         ):
             expiration_at = last_state.last_changed + timedelta(seconds=expire_after)
             if expiration_at < (time_now := dt_util.utcnow()):
@@ -132,7 +136,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
                 return
             self._expired = False
-            self._state = last_state.state
+            self._state = last_state.state == STATE_ON
 
             self._expiration_trigger = async_track_point_in_utc_time(
                 self.hass, self._value_is_expired, expiration_at
@@ -190,7 +194,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 # Reset old trigger
                 if self._expiration_trigger:
                     self._expiration_trigger()
-                    self._expiration_trigger = None
 
                 # Set new trigger
                 expiration_at = dt_util.utcnow() + timedelta(seconds=expire_after)

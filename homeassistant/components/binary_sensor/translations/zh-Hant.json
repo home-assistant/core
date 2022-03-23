@@ -134,6 +134,10 @@
             "off": "\u672a\u5728\u5145\u96fb",
             "on": "\u5145\u96fb\u4e2d"
         },
+        "carbon_monoxide": {
+            "off": "\u672a\u89f8\u767c",
+            "on": "\u5df2\u89f8\u767c"
+        },
         "co": {
             "off": "\u672a\u5075\u6e2c",
             "on": "\u5075\u6e2c"

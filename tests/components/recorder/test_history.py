@@ -5,6 +5,8 @@ from datetime import timedelta
 import json
 from unittest.mock import patch, sentinel
 
+import pytest
+
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.models import process_timestamp
 import homeassistant.core as ha
@@ -15,11 +17,9 @@ from tests.common import mock_state_change_event
 from tests.components.recorder.common import wait_recording_done
 
 
-def test_get_states(hass_recorder):
-    """Test getting states at a specific point in time."""
-    hass = hass_recorder()
+def _setup_get_states(hass):
+    """Set up for testing get_states."""
     states = []
-
     now = dt_util.utcnow()
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
         for i in range(5):
@@ -48,6 +48,13 @@ def test_get_states(hass_recorder):
 
         wait_recording_done(hass)
 
+    return now, future, states
+
+
+def test_get_states(hass_recorder):
+    """Test getting states at a specific point in time."""
+    hass = hass_recorder()
+    now, future, states = _setup_get_states(hass)
     # Get states returns everything before POINT for all entities
     for state1, state2 in zip(
         states,
@@ -75,14 +82,65 @@ def test_get_states(hass_recorder):
     assert history.get_state(hass, time_before_recorder_ran, "demo.id") is None
 
 
-def test_state_changes_during_period(hass_recorder):
+def test_get_states_no_attributes(hass_recorder):
+    """Test getting states without attributes at a specific point in time."""
+    hass = hass_recorder()
+    now, future, states = _setup_get_states(hass)
+    for state in states:
+        state.attributes = {}
+
+    # Get states returns everything before POINT for all entities
+    for state1, state2 in zip(
+        states,
+        sorted(
+            history.get_states(hass, future, no_attributes=True),
+            key=lambda state: state.entity_id,
+        ),
+    ):
+        assert state1 == state2
+
+    # Get states returns everything before POINT for tested entities
+    entities = [f"test.point_in_time_{i % 5}" for i in range(5)]
+    for state1, state2 in zip(
+        states,
+        sorted(
+            history.get_states(hass, future, entities, no_attributes=True),
+            key=lambda state: state.entity_id,
+        ),
+    ):
+        assert state1 == state2
+
+    # Test get_state here because we have a DB setup
+    assert states[0] == history.get_state(
+        hass, future, states[0].entity_id, no_attributes=True
+    )
+
+    time_before_recorder_ran = now - timedelta(days=1000)
+    assert history.get_states(hass, time_before_recorder_ran, no_attributes=True) == []
+
+    assert (
+        history.get_state(hass, time_before_recorder_ran, "demo.id", no_attributes=True)
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    "attributes, no_attributes, limit",
+    [
+        ({"attr": True}, False, 5000),
+        ({}, True, 5000),
+        ({"attr": True}, False, 3),
+        ({}, True, 3),
+    ],
+)
+def test_state_changes_during_period(hass_recorder, attributes, no_attributes, limit):
     """Test state change during period."""
     hass = hass_recorder()
     entity_id = "media_player.test"
 
     def set_state(state):
         """Set the state."""
-        hass.states.set(entity_id, state)
+        hass.states.set(entity_id, state, attributes)
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
@@ -106,9 +164,11 @@ def test_state_changes_during_period(hass_recorder):
         set_state("Netflix")
         set_state("Plex")
 
-    hist = history.state_changes_during_period(hass, start, end, entity_id)
+    hist = history.state_changes_during_period(
+        hass, start, end, entity_id, no_attributes, limit=limit
+    )
 
-    assert states == hist[entity_id]
+    assert states[:limit] == hist[entity_id]
 
 
 def test_get_last_state_changes(hass_recorder):

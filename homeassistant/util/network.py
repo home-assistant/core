@@ -59,9 +59,29 @@ def is_ip_address(address: str) -> bool:
     return True
 
 
+def is_ipv4_address(address: str) -> bool:
+    """Check if a given string is an IPv4 address."""
+    try:
+        IPv4Address(address)
+    except ValueError:
+        return False
+
+    return True
+
+
+def is_ipv6_address(address: str) -> bool:
+    """Check if a given string is an IPv6 address."""
+    try:
+        IPv6Address(address)
+    except ValueError:
+        return False
+
+    return True
+
+
 def normalize_url(address: str) -> str:
     """Normalize a given URL."""
     url = yarl.URL(address.rstrip("/"))
-    if url.is_default_port():
+    if url.is_absolute() and url.is_default_port():
         return str(url.with_port(None))
     return str(url)

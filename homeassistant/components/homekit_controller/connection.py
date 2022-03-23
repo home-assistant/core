@@ -378,7 +378,7 @@ class HKDevice:
 
         if self.watchable_characteristics:
             await self.pairing.subscribe(self.watchable_characteristics)
-            if not self.pairing.connection.is_connected:
+            if not self.pairing.is_connected:
                 return
 
         await self.async_update()
@@ -506,7 +506,7 @@ class HKDevice:
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
-            self.async_set_available_state(self.pairing.connection.is_connected)
+            self.async_set_available_state(self.pairing.is_connected)
             _LOGGER.debug(
                 "HomeKit connection not polling any characteristics: %s", self.unique_id
             )

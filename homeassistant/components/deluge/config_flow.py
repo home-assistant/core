@@ -46,14 +46,13 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if CONF_NAME in user_input:
                 title = user_input.pop(CONF_NAME)
-            error = await self.validate_input(user_input)
-            if error is None:
+            if (error := await self.validate_input(user_input)) is None:
                 for entry in self._async_current_entries():
                     if (
                         user_input[CONF_HOST] == entry.data[CONF_HOST]
                         and user_input[CONF_PORT] == entry.data[CONF_PORT]
                     ):
-                        if entry and self.context.get(CONF_SOURCE) == SOURCE_REAUTH:
+                        if self.context.get(CONF_SOURCE) == SOURCE_REAUTH:
                             self.hass.config_entries.async_update_entry(
                                 entry, data=user_input
                             )

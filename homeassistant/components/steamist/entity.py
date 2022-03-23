@@ -13,10 +13,8 @@ from .const import CONF_MODEL
 from .coordinator import SteamistDataUpdateCoordinator
 
 
-class SteamistEntity(CoordinatorEntity, Entity):
+class SteamistEntity(CoordinatorEntity[SteamistDataUpdateCoordinator], Entity):
     """Representation of an Steamist entity."""
-
-    coordinator: SteamistDataUpdateCoordinator
 
     def __init__(
         self,

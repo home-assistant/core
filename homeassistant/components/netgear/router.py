@@ -5,6 +5,7 @@ from abc import abstractmethod
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pynetgear import Netgear
 
@@ -59,13 +60,14 @@ class NetgearRouter:
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a Netgear router."""
+        assert entry.unique_id
         self.hass = hass
         self.entry = entry
         self.entry_id = entry.entry_id
         self.unique_id = entry.unique_id
-        self._host = entry.data.get(CONF_HOST)
-        self._port = entry.data.get(CONF_PORT)
-        self._ssl = entry.data.get(CONF_SSL)
+        self._host: str = entry.data[CONF_HOST]
+        self._port: int = entry.data[CONF_PORT]
+        self._ssl: bool = entry.data[CONF_SSL]
         self._username = entry.data.get(CONF_USERNAME)
         self._password = entry.data[CONF_PASSWORD]
 
@@ -85,9 +87,9 @@ class NetgearRouter:
         self._api: Netgear = None
         self._api_lock = asyncio.Lock()
 
-        self.devices = {}
+        self.devices: dict[str, Any] = {}
 
-    def _setup(self) -> None:
+    def _setup(self) -> bool:
         """Set up a Netgear router sync portion."""
         self._api = get_api(
             self._password,
@@ -123,8 +125,9 @@ class NetgearRouter:
 
     async def async_setup(self) -> bool:
         """Set up a Netgear router."""
-        if not await self.hass.async_add_executor_job(self._setup):
-            return False
+        async with self._api_lock:
+            if not await self.hass.async_add_executor_job(self._setup):
+                return False
 
         # set already known devices to away instead of unavailable
         device_registry = dr.async_get(self.hass)
@@ -133,7 +136,7 @@ class NetgearRouter:
             if device_entry.via_device_id is None:
                 continue  # do not add the router itself
 
-            device_mac = dict(device_entry.connections).get(dr.CONNECTION_NETWORK_MAC)
+            device_mac = dict(device_entry.connections)[dr.CONNECTION_NETWORK_MAC]
             self.devices[device_mac] = {
                 "mac": device_mac,
                 "name": device_entry.name,
@@ -147,6 +150,7 @@ class NetgearRouter:
                 "ip": None,
                 "ssid": None,
                 "conn_ap_mac": None,
+                "allow_or_block": None,
             }
 
         return True
@@ -164,14 +168,14 @@ class NetgearRouter:
                 self._api.get_attached_devices_2
             )
 
-    async def async_update_device_trackers(self, now=None) -> None:
+    async def async_update_device_trackers(self, now=None) -> bool:
         """Update Netgear devices."""
         new_device = False
         ntg_devices = await self.async_get_attached_devices()
         now = dt_util.utcnow()
 
         if ntg_devices is None:
-            return
+            return new_device
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
@@ -195,10 +199,22 @@ class NetgearRouter:
 
         return new_device
 
-    async def async_get_traffic_meter(self) -> None:
+    async def async_get_traffic_meter(self) -> dict[str, Any] | None:
         """Get the traffic meter data of the router."""
         async with self._api_lock:
             return await self.hass.async_add_executor_job(self._api.get_traffic_meter)
+
+    async def async_allow_block_device(self, mac: str, allow_block: str) -> None:
+        """Allow or block a device connected to the router."""
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(
+                self._api.allow_block_device, mac, allow_block
+            )
+
+    async def async_reboot(self) -> None:
+        """Reboot the router."""
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._api.reboot)
 
     @property
     def port(self) -> int:

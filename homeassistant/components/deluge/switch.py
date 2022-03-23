@@ -62,13 +62,11 @@ async def async_setup_entry(
 class DelugeSwitch(DelugeEntity, SwitchEntity):
     """Representation of a Deluge switch."""
 
-    coordinator: DelugeDataUpdateCoordinator
-
     def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize the Deluge switch."""
         super().__init__(coordinator)
         self._attr_name = coordinator.config_entry.title
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}/Deluge Switch"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_enabled"
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
