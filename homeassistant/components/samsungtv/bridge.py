@@ -167,6 +167,11 @@ class SamsungTVBridge(ABC):
 
     async def async_request_app_list(self) -> None:
         """Request app list."""
+        LOGGER.debug(
+            "App list request is not supported on %s TV: %s",
+            self.method,
+            self.host,
+        )
 
     @abstractmethod
     async def async_is_on(self) -> bool:
