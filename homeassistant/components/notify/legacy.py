@@ -35,6 +35,7 @@ NOTIFY_DISCOVERY = "notify_discovery"
 async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up legacy notify services."""
     hass.data.setdefault(NOTIFY_SERVICES, {})
+    hass.data.setdefault(NOTIFY_DISCOVERY, None)
 
     async def async_setup_platform(
         integration_name: str,
@@ -115,10 +116,11 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
         """Handle for discovered platform."""
         await async_setup_platform(platform, discovery_info=info)
 
-    # Avoid setting up duplicate listeners after a reload
-    if not hass.data.setdefault(NOTIFY_DISCOVERY, False):
+    hass.data[NOTIFY_DISCOVERY] = (
         discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-        hass.data[NOTIFY_DISCOVERY] = True
+        if hass.data[NOTIFY_DISCOVERY]
+        else None
+    )
 
 
 @callback
@@ -151,6 +153,8 @@ async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
 @bind_hass
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Unregister notify services for an integration."""
+    hass.data[NOTIFY_DISCOVERY]()
+    hass.data[NOTIFY_DISCOVERY] = None
     if not _async_integration_has_notify_services(hass, integration_name):
         return
 
