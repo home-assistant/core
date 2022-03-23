@@ -148,10 +148,8 @@ class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class WallboxEntity(CoordinatorEntity):
+class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
     """Defines a base Wallbox entity."""
-
-    coordinator: WallboxCoordinator
 
     @property
     def device_info(self) -> DeviceInfo:

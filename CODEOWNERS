@@ -210,6 +210,8 @@ tests/components/deconz/* @Kane610
 homeassistant/components/default_config/* @home-assistant/core
 tests/components/default_config/* @home-assistant/core
 homeassistant/components/delijn/* @bollewolle @Emilv2
+homeassistant/components/deluge/* @tkdrob
+tests/components/deluge/* @tkdrob
 homeassistant/components/demo/* @home-assistant/core
 tests/components/demo/* @home-assistant/core
 homeassistant/components/denonavr/* @ol-iver @starkillerOG
@@ -741,6 +743,8 @@ homeassistant/components/panel_custom/* @home-assistant/frontend
 tests/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
 tests/components/panel_iframe/* @home-assistant/frontend
+homeassistant/components/peco/* @IceBotYT
+tests/components/peco/* @IceBotYT
 homeassistant/components/persistent_notification/* @home-assistant/core
 tests/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
@@ -1059,6 +1063,8 @@ tests/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli @fabaff
 homeassistant/components/upcloud/* @scop
 tests/components/upcloud/* @scop
+homeassistant/components/update/* @home-assistant/core
+tests/components/update/* @home-assistant/core
 homeassistant/components/updater/* @home-assistant/core
 tests/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23

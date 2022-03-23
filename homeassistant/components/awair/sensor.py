@@ -102,7 +102,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AwairSensor(CoordinatorEntity, SensorEntity):
+class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
     """Defines an Awair sensor entity."""
 
     entity_description: AwairSensorEntityDescription

@@ -45,7 +45,7 @@ from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.speed import convert as convert_speed
 
-from . import MetDataUpdateCoordinator, MetWeatherData
+from . import MetDataUpdateCoordinator
 from .const import (
     ATTR_FORECAST_PRECIPITATION,
     ATTR_MAP,
@@ -127,10 +127,8 @@ def format_condition(condition: str) -> str:
     return condition
 
 
-class MetWeather(CoordinatorEntity[MetWeatherData], WeatherEntity):
+class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     """Implementation of a Met.no weather condition."""
-
-    coordinator: MetDataUpdateCoordinator
 
     def __init__(
         self,
