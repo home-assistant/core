@@ -1,7 +1,6 @@
 """Support for interface with an Samsung TV."""
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -76,9 +75,6 @@ SCAN_INTERVAL_PLUS_OFF_TIME = entity_component.DEFAULT_SCAN_INTERVAL + timedelta
     seconds=5
 )
 
-# Delay app_list request for xx seconds after TV is initially turned on
-APP_LIST_DELAY = 3
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -123,7 +119,6 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
         self._app_list: dict[str, str] | None = None
-        self._app_list_requested: bool = False
 
         if config_entry.data.get(CONF_METHOD) != METHOD_ENCRYPTED_WEBSOCKET:
             # Encrypted websockets currently only support ON/OFF status
@@ -188,21 +183,6 @@ class SamsungTVDevice(MediaPlayerEntity):
             self._attr_state = (
                 STATE_ON if await self._bridge.async_is_on() else STATE_OFF
             )
-
-        if self._attr_state != STATE_ON or self._app_list_requested:
-            return
-        self._app_list_requested = True
-        if isinstance(self._bridge, SamsungTVWSBridge):
-            self.hass.add_job(self._async_request_app_list())
-
-    async def _async_request_app_list(self) -> None:
-        """Send launch_app to the tv."""
-        await asyncio.sleep(APP_LIST_DELAY)
-        if self._power_off_in_progress():
-            LOGGER.info("TV is powering off, not sending app_list request")
-            return
-        assert isinstance(self._bridge, SamsungTVWSBridge)
-        await self._bridge.async_request_app_list()
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
