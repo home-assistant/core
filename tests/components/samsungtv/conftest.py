@@ -26,13 +26,6 @@ def fake_host_fixture() -> None:
         yield
 
 
-@pytest.fixture(autouse=True)
-def app_list_delay_fixture() -> None:
-    """Patch APP_LIST_DELAY."""
-    with patch("homeassistant.components.samsungtv.media_player.APP_LIST_DELAY", 0):
-        yield
-
-
 @pytest.fixture(name="remote")
 def remote_fixture() -> Mock:
     """Patch the samsungctl Remote."""
