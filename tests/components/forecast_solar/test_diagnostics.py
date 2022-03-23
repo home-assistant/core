@@ -28,6 +28,7 @@ async def test_diagnostics(
                 "azimuth": 190,
                 "damping": 0.5,
                 "declination": 30,
+                "inverter_size": 2000,
                 "modules power": 5100,
             },
         },
