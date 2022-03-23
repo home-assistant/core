@@ -6,11 +6,13 @@ from typing import Any
 from aiohue import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.lights import LightsController
+from aiohue.v2.models.feature import EffectStatus, TimedEffectStatus
 from aiohue.v2.models.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
@@ -19,6 +21,7 @@ from homeassistant.components.light import (
     COLOR_MODE_ONOFF,
     COLOR_MODE_XY,
     FLASH_SHORT,
+    SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     LightEntity,
@@ -35,6 +38,8 @@ from .helpers import (
     normalize_hue_colortemp,
     normalize_hue_transition,
 )
+
+EFFECT_NONE = "None"
 
 
 async def async_setup_entry(
@@ -86,6 +91,21 @@ class HueLight(HueBaseEntity, LightEntity):
                 self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
             # support transition if brightness control
             self._attr_supported_features |= SUPPORT_TRANSITION
+        # get list of supported effects (combine effects and timed_effects)
+        self._attr_effect_list = []
+        if effects := resource.effects:
+            self._attr_effect_list = [
+                x.value for x in effects.status_values if x != EffectStatus.NO_EFFECT
+            ]
+        if timed_effects := resource.timed_effects:
+            self._attr_effect_list += [
+                x.value
+                for x in timed_effects.status_values
+                if x != TimedEffectStatus.NO_EFFECT
+            ]
+        if len(self._attr_effect_list) > 0:
+            self._attr_effect_list.insert(0, EFFECT_NONE)
+            self._attr_supported_features |= SUPPORT_EFFECT
 
     @property
     def brightness(self) -> int | None:
@@ -155,6 +175,17 @@ class HueLight(HueBaseEntity, LightEntity):
             "dynamics": self.resource.dynamics.status.value,
         }
 
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if effects := self.resource.effects:
+            if effects.status != EffectStatus.NO_EFFECT:
+                return effects.status.value
+        if timed_effects := self.resource.timed_effects:
+            if timed_effects.status != TimedEffectStatus.NO_EFFECT:
+                return timed_effects.status.value
+        return EFFECT_NONE
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
@@ -162,6 +193,17 @@ class HueLight(HueBaseEntity, LightEntity):
         color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
+        effect = effect_str = kwargs.get(ATTR_EFFECT)
+        if effect_str == EFFECT_NONE:
+            effect = EffectStatus.NO_EFFECT
+        elif effect_str is not None:
+            # work out if we got a regular effect or timed effect
+            effect = EffectStatus(effect_str)
+            if effect == EffectStatus.UNKNOWN:
+                effect = TimedEffectStatus(effect_str)
+                if transition is None:
+                    # a transition is required for timed effect, default to 10 minutes
+                    transition = 600000
 
         if flash is not None:
             await self.async_set_flash(flash)
@@ -179,6 +221,7 @@ class HueLight(HueBaseEntity, LightEntity):
             color_xy=xy_color,
             color_temp=color_temp,
             transition_time=transition,
+            effect=effect,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:

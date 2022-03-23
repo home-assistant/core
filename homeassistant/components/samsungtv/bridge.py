@@ -14,7 +14,11 @@ from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.command import SamsungTVCommand
 from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
-from samsungtvws.event import MS_ERROR_EVENT
+from samsungtvws.event import (
+    ED_INSTALLED_APP_EVENT,
+    MS_ERROR_EVENT,
+    parse_installed_app,
+)
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -128,6 +132,7 @@ class SamsungTVBridge(ABC):
         self._reauth_callback: CALLBACK_TYPE | None = None
         self._reload_callback: CALLBACK_TYPE | None = None
         self._update_config_entry: Callable[[Mapping[str, Any]], None] | None = None
+        self._app_list_callback: Callable[[dict[str, str]], None] | None = None
 
     def register_reauth_callback(self, func: CALLBACK_TYPE) -> None:
         """Register a callback function."""
@@ -143,6 +148,12 @@ class SamsungTVBridge(ABC):
         """Register a callback function."""
         self._update_config_entry = func
 
+    def register_app_list_callback(
+        self, func: Callable[[dict[str, str]], None]
+    ) -> None:
+        """Register app_list callback function."""
+        self._app_list_callback = func
+
     @abstractmethod
     async def async_try_connect(self) -> str:
         """Try to connect to the TV."""
@@ -151,9 +162,15 @@ class SamsungTVBridge(ABC):
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
 
-    @abstractmethod
-    async def async_get_app_list(self) -> dict[str, str] | None:
-        """Get installed app list."""
+    async def async_request_app_list(self) -> None:
+        """Request app list."""
+        # Overridden in SamsungTVWSBridge
+        LOGGER.debug(
+            "App list request is not supported on %s TV: %s",
+            self.method,
+            self.host,
+        )
+        self._notify_app_list_callback({})
 
     @abstractmethod
     async def async_is_on(self) -> bool:
@@ -186,6 +203,11 @@ class SamsungTVBridge(ABC):
         if self._update_config_entry is not None:
             self._update_config_entry(updates)
 
+    def _notify_app_list_callback(self, app_list: dict[str, str]) -> None:
+        """Notify update config callback."""
+        if self._app_list_callback is not None:
+            self._app_list_callback(app_list)
+
 
 class SamsungTVLegacyBridge(SamsungTVBridge):
     """The Bridge for Legacy TVs."""
@@ -205,10 +227,6 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_TIMEOUT: 1,
         }
         self._remote: Remote | None = None
-
-    async def async_get_app_list(self) -> dict[str, str]:
-        """Get installed app list."""
-        return {}
 
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
@@ -345,25 +363,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
         if entry_data:
             self.token = entry_data.get(CONF_TOKEN)
         self._rest_api: SamsungTVAsyncRest | None = None
-        self._app_list: dict[str, str] | None = None
         self._device_info: dict[str, Any] | None = None
         self._remote: SamsungTVWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
-
-    async def async_get_app_list(self) -> dict[str, str] | None:
-        """Get installed app list."""
-        if self._app_list is None:
-            if remote := await self._async_get_remote():
-                raw_app_list = await remote.app_list()
-                self._app_list = {
-                    app["name"]: app["appId"]
-                    for app in sorted(
-                        raw_app_list or [],
-                        key=lambda app: cast(str, app["name"]),
-                    )
-                }
-                LOGGER.debug("Generated app list: %s", self._app_list)
-        return self._app_list
 
     def _get_device_spec(self, key: str) -> Any | None:
         """Check if a flag exists in latest device info."""
@@ -456,6 +458,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Send the launch_app command using websocket protocol."""
         await self._async_send_commands([ChannelEmitCommand.launch_app(app_id)])
 
+    async def async_request_app_list(self) -> None:
+        """Get installed app list."""
+        await self._async_send_commands([ChannelEmitCommand.get_installed_app()])
+
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using websocket protocol."""
         await self._async_send_commands([SendRemoteKey.click(key) for key in keys])
@@ -468,7 +474,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        await remote.send_command(commands)
+                        await remote.send_commands(commands)
                     break
                 except (
                     BrokenPipeError,
@@ -546,6 +552,17 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def _remote_event(self, event: str, response: Any) -> None:
         """Received event from remote websocket."""
+        if event == ED_INSTALLED_APP_EVENT:
+            self._notify_app_list_callback(
+                {
+                    app["name"]: app["appId"]
+                    for app in sorted(
+                        parse_installed_app(response),
+                        key=lambda app: cast(str, app["name"]),
+                    )
+                }
+            )
+            return
         if event == MS_ERROR_EVENT:
             # { 'event': 'ms.error',
             #   'data': {'message': 'unrecognized method value : ms.remote.control'}}
@@ -607,10 +624,6 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
         self._device_info: dict[str, Any] | None = None
         self._remote: SamsungTVEncryptedWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
-
-    async def async_get_app_list(self) -> dict[str, str]:
-        """Get installed app list."""
-        return {}
 
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
@@ -712,12 +725,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 timeout=TIMEOUT_WEBSOCKET,
             )
             try:
-                # pylint:disable=[fixme]
-                # TODO: remove secondary timeout when library is bumped
-                # See https://github.com/xchwarze/samsung-tv-ws-api/pull/82
-                await asyncio.wait_for(
-                    self._remote.start_listening(), TIMEOUT_WEBSOCKET
-                )
+                await self._remote.start_listening()
             except (WebSocketException, AsyncioTimeoutError, OSError) as err:
                 LOGGER.debug(
                     "Failed to get remote for %s: %s", self.host, err.__repr__()

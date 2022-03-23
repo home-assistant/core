@@ -1247,19 +1247,19 @@ def _filter_unique_constraint_integrity_error(
         if not isinstance(err, StatementError):
             return False
 
+        assert instance.engine is not None
+        dialect_name = instance.engine.dialect.name
+
         ignore = False
-        if (
-            instance.engine.dialect.name == "sqlite"
-            and "UNIQUE constraint failed" in str(err)
-        ):
+        if dialect_name == "sqlite" and "UNIQUE constraint failed" in str(err):
             ignore = True
         if (
-            instance.engine.dialect.name == "postgresql"
+            dialect_name == "postgresql"
             and hasattr(err.orig, "pgcode")
             and err.orig.pgcode == "23505"
         ):
             ignore = True
-        if instance.engine.dialect.name == "mysql" and hasattr(err.orig, "args"):
+        if dialect_name == "mysql" and hasattr(err.orig, "args"):
             with contextlib.suppress(TypeError):
                 if err.orig.args[0] == 1062:
                     ignore = True

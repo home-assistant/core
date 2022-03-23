@@ -10,15 +10,15 @@ from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
+    HelperFlowFormStep,
     HelperFlowMenuStep,
-    HelperFlowStep,
     wrapped_entity_config_entry_title,
 )
 
 from .const import CONF_TARGET_DOMAIN, DOMAIN
 
-CONFIG_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
-    "user": HelperFlowStep(
+CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
+    "user": HelperFlowFormStep(
         vol.Schema(
             {
                 vol.Required(CONF_ENTITY_ID): selector.selector(
