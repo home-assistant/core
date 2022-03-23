@@ -623,9 +623,8 @@
       "status_values": ["none", "dynamic_palette"]
     },
     "effects": {
-      "effect_values": ["no_effect", "candle", "fire"],
-      "status": "no_effect",
-      "status_values": ["no_effect", "candle"]
+      "status_values": ["no_effect", "candle", "fire"],
+      "status": "no_effect"
     },
     "id": "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
     "id_v1": "/lights/29",
@@ -666,9 +665,8 @@
       "status_values": ["none"]
     },
     "effects": {
-      "effect_values": ["no_effect", "candle"],
-      "status": "no_effect",
-      "status_values": ["no_effect", "candle"]
+      "status_values": ["no_effect", "candle"],
+      "status": "no_effect"
     },
     "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",
     "id_v1": "/lights/4",
