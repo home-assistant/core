@@ -17,6 +17,8 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
+AUXILIARY = "opentherm"
+
 
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
@@ -71,10 +73,12 @@ async def test_config_entry_not_ready(
             {
                 "domain": SENSOR_DOMAIN,
                 "platform": DOMAIN,
-                "unique_id": "opentherm_outdoor_temperature",
+                "unique_id": f"{AUXILIARY}_outdoor_temperature",
+                "suggested_object_id": f"{AUXILIARY}_outdoor_temperature",
+                "disabled_by": None,
             },
-            "opentherm_outdoor_temperature",
-            "opentherm_outdoor_air_temperature",
+            f"{AUXILIARY}_outdoor_temperature",
+            f"{AUXILIARY}_outdoor_air_temperature",
         ),
     ],
 )
