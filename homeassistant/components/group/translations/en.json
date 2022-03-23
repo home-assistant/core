@@ -5,6 +5,7 @@
                 "data": {
                     "all": "All entities",
                     "entities": "Members",
+                    "hide_members": "Hide members",
                     "name": "Name"
                 },
                 "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on.",
@@ -13,32 +14,36 @@
             "cover": {
                 "data": {
                     "entities": "Members",
-                    "name": "Name",
-                    "title": "New Group"
-                }
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "New Group"
             },
             "fan": {
                 "data": {
                     "entities": "Members",
-                    "name": "Name",
-                    "title": "New Group"
-                }
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "New Group"
             },
             "light": {
                 "data": {
                     "all": "All entities",
                     "entities": "Members",
-                    "name": "Name",
-                    "title": "New Group"
+                    "hide_members": "Hide members",
+                    "name": "Name"
                 },
-                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on.",
+                "title": "New Group"
             },
             "media_player": {
                 "data": {
                     "entities": "Members",
-                    "name": "Name",
-                    "title": "New Group"
-                }
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "New Group"
             },
             "user": {
                 "data": {
