@@ -716,7 +716,7 @@ class Recorder(threading.Thread):
         """Post connection initialize."""
         hass_started: asyncio.Future[object] = asyncio.Future()
 
-        def _empty_queue(event):
+        def _empty_queue(event: Event) -> None:
             """Empty the queue if its still present at final write."""
 
             # If the queue is full of events to be processed because
@@ -858,10 +858,17 @@ class Recorder(threading.Thread):
             self.migration_in_progress = True
 
         self.hass.add_job(self.async_connection_success)
+
+        async def _async_wait_hass_started() -> object | None:
+            assert hass_started is not None
+            return await hass_started
+
         # If shutdown happened before Home Assistant finished starting
         if (
             hass_started
-            and run_callback_threadsafe(self.hass.loop, hass_started.result).result()
+            and asyncio.run_coroutine_threadsafe(
+                _async_wait_hass_started(), self.hass.loop
+            ).result()
             is SHUTDOWN_TASK
         ):
             self.migration_in_progress = False
