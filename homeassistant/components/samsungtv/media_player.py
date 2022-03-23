@@ -1,6 +1,7 @@
 """Support for interface with an Samsung TV."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -67,6 +68,9 @@ SCAN_INTERVAL_PLUS_OFF_TIME = entity_component.DEFAULT_SCAN_INTERVAL + timedelta
     seconds=5
 )
 
+# Max delay waiting for app_list to return, as some TVs simply ignore the request
+APP_LIST_DELAY = 3
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -111,6 +115,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
         self._app_list: dict[str, str] | None = None
+        self._app_list_event: asyncio.Event = asyncio.Event()
 
         self._attr_supported_features = SUPPORT_SAMSUNGTV
         if self._on_script or self._mac:
@@ -135,6 +140,18 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._bridge = bridge
         self._auth_failed = False
         self._bridge.register_reauth_callback(self.access_denied)
+        self._bridge.register_app_list_callback(self._app_list_callback)
+
+    def _update_sources(self) -> None:
+        self._attr_source_list = list(SOURCES)
+        if app_list := self._app_list:
+            self._attr_source_list.extend(app_list)
+
+    def _app_list_callback(self, app_list: dict[str, str]) -> None:
+        """App list callback."""
+        self._app_list = app_list
+        self._update_sources()
+        self._app_list_event.set()
 
     def access_denied(self) -> None:
         """Access denied callback."""
@@ -162,14 +179,20 @@ class SamsungTVDevice(MediaPlayerEntity):
                 STATE_ON if await self._bridge.async_is_on() else STATE_OFF
             )
 
-        if self._attr_state == STATE_ON and self._app_list is None:
-            self._app_list = {}  # Ensure that we don't update it twice in parallel
-            await self._async_update_app_list()
-
-    async def _async_update_app_list(self) -> None:
-        self._app_list = await self._bridge.async_get_app_list()
-        if self._app_list is not None:
-            self._attr_source_list.extend(self._app_list)
+        if self._attr_state == STATE_ON and not self._app_list_event.is_set():
+            await self._bridge.async_request_app_list()
+            if self._app_list_event.is_set():
+                # The try+wait_for is a bit expensive so we should try not to
+                # enter it unless we have to (Python 3.11 will have zero cost try)
+                return
+            try:
+                await asyncio.wait_for(self._app_list_event.wait(), APP_LIST_DELAY)
+            except asyncio.TimeoutError as err:
+                # No need to try again
+                self._app_list_event.set()
+                LOGGER.debug(
+                    "Failed to load app list from %s: %s", self._host, err.__repr__()
+                )
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
