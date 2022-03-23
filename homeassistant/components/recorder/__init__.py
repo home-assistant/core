@@ -59,7 +59,6 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics, websocket_api
@@ -300,6 +299,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         exclude_t=exclude_t,
     )
     instance.async_initialize()
+    instance.async_register()
     instance.start()
     _async_register_services(hass, instance)
     history.async_setup(hass)
@@ -568,6 +568,7 @@ class Recorder(threading.Thread):
         self.hass = hass
         self.auto_purge = auto_purge
         self.keep_days = keep_days
+        self._hass_started: asyncio.Future[object] = asyncio.Future()
         self.commit_interval = commit_interval
         self.queue: queue.SimpleQueue[RecorderTask] = queue.SimpleQueue()
         self.recording_start = dt_util.utcnow()
@@ -712,9 +713,8 @@ class Recorder(threading.Thread):
         self.queue.put(StatisticsTask(start))
 
     @callback
-    def async_register(self) -> asyncio.Future[object] | None:
+    def async_register(self) -> None:
         """Post connection initialize."""
-        hass_started: asyncio.Future[object] = asyncio.Future()
 
         def _empty_queue(event: Event) -> None:
             """Empty the queue if its still present at final write."""
@@ -738,8 +738,8 @@ class Recorder(threading.Thread):
         @callback
         def _async_shutdown(event: Event) -> None:
             """Shut down the Recorder."""
-            if not hass_started.done():
-                hass_started.set_result(SHUTDOWN_TASK)
+            if not self._hass_started.done():
+                self._hass_started.set_result(SHUTDOWN_TASK)
             self.queue.put(StopTask())
             self._async_stop_queue_watcher_and_event_listener()
             self.hass.async_add_executor_job(self.join)
@@ -747,19 +747,17 @@ class Recorder(threading.Thread):
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
 
         if self.hass.state == CoreState.running:
-            hass_started.set_result(None)
-            return None
+            self._hass_started.set_result(None)
+            return
 
         @callback
         def _async_hass_started(event: Event) -> None:
             """Notify that hass has started."""
-            hass_started.set_result(None)
+            self._hass_started.set_result(None)
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, _async_hass_started
         )
-
-        return hass_started
 
     @callback
     def async_connection_failed(self) -> None:
@@ -839,12 +837,18 @@ class Recorder(threading.Thread):
             self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
         )
 
-    def run(self) -> None:
-        """Start processing events to save."""
-        hass_started: asyncio.Future[object] | None = run_callback_threadsafe(
-            self.hass.loop, self.async_register
+    async def _async_wait_for_started(self) -> object | None:
+        """Wait for the hass started future."""
+        return await self._hass_started
+
+    def _wait_startup_or_shutdown(self) -> object | None:
+        """Wait for startup or shutdown before starting."""
+        return asyncio.run_coroutine_threadsafe(
+            self._async_wait_for_started(), self.hass.loop
         ).result()
 
+    def run(self) -> None:
+        """Start processing events to save."""
         current_version = self._setup_recorder()
 
         if current_version is None:
@@ -859,18 +863,8 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_connection_success)
 
-        async def _async_wait_hass_started() -> object | None:
-            assert hass_started is not None
-            return await hass_started
-
         # If shutdown happened before Home Assistant finished starting
-        if (
-            hass_started
-            and asyncio.run_coroutine_threadsafe(
-                _async_wait_hass_started(), self.hass.loop
-            ).result()
-            is SHUTDOWN_TASK
-        ):
+        if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
             self.migration_in_progress = False
             # Make sure we cleanly close the run if
             # we restart before startup finishes
