@@ -135,8 +135,6 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
         targetlist = {"a": 1, "b": 2}
         return NotificationService(hass, targetlist)
 
-    await async_setup_component(hass, "notify", {})
-    config = {"notify": [{"platform": "testnotify"}]}
     # Mock notify services file
     services_yaml_file = tmp_path / "services.yaml"
     services_config = yaml.dump(
@@ -148,8 +146,10 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
     integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
     integration.file_path = tmp_path
 
-    # Setup the platform
-    await notify.async_setup(hass, config)
+    # Setup the testnotify platform
+    await async_setup_component(
+        hass, "notify", {"notify": [{"platform": "testnotify"}]}
+    )
     await hass.async_block_till_done()
     assert hass.services.has_service("testnotify", SERVICE_RELOAD)
     assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
