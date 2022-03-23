@@ -255,6 +255,11 @@ class SensorTemplate(TemplateEntity, SensorEntity):
 class SensorRestoreTemplate(SensorTemplate, TemplateRestoreEntity):
     """Representation of a restorable Template Sensor."""
 
+    def __init__(self, *args, **kwargs):
+        """Sensor Restore Template init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True
+
 
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
     """Sensor entity based on trigger data."""
@@ -292,3 +297,8 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
 
 class TriggerSensorRestoreEntity(TriggerSensorEntity, TriggerRestoreEntity):
     """Representation of a restorable Trigger Sensor."""
+
+    def __init__(self, *args, **kwargs):
+        """Trigger Sensor Restore init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True

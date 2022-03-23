@@ -267,3 +267,8 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
 
 class WeatherTemplateRestore(WeatherTemplate, TemplateRestoreEntity):
     """Representation of a restorable Template Weather."""
+
+    def __init__(self, *args, **kwargs):
+        """Weather Restore Template init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True

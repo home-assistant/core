@@ -5,7 +5,7 @@ from homeassistant import setup
 from homeassistant.components import lock
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
-from .helpers import template_restore_state_test
+from .helpers import template_restore_state, template_save_state
 
 
 @pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
@@ -390,62 +390,79 @@ async def test_unique_id(hass, start_ha):
                 "platform": "template",
                 "name": "restore",
                 "unique_id": "restore",
-                "value_template": "{{ states('sensor.test_state')|int(0) > 0 }}",
+                "value_template": "{{ 'True' == 'True' }}",
+                "restore": True,
                 "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
                 "unlock": {
                     "service": "switch.turn_off",
                     "entity_id": "switch.test_state",
                 },
-                "availability_template": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                "availability_template": "{{ 'True' == 'True' }}",
             },
         },
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
-            lock.STATE_UNLOCKED,
-            {},
-            {},
-        ),
-        (
-            {"restore": True},
-            10,
             lock.STATE_LOCKED,
             {},
-            {},
+            {
+                "_state": lock.STATE_LOCKED,
+            },
+            {
+                "_state": lock.STATE_LOCKED,
+            },
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring lock template."""
+class TestTemplateRestore:
+    """Test Restore of Lock Template."""
 
-    config = dict(config)
-    config[domain].update(**extra_config)
-
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Lock template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
+        domain,
         platform,
-        "restore",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Lock state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )

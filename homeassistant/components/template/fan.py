@@ -474,3 +474,8 @@ class TemplateFan(TemplateEntity, FanEntity):
 
 class TemplateFanRestore(TemplateFan, TemplateRestoreEntity):
     """Representation of a restorable Template Fan."""
+
+    def __init__(self, *args, **kwargs):
+        """Fan Restore Template init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True

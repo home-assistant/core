@@ -383,3 +383,8 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
 
 class TemplateVacuumRestore(TemplateVacuum, TemplateRestoreEntity):
     """Representation of a restorable Template Vacuum."""
+
+    def __init__(self, *args, **kwargs):
+        """Vacuum Restore Template init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True

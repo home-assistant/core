@@ -410,3 +410,10 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
 class CoverRestoreTemplate(CoverTemplate, TemplateRestoreEntity):
     """Representation of a restorable Template Cover."""
+
+    def __init__(self, *args, **kwargs):
+        """Cover Restore Template init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True
+        self.add_additional_data("_is_opening")
+        self.add_additional_data("_is_closing")

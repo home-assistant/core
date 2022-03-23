@@ -9,10 +9,9 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
-    STATE_UNKNOWN,
 )
 
-from .helpers import template_restore_state_test
+from .helpers import template_restore_state, template_save_state
 
 from tests.components.alarm_control_panel import common
 
@@ -533,7 +532,7 @@ async def test_code_config(hass, code_format, code_arm_required, start_ha):
 
 
 @pytest.mark.parametrize(
-    "count,domain,platform", [(1, "alarm_control_panel", "panels")]
+    "count,domain,platform", [(1, "alarm_control_panel", "alarm_control_panel")]
 )
 @pytest.mark.parametrize(
     "config",
@@ -543,7 +542,8 @@ async def test_code_config(hass, code_format, code_arm_required, start_ha):
                 "platform": "template",
                 "panels": {
                     "restore": {
-                        "value_template": f"{{{{ (is_state('sensor.test_state','10'))|iif('{STATE_ALARM_ARMED_HOME}','{STATE_ALARM_DISARMED}') }}}}",
+                        "value_template": f"{{{{ '{STATE_ALARM_ARMED_HOME}' }}}}",
+                        "restore": True,
                     },
                 },
             },
@@ -551,49 +551,64 @@ async def test_code_config(hass, code_format, code_arm_required, start_ha):
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
-            STATE_UNKNOWN,
-            {},
-            {},
-        ),
-        (
-            {"restore": True},
-            10,
             STATE_ALARM_ARMED_HOME,
             {},
-            {},
+            {
+                "_state": STATE_ALARM_ARMED_HOME,
+            },
+            {"_state": STATE_ALARM_ARMED_HOME},
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring alarm control panel template."""
+class TestTemplateRestore:
+    """Test Restore of Alarm Control Panel Template."""
 
-    config = dict(config)
-    config[domain][platform]["restore"].update(**extra_config)
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Alarm Control Panel template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
         domain,
-        "restore",
-    )
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Alarm Control Panel state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )

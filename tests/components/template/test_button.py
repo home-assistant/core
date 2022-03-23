@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_registry import async_get
 
-from .helpers import template_restore_state_test
+from .helpers import template_restore_state, template_save_state
 
 from tests.common import assert_setup_component, async_mock_service
 
@@ -191,70 +191,82 @@ async def test_unique_id(hass, calls):
         {
             "template": {
                 "button": {
-                    "name": "{{ (states('sensor.test_state')|int(0) > 0)|iif('Restored','Not Restored') }}",
+                    "name": "{{ 'restore' }}",
                     "unique_id": "restore",
                     "press": {"service": "script.press"},
-                    "icon": "{{ (states('sensor.test_state')|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                    "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                    "icon": "{{ 'mdi:thumb-up' }}",
+                    "availability": "{{ 'True' == 'True' }}",
+                    "restore": True,
                 },
             },
         },
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
             STATE_UNKNOWN,
             {
-                "friendly_name": "Not Restored",
-                "icon": "mdi:thumb-down",
-            },
-            {},
-        ),
-        (
-            {"restore": True},
-            10,
-            STATE_UNKNOWN,
-            {
-                "friendly_name": "Restored",
+                "friendly_name": "restore",
                 "icon": "mdi:thumb-up",
             },
             {},
+            {
+                "_attr_name": "restore",
+            },
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring button template."""
+class TestTemplateRestore:
+    """Test Restore of Button Template."""
 
-    config = dict(config)
-    config[domain][platform].update(**extra_config)
-
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Button template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
+        domain,
         platform,
-        "not_restored",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Button state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )
 
 
 def _verify(

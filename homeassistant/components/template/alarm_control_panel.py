@@ -277,3 +277,8 @@ class AlarmControlPanelRestoreTemplate(
     AlarmControlPanelTemplate, TemplateRestoreEntity
 ):
     """Representation of a restorable Template Alarm Control Panel."""
+
+    def __init__(self, *args, **kwargs):
+        """Alarm Control Panel Restore Template init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True

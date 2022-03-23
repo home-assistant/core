@@ -19,7 +19,12 @@ from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Context
 from homeassistant.helpers.entity_registry import async_get
 
-from .helpers import template_restore_state_test, trigger_restore_state_test
+from .helpers import (
+    template_restore_state,
+    template_save_state,
+    trigger_restore_state,
+    trigger_save_state,
+)
 
 from tests.common import (
     assert_setup_component,
@@ -362,8 +367,8 @@ async def test_template_icon_with_entities(hass, calls):
         {
             "template": {
                 "select": {
-                    "name": "{{ (states('sensor.test_state')|int(0) > 0)|iif('Restored','Not Restored') }}",
-                    "state": "{{ states('sensor.test_state') }}",
+                    "name": "{{ 'restore' }}",
+                    "state": "{{ 10 }}",
                     "options": "{{ ['0','10'] }}",
                     "select_option": {
                         "service": "input_select.select_option",
@@ -374,68 +379,84 @@ async def test_template_icon_with_entities(hass, calls):
                     },
                     "optimistic": True,
                     "unique_id": "restore",
-                    "icon": "{% if (states('select.not_restored') == '10') %}mdi:greater{% else %}mdi:less{% endif %}",
+                    "icon": "{{ 'mdi:thumb-up' }}",
+                    "restore": True,
                 },
             },
         },
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            "10",
-            STATE_UNKNOWN,
-            {
-                "friendly_name": "Not Restored",
-                "options": [],
-                "icon": "mdi:less",
-            },
-            {},
-        ),
-        (
-            {"restore": True},
-            "10",
             "10",
             {
-                "friendly_name": "Restored",
+                "friendly_name": "restore",
                 "options": ["0", "10"],
-                "icon": "mdi:greater",
+                "icon": "mdi:thumb-up",
             },
-            {},
+            {
+                "_attr_name": "restore",
+            },
+            {
+                "_attr_current_option": "10",
+                "_attr_options": ["0", "10"],
+                "_attr_icon": "mdi:thumb-up",
+                "_attr_name": "restore",
+            },
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring select template."""
+class TestTemplateRestore:
+    """Test Restore of Select Template."""
 
-    config = dict(config)
-    config[domain][platform].update(**extra_config)
-
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Select template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
+        domain,
         platform,
-        "not_restored",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Select state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )
 
 
 async def test_template_icon_with_trigger(hass):
@@ -519,9 +540,9 @@ async def test_template_icon_with_trigger(hass):
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "select": [
                         {
-                            "name": "{{ (trigger.event.data.beer|int(0) > 0)|iif('Restored','Not Restored') }}",
+                            "name": "{{ 'restore' }}",
                             "unique_id": "restore",
-                            "state": "{{ trigger.event.data.beer|int(0) }}",
+                            "state": "{{ 10 }}",
                             "options": "{{ ['0','10'] }}",
                             "select_option": {
                                 "service": "input_select.select_option",
@@ -531,7 +552,8 @@ async def test_template_icon_with_trigger(hass):
                                 },
                             },
                             "optimistic": True,
-                            "icon": "{{ (trigger.event.data.beer|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
+                            "icon": "{{ 'mdi:thumb-up' }}",
+                            "restore": True,
                         },
                     ],
                 },
@@ -540,56 +562,73 @@ async def test_template_icon_with_trigger(hass):
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            "10",
-            STATE_UNKNOWN,
-            {
-                "friendly_name": None,
-                "options": [],
-                "icon": None,
-            },
-            {},
-        ),
-        (
-            {"restore": True},
-            "10",
             "10",
             {
-                "friendly_name": "Restored",
+                "friendly_name": "restore",
                 "options": ["0", "10"],
                 "icon": "mdi:thumb-up",
             },
-            {},
+            {
+                "name": "restore",
+            },
+            {
+                "state": "10",
+                "icon": "mdi:thumb-up",
+                "name": "restore",
+                "options": ["0", "10"],
+            },
         ),
     ],
 )
-async def test_trigger_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring select trigger."""
+class TestTriggerRestore:
+    """Test Restore of Select Trigger."""
 
-    await trigger_restore_state_test(
+    async def test_trigger_save_state(
+        self,
         hass,
         count,
         domain,
-        config,
-        extra_config,
-        restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
         platform,
-        "template_restore",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Select Trigger."""
+        await trigger_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_trigger_restore_state(
+        self,
+        hass,
+        count,
+        domain,
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Select Trigger."""
+        await trigger_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )

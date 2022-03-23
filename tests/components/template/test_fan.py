@@ -16,7 +16,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
-from .helpers import template_restore_state_test
+from .helpers import template_restore_state, template_save_state
 
 from tests.common import assert_setup_component
 from tests.components.fan import common
@@ -866,7 +866,7 @@ async def test_implemented_preset_mode(hass, start_ha):
     assert attributes.get("supported_features") & SUPPORT_PRESET_MODE
 
 
-@pytest.mark.parametrize("count,domain,platform", [(1, "fan", "fans")])
+@pytest.mark.parametrize("count,domain,platform", [(1, "fan", "fan")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -875,11 +875,12 @@ async def test_implemented_preset_mode(hass, start_ha):
                 "platform": "template",
                 "fans": {
                     "restore": {
-                        "value_template": "{{ (states('sensor.test_state')|int(0) > 50)|iif('on','off') }}",
-                        "percentage_template": "{{ states('sensor.test_state')|int(0) }}",
-                        "oscillating_template": "{{ states('sensor.test_state')|int(0) > 50 }}",
-                        "direction_template": "{{ (states('sensor.test_state')|int(0) > 50)|iif('forward','reverse') }}",
-                        "availability_template": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                        "value_template": "{{ 'on' }}",
+                        "percentage_template": "{{ 80 }}",
+                        "oscillating_template": "{{ 'True' }}",
+                        "direction_template": "{{ 'forward' }}",
+                        "availability_template": "{{ 'True' == 'True' }}",
+                        "restore": True,
                         "turn_on": {
                             "service": "fan.turn_on",
                             "entity_id": "fan.test_state",
@@ -895,57 +896,188 @@ async def test_implemented_preset_mode(hass, start_ha):
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            80,
-            STATE_OFF,
-            {
-                "direction": None,
-                "oscillating": None,
-                "percentage": None,
-            },
-            {},
-        ),
-        (
-            {"restore": True},
-            80,
             STATE_ON,
             {
                 "direction": "forward",
                 "oscillating": True,
                 "percentage": 80,
             },
-            {},
+            {
+                "_attr_available": True,
+            },
+            {
+                "_state": STATE_ON,
+                "_percentage": 80,
+                "_oscillating": True,
+                "_direction": "forward",
+                "_attr_available": True,
+            },
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring fan template."""
+class TestTemplateRestore:
+    """Test Restore of Fan Template without preset mode."""
 
-    config = dict(config)
-    config[domain][platform]["restore"].update(**extra_config)
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off fan template."""
+
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
         domain,
-        "restore",
-    )
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of fan state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )
+
+
+@pytest.mark.parametrize("count,domain,platform", [(1, "fan", "fan")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "fan": {
+                "platform": "template",
+                "fans": {
+                    "restore": {
+                        "value_template": "{{ 'on' }}",
+                        "oscillating_template": "{{ 'True' }}",
+                        "direction_template": "{{ 'forward' }}",
+                        "preset_mode_template": "{{ 'any' }}",
+                        "preset_modes": ["any"],
+                        "availability_template": "{{ 'True' == 'True' }}",
+                        "restore": True,
+                        "turn_on": {
+                            "service": "fan.turn_on",
+                            "entity_id": "fan.test_state",
+                        },
+                        "turn_off": {
+                            "service": "fan.turn_off",
+                            "entity_id": "fan.test_state",
+                        },
+                        "set_preset_mode": [
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": "{{ percentage }}"},
+                            }
+                        ],
+                    },
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "restored_state, state_attributes, additional_attributes, save_data",
+    [
+        (
+            STATE_ON,
+            {
+                "direction": "forward",
+                "oscillating": True,
+                "preset_mode": "any",
+            },
+            {
+                "_attr_available": True,
+            },
+            {
+                "_state": STATE_ON,
+                "_oscillating": True,
+                "_direction": "forward",
+                "_preset_mode": "any",
+                "_attr_available": True,
+            },
+        ),
+    ],
+)
+class TestTemplatePresetRestore:
+    """Test Restore of Fan Template with preset mode."""
+
+    async def test_template_save_state(
+        self,
+        hass,
+        count,
+        domain,
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off fan template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
+        domain,
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of fan state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )

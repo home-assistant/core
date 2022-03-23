@@ -459,22 +459,41 @@ class TemplateEntity(Entity):
 class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
     """Template Entity that restores data."""
 
-    def __init__(self, *args, restore_additional_data: bool = False, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         """Template Restore Entity init."""
-
         super().__init__(*args, **kwargs)
-
-        self._restore = restore_additional_data
+        self._restore = False
         self._additional_data: list[str] = []
 
-    def add_template_attribute(self, attribute: str, *args, **kwargs):
+    def add_template_attribute(
+        self, attribute: str, template: Template, *args, **kwargs
+    ):
         """Store attribute to allow restore and setup template."""
 
-        super().__init__(attribute, *args, **kwargs)
-        self.additional_data(attribute)
+        super().add_template_attribute(attribute, template, *args, **kwargs)
+        if not template.is_static:
+            self.add_additional_data(attribute)
 
-    def additional_data(self, attribute: str) -> None:
-        """Add additional attributes to store."""
+    @property
+    def restore(self) -> bool:
+        """Retrieve restore."""
+        return self._restore or False
+
+    @restore.setter
+    def restore(self, restore: bool) -> None:
+        """Set restore."""
+        self._restore = restore
+
+    @property
+    def additional_data(self) -> list[str]:
+        """Return additional data list."""
+        return self._additional_data or []
+
+    def add_additional_data(self, attribute: str) -> None:
+        """Add attribute to additional data list."""
+        if not hasattr(self, "_additional_data"):
+            self._additional_data = []
+
         self._additional_data.append(attribute)
 
     async def restore_entity(
@@ -482,7 +501,7 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
     ) -> tuple[State | None, dict[str, Any] | None]:
         """Restore the entity."""
 
-        if not self._restore:
+        if not self.restore:
             return None, None
 
         if (last_sensor_state := await self.async_get_last_state()) is None:
@@ -522,7 +541,7 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
             )
             return last_sensor_state, None
 
-        for attribute in self._additional_data:
+        for attribute in self.additional_data:
             try:
                 value = last_sensor_data[attribute]
             except KeyError:
@@ -550,25 +569,27 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
                 self.entity_id,
             )
 
+        self.async_write_ha_state()
+
         return (last_sensor_state, last_sensor_data)
 
     @property
     def extra_restore_state_data(self) -> TemplateExtraStoredData | None:
         """Return sensor specific state data to be restored."""
         return (
-            TemplateExtraStoredData(self, self._additional_data)
-            if self._restore
+            TemplateExtraStoredData(self, self.additional_data)
+            if self.restore
             else TemplateExtraStoredData(self, [])
         )
 
     async def async_get_last_template_data(self) -> dict[str, Any] | None:
         """Restore native_value and native_unit_of_measurement."""
-        if not self._restore:
+        if not self.restore:
             return None
 
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
-        return TemplateExtraStoredData(self, self._additional_data).from_dict(
+        return TemplateExtraStoredData(self, self.additional_data).from_dict(
             restored_last_extra_data.as_dict()
         )
 

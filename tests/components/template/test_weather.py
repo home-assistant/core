@@ -2,7 +2,6 @@
 import pytest
 
 from homeassistant.components.weather import (
-    ATTR_CONDITION_RAINY,
     ATTR_CONDITION_SUNNY,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
@@ -13,9 +12,9 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
+from homeassistant.const import ATTR_ATTRIBUTION
 
-from .helpers import template_restore_state_test
+from .helpers import template_restore_state, template_save_state
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -76,44 +75,25 @@ async def test_template_state_text(hass, start_ha):
                 "platform": "template",
                 "name": "restore",
                 "unique_id": "restore",
-                "attribution_template": "{{ states('sensor.test_state')|int(0) }}",
-                "condition_template": f"{{{{ iif(is_state('sensor.test_state','10'),'{ATTR_CONDITION_SUNNY}','{ATTR_CONDITION_RAINY}') }}}}",
-                "forecast_template": "{{ [{'temperature': states('sensor.test_state')|int(0) }] }}",
-                "temperature_template": "{{ states('sensor.test_state')|int(0) }}",
-                "humidity_template": "{{ states('sensor.test_state')|int(0) }}",
-                "pressure_template": "{{ states('sensor.test_state')|int(0) }}",
-                "wind_speed_template": "{{ states('sensor.test_state')|int(0) }}",
-                "wind_bearing_template": "{{ states('sensor.test_state')|int(0) }}",
-                "ozone_template": "{{ states('sensor.test_state')|int(0) }}",
-                "visibility_template": "{{ states('sensor.test_state')|int(0) }}",
+                "attribution_template": "{{ 10 }}",
+                "condition_template": f"{{{{ '{ATTR_CONDITION_SUNNY}' }}}}",
+                "forecast_template": "{{ [{'temperature': 10 }] }}",
+                "temperature_template": "{{ 10 }}",
+                "humidity_template": "{{ 10 }}",
+                "pressure_template": "{{ 10 }}",
+                "wind_speed_template": "{{ 10 }}",
+                "wind_bearing_template": "{{ 10 }}",
+                "ozone_template": "{{ 10 }}",
+                "visibility_template": "{{ 10 }}",
+                "restore": True,
             },
         },
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
-            STATE_UNKNOWN,
-            {
-                "attribution": "Powered by Home Assistant",
-                "condition": None,
-                "forecast": [],
-                "temperature": None,
-                "humidity": None,
-                "pressure": None,
-                "wind_speed": None,
-                "wind_bearing": None,
-                "ozone": None,
-                "visibility": None,
-            },
-            {},
-        ),
-        (
-            {"restore": True},
-            10,
             ATTR_CONDITION_SUNNY,
             {
                 "attribution": 10,
@@ -129,35 +109,67 @@ async def test_template_state_text(hass, start_ha):
             {
                 "_condition": ATTR_CONDITION_SUNNY,
             },
+            {
+                "_condition": ATTR_CONDITION_SUNNY,
+                "_temperature": 10,
+                "_humidity": 10,
+                "_attribution": 10,
+                "_pressure": 10,
+                "_wind_speed": 10,
+                "_wind_bearing": 10,
+                "_ozone": 10,
+                "_visibility": 10,
+                "_forecast": [{"temperature": 10}],
+            },
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring weather template."""
+class TestTemplateRestore:
+    """Test Restore of Weather Template."""
 
-    config = dict(config)
-    config[domain].update(**extra_config)
-
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Weather template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
+        domain,
         platform,
-        "restore",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Weather state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )

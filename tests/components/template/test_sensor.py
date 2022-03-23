@@ -24,7 +24,12 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT
 import homeassistant.util.dt as dt_util
 
-from .helpers import template_restore_state_test, trigger_restore_state_test
+from .helpers import (
+    template_restore_state,
+    template_save_state,
+    trigger_restore_state,
+    trigger_save_state,
+)
 
 from tests.common import async_fire_time_changed, async_setup_component
 
@@ -871,87 +876,103 @@ async def test_duplicate_templates(hass, start_ha):
         {
             "template": {
                 "sensor": {
-                    "name": "{{ (states('sensor.test_state')|int(0) > 0)|iif('Restored','Not Restored') }}",
+                    "name": "{{ 'restore' }}",
                     "unique_id": "restore",
                     "unit_of_measurement": "kWh",
                     "state_class": "measurement",
                     "device_class": "energy",
-                    "state": "{{ states('sensor.test_state')|int(0) }}",
+                    "state": "{{ 'restore' }}",
                     "attributes": {
                         "attr1": "fixed",
-                        "attr2": "{{ states('sensor.test_state')|int(0) }}",
-                        "attr3": "{{ states('sensor.not_restored')|int(0) }}",
+                        "attr2": "{{ 'attr2' }}",
+                        "attr3": "{{ states('sensor.restore') }}",
                     },
-                    "picture": "{{ (states('sensor.not_restored')|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                    "icon": "{{ (states('sensor.not_restored')|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                    "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                    "picture": "{{ 'mdi:thumb-up' }}",
+                    "icon": "{{ 'mdi:thumb-up' }}",
+                    "availability": "{{ 'True' == 'True' }}",
+                    "restore": True,
                 },
             },
         },
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
-            STATE_UNKNOWN,
+            "restore",
             {
-                "friendly_name": "Not Restored",
-                "attr1": None,
-                "attr2": None,
-                "attr3": None,
-                "entity_picture": "mdi:thumb-down",
-                "icon": "mdi:thumb-down",
-            },
-            {},
-        ),
-        (
-            {"restore": True},
-            10,
-            "10",
-            {
-                "friendly_name": "Restored",
+                "friendly_name": "restore",
                 "attr1": "fixed",
-                "attr2": 10,
-                "attr3": 10,
+                "attr2": "attr2",
+                "attr3": "restore",
                 "entity_picture": "mdi:thumb-up",
                 "icon": "mdi:thumb-up",
             },
-            {},
+            {
+                "_attr_native_value": "restore",
+                "_attr_name": "restore",
+                "_attr_available": True,
+            },
+            {
+                "_attr_native_value": "restore",
+                "_attr_available": True,
+                "_attr_icon": "mdi:thumb-up",
+                "_attr_entity_picture": "mdi:thumb-up",
+                "_attr_name": "restore",
+            },
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring sensor template."""
+class TestTemplateRestore:
+    """Test Restore of Sensor Trigger."""
 
-    config = dict(config)
-    config[domain][platform].update(**extra_config)
-
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off sensor template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
+        domain,
         platform,
-        "not_restored",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Sensor state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )
 
 
 @pytest.mark.parametrize("count,domain", [(2, "template")])
@@ -1127,20 +1148,21 @@ async def test_trigger_not_allowed_platform_config(hass, start_ha, caplog_setup_
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "sensor": [
                         {
-                            "name": "{{ (trigger.event.data.beer|int(0) > 0)|iif('Restored','Not Restored') }}",
+                            "name": "{{ 'restore' }}",
                             "unique_id": "restore",
                             "unit_of_measurement": "kWh",
                             "state_class": "measurement",
                             "device_class": "energy",
-                            "state": "{{ trigger.event.data.beer|int(0) }}",
+                            "state": "{{ 'restore' }}",
                             "attributes": {
                                 "attr1": "fixed",
-                                "attr2": "{{ trigger.event.data.beer|int(0) + 1 }}",
-                                "attr3": "{{ state_attr('sensor.restore','attr3')|int(0) + 1 }}",
+                                "attr2": "{{ 'attr2' }}",
+                                "attr3": "{{ trigger.event.data.beer }}",
                             },
-                            "picture": "{{ (trigger.event.data.beer|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                            "icon": "{{ (trigger.event.data.beer|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                            "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                            "picture": "{{ 'mdi:thumb-up' }}",
+                            "icon": "{{ 'mdi:thumb-up' }}",
+                            "availability": "{{ 'True' == 'True' }}",
+                            "restore": True,
                         },
                     ],
                 },
@@ -1149,63 +1171,87 @@ async def test_trigger_not_allowed_platform_config(hass, start_ha, caplog_setup_
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
-            STATE_UNKNOWN,
+            "restore",
             {
-                "attr1": None,
-                "attr2": None,
-                "attr3": None,
-                "entity_picture": None,
-                "icon": None,
-            },
-            {},
-        ),
-        (
-            {"restore": True},
-            10,
-            "10",
-            {
+                "friendly_name": "restore",
                 "attr1": "fixed",
-                "attr2": 11,
+                "attr2": "attr2",
                 "attr3": 1,
                 "entity_picture": "mdi:thumb-up",
                 "icon": "mdi:thumb-up",
             },
-            {},
+            {
+                "state": "restore",
+                "name": "restore",
+                "availability": True,
+            },
+            {
+                "state": "restore",
+                "availability": True,
+                "icon": "mdi:thumb-up",
+                "picture": "mdi:thumb-up",
+                "name": "restore",
+                "attributes": {
+                    "attr1": "fixed",
+                    "attr2": "attr2",
+                    "attr3": 1,
+                },
+            },
         ),
     ],
 )
-async def test_trigger_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring sensor trigger."""
+class TestTriggerRestore:
+    """Test Restore of Sensor Template."""
 
-    await trigger_restore_state_test(
+    async def test_trigger_save_state(
+        self,
         hass,
         count,
         domain,
-        config,
-        extra_config,
-        restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
         platform,
-        "template_restore",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Sensor Trigger."""
+        await trigger_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_trigger_restore_state(
+        self,
+        hass,
+        count,
+        domain,
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Sensor Trigger."""
+        await trigger_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )
 
 
 @pytest.mark.parametrize("count,domain", [(1, "template")])

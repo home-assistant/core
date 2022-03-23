@@ -21,7 +21,12 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .helpers import template_restore_state_test, trigger_restore_state_test
+from .helpers import (
+    template_restore_state,
+    template_save_state,
+    trigger_restore_state,
+    trigger_save_state,
+)
 
 from tests.common import (
     assert_setup_component,
@@ -990,92 +995,111 @@ async def test_restore_state(
         {
             "template": {
                 "binary_sensor": {
-                    "name": "{{ (states('sensor.test_state')|int(0) > 0)|iif('Restored','Not Restored') }}",
+                    "name": "{{ 'restore' }}",
                     "unique_id": "restore",
-                    "state": "{{ is_state('sensor.test_state', '10') }}",
+                    "state": "{{ 'True' == 'True' }}",
                     "attributes": {
                         "attr1": "fixed",
-                        "attr2": "{{ states('sensor.test_state')|int(0) }}",
-                        "attr3": "{{ is_state('sensor.test_state', '10') }}",
+                        "attr2": "{{ 'attr2' }}",
+                        "attr3": "{{ states('sensor.restore') }}",
                     },
-                    "delay_on": "{{ states('sensor.test_state')|int(0) }}",
-                    "delay_off": "{{ states('sensor.test_state')|int(0) }}",
-                    "picture": "{{ (is_state('binary_sensor.not_restored', 'on'))|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                    "icon": "{{ (is_state('binary_sensor.not_restored', 'on'))|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                    "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                    "delay_on": "{{ '00:01:00' }}",
+                    "delay_off": "{{ '00:01:00' }}",
+                    "picture": "{{ 'mdi:thumb-up' }}",
+                    "icon": "{{ 'mdi:thumb-up' }}",
+                    "availability": "{{ 'True' == 'True' }}",
+                    "restore": True,
                 },
             },
         },
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes,stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
             ON,
             {
-                "friendly_name": "Not Restored",
-                "attr1": None,
-                "attr2": None,
-                "attr3": None,
-                "entity_picture": "mdi:thumb-down",
-                "icon": "mdi:thumb-down",
-            },
-            {
-                "_delay_on": None,
-                "_delay_off": None,
-            },
-        ),
-        (
-            {"restore": True},
-            10,
-            ON,
-            {
-                "friendly_name": "Restored",
+                "friendly_name": "restore",
                 "attr1": "fixed",
-                "attr2": 10,
-                "attr3": True,
+                "attr2": "attr2",
+                "attr3": "ON",
                 "entity_picture": "mdi:thumb-up",
                 "icon": "mdi:thumb-up",
             },
             {
-                "_delay_on": timedelta(seconds=10),
-                "_delay_off": timedelta(seconds=10),
+                "_attr_name": "restore",
+                "_attr_available": True,
+                "_delay_on": timedelta(seconds=60),
+                "_delay_off": timedelta(seconds=60),
+            },
+            {
+                "_state": True,
+                "_attr_available": True,
+                "_attr_icon": "mdi:thumb-up",
+                "_attr_entity_picture": "mdi:thumb-up",
+                "_attr_name": "restore",
+                "_delay_on": {
+                    "__type": "<class 'datetime.timedelta'>",
+                    "repr": {"days": 0, "seconds": 60, "microseconds": 0},
+                },
+                "_delay_off": {
+                    "__type": "<class 'datetime.timedelta'>",
+                    "repr": {"days": 0, "seconds": 60, "microseconds": 0},
+                },
             },
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring binary sensor template."""
+class TestTemplateRestore:
+    """Test Restore of Binary Sensor Template."""
 
-    config = dict(config)
-    config[domain][platform].update(**extra_config)
-
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Binary Sensor template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
+        domain,
         platform,
-        "not_restored",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Binary Sensor state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )
 
 
 @pytest.mark.parametrize("count,domain", [(2, "template")])
@@ -1238,19 +1262,20 @@ async def test_template_with_trigger_templated_delay_on(hass, start_ha):
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "binary_sensor": [
                         {
-                            "name": "{{ (trigger.event.data.beer|int(0) > 0)|iif('Restored','Not Restored') }}",
+                            "name": "{{ 'restore' }}",
                             "unique_id": "restore",
-                            "state": "{{ trigger.event.data.beer|int(0) == 10 }}",
+                            "state": "{{ 'True' == 'True' }}",
                             "attributes": {
                                 "attr1": "fixed",
-                                "attr2": "{{ trigger.event.data.beer|int(0) + 1 }}",
-                                "attr3": "{{ state_attr('binary_sensor.restore','attr3')|int(0) + 1 }}",
+                                "attr2": "{{ 'attr2' }}",
+                                "attr3": "{{ trigger.event.data.beer }}",
                             },
-                            "delay_on": "{{ (trigger.event.data.beer|int(0) > 0)|iif('00:00:00','00:00:01') }}",
-                            "delay_off": "{{ (trigger.event.data.beer|int(0) > 0)|iif('00:00:00','00:00:01') }}",
-                            "picture": "{{ (trigger.event.data.beer|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                            "icon": "{{ (trigger.event.data.beer|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                            "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                            "delay_on": "{{ '00:01:00' }}",
+                            "delay_off": "{{ '00:01:00' }}",
+                            "picture": "{{ 'mdi:thumb-up' }}",
+                            "icon": "{{ 'mdi:thumb-up' }}",
+                            "availability": "{{ 'True' == 'True' }}",
+                            "restore": True,
                         },
                     ],
                 },
@@ -1259,68 +1284,87 @@ async def test_template_with_trigger_templated_delay_on(hass, start_ha):
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
-            STATE_UNKNOWN,
-            {
-                "friendly_name": None,
-                "attr1": None,
-                "attr2": None,
-                "attr3": None,
-                "entity_picture": None,
-                "icon": None,
-            },
-            {
-                "delay_on": None,
-                "delay_off": None,
-            },
-        ),
-        (
-            {"restore": True},
-            10,
             ON,
             {
-                "friendly_name": "Restored",
+                "friendly_name": "restore",
                 "attr1": "fixed",
-                "attr2": 11,
+                "attr2": "attr2",
                 "attr3": 1,
                 "entity_picture": "mdi:thumb-up",
                 "icon": "mdi:thumb-up",
             },
             {
-                "delay_on": "00:00:00",
-                "delay_off": "00:00:00",
+                "name": "restore",
+                "availability": True,
+                "delay_on": "00:01:00",
+                "delay_off": "00:01:00",
+            },
+            {
+                "state": "True",
+                "availability": True,
+                "icon": "mdi:thumb-up",
+                "picture": "mdi:thumb-up",
+                "name": "restore",
+                "delay_on": "00:01:00",
+                "delay_off": "00:01:00",
+                "attributes": {
+                    "attr1": "fixed",
+                    "attr2": "attr2",
+                    "attr3": 1,
+                },
             },
         ),
     ],
 )
-async def test_trigger_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring binary sensor trigger."""
+class TestTriggerRestore:
+    """Test Restore of Binary Sensor Trigger."""
 
-    await trigger_restore_state_test(
+    async def test_trigger_save_state(
+        self,
         hass,
         count,
         domain,
-        config,
-        extra_config,
-        restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
         platform,
-        "template_restore",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Binary Sensor Trigger."""
+        await trigger_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_trigger_restore_state(
+        self,
+        hass,
+        count,
+        domain,
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Binary Sensor Trigger."""
+        await trigger_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )

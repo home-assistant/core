@@ -220,6 +220,7 @@ class BinarySensorTemplate(TemplateRestoreEntity, BinarySensorEntity):
         self._delay_on_raw = config.get(CONF_DELAY_ON)
         self._delay_off = None
         self._delay_off_raw = config.get(CONF_DELAY_OFF)
+        self.restore = config.get(CONF_RESTORE, False) or False
 
     async def async_added_to_hass(self):
         """Restore state and register callbacks."""
@@ -441,13 +442,20 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
 class TriggerBinarySensorRestoreEntity(TriggerBinarySensorEntity, TriggerRestoreEntity):
     """Representation of a restorable Trigger Binary Sensor."""
 
+    def __init__(self, *args, **kwargs):
+        """Trigger Sensor Restore init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True
+
     async def restore_entity(self) -> tuple[State | None, dict[str, Any] | None]:
         """Restore trigger binary sensor."""
         last_sensor_state, last_sensor_data = await super().restore_entity()
 
         if last_sensor_data is not None:
             try:
-                self._state = last_sensor_data[CONF_STATE]
+                self._state = template.result_as_boolean(
+                    last_sensor_data.get(CONF_STATE)
+                )
             except KeyError:
                 pass
 

@@ -13,7 +13,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers.entity_component import async_update_entity
 
-from .helpers import template_restore_state_test
+from .helpers import template_restore_state, template_save_state
 
 from tests.common import assert_setup_component
 from tests.components.vacuum import common
@@ -577,7 +577,7 @@ async def _register_components(hass):
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("count,domain,platform", [(1, "vacuum", "vacuums")])
+@pytest.mark.parametrize("count,domain,platform", [(1, "vacuum", "vacuum")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -586,15 +586,16 @@ async def _register_components(hass):
                 "platform": "template",
                 "vacuums": {
                     "restore": {
-                        "value_template": f"{{{{ (is_state('sensor.test_state','10'))|iif('{STATE_CLEANING}','{STATE_DOCKED}') }}}}",
-                        "fan_speed_template": "{{ states('sensor.test_state')|int(0) }}",
+                        "value_template": f"{{{{ '{STATE_CLEANING}' }}}}",
+                        "fan_speed_template": "{{ 8 }}",
                         "fan_speeds": [0, 2, 4, 6, 8, 10],
-                        "battery_level_template": "{{ states('sensor.test_state')|int(0) }}",
+                        "battery_level_template": "{{ 20 }}",
                         "attribute_templates": {
                             "attr1": "fixed",
-                            "attr2": "{{ states('sensor.test_state')|int(0) }}",
+                            "attr2": "{{ 'attr2' }}",
                             "attr3": "{{ states('vacuum.restore') }}",
                         },
+                        "restore": True,
                         "start": {
                             "service": "input_select.select_option",
                             "data": {
@@ -616,61 +617,68 @@ async def _register_components(hass):
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
-            STATE_UNKNOWN,
-            {
-                "fan_speed": None,
-                "battery_level": None,
-                "attr1": None,
-                "attr2": None,
-                "attr3": None,
-            },
-            {},
-        ),
-        (
-            {"restore": True},
-            10,
             STATE_CLEANING,
             {
-                "fan_speed": 10,
-                "battery_level": 10,
+                "fan_speed": 8,
+                "battery_level": 20,
                 "attr1": "fixed",
-                "attr2": 10,
+                "attr2": "attr2",
                 "attr3": STATE_CLEANING,
             },
             {},
+            {"_state": STATE_CLEANING, "_fan_speed": 8, "_battery_level": 20},
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring vacuum template."""
+class TestTemplateRestore:
+    """Test Restore of Vacuum Template."""
 
-    config = dict(config)
-    config[domain][platform]["restore"].update(**extra_config)
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Vacuum template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
         domain,
-        "restore",
-    )
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Vacuum state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )

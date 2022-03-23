@@ -174,6 +174,11 @@ class TemplateNumber(TemplateEntity, NumberEntity):
 class TemplateNumberRestore(TemplateNumber, TemplateRestoreEntity):
     """Representation of a restorable template number."""
 
+    def __init__(self, *args, **kwargs):
+        """Template Number Restore init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True
+
 
 class TriggerNumberEntity(TriggerEntity, NumberEntity):
     """Number entity based on trigger data."""
@@ -238,4 +243,9 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
 
 
 class TriggerNumberRestoreEntity(TriggerNumberEntity, TriggerRestoreEntity):
-    """Representation of a restorable Trigger Sensor."""
+    """Representation of a restorable Trigger Number Sensor."""
+
+    def __init__(self, *args, **kwargs):
+        """Trigger Number Restore init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True

@@ -163,3 +163,8 @@ class TemplateLock(TemplateEntity, LockEntity):
 
 class TemplateLockRestore(TemplateLock, TemplateRestoreEntity):
     """Representation of a restorable Template Lock."""
+
+    def __init__(self, *args, **kwargs):
+        """Lock Restore Template init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True

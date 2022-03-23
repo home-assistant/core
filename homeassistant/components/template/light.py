@@ -656,3 +656,8 @@ class LightTemplate(TemplateEntity, LightEntity):
 
 class LightRestoreTemplate(LightTemplate, TemplateRestoreEntity):
     """Representation of a restorable Template Light."""
+
+    def __init__(self, *args, **kwargs):
+        """Light Restore Template init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True

@@ -118,6 +118,7 @@ class TemplateButtonRestoreEntity(TemplateRestoreEntity, ButtonEntity):
         self._command_press = Script(hass, config[CONF_PRESS], self._attr_name, DOMAIN)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None
+        self.restore = True
 
     async def async_press(self) -> None:
         """Press the button."""

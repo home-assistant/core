@@ -12,9 +12,6 @@ from homeassistant.components.number.const import (
     ATTR_MIN,
     ATTR_STEP,
     ATTR_VALUE as NUMBER_ATTR_VALUE,
-    DEFAULT_MAX_VALUE,
-    DEFAULT_MIN_VALUE,
-    DEFAULT_STEP,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
 )
@@ -22,7 +19,12 @@ from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Context
 from homeassistant.helpers.entity_registry import async_get
 
-from .helpers import template_restore_state_test, trigger_restore_state_test
+from .helpers import (
+    template_restore_state,
+    template_save_state,
+    trigger_restore_state,
+    trigger_save_state,
+)
 
 from tests.common import (
     assert_setup_component,
@@ -271,12 +273,12 @@ async def test_templates_with_entities(hass, calls):
         {
             "template": {
                 "number": {
-                    "name": "{{ (states('sensor.test_state')|int(0) > 0)|iif('Restored','Not Restored') }}",
+                    "name": "{{ 'restore' }}",
                     "unique_id": "restore",
-                    "state": "{{ states('sensor.test_state')|int(-1) }}",
-                    "step": "{{ (is_state('sensor.test_state','unknown'))|iif(0,10) }}",
-                    "min": "{{ states('sensor.test_state')|int(-1) / 2 }}",
-                    "max": "{{ states('sensor.test_state')|int(-1) * 2 }}",
+                    "state": "{{ 10 }}",
+                    "step": "{{ 1 }}",
+                    "min": "{{ 0 }}",
+                    "max": "{{ 10 }}",
                     "set_value": {
                         "service": "input_number.set_value",
                         "data_template": {
@@ -284,73 +286,91 @@ async def test_templates_with_entities(hass, calls):
                             "value": "{{ value }}",
                         },
                     },
-                    "icon": "{{ (states('sensor.test_state')|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                    "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                    "icon": "{{ 'mdi:thumb-up' }}",
+                    "availability": "{{ 'True' == 'True' }}",
+                    "restore": True,
                 },
             },
         },
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
-            STATE_UNKNOWN,
-            {
-                "friendly_name": "Not Restored",
-                "min": None,
-                "max": None,
-                "step": None,
-                "icon": "mdi:thumb-down",
-            },
-            {},
-        ),
-        (
-            {"restore": True},
-            10,
             "10.0",
             {
-                "friendly_name": "Restored",
-                "min": 5,
-                "max": 20,
-                "step": 10,
+                "friendly_name": "restore",
+                "min": 0,
+                "max": 10,
+                "step": 1,
                 "icon": "mdi:thumb-up",
             },
-            {},
+            {
+                "_attr_available": True,
+                "_attr_name": "restore",
+            },
+            {
+                "_attr_step": 1,
+                "_attr_min_value": 0.0,
+                "_attr_max_value": 10.0,
+                "_attr_value": 10.0,
+                "_attr_available": True,
+                "_attr_icon": "mdi:thumb-up",
+                "_attr_name": "restore",
+            },
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring number template."""
+class TestTemplateRestore:
+    """Test Restore of Number Template."""
 
-    config = dict(config)
-    config[domain][platform].update(**extra_config)
-
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Number template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
+        domain,
         platform,
-        "not_restored",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Number state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )
 
 
 async def test_trigger_number(hass):
@@ -560,12 +580,13 @@ async def test_icon_template_with_trigger(hass):
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "number": [
                         {
-                            "name": "{{ (trigger.event.data.beer|int(0) > 0)|iif('Restored','Not Restored') }}",
+                            "name": "{{ 'restore' }}",
                             "unique_id": "restore",
-                            "state": "{{ trigger.event.data.beer|int(-1) }}",
-                            "step": "{{ trigger.event.data.beer|int(0) }}",
-                            "min": "{{ trigger.event.data.beer|int(0) / 2 }}",
-                            "max": "{{ trigger.event.data.beer|int(0) * 2 }}",
+                            "state": "{{ 10 }}",
+                            "step": "{{ 1 }}",
+                            "min": "{{ 0 }}",
+                            "max": "{{ 10 }}",
+                            "restore": True,
                             "set_value": {
                                 "service": "input_number.set_value",
                                 "data_template": {
@@ -573,8 +594,8 @@ async def test_icon_template_with_trigger(hass):
                                     "value": "{{ value }}",
                                 },
                             },
-                            "icon": "{{ (trigger.event.data.beer|int(0) > 0)|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                            "availability": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                            "icon": "{{ 'mdi:thumb-up' }}",
+                            "availability": "{{ 'True' == 'True' }}",
                         },
                     ],
                 },
@@ -583,64 +604,79 @@ async def test_icon_template_with_trigger(hass):
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
-            STATE_UNKNOWN,
-            {
-                "friendly_name": None,
-                "min": DEFAULT_MIN_VALUE,
-                "max": DEFAULT_MAX_VALUE,
-                "step": DEFAULT_STEP,
-                "icon": None,
-            },
-            {
-                "_attr_step": None,
-                "_attr_min_value": None,
-                "_attr_max_value": None,
-            },
-        ),
-        (
-            {"restore": True},
-            10,
             "10.0",
             {
-                "friendly_name": "Restored",
-                "min": 5,
-                "max": 20,
-                "step": 10,
+                "friendly_name": "restore",
+                "min": 0,
+                "max": 10,
+                "step": 1,
                 "icon": "mdi:thumb-up",
             },
-            {},
+            {
+                "availability": True,
+                "name": "restore",
+            },
+            {
+                "step": "1",
+                "min": "0",
+                "max": "10",
+                "state": "10",
+                "availability": True,
+                "icon": "mdi:thumb-up",
+                "name": "restore",
+            },
         ),
     ],
 )
-async def test_trigger_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring number trigger."""
+class TestTriggerRestore:
+    """Test Restore of Number Trigger."""
 
-    await trigger_restore_state_test(
+    async def test_trigger_save_state(
+        self,
         hass,
         count,
         domain,
-        config,
-        extra_config,
-        restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
         platform,
-        "template_restore",
-    )
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Number Trigger."""
+        await trigger_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_trigger_restore_state(
+        self,
+        hass,
+        count,
+        domain,
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Number Trigger."""
+        await trigger_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )

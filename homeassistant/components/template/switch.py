@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_RESTORE, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_RESTORE_SCHEMA,
@@ -111,6 +111,7 @@ class SwitchTemplate(TemplateRestoreEntity, SwitchEntity):
         self._on_script = Script(hass, config[ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[OFF_ACTION], friendly_name, DOMAIN)
         self._state = False
+        self.restore = config.get(CONF_RESTORE, False) or False
 
     @callback
     def _update_state(self, result):

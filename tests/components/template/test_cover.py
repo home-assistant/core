@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 
-from .helpers import template_restore_state_test
+from .helpers import template_restore_state, template_save_state
 
 from tests.common import assert_setup_component
 
@@ -991,7 +991,7 @@ async def test_self_referencing_icon_with_no_template_is_not_a_loop(
     assert "Template loop detected" not in caplog.text
 
 
-@pytest.mark.parametrize("count,domain,platform", [(1, "cover", "covers")])
+@pytest.mark.parametrize("count,domain,platform", [(1, "cover", "cover")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1000,12 +1000,13 @@ async def test_self_referencing_icon_with_no_template_is_not_a_loop(
                 "platform": "template",
                 "covers": {
                     "restore": {
-                        "value_template": "{{ 'open' if is_state('sensor.test_state','unknown') else (states('sensor.test_state')|int(0) > 50)|iif('closing','opening') }}",
-                        "position_template": "{{ states('sensor.test_state')|int(0) }}",
-                        "icon_template": "{{ (is_state('cover.restore','closed') or is_state('cover.restore','closing'))|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                        "entity_picture_template": "{{ (is_state('cover.restore','closed') or is_state('cover.restore','closing'))|iif('mdi:thumb-up','mdi:thumb-down') }}",
-                        "tilt_template": "{{ states('sensor.test_state')|int(0) }}",
-                        "availability_template": "{{ states('sensor.test_state') is not in ((None, 'unavailable')) }}",
+                        "value_template": "{{ 'closing' }}",
+                        "position_template": "{{ 80 }}",
+                        "icon_template": "{{ 'mdi:thumb-up' }}",
+                        "entity_picture_template": "{{ 'mdi:thumb-up' }}",
+                        "tilt_template": "{{ 80 }}",
+                        "availability_template": "{{ 'True' == 'True' }}",
+                        "restore": True,
                         "open_cover": {
                             "service": "cover.open_cover",
                             "entity_id": "cover.test_state",
@@ -1021,23 +1022,9 @@ async def test_self_referencing_icon_with_no_template_is_not_a_loop(
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            80,
-            STATE_OPEN,
-            {
-                "entity_picture": "mdi:thumb-down",
-                "icon": "mdi:thumb-down",
-                "current_position": None,
-                "current_tilt_position": None,
-            },
-            {},
-        ),
-        (
-            {"restore": True},
-            80,
             STATE_CLOSING,
             {
                 "entity_picture": "mdi:thumb-up",
@@ -1045,35 +1032,69 @@ async def test_self_referencing_icon_with_no_template_is_not_a_loop(
                 "current_position": 80.0,
                 "current_tilt_position": 80.0,
             },
-            {},
+            {
+                "_is_opening": False,
+                "_is_closing": True,
+            },
+            {
+                "_cover_state": STATE_CLOSING,
+                "_position": 80,
+                "_tilt_value": 80,
+                "_attr_available": True,
+                "_attr_icon": "mdi:thumb-up",
+                "_attr_entity_picture": "mdi:thumb-up",
+                "_is_opening": False,
+                "_is_closing": True,
+            },
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring cover template."""
+class TestTemplateRestore:
+    """Test Restore of Cover Template."""
 
-    config = dict(config)
-    config[domain][platform]["restore"].update(**extra_config)
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off cover template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
         domain,
-        "restore",
-    )
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of cover state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )

@@ -22,7 +22,7 @@ from . import (
     convert_attribute_from_string,
     convert_attribute_to_string,
 )
-from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE, CONF_RESTORE
+from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 
 
 class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
@@ -78,7 +78,6 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
         # We make a copy so our initial render is 'unknown' and not 'unavailable'
         self._rendered = dict(self._static_rendered)
         self._parse_result = {CONF_AVAILABILITY}
-        self._restore = config.get(CONF_RESTORE)
 
     @property
     def name(self):
@@ -175,19 +174,22 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
 class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
     """Trigger Entity that restores data."""
 
-    def __init__(self, *args, restore_additional_data: bool = False, **kwargs) -> None:
-        """Trigger Restore Entity Init."""
+    @property
+    def restore(self) -> bool:
+        """Retrieve restore."""
+        return self._restore or False
 
-        super().__init__(*args, **kwargs)
-
-        self._restore = restore_additional_data
+    @restore.setter
+    def restore(self, restore: bool) -> None:
+        """Set restore."""
+        self._restore = restore
 
     async def restore_entity(
         self,
     ) -> tuple[State | None, dict[str, Any] | None]:
         """Restore the entity."""
 
-        if not self._restore:
+        if not self.restore:
             return None, None
 
         if (last_sensor_state := await self.async_get_last_state()) is None:
@@ -273,13 +275,13 @@ class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
         """Return sensor specific state data to be restored."""
         return (
             TriggerExtraStoredData(self._rendered)
-            if self._restore
+            if self.restore
             else TriggerExtraStoredData(None)
         )
 
     async def async_get_last_rendered_data(self) -> dict[str, Any] | None:
         """Restore native_value and native_unit_of_measurement."""
-        if not self._restore:
+        if not self.restore:
             return None
 
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:

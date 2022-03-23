@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 
-from .helpers import template_restore_state_test
+from .helpers import template_restore_state, template_save_state
 
 from tests.common import (
     assert_setup_component,
@@ -726,7 +726,7 @@ async def test_unique_id(hass):
     assert len(hass.states.async_all("switch")) == 1
 
 
-@pytest.mark.parametrize("count,domain,platform", [(1, "switch", "switches")])
+@pytest.mark.parametrize("count,domain,platform", [(1, "switch", "switch")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -735,7 +735,8 @@ async def test_unique_id(hass):
                 "platform": "template",
                 "switches": {
                     "restore": {
-                        "value_template": "{{ is_state('sensor.test_state','10') }}",
+                        "value_template": "{{ 'True' == 'True' }}",
+                        "restore": True,
                         "turn_on": {
                             "service": "switch.turn_on",
                             "entity_id": "switch.test_state",
@@ -751,49 +752,64 @@ async def test_unique_id(hass):
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state, initial_attributes, stored_attributes",
+    "restored_state, state_attributes, additional_attributes, save_data",
     [
         (
-            {"restore": False},
-            10,
-            STATE_OFF,
-            {},
-            {},
-        ),
-        (
-            {"restore": True},
-            10,
             STATE_ON,
             {},
             {},
+            {
+                "_state": True,
+            },
         ),
     ],
 )
-async def test_template_restore_state(
-    hass,
-    count,
-    domain,
-    platform,
-    config,
-    extra_config,
-    restored_state,
-    initial_state,
-    initial_attributes,
-    stored_attributes,
-):
-    """Test restoring switch template."""
+class TestTemplateRestore:
+    """Test Restore of Switch Template."""
 
-    config = dict(config)
-    config[domain][platform]["restore"].update(**extra_config)
-    await template_restore_state_test(
+    async def test_template_save_state(
+        self,
         hass,
         count,
         domain,
+        platform,
         config,
         restored_state,
-        initial_state,
-        initial_attributes,
-        stored_attributes,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test saving off Switch template."""
+        await template_save_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            save_data,
+        )
+
+    async def test_template_restore_state(
+        self,
+        hass,
+        count,
         domain,
-        "restore",
-    )
+        platform,
+        config,
+        restored_state,
+        state_attributes,
+        additional_attributes,
+        save_data,
+    ):
+        """Test restore of Switch state."""
+        await template_restore_state(
+            hass,
+            count,
+            domain,
+            platform,
+            config,
+            restored_state,
+            state_attributes,
+            additional_attributes,
+            save_data,
+        )

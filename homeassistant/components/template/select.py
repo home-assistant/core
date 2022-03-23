@@ -149,6 +149,11 @@ class TemplateSelect(TemplateEntity, SelectEntity):
 class TemplateSelectRestore(TemplateSelect, TemplateRestoreEntity):
     """Representation of a restorable Template Select."""
 
+    def __init__(self, *args, **kwargs):
+        """Select Restore Template init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True
+
 
 class TriggerSelectEntity(TriggerEntity, SelectEntity):
     """Select entity based on trigger data."""
@@ -194,3 +199,8 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
 
 class TriggerSelectRestoreEntity(TriggerSelectEntity, TriggerRestoreEntity):
     """Representation of a restorable Trigger Select."""
+
+    def __init__(self, *args, **kwargs):
+        """Select Restore Trigger init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True
