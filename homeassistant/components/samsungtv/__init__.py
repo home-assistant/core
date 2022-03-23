@@ -1,6 +1,7 @@
 """The Samsung TV integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
 import socket
 from typing import Any
@@ -21,25 +22,21 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .bridge import (
-    SamsungTVBridge,
-    SamsungTVLegacyBridge,
-    SamsungTVWSBridge,
-    async_get_device_info,
-    mac_from_device_info,
-)
+from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
+    CONF_MODEL,
     CONF_ON_ACTION,
+    CONF_SESSION_ID,
     DEFAULT_NAME,
     DOMAIN,
     LEGACY_PORT,
     LOGGER,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
-    METHOD_WEBSOCKET,
 )
 
 
@@ -101,14 +98,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @callback
 def _async_get_device_bridge(
     hass: HomeAssistant, data: dict[str, Any]
-) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
+) -> SamsungTVBridge:
     """Get device bridge."""
     return SamsungTVBridge.get_bridge(
         hass,
         data[CONF_METHOD],
         data[CONF_HOST],
         data[CONF_PORT],
-        data.get(CONF_TOKEN),
+        data,
     )
 
 
@@ -116,25 +113,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
 
     # Initialize bridge
+    if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
+        if not entry.data.get(CONF_TOKEN) or not entry.data.get(CONF_SESSION_ID):
+            raise ConfigEntryAuthFailed(
+                "Token and session id are required in encrypted mode"
+            )
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
 
-    # Ensure new token gets saved against the config_entry
+    # Ensure updates get saved against the config_entry
     @callback
-    def _update_token() -> None:
+    def _update_config_entry(updates: Mapping[str, Any]) -> None:
         """Update config entry with the new token."""
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_TOKEN: bridge.token}
-        )
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
-    def new_token_callback() -> None:
+    bridge.register_update_config_entry_callback(_update_config_entry)
+
+    # Allow bridge to force the reload of the config_entry
+    @callback
+    def _reload_config_entry() -> None:
         """Update config entry with the new token."""
-        hass.add_job(_update_token)
+        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
-    bridge.register_new_token_callback(new_token_callback)
+    bridge.register_reload_callback(_reload_config_entry)
 
     async def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
-        await bridge.async_stop()
+        LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
+        await bridge.async_close_remote()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
@@ -145,46 +150,79 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+def _model_requires_encryption(model: str | None) -> bool:
+    """H and J models need pairing with PIN."""
+    return model is not None and len(model) > 4 and model[4] in ("H", "J")
+
+
 async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: ConfigEntry
-) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
+) -> SamsungTVBridge:
     """Create a bridge object and update any missing data in the config entry."""
-    updated_data = {}
-    host = entry.data[CONF_HOST]
-    port = entry.data.get(CONF_PORT)
-    method = entry.data.get(CONF_METHOD)
-    info = None
+    updated_data: dict[str, str | int] = {}
+    host: str = entry.data[CONF_HOST]
+    port: int | None = entry.data.get(CONF_PORT)
+    method: str | None = entry.data.get(CONF_METHOD)
+    load_info_attempted = False
+    info: dict[str, Any] | None = None
 
     if not port or not method:
+        LOGGER.debug("Attempting to get port or method for %s", host)
         if method == METHOD_LEGACY:
             port = LEGACY_PORT
         else:
             # When we imported from yaml we didn't setup the method
             # because we didn't know it
             port, method, info = await async_get_device_info(hass, None, host)
-            if not port:
+            load_info_attempted = True
+            if not port or not method:
                 raise ConfigEntryNotReady(
                     "Failed to determine connection method, make sure the device is on."
                 )
 
+        LOGGER.info("Updated port to %s and method to %s for %s", port, method, host)
         updated_data[CONF_PORT] = port
         updated_data[CONF_METHOD] = method
 
     bridge = _async_get_device_bridge(hass, {**entry.data, **updated_data})
 
-    mac = entry.data.get(CONF_MAC)
-    if not mac and bridge.method == METHOD_WEBSOCKET:
-        if info:
-            mac = mac_from_device_info(info)
-        else:
-            mac = await bridge.async_mac_from_device()
+    mac: str | None = entry.data.get(CONF_MAC)
+    model: str | None = entry.data.get(CONF_MODEL)
+    if (not mac or not model) and not load_info_attempted:
+        info = await bridge.async_device_info()
 
     if not mac:
-        mac = await hass.async_add_executor_job(
-            partial(getmac.get_mac_address, ip=host)
+        LOGGER.debug("Attempting to get mac for %s", host)
+        if info:
+            mac = mac_from_device_info(info)
+
+        if not mac:
+            mac = await hass.async_add_executor_job(
+                partial(getmac.get_mac_address, ip=host)
+            )
+
+        if mac:
+            LOGGER.info("Updated mac to %s for %s", mac, host)
+            updated_data[CONF_MAC] = mac
+        else:
+            LOGGER.info("Failed to get mac for %s", host)
+
+    if not model:
+        LOGGER.debug("Attempting to get model for %s", host)
+        if info:
+            model = info.get("device", {}).get("modelName")
+            if model:
+                LOGGER.info("Updated model to %s for %s", model, host)
+                updated_data[CONF_MODEL] = model
+
+    if _model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
+        LOGGER.info(
+            "Detected model %s for %s. Some televisions from H and J series use "
+            "an encrypted protocol but you are using %s which may not be supported",
+            model,
+            host,
+            method,
         )
-    if mac:
-        updated_data[CONF_MAC] = mac
 
     if updated_data:
         data = {**entry.data, **updated_data}
@@ -197,7 +235,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await hass.data[DOMAIN][entry.entry_id].async_stop()
+        bridge: SamsungTVBridge = hass.data[DOMAIN][entry.entry_id]
+        LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
+        await bridge.async_close_remote()
     return unload_ok
 
 

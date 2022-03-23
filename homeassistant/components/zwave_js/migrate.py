@@ -9,7 +9,7 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import LIGHT_LUX, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -90,6 +90,8 @@ CC_ID_LABEL_TO_PROPERTY = {
     49: SENSOR_MULTILEVEL_CC_LABEL_TO_PROPERTY_NAME,
     113: NOTIFICATION_CC_LABEL_TO_PROPERTY_NAME,
 }
+
+UNIT_LEGACY_MIGRATION_MAP = {LIGHT_LUX: "Lux"}
 
 
 class ZWaveMigrationData(TypedDict):
@@ -209,7 +211,8 @@ class LegacyZWaveMigration:
 
         # Normalize unit of measurement.
         if unit := entity_entry.unit_of_measurement:
-            unit = unit.lower()
+            _unit = UNIT_LEGACY_MIGRATION_MAP.get(unit, unit)
+            unit = _unit.lower()
         if unit == "":
             unit = None
 

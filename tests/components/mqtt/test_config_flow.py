@@ -3,8 +3,9 @@ from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
+import yaml
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config as hass_config, config_entries, data_entry_flow
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.core import HomeAssistant
@@ -151,7 +152,7 @@ async def test_manual_config_set(
         "discovery": True,
     }
     # Check we tried the connection, with precedence for config entry settings
-    mock_try_connection.assert_called_once_with("127.0.0.1", 1883, None, None)
+    mock_try_connection.assert_called_once_with(hass, "127.0.0.1", 1883, None, None)
     # Check config entry got setup
     assert len(mock_finish_setup.mock_calls) == 1
 
@@ -642,3 +643,95 @@ async def test_options_bad_will_message_fails(hass, mock_try_connection):
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
     }
+
+
+async def test_try_connection_with_advanced_parameters(
+    hass, mock_try_connection_success, tmp_path
+):
+    """Test config flow with advanced parameters from config."""
+    # Mock certificate files
+    certfile = tmp_path / "cert.pem"
+    certfile.write_text("## mock certificate file ##")
+    keyfile = tmp_path / "key.pem"
+    keyfile.write_text("## mock key file ##")
+    config = {
+        "certificate": "auto",
+        "tls_insecure": True,
+        "client_cert": certfile,
+        "client_key": keyfile,
+    }
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config = yaml.dump({mqtt.DOMAIN: config})
+    new_yaml_config_file.write_text(new_yaml_config)
+    assert new_yaml_config_file.read_text() == new_yaml_config
+
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+        await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+        await hass.async_block_till_done()
+        config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
+        config_entry.add_to_hass(hass)
+        config_entry.data = {
+            mqtt.CONF_BROKER: "test-broker",
+            mqtt.CONF_PORT: 1234,
+            mqtt.CONF_USERNAME: "user",
+            mqtt.CONF_PASSWORD: "pass",
+            mqtt.CONF_DISCOVERY: True,
+            mqtt.CONF_BIRTH_MESSAGE: {
+                mqtt.ATTR_TOPIC: "ha_state/online",
+                mqtt.ATTR_PAYLOAD: "online",
+                mqtt.ATTR_QOS: 1,
+                mqtt.ATTR_RETAIN: True,
+            },
+            mqtt.CONF_WILL_MESSAGE: {
+                mqtt.ATTR_TOPIC: "ha_state/offline",
+                mqtt.ATTR_PAYLOAD: "offline",
+                mqtt.ATTR_QOS: 2,
+                mqtt.ATTR_RETAIN: False,
+            },
+        }
+
+        # Test default/suggested values from config
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "broker"
+        defaults = {
+            mqtt.CONF_BROKER: "test-broker",
+            mqtt.CONF_PORT: 1234,
+        }
+        suggested = {
+            mqtt.CONF_USERNAME: "user",
+            mqtt.CONF_PASSWORD: "pass",
+        }
+        for k, v in defaults.items():
+            assert get_default(result["data_schema"].schema, k) == v
+        for k, v in suggested.items():
+            assert get_suggested(result["data_schema"].schema, k) == v
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                mqtt.CONF_BROKER: "another-broker",
+                mqtt.CONF_PORT: 2345,
+                mqtt.CONF_USERNAME: "us3r",
+                mqtt.CONF_PASSWORD: "p4ss",
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "options"
+
+        # check if the username and password was set from config flow and not from configuration.yaml
+        assert mock_try_connection_success.username_pw_set.mock_calls[0][1] == (
+            "us3r",
+            "p4ss",
+        )
+
+        # check if tls_insecure_set is called
+        assert mock_try_connection_success.tls_insecure_set.mock_calls[0][1] == (True,)
+
+        # check if the certificate settings were set from configuration.yaml
+        assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
+            "certfile"
+        ] == str(certfile)
+        assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
+            "keyfile"
+        ] == str(keyfile)

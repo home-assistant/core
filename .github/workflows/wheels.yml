@@ -22,7 +22,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Get information
         id: info
@@ -50,13 +50,13 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v3.0.0
         with:
           name: env_file
           path: ./.env_file
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v3.0.0
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -74,7 +74,7 @@ jobs:
           - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Download env_file
         uses: actions/download-artifact@v2
@@ -115,7 +115,7 @@ jobs:
           - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Download env_file
         uses: actions/download-artifact@v2
@@ -135,13 +135,9 @@ jobs:
             sed -i "s|# bluepy|bluepy|g" ${requirement_file}
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
             sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
-            sed -i "s|# raspihats|raspihats|g" ${requirement_file}
-            sed -i "s|# rpi-rf|rpi-rf|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}
-            sed -i "s|# smbus-cffi|smbus-cffi|g" ${requirement_file}
-            sed -i "s|# i2csense|i2csense|g" ${requirement_file}
             sed -i "s|# python-eq3bt|python-eq3bt|g" ${requirement_file}
             sed -i "s|# pycups|pycups|g" ${requirement_file}
             sed -i "s|# homekit|homekit|g" ${requirement_file}
@@ -151,9 +147,7 @@ jobs:
             sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
             sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
             sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
-            sed -i "s|# bme680|bme680|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
-            sed -i "s|# homeassistant-pyozw|homeassistant-pyozw|g" ${requirement_file}
           done
 
       - name: Build wheels

@@ -81,10 +81,11 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     )
     elk.connect()
 
-    if not await async_wait_for_elk_to_sync(
-        elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT, bool(userid)
-    ):
-        raise InvalidAuth
+    try:
+        if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT):
+            raise InvalidAuth
+    finally:
+        elk.disconnect()
 
     short_mac = _short_mac(mac) if mac else None
     if prefix and prefix != short_mac:
@@ -227,7 +228,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(user_input, self.unique_id)
         except asyncio.TimeoutError:
-            return {CONF_HOST: "cannot_connect"}, None
+            return {"base": "cannot_connect"}, None
         except InvalidAuth:
             return {CONF_PASSWORD: "invalid_auth"}, None
         except Exception:  # pylint: disable=broad-except
@@ -287,9 +288,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if device := await async_discover_device(
                 self.hass, user_input[CONF_ADDRESS]
             ):
-                await self.async_set_unique_id(dr.format_mac(device.mac_address))
+                await self.async_set_unique_id(
+                    dr.format_mac(device.mac_address), raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
-                user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
+                # Ignore the port from discovery since its always going to be
+                # 2601 if secure is turned on even though they may want insecure
+                user_input[CONF_ADDRESS] = device.ip_address
             errors, result = await self._async_create_or_error(user_input, False)
             if not errors:
                 return result
@@ -324,7 +329,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if is_ip_address(host) and (
             device := await async_discover_device(self.hass, host)
         ):
-            await self.async_set_unique_id(dr.format_mac(device.mac_address))
+            await self.async_set_unique_id(
+                dr.format_mac(device.mac_address), raise_on_progress=False
+            )
             self._abort_if_unique_id_configured()
 
         return (await self._async_create_or_error(user_input, True))[1]

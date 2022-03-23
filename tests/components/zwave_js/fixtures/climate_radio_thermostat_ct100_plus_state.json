@@ -851,5 +851,6 @@
       },
       "value": false
     }
-  ]
+  ],
+  "isControllerNode": false
 }

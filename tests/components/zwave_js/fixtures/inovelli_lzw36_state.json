@@ -1952,5 +1952,6 @@
           }
         }
       }
-    ]
+    ],
+    "isControllerNode": false
   }

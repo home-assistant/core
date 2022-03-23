@@ -94,10 +94,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.minecraft_server",
     "homeassistant.components.minecraft_server.helpers",
     "homeassistant.components.minecraft_server.sensor",
-    "homeassistant.components.netgear",
-    "homeassistant.components.netgear.config_flow",
-    "homeassistant.components.netgear.device_tracker",
-    "homeassistant.components.netgear.router",
     "homeassistant.components.nilu.air_quality",
     "homeassistant.components.nzbget",
     "homeassistant.components.nzbget.config_flow",
@@ -116,9 +112,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.onvif.models",
     "homeassistant.components.onvif.parsers",
     "homeassistant.components.onvif.sensor",
-    "homeassistant.components.ozw",
-    "homeassistant.components.ozw.climate",
-    "homeassistant.components.ozw.entity",
     "homeassistant.components.philips_js",
     "homeassistant.components.philips_js.config_flow",
     "homeassistant.components.philips_js.device_trigger",
@@ -135,7 +128,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.diagnostics",
     "homeassistant.components.sonos.entity",
     "homeassistant.components.sonos.favorites",
-    "homeassistant.components.sonos.helpers",
     "homeassistant.components.sonos.media_browser",
     "homeassistant.components.sonos.media_player",
     "homeassistant.components.sonos.number",
@@ -154,11 +146,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.unifi.device_tracker",
     "homeassistant.components.unifi.diagnostics",
     "homeassistant.components.unifi.unifi_entity_base",
-    "homeassistant.components.upnp",
-    "homeassistant.components.upnp.binary_sensor",
-    "homeassistant.components.upnp.config_flow",
-    "homeassistant.components.upnp.device",
-    "homeassistant.components.upnp.sensor",
     "homeassistant.components.vizio.config_flow",
     "homeassistant.components.vizio.media_player",
     "homeassistant.components.withings",
@@ -227,9 +214,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.zha.sensor",
     "homeassistant.components.zha.siren",
     "homeassistant.components.zha.switch",
-    "homeassistant.components.zwave",
-    "homeassistant.components.zwave.migration",
-    "homeassistant.components.zwave.node_entity",
 ]
 
 # Component modules which should set no_implicit_reexport = true.
@@ -256,6 +240,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
+    "enable_error_code": "ignore-without-code",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".

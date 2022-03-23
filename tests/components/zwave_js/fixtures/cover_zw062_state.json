@@ -917,5 +917,6 @@
         "label": "Z-Wave chip hardware version"
       }
     }
-  ]
+  ],
+  "isControllerNode": false
 }

@@ -10,7 +10,8 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Tilkobling mislyktes",
-            "invalid_auth": "Ugyldig godkjenning"
+            "invalid_auth": "Ugyldig godkjenning",
+            "upnp_not_configured": "Mangler UPnP-innstillinger p\u00e5 enheten."
         },
         "flow_title": "{name}",
         "step": {

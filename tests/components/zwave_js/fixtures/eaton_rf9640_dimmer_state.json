@@ -775,5 +775,6 @@
             "value": 0,
             "ccVersion": 3
         }
-    ]
+    ],
+    "isControllerNode": false
 }

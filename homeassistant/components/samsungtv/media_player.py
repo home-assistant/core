@@ -1,7 +1,6 @@
 """Support for interface with an Samsung TV."""
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -27,7 +26,14 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_METHOD,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +43,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
-from .bridge import SamsungTVLegacyBridge, SamsungTVWSBridge
+from .bridge import SamsungTVBridge, SamsungTVWSBridge
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -45,9 +51,9 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
+    METHOD_ENCRYPTED_WEBSOCKET,
 )
 
-KEY_PRESS_TIMEOUT = 1.2
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
 SUPPORT_SAMSUNGTV = (
@@ -94,7 +100,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     def __init__(
         self,
-        bridge: SamsungTVLegacyBridge | SamsungTVWSBridge,
+        bridge: SamsungTVBridge,
         config_entry: ConfigEntry,
         on_script: Script | None,
     ) -> None:
@@ -114,10 +120,13 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._attr_source_list = list(SOURCES)
         self._app_list: dict[str, str] | None = None
 
-        if self._on_script or self._mac:
-            self._attr_supported_features = SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
-        else:
+        if config_entry.data.get(CONF_METHOD) != METHOD_ENCRYPTED_WEBSOCKET:
+            # Encrypted websockets currently only support ON/OFF status
             self._attr_supported_features = SUPPORT_SAMSUNGTV
+
+        if self._on_script or self._mac:
+            # Add turn-on if on_script or mac is available
+            self._attr_supported_features |= SUPPORT_TURN_ON
 
         self._attr_device_info = DeviceInfo(
             name=self.name,
@@ -173,12 +182,21 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._app_list is not None:
             self._attr_source_list.extend(self._app_list)
 
-    async def _async_send_key(self, key: str, key_type: str | None = None) -> None:
-        """Send a key to the tv and handles exceptions."""
-        if self._power_off_in_progress() and key != "KEY_POWEROFF":
-            LOGGER.info("TV is powering off, not sending command: %s", key)
+    async def _async_launch_app(self, app_id: str) -> None:
+        """Send launch_app to the tv."""
+        if self._power_off_in_progress():
+            LOGGER.info("TV is powering off, not sending launch_app command")
             return
-        await self._bridge.async_send_key(key, key_type)
+        assert isinstance(self._bridge, SamsungTVWSBridge)
+        await self._bridge.async_launch_app(app_id)
+
+    async def _async_send_keys(self, keys: list[str]) -> None:
+        """Send a key to the tv and handles exceptions."""
+        assert keys
+        if self._power_off_in_progress() and keys[0] != "KEY_POWEROFF":
+            LOGGER.info("TV is powering off, not sending keys: %s", keys)
+            return
+        await self._bridge.async_send_keys(keys)
 
     def _power_off_in_progress(self) -> bool:
         return (
@@ -201,22 +219,19 @@ class SamsungTVDevice(MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
-
-        await self._async_send_key("KEY_POWEROFF")
-        # Force closing of remote session to provide instant UI feedback
-        await self._bridge.async_close_remote()
+        await self._bridge.async_power_off()
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        await self._async_send_key("KEY_VOLUP")
+        await self._async_send_keys(["KEY_VOLUP"])
 
     async def async_volume_down(self) -> None:
         """Volume down media player."""
-        await self._async_send_key("KEY_VOLDOWN")
+        await self._async_send_keys(["KEY_VOLDOWN"])
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        await self._async_send_key("KEY_MUTE")
+        await self._async_send_keys(["KEY_MUTE"])
 
     async def async_media_play_pause(self) -> None:
         """Simulate play pause media player."""
@@ -228,27 +243,27 @@ class SamsungTVDevice(MediaPlayerEntity):
     async def async_media_play(self) -> None:
         """Send play command."""
         self._playing = True
-        await self._async_send_key("KEY_PLAY")
+        await self._async_send_keys(["KEY_PLAY"])
 
     async def async_media_pause(self) -> None:
         """Send media pause command to media player."""
         self._playing = False
-        await self._async_send_key("KEY_PAUSE")
+        await self._async_send_keys(["KEY_PAUSE"])
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        await self._async_send_key("KEY_CHUP")
+        await self._async_send_keys(["KEY_CHUP"])
 
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
-        await self._async_send_key("KEY_CHDOWN")
+        await self._async_send_keys(["KEY_CHDOWN"])
 
     async def async_play_media(
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Support changing a channel."""
         if media_type == MEDIA_TYPE_APP:
-            await self._async_send_key(media_id, "run_app")
+            await self._async_launch_app(media_id)
             return
 
         if media_type != MEDIA_TYPE_CHANNEL:
@@ -262,10 +277,9 @@ class SamsungTVDevice(MediaPlayerEntity):
             LOGGER.error("Media ID must be positive integer")
             return
 
-        for digit in media_id:
-            await self._async_send_key(f"KEY_{digit}")
-            await asyncio.sleep(KEY_PRESS_TIMEOUT)
-        await self._async_send_key("KEY_ENTER")
+        await self._async_send_keys(
+            keys=[f"KEY_{digit}" for digit in media_id] + ["KEY_ENTER"]
+        )
 
     def _wake_on_lan(self) -> None:
         """Wake the device via wake on lan."""
@@ -284,11 +298,11 @@ class SamsungTVDevice(MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self._app_list and source in self._app_list:
-            await self._async_send_key(self._app_list[source], "run_app")
+            await self._async_launch_app(self._app_list[source])
             return
 
         if source in SOURCES:
-            await self._async_send_key(SOURCES[source])
+            await self._async_send_keys([SOURCES[source]])
             return
 
         LOGGER.error("Unsupported source")

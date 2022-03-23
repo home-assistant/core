@@ -432,27 +432,11 @@ class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
 
 
 @dataclass
-class FanSpeedDataTemplate:
-    """Mixin to define get_speed_config."""
+class FanValueMapping:
+    """Data class to represent how a fan's values map to features."""
 
-    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
-        """
-        Get the fan speed configuration for this device.
-
-        Values should indicate the highest allowed device setting for each
-        actual speed, and should be sorted in ascending order.
-
-        Empty lists are not permissible.
-        """
-        raise NotImplementedError
-
-
-@dataclass
-class ConfigurableFanSpeedValueMix:
-    """Mixin data class for defining configurable fan speeds."""
-
-    configuration_option: ZwaveValueID
-    configuration_value_to_speeds: dict[int, list[int]]
+    presets: dict[int, str] = field(default_factory=dict)
+    speeds: list[tuple[int, int]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """
@@ -461,14 +445,36 @@ class ConfigurableFanSpeedValueMix:
         These inputs are hardcoded in `discovery.py`, so these checks should
         only fail due to developer error.
         """
-        for speeds in self.configuration_value_to_speeds.values():
-            assert len(speeds) > 0
-            assert sorted(speeds) == speeds
+        assert len(self.speeds) > 0, "At least one speed must be specified"
+        for speed_range in self.speeds:
+            (low, high) = speed_range
+            assert high >= low, "Speed range values must be ordered"
 
 
 @dataclass
-class ConfigurableFanSpeedDataTemplate(
-    BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate, ConfigurableFanSpeedValueMix
+class FanValueMappingDataTemplate:
+    """Mixin to define `get_fan_value_mapping`."""
+
+    def get_fan_value_mapping(
+        self, resolved_data: dict[str, Any]
+    ) -> FanValueMapping | None:
+        """Get the value mappings for this device."""
+        raise NotImplementedError
+
+
+@dataclass
+class ConfigurableFanValueMappingValueMix:
+    """Mixin data class for defining fan properties that change based on a device configuration option."""
+
+    configuration_option: ZwaveValueID
+    configuration_value_to_fan_value_mapping: dict[int, FanValueMapping]
+
+
+@dataclass
+class ConfigurableFanValueMappingDataTemplate(
+    BaseDiscoverySchemaDataTemplate,
+    FanValueMappingDataTemplate,
+    ConfigurableFanValueMappingValueMix,
 ):
     """
     Gets fan speeds based on a configuration value.
@@ -476,22 +482,23 @@ class ConfigurableFanSpeedDataTemplate(
     Example:
       ZWaveDiscoverySchema(
           platform="fan",
-          hint="configured_fan_speed",
+          hint="has_fan_value_mapping",
           ...
-          data_template=ConfigurableFanSpeedDataTemplate(
+          data_template=ConfigurableFanValueMappingDataTemplate(
             configuration_option=ZwaveValueID(
                 5, CommandClass.CONFIGURATION, endpoint=0
             ),
-            configuration_value_to_speeds={0: [32, 65, 99], 1: [24, 49, 74, 99]},
+            configuration_value_to_fan_value_mapping={
+                0: FanValueMapping(speeds=[(1,33), (34,66), (67,99)]),
+                1: FanValueMapping(speeds=[(1,24), (25,49), (50,74), (75,99)]),
+            },
           ),
-      ),
 
-    `configuration_option` is a reference to the setting that determines how
-    many speeds are supported.
+    `configuration_option` is a reference to the setting that determines which
+    value mapping to use (e.g., 3 speeds or 4 speeds).
 
-    `configuration_value_to_speeds` maps the values from `configuration_option`
-    to a list of speeds.  The specified speeds indicate the maximum setting on
-    the underlying switch for each actual speed.
+    `configuration_value_to_fan_value_mapping` maps the values from
+    `configuration_option` to the value mapping object.
     """
 
     def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveConfigurationValue]:
@@ -507,64 +514,61 @@ class ConfigurableFanSpeedDataTemplate(
             resolved_data["configuration_value"],
         ]
 
-    def get_speed_config(
+    def get_fan_value_mapping(
         self, resolved_data: dict[str, ZwaveConfigurationValue]
-    ) -> list[int] | None:
-        """Get current speed configuration from resolved data."""
+    ) -> FanValueMapping | None:
+        """Get current fan properties from resolved data."""
         zwave_value: ZwaveValue = resolved_data["configuration_value"]
 
+        if zwave_value is None:
+            _LOGGER.warning("Unable to read device configuration value")
+            return None
+
         if zwave_value.value is None:
-            _LOGGER.warning("Unable to read fan speed configuration value")
+            _LOGGER.warning("Fan configuration value is missing")
             return None
 
-        speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
-        if speed_config is None:
-            _LOGGER.warning("Unrecognized speed configuration value")
+        fan_value_mapping = self.configuration_value_to_fan_value_mapping.get(
+            zwave_value.value
+        )
+        if fan_value_mapping is None:
+            _LOGGER.warning("Unrecognized fan configuration value")
             return None
 
-        return speed_config
+        return fan_value_mapping
 
 
 @dataclass
-class FixedFanSpeedValueMix:
+class FixedFanValueMappingValueMix:
     """Mixin data class for defining supported fan speeds."""
 
-    speeds: list[int]
-
-    def __post_init__(self) -> None:
-        """
-        Validate inputs.
-
-        These inputs are hardcoded in `discovery.py`, so these checks should
-        only fail due to developer error.
-        """
-        assert len(self.speeds) > 0
-        assert sorted(self.speeds) == self.speeds
+    fan_value_mapping: FanValueMapping
 
 
 @dataclass
-class FixedFanSpeedDataTemplate(
-    BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate, FixedFanSpeedValueMix
+class FixedFanValueMappingDataTemplate(
+    BaseDiscoverySchemaDataTemplate,
+    FanValueMappingDataTemplate,
+    FixedFanValueMappingValueMix,
 ):
     """
-    Specifies a fixed set of fan speeds.
+    Specifies a fixed set of properties for a fan.
 
     Example:
       ZWaveDiscoverySchema(
           platform="fan",
-          hint="configured_fan_speed",
+          hint="has_fan_value_mapping",
           ...
-          data_template=FixedFanSpeedDataTemplate(
-              speeds=[32,65,99]
+          data_template=FixedFanValueMappingDataTemplate(
+              config=FanValueMapping(
+                speeds=[(1, 32), (33, 65), (66, 99)]
+              )
           ),
       ),
-
-    `speeds` indicates the maximum setting on the underlying fan controller
-    for each actual speed.
     """
 
-    def get_speed_config(
+    def get_fan_value_mapping(
         self, resolved_data: dict[str, ZwaveConfigurationValue]
-    ) -> list[int]:
-        """Get the fan speed configuration for this device."""
-        return self.speeds
+    ) -> FanValueMapping:
+        """Get the fan properties for this device."""
+        return self.fan_value_mapping

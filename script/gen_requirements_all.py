@@ -19,14 +19,10 @@ COMMENT_REQUIREMENTS = (
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "bluepy",
-    "bme680",
     "decora",
     "decora_wifi",
-    "envirophat",
     "evdev",
     "face_recognition",
-    "homeassistant-pyozw",
-    "i2csense",
     "opencv-python-headless",
     "pybluez",
     "pycups",
@@ -36,10 +32,7 @@ COMMENT_REQUIREMENTS = (
     "python-gammu",
     "python-lirc",
     "pyuserinput",
-    "raspihats",
-    "rpi-rf",
     "RPi.GPIO",
-    "smbus-cffi",
     "tensorflow",
     "tf-models-official",
 )
@@ -103,7 +96,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.5.0
 h11==0.12.0
-httpcore==0.14.5
+httpcore==0.14.7
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -121,6 +114,10 @@ python-socketio>=4.6.0,<5.0
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
+
+# Required for compatibility with point integration - ensure_active_token
+# https://github.com/home-assistant/core/pull/68176
+authlib<1.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

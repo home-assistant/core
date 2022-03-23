@@ -2,14 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
-            "api_not_enabled": "L'API n'est pas activ\u00e9e. Activer l'API dans l'application HomeWizard Energy dans les param\u00e8tres",
+            "api_not_enabled": "L'API n'est pas activ\u00e9e. Activez l'API dans les param\u00e8tres de l'application HomeWizard Energy",
             "device_not_supported": "Cet appareil n'est pas compatible",
             "invalid_discovery_parameters": "Version d'API non prise en charge d\u00e9tect\u00e9e",
             "unknown_error": "Erreur inattendue"
         },
         "step": {
             "discovery_confirm": {
-                "description": "Voulez-vous configurer {product_type} ( {serial} ) \u00e0 {ip_address}\u00a0?",
+                "description": "Voulez-vous configurer {product_type} ({serial}) sur {ip_address}\u00a0?",
                 "title": "Confirmer"
             },
             "user": {
