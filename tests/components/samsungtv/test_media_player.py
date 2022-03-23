@@ -9,7 +9,6 @@ from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
 from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
-from samsungtvws.event import ED_INSTALLED_APP_EVENT
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -737,16 +736,13 @@ async def test_turn_off_websocket(
     hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
+    remotews.app_list_data = SAMPLE_EVENT_ED_INSTALLED_APP
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
-    remotews.raise_mock_ws_event_callback(
-        ED_INSTALLED_APP_EVENT,
-        SAMPLE_EVENT_ED_INSTALLED_APP,
-    )
     remotews.send_commands.reset_mock()
 
     assert await hass.services.async_call(
@@ -1181,11 +1177,8 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
 
 async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
     """Test for select_source."""
+    remotews.app_list_data = SAMPLE_EVENT_ED_INSTALLED_APP
     await setup_samsungtv(hass, MOCK_CONFIGWS)
-    remotews.raise_mock_ws_event_callback(
-        ED_INSTALLED_APP_EVENT,
-        SAMPLE_EVENT_ED_INSTALLED_APP,
-    )
     remotews.send_commands.reset_mock()
 
     assert await hass.services.async_call(
