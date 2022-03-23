@@ -17,6 +17,7 @@ from awesomeversion import (
 )
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import HomeAssistant
@@ -111,7 +112,9 @@ def commit(session, work):
     return False
 
 
-def execute(qry, to_native=False, validate_entity_ids=True) -> list | None:
+def execute(
+    qry: Query, to_native: bool = False, validate_entity_ids: bool = True
+) -> list | None:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -129,7 +132,7 @@ def execute(qry, to_native=False, validate_entity_ids=True) -> list | None:
                     if row is not None
                 ]
             else:
-                result = list(qry)
+                result = qry.all()
 
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 elapsed = time.perf_counter() - timer_start
@@ -426,6 +429,7 @@ def retryable_database_job(description: str) -> Callable:
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
+                assert instance.engine is not None
                 if (
                     instance.engine.dialect.name == "mysql"
                     and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
@@ -452,7 +456,7 @@ def perodic_db_cleanups(instance: Recorder):
 
     These cleanups will happen nightly or after any purge.
     """
-
+    assert instance.engine is not None
     if instance.engine.dialect.name == "sqlite":
         # Execute sqlite to create a wal checkpoint and free up disk space
         _LOGGER.debug("WAL checkpoint")
@@ -463,7 +467,7 @@ def perodic_db_cleanups(instance: Recorder):
 @contextmanager
 def write_lock_db_sqlite(instance: Recorder):
     """Lock database for writes."""
-
+    assert instance.engine is not None
     with instance.engine.connect() as connection:
         # Execute sqlite to create a wal checkpoint
         # This is optional but makes sure the backup is going to be minimal
