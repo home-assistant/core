@@ -167,7 +167,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         radio_type = discovery_info.properties.get("radio_type") or local_name
         node_name = local_name[: -len(".local")]
         host = discovery_info.host
-        port = discovery_info.port
+        port = 6638 if local_name.startswith("tube") else discovery_info.port
         device_path = f"socket://{host}:{port}"
 
         if current_entry := await self.async_set_unique_id(node_name):
