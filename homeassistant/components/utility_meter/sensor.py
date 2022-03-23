@@ -265,7 +265,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._sensor_net_consumption = net_consumption
         self._tariff = tariff
         self._tariff_entity = tariff_entity
-        self._attr_unique_id = f"{parent_meter} {tariff}"
+        self._attr_unique_id = f"utility_meter{parent_meter}{tariff}"
 
     def start(self, unit):
         """Initialize unit and state upon source initial update."""
