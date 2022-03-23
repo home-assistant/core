@@ -1,7 +1,6 @@
 """A platform which allows you to get information from Tautulli."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -63,8 +62,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -73,13 +70,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Create the Tautulli sensor."""
-    _LOGGER.warning(
-        "Configuration of the Tautulli platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2022.6; Your existing configuration for host %s"
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file",
-        config[CONF_HOST],
-    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
