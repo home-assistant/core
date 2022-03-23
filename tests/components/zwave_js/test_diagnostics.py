@@ -5,6 +5,7 @@ import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.zwave_js.diagnostics import async_get_device_diagnostics
+from homeassistant.components.zwave_js.discovery import async_discover_node_values
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.helpers.device_registry import async_get
 
@@ -69,7 +70,12 @@ async def test_device_diagnostics(
         "minSchemaVersion": 0,
         "maxSchemaVersion": 0,
     }
-
+    # Assert that we only have the entities that were discovered for this device
+    # Entities that are created outside of discovery (e.g. node status sensor and
+    # ping button) should not be in dump.
+    assert len(diagnostics_data["entities"]) == len(
+        list(async_discover_node_values(multisensor_6, device, {device.id: set()}))
+    )
     assert diagnostics_data["state"] == multisensor_6.data
 
 
