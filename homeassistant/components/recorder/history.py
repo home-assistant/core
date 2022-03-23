@@ -7,7 +7,7 @@ from itertools import groupby
 import logging
 import time
 
-from sqlalchemy import Text, and_, bindparam, func, or_
+from sqlalchemy import Column, Text, and_, bindparam, func, or_
 from sqlalchemy.ext import baked
 from sqlalchemy.sql.expression import literal
 
@@ -59,13 +59,41 @@ QUERY_STATE_NO_ATTR = [
     literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
 ]
-QUERY_STATES = [
+# Remove QUERY_STATES_PRE_SCHEMA_25
+# and the migration_in_progress check
+# once schema 26 is created
+QUERY_STATES_PRE_SCHEMA_25 = [
     *BASE_STATES,
     States.attributes,
+    literal(value="{}", type_=Text).label("shared_attrs"),
+]
+QUERY_STATES = [
+    *BASE_STATES,
+    States.attributes,  # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     StateAttributes.shared_attrs,
 ]
 
 HISTORY_BAKERY = "recorder_history_bakery"
+
+
+def query_and_join_attributes(
+    hass: HomeAssistant, no_attributes: bool
+) -> tuple[list[Column], bool]:
+    """Return the query keys and if StateAttributes should be joined."""
+    # If we in the process of migrating schema we do
+    # not want to join the state_attributes table as we
+    # do not know if it will be there yet
+    if recorder.get_instance(hass).migration_in_progress:
+        return QUERY_STATES_PRE_SCHEMA_25, False
+    # If no_attributes was requested we do the query
+    # without the attributes fields and do not join the
+    # state_attributes table
+    if no_attributes:
+        return QUERY_STATE_NO_ATTR, False
+    # Finally if no migration is in progress and no_attributes
+    # was not requested, we query both attributes columns and
+    # join state_attributes
+    return QUERY_STATES, True
 
 
 def async_setup(hass):
@@ -104,7 +132,7 @@ def get_significant_states_with_session(
     thermostat so that we get current temperature in our graphs).
     """
     timer_start = time.perf_counter()
-    query_keys = QUERY_STATE_NO_ATTR if no_attributes else QUERY_STATES
+    query_keys, join_attributes = query_and_join_attributes(hass, no_attributes)
     baked_query = hass.data[HISTORY_BAKERY](lambda session: session.query(*query_keys))
 
     if entity_ids is not None and len(entity_ids) == 1:
@@ -146,7 +174,7 @@ def get_significant_states_with_session(
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
 
-    if not no_attributes:
+    if join_attributes:
         baked_query += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
@@ -187,7 +215,7 @@ def state_changes_during_period(
 ) -> dict[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
-        query_keys = QUERY_STATE_NO_ATTR if no_attributes else QUERY_STATES
+        query_keys, join_attributes = query_and_join_attributes(hass, no_attributes)
         baked_query = hass.data[HISTORY_BAKERY](
             lambda session: session.query(*query_keys)
         )
@@ -206,7 +234,7 @@ def state_changes_during_period(
             baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
             entity_id = entity_id.lower()
 
-        if not no_attributes:
+        if join_attributes:
             baked_query += lambda q: q.outerjoin(
                 StateAttributes, States.attributes_id == StateAttributes.attributes_id
             )
@@ -240,8 +268,9 @@ def get_last_state_changes(hass, number_of_states, entity_id):
     start_time = dt_util.utcnow()
 
     with session_scope(hass=hass) as session:
+        query_keys, join_attributes = query_and_join_attributes(hass, False)
         baked_query = hass.data[HISTORY_BAKERY](
-            lambda session: session.query(*QUERY_STATES)
+            lambda session: session.query(*query_keys)
         )
         baked_query += lambda q: q.filter(States.last_changed == States.last_updated)
 
@@ -249,9 +278,10 @@ def get_last_state_changes(hass, number_of_states, entity_id):
             baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
             entity_id = entity_id.lower()
 
-        baked_query += lambda q: q.outerjoin(
-            StateAttributes, States.attributes_id == StateAttributes.attributes_id
-        )
+        if join_attributes:
+            baked_query += lambda q: q.outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
         baked_query += lambda q: q.order_by(
             States.entity_id, States.last_updated.desc()
         )
@@ -322,7 +352,7 @@ def _get_states_with_session(
 
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
-    query_keys = QUERY_STATE_NO_ATTR if no_attributes else QUERY_STATES
+    query_keys, join_attributes = query_and_join_attributes(hass, no_attributes)
     query = session.query(*query_keys)
 
     if entity_ids:
@@ -344,7 +374,7 @@ def _get_states_with_session(
             most_recent_state_ids,
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
-        if not no_attributes:
+        if join_attributes:
             query = query.outerjoin(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
             )
@@ -386,7 +416,7 @@ def _get_states_with_session(
             query = query.filter(~States.entity_id.like(entity_domain))
         if filters:
             query = filters.apply(query)
-        if not no_attributes:
+        if join_attributes:
             query = query.outerjoin(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
             )
@@ -400,13 +430,13 @@ def _get_single_entity_states_with_session(
 ):
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
-    query_keys = QUERY_STATE_NO_ATTR if no_attributes else QUERY_STATES
+    query_keys, join_attributes = query_and_join_attributes(hass, no_attributes)
     baked_query = hass.data[HISTORY_BAKERY](lambda session: session.query(*query_keys))
     baked_query += lambda q: q.filter(
         States.last_updated < bindparam("utc_point_in_time"),
         States.entity_id == bindparam("entity_id"),
     )
-    if not no_attributes:
+    if join_attributes:
         baked_query += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
