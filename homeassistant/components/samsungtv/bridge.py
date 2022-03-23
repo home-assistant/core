@@ -738,12 +738,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 timeout=TIMEOUT_WEBSOCKET,
             )
             try:
-                # pylint:disable=[fixme]
-                # TODO: remove secondary timeout when library is bumped
-                # See https://github.com/xchwarze/samsung-tv-ws-api/pull/82
-                await asyncio.wait_for(
-                    self._remote.start_listening(), TIMEOUT_WEBSOCKET
-                )
+                await self._remote.start_listening()
             except (WebSocketException, AsyncioTimeoutError, OSError) as err:
                 LOGGER.debug(
                     "Failed to get remote for %s: %s", self.host, err.__repr__()
