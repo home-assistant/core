@@ -60,8 +60,10 @@ class PubliBikeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if station_id is not None:
                 try:
                     id_valid = await self._is_valid_station_id(station_id)
-                except RequestException as e:
-                    _LOGGER.error("Unable to connect to the PubliBike API: %s", str(e))
+                except RequestException as req_err:
+                    _LOGGER.error(
+                        "Unable to connect to the PubliBike API: %s", str(req_err)
+                    )
                     return self.async_show_form(
                         step_id="user",
                         data_schema=DATA_SCHEMA,
