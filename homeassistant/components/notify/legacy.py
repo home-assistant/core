@@ -35,7 +35,7 @@ NOTIFY_DISCOVERY = "notify_discovery"
 async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up legacy notify services."""
     hass.data.setdefault(NOTIFY_SERVICES, {})
-    hass.data.setdefault(NOTIFY_DISCOVERY, None)
+    hass.data.setdefault(NOTIFY_DISCOVERY, {"dispatcher": None, "lock": asyncio.Lock()})
 
     async def async_setup_platform(
         integration_name: str,
@@ -101,26 +101,27 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
             )
             hass.config.components.add(f"{DOMAIN}.{integration_name}")
 
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(integration_name, p_config))
-        for integration_name, p_config in config_per_platform(config, DOMAIN)
-        if integration_name is not None
-    ]
+    async with hass.data[NOTIFY_DISCOVERY]["lock"]:
+        setup_tasks = [
+            asyncio.create_task(async_setup_platform(integration_name, p_config))
+            for integration_name, p_config in config_per_platform(config, DOMAIN)
+            if integration_name is not None
+        ]
 
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
+        if setup_tasks:
+            await asyncio.wait(setup_tasks)
 
-    async def async_platform_discovered(
-        platform: str, info: DiscoveryInfoType | None
-    ) -> None:
-        """Handle for discovered platform."""
-        await async_setup_platform(platform, discovery_info=info)
+        async def async_platform_discovered(
+            platform: str, info: DiscoveryInfoType | None
+        ) -> None:
+            """Handle for discovered platform."""
+            await async_setup_platform(platform, discovery_info=info)
 
-    hass.data[NOTIFY_DISCOVERY] = (
-        discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-        if hass.data[NOTIFY_DISCOVERY]
-        else None
-    )
+        hass.data[NOTIFY_DISCOVERY]["dispatcher"] = (
+            discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
+            if hass.data[NOTIFY_DISCOVERY]
+            else None
+        )
 
 
 @callback
@@ -153,19 +154,19 @@ async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
 @bind_hass
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Unregister notify services for an integration."""
-    hass.data[NOTIFY_DISCOVERY]()
-    hass.data[NOTIFY_DISCOVERY] = None
-    if not _async_integration_has_notify_services(hass, integration_name):
-        return
+    async with hass.data[NOTIFY_DISCOVERY]["lock"]:
+        hass.data[NOTIFY_DISCOVERY]["dispatcher"]()
+        if not _async_integration_has_notify_services(hass, integration_name):
+            return
 
-    tasks = [
-        notify_service.async_unregister_services()
-        for notify_service in hass.data[NOTIFY_SERVICES][integration_name]
-    ]
+        tasks = [
+            notify_service.async_unregister_services()
+            for notify_service in hass.data[NOTIFY_SERVICES][integration_name]
+        ]
 
-    await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
 
-    del hass.data[NOTIFY_SERVICES][integration_name]
+        del hass.data[NOTIFY_SERVICES][integration_name]
 
 
 def _async_integration_has_notify_services(
