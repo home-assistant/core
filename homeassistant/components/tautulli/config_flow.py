@@ -48,8 +48,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
         errors = {}
         if user_input is not None:
-            error = await self.validate_input(user_input)
-            if error is None:
+            if (error := await self.validate_input(user_input)) is None:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data=user_input,
@@ -80,11 +79,11 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm reauth dialog."""
         errors = {}
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        if user_input is not None and entry:
+        if user_input is not None and (
+            entry := self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        ):
             _input = {**entry.data, CONF_API_KEY: user_input[CONF_API_KEY]}
-            error = await self.validate_input(_input)
-            if error is None:
+            if (error := await self.validate_input(_input)) is None:
                 self.hass.config_entries.async_update_entry(entry, data=_input)
                 await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
@@ -97,11 +96,14 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
+        _LOGGER.warning(
+            "Configuration of the Tautulli platform in YAML is deprecated and will be "
+            "removed in Home Assistant 2022.6; Your existing configuration for host %s"
+            "has been imported into the UI automatically and can be safely removed "
+            "from your configuration.yaml file",
+            config[CONF_HOST],
+        )
         if self._async_current_entries():
-            _LOGGER.warning(
-                "Tautulli config with host %s import failed. Only one instance is supported",
-                config[CONF_HOST],
-            )
             return self.async_abort(reason="single_instance_allowed")
         host_configuration = PyTautulliHostConfiguration(
             config[CONF_API_KEY],

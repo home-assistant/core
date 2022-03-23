@@ -74,7 +74,10 @@ async def async_setup_platform(
 ) -> None:
     """Create the Tautulli sensor."""
     _LOGGER.warning(
-        "Tautulli yaml config with host %s has been imported. Please remove it",
+        "Configuration of the Tautulli platform in YAML is deprecated and will be "
+        "removed in Home Assistant 2022.6; Your existing configuration for host %s"
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file",
         config[CONF_HOST],
     )
     hass.async_create_task(

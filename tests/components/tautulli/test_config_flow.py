@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 from pytautulli import exceptions
+from pytest import LogCaptureFixture
 
 from homeassistant import data_entry_flow
 from homeassistant.components.tautulli.const import DEFAULT_NAME, DOMAIN
@@ -68,6 +69,17 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
 
+    with patch_config_flow_tautulli(AsyncMock()):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == NAME
+    assert result2["data"] == CONF_DATA
+
 
 async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test user initialized flow with invalid authentication."""
@@ -79,6 +91,17 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "invalid_auth"
+
+    with patch_config_flow_tautulli(AsyncMock()):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == NAME
+    assert result2["data"] == CONF_DATA
 
 
 async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
@@ -92,8 +115,19 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "unknown"
 
+    with patch_config_flow_tautulli(AsyncMock()):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    await hass.async_block_till_done()
 
-async def test_flow_import(hass: HomeAssistant) -> None:
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == NAME
+    assert result2["data"] == CONF_DATA
+
+
+async def test_flow_import(hass: HomeAssistant, caplog: LogCaptureFixture) -> None:
     """Test import step."""
     with patch_config_flow_tautulli(AsyncMock()):
         result = await hass.config_entries.flow.async_init(
@@ -101,9 +135,12 @@ async def test_flow_import(hass: HomeAssistant) -> None:
             context={"source": SOURCE_IMPORT},
             data=CONF_IMPORT_DATA,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == DEFAULT_NAME
-        assert result["data"] == CONF_DATA
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == CONF_DATA
+    assert "Tautulli platform in YAML" in caplog.text
 
 
 async def test_flow_import_single_instance_allowed(hass: HomeAssistant) -> None:
@@ -180,3 +217,11 @@ async def test_flow_reauth_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == "invalid_auth"
+
+    with patch_config_flow_tautulli(AsyncMock()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "efgh"},
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "reauth_successful"
