@@ -1,7 +1,7 @@
 """Config flow for Group integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any, cast
 
 import voluptuous as vol
@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
+    HelperFlowMenuStep,
     HelperFlowStep,
 )
 
@@ -61,43 +62,44 @@ LIGHT_CONFIG_SCHEMA = vol.Schema(
 ).extend(LIGHT_OPTIONS_SCHEMA.schema)
 
 
-INITIAL_STEP_SCHEMA = vol.Schema(
-    {
-        vol.Required("group_type"): selector.selector(
-            {
-                "select": {
-                    "options": [
-                        "binary_sensor",
-                        "cover",
-                        "fan",
-                        "light",
-                        "media_player",
-                    ]
-                }
-            }
-        )
-    }
-)
+GROUP_TYPES = ["binary_sensor", "cover", "fan", "light", "media_player"]
 
 
 @callback
-def choose_config_step(options: dict[str, Any]) -> str:
-    """Return next step_id when group_type is selected."""
+def choose_options_step(options: dict[str, Any]) -> str:
+    """Return next step_id for options flow according to group_type."""
     return cast(str, options["group_type"])
 
 
-CONFIG_FLOW = {
-    "user": HelperFlowStep(INITIAL_STEP_SCHEMA, next_step=choose_config_step),
-    "binary_sensor": HelperFlowStep(BINARY_SENSOR_CONFIG_SCHEMA),
-    "cover": HelperFlowStep(basic_group_config_schema("cover")),
-    "fan": HelperFlowStep(basic_group_config_schema("fan")),
-    "light": HelperFlowStep(LIGHT_CONFIG_SCHEMA),
-    "media_player": HelperFlowStep(basic_group_config_schema("media_player")),
+def set_group_type(group_type: str) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Set group type."""
+
+    @callback
+    def _set_group_type(user_input: dict[str, Any]) -> dict[str, Any]:
+        """Add group type to user input."""
+        return {"group_type": group_type, **user_input}
+
+    return _set_group_type
+
+
+CONFIG_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
+    "user": HelperFlowMenuStep(GROUP_TYPES),
+    "binary_sensor": HelperFlowStep(
+        BINARY_SENSOR_CONFIG_SCHEMA, set_group_type("binary_sensor")
+    ),
+    "cover": HelperFlowStep(
+        basic_group_config_schema("cover"), set_group_type("cover")
+    ),
+    "fan": HelperFlowStep(basic_group_config_schema("fan"), set_group_type("fan")),
+    "light": HelperFlowStep(LIGHT_CONFIG_SCHEMA, set_group_type("light")),
+    "media_player": HelperFlowStep(
+        basic_group_config_schema("media_player"), set_group_type("media_player")
+    ),
 }
 
 
-OPTIONS_FLOW = {
-    "init": HelperFlowStep(None, next_step=choose_config_step),
+OPTIONS_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
+    "init": HelperFlowStep(None, next_step=choose_options_step),
     "binary_sensor": HelperFlowStep(BINARY_SENSOR_OPTIONS_SCHEMA),
     "cover": HelperFlowStep(basic_group_options_schema("cover")),
     "fan": HelperFlowStep(basic_group_options_schema("fan")),

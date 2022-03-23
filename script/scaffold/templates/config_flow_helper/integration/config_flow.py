@@ -10,6 +10,7 @@ from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
+    HelperFlowMenuStep,
     HelperFlowStep,
 )
 
@@ -29,9 +30,13 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW = {"user": HelperFlowStep(CONFIG_SCHEMA)}
+CONFIG_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
+    "user": HelperFlowStep(CONFIG_SCHEMA)
+}
 
-OPTIONS_FLOW = {"init": HelperFlowStep(OPTIONS_SCHEMA)}
+OPTIONS_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
+    "init": HelperFlowStep(OPTIONS_SCHEMA)
+}
 
 
 class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
