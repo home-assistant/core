@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_NAME,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
@@ -249,7 +248,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._last_period = Decimal(0)
         self._last_reset = dt_util.utcnow()
         self._collecting = None
-        self._name = name
+        self._name = f"{parent_meter} {tariff}" if tariff else parent_meter
         self._unit_of_measurement = None
         self._period = meter_type
         if meter_type is not None:
@@ -266,6 +265,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._sensor_net_consumption = net_consumption
         self._tariff = tariff
         self._tariff_entity = tariff_entity
+        self._attr_unique_id = f"{parent_meter} {tariff}"
 
     def start(self, unit):
         """Initialize unit and state upon source initial update."""
