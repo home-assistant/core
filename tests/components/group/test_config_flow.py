@@ -6,7 +6,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.group import DOMAIN, async_setup_entry
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+    RESULT_TYPE_MENU,
+)
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -42,12 +46,11 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["type"] == RESULT_TYPE_MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"group_type": group_type},
+        {"next_step_id": group_type},
     )
     await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_FORM
@@ -130,12 +133,11 @@ async def test_config_flow_hides_members(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["type"] == RESULT_TYPE_MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"group_type": group_type},
+        {"next_step_id": group_type},
     )
     await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_FORM
@@ -251,13 +253,11 @@ async def test_options(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
-    assert get_suggested(result["data_schema"].schema, "group_type") is None
+    assert result["type"] == RESULT_TYPE_MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"group_type": group_type},
+        {"next_step_id": group_type},
     )
     await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_FORM
