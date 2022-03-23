@@ -198,12 +198,12 @@ class HueLight(HueBaseEntity, LightEntity):
             effect = EffectStatus.NO_EFFECT
         elif effect_str is not None:
             # work out if we got a regular effect or timed effect
-            effect = TimedEffectStatus(effect_str)
-            if effect == TimedEffectStatus.UNKNOWN:
-                effect = EffectStatus(effect_str)
-            if transition is None:
-                # a transition is required for timed effect, default to 10 minutes
-                transition = 600000
+            effect = EffectStatus(effect_str)
+            if effect == EffectStatus.UNKNOWN:
+                effect = TimedEffectStatus(effect_str)
+                if transition is None:
+                    # a transition is required for timed effect, default to 10 minutes
+                    transition = 600000
 
         if flash is not None:
             await self.async_set_flash(flash)
