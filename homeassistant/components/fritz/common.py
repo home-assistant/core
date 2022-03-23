@@ -817,7 +817,7 @@ class FritzData:
     profile_switches: dict = field(default_factory=dict)
 
 
-class FritzDeviceBase(update_coordinator.CoordinatorEntity):
+class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
     """Entity base class for a device connected to a FRITZ!Box device."""
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:

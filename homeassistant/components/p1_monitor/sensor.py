@@ -235,10 +235,10 @@ async def async_setup_entry(
     )
 
 
-class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
+class P1MonitorSensorEntity(
+    CoordinatorEntity[P1MonitorDataUpdateCoordinator], SensorEntity
+):
     """Defines an P1 Monitor sensor."""
-
-    coordinator: P1MonitorDataUpdateCoordinator
 
     def __init__(
         self,
