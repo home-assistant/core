@@ -164,6 +164,16 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     assert len(mock_bridge_v2.mock_requests) == 6
     assert mock_bridge_v2.mock_requests[5]["json"]["color_temperature"]["mirek"] == 500
 
+    # test sending effect
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "candle"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 7
+    assert mock_bridge_v2.mock_requests[6]["json"]["effects"]["effect"] == "candle"
+
 
 async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_data):
     """Test calling the turn off service on a light."""
