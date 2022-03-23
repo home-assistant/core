@@ -394,6 +394,8 @@ def test_external_statistics(hass_recorder, caplog):
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "has_mean": False,
+            "has_sum": True,
             "statistic_id": "test:total_energy_import",
             "name": "Total imported energy",
             "source": "test",

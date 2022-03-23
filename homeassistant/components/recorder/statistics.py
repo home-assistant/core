@@ -744,6 +744,8 @@ def list_statistic_ids(
 
         result = {
             meta["statistic_id"]: {
+                "has_mean": meta["has_mean"],
+                "has_sum": meta["has_sum"],
                 "name": meta["name"],
                 "source": meta["source"],
                 "unit_of_measurement": meta["unit_of_measurement"],
@@ -772,6 +774,8 @@ def list_statistic_ids(
     return [
         {
             "statistic_id": _id,
+            "has_mean": info["has_mean"],
+            "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
             "unit_of_measurement": info["unit_of_measurement"],
