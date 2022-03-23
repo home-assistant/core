@@ -108,8 +108,7 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
     @property
     def name(self) -> str:
         """Return default entity name."""
-        group = self.controller.get_group(self.resource.id)
-        return f"{group.metadata.name} {self.resource.metadata.name}"
+        return f"{self.group.metadata.name} {self.resource.metadata.name}"
 
     @property
     def is_dynamic(self) -> bool:
