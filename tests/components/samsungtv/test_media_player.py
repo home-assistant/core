@@ -72,8 +72,8 @@ import homeassistant.util.dt as dt_util
 from . import setup_samsungtv_entry
 from .const import (
     MOCK_ENTRYDATA_ENCRYPTED_WS,
-    SAMPLE_APP_LIST,
     SAMPLE_DEVICE_INFO_FRAME,
+    SAMPLE_EVENT_ED_INSTALLED_APP,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -175,7 +175,6 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock()
-        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.token = "123456789"
         remote_class.return_value = remote
 
@@ -213,7 +212,6 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock()
-        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.token = "987654321"
         remote_class.return_value = remote
         assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
@@ -738,6 +736,7 @@ async def test_turn_off_websocket(
     hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
+    remotews.app_list_data = SAMPLE_EVENT_ED_INSTALLED_APP
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
@@ -1178,6 +1177,7 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
 
 async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
     """Test for select_source."""
+    remotews.app_list_data = SAMPLE_EVENT_ED_INSTALLED_APP
     await setup_samsungtv(hass, MOCK_CONFIGWS)
     remotews.send_commands.reset_mock()
 
