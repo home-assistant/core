@@ -41,6 +41,10 @@ async def test_wallbox_lock_class(hass: HomeAssistant):
 
     await setup_integration(hass)
 
+    state = hass.states.get(CONF_MOCK_LOCK_ENTITY_ID)
+    assert state
+    assert state.state == "unlocked"
+
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
