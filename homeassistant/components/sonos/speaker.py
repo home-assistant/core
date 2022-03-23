@@ -29,11 +29,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
-from homeassistant.helpers.event import (
-    async_call_later,
-    async_track_time_interval,
-    track_time_interval,
-)
+from homeassistant.helpers.event import async_track_time_interval, track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .alarms import SonosAlarms
@@ -66,8 +62,8 @@ from .helpers import soco_error
 from .media import SonosMedia
 from .statistics import ActivityStatistics, EventStatistics
 
-COOLDOWN_SECONDS = 10
 NEVER_TIME = -1200.0
+RESUB_COOLDOWN_SECONDS = 10.0
 EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
@@ -131,7 +127,7 @@ class SonosSpeaker:
         self._last_event_cache: dict[str, Any] = {}
         self.activity_stats: ActivityStatistics = ActivityStatistics(self.zone_name)
         self.event_stats: EventStatistics = EventStatistics(self.zone_name)
-        self._in_cooldown: bool = False
+        self._resub_cooldown_expires_at: float | None = None
 
         # Scheduled callback handles
         self._poll_timer: Callable | None = None
@@ -328,7 +324,7 @@ class SonosSpeaker:
             self._subscription_lock = asyncio.Lock()
 
         async with self._subscription_lock:
-            if self._subscriptions or self._in_cooldown:
+            if self._subscriptions:
                 return
             await self._async_subscribe()
 
@@ -509,6 +505,16 @@ class SonosSpeaker:
     @callback
     def speaker_activity(self, source):
         """Track the last activity on this speaker, set availability and resubscribe."""
+        if self._resub_cooldown_expires_at:
+            if time.monotonic() < self._resub_cooldown_expires_at:
+                _LOGGER.debug(
+                    "Activity on %s from %s while in cooldown, ignoring",
+                    self.zone_name,
+                    source,
+                )
+                return
+            self._resub_cooldown_expires_at = None
+
         _LOGGER.debug("Activity on %s from %s", self.zone_name, source)
         self._last_activity = time.monotonic()
         self.activity_stats.activity(source, self._last_activity)
@@ -544,19 +550,16 @@ class SonosSpeaker:
         else:
             self.speaker_activity("timeout poll")
 
-    @callback
-    def async_clear_cooldown(self, now: datetime.datetime) -> None:
-        """Clear the cooldown flag."""
-        _LOGGER.debug("Subscription cooldown for %s expired", self.zone_name)
-        self._in_cooldown = False
-
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
         if not self.available:
             return
 
+        if self._resub_cooldown_expires_at is None and not self.hass.is_stopping:
+            self._resub_cooldown_expires_at = time.monotonic() + RESUB_COOLDOWN_SECONDS
+            _LOGGER.debug("Starting resubscription cooldown for %s", self.zone_name)
+
         self.available = False
-        self._in_cooldown = True
         self.async_write_entity_states()
 
         self._share_link_plugin = None
@@ -569,10 +572,6 @@ class SonosSpeaker:
             await self.async_unsubscribe()
 
         self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
-
-        if not self.hass.is_stopping:
-            _LOGGER.debug("Starting subscription cooldown timer for %s", self.zone_name)
-            async_call_later(self.hass, COOLDOWN_SECONDS, self.async_clear_cooldown)
 
     async def async_vanished(self, reason: str) -> None:
         """Handle removal of speaker when marked as vanished."""
