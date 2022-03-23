@@ -30,7 +30,13 @@ from .models import WizData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.NUMBER, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 REQUEST_REFRESH_DELAY = 0.35
 
@@ -46,6 +52,11 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     asyncio.create_task(_async_discovery())
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -117,6 +128,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator=coordinator, bulb=bulb, scenes=scenes
     )
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 

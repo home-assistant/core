@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -17,9 +18,10 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -48,7 +50,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Group Binary Sensor platform."""
+    """Set up the Binary Sensor Group platform."""
     async_add_entities(
         [
             BinarySensorGroup(
@@ -57,6 +59,27 @@ async def async_setup_platform(
                 config.get(CONF_DEVICE_CLASS),
                 config[CONF_ENTITIES],
                 config.get(CONF_ALL),
+            )
+        ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Binary Sensor Group config entry."""
+    registry = er.async_get(hass)
+    entities = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITIES]
+    )
+    mode = config_entry.options[CONF_ALL]
+
+    async_add_entities(
+        [
+            BinarySensorGroup(
+                config_entry.entry_id, config_entry.title, None, entities, mode
             )
         ]
     )
@@ -80,7 +103,6 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self._device_class = device_class
-        self._state: str | None = None
         self.mode = any
         if mode:
             self.mode = all
@@ -106,13 +128,23 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
     def async_update_group_state(self) -> None:
         """Query all members and determine the binary sensor group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
+
+        # filtered_states are members currently in the state machine
         filtered_states: list[str] = [x.state for x in all_states if x is not None]
+
+        # Set group as unavailable if all members are unavailable
         self._attr_available = any(
             state != STATE_UNAVAILABLE for state in filtered_states
         )
-        if STATE_UNAVAILABLE in filtered_states:
+
+        valid_state = self.mode(
+            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in filtered_states
+        )
+        if not valid_state:
+            # Set as unknown if any / all member is not unknown or unavailable
             self._attr_is_on = None
         else:
+            # Set as ON if any / all member is ON
             states = list(map(lambda x: x == STATE_ON, filtered_states))
             state = self.mode(states)
             self._attr_is_on = state

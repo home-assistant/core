@@ -6,13 +6,12 @@ import binascii
 from collections.abc import Callable
 import copy
 import logging
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import RFXtrx as rfxtrxmod
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -43,13 +42,11 @@ from .const import (
     CONF_PROTOCOLS,
     DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
+    DOMAIN,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
 )
 
-DOMAIN = "rfxtrx"
-
-DEFAULT_SIGNAL_REPETITIONS = 1
 DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
@@ -87,9 +84,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -163,7 +158,7 @@ def _get_device_lookup(devices):
     return lookup
 
 
-async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
+async def async_setup_internal(hass, entry: ConfigEntry):
     """Set up the RFXtrx component."""
     config = entry.data
 
@@ -245,11 +240,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         devices[device_id] = config
 
     @callback
-    def _remove_device(event: Event):
-        if event.data["action"] != "remove":
-            return
-        device_entry = device_registry.deleted_devices[event.data["device_id"]]
-        device_id = next(iter(device_entry.identifiers))[1:]
+    def _remove_device(device_id: DeviceTuple):
         data = {
             **entry.data,
             CONF_DEVICES: {
@@ -261,8 +252,19 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         hass.config_entries.async_update_entry(entry=entry, data=data)
         devices.pop(device_id)
 
+    @callback
+    def _updated_device(event: Event):
+        if event.data["action"] != "remove":
+            return
+        device_entry = device_registry.deleted_devices[event.data["device_id"]]
+        if entry.entry_id not in device_entry.config_entries:
+            return
+        device_id = get_device_tuple_from_identifiers(device_entry.identifiers)
+        if device_id:
+            _remove_device(device_id)
+
     entry.async_on_unload(
-        hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, _remove_device)
+        hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
     )
 
     def _shutdown_rfxtrx(event):
@@ -285,7 +287,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
 
 async def async_setup_platform_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     supported: Callable[[rfxtrxmod.RFXtrxEvent], bool],
     constructor: Callable[
@@ -429,6 +431,18 @@ def get_device_id(
     return DeviceTuple(f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
+def get_device_tuple_from_identifiers(
+    identifiers: set[tuple[str, str]]
+) -> DeviceTuple | None:
+    """Calculate the device tuple from a device entry."""
+    identifier = next((x for x in identifiers if x[0] == DOMAIN), None)
+    if not identifier:
+        return None
+    # work around legacy identifier, being a multi tuple value
+    identifier2 = cast(tuple[str, str, str, str], identifier)
+    return DeviceTuple(identifier2[1], identifier2[2], identifier2[3])
+
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
 ) -> bool:
@@ -546,15 +560,12 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
-        signal_repetitions: int = 1,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
-        self.signal_repetitions = signal_repetitions
         self._state: bool | None = None
 
     async def _async_send(self, fun, *args):
         rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]
-        for _ in range(self.signal_repetitions):
-            await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)
+        await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

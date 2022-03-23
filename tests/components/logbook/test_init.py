@@ -43,7 +43,11 @@ from tests.common import (
     async_init_recorder_component,
     mock_platform,
 )
-from tests.components.recorder.common import trigger_db_commit
+from tests.components.recorder.common import (
+    async_trigger_db_commit,
+    async_wait_recording_done_without_instance,
+    trigger_db_commit,
+)
 
 EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 
@@ -54,6 +58,12 @@ async def hass_(hass):
     await async_init_recorder_component(hass)  # Force an in memory DB
     assert await async_setup_component(hass, logbook.DOMAIN, EMPTY_CONFIG)
     return hass
+
+
+@pytest.fixture()
+def set_utc(hass):
+    """Set timezone to UTC."""
+    hass.config.set_time_zone("UTC")
 
 
 async def test_service_call_create_logbook_entry(hass_):
@@ -280,12 +290,14 @@ def create_state_changed_event_from_old_new(
             "attributes"
             "state_id",
             "old_state_id",
+            "shared_attrs",
         ],
     )
 
     row.event_type = EVENT_STATE_CHANGED
     row.event_data = "{}"
     row.attributes = attributes_json
+    row.shared_attrs = attributes_json
     row.time_fired = event_time_fired
     row.state = new_state and new_state.get("state")
     row.entity_id = entity_id
@@ -308,7 +320,7 @@ async def test_logbook_view(hass, hass_client):
     assert response.status == HTTPStatus.OK
 
 
-async def test_logbook_view_period_entity(hass, hass_client):
+async def test_logbook_view_period_entity(hass, hass_client, set_utc):
     """Test the logbook view with period and entity."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, "logbook", {})
@@ -636,7 +648,45 @@ async def test_logbook_entity_filter_with_automations(hass, hass_client):
     assert json_dict[0]["entity_id"] == entity_id_second
 
 
-async def test_filter_continuous_sensor_values(hass, hass_client):
+async def test_logbook_entity_no_longer_in_state_machine(hass, hass_client):
+    """Test the logbook view with an entity that hass been removed from the state machine."""
+    await async_init_recorder_component(hass)
+    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, "automation", {})
+    await async_setup_component(hass, "script", {})
+
+    await async_wait_recording_done_without_instance(hass)
+
+    entity_id_test = "alarm_control_panel.area_001"
+    hass.states.async_set(
+        entity_id_test, STATE_OFF, {ATTR_FRIENDLY_NAME: "Alarm Control Panel"}
+    )
+    hass.states.async_set(
+        entity_id_test, STATE_ON, {ATTR_FRIENDLY_NAME: "Alarm Control Panel"}
+    )
+
+    async_trigger_db_commit(hass)
+    await async_wait_recording_done_without_instance(hass)
+
+    hass.states.async_remove(entity_id_test)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+    assert json_dict[0]["name"] == "Alarm Control Panel"
+
+
+async def test_filter_continuous_sensor_values(hass, hass_client, set_utc):
     """Test remove continuous sensor events from logbook."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, "logbook", {})
@@ -672,7 +722,7 @@ async def test_filter_continuous_sensor_values(hass, hass_client):
     assert response_json[1]["entity_id"] == entity_id_third
 
 
-async def test_exclude_new_entities(hass, hass_client):
+async def test_exclude_new_entities(hass, hass_client, set_utc):
     """Test if events are excluded on first update."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, "logbook", {})
@@ -707,7 +757,7 @@ async def test_exclude_new_entities(hass, hass_client):
     assert response_json[1]["message"] == "started"
 
 
-async def test_exclude_removed_entities(hass, hass_client):
+async def test_exclude_removed_entities(hass, hass_client, set_utc):
     """Test if events are excluded on last update."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, "logbook", {})
@@ -749,7 +799,7 @@ async def test_exclude_removed_entities(hass, hass_client):
     assert response_json[2]["entity_id"] == entity_id2
 
 
-async def test_exclude_attribute_changes(hass, hass_client):
+async def test_exclude_attribute_changes(hass, hass_client, set_utc):
     """Test if events of attribute changes are filtered."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, "logbook", {})

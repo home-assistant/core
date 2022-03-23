@@ -31,11 +31,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class SteamEntity(CoordinatorEntity):
+class SteamEntity(CoordinatorEntity[SteamDataUpdateCoordinator]):
     """Representation of a Steam entity."""
 
     _attr_attribution = "Data provided by Steam"
-    coordinator: SteamDataUpdateCoordinator
 
     def __init__(self, coordinator: SteamDataUpdateCoordinator) -> None:
         """Initialize a Steam entity."""

@@ -182,7 +182,7 @@ async def test_api_increase_color_temp(hass, result, initial):
 @pytest.mark.parametrize(
     "domain,payload,source_list,idx",
     [
-        ("media_player", "GAME CONSOLE", ["tv", "game console"], 1),
+        ("media_player", "GAME CONSOLE", ["tv", "game console", 10000], 1),
         ("media_player", "SATELLITE TV", ["satellite-tv", "game console"], 0),
         ("media_player", "SATELLITE TV", ["satellite_tv", "game console"], 0),
         ("media_player", "BAD DEVICE", ["satellite_tv", "game console"], None),

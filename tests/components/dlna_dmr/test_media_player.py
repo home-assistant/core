@@ -9,7 +9,7 @@ from types import MappingProxyType
 from typing import Any
 from unittest.mock import ANY, DEFAULT, Mock, patch
 
-from async_upnp_client import UpnpService, UpnpStateVariable
+from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.exceptions import (
     UpnpConnectionError,
     UpnpError,
@@ -961,6 +961,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_video in response["result"]["children"]
 
@@ -972,6 +973,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_audio in response["result"]["children"]
 

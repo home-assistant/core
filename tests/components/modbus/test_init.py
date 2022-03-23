@@ -21,6 +21,7 @@ from pymodbus.pdu import ExceptionResponse, IllegalFunctionRequest
 import pytest
 import voluptuous as vol
 
+from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
@@ -42,6 +43,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
+    CONF_SLAVE_COUNT,
     CONF_STOPBITS,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -82,6 +84,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -98,7 +101,7 @@ from .conftest import (
     ReadResult,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, get_fixture_path
 
 
 @pytest.fixture(name="mock_modbus_with_pymodbus")
@@ -176,7 +179,7 @@ async def test_ok_struct_validator(do_config):
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 8,
-            CONF_DATA_TYPE: DataType.INT,
+            CONF_DATA_TYPE: "int",
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
@@ -208,6 +211,13 @@ async def test_ok_struct_validator(do_config):
             CONF_DATA_TYPE: DataType.STRING,
             CONF_STRUCTURE: ">f",
             CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 2,
+            CONF_DATA_TYPE: DataType.CUSTOM,
+            CONF_STRUCTURE: ">f",
+            CONF_SLAVE_COUNT: 5,
         },
     ],
 )
@@ -816,3 +826,43 @@ async def test_stop_restart(hass, caplog, mock_modbus):
     assert mock_modbus.connect.called
     assert f"modbus {TEST_MODBUS_NAME} communication closed" in caplog.text
     assert f"modbus {TEST_MODBUS_NAME} communication open" in caplog.text
+
+
+@pytest.mark.parametrize("do_config", [{}])
+async def test_write_no_client(hass, mock_modbus):
+    """Run test for service stop and write without client."""
+
+    mock_modbus.reset()
+    data = {
+        ATTR_HUB: TEST_MODBUS_NAME,
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_STOP, data, blocking=True)
+    await hass.async_block_till_done()
+    assert mock_modbus.close.called
+
+    data = {
+        ATTR_HUB: TEST_MODBUS_NAME,
+        ATTR_UNIT: 17,
+        ATTR_ADDRESS: 16,
+        ATTR_STATE: True,
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
+
+
+@pytest.mark.parametrize("do_config", [{}])
+async def test_integration_reload(hass, caplog, mock_modbus):
+    """Run test for integration reload."""
+
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+
+    yaml_path = get_fixture_path("configuration.yaml", "modbus")
+    now = dt_util.utcnow()
+    with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+        for i in range(4):
+            now = now + timedelta(seconds=1)
+            async_fire_time_changed(hass, now)
+            await hass.async_block_till_done()
+    assert "Modbus reloading" in caplog.text

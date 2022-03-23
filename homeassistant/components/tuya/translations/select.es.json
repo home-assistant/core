@@ -19,6 +19,10 @@
             "6h": "6 horas",
             "cancel": "Cancelar"
         },
+        "tuya__curtain_mode": {
+            "morning": "Ma\u00f1ana",
+            "night": "Noche"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Sensibilidad baja",
             "1": "Sensibilidad alta"

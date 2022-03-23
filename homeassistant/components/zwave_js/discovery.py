@@ -34,6 +34,7 @@ from zwave_js_server.const.command_class.sound_switch import (
 )
 from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
+    THERMOSTAT_FAN_MODE_PROPERTY,
     THERMOSTAT_MODE_PROPERTY,
     THERMOSTAT_SETPOINT_PROPERTY,
 )
@@ -48,10 +49,11 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
-    ConfigurableFanSpeedDataTemplate,
+    ConfigurableFanValueMappingDataTemplate,
     CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
-    FixedFanSpeedDataTemplate,
+    FanValueMapping,
+    FixedFanValueMappingDataTemplate,
     NumericSensorDataTemplate,
     ZwaveValueID,
 )
@@ -238,25 +240,25 @@ DISCOVERY_SCHEMAS = [
     # GE/Jasco - In-Wall Smart Fan Control - 12730 / ZW4002
     ZWaveDiscoverySchema(
         platform="fan",
-        hint="configured_fan_speed",
+        hint="has_fan_value_mapping",
         manufacturer_id={0x0063},
         product_id={0x3034},
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-        data_template=FixedFanSpeedDataTemplate(
-            speeds=[33, 67, 99],
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 33), (34, 67), (68, 99)]),
         ),
     ),
     # GE/Jasco - In-Wall Smart Fan Control - 14287 / ZW4002
     ZWaveDiscoverySchema(
         platform="fan",
-        hint="configured_fan_speed",
+        hint="has_fan_value_mapping",
         manufacturer_id={0x0063},
         product_id={0x3131},
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-        data_template=FixedFanSpeedDataTemplate(
-            speeds=[32, 66, 99],
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 32), (33, 66), (67, 99)]),
         ),
     ),
     # GE/Jasco - In-Wall Smart Fan Control - 14314 / ZW4002
@@ -279,6 +281,7 @@ DISCOVERY_SCHEMAS = [
     # The fan is endpoint 2, the light is endpoint 1.
     ZWaveDiscoverySchema(
         platform="fan",
+        hint="has_fan_value_mapping",
         manufacturer_id={0x031E},
         product_id={0x0001},
         product_type={0x000E},
@@ -288,20 +291,28 @@ DISCOVERY_SCHEMAS = [
             property={CURRENT_VALUE_PROPERTY},
             type={"number"},
         ),
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(
+                presets={1: "breeze"}, speeds=[(2, 33), (34, 66), (67, 99)]
+            ),
+        ),
     ),
     # HomeSeer HS-FC200+
     ZWaveDiscoverySchema(
         platform="fan",
-        hint="configured_fan_speed",
+        hint="has_fan_value_mapping",
         manufacturer_id={0x000C},
         product_id={0x0001},
         product_type={0x0203},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-        data_template=ConfigurableFanSpeedDataTemplate(
+        data_template=ConfigurableFanValueMappingDataTemplate(
             configuration_option=ZwaveValueID(
                 5, CommandClass.CONFIGURATION, endpoint=0
             ),
-            configuration_value_to_speeds={0: [33, 66, 99], 1: [24, 49, 74, 99]},
+            configuration_value_to_fan_value_mapping={
+                0: FanValueMapping(speeds=[(1, 33), (34, 66), (67, 99)]),
+                1: FanValueMapping(speeds=[(1, 24), (25, 49), (50, 74), (75, 99)]),
+            },
         ),
     ),
     # Fibaro Shutter Fibaro FGR222
@@ -509,6 +520,17 @@ DISCOVERY_SCHEMAS = [
             property={DOOR_STATUS_PROPERTY},
             type={"any"},
         ),
+    ),
+    # thermostat fan
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="thermostat_fan",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.THERMOSTAT_FAN_MODE},
+            property={THERMOSTAT_FAN_MODE_PROPERTY},
+            type={"number"},
+        ),
+        entity_registry_enabled_default=False,
     ),
     # humidifier
     # hygrostats supporting mode (and optional setpoint)

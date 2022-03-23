@@ -91,3 +91,4 @@ def test_normalize_url():
         network_util.normalize_url("https://example.com:443/test/")
         == "https://example.com/test"
     )
+    assert network_util.normalize_url("/test/") == "/test"

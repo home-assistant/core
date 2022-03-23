@@ -1,7 +1,7 @@
 {
     "state": {
         "_": {
-            "idle": "En veille",
+            "idle": "Inactif",
             "recording": "Enregistrement",
             "streaming": "Diffusion en cours"
         }

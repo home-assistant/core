@@ -663,6 +663,28 @@ async def test_device_tracker_registered(hass):
     await hass.async_block_till_done()
 
 
+async def test_device_tracker_registered_hostname_none(hass):
+    """Test handle None hostname."""
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerRegisteredWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        await device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        async_dispatcher_send(
+            hass,
+            CONNECTED_DEVICE_REGISTERED,
+            {"ip": "192.168.210.56", "mac": "b8b7f16db533", "host_name": None},
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 0
+    await device_tracker_watcher.async_stop()
+    await hass.async_block_till_done()
+
+
 async def test_device_tracker_hostname_and_macaddress_after_start(hass):
     """Test matching based on hostname and macaddress after start."""
 

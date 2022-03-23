@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
-from rokuecp import RokuError
+from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.media_player.const import (
@@ -164,10 +164,15 @@ async def test_tv_setup(
     assert device_entry.suggested_area == "Living room"
 
 
+@pytest.mark.parametrize(
+    "error",
+    [RokuConnectionTimeoutError, RokuConnectionError, RokuError],
+)
 async def test_availability(
     hass: HomeAssistant,
     mock_roku: MagicMock,
     mock_config_entry: MockConfigEntry,
+    error: RokuError,
 ) -> None:
     """Test entity availability."""
     now = dt_util.utcnow()
@@ -179,7 +184,7 @@ async def test_availability(
         await hass.async_block_till_done()
 
     with patch("homeassistant.util.dt.utcnow", return_value=future):
-        mock_roku.update.side_effect = RokuError
+        mock_roku.update.side_effect = error
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
         assert hass.states.get(MAIN_ENTITY_ID).state == STATE_UNAVAILABLE
@@ -759,7 +764,10 @@ async def test_media_browse(
     assert msg["result"]["children"][0]["title"] == "Roku Channel Store"
     assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
     assert msg["result"]["children"][0]["media_content_id"] == "11"
-    assert "/browse_media/app/11" in msg["result"]["children"][0]["thumbnail"]
+    assert (
+        msg["result"]["children"][0]["thumbnail"]
+        == "http://192.168.1.160:8060/query/icon/11"
+    )
     assert msg["result"]["children"][0]["can_play"]
 
     # test invalid media type
@@ -1016,14 +1024,18 @@ async def test_tv_media_browse(
     assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
     assert msg["result"]["children"][0]["media_content_id"] == "tvinput.hdmi2"
     assert (
-        "/browse_media/app/tvinput.hdmi2" in msg["result"]["children"][0]["thumbnail"]
+        msg["result"]["children"][0]["thumbnail"]
+        == "http://192.168.1.160:8060/query/icon/tvinput.hdmi2"
     )
     assert msg["result"]["children"][0]["can_play"]
 
     assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
     assert msg["result"]["children"][3]["media_content_type"] == MEDIA_TYPE_APP
     assert msg["result"]["children"][3]["media_content_id"] == "11"
-    assert "/browse_media/app/11" in msg["result"]["children"][3]["thumbnail"]
+    assert (
+        msg["result"]["children"][3]["thumbnail"]
+        == "http://192.168.1.160:8060/query/icon/11"
+    )
     assert msg["result"]["children"][3]["can_play"]
 
     # test channels

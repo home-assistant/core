@@ -1,33 +1,108 @@
 """Support for powerwall sensors."""
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
 
 from tesla_powerwall import Meter, MeterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, PERCENTAGE, POWER_KILO_WATT
+from homeassistant.const import (
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
+    FREQUENCY_HERTZ,
+    PERCENTAGE,
+    POWER_KILO_WATT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_FREQUENCY,
-    ATTR_INSTANT_AVERAGE_VOLTAGE,
-    ATTR_INSTANT_TOTAL_CURRENT,
-    ATTR_IS_ACTIVE,
-    DOMAIN,
-    POWERWALL_COORDINATOR,
-)
+from .const import DOMAIN, POWERWALL_COORDINATOR
 from .entity import PowerWallEntity
 from .models import PowerwallData, PowerwallRuntimeData
 
 _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
+
+
+@dataclass
+class PowerwallRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[Meter], float]
+
+
+@dataclass
+class PowerwallSensorEntityDescription(
+    SensorEntityDescription, PowerwallRequiredKeysMixin
+):
+    """Describes Powerwall entity."""
+
+
+def _get_meter_power(meter: Meter) -> float:
+    """Get the current value in kW."""
+    return meter.get_power(precision=3)
+
+
+def _get_meter_frequency(meter: Meter) -> float:
+    """Get the current value in Hz."""
+    return round(meter.frequency, 1)
+
+
+def _get_meter_total_current(meter: Meter) -> float:
+    """Get the current value in A."""
+    return meter.get_instant_total_current()
+
+
+def _get_meter_average_voltage(meter: Meter) -> float:
+    """Get the current value in V."""
+    return round(meter.average_voltage, 1)
+
+
+POWERWALL_INSTANT_SENSORS = (
+    PowerwallSensorEntityDescription(
+        key="instant_power",
+        name="Now",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_KILO_WATT,
+        value_fn=_get_meter_power,
+    ),
+    PowerwallSensorEntityDescription(
+        key="instant_frequency",
+        name="Frequency Now",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement=FREQUENCY_HERTZ,
+        entity_registry_enabled_default=False,
+        value_fn=_get_meter_frequency,
+    ),
+    PowerwallSensorEntityDescription(
+        key="instant_current",
+        name="Average Current Now",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        entity_registry_enabled_default=False,
+        value_fn=_get_meter_total_current,
+    ),
+    PowerwallSensorEntityDescription(
+        key="instant_voltage",
+        name="Average Voltage Now",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        entity_registry_enabled_default=False,
+        value_fn=_get_meter_average_voltage,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -40,20 +115,17 @@ async def async_setup_entry(
     coordinator = powerwall_data[POWERWALL_COORDINATOR]
     assert coordinator is not None
     data: PowerwallData = coordinator.data
-    entities: list[
-        PowerWallEnergySensor
-        | PowerWallImportSensor
-        | PowerWallExportSensor
-        | PowerWallChargeSensor
-    ] = [PowerWallChargeSensor(powerwall_data)]
+    entities: list[PowerWallEntity] = [
+        PowerWallChargeSensor(powerwall_data),
+        PowerWallBackupReserveSensor(powerwall_data),
+    ]
 
     for meter in data.meters.meters:
+        entities.append(PowerWallExportSensor(powerwall_data, meter))
+        entities.append(PowerWallImportSensor(powerwall_data, meter))
         entities.extend(
-            [
-                PowerWallEnergySensor(powerwall_data, meter),
-                PowerWallExportSensor(powerwall_data, meter),
-                PowerWallImportSensor(powerwall_data, meter),
-            ]
+            PowerWallEnergySensor(powerwall_data, meter, description)
+            for description in POWERWALL_INSTANT_SENSORS
         )
 
     async_add_entities(entities)
@@ -81,40 +153,52 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
 class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Energy sensor."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = POWER_KILO_WATT
-    _attr_device_class = SensorDeviceClass.POWER
+    entity_description: PowerwallSensorEntityDescription
 
-    def __init__(self, powerwall_data: PowerwallRuntimeData, meter: MeterType) -> None:
+    def __init__(
+        self,
+        powerwall_data: PowerwallRuntimeData,
+        meter: MeterType,
+        description: PowerwallSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
+        self.entity_description = description
         super().__init__(powerwall_data)
         self._meter = meter
-        self._attr_name = f"Powerwall {self._meter.value.title()} Now"
+        self._attr_name = f"Powerwall {self._meter.value.title()} {description.name}"
         self._attr_unique_id = (
-            f"{self.base_unique_id}_{self._meter.value}_instant_power"
+            f"{self.base_unique_id}_{self._meter.value}_{description.key}"
         )
 
     @property
     def native_value(self) -> float:
-        """Get the current value in kW."""
-        return self.data.meters.get_meter(self._meter).get_power(precision=3)
+        """Get the current value."""
+        return self.entity_description.value_fn(self.data.meters.get_meter(self._meter))
+
+
+class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
+    """Representation of the Powerwall backup reserve setting."""
+
+    _attr_name = "Powerwall Backup Reserve"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.BATTERY
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the device specific state attributes."""
-        meter = self.data.meters.get_meter(self._meter)
-        return {
-            ATTR_FREQUENCY: round(meter.frequency, 1),
-            ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.average_voltage, 1),
-            ATTR_INSTANT_TOTAL_CURRENT: meter.get_instant_total_current(),
-            ATTR_IS_ACTIVE: meter.is_active(),
-        }
+    def unique_id(self) -> str:
+        """Device Uniqueid."""
+        return f"{self.base_unique_id}_backup_reserve"
+
+    @property
+    def native_value(self) -> int:
+        """Get the current value in percentage."""
+        return round(self.data.backup_reserve)
 
 
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
 
@@ -160,7 +244,7 @@ class PowerWallExportSensor(PowerWallEnergyDirectionSensor):
     @property
     def native_value(self) -> float:
         """Get the current value in kWh."""
-        return abs(self.meter.get_energy_exported())
+        return self.meter.get_energy_exported()
 
 
 class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
@@ -177,4 +261,4 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
     @property
     def native_value(self) -> float:
         """Get the current value in kWh."""
-        return abs(self.meter.get_energy_imported())
+        return self.meter.get_energy_imported()

@@ -131,9 +131,9 @@ async def test_connect(hass):
     entry_data = create_rfx_test_cfg(device="/dev/ttyUSBfake")
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    with patch.object(rfxtrxmod, "Connect") as connect:
-        mock_entry.add_to_hass(hass)
+    mock_entry.add_to_hass(hass)
 
+    with patch.object(rfxtrxmod, "Connect") as connect:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -145,9 +145,9 @@ async def test_connect_with_protocols(hass):
     entry_data = create_rfx_test_cfg(device="/dev/ttyUSBfake", protocols=SOME_PROTOCOLS)
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    with patch.object(rfxtrxmod, "Connect") as connect:
-        mock_entry.add_to_hass(hass)
+    mock_entry.add_to_hass(hass)
 
+    with patch.object(rfxtrxmod, "Connect") as connect:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
