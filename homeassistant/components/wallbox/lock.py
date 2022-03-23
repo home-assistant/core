@@ -29,7 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Create wallbox sensor entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-    # Check if the user is authorized to lock, if so, add lock component:
+    # Check if the user is authorized to lock, if so, add lock component
     try:
         await coordinator.async_set_lock_unlock(
             coordinator.data[CONF_LOCKED_UNLOCKED_KEY]
