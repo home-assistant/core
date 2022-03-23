@@ -32,8 +32,7 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             email = user_input[CONF_EMAIL].lower()
             password = user_input[CONF_PASSWORD]
 
-            if self.context["source"] != config_entries.SOURCE_REAUTH:
-                self._async_abort_entries_match({CONF_EMAIL: email})
+            self._async_abort_entries_match({CONF_EMAIL: email})
             user_id, error = await self._async_validate_input(email, password)
             if error is None:
                 await self.async_set_unique_id(user_id)

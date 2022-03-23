@@ -120,11 +120,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class SkybellEntity(CoordinatorEntity):
+class SkybellEntity(CoordinatorEntity[SkybellDataUpdateCoordinator]):
     """An HA implementation for Skybell entity."""
 
     _attr_attribution = "Data provided by Skybell.com"
-    coordinator: SkybellDataUpdateCoordinator
 
     def __init__(self, coordinator: SkybellDataUpdateCoordinator) -> None:
         """Initialize a SkyBell entity."""

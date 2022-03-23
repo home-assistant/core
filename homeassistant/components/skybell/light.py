@@ -32,7 +32,6 @@ class SkybellLight(SkybellEntity, LightEntity):
     """A light implementation for Skybell devices."""
 
     _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS, COLOR_MODE_RGB}
-    coordinator: SkybellDataUpdateCoordinator
 
     def __init__(
         self,

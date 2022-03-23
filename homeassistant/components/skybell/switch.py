@@ -56,8 +56,6 @@ async def async_setup_entry(
 class SkybellSwitch(SkybellEntity, SwitchEntity):
     """A switch implementation for Skybell devices."""
 
-    coordinator: SkybellDataUpdateCoordinator
-
     def __init__(
         self,
         coordinator: SkybellDataUpdateCoordinator,

@@ -50,8 +50,6 @@ async def async_setup_entry(
 class SkybellCamera(SkybellEntity, Camera):
     """A camera implementation for Skybell devices."""
 
-    coordinator: SkybellDataUpdateCoordinator
-
     def __init__(
         self,
         coordinator: SkybellDataUpdateCoordinator,
