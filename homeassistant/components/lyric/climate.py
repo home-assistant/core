@@ -223,16 +223,26 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         device = self.device
-        if device.changeableValues.autoChangeoverActive:
-            return device.changeableValues.coolSetpoint
+        if (
+            device.changeableValues.autoChangeoverActive
+            and HVAC_MODES[device.changeableValues.mode] != HVAC_MODE_OFF
+        ):
+            if device.changeableValues.autoChangeoverActive:
+                return device.changeableValues.coolSetpoint
+            return None
         return None
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         device = self.device
-        if device.changeableValues.autoChangeoverActive:
-            return device.changeableValues.heatSetpoint
+        if (
+            device.changeableValues.autoChangeoverActive
+            and HVAC_MODES[device.changeableValues.mode] != HVAC_MODE_OFF
+        ):
+            if device.changeableValues.autoChangeoverActive:
+                return device.changeableValues.heatSetpoint
+            return None
         return None
 
     @property
