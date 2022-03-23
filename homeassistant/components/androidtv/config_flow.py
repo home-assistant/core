@@ -74,7 +74,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize AndroidTV config flow."""
-        self._import_options = None
+        self._import_config = None
 
     @callback
     def _show_setup_form(self, user_input=None, error=None):
@@ -139,6 +139,9 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         error = None
 
+        if self._import_config and not user_input:
+            user_input = self._import_config
+
         if user_input is not None:
             host = user_input[CONF_HOST]
             adb_key = user_input.get(CONF_ADBKEY)
@@ -171,7 +174,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME) or host,
                     data=user_input,
-                    options=self._import_options,
+                    options=self._import_config.pop(CONF_MIGRATION_OPTIONS, None),
                 )
 
         user_input = user_input or {}
@@ -186,7 +189,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     import_config[CONF_HOST],
                 )
                 return self.async_abort(reason="already_configured")
-        self._import_options = import_config.pop(CONF_MIGRATION_OPTIONS, None)
+        self._import_config = import_config
         return await self.async_step_user(import_config)
 
     @staticmethod
