@@ -3,7 +3,7 @@ import os
 
 from adb_shell.auth.keygen import keygen
 from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
-from androidtv.setup_async import setup
+from androidtv.setup_async import setup as async_androidtv_setup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +18,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ANDROID_DEV,
@@ -83,7 +82,7 @@ async def async_connect_androidtv(
         _setup_androidtv, hass, config
     )
 
-    aftv = await setup(
+    aftv = await async_androidtv_setup(
         config[CONF_HOST],
         config[CONF_PORT],
         adbkey,
@@ -108,11 +107,6 @@ async def async_connect_androidtv(
         return None, error_message
 
     return aftv, None
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Android TV integration."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
