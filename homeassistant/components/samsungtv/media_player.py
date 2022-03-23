@@ -192,6 +192,10 @@ class SamsungTVDevice(MediaPlayerEntity):
 
         if self._attr_state == STATE_ON and not self._app_list_event.is_set():
             await self._bridge.async_request_app_list()
+            if self._app_list_event.is_set():
+                # The try+wait_for is a bit expensive so we should try not to
+                # enter it unless we have to (Python 3.11 will have zero cost try)
+                return
             try:
                 await asyncio.wait_for(self._app_list_event.wait(), APP_LIST_DELAY)
             except asyncio.TimeoutError as err:
