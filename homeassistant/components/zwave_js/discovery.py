@@ -55,8 +55,8 @@ from .discovery_data_template import (
     FanValueMapping,
     FixedFanValueMappingDataTemplate,
     NumericSensorDataTemplate,
-    ZwaveValueID,
 )
+from .helpers import ZwaveValueID
 
 
 class DataclassMustHaveAtLeastOne:
@@ -307,7 +307,7 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=ConfigurableFanValueMappingDataTemplate(
             configuration_option=ZwaveValueID(
-                5, CommandClass.CONFIGURATION, endpoint=0
+                property_=5, command_class=CommandClass.CONFIGURATION, endpoint=0
             ),
             configuration_value_to_fan_value_mapping={
                 0: FanValueMapping(speeds=[(1, 33), (34, 66), (67, 99)]),
@@ -325,8 +325,8 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=CoverTiltDataTemplate(
             tilt_value_id=ZwaveValueID(
-                "fibaro",
-                CommandClass.MANUFACTURER_PROPRIETARY,
+                property_="fibaro",
+                command_class=CommandClass.MANUFACTURER_PROPRIETARY,
                 endpoint=0,
                 property_key="venetianBlindsTilt",
             )
@@ -391,34 +391,36 @@ DISCOVERY_SCHEMAS = [
             lookup_table={
                 # Internal Sensor
                 "A": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=2,
                 ),
                 "AF": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=2,
                 ),
                 # External Sensor
                 "A2": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=3,
                 ),
                 "A2F": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=3,
                 ),
                 # Floor sensor
                 "F": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=4,
                 ),
             },
-            dependent_value=ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+            dependent_value=ZwaveValueID(
+                property_=2, command_class=CommandClass.CONFIGURATION, endpoint=0
+            ),
         ),
     ),
     # Heatit Z-TRM2fx
@@ -438,23 +440,25 @@ DISCOVERY_SCHEMAS = [
             lookup_table={
                 # External Sensor
                 "A2": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=2,
                 ),
                 "A2F": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=2,
                 ),
                 # Floor sensor
                 "F": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=3,
                 ),
             },
-            dependent_value=ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+            dependent_value=ZwaveValueID(
+                property_=2, command_class=CommandClass.CONFIGURATION, endpoint=0
+            ),
         ),
     ),
     # FortrezZ SSA1/SSA2/SSA3

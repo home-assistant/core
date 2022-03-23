@@ -1,12 +1,16 @@
 """Provides diagnostics for Z-Wave JS."""
 from __future__ import annotations
 
+from dataclasses import astuple
 from typing import Any
 
 from zwave_js_server.client import Client
+from zwave_js_server.const import CommandClass
 from zwave_js_server.dump import dump_msgs
 from zwave_js_server.model.node import Node, NodeDataType
+from zwave_js_server.model.value import ValueDataType
 
+from homeassistant.components.diagnostics.const import REDACTED
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -17,9 +21,43 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 
 from .const import DATA_CLIENT, DOMAIN
-from .helpers import get_home_and_node_id_from_device_entry
+from .helpers import ZwaveValueID, get_home_and_node_id_from_device_entry
 
-TO_REDACT = {"homeId", "location"}
+KEYS_TO_REDACT = {"homeId", "location"}
+
+VALUES_TO_REDACT = (
+    ZwaveValueID(property_="userCode", command_class=CommandClass.USER_CODE),
+)
+
+
+def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
+    """Redact value of a Z-Wave value."""
+    for value_to_redact in VALUES_TO_REDACT:
+        zwave_value_id = ZwaveValueID(
+            property_=zwave_value["property"],
+            command_class=CommandClass(zwave_value["commandClass"]),
+            endpoint=zwave_value["endpoint"],
+            property_key=zwave_value.get("propertyKey"),
+        )
+        if all(
+            redacted_field_val is None or redacted_field_val == zwave_value_field_val
+            for redacted_field_val, zwave_value_field_val in zip(
+                astuple(value_to_redact), astuple(zwave_value_id)
+            )
+        ):
+            return {**zwave_value, "value": REDACTED}
+    return zwave_value
+
+
+def redact_node_state(node_state: NodeDataType) -> NodeDataType:
+    """Redact node state."""
+    return {
+        **node_state,
+        "values": [
+            redact_value_of_zwave_value(zwave_value)
+            for zwave_value in node_state["values"]
+        ],
+    }
 
 
 def get_device_entities(
@@ -79,10 +117,16 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> list[dict]:
     """Return diagnostics for a config entry."""
-    msgs: list[dict] = await dump_msgs(
-        config_entry.data[CONF_URL], async_get_clientsession(hass)
+    msgs: list[dict] = async_redact_data(
+        await dump_msgs(config_entry.data[CONF_URL], async_get_clientsession(hass)),
+        KEYS_TO_REDACT,
     )
-    return async_redact_data(msgs, TO_REDACT)
+    handshake_msgs = msgs[:-1]
+    network_state = msgs[-1]
+    network_state["result"]["state"]["nodes"] = [
+        redact_node_state(node) for node in network_state["result"]["state"]["nodes"]
+    ]
+    return [*handshake_msgs, network_state]
 
 
 async def async_get_device_diagnostics(
@@ -104,5 +148,5 @@ async def async_get_device_diagnostics(
             "maxSchemaVersion": client.version.max_schema_version,
         },
         "entities": entities,
-        "state": async_redact_data(node.data, TO_REDACT),
+        "state": redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT)),
     }
