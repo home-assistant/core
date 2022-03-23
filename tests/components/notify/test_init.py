@@ -129,6 +129,81 @@ async def test_warn_template(hass, caplog):
     assert hass.states.get("persistent_notification.notification") is not None
 
 
+async def test_invalid_platform(hass, caplog, tmp_path):
+    """Test service setup with an invalid platform."""
+    loaded_platform = MockNotifyPlatform()
+    mock_platform(hass, "testnotify.notify", loaded_platform)
+    integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
+    integration.file_path = tmp_path
+    # Setup the second testnotify2 platform dynamically
+    await async_load_platform(
+        hass,
+        "notify",
+        "testnotify",
+        {"notify": [{"platform": "testnotify"}]},
+        hass_config={"notify": [{"platform": "testnotify"}]},
+    )
+    await hass.async_block_till_done()
+    assert "Invalid notify platform" in caplog.text
+
+
+async def test_invalid_service(hass, caplog, tmp_path):
+    """Test service setup with an invalid service object or platform."""
+
+    async def async_get_service(hass, config, discovery_info=None):
+        """Return None for an invalid notify service."""
+        return None
+
+    loaded_platform = MockNotifyPlatform(async_get_service=async_get_service)
+    mock_platform(hass, "testnotify.notify", loaded_platform)
+    integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
+    integration.file_path = tmp_path
+    # Setup the second testnotify2 platform dynamically
+    await async_load_platform(
+        hass,
+        "notify",
+        "testnotify",
+        {"notify": [{"platform": "testnotify"}]},
+        hass_config={"notify": [{"platform": "testnotify"}]},
+    )
+    await hass.async_block_till_done()
+    assert "Failed to initialize notification service testnotify" in caplog.text
+    caplog.clear()
+
+    await async_load_platform(
+        hass,
+        "notify",
+        "testnotifyinvalid",
+        {"notify": [{"platform": "testnotifyinvalid"}]},
+        hass_config={"notify": [{"platform": "testnotifyinvalid"}]},
+    )
+    await hass.async_block_till_done()
+    assert "Unknown notification service specified" in caplog.text
+
+
+async def test_platform_setup_with_error(hass, caplog, tmp_path):
+    """Test service setup with an invalid setup."""
+
+    async def async_get_service(hass, config, discovery_info=None):
+        """Return None for an invalid notify service."""
+        raise Exception("Setup error")
+
+    loaded_platform = MockNotifyPlatform(async_get_service=async_get_service)
+    mock_platform(hass, "testnotify.notify", loaded_platform)
+    integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
+    integration.file_path = tmp_path
+    # Setup the second testnotify2 platform dynamically
+    await async_load_platform(
+        hass,
+        "notify",
+        "testnotify",
+        {"notify": [{"platform": "testnotify"}]},
+        hass_config={"notify": [{"platform": "testnotify"}]},
+    )
+    await hass.async_block_till_done()
+    assert "Error setting up platform testnotify" in caplog.text
+
+
 async def test_setup_platform_and_reload(hass, caplog, tmp_path):
     """Test service setup and reload."""
     get_service_called = Mock()
