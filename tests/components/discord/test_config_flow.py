@@ -1,5 +1,6 @@
 """Test Discord config flow."""
 import nextcord
+from pytest import LogCaptureFixture
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.discord.const import DOMAIN
@@ -64,6 +65,15 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
+    with mocked_discord_info(), patch_discord_login():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_INPUT,
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"] == CONF_DATA
+
 
 async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
@@ -77,6 +87,15 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with mocked_discord_info(), patch_discord_login():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_INPUT,
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"] == CONF_DATA
 
 
 async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
@@ -92,8 +111,17 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
+    with mocked_discord_info(), patch_discord_login():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_INPUT,
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"] == CONF_DATA
 
-async def test_flow_import(hass: HomeAssistant) -> None:
+
+async def test_flow_import(hass: HomeAssistant, caplog: LogCaptureFixture) -> None:
     """Test an import flow."""
     with mocked_discord_info(), patch_discord_login():
         result = await hass.config_entries.flow.async_init(
@@ -105,6 +133,7 @@ async def test_flow_import(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"] == CONF_DATA
+    assert "Discord integration in YAML" in caplog.text
 
 
 async def test_flow_import_no_name(hass: HomeAssistant) -> None:
