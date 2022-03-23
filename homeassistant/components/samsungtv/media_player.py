@@ -1,6 +1,7 @@
 """Support for interface with an Samsung TV."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -26,14 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_METHOD,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component
 import homeassistant.helpers.config_validation as cv
@@ -51,7 +45,6 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
-    METHOD_ENCRYPTED_WEBSOCKET,
 )
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -74,6 +67,9 @@ SUPPORT_SAMSUNGTV = (
 SCAN_INTERVAL_PLUS_OFF_TIME = entity_component.DEFAULT_SCAN_INTERVAL + timedelta(
     seconds=5
 )
+
+# Max delay waiting for app_list to return, as some TVs simply ignore the request
+APP_LIST_DELAY = 3
 
 
 async def async_setup_entry(
@@ -119,11 +115,9 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
         self._app_list: dict[str, str] | None = None
+        self._app_list_event: asyncio.Event = asyncio.Event()
 
-        if config_entry.data.get(CONF_METHOD) != METHOD_ENCRYPTED_WEBSOCKET:
-            # Encrypted websockets currently only support ON/OFF status
-            self._attr_supported_features = SUPPORT_SAMSUNGTV
-
+        self._attr_supported_features = SUPPORT_SAMSUNGTV
         if self._on_script or self._mac:
             # Add turn-on if on_script or mac is available
             self._attr_supported_features |= SUPPORT_TURN_ON
@@ -145,7 +139,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._end_of_power_off: datetime | None = None
         self._bridge = bridge
         self._auth_failed = False
-        self._bridge.register_reauth_callback(self._access_denied)
+        self._bridge.register_reauth_callback(self.access_denied)
         self._bridge.register_app_list_callback(self._app_list_callback)
 
     def _update_sources(self) -> None:
@@ -157,8 +151,9 @@ class SamsungTVDevice(MediaPlayerEntity):
         """App list callback."""
         self._app_list = app_list
         self._update_sources()
+        self._app_list_event.set()
 
-    def _access_denied(self) -> None:
+    def access_denied(self) -> None:
         """Access denied callback."""
         LOGGER.debug("Access denied in getting remote object")
         self._auth_failed = True
@@ -183,6 +178,21 @@ class SamsungTVDevice(MediaPlayerEntity):
             self._attr_state = (
                 STATE_ON if await self._bridge.async_is_on() else STATE_OFF
             )
+
+        if self._attr_state == STATE_ON and not self._app_list_event.is_set():
+            await self._bridge.async_request_app_list()
+            if self._app_list_event.is_set():
+                # The try+wait_for is a bit expensive so we should try not to
+                # enter it unless we have to (Python 3.11 will have zero cost try)
+                return
+            try:
+                await asyncio.wait_for(self._app_list_event.wait(), APP_LIST_DELAY)
+            except asyncio.TimeoutError as err:
+                # No need to try again
+                self._app_list_event.set()
+                LOGGER.debug(
+                    "Failed to load app list from %s: %s", self._host, err.__repr__()
+                )
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
