@@ -37,21 +37,6 @@ from .helpers import (
     normalize_hue_transition,
 )
 
-ALLOWED_ERRORS = [
-    "device (groupedLight) has communication issues, command (on) may not have effect",
-    'device (groupedLight) is "soft off", command (on) may not have effect',
-    "device (light) has communication issues, command (on) may not have effect",
-    'device (light) is "soft off", command (on) may not have effect',
-    "device (grouped_light) has communication issues, command (.on) may not have effect",
-    'device (grouped_light) is "soft off", command (.on) may not have effect'
-    "device (grouped_light) has communication issues, command (.on.on) may not have effect",
-    'device (grouped_light) is "soft off", command (.on.on) may not have effect'
-    "device (light) has communication issues, command (.on) may not have effect",
-    'device (light) is "soft off", command (.on) may not have effect',
-    "device (light) has communication issues, command (.on.on) may not have effect",
-    'device (light) is "soft off", command (.on.on) may not have effect',
-]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -183,10 +168,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             and flash is None
         ):
             await self.bridge.async_request_call(
-                self.controller.set_state,
-                id=self.resource.id,
-                on=True,
-                allowed_errors=ALLOWED_ERRORS,
+                self.controller.set_state, id=self.resource.id, on=True
             )
             return
 
@@ -202,7 +184,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                     color_xy=xy_color if light.supports_color else None,
                     color_temp=color_temp if light.supports_color_temperature else None,
                     transition_time=transition,
-                    allowed_errors=ALLOWED_ERRORS,
                 )
                 for light in self.controller.get_lights(self.resource.id)
             ]
@@ -222,10 +203,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         # To set other features, you'll have to control the attached lights
         if transition is None:
             await self.bridge.async_request_call(
-                self.controller.set_state,
-                id=self.resource.id,
-                on=False,
-                allowed_errors=ALLOWED_ERRORS,
+                self.controller.set_state, id=self.resource.id, on=False
             )
             return
 
@@ -237,7 +215,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                     light.id,
                     on=False,
                     transition_time=transition,
-                    allowed_errors=ALLOWED_ERRORS,
                 )
                 for light in self.controller.get_lights(self.resource.id)
             ]

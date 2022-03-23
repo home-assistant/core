@@ -117,10 +117,10 @@ async def test_update(hass: HomeAssistant) -> None:
     assert update.entity_category is EntityCategory.DIAGNOSTIC
 
     with pytest.raises(NotImplementedError):
-        await update.async_install()
+        await update.async_install(version=None, backup=True)
 
     with pytest.raises(NotImplementedError):
-        update.install()
+        update.install(version=None, backup=False)
 
     update.install = MagicMock()
     await update.async_install(version="1.0.1", backup=True)

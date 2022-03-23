@@ -134,10 +134,7 @@ class DemoUpdate(UpdateEntity):
             self._attr_supported_features |= UpdateEntityFeature.PROGRESS
 
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         if self.supported_features & UpdateEntityFeature.PROGRESS:
