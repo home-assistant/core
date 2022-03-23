@@ -17,16 +17,12 @@ from tests.components.sleepiq.conftest import (
     BED_NAME_LOWER,
     PRESET_L_STATE,
     PRESET_R_STATE,
-    PRESET_SINGLE_STATE,
     setup_platform,
 )
 
 
 async def test_split_foundation_preset(hass: HomeAssistant, mock_asyncsleepiq):
     """Test the SleepIQ select entity for split foundation presets."""
-    if mock_asyncsleepiq.type != "split":
-        return
-
     entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
 
@@ -79,16 +75,15 @@ async def test_split_foundation_preset(hass: HomeAssistant, mock_asyncsleepiq):
     )
 
 
-async def test_single_foundation_preset(hass: HomeAssistant, mock_asyncsleepiq):
+async def test_single_foundation_preset(
+    hass: HomeAssistant, mock_asyncsleepiq_single_foundation
+):
     """Test the SleepIQ select entity for single foundation presets."""
-    if mock_asyncsleepiq.type == "split":
-        return
-
     entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
 
     state = hass.states.get(f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset")
-    assert state.state == PRESET_SINGLE_STATE
+    assert state.state == PRESET_R_STATE
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
@@ -112,7 +107,9 @@ async def test_single_foundation_preset(hass: HomeAssistant, mock_asyncsleepiq):
     )
     await hass.async_block_till_done()
 
-    mock_asyncsleepiq.beds[BED_ID].foundation.presets[0].set_preset.assert_called_once()
-    mock_asyncsleepiq.beds[BED_ID].foundation.presets[0].set_preset.assert_called_with(
-        ZERO_G
-    )
+    mock_asyncsleepiq_single_foundation.beds[BED_ID].foundation.presets[
+        0
+    ].set_preset.assert_called_once()
+    mock_asyncsleepiq_single_foundation.beds[BED_ID].foundation.presets[
+        0
+    ].set_preset.assert_called_with(ZERO_G)
