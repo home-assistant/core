@@ -254,7 +254,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             self.current_cover_position == prev_position
             for prev_position in self._previous_positions
         ):
-            # keep updating the position @UPDATE_INTERVAL_MOVING untill the position does not change.
+            # keep updating the position @UPDATE_INTERVAL_MOVING until the position does not change.
             async_track_point_in_time(
                 self.hass,
                 self.async_scheduled_update_request,
@@ -270,7 +270,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self.hass.loop.create_task(self.async_scheduled_update_request())
 
     def request_position_till_stop(self):
-        """Request the position of the blind every UPDATE_INTERVAL_MOVING seconds untill it stops moving."""
+        """Request the position of the blind every UPDATE_INTERVAL_MOVING seconds until it stops moving."""
         self._previous_positions = []
         if self._requesting_position or self.current_cover_position is None:
             return
