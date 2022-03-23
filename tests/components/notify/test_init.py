@@ -8,6 +8,7 @@ from homeassistant import config as hass_config
 from homeassistant.components import notify
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.loader import DATA_INTEGRATIONS
 from homeassistant.setup import async_setup_component
@@ -93,12 +94,12 @@ async def test_remove_targets(hass: HomeAssistant):
 class NotificationService(notify.BaseNotificationService):
     """A test class for notification services."""
 
-    def __init__(self, hass, target_list={"a": 1, "b": 2}):
+    def __init__(self, hass, target_list={"a": 1, "b": 2}, name="notify"):
         """Initialize the service."""
 
         async def _async_make_reloadable(hass):
             """Initialize the reload service."""
-            await async_setup_reload_service(hass, "testnotify", [notify.DOMAIN])
+            await async_setup_reload_service(hass, name, [notify.DOMAIN])
 
         self.hass = hass
         self.target_list = target_list
@@ -131,9 +132,15 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
 
     async def async_get_service(hass, config, discovery_info=None):
         """Get notify service for mocked platform."""
-        get_service_called()
+        get_service_called(config, discovery_info)
         targetlist = {"a": 1, "b": 2}
-        return NotificationService(hass, targetlist)
+        return NotificationService(hass, targetlist, "testnotify")
+
+    async def async_get_service2(hass, config, discovery_info=None):
+        """Get notify service for mocked platform."""
+        get_service_called(config, discovery_info)
+        targetlist = {"c": 3, "d": 4}
+        return NotificationService(hass, targetlist, "testnotify2")
 
     # Mock notify services file
     services_yaml_file = tmp_path / "services.yaml"
@@ -146,6 +153,10 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
     integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
     integration.file_path = tmp_path
 
+    # Initialize a second platform
+    loaded_platform2 = MockNotifyPlatform(async_get_service=async_get_service2)
+    mock_platform(hass, "testnotify2.notify", loaded_platform2)
+
     # Setup the testnotify platform
     await async_setup_component(
         hass, "notify", {"notify": [{"platform": "testnotify"}]}
@@ -155,6 +166,28 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
     assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
     assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
     assert get_service_called.call_count == 1
+    assert get_service_called.call_args[0][0] == {"platform": "testnotify"}
+    assert get_service_called.call_args[0][1] is None
+    get_service_called.reset_mock()
+
+    # Setup the second testnotify2 platform dynamically
+    await async_load_platform(
+        hass,
+        "notify",
+        "testnotify2",
+        {"notify": [{"platform": "testnotify2"}]},
+        hass_config={"notify": [{"platform": "testnotify"}]},
+    )
+    await hass.async_block_till_done()
+    assert hass.services.has_service("testnotify2", SERVICE_RELOAD)
+    assert hass.services.has_service(notify.DOMAIN, "testnotify2_c")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify2_d")
+    assert get_service_called.call_count == 1
+    assert get_service_called.call_args[0][0] == {}
+    assert get_service_called.call_args[0][1] == {
+        "notify": [{"platform": "testnotify2"}]
+    }
+    get_service_called.reset_mock()
 
     # Perform a reload
     new_yaml_config_file = tmp_path / "configuration.yaml"
@@ -168,9 +201,21 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
             {},
             blocking=True,
         )
+        await hass.services.async_call(
+            "testnotify2",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
         await hass.async_block_till_done()
 
-    # Check if the notify services still exist
+    # Check if the notify services from setup still exist
     assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
     assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
-    assert get_service_called.call_count == 2
+    assert get_service_called.call_count == 1
+    assert get_service_called.call_args[0][0] == {"platform": "testnotify"}
+    assert get_service_called.call_args[0][1] is None
+
+    # Check if the dynamically notify services from setup were removed
+    assert not hass.services.has_service(notify.DOMAIN, "testnotify2_c")
+    assert not hass.services.has_service(notify.DOMAIN, "testnotify2_d")
