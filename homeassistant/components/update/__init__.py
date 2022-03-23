@@ -128,7 +128,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
 
     # If backup is requested, but not supported by the entity.
     if (
-        backup := service_call.data.get(ATTR_BACKUP)
+        backup := service_call.data[ATTR_BACKUP]
     ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
         raise HomeAssistantError(f"Backup is not supported for {entity.name}")
 
@@ -138,7 +138,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
             f"Update installation already in progress for {entity.name}"
         )
 
-    await entity.async_install_with_progress(version, backup or False)
+    await entity.async_install_with_progress(version, backup)
 
 
 @dataclass
