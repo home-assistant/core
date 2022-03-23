@@ -57,9 +57,6 @@ async def test_wallbox_lock_class(hass: HomeAssistant):
             status_code=200,
         )
 
-        state = hass.states.get(CONF_MOCK_LOCK_ENTITY_ID)
-        assert state.state == "unlocked"
-
         await hass.services.async_call(
             "lock",
             SERVICE_LOCK,
