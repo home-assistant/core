@@ -151,7 +151,7 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
                     },
                     {
                         "iid": 13,
-                        "type": "4aaaf940-0dec-11e5-b939-0800200c9a66",
+                        "type": "4AAAF940-0DEC-11E5-B939-0800200C9A66",
                         "characteristics": [
                             {
                                 "type": "4AAAF942-0DEC-11E5-B939-0800200C9A66",
@@ -422,7 +422,7 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
                     },
                     {
                         "iid": 13,
-                        "type": "4aaaf940-0dec-11e5-b939-0800200c9a66",
+                        "type": "4AAAF940-0DEC-11E5-B939-0800200C9A66",
                         "characteristics": [
                             {
                                 "type": "4AAAF942-0DEC-11E5-B939-0800200C9A66",

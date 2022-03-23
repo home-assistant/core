@@ -204,7 +204,7 @@ UOM_PERCENTAGE = "51"
 # responses, not using them for Home Assistant states
 # Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
 # Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
-NODE_FILTERS = {
+NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
     Platform.BINARY_SENSOR: {
         FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: [],

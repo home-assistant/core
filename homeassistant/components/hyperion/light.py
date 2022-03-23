@@ -244,6 +244,7 @@ class HyperionBaseLight(LightEntity):
             manufacturer=HYPERION_MANUFACTURER_NAME,
             model=HYPERION_MODEL_NAME,
             name=self._instance_name,
+            configuration_url=self._client.remote_url,
         )
 
     def _get_option(self, key: str) -> Any:

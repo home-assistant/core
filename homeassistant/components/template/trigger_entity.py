@@ -12,13 +12,15 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import template, update_coordinator
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import template
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 
 
-class TriggerEntity(update_coordinator.CoordinatorEntity):
+class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
     """Template entity based on trigger data."""
 
     domain: str
@@ -36,6 +38,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
 
         entity_unique_id = config.get(CONF_UNIQUE_ID)
 
+        self._unique_id: str | None
         if entity_unique_id and coordinator.unique_id:
             self._unique_id = f"{coordinator.unique_id}-{entity_unique_id}"
         else:
@@ -45,7 +48,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
 
         self._static_rendered = {}
         self._to_render_simple = []
-        self._to_render_complex = []
+        self._to_render_complex: list[str] = []
 
         for itm in (
             CONF_NAME,
@@ -148,7 +151,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
                 )
 
             self._rendered = rendered
-        except template.TemplateError as err:
+        except TemplateError as err:
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )

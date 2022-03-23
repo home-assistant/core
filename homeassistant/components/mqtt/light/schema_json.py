@@ -179,7 +179,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT JSON light."""
-        self._state = False
+        self._state = None
         self._supported_features = 0
 
         self._topic = None
@@ -304,9 +304,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             except (KeyError, ValueError):
                 _LOGGER.warning("Invalid or incomplete color value received")
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        last_state = await self.async_get_last_state()
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -318,6 +317,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._state = True
             elif values["state"] == "OFF":
                 self._state = False
+            elif values["state"] is None:
+                self._state = None
 
             if self._supported_features and SUPPORT_COLOR and "color" in values:
                 if values["color"] is None:
@@ -370,7 +371,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -383,6 +384,11 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 },
             )
 
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+
+        last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
             last_attributes = last_state.attributes
@@ -630,8 +636,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             json.dumps(message),
             self._config[CONF_QOS],
@@ -656,8 +661,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             json.dumps(message),
             self._config[CONF_QOS],

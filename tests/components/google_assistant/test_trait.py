@@ -1589,7 +1589,7 @@ async def test_fan_speed(hass):
         hass,
         State(
             "fan.living_room_fan",
-            fan.SPEED_HIGH,
+            STATE_ON,
             attributes={
                 "percentage": 33,
                 "percentage_step": 1.0,
@@ -1633,7 +1633,7 @@ async def test_fan_reverse(hass, direction_state, direction_call):
         hass,
         State(
             "fan.living_room_fan",
-            fan.SPEED_HIGH,
+            STATE_ON,
             attributes={
                 "percentage": 33,
                 "percentage_step": 1.0,

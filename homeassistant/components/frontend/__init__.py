@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import pathlib
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
@@ -313,7 +313,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     # pylint: disable=import-outside-toplevel
     import hass_frontend
 
-    return cast(pathlib.Path, hass_frontend.where())
+    return hass_frontend.where()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

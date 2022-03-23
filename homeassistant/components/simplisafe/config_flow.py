@@ -1,7 +1,7 @@
 """Config flow to configure the SimpliSafe component."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import Any, NamedTuple
 
 from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
@@ -97,8 +97,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._async_show_form()
 
-        if TYPE_CHECKING:
-            assert self._oauth_values
+        assert self._oauth_values
 
         errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)

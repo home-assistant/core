@@ -74,6 +74,21 @@ async def test_fan_light(hass: HomeAssistant) -> None:
     assert device.light_on is True
 
 
+async def test_fan_light_no_brightness(hass: HomeAssistant) -> None:
+    """Test a fan light without brightness."""
+    device = _mock_device()
+    device.brightness = None
+    await _setup_mocked_entry(hass, device)
+    entity_id = "light.haiku_fan"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 255
+    assert attributes[ATTR_COLOR_MODE] == COLOR_MODE_BRIGHTNESS
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_BRIGHTNESS]
+
+
 async def test_standalone_light(hass: HomeAssistant) -> None:
     """Test a standalone light."""
     device = _mock_device()

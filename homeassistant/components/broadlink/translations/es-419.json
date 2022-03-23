@@ -21,6 +21,12 @@
                 },
                 "description": "{name} ({model} en {host}) est\u00e1 bloqueado. Esto puede provocar problemas de autenticaci\u00f3n en Home Assistant. \u00bfQuieres desbloquearlo?",
                 "title": "Desbloquear el dispositivo (opcional)"
+            },
+            "user": {
+                "data": {
+                    "timeout": "Tiempo de espera"
+                },
+                "title": "Conectarse al dispositivo"
             }
         }
     }

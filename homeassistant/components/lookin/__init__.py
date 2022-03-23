@@ -153,6 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     hass.data[DOMAIN][entry.entry_id] = LookinData(
+        host=host,
         lookin_udp_subs=lookin_udp_subs,
         lookin_device=lookin_device,
         meteo_coordinator=meteo_coordinator,

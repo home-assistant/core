@@ -1,4 +1,6 @@
 """Legacy Works with Nest climate implementation."""
+# mypy: ignore-errors
+
 import logging
 
 from nest.nest import APIError

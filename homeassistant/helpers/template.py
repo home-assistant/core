@@ -836,7 +836,7 @@ def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
 def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     state = hass.states.get(entity_id)
     if state is None and not valid_entity_id(entity_id):
-        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore
+        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore[arg-type]
     return _get_template_state_from_state(hass, entity_id, state)
 
 
@@ -1302,7 +1302,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
     """Filter to round a value."""
     try:
         # support rounding methods like jinja
-        multiplier = float(10 ** precision)
+        multiplier = float(10**precision)
         if method == "ceil":
             value = math.ceil(float(value) * multiplier) / multiplier
         elif method == "floor":

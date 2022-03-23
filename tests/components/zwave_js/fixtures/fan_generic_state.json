@@ -10,7 +10,7 @@
       "generic": {"key": 17, "label":"Multilevel Switch"},
       "specific": {"key": 8, "label":"Fan Switch"},
       "mandatorySupportedCCs": [],
-      "mandatoryControlCCs": []
+      "mandatoryControlledCCs": []
     },
     "isListening": true,
     "isFrequentListening": false,
@@ -348,5 +348,6 @@
           "label": "Z-Wave chip hardware version"
         }
       }
-    ]
+    ],
+    "isControllerNode": false
   }

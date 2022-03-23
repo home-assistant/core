@@ -16,11 +16,12 @@ from . import ValloxDataUpdateCoordinator
 from .const import DOMAIN
 
 
-class ValloxBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class ValloxBinarySensor(
+    CoordinatorEntity[ValloxDataUpdateCoordinator], BinarySensorEntity
+):
     """Representation of a Vallox binary sensor."""
 
     entity_description: ValloxBinarySensorEntityDescription
-    coordinator: ValloxDataUpdateCoordinator
 
     def __init__(
         self,

@@ -646,9 +646,12 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
 
 
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
-    hass, device_reg, calls, mqtt_mock
+    hass, hass_ws_client, device_reg, calls, mqtt_mock
 ):
     """Test triggers not firing after removal."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -688,8 +691,18 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    # Remove the device
-    device_reg.async_remove_device(device_entry.id)
+    # Remove MQTT from the device
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
@@ -967,8 +980,11 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     assert device.name == "Milk"
 
 
-async def test_cleanup_trigger(hass, device_reg, entity_reg, mqtt_mock):
+async def test_cleanup_trigger(hass, hass_ws_client, device_reg, entity_reg, mqtt_mock):
     """Test trigger discovery topic is cleaned when device is removed from registry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
     config = {
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -990,7 +1006,18 @@ async def test_cleanup_trigger(hass, device_reg, entity_reg, mqtt_mock):
     )
     assert triggers[0]["type"] == "foo"
 
-    device_reg.async_remove_device(device_entry.id)
+    # Remove MQTT from the device
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -1246,7 +1273,7 @@ async def test_trigger_debug_info(hass, mqtt_mock):
     )
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 2
     topic_map = {
@@ -1268,7 +1295,7 @@ async def test_trigger_debug_info(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
     await hass.async_block_till_done()
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 1
     assert (

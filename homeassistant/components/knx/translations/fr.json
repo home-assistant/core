@@ -14,9 +14,10 @@
                     "individual_address": "Adresse individuelle pour la connexion",
                     "local_ip": "IP locale (laisser vide en cas de doute)",
                     "port": "Port",
-                    "route_back": "Retour/Mode NAT"
+                    "route_back": "Retour/Mode NAT",
+                    "tunneling_type": "Type de tunnel KNX"
                 },
-                "description": "Veuillez saisir les informations de connexion de votre p\u00e9riph\u00e9rique de tunneling."
+                "description": "Veuillez saisir les informations de connexion de votre appareil de cr\u00e9ation de tunnel."
             },
             "routing": {
                 "data": {
@@ -59,7 +60,8 @@
                     "host": "H\u00f4te",
                     "local_ip": "IP locale (laisser vide en cas de doute)",
                     "port": "Port",
-                    "route_back": "Retour/Mode NAT"
+                    "route_back": "Retour/Mode NAT",
+                    "tunneling_type": "Type de tunnel KNX"
                 }
             }
         }

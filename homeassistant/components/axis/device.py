@@ -13,6 +13,7 @@ from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -156,7 +157,9 @@ class AxisNetworkDevice:
             async_dispatcher_send(self.hass, self.signal_new_event, event_id)
 
     @staticmethod
-    async def async_new_address_callback(hass, entry):
+    async def async_new_address_callback(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
         """Handle signals of device getting new address.
 
         Called when config entry is updated.

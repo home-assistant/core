@@ -76,7 +76,7 @@ class UsageSensor(LTESensor):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return round(self.modem_data.data.usage / 1024 ** 2, 1)
+        return round(self.modem_data.data.usage / 1024**2, 1)
 
 
 class GenericSensor(LTESensor):

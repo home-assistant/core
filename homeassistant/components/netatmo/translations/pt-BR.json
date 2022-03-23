@@ -52,7 +52,7 @@
                     "lon_ne": "Longitude nordeste",
                     "lon_sw": "Longitude sudoeste",
                     "mode": "C\u00e1lculo",
-                    "show_on_map": "Mostrar no mapa"
+                    "show_on_map": "Mostrar no mapa?"
                 },
                 "description": "Configure um sensor meteorol\u00f3gico p\u00fablico para uma \u00e1rea.",
                 "title": "Sensor meteorol\u00f3gico p\u00fablico Netatmo"

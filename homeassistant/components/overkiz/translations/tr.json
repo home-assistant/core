@@ -12,6 +12,7 @@
             "too_many_requests": "\u00c7ok fazla istek var, daha sonra tekrar deneyin",
             "unknown": "Beklenmeyen hata"
         },
+        "flow_title": "A\u011f ge\u00e7idi: {gateway_id}",
         "step": {
             "user": {
                 "data": {

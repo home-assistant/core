@@ -1,7 +1,10 @@
 """Demo implementation of the media player."""
 from __future__ import annotations
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -68,8 +71,8 @@ async def async_setup_entry(
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-SOUND_MODE_LIST = ["Dummy Music", "Dummy Movie"]
-DEFAULT_SOUND_MODE = "Dummy Music"
+SOUND_MODE_LIST = ["Music", "Movie"]
+DEFAULT_SOUND_MODE = "Music"
 
 YOUTUBE_PLAYER_SUPPORT = (
     SUPPORT_PAUSE
@@ -448,6 +451,8 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     """A Demo media player that only supports YouTube."""
 
     # We only implement the methods that we support
+
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(self):
         """Initialize the demo device."""

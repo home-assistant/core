@@ -42,7 +42,7 @@ def create_char_switch_service(accessory):
     """Define swtch characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 
-    on_char = service.add_char(CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE)
+    on_char = service.add_char(CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE)
     on_char.perms.append("ev")
     on_char.value = False
 
@@ -178,7 +178,7 @@ async def test_char_switch_change_state(hass, utcnow):
     helper.async_assert_service_values(
         ServicesTypes.OUTLET,
         {
-            CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE: True,
+            CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: True,
         },
     )
 
@@ -191,7 +191,7 @@ async def test_char_switch_change_state(hass, utcnow):
     helper.async_assert_service_values(
         ServicesTypes.OUTLET,
         {
-            CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE: False,
+            CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: False,
         },
     )
 
@@ -205,13 +205,13 @@ async def test_char_switch_read_state(hass, utcnow):
     # Simulate that someone switched on the device in the real world not via HA
     switch_1 = await helper.async_update(
         ServicesTypes.OUTLET,
-        {CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE: True},
+        {CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: True},
     )
     assert switch_1.state == "on"
 
     # Simulate that device switched off in the real world not via HA
     switch_1 = await helper.async_update(
         ServicesTypes.OUTLET,
-        {CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE: False},
+        {CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: False},
     )
     assert switch_1.state == "off"

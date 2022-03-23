@@ -3,7 +3,7 @@
   "name": "IKEA TR\u00c5DFRI",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tradfri",
-  "requirements": ["pytradfri[async]==8.0.1"],
+  "requirements": ["pytradfri[async]==9.0.0"],
   "homekit": {
     "models": ["TRADFRI"]
   },

@@ -161,7 +161,6 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     def turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs: Any,

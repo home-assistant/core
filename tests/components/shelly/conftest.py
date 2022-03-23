@@ -58,6 +58,7 @@ MOCK_BLOCKS = [
 MOCK_CONFIG = {
     "input:0": {"id": 0, "type": "button"},
     "switch:0": {"name": "test switch_0"},
+    "cover:0": {"name": "test cover_0"},
     "sys": {
         "ui_data": {},
         "device": {"name": "Test name"},
@@ -84,6 +85,7 @@ MOCK_STATUS_COAP = {
 
 MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
+    "cover:0": {"state": "stopped", "pos_control": True, "current_pos": 50},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},

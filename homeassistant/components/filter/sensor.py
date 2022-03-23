@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections import Counter, deque
 from copy import copy
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 import logging
 from numbers import Number
@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -28,6 +29,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -50,7 +52,7 @@ FILTER_NAME_OUTLIER = "outlier"
 FILTER_NAME_THROTTLE = "throttle"
 FILTER_NAME_TIME_THROTTLE = "time_throttle"
 FILTER_NAME_TIME_SMA = "time_simple_moving_average"
-FILTERS = Registry()
+FILTERS: Registry[str, type[Filter]] = Registry()
 
 CONF_FILTERS = "filters"
 CONF_FILTER_NAME = "filter"
@@ -149,6 +151,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.entity_domain(INPUT_NUMBER_DOMAIN),
         ),
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_FILTERS): vol.All(
             cv.ensure_list,
             [
@@ -177,6 +180,7 @@ async def async_setup_platform(
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name = config.get(CONF_NAME)
+    unique_id = config.get(CONF_UNIQUE_ID)
     entity_id = config.get(CONF_ENTITY_ID)
 
     filters = [
@@ -184,15 +188,16 @@ async def async_setup_platform(
         for _filter in config[CONF_FILTERS]
     ]
 
-    async_add_entities([SensorFilter(name, entity_id, filters)])
+    async_add_entities([SensorFilter(name, unique_id, entity_id, filters)])
 
 
 class SensorFilter(SensorEntity):
     """Representation of a Filter Sensor."""
 
-    def __init__(self, name, entity_id, filters):
+    def __init__(self, name, unique_id, entity_id, filters):
         """Initialize the sensor."""
         self._name = name
+        self._attr_unique_id = unique_id
         self._entity = entity_id
         self._unit_of_measurement = None
         self._state = None
@@ -346,6 +351,9 @@ class SensorFilter(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
+        if self._device_class == SensorDeviceClass.TIMESTAMP:
+            return datetime.fromisoformat(self._state)
+
         return self._state
 
     @property

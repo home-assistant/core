@@ -276,3 +276,20 @@ async def test_bad_token_with_tokenless_server(
     # Ensure updates that rely on account return nothing
     trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
+
+
+async def test_scan_clients_schedule(hass, setup_plex_server):
+    """Test scan_clients scheduled update."""
+    with patch(
+        "homeassistant.components.plex.server.PlexServer._async_update_platforms"
+    ) as mock_scan_clients:
+        await setup_plex_server()
+        mock_scan_clients.reset_mock()
+
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + const.CLIENT_SCAN_INTERVAL,
+        )
+        await hass.async_block_till_done()
+
+    assert mock_scan_clients.called

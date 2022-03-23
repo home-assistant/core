@@ -43,12 +43,12 @@
             "gw_mqtt": {
                 "data": {
                     "persistence_file": "archivo de persistencia (d\u00e9jelo vac\u00edo para que se genere autom\u00e1ticamente)",
-                    "retain": "retener mqtt",
+                    "retain": "retenci\u00f3n mqtt",
                     "topic_in_prefix": "prefijo para los temas de entrada (topic_in_prefix)",
                     "topic_out_prefix": "prefijo para los temas de salida (topic_out_prefix)",
                     "version": "Versi\u00f3n de MySensors"
                 },
-                "description": "Configuraci\u00f3n del gateway MQTT"
+                "description": "Configuraci\u00f3n de la puerta de enlace MQTT"
             },
             "gw_serial": {
                 "data": {

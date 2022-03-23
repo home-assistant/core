@@ -13,11 +13,15 @@
         "description": "Do you want to set up {device}? If you never connected Home Assistant before you should see a popup on your TV asking for authorization."
       },
       "reauth_confirm": {
-        "description": "After submitting, accept the the popup on {device} requesting authorization within 30 seconds."
+        "description": "After submitting, accept the the popup on {device} requesting authorization within 30 seconds or input PIN."
+      },
+      "reauth_confirm_encrypted": {
+        "description": "Please enter the PIN displayed on {device}."
       }
     },
     "error": {
-      "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]"
+      "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]",
+      "invalid_pin": "PIN is invalid, please try again."
     },
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",

@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_api_key": "Cl\u00e9 API invalide",
+            "invalid_api_key": "Cl\u00e9 d'API non valide",
             "requests_exceeded": "Le nombre autoris\u00e9 de requ\u00eates adress\u00e9es \u00e0 l'API AccuWeather a \u00e9t\u00e9 d\u00e9pass\u00e9. Vous devez attendre ou modifier la cl\u00e9 API."
         },
         "step": {

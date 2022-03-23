@@ -2,9 +2,7 @@
 from unittest.mock import patch
 
 import pytest
-from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
-from zwave_js_server.model.value import _get_value_id_from_dict, get_value_id
 
 from homeassistant.components.zwave_js.diagnostics import async_get_device_diagnostics
 from homeassistant.components.zwave_js.helpers import get_device_id
@@ -43,9 +41,6 @@ async def test_device_diagnostics(
     assert device
 
     # Update a value and ensure it is reflected in the node state
-    value_id = get_value_id(
-        multisensor_6, CommandClass.SENSOR_MULTILEVEL, PROPERTY_ULTRAVIOLET
-    )
     event = Event(
         type="value updated",
         data={
@@ -75,18 +70,7 @@ async def test_device_diagnostics(
         "maxSchemaVersion": 0,
     }
 
-    # Assert that the data returned doesn't match the stale node state data
-    assert diagnostics_data["state"] != multisensor_6.data
-
-    # Replace data for the value we updated and assert the new node data is the same
-    # as what's returned
-    updated_node_data = multisensor_6.data.copy()
-    for idx, value in enumerate(updated_node_data["values"]):
-        if _get_value_id_from_dict(multisensor_6, value) == value_id:
-            updated_node_data["values"][idx] = multisensor_6.values[
-                value_id
-            ].data.copy()
-    assert diagnostics_data["state"] == updated_node_data
+    assert diagnostics_data["state"] == multisensor_6.data
 
 
 async def test_device_diagnostics_error(hass, integration):

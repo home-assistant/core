@@ -5,6 +5,7 @@ Call init before using it in your tests to ensure clean test data.
 """
 from homeassistant.components.sensor import (
     DEVICE_CLASSES,
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -109,3 +110,17 @@ class MockSensor(MockEntity, SensorEntity):
     def state_class(self):
         """Return the state class of this sensor."""
         return self._handle("state_class")
+
+
+class MockRestoreSensor(MockSensor, RestoreSensor):
+    """Mock RestoreSensor class."""
+
+    async def async_added_to_hass(self) -> None:
+        """Restore native_value and native_unit_of_measurement."""
+        await super().async_added_to_hass()
+        if (last_sensor_data := await self.async_get_last_sensor_data()) is None:
+            return
+        self._values["native_value"] = last_sensor_data.native_value
+        self._values[
+            "native_unit_of_measurement"
+        ] = last_sensor_data.native_unit_of_measurement

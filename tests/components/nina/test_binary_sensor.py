@@ -1,5 +1,4 @@
 """Test the Nina binary sensor."""
-import json
 from typing import Any
 from unittest.mock import patch
 
@@ -17,7 +16,9 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, load_fixture
+from . import mocked_request_function
+
+from tests.common import MockConfigEntry
 
 ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
@@ -35,13 +36,9 @@ ENTRY_DATA_NO_CORONA: dict[str, Any] = {
 async def test_sensors(hass: HomeAssistant) -> None:
     """Test the creation and values of the NINA sensors."""
 
-    dummy_response: dict[str, Any] = json.loads(
-        load_fixture("sample_warnings.json", "nina")
-    )
-
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=dummy_response,
+        wraps=mocked_request_function,
     ):
 
         conf_entry: MockConfigEntry = MockConfigEntry(
@@ -125,13 +122,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
 async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
 
-    dummy_response: dict[str, Any] = json.loads(
-        load_fixture("nina/sample_warnings.json")
-    )
-
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=dummy_response,
+        wraps=mocked_request_function,
     ):
 
         conf_entry: MockConfigEntry = MockConfigEntry(

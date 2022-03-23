@@ -780,6 +780,15 @@ async def test_info_from_service_prefers_ipv4(hass):
     assert info.host == "192.168.66.12"
 
 
+async def test_info_from_service_can_return_ipv6(hass):
+    """Test that IPv6-only devices can be discovered."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = ["fd11:1111:1111:0:1234:1234:1234:1234"]
+    info = zeroconf.info_from_service(service_info)
+    assert info.host == "fd11:1111:1111:0:1234:1234:1234:1234"
+
+
 async def test_get_instance(hass, mock_async_zeroconf):
     """Test we get an instance."""
     assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
@@ -946,11 +955,11 @@ async def test_async_detect_interfaces_setting_empty_route_linux(
         await hass.async_block_till_done()
     assert mock_zc.mock_calls[0] == call(
         interfaces=[
-            "2001:db8::",
-            "fe80::1234:5678:9abc:def0",
+            "2001:db8::%1",
+            "fe80::1234:5678:9abc:def0%1",
             "192.168.1.5",
             "172.16.1.5",
-            "fe80::dead:beef:dead:beef",
+            "fe80::dead:beef:dead:beef%3",
         ],
         ip_version=IPVersion.All,
     )
@@ -1044,7 +1053,7 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_linux(
         await hass.async_block_till_done()
 
     assert mock_zc.mock_calls[0] == call(
-        interfaces=["192.168.1.5", "fe80::dead:beef:dead:beef"],
+        interfaces=["192.168.1.5", "fe80::dead:beef:dead:beef%3"],
         ip_version=IPVersion.All,
     )
 
@@ -1095,6 +1104,7 @@ async def test_service_info_compatibility(hass, caplog):
     """
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="mock_host",
+        addresses=["mock_host"],
         port=None,
         hostname="mock_hostname",
         type="mock_type",

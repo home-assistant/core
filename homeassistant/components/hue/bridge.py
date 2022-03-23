@@ -6,6 +6,7 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
+import aiohttp
 from aiohttp import client_exceptions
 from aiohue import HueBridgeV1, HueBridgeV2, LinkButtonNotPressed, Unauthorized
 from aiohue.errors import AiohueException, BridgeBusy
@@ -14,7 +15,7 @@ import async_timeout
 from homeassistant import core
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, Platform
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_API_VERSION, DOMAIN
@@ -49,11 +50,12 @@ class HueBridge:
         self.logger = logging.getLogger(__name__)
         # store actual api connection to bridge as api
         app_key: str = self.config_entry.data[CONF_API_KEY]
-        websession = aiohttp_client.async_get_clientsession(hass)
         if self.api_version == 1:
-            self.api = HueBridgeV1(self.host, app_key, websession)
+            self.api = HueBridgeV1(
+                self.host, app_key, aiohttp_client.async_get_clientsession(hass)
+            )
         else:
-            self.api = HueBridgeV2(self.host, app_key, websession)
+            self.api = HueBridgeV2(self.host, app_key)
         # store (this) bridge object in hass data
         hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
 
@@ -130,7 +132,11 @@ class HueBridge:
                 # log only
                 self.logger.debug("Ignored error/warning from Hue API: %s", str(err))
                 return None
-            raise err
+            raise HomeAssistantError(f"Request failed: {err}") from err
+        except aiohttp.ClientError as err:
+            raise HomeAssistantError(
+                f"Request failed due connection error: {err}"
+            ) from err
 
     async def async_reset(self) -> bool:
         """Reset this bridge to default state.

@@ -252,7 +252,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     with _patch_discovery(), _patch_single_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS},
         )
         await hass.async_block_till_done()
@@ -304,7 +304,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=ALIAS),
         ),
         (
-            config_entries.SOURCE_DISCOVERY,
+            config_entries.SOURCE_INTEGRATION_DISCOVERY,
             {CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS},
         ),
     ],
@@ -345,7 +345,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
             dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=ALIAS),
         ),
         (
-            config_entries.SOURCE_DISCOVERY,
+            config_entries.SOURCE_INTEGRATION_DISCOVERY,
             {CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS},
         ),
     ],

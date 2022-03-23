@@ -163,7 +163,7 @@ class GlancesData:
         )
 
     @staticmethod
-    async def async_options_updated(hass, entry):
+    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
         hass.data[DOMAIN][entry.entry_id].set_scan_interval(
             entry.options[CONF_SCAN_INTERVAL]

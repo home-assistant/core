@@ -9,9 +9,11 @@
         "overkiz__discrete_rssi_level": {
             "good": "Bon",
             "low": "Bas",
-            "normal": "Normal"
+            "normal": "Normal",
+            "verylow": "Tr\u00e8s lent"
         },
         "overkiz__priority_lock_originator": {
+            "external_gateway": "Passerelle externe",
             "local_user": "Utilisateur local",
             "lsc": "LSC",
             "myself": "Moi-m\u00eame",

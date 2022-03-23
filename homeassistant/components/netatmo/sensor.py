@@ -839,15 +839,16 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         elif self.entity_description.key == "guststrength":
             data = self._data.get_latest_gust_strengths()
 
-        if data is None:
-            if self.state is None:
-                return
-            _LOGGER.debug(
-                "No station provides %s data in the area %s",
-                self.entity_description.key,
-                self._area_name,
-            )
-            self._attr_native_value = None
+        if not data:
+            if self.available:
+                _LOGGER.error(
+                    "No station provides %s data in the area %s",
+                    self.entity_description.key,
+                    self._area_name,
+                )
+                self._attr_native_value = None
+
+            self._attr_available = False
             return
 
         if values := [x for x in data.values() if x is not None]:

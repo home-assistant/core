@@ -50,10 +50,8 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class RadarrEntity(CoordinatorEntity):
+class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
     """Defines a base Radarr entity."""
-
-    coordinator: RadarrDataUpdateCoordinator
 
     def __init__(self, coordinator: RadarrDataUpdateCoordinator) -> None:
         """Initialize the Radarr entity."""

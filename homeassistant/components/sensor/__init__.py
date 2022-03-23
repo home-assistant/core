@@ -9,7 +9,6 @@ import inspect
 import logging
 from typing import Any, Final, cast, final
 
-import ciso8601
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -53,7 +52,9 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_STATE_CLASS  # noqa: F401
 
@@ -354,7 +355,7 @@ class SensorEntity(Entity):
             hasattr(self, "_attr_unit_of_measurement")
             and self._attr_unit_of_measurement is not None
         ):
-            return self._attr_unit_of_measurement  # type: ignore
+            return self._attr_unit_of_measurement  # type: ignore[unreachable]
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
@@ -370,44 +371,6 @@ class SensorEntity(Entity):
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
         device_class = self.device_class
-
-        # We have an old non-datetime value, warn about it and convert it during
-        # the deprecation period.
-        if (
-            value is not None
-            and device_class in (DEVICE_CLASS_DATE, DEVICE_CLASS_TIMESTAMP)
-            and not isinstance(value, (date, datetime))
-        ):
-            # Deprecation warning for date/timestamp device classes
-            if not self.__datetime_as_string_deprecation_logged:
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    "%s is providing a string for its state, while the device "
-                    "class is '%s', this is not valid and will be unsupported "
-                    "from Home Assistant 2022.2. Please %s",
-                    self.entity_id,
-                    device_class,
-                    report_issue,
-                )
-                self.__datetime_as_string_deprecation_logged = True
-
-            # Anyways, lets validate the date at least..
-            try:
-                value = ciso8601.parse_datetime(str(value))
-            except (ValueError, IndexError) as error:
-                raise ValueError(
-                    f"Invalid date/datetime: {self.entity_id} provide state '{value}', "
-                    f"while it has device class '{device_class}'"
-                ) from error
-
-            if value.tzinfo is not None and value.tzinfo != timezone.utc:
-                value = value.astimezone(timezone.utc)
-
-            # Convert the date object to a standardized state string.
-            if device_class == DEVICE_CLASS_DATE:
-                return value.date().isoformat()
-
-            return value.isoformat(timespec="seconds")
 
         # Received a datetime
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
@@ -427,17 +390,20 @@ class SensorEntity(Entity):
                 return value.isoformat(timespec="seconds")
             except (AttributeError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has a timestamp device class"
+                    f"Invalid datetime: {self.entity_id} has a timestamp device class "
                     f"but does not provide a datetime state but {type(value)}"
                 ) from err
 
         # Received a date value
         if value is not None and device_class == DEVICE_CLASS_DATE:
             try:
-                return value.isoformat()  # type: ignore
+                # We cast the value, to avoid using isinstance, but satisfy
+                # typechecking. The errors are guarded in this try.
+                value = cast(date, value)
+                return value.isoformat()
             except (AttributeError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid date: {self.entity_id} has a date device class"
+                    f"Invalid date: {self.entity_id} has a date device class "
                     f"but does not provide a date state but {type(value)}"
                 ) from err
 
@@ -471,7 +437,7 @@ class SensorEntity(Entity):
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
-                temp = units.temperature(float(value), unit_of_measurement)  # type: ignore
+                temp = units.temperature(float(value), unit_of_measurement)  # type: ignore[arg-type]
                 value = round(temp) if prec == 0 else round(temp, prec)
 
         return value
@@ -486,3 +452,62 @@ class SensorEntity(Entity):
             return f"<Entity {self.name}>"
 
         return super().__repr__()
+
+
+@dataclass
+class SensorExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    native_value: StateType | date | datetime
+    native_unit_of_measurement: str | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the sensor data."""
+        native_value: StateType | date | datetime | dict[str, str] = self.native_value
+        if isinstance(native_value, (date, datetime)):
+            native_value = {
+                "__type": str(type(native_value)),
+                "isoformat": native_value.isoformat(),
+            }
+        return {
+            "native_value": native_value,
+            "native_unit_of_measurement": self.native_unit_of_measurement,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> SensorExtraStoredData | None:
+        """Initialize a stored sensor state from a dict."""
+        try:
+            native_value = restored["native_value"]
+            native_unit_of_measurement = restored["native_unit_of_measurement"]
+        except KeyError:
+            return None
+        try:
+            type_ = native_value["__type"]
+            if type_ == "<class 'datetime.datetime'>":
+                native_value = dt_util.parse_datetime(native_value["isoformat"])
+            elif type_ == "<class 'datetime.date'>":
+                native_value = dt_util.parse_date(native_value["isoformat"])
+        except TypeError:
+            # native_value is not a dict
+            pass
+        except KeyError:
+            # native_value is a dict, but does not have all values
+            return None
+
+        return cls(native_value, native_unit_of_measurement)
+
+
+class RestoreSensor(SensorEntity, RestoreEntity):
+    """Mixin class for restoring previous sensor state."""
+
+    @property
+    def extra_restore_state_data(self) -> SensorExtraStoredData:
+        """Return sensor specific state data to be restored."""
+        return SensorExtraStoredData(self.native_value, self.native_unit_of_measurement)
+
+    async def async_get_last_sensor_data(self) -> SensorExtraStoredData | None:
+        """Restore native_value and native_unit_of_measurement."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return SensorExtraStoredData.from_dict(restored_last_extra_data.as_dict())

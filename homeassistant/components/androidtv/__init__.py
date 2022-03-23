@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
@@ -33,14 +34,28 @@ from .const import (
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
     DOMAIN,
+    PROP_ETHMAC,
     PROP_SERIALNO,
+    PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
+_INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_androidtv_mac(dev_props):
+    """Return formatted mac from device properties."""
+    for prop_mac in (PROP_ETHMAC, PROP_WIFIMAC):
+        if if_mac := dev_props.get(prop_mac):
+            mac = format_mac(if_mac)
+            if mac not in _INVALID_MACS:
+                return mac
+    return None
 
 
 def _setup_androidtv(hass, config):
@@ -110,8 +125,7 @@ def _migrate_aftv_entity(hass, aftv, entry_unique_id):
         # entity already exist, nothing to do
         return
 
-    old_unique_id = aftv.device_properties.get(PROP_SERIALNO)
-    if not old_unique_id:
+    if not (old_unique_id := aftv.device_properties.get(PROP_SERIALNO)):
         # serial no not found, exit
         return
 

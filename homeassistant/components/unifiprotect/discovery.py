@@ -57,7 +57,7 @@ def async_trigger_discovery(
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": config_entries.SOURCE_DISCOVERY},
+                    context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
                     data=asdict(device),
                 )
             )
