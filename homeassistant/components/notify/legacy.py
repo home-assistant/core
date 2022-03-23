@@ -151,7 +151,8 @@ async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
 @bind_hass
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Unregister notify services for an integration."""
-    hass.data[NOTIFY_DISCOVERY_DISPATCHER]()
+    if NOTIFY_DISCOVERY_DISPATCHER in hass.data:
+        hass.data[NOTIFY_DISCOVERY_DISPATCHER]()
     if not _async_integration_has_notify_services(hass, integration_name):
         return
 
