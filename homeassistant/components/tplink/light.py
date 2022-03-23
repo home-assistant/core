@@ -175,7 +175,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, coordinator)
-        self._last_custom_effect: dict[str, Any] = {}
         # For backwards compat with pyHS100
         if device.is_dimmer:
             # Dimmers used to use the switch format since
