@@ -167,6 +167,7 @@ class SamsungTVBridge(ABC):
 
     async def async_request_app_list(self) -> None:
         """Request app list."""
+        # Overridden in SamsungTVWSBridge
         LOGGER.debug(
             "App list request is not supported on %s TV: %s",
             self.method,
