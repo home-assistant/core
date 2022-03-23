@@ -1,12 +1,10 @@
 """Support for functionality to interact with Android TV/Fire TV devices."""
-import logging
 import os
 
 from adb_shell.auth.keygen import keygen
 from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
 from androidtv.setup_async import setup
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -17,7 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -35,7 +32,6 @@ from .const import (
     DEVICE_FIRETV,
     DOMAIN,
     PROP_ETHMAC,
-    PROP_SERIALNO,
     PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
@@ -44,8 +40,6 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
 _INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_androidtv_mac(dev_props):
@@ -114,30 +108,6 @@ async def async_connect_androidtv(
         return None, error_message
 
     return aftv, None
-
-
-def _migrate_aftv_entity(hass, aftv, entry_unique_id):
-    """Migrate a entity to new unique id."""
-    entity_reg = er.async_get(hass)
-
-    entity_unique_id = entry_unique_id
-    if entity_reg.async_get_entity_id(MP_DOMAIN, DOMAIN, entity_unique_id):
-        # entity already exist, nothing to do
-        return
-
-    if not (old_unique_id := aftv.device_properties.get(PROP_SERIALNO)):
-        # serial no not found, exit
-        return
-
-    migr_entity = entity_reg.async_get_entity_id(MP_DOMAIN, DOMAIN, old_unique_id)
-    if not migr_entity:
-        # old entity not found, exit
-        return
-
-    try:
-        entity_reg.async_update_entity(migr_entity, new_unique_id=entity_unique_id)
-    except ValueError as exp:
-        _LOGGER.warning("Migration of old entity failed: %s", exp)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
