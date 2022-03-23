@@ -164,7 +164,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.
         local_name = discovery_info.hostname[:-1]
-        radio_type = discovery_info.properties["radio_type"]
+        radio_type = discovery_info.properties.get("radio_type") or local_name
         node_name = local_name[: -len(".local")]
         host = discovery_info.host
         port = discovery_info.port
