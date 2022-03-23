@@ -74,7 +74,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize AndroidTV config flow."""
-        self._import_config = None
+        self._import_config = {}
 
     @callback
     def _show_setup_form(self, user_input=None, error=None):
