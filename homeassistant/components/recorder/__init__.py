@@ -4,7 +4,6 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Callable, Iterable
-import concurrent.futures
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -60,6 +59,7 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics, websocket_api
@@ -148,6 +148,8 @@ EXPIRE_AFTER_COMMITS = 120
 # - How frequently states with overlapping attributes will change
 # - How much memory our low end hardware has
 STATE_ATTRIBUTES_ID_CACHE_SIZE = 2048
+
+SHUTDOWN_TASK = object()
 
 
 DB_LOCK_TIMEOUT = 30
@@ -710,10 +712,9 @@ class Recorder(threading.Thread):
         self.queue.put(StatisticsTask(start))
 
     @callback
-    def async_register(
-        self, shutdown_task: object, hass_started: concurrent.futures.Future
-    ) -> None:
+    def async_register(self) -> asyncio.Future[object] | None:
         """Post connection initialize."""
+        hass_started: asyncio.Future[object] = asyncio.Future()
 
         def _empty_queue(event):
             """Empty the queue if its still present at final write."""
@@ -734,26 +735,31 @@ class Recorder(threading.Thread):
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, _empty_queue)
 
-        def shutdown(event):
+        @callback
+        def _async_shutdown(event: Event) -> None:
             """Shut down the Recorder."""
             if not hass_started.done():
-                hass_started.set_result(shutdown_task)
+                hass_started.set_result(SHUTDOWN_TASK)
             self.queue.put(StopTask())
-            self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
-            self.join()
+            self._async_stop_queue_watcher_and_event_listener()
+            self.hass.async_add_executor_job(self.join)
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
 
         if self.hass.state == CoreState.running:
             hass_started.set_result(None)
-            return
+            return None
 
         @callback
-        def async_hass_started(event):
+        def _async_hass_started(event: Event) -> None:
             """Notify that hass has started."""
             hass_started.set_result(None)
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, async_hass_started)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, _async_hass_started
+        )
+
+        return hass_started
 
     @callback
     def async_connection_failed(self) -> None:
@@ -835,10 +841,9 @@ class Recorder(threading.Thread):
 
     def run(self) -> None:
         """Start processing events to save."""
-        shutdown_task = object()
-        hass_started: concurrent.futures.Future = concurrent.futures.Future()
-
-        self.hass.add_job(self.async_register, shutdown_task, hass_started)
+        hass_started: asyncio.Future[object] | None = run_callback_threadsafe(
+            self.hass.loop, self.async_register
+        ).result()
 
         current_version = self._setup_recorder()
 
@@ -854,7 +859,11 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_connection_success)
         # If shutdown happened before Home Assistant finished starting
-        if hass_started.result() is shutdown_task:
+        if (
+            hass_started
+            and run_callback_threadsafe(self.hass.loop, hass_started.result).result()
+            is SHUTDOWN_TASK
+        ):
             self.migration_in_progress = False
             # Make sure we cleanly close the run if
             # we restart before startup finishes
