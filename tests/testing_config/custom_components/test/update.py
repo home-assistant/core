@@ -6,6 +6,7 @@ Call init before using it in your tests to ensure clean test data.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 
@@ -49,11 +50,7 @@ class MockUpdateEntity(MockEntity, UpdateEntity):
         """Title of the software."""
         return self._handle("title")
 
-    def install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-    ) -> None:
+    def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update."""
         if backup:
             _LOGGER.info("Creating backup before installing update")
