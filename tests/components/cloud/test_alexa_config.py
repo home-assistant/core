@@ -6,8 +6,8 @@ import pytest
 
 from homeassistant.components.alexa import errors
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed, mock_registry
@@ -44,6 +44,20 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
         suggested_object_id="system_light",
         entity_category="system",
     )
+    entity_entry4 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_hidden_integration_id",
+        suggested_object_id="hidden_integration_light",
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
+    entity_entry5 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_hidden_user_id",
+        suggested_object_id="hidden_user_light",
+        hidden_by=er.RegistryEntryHider.USER,
+    )
 
     entity_conf = {"should_expose": False}
     await cloud_prefs.async_update(
@@ -61,20 +75,26 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)
     assert not conf.should_expose(entity_entry3.entity_id)
+    assert not conf.should_expose(entity_entry4.entity_id)
+    assert not conf.should_expose(entity_entry5.entity_id)
 
     entity_conf["should_expose"] = True
     assert conf.should_expose("light.kitchen")
-    # config and diagnostic entities should not be exposed
+    # categorized and hidden entities should not be exposed
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)
     assert not conf.should_expose(entity_entry3.entity_id)
+    assert not conf.should_expose(entity_entry4.entity_id)
+    assert not conf.should_expose(entity_entry5.entity_id)
 
     entity_conf["should_expose"] = None
     assert conf.should_expose("light.kitchen")
-    # config and diagnostic entities should not be exposed
+    # categorized and hidden entities should not be exposed
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)
     assert not conf.should_expose(entity_entry3.entity_id)
+    assert not conf.should_expose(entity_entry4.entity_id)
+    assert not conf.should_expose(entity_entry5.entity_id)
 
     assert "alexa" not in hass.config.components
     await cloud_prefs.async_update(
@@ -324,7 +344,7 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "create", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
@@ -334,7 +354,7 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "remove", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
@@ -344,7 +364,7 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {
                 "action": "update",
                 "entity_id": "light.kitchen",
@@ -359,7 +379,7 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "update", "entity_id": "light.kitchen", "changes": ["icon"]},
         )
         await hass.async_block_till_done()

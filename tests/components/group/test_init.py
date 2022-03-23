@@ -1370,7 +1370,7 @@ async def test_plant_group(hass):
         ("binary_sensor", "on", {"all": False}),
         ("cover", "open", {}),
         ("fan", "on", {}),
-        ("light", "on", {}),
+        ("light", "on", {"all": False}),
         ("media_player", "on", {}),
     ),
 )
@@ -1435,7 +1435,7 @@ async def test_setup_and_remove_config_entry(
         ("binary_sensor", {"all": False}),
         ("cover", {}),
         ("fan", {}),
-        ("light", {}),
+        ("light", {"all": False}),
         ("media_player", {}),
     ),
 )
