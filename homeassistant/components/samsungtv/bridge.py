@@ -59,6 +59,9 @@ from .const import (
 
 KEY_PRESS_TIMEOUT = 1.2
 
+# Max delay waiting for app_list to return, as some TVs simply ignore the request
+APP_LIST_DELAY = 3
+
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
     """Extract the mac address from the device info."""
@@ -161,6 +164,10 @@ class SamsungTVBridge(ABC):
     @abstractmethod
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
+
+    async def async_request_app_list(self) -> None:  # pylint:disable=[no-self-use]
+        """Request app list."""
+        return
 
     @abstractmethod
     async def async_is_on(self) -> bool:
@@ -351,6 +358,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         self._device_info: dict[str, Any] | None = None
         self._remote: SamsungTVWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
+        self._app_list_event: asyncio.Event = asyncio.Event()
 
     def _get_device_spec(self, key: str) -> Any | None:
         """Check if a flag exists in latest device info."""
@@ -443,6 +451,20 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Send the launch_app command using websocket protocol."""
         await self._async_send_commands([ChannelEmitCommand.launch_app(app_id)])
 
+    async def async_request_app_list(self) -> None:
+        """Get installed app list."""
+        self._app_list_event.clear()
+        await self._async_send_commands([ChannelEmitCommand.get_installed_app()])
+        try:
+            await asyncio.wait_for(self._app_list_event.wait(), APP_LIST_DELAY)
+        except AsyncioTimeoutError as err:
+            LOGGER.debug(
+                "TV %s does not seem to support 'ed.installedApp.get' event, "
+                "which was dropped by Samsung on newer models: %s",
+                self.host,
+                err.__repr__(),
+            )
+
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using websocket protocol."""
         await self._async_send_commands([SendRemoteKey.click(key) for key in keys])
@@ -519,7 +541,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 self._remote = None
             else:
                 LOGGER.debug("Created SamsungTVWSBridge for %s", self.host)
-                await self._remote.send_command(ChannelEmitCommand.get_installed_app())
                 if self._device_info is None:
                     # Initialise device info on first connect
                     await self.async_device_info()
@@ -534,15 +555,17 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def _remote_event(self, event: str, response: Any) -> None:
         """Received event from remote websocket."""
-        if event == ED_INSTALLED_APP_EVENT and self._app_list_callback is not None:
-            app_list = {
-                app["name"]: app["appId"]
-                for app in sorted(
-                    parse_installed_app(response),
-                    key=lambda app: cast(str, app["name"]),
-                )
-            }
-            self._app_list_callback(app_list)
+        if event == ED_INSTALLED_APP_EVENT:
+            if self._app_list_callback is not None:
+                app_list = {
+                    app["name"]: app["appId"]
+                    for app in sorted(
+                        parse_installed_app(response),
+                        key=lambda app: cast(str, app["name"]),
+                    )
+                }
+                self._app_list_callback(app_list)
+            self._app_list_event.set()
             return
         if event == MS_ERROR_EVENT:
             # { 'event': 'ms.error',
