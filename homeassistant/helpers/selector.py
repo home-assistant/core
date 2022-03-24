@@ -258,7 +258,7 @@ class TimeSelector(Selector):
 
     selector_type = "time"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Optional("as_str", default=False): bool})
+    CONFIG_SCHEMA = vol.Schema({})
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
@@ -407,7 +407,7 @@ class DurationSelector(Selector):
 
     selector_type = "duration"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Optional("as_dict", default=False): bool})
+    CONFIG_SCHEMA = vol.Schema({})
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
