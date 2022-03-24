@@ -84,7 +84,7 @@ SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     }
 )
 
-DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration linked to it with a config entry
         vol.Optional("integration"): str,
@@ -94,7 +94,6 @@ DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("model"): str,
         # Device has to contain entities matching this selector
         vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
-        vol.Optional("multiple", default=False): cv.boolean,
     }
 )
 
@@ -140,7 +139,7 @@ class AreaSelector(Selector):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
-            vol.Optional("device"): DEVICE_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )
@@ -183,13 +182,82 @@ class BooleanSelector(Selector):
         return value
 
 
+@SELECTORS.register("color_rgb")
+class ColorRGBSelector(Selector):
+    """Selector of an RGB color value."""
+
+    selector_type = "color_rgb"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> list[int]:
+        """Validate the passed selection."""
+        value: list[int] = vol.All(list, vol.ExactSequence((cv.byte,) * 3))(data)
+        return value
+
+
+@SELECTORS.register("color_temp")
+class ColorTempSelector(Selector):
+    """Selector of an color temperature."""
+
+    selector_type = "color_temp"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("max_mireds"): vol.Coerce(int),
+            vol.Optional("min_mireds"): vol.Coerce(int),
+        }
+    )
+
+    def __call__(self, data: Any) -> int:
+        """Validate the passed selection."""
+        value: int = vol.All(
+            vol.Coerce(float),
+            vol.Range(
+                min=self.config.get("min_mireds"),
+                max=self.config.get("max_mireds"),
+            ),
+        )(data)
+        return value
+
+
+@SELECTORS.register("date")
+class DateSelector(Selector):
+    """Selector of a date."""
+
+    selector_type = "date"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        cv.date(data)
+        return data
+
+
+@SELECTORS.register("datetime")
+class DateTimeSelector(Selector):
+    """Selector of a datetime."""
+
+    selector_type = "datetime"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        cv.datetime(data)
+        return data
+
+
 @SELECTORS.register("device")
 class DeviceSelector(Selector):
     """Selector of a single or list of devices."""
 
     selector_type = "device"
 
-    CONFIG_SCHEMA = DEVICE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA.extend(
+        {vol.Optional("multiple", default=False): cv.boolean}
+    )
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
@@ -222,7 +290,11 @@ class EntitySelector(Selector):
     selector_type = "entity"
 
     CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
-        {vol.Optional("multiple", default=False): cv.boolean}
+        {
+            vol.Optional("exclude_entities"): [str],
+            vol.Optional("include_entities"): [str],
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
     )
 
     def __call__(self, data: Any) -> str | list[str]:
@@ -456,7 +528,7 @@ class TargetSelector(Selector):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
-            vol.Optional("device"): DEVICE_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
         }
     )
 

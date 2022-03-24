@@ -485,3 +485,72 @@ def test_location_selector_schema(schema, valid_selections, invalid_selections):
     """Test location selector."""
 
     _test_selector("location", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ([0, 0, 0], [255, 255, 255], [0.0, 0.0, 0.0], [255.0, 255.0, 255.0]),
+            (None, "abc", [0, 0, "nil"], (255, 255, 255)),
+        ),
+    ),
+)
+def test_rgb_color_selector_schema(schema, valid_selections, invalid_selections):
+    """Test color_rgb selector."""
+
+    _test_selector("color_rgb", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            (100, 100.0),
+            (None, "abc", [100]),
+        ),
+        (
+            {"min_mireds": 100, "max_mireds": 200},
+            (100, 200),
+            (99, 201),
+        ),
+    ),
+)
+def test_color_tempselector_schema(schema, valid_selections, invalid_selections):
+    """Test color_temp selector."""
+
+    _test_selector("color_temp", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ("2022-03-24",),
+            (None, "abc", "00:00", "2022-03-24 00:00", "2022-03-32"),
+        ),
+    ),
+)
+def test_date_selector_schema(schema, valid_selections, invalid_selections):
+    """Test date selector."""
+
+    _test_selector("date", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ("2022-03-24 00:00", "2022-03-24"),
+            (None, "abc", "00:00", "2022-03-24 24:01"),
+        ),
+    ),
+)
+def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
+    """Test datetime selector."""
+
+    _test_selector("datetime", schema, valid_selections, invalid_selections)
