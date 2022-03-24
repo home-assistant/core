@@ -27,14 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_METHOD,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component
 import homeassistant.helpers.config_validation as cv
@@ -52,7 +45,6 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
-    METHOD_ENCRYPTED_WEBSOCKET,
 )
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -125,10 +117,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._app_list: dict[str, str] | None = None
         self._app_list_event: asyncio.Event = asyncio.Event()
 
-        if config_entry.data.get(CONF_METHOD) != METHOD_ENCRYPTED_WEBSOCKET:
-            # Encrypted websockets currently only support ON/OFF status
-            self._attr_supported_features = SUPPORT_SAMSUNGTV
-
+        self._attr_supported_features = SUPPORT_SAMSUNGTV
         if self._on_script or self._mac:
             # Add turn-on if on_script or mac is available
             self._attr_supported_features |= SUPPORT_TURN_ON
