@@ -57,11 +57,6 @@ BINARY_SENSOR_CONFIG_SCHEMA = vol.Schema(
     {vol.Required("name"): selector.selector({"text": {}})}
 ).extend(BINARY_SENSOR_OPTIONS_SCHEMA.schema)
 
-LIGHT_CONFIG_SCHEMA = vol.Schema(
-    {vol.Required("name"): selector.selector({"text": {}})}
-).extend(LIGHT_OPTIONS_SCHEMA.schema)
-
-
 GROUP_TYPES = ["binary_sensor", "cover", "fan", "light", "media_player"]
 
 
@@ -91,7 +86,9 @@ CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
         basic_group_config_schema("cover"), set_group_type("cover")
     ),
     "fan": HelperFlowFormStep(basic_group_config_schema("fan"), set_group_type("fan")),
-    "light": HelperFlowFormStep(LIGHT_CONFIG_SCHEMA, set_group_type("light")),
+    "light": HelperFlowFormStep(
+        basic_group_config_schema("light"), set_group_type("light")
+    ),
     "media_player": HelperFlowFormStep(
         basic_group_config_schema("media_player"), set_group_type("media_player")
     ),
