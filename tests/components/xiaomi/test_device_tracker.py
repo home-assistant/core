@@ -194,7 +194,6 @@ async def test_config_full(xiaomi_mock, hass):
     assert call_arg["timeout"] == 10
     assert call_arg["host"] == "192.168.0.1"
     assert call_arg["platform"] == "device_tracker"
-
     
 @patch(
     "homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner",
