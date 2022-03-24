@@ -36,6 +36,8 @@ async def test_trigger_entity_save_state(hass):
     )
     entity._rendered["_timedelta"] = timedelta(days=1, seconds=5, milliseconds=0)
 
+    setattr(entity, "_additional_saved_data", "additional saved data")
+
     restored_extra_data = entity.extra_restore_state_data.as_dict()
 
     # Confirm standard TemplateEntity templates
@@ -58,6 +60,8 @@ async def test_trigger_entity_save_state(hass):
         "__type": "<class 'datetime.timedelta'>",
         "repr": {"days": 1, "seconds": 5, "microseconds": 0},
     }
+
+    assert restored_extra_data["_additional_saved_data"] == "additional saved data"
 
 
 async def test_template_entity_restore_state(hass):
@@ -95,6 +99,7 @@ async def test_template_entity_restore_state(hass):
                         "repr": {"days": 1, "seconds": 5, "microseconds": 0},
                     },
                     CONF_ATTRIBUTES: {"attr": "attribute"},
+                    "_additional_saved_data": "additional saved data",
                 },
             ),
         ),
@@ -117,6 +122,7 @@ async def test_template_entity_restore_state(hass):
     assert entity._rendered["_timedelta"] == timedelta(
         days=1, seconds=5, milliseconds=0
     )
+    assert getattr(entity, "_additional_saved_data", None) == "additional saved data"
 
 
 def _setup_rendered_templates(entity):
@@ -131,3 +137,4 @@ def _setup_rendered_templates(entity):
     entity._to_render_complex.append("_timedelta")
 
     entity._config[CONF_ATTRIBUTES] = {"attr": "dummy"}
+    entity.add_additional_data("_additional_saved_data")
