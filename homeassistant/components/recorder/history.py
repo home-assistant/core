@@ -65,7 +65,7 @@ QUERY_STATE_NO_ATTR = [
 QUERY_STATES_PRE_SCHEMA_25 = [
     *BASE_STATES,
     States.attributes,
-    literal(value="{}", type_=Text).label("shared_attrs"),
+    literal(value=None, type_=Text).label("shared_attrs"),
 ]
 QUERY_STATES = [
     *BASE_STATES,
@@ -80,20 +80,45 @@ def query_and_join_attributes(
     hass: HomeAssistant, no_attributes: bool
 ) -> tuple[list[Column], bool]:
     """Return the query keys and if StateAttributes should be joined."""
-    # If we in the process of migrating schema we do
-    # not want to join the state_attributes table as we
-    # do not know if it will be there yet
-    if recorder.get_instance(hass).migration_in_progress:
-        return QUERY_STATES_PRE_SCHEMA_25, False
     # If no_attributes was requested we do the query
     # without the attributes fields and do not join the
     # state_attributes table
     if no_attributes:
         return QUERY_STATE_NO_ATTR, False
+    # If we in the process of migrating schema we do
+    # not want to join the state_attributes table as we
+    # do not know if it will be there yet
+    if recorder.get_instance(hass).migration_in_progress:
+        return QUERY_STATES_PRE_SCHEMA_25, False
     # Finally if no migration is in progress and no_attributes
     # was not requested, we query both attributes columns and
     # join state_attributes
     return QUERY_STATES, True
+
+
+def bake_query_and_join_attributes(
+    hass: HomeAssistant, no_attributes: bool
+) -> tuple[baked.bakery, bool]:
+    """Return the initial backed query and if StateAttributes should be joined.
+
+    Because these are baked queries the values inside the lambdas need
+    to be explicitly written out to avoid caching the wrong values.
+    """
+    bakery: baked.bakery = hass.data[HISTORY_BAKERY]
+    # If no_attributes was requested we do the query
+    # without the attributes fields and do not join the
+    # state_attributes table
+    if no_attributes:
+        return bakery(lambda session: session.query(*QUERY_STATE_NO_ATTR)), False
+    # If we in the process of migrating schema we do
+    # not want to join the state_attributes table as we
+    # do not know if it will be there yet
+    if recorder.get_instance(hass).migration_in_progress:
+        return bakery(lambda session: session.query(*QUERY_STATES_PRE_SCHEMA_25)), False
+    # Finally if no migration is in progress and no_attributes
+    # was not requested, we query both attributes columns and
+    # join state_attributes
+    return bakery(lambda session: session.query(*QUERY_STATES)), True
 
 
 def async_setup(hass):
@@ -132,8 +157,7 @@ def get_significant_states_with_session(
     thermostat so that we get current temperature in our graphs).
     """
     timer_start = time.perf_counter()
-    query_keys, join_attributes = query_and_join_attributes(hass, no_attributes)
-    baked_query = hass.data[HISTORY_BAKERY](lambda session: session.query(*query_keys))
+    baked_query, join_attributes = bake_query_and_join_attributes(hass, no_attributes)
 
     if entity_ids is not None and len(entity_ids) == 1:
         if (
@@ -215,9 +239,8 @@ def state_changes_during_period(
 ) -> dict[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
-        query_keys, join_attributes = query_and_join_attributes(hass, no_attributes)
-        baked_query = hass.data[HISTORY_BAKERY](
-            lambda session: session.query(*query_keys)
+        baked_query, join_attributes = bake_query_and_join_attributes(
+            hass, no_attributes
         )
 
         baked_query += lambda q: q.filter(
@@ -268,10 +291,8 @@ def get_last_state_changes(hass, number_of_states, entity_id):
     start_time = dt_util.utcnow()
 
     with session_scope(hass=hass) as session:
-        query_keys, join_attributes = query_and_join_attributes(hass, False)
-        baked_query = hass.data[HISTORY_BAKERY](
-            lambda session: session.query(*query_keys)
-        )
+        baked_query, join_attributes = bake_query_and_join_attributes(hass, False)
+
         baked_query += lambda q: q.filter(States.last_changed == States.last_updated)
 
         if entity_id is not None:
@@ -430,8 +451,7 @@ def _get_single_entity_states_with_session(
 ):
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
-    query_keys, join_attributes = query_and_join_attributes(hass, no_attributes)
-    baked_query = hass.data[HISTORY_BAKERY](lambda session: session.query(*query_keys))
+    baked_query, join_attributes = bake_query_and_join_attributes(hass, no_attributes)
     baked_query += lambda q: q.filter(
         States.last_updated < bindparam("utc_point_in_time"),
         States.entity_id == bindparam("entity_id"),
