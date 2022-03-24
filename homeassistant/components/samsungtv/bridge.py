@@ -39,9 +39,11 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.frame import report
 
 from .const import (
     CONF_DESCRIPTION,
+    CONF_MODEL,
     CONF_SESSION_ID,
     ENCRYPTED_WEBSOCKET_PORT,
     LEGACY_PORT,
@@ -610,6 +612,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
 class SamsungTVEncryptedBridge(SamsungTVBridge):
     """The Bridge for Encrypted WebSocket TVs (J/H models)."""
 
+    _MODEL_USES_POWER_OFF = set("UE50H6400")
+    _MODEL_USES_POWER = set("UN75JU641D")
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -620,9 +625,12 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
     ) -> None:
         """Initialize Bridge."""
         super().__init__(hass, method, host, port)
+        self._model: str | None = None
         if entry_data:
             self.token = entry_data.get(CONF_TOKEN)
             self.session_id = entry_data.get(CONF_SESSION_ID)
+            self._model = entry_data.get(CONF_MODEL)
+
         self._rest_api_port: int | None = None
         self._device_info: dict[str, Any] | None = None
         self._remote: SamsungTVEncryptedWSAsyncRemote | None = None
@@ -763,7 +771,19 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
 
     async def async_power_off(self) -> None:
         """Send power off command to remote."""
-        await self._async_send_commands([SendEncryptedRemoteKey.click("KEY_POWER")])
+        power_off_commands: list[SamsungTVEncryptedCommand] = []
+        if self._model in self._MODEL_USES_POWER_OFF:
+            power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWEROFF"))
+        elif self._model in self._MODEL_USES_POWER:
+            power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWER"))
+        else:
+            report(
+                f"sends both KEY_POWEROFF and KEY_POWER because model {self._model} "
+                "for {self.host} is unrecognised"
+            )
+            power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWEROFF"))
+            power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWER"))
+        await self._async_send_commands(power_off_commands)
         # Force closing of remote session to provide instant UI feedback
         await self.async_close_remote()
 

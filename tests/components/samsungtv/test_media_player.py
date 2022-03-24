@@ -814,9 +814,11 @@ async def test_turn_off_encrypted_websocket(
     # key called
     assert remoteencws.send_commands.call_count == 1
     commands = remoteencws.send_commands.call_args_list[0].args[0]
-    assert len(commands) == 1
-    assert isinstance(commands[0], SamsungTVEncryptedCommand)
-    assert commands[0].body["param3"] == "KEY_POWEROFF"
+    assert len(commands) == 2
+    assert isinstance(command := commands[0], SamsungTVEncryptedCommand)
+    assert command.body["param3"] == "KEY_POWEROFF"
+    assert isinstance(command := commands[1], SamsungTVEncryptedCommand)
+    assert command.body["param3"] == "KEY_POWER"
 
     # commands not sent : power off in progress
     remoteencws.send_commands.reset_mock()
