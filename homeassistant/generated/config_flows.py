@@ -364,7 +364,6 @@ FLOWS = {
         "upnp",
         "uptime",
         "uptimerobot",
-        "utility_meter",
         "vallox",
         "velbus",
         "venstar",
@@ -405,6 +404,7 @@ FLOWS = {
     "helper": [
         "derivative",
         "min_max",
-        "tod"
+        "tod",
+        "utility_meter"
     ]
 }
