@@ -7,7 +7,6 @@ import requests_mock
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.components.wallbox import CONF_MAX_CHARGING_CURRENT_KEY
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
 
 from tests.components.wallbox import entry, setup_integration
 from tests.components.wallbox.const import (
@@ -32,7 +31,7 @@ authorisation_response = json.loads(
 )
 
 
-async def test_wallbox_number_class(hass: HomeAssistant):
+async def test_wallbox_number_class(hass):
     """Test wallbox sensor class."""
 
     await setup_integration(hass)
@@ -61,7 +60,7 @@ async def test_wallbox_number_class(hass: HomeAssistant):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_wallbox_number_class_connection_error(hass: HomeAssistant):
+async def test_wallbox_number_class_connection_error(hass):
     """Test wallbox sensor class."""
 
     await setup_integration(hass)

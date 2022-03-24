@@ -24,7 +24,6 @@ from homeassistant.components.wallbox.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
 from .const import CONF_ERROR, CONF_JWT, CONF_STATUS, CONF_TTL, CONF_USER_ID
 
@@ -74,7 +73,7 @@ entry = MockConfigEntry(
 )
 
 
-async def setup_integration(hass: HomeAssistant):
+async def setup_integration(hass):
     """Test wallbox sensor class setup."""
 
     entry.add_to_hass(hass)
@@ -102,7 +101,7 @@ async def setup_integration(hass: HomeAssistant):
         await hass.async_block_till_done()
 
 
-async def setup_integration_connection_error(hass: HomeAssistant):
+async def setup_integration_connection_error(hass):
     """Test wallbox sensor class setup with a connection error."""
 
     with requests_mock.Mocker() as mock_request:
@@ -128,7 +127,7 @@ async def setup_integration_connection_error(hass: HomeAssistant):
         await hass.async_block_till_done()
 
 
-async def setup_integration_read_only(hass: HomeAssistant):
+async def setup_integration_read_only(hass):
     """Test wallbox sensor class setup for read only."""
 
     with requests_mock.Mocker() as mock_request:

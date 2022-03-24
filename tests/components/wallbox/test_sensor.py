@@ -1,6 +1,5 @@
 """Test Wallbox Switch component."""
 from homeassistant.const import CONF_ICON, CONF_UNIT_OF_MEASUREMENT, POWER_KILO_WATT
-from homeassistant.core import HomeAssistant
 
 from tests.components.wallbox import entry, setup_integration
 from tests.components.wallbox.const import (
@@ -10,7 +9,7 @@ from tests.components.wallbox.const import (
 )
 
 
-async def test_wallbox_sensor_class(hass: HomeAssistant):
+async def test_wallbox_sensor_class(hass):
     """Test wallbox sensor class."""
 
     await setup_integration(hass)
