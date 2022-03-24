@@ -735,14 +735,13 @@ class Recorder(threading.Thread):
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, _empty_queue)
 
-        @callback
-        def _async_shutdown(event: Event) -> None:
+        async def _async_shutdown(event: Event) -> None:
             """Shut down the Recorder."""
             if not self._hass_started.done():
                 self._hass_started.set_result(SHUTDOWN_TASK)
             self.queue.put(StopTask())
             self._async_stop_queue_watcher_and_event_listener()
-            self.hass.async_add_executor_job(self.join)
+            await self.hass.async_add_executor_job(self.join)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
 
