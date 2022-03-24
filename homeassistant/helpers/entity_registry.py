@@ -962,6 +962,22 @@ def async_validate_entity_id(registry: EntityRegistry, entity_id_or_uuid: str) -
 
 
 @callback
+def async_resolve_entity_id(
+    registry: EntityRegistry, entity_id_or_uuid: str
+) -> str | None:
+    """Validate and resolve an entity id or UUID to an entity id.
+
+    Returns None if the entity or UUID is invalid, or if the UUID is not
+    associated with an entity registry item.
+    """
+    if valid_entity_id(entity_id_or_uuid):
+        return entity_id_or_uuid
+    if (entry := registry.entities.get_entry(entity_id_or_uuid)) is None:
+        return None
+    return entry.entity_id
+
+
+@callback
 def async_validate_entity_ids(
     registry: EntityRegistry, entity_ids_or_uuids: list[str]
 ) -> list[str]:

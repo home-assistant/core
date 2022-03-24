@@ -31,10 +31,10 @@ async def async_setup_entry(
         )
 
 
-class HWEnergySwitchEntity(CoordinatorEntity, SwitchEntity):
+class HWEnergySwitchEntity(
+    CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SwitchEntity
+):
     """Representation switchable entity."""
-
-    coordinator: HWEnergyDeviceUpdateCoordinator
 
     def __init__(
         self,
