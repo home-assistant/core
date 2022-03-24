@@ -86,15 +86,15 @@ class HelperCommonFlowHandler:
             and not self._handler.show_advanced_options
         ):
             # Add advanced field default if not set
-            for key in data_schema.schema.items():
+            for key in data_schema.schema.keys():
                 if isinstance(key, (vol.Optional, vol.Required)):
                     if (
                         key.description
                         and key.description.get("advanced")
-                        and key.default is not vol.Undefined
+                        and key.default is not vol.UNDEFINED
                         and key not in self._options
                     ):
-                        user_input[key] = key.default
+                        user_input[str(key.schema)] = key.default()
 
         if user_input is not None and form_step.schema is not None:
             # Do extra validation of user input
