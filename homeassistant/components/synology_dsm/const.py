@@ -21,6 +21,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.switch import SwitchEntityDescription
+from homeassistant.components.update import UpdateEntityDescription
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
@@ -38,6 +39,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 COORDINATOR_CAMERAS = "coordinator_cameras"
 COORDINATOR_CENTRAL = "coordinator_central"
@@ -93,6 +95,13 @@ class SynologyDSMBinarySensorEntityDescription(
     BinarySensorEntityDescription, SynologyDSMEntityDescription
 ):
     """Describes Synology DSM binary sensor entity."""
+
+
+@dataclass
+class SynologyDSMUpdateEntityEntityDescription(
+    UpdateEntityDescription, SynologyDSMEntityDescription
+):
+    """Describes Synology DSM update entity."""
 
 
 @dataclass
