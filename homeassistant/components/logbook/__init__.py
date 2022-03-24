@@ -7,7 +7,6 @@ from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 from itertools import groupby
 import json
-import logging
 import re
 from typing import Any
 
@@ -122,8 +121,6 @@ LOG_MESSAGE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
@@ -492,11 +489,6 @@ def _get_events(
                 query = query.filter(Events.context_id == context_id)
 
         query = query.order_by(Events.time_fired)
-
-        _LOGGER.warning(
-            "Running logbook query: %s",
-            str(query.statement.compile(compile_kwargs={"literal_binds": True})),
-        )
 
         return list(
             humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
