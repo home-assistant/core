@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import pathlib
 
 from homeassistant.config_entries import ConfigEntry
