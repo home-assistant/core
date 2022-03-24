@@ -834,6 +834,37 @@ async def test_turn_off_encrypted_websocket(
     remoteencws.send_commands.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("model", "expected_key_type"),
+    [("UE50H6400", "KEY_POWEROFF"), ("UN75JU641D", "KEY_POWER")],
+)
+async def test_turn_off_encrypted_websocket_key_type(
+    hass: HomeAssistant,
+    remoteencws: Mock,
+    caplog: pytest.LogCaptureFixture,
+    model: str,
+    expected_key_type: str,
+) -> None:
+    """Test for turn_off."""
+    entry_data = deepcopy(MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data[CONF_MODEL] = model
+    await setup_samsungtv_entry(hass, entry_data)
+
+    remoteencws.send_commands.reset_mock()
+
+    caplog.clear()
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    # key called
+    assert remoteencws.send_commands.call_count == 1
+    commands = remoteencws.send_commands.call_args_list[0].args[0]
+    assert len(commands) == 1
+    assert isinstance(command := commands[0], SamsungTVEncryptedCommand)
+    assert command.body["param3"] == expected_key_type
+    assert "Unknown power_off command for" not in caplog.text
+
+
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
     """Test for turn_off."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
