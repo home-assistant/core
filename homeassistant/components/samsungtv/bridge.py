@@ -39,7 +39,6 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.frame import report
 
 from .const import (
     CONF_DESCRIPTION,
@@ -612,8 +611,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
 class SamsungTVEncryptedBridge(SamsungTVBridge):
     """The Bridge for Encrypted WebSocket TVs (J/H models)."""
 
-    _MODEL_USES_POWER_OFF = set("UE50H6400")
-    _MODEL_USES_POWER = set("UN75JU641D")
+    _MODEL_USES_POWER_OFF = set("H6400")
+    _MODEL_USES_POWER = set("JU641D")
 
     def __init__(
         self,
@@ -625,11 +624,15 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
     ) -> None:
         """Initialize Bridge."""
         super().__init__(hass, method, host, port)
+        self._power_off_warning_logged: bool = False
         self._model: str | None = None
+        self._short_model: str | None = None
         if entry_data:
             self.token = entry_data.get(CONF_TOKEN)
             self.session_id = entry_data.get(CONF_SESSION_ID)
             self._model = entry_data.get(CONF_MODEL)
+            if self._model and len(self._model) > 4:
+                self._short_model = self._model[4:]
 
         self._rest_api_port: int | None = None
         self._device_info: dict[str, Any] | None = None
@@ -772,15 +775,18 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
     async def async_power_off(self) -> None:
         """Send power off command to remote."""
         power_off_commands: list[SamsungTVEncryptedCommand] = []
-        if self._model in self._MODEL_USES_POWER_OFF:
+        if self._short_model in self._MODEL_USES_POWER_OFF:
             power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWEROFF"))
-        elif self._model in self._MODEL_USES_POWER:
+        elif self._short_model in self._MODEL_USES_POWER:
             power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWER"))
         else:
-            report(
-                f"sends both KEY_POWEROFF and KEY_POWER because model {self._model} "
-                "for {self.host} is unrecognised"
-            )
+            if self._model and not self._power_off_warning_logged:
+                LOGGER.warning(
+                    "Unknown power_off command for %s (%s): sending KEY_POWEROFF and KEY_POWER",
+                    self._model,
+                    self.host,
+                )
+                self._power_off_warning_logged = True
             power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWEROFF"))
             power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWER"))
         await self._async_send_commands(power_off_commands)

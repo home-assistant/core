@@ -31,6 +31,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
 )
 from homeassistant.components.samsungtv.const import (
+    CONF_MODEL,
     CONF_ON_ACTION,
     DOMAIN as SAMSUNGTV_DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
@@ -804,10 +805,13 @@ async def test_turn_off_encrypted_websocket(
     hass: HomeAssistant, remoteencws: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data = deepcopy(MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data[CONF_MODEL] = "UE48JU6400"
+    await setup_samsungtv_entry(hass, entry_data)
 
     remoteencws.send_commands.reset_mock()
 
+    caplog.clear()
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -819,6 +823,7 @@ async def test_turn_off_encrypted_websocket(
     assert command.body["param3"] == "KEY_POWEROFF"
     assert isinstance(command := commands[1], SamsungTVEncryptedCommand)
     assert command.body["param3"] == "KEY_POWER"
+    assert "Unknown power_off command for UE48JU6400 (fake_host)" in caplog.text
 
     # commands not sent : power off in progress
     remoteencws.send_commands.reset_mock()
