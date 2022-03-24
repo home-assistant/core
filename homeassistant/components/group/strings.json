@@ -59,31 +59,38 @@
   },
   "options": {
     "step": {
-      "binary_sensor_options": {
+      "binary_sensor": {
+        "description": "[%key:component::group::config::step::binary_sensor::description%]",
         "data": {
           "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
-          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }
       },
-      "cover_options": {
+      "cover": {
         "data": {
-          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }
       },
-      "fan_options": {
+      "fan": {
         "data": {
-          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }
       },
-      "light_options": {
+      "light": {
+        "description": "[%key:component::group::config::step::binary_sensor::description%]",
         "data": {
           "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
-          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }
       },
-      "media_player_options": {
+      "media_player": {
         "data": {
-          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }
       }
     }
