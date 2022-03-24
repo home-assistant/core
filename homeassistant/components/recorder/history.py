@@ -6,6 +6,7 @@ from datetime import datetime
 from itertools import groupby
 import logging
 import time
+from typing import Any
 
 from sqlalchemy import Column, Text, and_, bindparam, func, or_
 from sqlalchemy.ext import baked
@@ -98,7 +99,7 @@ def query_and_join_attributes(
 
 def bake_query_and_join_attributes(
     hass: HomeAssistant, no_attributes: bool
-) -> tuple[baked.bakery, bool]:
+) -> tuple[Any, bool]:
     """Return the initial backed query and if StateAttributes should be joined.
 
     Because these are baked queries the values inside the lambdas need
