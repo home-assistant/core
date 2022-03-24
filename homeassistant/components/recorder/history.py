@@ -10,14 +10,16 @@ from typing import Any
 
 from sqlalchemy import Column, Text, and_, bindparam, func, or_
 from sqlalchemy.ext import baked
+from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
 
 from homeassistant.components import recorder
-from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from .models import (
     LazyState,
+    RecorderRuns,
     StateAttributes,
     States,
     process_timestamp_to_utc_isoformat,
@@ -123,29 +125,31 @@ def bake_query_and_join_attributes(
     return bakery(lambda session: session.query(*QUERY_STATES)), True
 
 
-def async_setup(hass):
+def async_setup(hass: HomeAssistant) -> None:
     """Set up the history hooks."""
     hass.data[HISTORY_BAKERY] = baked.bakery()
 
 
-def get_significant_states(hass, *args, **kwargs):
+def get_significant_states(
+    hass, *args: Any, **kwargs: Any
+) -> dict[str, list[LazyState | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass) as session:
         return get_significant_states_with_session(hass, session, *args, **kwargs)
 
 
 def get_significant_states_with_session(
-    hass,
-    session,
-    start_time,
-    end_time=None,
-    entity_ids=None,
-    filters=None,
-    include_start_time_state=True,
-    significant_changes_only=True,
-    minimal_response=False,
-    no_attributes=False,
-):
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    end_time: datetime | None = None,
+    entity_ids: list[str] = None,
+    filters: Any = None,
+    include_start_time_state: bool = True,
+    significant_changes_only: bool = True,
+    minimal_response: bool = False,
+    no_attributes: bool = False,
+) -> dict[str, list[LazyState | dict[str, Any]]]:
     """
     Return states changes during UTC period start_time - end_time.
 
@@ -238,7 +242,7 @@ def state_changes_during_period(
     descending: bool = False,
     limit: int | None = None,
     include_start_time_state: bool = True,
-) -> dict[str, list[State]]:
+) -> dict[str, list[LazyState | dict[str, Any]]]:
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
         baked_query, join_attributes = bake_query_and_join_attributes(
@@ -338,12 +342,13 @@ def get_states(
     no_attributes=False,
 ):
     """Return the states at a specific point in time."""
-    if run is None:
-        run = recorder.run_information_from_instance(hass, utc_point_in_time)
-
+    if (
+        run is None
+        and (run := (recorder.run_information_from_instance(hass, utc_point_in_time)))
+        is None
+    ):
         # History did not run before utc_point_in_time
-        if run is None:
-            return []
+        return []
 
     with session_scope(hass=hass) as session:
         return _get_states_with_session(
@@ -352,26 +357,27 @@ def get_states(
 
 
 def _get_states_with_session(
-    hass,
-    session,
-    utc_point_in_time,
-    entity_ids=None,
-    run=None,
-    filters=None,
-    no_attributes=False,
-):
+    hass: HomeAssistant,
+    session: Session,
+    utc_point_in_time: datetime,
+    entity_ids: list[str] | None = None,
+    run: RecorderRuns = None,
+    filters: Any = None,
+    no_attributes: bool = False,
+) -> list[LazyState]:
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
         return _get_single_entity_states_with_session(
             hass, session, utc_point_in_time, entity_ids[0], no_attributes
         )
 
-    if run is None:
-        run = recorder.run_information_with_session(session, utc_point_in_time)
-
+    if (
+        run is None
+        and (run := (recorder.run_information_from_instance(hass, utc_point_in_time)))
+        is None
+    ):
         # History did not run before utc_point_in_time
-        if run is None:
-            return []
+        return []
 
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
@@ -444,7 +450,7 @@ def _get_states_with_session(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
             )
 
-    attr_cache = {}
+    attr_cache: dict[str, dict[str, Any]] = {}
     return [LazyState(row, attr_cache) for row in execute(query)]
 
 
@@ -473,16 +479,16 @@ def _get_single_entity_states_with_session(
 
 
 def _sorted_states_to_dict(
-    hass,
-    session,
-    states,
-    start_time,
-    entity_ids,
-    filters=None,
-    include_start_time_state=True,
-    minimal_response=False,
-    no_attributes=False,
-):
+    hass: HomeAssistant,
+    session: Session,
+    states: list[States],
+    start_time: datetime,
+    entity_ids: list[str] | None,
+    filters: Any = None,
+    include_start_time_state: bool = True,
+    minimal_response: bool = False,
+    no_attributes: bool = False,
+) -> dict[str, list[LazyState | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
@@ -494,7 +500,7 @@ def _sorted_states_to_dict(
     each list of states, otherwise our graphs won't start on the Y
     axis correctly.
     """
-    result = defaultdict(list)
+    result: dict[str, list[LazyState | dict[str, Any]]] = defaultdict(list)
     # Set all entity IDs to empty lists in result set to maintain the order
     if entity_ids is not None:
         for ent_id in entity_ids:
@@ -529,7 +535,7 @@ def _sorted_states_to_dict(
     for ent_id, group in groupby(states, lambda state: state.entity_id):
         domain = split_entity_id(ent_id)[0]
         ent_results = result[ent_id]
-        attr_cache = {}
+        attr_cache: dict[str, dict[str, Any]] = {}
 
         if not minimal_response or domain in NEED_ATTRIBUTE_DOMAINS:
             ent_results.extend(LazyState(db_state, attr_cache) for db_state in group)
@@ -542,6 +548,7 @@ def _sorted_states_to_dict(
             ent_results.append(LazyState(next(group), attr_cache))
 
         prev_state = ent_results[-1]
+        assert isinstance(prev_state, LazyState)
         initial_state_count = len(ent_results)
 
         for db_state in group:
@@ -570,7 +577,9 @@ def _sorted_states_to_dict(
     return {key: val for key, val in result.items() if val}
 
 
-def get_state(hass, utc_point_in_time, entity_id, run=None, no_attributes=False):
+def get_state(
+    hass, utc_point_in_time: datetime, entity_id: str, run=None, no_attributes=False
+):
     """Return a state at a specific point in time."""
     states = get_states(hass, utc_point_in_time, (entity_id,), run, None, no_attributes)
     return states[0] if states else None
