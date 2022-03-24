@@ -1,5 +1,6 @@
 {
   "domain": "min_max",
+  "integration_type": "helper",
   "name": "Min/Max",
   "documentation": "https://www.home-assistant.io/integrations/min_max",
   "codeowners": [
