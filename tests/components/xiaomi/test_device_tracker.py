@@ -200,7 +200,7 @@ async def test_config_full(xiaomi_mock, hass):
     "homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner",
     return_value=MagicMock(),
 )
-async def test_config_full(xiaomi_mock, hass):
+async def test_config_only_required(xiaomi_mock, hass):
     """Testing configuration with optional values."""
     config = {
         DOMAIN: xiaomi.PLATFORM_SCHEMA(
@@ -208,7 +208,7 @@ async def test_config_full(xiaomi_mock, hass):
                 CONF_PLATFORM: xiaomi.DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_USERNAME: "alternativeAdminName",
-                CONF_PASSWORD: "passwordTest"
+                CONF_PASSWORD: "passwordTest",
             }
         )
     }
