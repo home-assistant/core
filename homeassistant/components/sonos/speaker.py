@@ -154,9 +154,9 @@ class SonosSpeaker:
         self.sub_enabled: bool | None = None
         self.sub_gain: int | None = None
         self.surround_enabled: bool | None = None
-        self.surround_mode: bool | None = None  # surround ambient mode
-        self.surround_level: int | None = None
-        self.music_surround_level: int | None = None
+        self.surround_full_volume_enabled: bool | None = None
+        self.surround_volume_tv: int | None = None
+        self.surround_volume_music: int | None = None
         # Misc features
         self.buttons_enabled: bool | None = None
         self.mic_enabled: bool | None = None
@@ -489,11 +489,14 @@ class SonosSpeaker:
             self.muted = variables["mute"]["Master"] == "1"
 
         class Variable(NamedTuple):
-            """Container for mapping sonos notification variable to our local one."""
+            """Container for mapping sonos notification variable to our local one.
+
+            If local_variable is None, the sonos naming will be used.
+            """
 
             sonos_variable: str  # name in notification
             variable_type: type
-            local_variable: str | None = None  # our local variable name
+            local_variable: str | None = None
 
         variable_list = [
             # Switch variables
