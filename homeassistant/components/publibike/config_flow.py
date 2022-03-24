@@ -56,8 +56,8 @@ class PubliBikeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            station_id = user_input.get(STATION_ID)
-            if station_id is not None:
+            
+            if (station_id := user_input.get(STATION_ID)) is not None:
                 try:
                     id_valid = await self._is_valid_station_id(station_id)
                 except RequestException as req_err:

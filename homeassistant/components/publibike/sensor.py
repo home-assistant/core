@@ -15,32 +15,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the PubliBike sensors."""
-    station = hass.data[DOMAIN][config_entry.entry_id]["station"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
     battery_limit = hass.data[DOMAIN][config_entry.entry_id][BATTERY_LIMIT]
-    entities = [
-        EBikeSensor(station, coordinator, battery_limit),
-        BikeSensor(station, coordinator),
-    ]
+    async_add_entities(
+        [
+            EBikeSensor(coordinator, battery_limit),
+            BikeSensor(coordinator),
+        ]
+    )
 
-    async_add_entities(entities)
 
-
-class PubliBikeSensor(CoordinatorEntity, SensorEntity):
+class PubliBikeSensor(CoordinatorEntity[PubliBikeDataUpdateCoordinator], SensorEntity):
     """Representation of a PubliBike sensor."""
 
-    def __init__(self, station, coordinator):
+    def __init__(self, coordinator):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.station = station
-        self.coordinator = coordinator
         self.attributes = {}
-        self.bike_type = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.station.name} - {self.bike_type.capitalize()}s"
 
     def refresh_common_attributes(self):
         """Update attributes dictionary."""
@@ -61,10 +52,10 @@ class PubliBikeSensor(CoordinatorEntity, SensorEntity):
 class EBikeSensor(PubliBikeSensor):
     """Representation of an E-Bike Sensor."""
 
-    def __init__(self, station, coordinator, battery_limit=None):
+    def __init__(self, coordinator, battery_limit=None):
         """Initialize the sensor."""
-        super().__init__(station, coordinator)
-        self.bike_type = "E-bike"
+        super().__init__(coordinator)
+        self._attr_name = f"{coordinator.station.name} - E-bikes"
         self.battery_limit = battery_limit
 
     @property
@@ -82,7 +73,7 @@ class EBikeSensor(PubliBikeSensor):
 
     def get_battery_levels(self):
         """Update battery level for every bike."""
-        return {f"Bike {bike.name}": bike.batteryLevel for bike in self.station.ebikes}
+        return {f"Bike {bike.name}": bike.batteryLevel for bike in self.coordinator.station.ebikes}
 
     @property
     def extra_state_attributes(self):
@@ -104,9 +95,9 @@ class BikeSensor(PubliBikeSensor):
     def __init__(self, *args, **kwargs):
         """Initialize the sensor."""
         super().__init__(*args, **kwargs)
-        self.bike_type = "bike"
+        self._attr_name = f"{coordinator.station.name} - Bikes"
 
     @property
     def native_value(self) -> int:
         """Return the state of the sensor."""
-        return len(self.station.bikes)
+        return len(self.coordinator.station.bikes)

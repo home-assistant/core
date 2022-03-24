@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "PubliBike",
         "data": {
           "battery_limit": "Min. battery level [%]",
           "latitude": "Latitude (optional)",

@@ -70,7 +70,7 @@ class PubliBikeDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, station: Station) -> None:
         """Initialize global PubliBike station data updater."""
-        self._station = station
+        self.station = station
         self._hass = hass
         super().__init__(
             hass,
@@ -81,4 +81,4 @@ class PubliBikeDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Refresh state of the station."""
-        await self._hass.async_add_executor_job(self._station.refresh)
+        await self._hass.async_add_executor_job(self.station.refresh)
