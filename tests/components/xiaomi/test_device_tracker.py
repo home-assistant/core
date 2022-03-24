@@ -181,6 +181,7 @@ async def test_config_full(xiaomi_mock, hass):
                 CONF_HOST: "192.168.0.1",
                 CONF_USERNAME: "alternativeAdminName",
                 CONF_PASSWORD: "passwordTest",
+                CONF_TIMEOUT: 10
             }
         )
     }
@@ -190,6 +191,34 @@ async def test_config_full(xiaomi_mock, hass):
     call_arg = xiaomi_mock.call_args[0][0]
     assert call_arg["username"] == "alternativeAdminName"
     assert call_arg["password"] == "passwordTest"
+    assert call_arg["timeout"] == 10
+    assert call_arg["host"] == "192.168.0.1"
+    assert call_arg["platform"] == "device_tracker"
+
+    
+@patch(
+    "homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner",
+    return_value=MagicMock(),
+)
+async def test_config_full(xiaomi_mock, hass):
+    """Testing configuration with optional values."""
+    config = {
+        DOMAIN: xiaomi.PLATFORM_SCHEMA(
+            {
+                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_HOST: "192.168.0.1",
+                CONF_USERNAME: "alternativeAdminName",
+                CONF_PASSWORD: "passwordTest"
+            }
+        )
+    }
+    xiaomi.get_scanner(hass, config)
+    assert xiaomi_mock.call_count == 1
+    assert xiaomi_mock.call_args == call(config[DOMAIN])
+    call_arg = xiaomi_mock.call_args[0][0]
+    assert call_arg["username"] == "alternativeAdminName"
+    assert call_arg["password"] == "passwordTest"
+    assert call_arg["timeout"] == 5
     assert call_arg["host"] == "192.168.0.1"
     assert call_arg["platform"] == "device_tracker"
 
