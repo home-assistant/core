@@ -1,77 +1,92 @@
 """Tests for the SolarEdge coordinator services."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-import pytest
+from homeassistant.components.solaredge.const import (
+    CONF_SITE_ID,
+    DEFAULT_NAME,
+    DOMAIN,
+    OVERVIEW_UPDATE_DELAY,
+)
+from homeassistant.const import CONF_API_KEY, CONF_NAME, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+import homeassistant.util.dt as dt_util
 
-from homeassistant.components.solaredge.coordinator import SolarEdgeOverviewDataService
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 SITE_ID = "1a2b3c4d5e6f7g8h"
+API_KEY = "a1b2c3d4e5f6g7h8"
 
-mock_overview_data = {
-    "overview": {
-        "lifeTimeData": {"energy": 100000},
-        "lastYearData": {"energy": 50000},
-        "lastMonthData": {"energy": 10000},
-        "lastDayData": {"energy": 0.0},
-        "currentPower": {"power": 0.0},
+
+@patch("homeassistant.components.solaredge.Solaredge")
+async def test_solaredgeoverviewdataservice_energy_values_validity(
+    mock_solaredge, hass: HomeAssistant
+):
+    """Test overview energy data validity."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data={CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+    )
+    mock_solaredge().get_details.return_value = {"details": {"status": "active"}}
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Valid energy values update
+    mock_overview_data = {
+        "overview": {
+            "lifeTimeData": {"energy": 100000},
+            "lastYearData": {"energy": 50000},
+            "lastMonthData": {"energy": 10000},
+            "lastDayData": {"energy": 0.0},
+            "currentPower": {"power": 0.0},
+        }
     }
-}
+    mock_solaredge().get_overview.return_value = mock_overview_data
+    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.solaredge_lifetime_energy")
+    assert state
+    assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
 
-
-@patch("solaredge.Solaredge")
-def test_solaredgeoverviewdataservice_valid_energy_values(mock_solaredge):
-    """Test valid no exception for valid overview data."""
-    data_service = SolarEdgeOverviewDataService(Mock(), mock_solaredge, SITE_ID)
-
-    # Valid data
-    mock_solaredge.get_overview.return_value = mock_overview_data
-
-    # No exception should be raised
-    data_service.update()
-
-
-@patch("solaredge.Solaredge")
-def test_solaredgeoverviewdataservice_invalid_lifetime_energy(mock_solaredge):
-    """Test update will be skipped for invalid energy values."""
-    data_service = SolarEdgeOverviewDataService(Mock(), mock_solaredge, SITE_ID)
-
-    invalid_data = mock_overview_data
     # Invalid energy values, lifeTimeData energy is lower than last year, month or day.
-    invalid_data["overview"]["lifeTimeData"]["energy"] = 0
-    mock_solaredge.get_overview.return_value = invalid_data
+    mock_overview_data["overview"]["lifeTimeData"]["energy"] = 0
+    mock_solaredge().get_overview.return_value = mock_overview_data
+    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    await hass.async_block_till_done()
 
-    # UpdateFailed exception should be raised
-    with pytest.raises(UpdateFailed):
-        data_service.update()
+    state = hass.states.get("sensor.solaredge_lifetime_energy")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
+    # New valid energy values update
+    mock_overview_data["overview"]["lifeTimeData"]["energy"] = 100001
+    mock_solaredge().get_overview.return_value = mock_overview_data
+    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    await hass.async_block_till_done()
 
-@patch("solaredge.Solaredge")
-def test_solaredgeoverviewdataservice_invalid_year_energy(mock_solaredge):
-    """Test update will be skipped for invalid energy values."""
-    data_service = SolarEdgeOverviewDataService(Mock(), mock_solaredge, SITE_ID)
+    state = hass.states.get("sensor.solaredge_lifetime_energy")
+    assert state
+    assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
 
-    invalid_data = mock_overview_data
     # Invalid energy values, lastYearData energy is lower than last month or day.
-    invalid_data["overview"]["lastYearData"]["energy"] = 0
-    mock_solaredge.get_overview.return_value = invalid_data
+    mock_overview_data["overview"]["lastYearData"]["energy"] = 0
+    mock_solaredge().get_overview.return_value = mock_overview_data
+    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    await hass.async_block_till_done()
 
-    # UpdateFailed exception should be raised
-    with pytest.raises(UpdateFailed):
-        data_service.update()
+    state = hass.states.get("sensor.solaredge_lifetime_energy")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
+    # All zero energy values should also be valid.
+    mock_overview_data["overview"]["lifeTimeData"]["energy"] = 0.0
+    mock_overview_data["overview"]["lastYearData"]["energy"] = 0.0
+    mock_overview_data["overview"]["lastMonthData"]["energy"] = 0.0
+    mock_overview_data["overview"]["lastDayData"]["energy"] = 0.0
+    mock_solaredge().get_overview.return_value = mock_overview_data
+    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    await hass.async_block_till_done()
 
-@patch("solaredge.Solaredge")
-def test_solaredgeoverviewdataservice_valid_all_zero_energy(mock_solaredge):
-    """Test update will not be skipped for valid energy values."""
-    data_service = SolarEdgeOverviewDataService(Mock(), mock_solaredge, SITE_ID)
-
-    invalid_data = mock_overview_data
-    # All zero energy values should be valid.
-    invalid_data["overview"]["lifeTimeData"]["energy"] = 0.0
-    invalid_data["overview"]["lastYearData"]["energy"] = 0.0
-    invalid_data["overview"]["lastMonthData"]["energy"] = 0.0
-    invalid_data["overview"]["lastDayData"]["energy"] = 0.0
-    mock_solaredge.get_overview.return_value = invalid_data
-
-    data_service.update()
+    state = hass.states.get("sensor.solaredge_lifetime_energy")
+    assert state
+    assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
