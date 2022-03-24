@@ -4,8 +4,13 @@
     "step": {
       "user": {
         "title": "New Group",
-        "data": {
-          "group_type": "Group type"
+        "description": "Select group type",
+        "menu_options": {
+          "binary_sensor": "Binary sensor group",
+          "cover": "Cover group",
+          "fan": "Fan group",
+          "light": "Light group",
+          "media_player": "Media player group"
         }
       },
       "binary_sensor": {
@@ -14,34 +19,41 @@
         "data": {
           "all": "All entities",
           "entities": "Members",
+          "hide_members": "Hide members",
           "name": "Name"
         }
       },
       "cover": {
+        "title": "[%key:component::group::config::step::user::title%]",
         "data": {
-          "title": "[%key:component::group::config::step::user::title%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
       "fan": {
+        "title": "[%key:component::group::config::step::user::title%]",
         "data": {
-          "title": "[%key:component::group::config::step::user::title%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
       "light": {
+        "description": "[%key:component::group::config::step::binary_sensor::description%]",
+        "title": "[%key:component::group::config::step::user::title%]",
         "data": {
-          "title": "[%key:component::group::config::step::user::title%]",
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
       "media_player": {
+        "title": "[%key:component::group::config::step::user::title%]",
         "data": {
-          "title": "[%key:component::group::config::step::user::title%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       }
@@ -67,6 +79,7 @@
       },
       "light_options": {
         "data": {
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]"
         }
       },

@@ -89,10 +89,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class OctoPrintSensorBase(CoordinatorEntity, SensorEntity):
+class OctoPrintSensorBase(
+    CoordinatorEntity[OctoprintDataUpdateCoordinator], SensorEntity
+):
     """Representation of an OctoPrint sensor."""
-
-    coordinator: OctoprintDataUpdateCoordinator
 
     def __init__(
         self,

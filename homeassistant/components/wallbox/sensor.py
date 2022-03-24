@@ -152,7 +152,6 @@ class WallboxSensor(WallboxEntity, SensorEntity):
     """Representation of the Wallbox portal."""
 
     entity_description: WallboxSensorEntityDescription
-    coordinator: WallboxCoordinator
 
     def __init__(
         self,

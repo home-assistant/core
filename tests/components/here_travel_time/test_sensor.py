@@ -49,16 +49,50 @@ PLATFORM = "here_travel_time"
 
 
 @pytest.mark.parametrize(
-    "mode,icon,traffic_mode,unit_system",
+    "mode,icon,traffic_mode,unit_system,expected_state,expected_distance,expected_duration_in_traffic",
     [
-        (TRAVEL_MODE_CAR, ICON_CAR, True, "metric"),
-        (TRAVEL_MODE_BICYCLE, ICON_BICYCLE, False, "metric"),
-        (TRAVEL_MODE_PEDESTRIAN, ICON_PEDESTRIAN, False, "imperial"),
-        (TRAVEL_MODE_PUBLIC_TIME_TABLE, ICON_PUBLIC, False, "imperial"),
-        (TRAVEL_MODE_TRUCK, ICON_TRUCK, True, "metric"),
+        (TRAVEL_MODE_CAR, ICON_CAR, True, "metric", "31", 23.903, 31.016666666666666),
+        (TRAVEL_MODE_BICYCLE, ICON_BICYCLE, False, "metric", "30", 23.903, 30.05),
+        (
+            TRAVEL_MODE_PEDESTRIAN,
+            ICON_PEDESTRIAN,
+            False,
+            "imperial",
+            "30",
+            14.852635608048994,
+            30.05,
+        ),
+        (
+            TRAVEL_MODE_PUBLIC_TIME_TABLE,
+            ICON_PUBLIC,
+            False,
+            "imperial",
+            "30",
+            14.852635608048994,
+            30.05,
+        ),
+        (
+            TRAVEL_MODE_TRUCK,
+            ICON_TRUCK,
+            True,
+            "metric",
+            "31",
+            23.903,
+            31.016666666666666,
+        ),
     ],
 )
-async def test_sensor(hass, mode, icon, traffic_mode, unit_system, valid_response):
+async def test_sensor(
+    hass,
+    mode,
+    icon,
+    traffic_mode,
+    unit_system,
+    expected_state,
+    expected_distance,
+    expected_duration_in_traffic,
+    valid_response,
+):
     """Test that sensor works."""
     config = {
         DOMAIN: {
@@ -85,25 +119,18 @@ async def test_sensor(hass, mode, icon, traffic_mode, unit_system, valid_respons
         sensor.attributes.get(ATTR_ATTRIBUTION)
         == "With the support of HERE Technologies. All information is provided without warranty of any kind."
     )
-    if traffic_mode:
-        assert sensor.state == "31"
-    else:
-        assert sensor.state == "30"
+    assert sensor.state == expected_state
 
     assert sensor.attributes.get(ATTR_DURATION) == 30.05
-    if unit_system == "metric":
-        assert sensor.attributes.get(ATTR_DISTANCE) == 23.903
-    else:
-        assert sensor.attributes.get(ATTR_DISTANCE) == 14.852635608048994
+    assert sensor.attributes.get(ATTR_DISTANCE) == expected_distance
     assert sensor.attributes.get(ATTR_ROUTE) == (
         "US-29 - K St NW; US-29 - Whitehurst Fwy; "
         "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"
     )
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == unit_system
-    if mode in TRAVEL_MODES_VEHICLE:
-        assert sensor.attributes.get(ATTR_DURATION_IN_TRAFFIC) == 31.016666666666666
-    else:
-        assert sensor.attributes.get(ATTR_DURATION_IN_TRAFFIC) == 30.05
+    assert (
+        sensor.attributes.get(ATTR_DURATION_IN_TRAFFIC) == expected_duration_in_traffic
+    )
     assert sensor.attributes.get(ATTR_ORIGIN) == ",".join(
         [CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]
     )
@@ -168,7 +195,7 @@ async def test_entity_ids(hass, valid_response):
         assert sensor.attributes.get(ATTR_DISTANCE) == 23.903
 
 
-async def test_route_not_found(hass, caplog, valid_response):
+async def test_route_not_found(hass, caplog):
     """Test that route not found error is correctly handled."""
     config = {
         DOMAIN: {
@@ -181,12 +208,15 @@ async def test_route_not_found(hass, caplog, valid_response):
             "api_key": API_KEY,
         }
     }
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
     with patch(
+        "homeassistant.components.here_travel_time.sensor._are_valid_client_credentials",
+        return_value=True,
+    ), patch(
         "herepy.RoutingApi.public_transport_timetable",
         side_effect=NoRouteFoundError,
     ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
