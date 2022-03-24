@@ -25,35 +25,38 @@ from tests.common import mock_state_change_event
 from tests.components.recorder.common import wait_recording_done
 
 
-def _add_db_entries(hass: ha.HomeAssistant, point: datetime, entity_id: str) -> None:
+def _add_db_entries(
+    hass: ha.HomeAssistant, point: datetime, entity_ids: list[str]
+) -> None:
     with recorder.session_scope(hass=hass) as session:
-        session.add(
-            Events(
-                event_id=1001,
-                event_type="state_changed",
-                event_data="{}",
-                origin="LOCAL",
-                time_fired=point,
+        for idx, entity_id in enumerate(entity_ids):
+            session.add(
+                Events(
+                    event_id=1001 + idx,
+                    event_type="state_changed",
+                    event_data="{}",
+                    origin="LOCAL",
+                    time_fired=point,
+                )
             )
-        )
-        session.add(
-            States(
-                entity_id=entity_id,
-                state="on",
-                attributes='{"name":"the light"}',
-                last_changed=point,
-                last_updated=point,
-                event_id=1001,
-                attributes_id=1002,
+            session.add(
+                States(
+                    entity_id=entity_id,
+                    state="on",
+                    attributes='{"name":"the light"}',
+                    last_changed=point,
+                    last_updated=point,
+                    event_id=1001 + idx,
+                    attributes_id=1002 + idx,
+                )
             )
-        )
-        session.add(
-            StateAttributes(
-                shared_attrs='{"name":"the shared light"}',
-                hash=1234,
-                attributes_id=1002,
+            session.add(
+                StateAttributes(
+                    shared_attrs='{"name":"the shared light"}',
+                    hash=1234 + idx,
+                    attributes_id=1002 + idx,
+                )
             )
-        )
 
 
 def _setup_get_states(hass):
@@ -553,7 +556,7 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
     entity_id = "light.test"
-    await hass.async_add_executor_job(_add_db_entries, hass, point, entity_id)
+    await hass.async_add_executor_job(_add_db_entries, hass, point, [entity_id])
 
     no_attributes = True
     hist = history.state_changes_during_period(
@@ -599,7 +602,7 @@ async def test_get_states_query_during_migration_to_schema_25(
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
     entity_id = "light.test"
-    await hass.async_add_executor_job(_add_db_entries, hass, point, entity_id)
+    await hass.async_add_executor_job(_add_db_entries, hass, point, [entity_id])
 
     no_attributes = True
     hist = history.get_states(hass, end, [entity_id], no_attributes=no_attributes)
@@ -624,3 +627,44 @@ async def test_get_states_query_during_migration_to_schema_25(
         hist = history.get_states(hass, end, [entity_id], no_attributes=no_attributes)
         state = hist[0]
         assert state.attributes == {"name": "the light"}
+
+
+async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
+    hass: ha.HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+):
+    """Test we can query data prior to schema 25 and during migration to schema 25."""
+    instance = await async_setup_recorder_instance(hass, {})
+
+    start = dt_util.utcnow()
+    point = start + timedelta(seconds=1)
+    end = point + timedelta(seconds=1)
+    entity_id_1 = "light.test"
+    entity_id_2 = "switch.test"
+    entity_ids = [entity_id_1, entity_id_2]
+
+    await hass.async_add_executor_job(_add_db_entries, hass, point, entity_ids)
+
+    no_attributes = True
+    hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+    assert hist[0].attributes == {}
+    assert hist[1].attributes == {}
+
+    no_attributes = False
+    hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+    assert hist[0].attributes == {"name": "the shared light"}
+    assert hist[1].attributes == {"name": "the shared light"}
+
+    instance.engine.execute("update states set attributes_id=NULL;")
+    instance.engine.execute("drop table state_attributes;")
+
+    with patch.object(instance, "migration_in_progress", True):
+        no_attributes = True
+        hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+        assert hist[0].attributes == {}
+        assert hist[1].attributes == {}
+
+        no_attributes = False
+        hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+        assert hist[0].attributes == {"name": "the light"}
+        assert hist[1].attributes == {"name": "the light"}
