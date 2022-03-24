@@ -132,11 +132,30 @@ def async_setup(hass: HomeAssistant) -> None:
 
 
 def get_significant_states(
-    hass, *args: Any, **kwargs: Any
+    hass: HomeAssistant,
+    start_time: datetime,
+    end_time: datetime | None = None,
+    entity_ids: list[str] = None,
+    filters: Any = None,
+    include_start_time_state: bool = True,
+    significant_changes_only: bool = True,
+    minimal_response: bool = False,
+    no_attributes: bool = False,
 ) -> dict[str, list[LazyState | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass) as session:
-        return get_significant_states_with_session(hass, session, *args, **kwargs)
+        return get_significant_states_with_session(
+            hass,
+            session,
+            start_time,
+            end_time,
+            entity_ids,
+            filters,
+            include_start_time_state,
+            significant_changes_only,
+            minimal_response,
+            no_attributes,
+        )
 
 
 def get_significant_states_with_session(
