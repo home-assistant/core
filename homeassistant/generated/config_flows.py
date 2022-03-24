@@ -341,7 +341,6 @@ FLOWS = {
         "threshold",
         "tibber",
         "tile",
-        "tod",
         "tolo",
         "tomorrowio",
         "toon",
@@ -401,6 +400,7 @@ FLOWS = {
         "zwave_me"
     ],
     "helper": [
-        "derivative"
+        "derivative",
+        "tod"
     ]
 }
