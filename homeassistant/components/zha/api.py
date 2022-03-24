@@ -332,17 +332,17 @@ async def websocket_get_device(
     """Get ZHA devices."""
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee: EUI64 = msg[ATTR_IEEE]
-    device = None
-    if ieee in zha_gateway.devices:
-        device = zha_gateway.devices[ieee].zha_device_info
-    if not device:
+
+    if not (zha_device := zha_gateway.devices.get(ieee)):
         connection.send_message(
             websocket_api.error_message(
                 msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Device not found"
             )
         )
         return
-    connection.send_result(msg[ID], device)
+
+    device_info = zha_device.zha_device_info
+    connection.send_result(msg[ID], device_info)
 
 
 @websocket_api.require_admin
@@ -359,18 +359,17 @@ async def websocket_get_group(
     """Get ZHA group."""
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     group_id: int = msg[GROUP_ID]
-    group = None
 
-    if group_id in zha_gateway.groups:
-        group = zha_gateway.groups.get(group_id).group_info
-    if not group:
+    if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
             websocket_api.error_message(
                 msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
             )
         )
         return
-    connection.send_result(msg[ID], group)
+
+    group_info = zha_group.group_info
+    connection.send_result(msg[ID], group_info)
 
 
 def cv_group_member(value: Any) -> GroupMember:
@@ -451,18 +450,16 @@ async def websocket_add_group_members(
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     group_id: int = msg[GROUP_ID]
     members: list[GroupMember] = msg[ATTR_MEMBERS]
-    zha_group = None
 
-    if group_id in zha_gateway.groups:
-        zha_group = zha_gateway.groups.get(group_id)
-        await zha_group.async_add_members(members)
-    if not zha_group:
+    if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
             websocket_api.error_message(
                 msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
             )
         )
         return
+
+    await zha_group.async_add_members(members)
     ret_group = zha_group.group_info
     connection.send_result(msg[ID], ret_group)
 
@@ -483,18 +480,16 @@ async def websocket_remove_group_members(
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     group_id: int = msg[GROUP_ID]
     members: list[GroupMember] = msg[ATTR_MEMBERS]
-    zha_group = None
 
-    if group_id in zha_gateway.groups:
-        zha_group = zha_gateway.groups.get(group_id)
-        await zha_group.async_remove_members(members)
-    if not zha_group:
+    if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
             websocket_api.error_message(
                 msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
             )
         )
         return
+
+    await zha_group.async_remove_members(members)
     ret_group = zha_group.group_info
     connection.send_result(msg[ID], ret_group)
 
@@ -618,10 +613,8 @@ async def websocket_device_cluster_attributes(
             endpoint_id, cluster_id, cluster_type
         )
         if attributes is not None:
-            for attr_id in attributes:
-                cluster_attributes.append(
-                    {ID: attr_id, ATTR_NAME: attributes[attr_id][0]}
-                )
+            for attr_id, attr in attributes.items():
+                cluster_attributes.append({ID: attr_id, ATTR_NAME: attr[0]})
     _LOGGER.debug(
         "Requested attributes for: %s: %s, %s: '%s', %s: %s, %s: %s",
         ATTR_CLUSTER_ID,
@@ -658,7 +651,7 @@ async def websocket_device_cluster_commands(
     cluster_id: int = msg[ATTR_CLUSTER_ID]
     cluster_type: str = msg[ATTR_CLUSTER_TYPE]
     zha_device = zha_gateway.get_device(ieee)
-    cluster_commands = []
+    cluster_commands: list[dict[str, Any]] = []
     commands = None
     if zha_device is not None:
         commands = zha_device.async_get_cluster_commands(
@@ -666,20 +659,20 @@ async def websocket_device_cluster_commands(
         )
 
         if commands is not None:
-            for cmd_id in commands[CLUSTER_COMMANDS_CLIENT]:
+            for cmd_id, cmd in commands[CLUSTER_COMMANDS_CLIENT].items():
                 cluster_commands.append(
                     {
                         TYPE: CLIENT,
                         ID: cmd_id,
-                        ATTR_NAME: commands[CLUSTER_COMMANDS_CLIENT][cmd_id][0],
+                        ATTR_NAME: cmd[0],
                     }
                 )
-            for cmd_id in commands[CLUSTER_COMMANDS_SERVER]:
+            for cmd_id, cmd in commands[CLUSTER_COMMANDS_SERVER].items():
                 cluster_commands.append(
                     {
                         TYPE: CLUSTER_COMMAND_SERVER,
                         ID: cmd_id,
-                        ATTR_NAME: commands[CLUSTER_COMMANDS_SERVER][cmd_id][0],
+                        ATTR_NAME: cmd[0],
                     }
                 )
     _LOGGER.debug(
