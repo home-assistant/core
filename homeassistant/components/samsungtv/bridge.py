@@ -63,6 +63,9 @@ from .const import (
 
 KEY_PRESS_TIMEOUT = 1.2
 
+ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400"}
+ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
+
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
     """Extract the mac address from the device info."""
@@ -611,9 +614,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
 class SamsungTVEncryptedBridge(SamsungTVBridge):
     """The Bridge for Encrypted WebSocket TVs (J/H models)."""
 
-    _MODEL_USES_POWER_OFF = {"H6400"}
-    _MODEL_USES_POWER = {"JU6400", "JU641D"}
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -775,9 +775,9 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
     async def async_power_off(self) -> None:
         """Send power off command to remote."""
         power_off_commands: list[SamsungTVEncryptedCommand] = []
-        if self._short_model in self._MODEL_USES_POWER_OFF:
+        if self._short_model in ENCRYPTED_MODEL_USES_POWER_OFF:
             power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWEROFF"))
-        elif self._short_model in self._MODEL_USES_POWER:
+        elif self._short_model in ENCRYPTED_MODEL_USES_POWER:
             power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWER"))
         else:
             if self._model and not self._power_off_warning_logged:
