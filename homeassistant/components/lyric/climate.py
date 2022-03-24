@@ -211,29 +211,35 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         device = self.device
         if (
-            not device.changeableValues.autoChangeoverActive
-            and HVAC_MODES[device.changeableValues.mode] != HVAC_MODE_OFF
+            device.changeableValues.autoChangeoverActive
+            or HVAC_MODES[device.changeableValues.mode] == HVAC_MODE_OFF
         ):
-            if self.hvac_mode == HVAC_MODE_COOL:
-                return device.changeableValues.coolSetpoint
-            return device.changeableValues.heatSetpoint
-        return None
+            return None
+        if self.hvac_mode == HVAC_MODE_COOL:
+            return device.changeableValues.coolSetpoint
+        return device.changeableValues.heatSetpoint
 
     @property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         device = self.device
-        if device.changeableValues.autoChangeoverActive:
-            return device.changeableValues.coolSetpoint
-        return None
+        if (
+            not device.changeableValues.autoChangeoverActive
+            or HVAC_MODES[device.changeableValues.mode] == HVAC_MODE_OFF
+        ):
+            return None
+        return device.changeableValues.coolSetpoint
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         device = self.device
-        if device.changeableValues.autoChangeoverActive:
-            return device.changeableValues.heatSetpoint
-        return None
+        if (
+            not device.changeableValues.autoChangeoverActive
+            or HVAC_MODES[device.changeableValues.mode] == HVAC_MODE_OFF
+        ):
+            return None
+        return device.changeableValues.heatSetpoint
 
     @property
     def preset_mode(self) -> str | None:
@@ -269,6 +275,9 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
+        if self.hvac_mode == HVAC_MODE_OFF:
+            return
+
         device = self.device
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
