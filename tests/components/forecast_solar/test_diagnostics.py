@@ -25,11 +25,11 @@ async def test_diagnostics(
             },
             "options": {
                 "api_key": REDACTED,
-                "azimuth": 190,
-                "damping": 0.5,
                 "declination": 30,
-                "inverter_size": 2000,
+                "azimuth": 190,
                 "modules power": 5100,
+                "damping": 0.5,
+                "inverter_size": 2000,
             },
         },
         "data": {
@@ -37,6 +37,18 @@ async def test_diagnostics(
             "energy_production_tomorrow": 200000,
             "energy_current_hour": 800000,
             "power_production_now": 300000,
+            "watts": {
+                "2021-06-27T13:00:00-07:00": 10,
+                "2022-06-27T13:00:00-07:00": 100,
+            },
+            "wh_days": {
+                "2021-06-27T13:00:00-07:00": 30,
+                "2022-06-27T13:00:00-07:00": 300,
+            },
+            "wh_hours": {
+                "2021-06-27T13:00:00-07:00": 30,
+                "2022-06-27T13:00:00-07:00": 300,
+            },
         },
         "account": {
             "type": "public",

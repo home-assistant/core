@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from forecast_solar import Estimate
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -22,7 +24,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator[Estimate] = hass.data[DOMAIN][entry.entry_id]
 
     return {
         "entry": {
@@ -35,6 +37,18 @@ async def async_get_config_entry_diagnostics(
             "energy_production_tomorrow": coordinator.data.energy_production_tomorrow,
             "energy_current_hour": coordinator.data.energy_current_hour,
             "power_production_now": coordinator.data.power_production_now,
+            "watts": {
+                watt_datetime.isoformat(): watt_value
+                for watt_datetime, watt_value in coordinator.data.watts.items()
+            },
+            "wh_days": {
+                wh_datetime.isoformat(): wh_value
+                for wh_datetime, wh_value in coordinator.data.wh_hours.items()
+            },
+            "wh_hours": {
+                wh_datetime.isoformat(): wh_value
+                for wh_datetime, wh_value in coordinator.data.wh_hours.items()
+            },
         },
         "account": {
             "type": coordinator.data.account_type.value,

@@ -81,6 +81,18 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
         estimate.sum_energy_production.side_effect = {
             1: 900000,
         }.get
+        estimate.watts = {
+            datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 10,
+            datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 100,
+        }
+        estimate.wh_days = {
+            datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 20,
+            datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 200,
+        }
+        estimate.wh_hours = {
+            datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 30,
+            datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 300,
+        }
 
         forecast_solar.estimate.return_value = estimate
         yield forecast_solar
