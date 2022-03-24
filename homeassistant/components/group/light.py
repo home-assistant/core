@@ -109,7 +109,7 @@ async def async_setup_entry(
     entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]
     )
-    mode = config_entry.options[CONF_ALL]
+    mode = config_entry.options.get(CONF_ALL, False)
 
     async_add_entities(
         [LightGroup(config_entry.entry_id, config_entry.title, entities, mode)]

@@ -13,7 +13,11 @@ from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledRespo
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.command import SamsungTVCommand
-from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
+from samsungtvws.encrypted.command import SamsungTVEncryptedCommand
+from samsungtvws.encrypted.remote import (
+    SamsungTVEncryptedWSAsyncRemote,
+    SendRemoteKey as SendEncryptedRemoteKey,
+)
 from samsungtvws.event import (
     ED_INSTALLED_APP_EVENT,
     MS_ERROR_EVENT,
@@ -33,12 +37,12 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_DESCRIPTION,
+    CONF_MODEL,
     CONF_SESSION_ID,
     ENCRYPTED_WEBSOCKET_PORT,
     LEGACY_PORT,
@@ -58,6 +62,9 @@ from .const import (
 )
 
 KEY_PRESS_TIMEOUT = 1.2
+
+ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400"}
+ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
 
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
@@ -617,9 +624,16 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
     ) -> None:
         """Initialize Bridge."""
         super().__init__(hass, method, host, port)
+        self._power_off_warning_logged: bool = False
+        self._model: str | None = None
+        self._short_model: str | None = None
         if entry_data:
             self.token = entry_data.get(CONF_TOKEN)
             self.session_id = entry_data.get(CONF_SESSION_ID)
+            self._model = entry_data.get(CONF_MODEL)
+            if self._model and len(self._model) > 4:
+                self._short_model = self._model[4:]
+
         self._rest_api_port: int | None = None
         self._device_info: dict[str, Any] | None = None
         self._remote: SamsungTVEncryptedWSAsyncRemote | None = None
@@ -693,9 +707,32 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
 
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using websocket protocol."""
-        raise HomeAssistantError(
-            "Sending commands to encrypted TVs is not yet supported"
+        await self._async_send_commands(
+            [SendEncryptedRemoteKey.click(key) for key in keys]
         )
+
+    async def _async_send_commands(
+        self, commands: list[SamsungTVEncryptedCommand]
+    ) -> None:
+        """Send the commands using websocket protocol."""
+        try:
+            # recreate connection if connection was dead
+            retry_count = 1
+            for _ in range(retry_count + 1):
+                try:
+                    if remote := await self._async_get_remote():
+                        await remote.send_commands(commands)
+                    break
+                except (
+                    BrokenPipeError,
+                    WebSocketException,
+                ):
+                    # BrokenPipe can occur when the commands is sent to fast
+                    # WebSocketException can occur when timed out
+                    self._remote = None
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
+            pass
 
     async def _async_get_remote(self) -> SamsungTVEncryptedWSAsyncRemote | None:
         """Create or return a remote control instance."""
@@ -737,9 +774,24 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
 
     async def async_power_off(self) -> None:
         """Send power off command to remote."""
-        raise HomeAssistantError(
-            "Sending commands to encrypted TVs is not yet supported"
-        )
+        power_off_commands: list[SamsungTVEncryptedCommand] = []
+        if self._short_model in ENCRYPTED_MODEL_USES_POWER_OFF:
+            power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWEROFF"))
+        elif self._short_model in ENCRYPTED_MODEL_USES_POWER:
+            power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWER"))
+        else:
+            if self._model and not self._power_off_warning_logged:
+                LOGGER.warning(
+                    "Unknown power_off command for %s (%s): sending KEY_POWEROFF and KEY_POWER",
+                    self._model,
+                    self.host,
+                )
+                self._power_off_warning_logged = True
+            power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWEROFF"))
+            power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWER"))
+        await self._async_send_commands(power_off_commands)
+        # Force closing of remote session to provide instant UI feedback
+        await self.async_close_remote()
 
     async def async_close_remote(self) -> None:
         """Close remote object."""
