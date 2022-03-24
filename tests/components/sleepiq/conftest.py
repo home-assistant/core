@@ -1,7 +1,8 @@
 """Common methods for SleepIQ."""
 from __future__ import annotations
 
-from unittest.mock import create_autospec, patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, create_autospec, patch
 
 from asyncsleepiq import (
     SleepIQActuator,
@@ -39,7 +40,7 @@ SLEEPIQ_CONFIG = {
 
 
 @pytest.fixture
-def mock_bed():
+def mock_bed() -> MagicMock:
     """Mock a SleepIQBed object with sleepers and lights."""
     bed = create_autospec(SleepIQBed)
     bed.name = BED_NAME
@@ -78,7 +79,9 @@ def mock_bed():
 
 
 @pytest.fixture
-def mock_asyncsleepiq_single_foundation(mock_bed):
+def mock_asyncsleepiq_single_foundation(
+    mock_bed: MagicMock,
+) -> Generator[MagicMock, None, None]:
     """Mock an AsyncSleepIQ object with a single foundation."""
     with patch("homeassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
         client = mock.return_value
@@ -109,7 +112,7 @@ def mock_asyncsleepiq_single_foundation(mock_bed):
 
 
 @pytest.fixture
-def mock_asyncsleepiq(mock_bed):
+def mock_asyncsleepiq(mock_bed: MagicMock) -> Generator[MagicMock, None, None]:
     """Mock an AsyncSleepIQ object with a split foundation."""
     with patch("homeassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
         client = mock.return_value
