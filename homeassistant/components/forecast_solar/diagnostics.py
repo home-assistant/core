@@ -43,7 +43,7 @@ async def async_get_config_entry_diagnostics(
             },
             "wh_days": {
                 wh_datetime.isoformat(): wh_value
-                for wh_datetime, wh_value in coordinator.data.wh_hours.items()
+                for wh_datetime, wh_value in coordinator.data.wh_days.items()
             },
             "wh_hours": {
                 wh_datetime.isoformat(): wh_value
