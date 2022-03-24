@@ -370,7 +370,7 @@ async def test_options_flow(hass):
 
 
 async def test_change_connection_settings(hass):
-    """Test changing connection settings by issueing a second user config flow."""
+    """Test changing connection settings by issuing a second user config flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id=TEST_MAC,
