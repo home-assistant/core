@@ -174,6 +174,9 @@ async def ws_get_list_statistic_ids(
         None,
         msg.get("statistic_type"),
     )
+    for statistic_id in statistic_ids:
+        statistic_id.pop("has_mean")
+        statistic_id.pop("has_sum")
     connection.send_result(msg["id"], statistic_ids)
 
 

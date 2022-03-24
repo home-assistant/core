@@ -720,7 +720,7 @@ def list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-) -> list[dict | None]:
+) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
     Queries the database for existing statistic_ids, as well as integrations with
