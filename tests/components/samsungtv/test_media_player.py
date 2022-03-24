@@ -31,6 +31,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
 )
 from homeassistant.components.samsungtv.const import (
+    CONF_MODEL,
     CONF_ON_ACTION,
     DOMAIN as SAMSUNGTV_DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
@@ -804,19 +805,25 @@ async def test_turn_off_encrypted_websocket(
     hass: HomeAssistant, remoteencws: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data = deepcopy(MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data[CONF_MODEL] = "UE48UNKNOWN"
+    await setup_samsungtv_entry(hass, entry_data)
 
     remoteencws.send_commands.reset_mock()
 
+    caplog.clear()
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
     assert remoteencws.send_commands.call_count == 1
     commands = remoteencws.send_commands.call_args_list[0].args[0]
-    assert len(commands) == 1
-    assert isinstance(commands[0], SamsungTVEncryptedCommand)
-    assert commands[0].body["param3"] == "KEY_POWEROFF"
+    assert len(commands) == 2
+    assert isinstance(command := commands[0], SamsungTVEncryptedCommand)
+    assert command.body["param3"] == "KEY_POWEROFF"
+    assert isinstance(command := commands[1], SamsungTVEncryptedCommand)
+    assert command.body["param3"] == "KEY_POWER"
+    assert "Unknown power_off command for UE48UNKNOWN (fake_host)" in caplog.text
 
     # commands not sent : power off in progress
     remoteencws.send_commands.reset_mock()
@@ -825,6 +832,37 @@ async def test_turn_off_encrypted_websocket(
     )
     assert "TV is powering off, not sending keys: ['KEY_VOLUP']" in caplog.text
     remoteencws.send_commands.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("model", "expected_key_type"),
+    [("UE50H6400", "KEY_POWEROFF"), ("UN75JU641D", "KEY_POWER")],
+)
+async def test_turn_off_encrypted_websocket_key_type(
+    hass: HomeAssistant,
+    remoteencws: Mock,
+    caplog: pytest.LogCaptureFixture,
+    model: str,
+    expected_key_type: str,
+) -> None:
+    """Test for turn_off."""
+    entry_data = deepcopy(MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data[CONF_MODEL] = model
+    await setup_samsungtv_entry(hass, entry_data)
+
+    remoteencws.send_commands.reset_mock()
+
+    caplog.clear()
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    # key called
+    assert remoteencws.send_commands.call_count == 1
+    commands = remoteencws.send_commands.call_args_list[0].args[0]
+    assert len(commands) == 1
+    assert isinstance(command := commands[0], SamsungTVEncryptedCommand)
+    assert command.body["param3"] == expected_key_type
+    assert "Unknown power_off command for" not in caplog.text
 
 
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
