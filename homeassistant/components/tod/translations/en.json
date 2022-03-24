@@ -4,10 +4,8 @@
             "user": {
                 "data": {
                     "after": "On after",
-                    "after_offset": "On offset",
                     "after_time": "On time",
                     "before": "Off after",
-                    "before_offset": "Off offset",
                     "before_time": "Off time",
                     "name": "Name"
                 },
@@ -21,10 +19,8 @@
             "init": {
                 "data": {
                     "after": "On after",
-                    "after_offset": "On offset",
                     "after_time": "On time",
                     "before": "Off after",
-                    "before_offset": "Off offset",
                     "before_time": "Off time"
                 },
                 "description": "Configure when the sensor should turn on and off."
