@@ -280,8 +280,8 @@ SERVICE_SET_REMOTE_LED_ON = "remote_set_led_on"
 SERVICE_SET_REMOTE_LED_OFF = "remote_set_led_off"
 
 # Switch Services
-SERVICE_SET_WIFI_LED_ON = "switch_set_wifi_led_on"
-SERVICE_SET_WIFI_LED_OFF = "switch_set_wifi_led_off"
+SERVICE_SET_LED_ON = "switch_set_led_on"
+SERVICE_SET_LED_OFF = "switch_set_led_off"
 SERVICE_SET_POWER_MODE = "switch_set_power_mode"
 SERVICE_SET_POWER_PRICE = "switch_set_power_price"
 

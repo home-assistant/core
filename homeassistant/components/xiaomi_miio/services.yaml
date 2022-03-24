@@ -173,9 +173,9 @@ remote_set_led_off:
       integration: xiaomi_miio
       domain: remote
 
-switch_set_wifi_led_on:
-  name: Switch set Wi-fi LED on
-  description: Turn the wifi led on.
+switch_set_led_on:
+  name: Switch set LED on
+  description: Turn the led on.
   fields:
     entity_id:
       description: Name of the xiaomi miio entity.
@@ -184,9 +184,9 @@ switch_set_wifi_led_on:
           integration: xiaomi_miio
           domain: switch
 
-switch_set_wifi_led_off:
-  name: Switch set Wi-fi LED off
-  description: Turn the wifi led off.
+switch_set_led_off:
+  name: Switch set LED off
+  description: Turn the led off.
   fields:
     entity_id:
       description: Name of the xiaomi miio entity.
