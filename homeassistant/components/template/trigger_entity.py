@@ -302,15 +302,12 @@ class TriggerExtraStoredData(ExtraStoredData):
         if self.rendered_values is None:
             return {}
 
-        dict_values: dict[str, Any] = {}
-        for key, value in self.rendered_values.items():
-            value = convert_attribute_to_string(value)
-            logging.getLogger(f"{__package__}").info(
-                "Storing attribute %s with value %s",
-                key,
-                value,
-            )
-            dict_values.update({key: value})
+                logging.getLogger(f"{__package__}").info(
+                    "Storing additional attribute %s with value %s",
+                    attribute,
+                    value,
+                )
+                dict_values.update({attribute: value})
 
         return dict_values
 

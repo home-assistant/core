@@ -627,7 +627,7 @@ class TemplateExtraStoredData(ExtraStoredData):
             except AttributeError:
                 continue
 
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Storing additional attribute %s with value %s",
                 attribute,
                 value,
@@ -643,7 +643,7 @@ class TemplateExtraStoredData(ExtraStoredData):
         for attribute, value in restored.items():
             value = convert_attribute_from_string(value)
 
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Retrieved additional attribute %s with value %s",
                 attribute,
                 value,
