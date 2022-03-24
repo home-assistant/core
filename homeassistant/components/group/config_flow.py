@@ -49,7 +49,9 @@ BINARY_SENSOR_OPTIONS_SCHEMA = basic_group_options_schema("binary_sensor").exten
 
 LIGHT_OPTIONS_SCHEMA = basic_group_options_schema("light").extend(
     {
-        vol.Required(CONF_ALL, default=False): selector.selector({"boolean": {}}),
+        vol.Required(
+            CONF_ALL, default=False, description={"advanced": True}
+        ): selector.selector({"boolean": {}}),
     }
 )
 
