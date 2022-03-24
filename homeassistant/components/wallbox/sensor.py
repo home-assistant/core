@@ -169,8 +169,14 @@ class WallboxSensor(WallboxEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if (sensor_round := self.entity_description.precision) is not None:
-            return cast(
-                StateType,
-                round(self.coordinator.data[self.entity_description.key], sensor_round),
-            )
+            try:
+                return cast(
+                    StateType,
+                    round(
+                        self.coordinator.data[self.entity_description.key], sensor_round
+                    ),
+                )
+            except TypeError:
+                _LOGGER.debug("Cannot format %s", self._attr_name)
+                return None
         return cast(StateType, self.coordinator.data[self.entity_description.key])
