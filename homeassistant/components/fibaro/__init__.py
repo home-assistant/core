@@ -399,7 +399,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _init_controller, entry.data
     )
     if not connected:
-        return False
+        raise ConfigEntryNotReady(f"Could not connect to controller at {entry.data[CONF_URL]}")
 
     data: dict[str, Any] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
