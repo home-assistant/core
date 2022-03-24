@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, MutableMapping
 from datetime import datetime
 from itertools import groupby
 import logging
@@ -15,7 +15,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
 
 from homeassistant.components import recorder
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from .models import (
@@ -141,7 +141,7 @@ def get_significant_states(
     significant_changes_only: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
-) -> dict[str, list[LazyState | dict[str, Any]]]:
+) -> MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass) as session:
         return get_significant_states_with_session(
@@ -169,7 +169,7 @@ def get_significant_states_with_session(
     significant_changes_only: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
-) -> dict[str, list[LazyState | dict[str, Any]]]:
+) -> MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]]:
     """
     Return states changes during UTC period start_time - end_time.
 
@@ -262,7 +262,7 @@ def state_changes_during_period(
     descending: bool = False,
     limit: int | None = None,
     include_start_time_state: bool = True,
-) -> dict[str, list[LazyState | dict[str, Any]]]:
+) -> MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]]:
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
         baked_query, join_attributes = bake_query_and_join_attributes(
@@ -314,7 +314,7 @@ def state_changes_during_period(
 
 def get_last_state_changes(
     hass: HomeAssistant, number_of_states: int, entity_id: str
-) -> dict[str, list[LazyState | dict[str, Any]]]:
+) -> MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]]:
     """Return the last number_of_states."""
     start_time = dt_util.utcnow()
 
@@ -514,7 +514,7 @@ def _sorted_states_to_dict(
     include_start_time_state: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
-) -> dict[str, list[LazyState | dict[str, Any]]]:
+) -> MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
