@@ -1,7 +1,6 @@
 """Support for Hue groups (room/zone)."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2
@@ -36,13 +35,6 @@ from .helpers import (
     normalize_hue_colortemp,
     normalize_hue_transition,
 )
-
-ALLOWED_ERRORS = [
-    "device (groupedLight) has communication issues, command (on) may not have effect",
-    'device (groupedLight) is "soft off", command (on) may not have effect',
-    "device (light) has communication issues, command (on) may not have effect",
-    'device (light) is "soft off", command (on) may not have effect',
-]
 
 
 async def async_setup_entry(
@@ -153,7 +145,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the light on."""
+        """Turn the grouped_light on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
@@ -162,42 +154,16 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash can not be sent with other commands at the same time
             return
 
-        # NOTE: a grouped_light can only handle turn on/off
-        # To set other features, you'll have to control the attached lights
-        if (
-            brightness is None
-            and xy_color is None
-            and color_temp is None
-            and transition is None
-            and flash is None
-        ):
-            await self.bridge.async_request_call(
-                self.controller.set_state,
-                id=self.resource.id,
-                on=True,
-                allowed_errors=ALLOWED_ERRORS,
-            )
-            return
-
-        # redirect all other feature commands to underlying lights
-        # note that this silently ignores params sent to light that are not supported
-        await asyncio.gather(
-            *[
-                self.bridge.async_request_call(
-                    self.api.lights.set_state,
-                    light.id,
-                    on=True,
-                    brightness=brightness if light.supports_dimming else None,
-                    color_xy=xy_color if light.supports_color else None,
-                    color_temp=color_temp if light.supports_color_temperature else None,
-                    transition_time=transition,
-                    allowed_errors=ALLOWED_ERRORS,
-                )
-                for light in self.controller.get_lights(self.resource.id)
-            ]
+        await self.bridge.async_request_call(
+            self.controller.set_state,
+            id=self.resource.id,
+            on=True,
+            brightness=brightness,
+            color_xy=xy_color,
+            color_temp=color_temp,
+            transition_time=transition,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -210,42 +176,19 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             # flash can not be sent with other commands at the same time
             return
 
-        # NOTE: a grouped_light can only handle turn on/off
-        # To set other features, you'll have to control the attached lights
-        if transition is None:
-            await self.bridge.async_request_call(
-                self.controller.set_state,
-                id=self.resource.id,
-                on=False,
-                allowed_errors=ALLOWED_ERRORS,
-            )
-            return
-
-        # redirect all other feature commands to underlying lights
-        await asyncio.gather(
-            *[
-                self.bridge.async_request_call(
-                    self.api.lights.set_state,
-                    light.id,
-                    on=False,
-                    transition_time=transition,
-                    allowed_errors=ALLOWED_ERRORS,
-                )
-                for light in self.controller.get_lights(self.resource.id)
-            ]
+        await self.bridge.async_request_call(
+            self.controller.set_state,
+            id=self.resource.id,
+            on=False,
+            transition_time=transition,
         )
 
     async def async_set_flash(self, flash: str) -> None:
         """Send flash command to light."""
-        await asyncio.gather(
-            *[
-                self.bridge.async_request_call(
-                    self.api.lights.set_flash,
-                    id=light.id,
-                    short=flash == FLASH_SHORT,
-                )
-                for light in self.controller.get_lights(self.resource.id)
-            ]
+        await self.bridge.async_request_call(
+            self.controller.set_flash,
+            id=self.resource.id,
+            short=flash == FLASH_SHORT,
         )
 
     @callback

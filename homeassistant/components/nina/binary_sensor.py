@@ -46,7 +46,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class NINAMessage(CoordinatorEntity, BinarySensorEntity):
+class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEntity):
     """Representation of an NINA warning."""
 
     def __init__(

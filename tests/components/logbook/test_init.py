@@ -60,6 +60,12 @@ async def hass_(hass):
     return hass
 
 
+@pytest.fixture()
+def set_utc(hass):
+    """Set timezone to UTC."""
+    hass.config.set_time_zone("UTC")
+
+
 async def test_service_call_create_logbook_entry(hass_):
     """Test if service call create log book entry."""
     calls = async_capture_events(hass_, logbook.EVENT_LOGBOOK_ENTRY)
@@ -314,7 +320,7 @@ async def test_logbook_view(hass, hass_client):
     assert response.status == HTTPStatus.OK
 
 
-async def test_logbook_view_period_entity(hass, hass_client):
+async def test_logbook_view_period_entity(hass, hass_client, set_utc):
     """Test the logbook view with period and entity."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, "logbook", {})
@@ -680,7 +686,7 @@ async def test_logbook_entity_no_longer_in_state_machine(hass, hass_client):
     assert json_dict[0]["name"] == "Alarm Control Panel"
 
 
-async def test_filter_continuous_sensor_values(hass, hass_client):
+async def test_filter_continuous_sensor_values(hass, hass_client, set_utc):
     """Test remove continuous sensor events from logbook."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, "logbook", {})
@@ -716,7 +722,7 @@ async def test_filter_continuous_sensor_values(hass, hass_client):
     assert response_json[1]["entity_id"] == entity_id_third
 
 
-async def test_exclude_new_entities(hass, hass_client):
+async def test_exclude_new_entities(hass, hass_client, set_utc):
     """Test if events are excluded on first update."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, "logbook", {})
@@ -751,7 +757,7 @@ async def test_exclude_new_entities(hass, hass_client):
     assert response_json[1]["message"] == "started"
 
 
-async def test_exclude_removed_entities(hass, hass_client):
+async def test_exclude_removed_entities(hass, hass_client, set_utc):
     """Test if events are excluded on last update."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, "logbook", {})
@@ -793,7 +799,7 @@ async def test_exclude_removed_entities(hass, hass_client):
     assert response_json[2]["entity_id"] == entity_id2
 
 
-async def test_exclude_attribute_changes(hass, hass_client):
+async def test_exclude_attribute_changes(hass, hass_client, set_utc):
     """Test if events of attribute changes are filtered."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, "logbook", {})
