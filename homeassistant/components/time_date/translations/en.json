@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "beat": "Internet time (beats)",
+                    "date": "Date",
+                    "date_time": "Date & Time",
+                    "date_time_iso": "Date & Time (ISO)",
+                    "date_time_utc": "Date & Time (UTC)",
+                    "time": "Time",
+                    "time_date": "Time & Date",
+                    "time_utc": "Time (UTC)"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "beat": "Internet time (beats)",
+                    "date": "Date",
+                    "date_time": "Date & Time",
+                    "date_time_iso": "Date & Time (ISO)",
+                    "date_time_utc": "Date & Time (UTC)",
+                    "time": "Time",
+                    "time_date": "Time & Date",
+                    "time_utc": "Time (UTC)"
+                }
+            }
+        }
+    }
+}

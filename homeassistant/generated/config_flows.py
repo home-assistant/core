@@ -342,6 +342,7 @@ FLOWS = {
         "tesla_wall_connector",
         "tibber",
         "tile",
+        "time_date",
         "tolo",
         "tomorrowio",
         "toon",

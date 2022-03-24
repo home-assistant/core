@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "beat": "Internet time (beats)",
+          "date": "Date",
+          "date_time": "Date & Time",
+          "date_time_iso": "Date & Time (ISO)",
+          "date_time_utc": "Date & Time (UTC)",
+          "time": "Time",
+          "time_date": "Time & Date",
+          "time_utc": "Time (UTC)"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "beat": "[%key:component::time_date::config::step::user::data::beat%]",
+          "date": "[%key:component::time_date::config::step::user::data::date%]",
+          "date_time": "[%key:component::time_date::config::step::user::data::date_time%]",
+          "date_time_iso": "[%key:component::time_date::config::step::user::data::date_time_iso%]",
+          "date_time_utc": "[%key:component::time_date::config::step::user::data::date_time_utc%]",
+          "time": "[%key:component::time_date::config::step::user::data::time%]",
+          "time_date": "[%key:component::time_date::config::step::user::data::time_date%]",
+          "time_utc": "[%key:component::time_date::config::step::user::data::time_utc%]"
+        }
+      }
+    }
+  }
+}
