@@ -1038,6 +1038,8 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": unit,
@@ -1056,6 +1058,8 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": unit,
@@ -1076,6 +1080,8 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": unit,
