@@ -6,7 +6,7 @@
             "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau"
         },
         "error": {
-            "bulb_time_out": "Impossible de se connecter \u00e0 l'ampoule. Peut-\u00eatre que l'ampoule est hors ligne ou qu'une mauvaise adresse IP a \u00e9t\u00e9 saisie. Veuillez allumer la lumi\u00e8re et r\u00e9essayer\u00a0!",
+            "bulb_time_out": "Impossible de se connecter \u00e0 l'ampoule. L'ampoule est peut-\u00eatre hors ligne ou bien une mauvaise adresse IP a \u00e9t\u00e9 saisie. Veuillez allumer la lumi\u00e8re et r\u00e9essayer\u00a0!",
             "cannot_connect": "\u00c9chec de connexion",
             "no_ip": "Adresse IP non valide",
             "no_wiz_light": "L'ampoule ne peut pas \u00eatre connect\u00e9e via l'int\u00e9gration de la plate-forme WiZ.",

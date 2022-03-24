@@ -7,7 +7,7 @@
         },
         "error": {
             "account_not_verified": "Compte non v\u00e9rifi\u00e9. Veuillez activer votre compte via l'e-mail d'activation de Crownstone.",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {

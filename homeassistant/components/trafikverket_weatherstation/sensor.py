@@ -8,20 +8,16 @@ import logging
 
 import aiohttp
 from pytrafikverket.trafikverket_weather import TrafikverketWeather, WeatherStationInfo
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
     DEGREE,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
@@ -30,11 +26,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -150,37 +144,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
 )
-
-SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
-
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_STATION): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): [vol.In(SENSOR_KEYS)],
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import Trafikverket Weather configuration from YAML."""
-    _LOGGER.warning(
-        # Config flow added in Home Assistant Core 2021.12, remove import flow in 2022.4
-        "Loading Trafikverket Weather via platform setup is deprecated; Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(

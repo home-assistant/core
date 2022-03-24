@@ -5,7 +5,7 @@
             "unknown": "Erreur inattendue"
         },
         "error": {
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification non valide"
         },
         "flow_title": "{name} ({host})",
         "step": {

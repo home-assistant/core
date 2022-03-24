@@ -7,7 +7,7 @@
         },
         "error": {
             "api_ratelimit": "Limite de d\u00e9bit API d\u00e9pass\u00e9e",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {

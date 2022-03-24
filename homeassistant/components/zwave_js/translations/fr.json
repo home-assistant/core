@@ -15,7 +15,7 @@
         "error": {
             "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS. V\u00e9rifiez la configuration.",
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_ws_url": "URL websocket invalide",
+            "invalid_ws_url": "URL websocket non valide",
             "unknown": "Erreur inattendue"
         },
         "flow_title": "{name}",
@@ -65,8 +65,8 @@
     "device_automation": {
         "action_type": {
             "clear_lock_usercode": "Effacer le code utilisateur sur {entity_name}",
-            "ping": "Pinger l'appareil",
-            "refresh_value": "Actualisez la ou les valeurs de {entity_name}",
+            "ping": "Envoyer un \u00ab\u00a0ping\u00a0\u00bb \u00e0 l'appareil",
+            "refresh_value": "Actualiser la ou les valeurs de {entity_name}",
             "reset_meter": "R\u00e9initialiser les compteurs sur {subtype}",
             "set_config_parameter": "D\u00e9finir la valeur du param\u00e8tre de configuration {subtype}",
             "set_lock_usercode": "D\u00e9finir un code utilisateur sur {entity_name}",
@@ -101,7 +101,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_ws_url": "URL websocket invalide",
+            "invalid_ws_url": "URL websocket non valide",
             "unknown": "Erreur inattendue"
         },
         "progress": {

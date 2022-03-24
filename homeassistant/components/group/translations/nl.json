@@ -12,8 +12,8 @@
             },
             "cover": {
                 "data": {
-                    "entities": "Groepsleden",
-                    "name": "Groepsnaam",
+                    "entities": "Leden",
+                    "name": "Naam",
                     "title": "Nieuwe groep"
                 },
                 "description": "Selecteer groepsopties"
@@ -26,8 +26,8 @@
             },
             "fan": {
                 "data": {
-                    "entities": "Groepsleden",
-                    "name": "Groepsnaam",
+                    "entities": "Leden",
+                    "name": "Naam",
                     "title": "Nieuwe groep"
                 },
                 "description": "Selecteer groepsopties"
@@ -46,8 +46,8 @@
             },
             "light": {
                 "data": {
-                    "entities": "Groepsleden",
-                    "name": "Groepsnaam",
+                    "entities": "Leden",
+                    "name": "Naam",
                     "title": "Nieuwe groep"
                 },
                 "description": "Selecteer groepsopties"
@@ -60,8 +60,8 @@
             },
             "media_player": {
                 "data": {
-                    "entities": "Groepsleden",
-                    "name": "Groepsnaam",
+                    "entities": "Leden",
+                    "name": "Naam",
                     "title": "Nieuwe groep"
                 },
                 "description": "Selecteer groepsopties"

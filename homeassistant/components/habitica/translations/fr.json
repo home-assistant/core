@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "invalid_credentials": "Authentification invalide",
+            "invalid_credentials": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {
