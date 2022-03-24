@@ -79,6 +79,23 @@ class HelperCommonFlowHandler:
         """Handle a form step."""
         form_step: HelperFlowFormStep = cast(HelperFlowFormStep, self._flow[step_id])
 
+        if (
+            user_input is not None
+            and (data_schema := form_step.schema)
+            and data_schema.schema
+            and not self._handler.show_advanced_options
+        ):
+            # Add advanced field default if not set
+            for key in data_schema.schema.items():
+                if isinstance(key, (vol.Optional, vol.Required)):
+                    if (
+                        key.description
+                        and key.description.get("advanced")
+                        and key.default is not vol.Undefined
+                        and key not in self._options
+                    ):
+                        user_input[key] = key.default
+
         if user_input is not None and form_step.schema is not None:
             # Do extra validation of user input
             try:
@@ -120,6 +137,16 @@ class HelperCommonFlowHandler:
             # Make a copy of the schema with suggested values set to saved options
             schema = {}
             for key, val in data_schema.schema.items():
+
+                if isinstance(key, vol.Marker):
+                    # Exclude advanced field
+                    if (
+                        key.description
+                        and key.description.get("advanced")
+                        and not self._handler.show_advanced_options
+                    ):
+                        continue
+
                 new_key = key
                 if key in options and isinstance(key, vol.Marker):
                     # Copy the marker to not modify the flow schema
