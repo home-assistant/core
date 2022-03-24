@@ -6,6 +6,7 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import TIME_MINUTES
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -111,6 +112,28 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.POWDER_SET,
             name="Powder",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Sous Vide Cooker
+    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
+    "mzj": (
+        NumberEntityDescription(
+            key=DPCode.COOK_TEMPERATURE,
+            name="Cook Temperature",
+            icon="mdi:thermometer",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COOK_TIME,
+            name="Cook Time",
+            icon="mdi:timer",
+            unit_of_measurement=TIME_MINUTES,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CLOUD_RECIPE_NUMBER,
+            name="Cloud Recipe",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
