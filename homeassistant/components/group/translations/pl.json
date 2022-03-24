@@ -1,10 +1,20 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Wszystkie encje",
+                    "entities": "Encje",
+                    "name": "Nazwa"
+                },
+                "description": "Je\u015bli \u201ewszystkie encje\u201d jest w\u0142\u0105czone, stan grupy jest w\u0142\u0105czony tylko wtedy, gdy wszystkie encje s\u0105 w\u0142\u0105czone. Je\u015bli \u201ewszystkie encje\u201d s\u0105 wy\u0142\u0105czone, stan grupy jest w\u0142\u0105czony, je\u015bli kt\u00f3rakolwiek encja jest w\u0142\u0105czona.",
+                "title": "Nowa grupa"
+            },
             "cover": {
                 "data": {
-                    "entities": "Encje w grupie",
-                    "name": "Nazwa grupy"
+                    "entities": "Encje",
+                    "name": "Nazwa",
+                    "title": "Nowa grupa"
                 },
                 "description": "Wybierz opcje grupy"
             },
@@ -16,8 +26,9 @@
             },
             "fan": {
                 "data": {
-                    "entities": "Encje w grupie",
-                    "name": "Nazwa grupy"
+                    "entities": "Encje",
+                    "name": "Nazwa",
+                    "title": "Nowa grupa"
                 },
                 "description": "Wybierz opcje grupy"
             },
@@ -29,14 +40,15 @@
             },
             "init": {
                 "data": {
-                    "group_type": "Typ grupy"
+                    "group_type": "Rodzaj grupy"
                 },
-                "description": "Wybierz typ grupy"
+                "description": "Wybierz rodzaj grupy"
             },
             "light": {
                 "data": {
-                    "entities": "Encje w grupie",
-                    "name": "Nazwa grupy"
+                    "entities": "Encje",
+                    "name": "Nazwa",
+                    "title": "Nowa grupa"
                 },
                 "description": "Wybierz opcje grupy"
             },
@@ -48,8 +60,9 @@
             },
             "media_player": {
                 "data": {
-                    "entities": "Encje w grupie",
-                    "name": "Nazwa grupy"
+                    "entities": "Encje",
+                    "name": "Nazwa",
+                    "title": "Nowa grupa"
                 },
                 "description": "Wybierz opcje grupy"
             },
@@ -58,6 +71,42 @@
                     "entities": "Encje w grupie"
                 },
                 "description": "Wybierz opcje grupy"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Rodzaj grupy"
+                },
+                "title": "Nowa grupa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "Wszystkie encje",
+                    "entities": "Encje"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Encje"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Encje"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Encje"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Encje"
+                }
             }
         }
     },

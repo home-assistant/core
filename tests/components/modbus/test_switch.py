@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
@@ -395,3 +396,15 @@ async def test_delay_switch(hass, mock_modbus):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_no_discovery_info_switch(hass, caplog):
+    """Test setup without discovery info."""
+    assert SWITCH_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {SWITCH_DOMAIN: {"platform": MODBUS_DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert SWITCH_DOMAIN in hass.config.components

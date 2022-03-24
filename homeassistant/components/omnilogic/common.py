@@ -73,7 +73,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
         return parsed_data
 
 
-class OmniLogicEntity(CoordinatorEntity):
+class OmniLogicEntity(CoordinatorEntity[OmniLogicUpdateCoordinator]):
     """Defines the base OmniLogic entity."""
 
     def __init__(

@@ -47,5 +47,5 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    _LOGGER.info("Configuration options updated, reloading OneWire integration")
+    _LOGGER.debug("Configuration options updated, reloading OneWire integration")
     await hass.config_entries.async_reload(entry.entry_id)

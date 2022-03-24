@@ -326,7 +326,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,

@@ -29,6 +29,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
 
@@ -309,3 +310,15 @@ async def test_service_fan_update(hass, mock_modbus, mock_ha):
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_no_discovery_info_fan(hass, caplog):
+    """Test setup without discovery info."""
+    assert FAN_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        FAN_DOMAIN,
+        {FAN_DOMAIN: {"platform": MODBUS_DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert FAN_DOMAIN in hass.config.components

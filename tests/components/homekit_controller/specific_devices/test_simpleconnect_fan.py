@@ -40,7 +40,6 @@ async def test_simpleconnect_fan_setup(hass):
                     supported_features=SUPPORT_DIRECTION | SUPPORT_SET_SPEED,
                     capabilities={
                         "preset_modes": None,
-                        "speed_list": ["off", "low", "medium", "high"],
                     },
                     state="off",
                 ),

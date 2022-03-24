@@ -32,7 +32,7 @@ COMMUNITY_POST_INPUTS = {
     "light": {
         "name": "Light(s)",
         "description": "The light(s) to control",
-        "selector": {"target": {"entity": {"domain": "light", "multiple": False}}},
+        "selector": {"target": {"entity": {"domain": "light"}}},
     },
     "force_brightness": {
         "name": "Force turn on brightness",

@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_when_setup
 
@@ -101,8 +102,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN]["unsub"] = hass.helpers.dispatcher.async_dispatcher_connect(
-        DOMAIN, async_handle_message
+    hass.data[DOMAIN]["unsub"] = async_dispatcher_connect(
+        hass, DOMAIN, async_handle_message
     )
 
     return True

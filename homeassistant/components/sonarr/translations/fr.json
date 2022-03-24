@@ -7,12 +7,12 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification non valide"
         },
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
-                "description": "L'int\u00e9gration Sonarr doit \u00eatre r\u00e9-authentifi\u00e9e manuellement avec l'API Sonarr h\u00e9berg\u00e9e sur: {host}",
+                "description": "L'int\u00e9gration Sonarr doit \u00eatre r\u00e9-authentifi\u00e9e manuellement avec l'API Sonarr h\u00e9berg\u00e9e sur\u00a0: {url}",
                 "title": "R\u00e9-authentifier l'int\u00e9gration"
             },
             "user": {

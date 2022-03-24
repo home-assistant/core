@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from homeassistant.data_entry_flow import FlowResult
 
 ERROR_CANNOT_CONNECT = "cannot_connect"
-ERROR_UNKNOWN = "unknown"
 ERROR_UNSUPPORTED = "unsupported"
 
 

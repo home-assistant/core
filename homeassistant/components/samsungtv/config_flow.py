@@ -8,6 +8,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 import getmac
+from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -21,26 +22,25 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from .bridge import (
-    SamsungTVBridge,
-    SamsungTVLegacyBridge,
-    SamsungTVWSBridge,
-    async_get_device_info,
-    mac_from_device_info,
-)
+from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
+    CONF_SESSION_ID,
     DEFAULT_MANUFACTURER,
     DOMAIN,
+    ENCRYPTED_WEBSOCKET_PORT,
     LEGACY_PORT,
     LOGGER,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
+    RESULT_INVALID_PIN,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
@@ -77,8 +77,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._title: str = ""
         self._id: int | None = None
-        self._bridge: SamsungTVLegacyBridge | SamsungTVWSBridge | None = None
+        self._bridge: SamsungTVBridge | None = None
         self._device_info: dict[str, Any] | None = None
+        self._encrypted_authenticator: SamsungTVEncryptedWSAsyncAuthenticator | None = (
+            None
+        )
 
     def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
         """Get device entry."""
@@ -180,6 +183,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         port = user_input.get(CONF_PORT)
         if port in WEBSOCKET_PORTS:
             user_input[CONF_METHOD] = METHOD_WEBSOCKET
+        elif port == ENCRYPTED_WEBSOCKET_PORT:
+            user_input[CONF_METHOD] = METHOD_ENCRYPTED_WEBSOCKET
         elif port == LEGACY_PORT:
             user_input[CONF_METHOD] = METHOD_LEGACY
         user_input[CONF_MANUFACTURER] = DEFAULT_MANUFACTURER
@@ -215,15 +220,23 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
     @callback
-    def _async_get_existing_matching_entry(self) -> config_entries.ConfigEntry | None:
-        """Get first existing matching entry."""
+    def _async_get_existing_matching_entry(
+        self,
+    ) -> tuple[config_entries.ConfigEntry | None, bool]:
+        """Get first existing matching entry (prefer unique id)."""
+        matching_host_entry: config_entries.ConfigEntry | None = None
         for entry in self._async_current_entries(include_ignore=False):
-            mac = entry.data.get(CONF_MAC)
-            mac_match = mac and self._mac and mac == self._mac
-            upnp_udn_match = self._upnp_udn and self._upnp_udn == entry.unique_id
-            if entry.data[CONF_HOST] == self._host or mac_match or upnp_udn_match:
-                return entry
-        return None
+            if (self._mac and self._mac == entry.data.get(CONF_MAC)) or (
+                self._upnp_udn and self._upnp_udn == entry.unique_id
+            ):
+                LOGGER.debug("Found entry matching unique_id for %s", self._host)
+                return entry, True
+
+            if entry.data[CONF_HOST] == self._host:
+                LOGGER.debug("Found entry matching host for %s", self._host)
+                matching_host_entry = entry
+
+        return matching_host_entry, False
 
     @callback
     def _async_update_existing_matching_entry(
@@ -233,15 +246,18 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Returns the existing entry if it was updated.
         """
-        if entry := self._async_get_existing_matching_entry():
+        entry, is_unique_match = self._async_get_existing_matching_entry()
+        if entry:
             entry_kw_args: dict = {}
-            if (self._udn and self._upnp_udn and self._upnp_udn != self._udn) or (
-                self.unique_id and entry.unique_id is None
+            if self.unique_id and (
+                entry.unique_id is None
+                or (is_unique_match and self.unique_id != entry.unique_id)
             ):
                 entry_kw_args["unique_id"] = self.unique_id
             if self._mac and not entry.data.get(CONF_MAC):
                 entry_kw_args["data"] = {**entry.data, CONF_MAC: self._mac}
             if entry_kw_args:
+                LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
                 self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
@@ -360,10 +376,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm reauth."""
         errors = {}
         assert self._reauth_entry
+        method = self._reauth_entry.data[CONF_METHOD]
         if user_input is not None:
             bridge = SamsungTVBridge.get_bridge(
                 self.hass,
-                self._reauth_entry.data[CONF_METHOD],
+                method,
                 self._reauth_entry.data[CONF_HOST],
             )
             result = await bridge.async_try_connect()
@@ -382,8 +399,50 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors = {"base": RESULT_AUTH_MISSING}
 
         self.context["title_placeholders"] = {"device": self._title}
+        step_id = "reauth_confirm"
+        if method == METHOD_ENCRYPTED_WEBSOCKET:
+            step_id = "reauth_confirm_encrypted"
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id=step_id,
             errors=errors,
             description_placeholders={"device": self._title},
+        )
+
+    async def async_step_reauth_confirm_encrypted(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Confirm reauth (encrypted method)."""
+        errors = {}
+        assert self._reauth_entry
+        if self._encrypted_authenticator is None:
+            self._encrypted_authenticator = SamsungTVEncryptedWSAsyncAuthenticator(
+                self._reauth_entry.data[CONF_HOST],
+                web_session=async_get_clientsession(self.hass),
+            )
+            await self._encrypted_authenticator.start_pairing()
+
+        if user_input is not None and (pin := user_input.get("pin")):
+            if token := await self._encrypted_authenticator.try_pin(pin):
+                session_id = (
+                    await self._encrypted_authenticator.get_session_id_and_close()
+                )
+                new_data = {
+                    **self._reauth_entry.data,
+                    CONF_TOKEN: token,
+                    CONF_SESSION_ID: session_id,
+                }
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry, data=new_data
+                )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+            errors = {"base": RESULT_INVALID_PIN}
+
+        self.context["title_placeholders"] = {"device": self._title}
+        return self.async_show_form(
+            step_id="reauth_confirm_encrypted",
+            errors=errors,
+            description_placeholders={"device": self._title},
+            data_schema=vol.Schema({vol.Required("pin"): str}),
         )

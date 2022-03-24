@@ -174,6 +174,7 @@ SENSORS: Final = {
         value=lambda value: round(value / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        available=lambda block: cast(int, block.energy) != -1,
     ),
     ("emeter", "energyReturned"): BlockSensorDescription(
         key="emeter|energyReturned",
@@ -182,6 +183,7 @@ SENSORS: Final = {
         value=lambda value: round(value / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        available=lambda block: cast(int, block.energyReturned) != -1,
     ),
     ("light", "energy"): BlockSensorDescription(
         key="light|energy",
