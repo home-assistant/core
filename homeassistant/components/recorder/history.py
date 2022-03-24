@@ -334,13 +334,13 @@ def get_last_state_changes(hass, number_of_states, entity_id):
 
 
 def get_states(
-    hass,
-    utc_point_in_time,
-    entity_ids=None,
-    run=None,
-    filters=None,
-    no_attributes=False,
-):
+    hass: HomeAssistant,
+    utc_point_in_time: datetime,
+    entity_ids: list[str] | None = None,
+    run: RecorderRuns | None = None,
+    filters: Any = None,
+    no_attributes: bool = False,
+) -> list[LazyState]:
     """Return the states at a specific point in time."""
     if (
         run is None
@@ -455,8 +455,12 @@ def _get_states_with_session(
 
 
 def _get_single_entity_states_with_session(
-    hass, session, utc_point_in_time, entity_id, no_attributes=False
-):
+    hass: HomeAssistant,
+    session: Session,
+    utc_point_in_time: datetime,
+    entity_id: str,
+    no_attributes: bool = False,
+) -> list[LazyState]:
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
     baked_query, join_attributes = bake_query_and_join_attributes(hass, no_attributes)
@@ -578,8 +582,12 @@ def _sorted_states_to_dict(
 
 
 def get_state(
-    hass, utc_point_in_time: datetime, entity_id: str, run=None, no_attributes=False
-):
+    hass: HomeAssistant,
+    utc_point_in_time: datetime,
+    entity_id: str,
+    run: RecorderRuns | None = None,
+    no_attributes: bool = False,
+) -> LazyState | None:
     """Return a state at a specific point in time."""
-    states = get_states(hass, utc_point_in_time, (entity_id,), run, None, no_attributes)
+    states = get_states(hass, utc_point_in_time, [entity_id], run, None, no_attributes)
     return states[0] if states else None
