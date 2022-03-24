@@ -23,8 +23,7 @@ from tests.common import MockConfigEntry
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
         ("fan", "on", "on", {}, {}, {}, {}),
-        ("light", "on", "on", {}, {}, {"all": False}, {}),
-        ("light", "on", "on", {}, {"all": True}, {"all": True}, {}),
+        ("light", "on", "on", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
     ),
 )
