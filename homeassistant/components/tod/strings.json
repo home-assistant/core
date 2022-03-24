@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "New Times of the Day Sensor",
-        "description": "Configure when the sensor should turn on and off. If \"on after\" is not set to \"absolute time\", the \"on time\" is ignored. If \"off after\" is not set to \"absolute time\", the \"off time\" is ignored.",
+        "description": "Configure when the sensor should turn on and off.",
         "data": {
           "after": "On after",
           "after_offset": "On offset",
