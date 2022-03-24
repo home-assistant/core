@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import datetime
 from itertools import groupby
 import logging
@@ -292,7 +293,9 @@ def state_changes_during_period(
         )
 
 
-def get_last_state_changes(hass, number_of_states, entity_id):
+def get_last_state_changes(
+    hass: HomeAssistant, number_of_states: int, entity_id: str
+) -> dict[str, list[LazyState | dict[str, Any]]]:
     """Return the last number_of_states."""
     start_time = dt_util.utcnow()
 
@@ -485,7 +488,7 @@ def _get_single_entity_states_with_session(
 def _sorted_states_to_dict(
     hass: HomeAssistant,
     session: Session,
-    states: list[States],
+    states: Iterable[States],
     start_time: datetime,
     entity_ids: list[str] | None,
     filters: Any = None,
