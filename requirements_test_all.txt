@@ -853,7 +853,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.6
+py-synologydsm-api==1.0.7
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -902,7 +902,7 @@ pyatmo==6.2.4
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.14
+pyaussiebb==0.0.15
 
 # homeassistant.components.balboa
 pybalboa==0.13

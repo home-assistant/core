@@ -627,6 +627,8 @@ def list_statistic_ids(
 
         if device_class not in UNIT_CONVERSIONS:
             result[state.entity_id] = {
+                "has_mean": "mean" in provided_statistics,
+                "has_sum": "sum" in provided_statistics,
                 "source": RECORDER_DOMAIN,
                 "unit_of_measurement": native_unit,
             }
@@ -637,6 +639,8 @@ def list_statistic_ids(
 
         statistics_unit = DEVICE_CLASS_UNITS[device_class]
         result[state.entity_id] = {
+            "has_mean": "mean" in provided_statistics,
+            "has_sum": "sum" in provided_statistics,
             "source": RECORDER_DOMAIN,
             "unit_of_measurement": statistics_unit,
         }

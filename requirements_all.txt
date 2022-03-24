@@ -1283,7 +1283,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.6
+py-synologydsm-api==1.0.7
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -1356,7 +1356,7 @@ pyatome==0.1.1
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.14
+pyaussiebb==0.0.15
 
 # homeassistant.components.balboa
 pybalboa==0.13
