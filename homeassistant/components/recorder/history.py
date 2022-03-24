@@ -135,8 +135,8 @@ def get_significant_states(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime | None = None,
-    entity_ids: list[str] = None,
-    filters: Any = None,
+    entity_ids: list[str] | None = None,
+    filters: Any | None = None,
     include_start_time_state: bool = True,
     significant_changes_only: bool = True,
     minimal_response: bool = False,
@@ -163,7 +163,7 @@ def get_significant_states_with_session(
     session: Session,
     start_time: datetime,
     end_time: datetime | None = None,
-    entity_ids: list[str] = None,
+    entity_ids: list[str] | None = None,
     filters: Any = None,
     include_start_time_state: bool = True,
     significant_changes_only: bool = True,
@@ -383,8 +383,8 @@ def _get_states_with_session(
     session: Session,
     utc_point_in_time: datetime,
     entity_ids: list[str] | None = None,
-    run: RecorderRuns = None,
-    filters: Any = None,
+    run: RecorderRuns | None = None,
+    filters: Any | None = None,
     no_attributes: bool = False,
 ) -> list[LazyState]:
     """Return the states at a specific point in time."""
@@ -558,7 +558,7 @@ def _sorted_states_to_dict(
     _process_timestamp_to_utc_isoformat = process_timestamp_to_utc_isoformat
 
     # Append all changes to it
-    for ent_id, group in groupby(states, lambda state: state.entity_id):
+    for ent_id, group in groupby(states, lambda state: state.entity_id):  # type: ignore[no-any-return]
         domain = split_entity_id(ent_id)[0]
         ent_results = result[ent_id]
         attr_cache: dict[str, dict[str, Any]] = {}
