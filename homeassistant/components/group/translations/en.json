@@ -29,8 +29,8 @@
             },
             "light": {
                 "data": {
-                    "all": "All entities",
                     "entities": "Members",
+                    "hide_members": "Hide members",
                     "name": "Name"
                 },
                 "title": "New Group"
