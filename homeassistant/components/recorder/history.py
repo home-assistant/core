@@ -70,7 +70,8 @@ QUERY_STATES_PRE_SCHEMA_25 = [
 ]
 QUERY_STATES = [
     *BASE_STATES,
-    States.attributes,  # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
+    # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
+    States.attributes,
     StateAttributes.shared_attrs,
 ]
 
