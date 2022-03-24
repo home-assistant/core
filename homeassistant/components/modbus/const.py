@@ -70,6 +70,7 @@ ATTR_HUB = CONF_HUB
 ATTR_UNIT = "unit"
 ATTR_SLAVE = "slave"
 ATTR_VALUE = "value"
+ATTR_FORCE = "force"
 
 
 class DataType(str, Enum):
