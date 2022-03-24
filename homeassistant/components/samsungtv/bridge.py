@@ -611,8 +611,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
 class SamsungTVEncryptedBridge(SamsungTVBridge):
     """The Bridge for Encrypted WebSocket TVs (J/H models)."""
 
-    _MODEL_USES_POWER_OFF = set("H6400")
-    _MODEL_USES_POWER = set("JU641D")
+    _MODEL_USES_POWER_OFF = {"H6400"}
+    _MODEL_USES_POWER = {"JU6400", "JU641D"}
 
     def __init__(
         self,

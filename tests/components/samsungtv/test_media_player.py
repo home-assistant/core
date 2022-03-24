@@ -806,7 +806,7 @@ async def test_turn_off_encrypted_websocket(
 ) -> None:
     """Test for turn_off."""
     entry_data = deepcopy(MOCK_ENTRYDATA_ENCRYPTED_WS)
-    entry_data[CONF_MODEL] = "UE48JU6400"
+    entry_data[CONF_MODEL] = "UE48UNKNOWN"
     await setup_samsungtv_entry(hass, entry_data)
 
     remoteencws.send_commands.reset_mock()
@@ -823,7 +823,7 @@ async def test_turn_off_encrypted_websocket(
     assert command.body["param3"] == "KEY_POWEROFF"
     assert isinstance(command := commands[1], SamsungTVEncryptedCommand)
     assert command.body["param3"] == "KEY_POWER"
-    assert "Unknown power_off command for UE48JU6400 (fake_host)" in caplog.text
+    assert "Unknown power_off command for UE48UNKNOWN (fake_host)" in caplog.text
 
     # commands not sent : power off in progress
     remoteencws.send_commands.reset_mock()
