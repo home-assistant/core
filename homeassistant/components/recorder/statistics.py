@@ -190,7 +190,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[STATISTICS_META_BAKERY] = baked.bakery()
     hass.data[STATISTICS_SHORT_TERM_BAKERY] = baked.bakery()
 
-    def entity_id_changed(event: Event) -> None:
+    def _entity_id_changed(event: Event) -> None:
         """Handle entity_id changed."""
         old_entity_id = event.data["old_entity_id"]
         entity_id = event.data["entity_id"]
@@ -199,6 +199,9 @@ def async_setup(hass: HomeAssistant) -> None:
                 (StatisticsMeta.statistic_id == old_entity_id)
                 & (StatisticsMeta.source == DOMAIN)
             ).update({StatisticsMeta.statistic_id: entity_id})
+
+    async def _async_entity_id_changed(event: Event) -> None:
+        await hass.data[DATA_INSTANCE].async_add_executor_job(_entity_id_changed, event)
 
     @callback
     def entity_registry_changed_filter(event: Event) -> bool:
@@ -211,7 +214,7 @@ def async_setup(hass: HomeAssistant) -> None:
     if hass.is_running:
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_id_changed,
+            _async_entity_id_changed,
             event_filter=entity_registry_changed_filter,
         )
 
