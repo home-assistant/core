@@ -37,7 +37,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the file size sensor."""
-
+    _LOGGER.warning(
+        # Filesize config flow added in 2022.4 and should be removed in 2022.8
+        "Loading filesize via platform setup is deprecated; Please remove it from your configuration"
+    )
     for path in config[CONF_FILE_PATHS]:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -56,16 +59,11 @@ async def async_setup_entry(
     """Set up the platform from config entry."""
 
     path = entry.data[CONF_FILE_PATH]
-
     try:
         get_path = await hass.async_add_executor_job(pathlib.Path, path)
         fullpath = str(get_path.absolute())
     except OSError as error:
         _LOGGER.error("Can not access file %s, error %s", path, error)
-        return
-
-    if not hass.config.is_allowed_path(path):
-        _LOGGER.error("Filepath %s is not valid or allowed", path)
         return
 
     async_add_entities([FilesizeEntity(fullpath, entry.entry_id)], True)
