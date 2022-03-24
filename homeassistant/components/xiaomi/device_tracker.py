@@ -12,18 +12,20 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME, default="admin"): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_TIMEOUT, default=5): cv.positive_int 
     }
 )
 
@@ -46,9 +48,10 @@ class XiaomiDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.timeout = config[CONF_TIMEOUT]
 
         self.last_results = {}
-        self.token = _get_token(self.host, self.username, self.password)
+        self.token = _get_token(self.host, self.username, self.password, self.timeout)
 
         self.mac2name = None
         self.success_init = self.token is not None
@@ -96,7 +99,7 @@ class XiaomiDeviceScanner(DeviceScanner):
             return result
 
         _LOGGER.debug("Refreshing token and retrying device list refresh")
-        self.token = _get_token(self.host, self.username, self.password)
+        self.token = _get_token(self.host, self.username, self.password, self.timeout)
         return _retrieve_list(self.host, self.token)
 
     def _store_result(self, result):
@@ -146,12 +149,12 @@ def _retrieve_list(host, token, **kwargs):
         return
 
 
-def _get_token(host, username, password):
+def _get_token(host, username, password, timeout):
     """Get authentication token for the given host+username+password."""
     url = f"http://{host}/cgi-bin/luci/api/xqsystem/login"
     data = {"username": username, "password": password}
     try:
-        res = requests.post(url, data=data, timeout=5)
+        res = requests.post(url, data=data, timeout=timeout)
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out")
         return
