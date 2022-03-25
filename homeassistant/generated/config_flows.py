@@ -97,6 +97,7 @@ FLOWS = {
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
+        "filesize",
         "fireservicerota",
         "fivem",
         "fjaraskupan",
@@ -401,6 +402,7 @@ FLOWS = {
         "zwave_me"
     ],
     "helper": [
-        "derivative"
+        "derivative",
+        "tod"
     ]
 }
