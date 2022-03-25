@@ -32,7 +32,7 @@ authorisation_response = json.loads(
 )
 
 
-async def test_wallbox_number_class(hass: HomeAssistant):
+async def test_wallbox_number_class(hass: HomeAssistant) -> None:
     """Test wallbox sensor class."""
 
     await setup_integration(hass)
@@ -61,7 +61,7 @@ async def test_wallbox_number_class(hass: HomeAssistant):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_wallbox_number_class_connection_error(hass: HomeAssistant):
+async def test_wallbox_number_class_connection_error(hass: HomeAssistant) -> None:
     """Test wallbox sensor class."""
 
     await setup_integration(hass)

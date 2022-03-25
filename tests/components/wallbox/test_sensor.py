@@ -10,7 +10,7 @@ from tests.components.wallbox.const import (
 )
 
 
-async def test_wallbox_sensor_class(hass: HomeAssistant):
+async def test_wallbox_sensor_class(hass: HomeAssistant) -> None:
     """Test wallbox sensor class."""
 
     await setup_integration(hass)

@@ -72,7 +72,7 @@ entry = MockConfigEntry(
 )
 
 
-async def setup_integration(hass: HomeAssistant):
+async def setup_integration(hass: HomeAssistant) -> None:
     """Test wallbox sensor class setup."""
 
     entry.add_to_hass(hass)
@@ -100,7 +100,7 @@ async def setup_integration(hass: HomeAssistant):
         await hass.async_block_till_done()
 
 
-async def setup_integration_connection_error(hass: HomeAssistant):
+async def setup_integration_connection_error(hass: HomeAssistant) -> None:
     """Test wallbox sensor class setup with a connection error."""
 
     with requests_mock.Mocker() as mock_request:
@@ -126,7 +126,7 @@ async def setup_integration_connection_error(hass: HomeAssistant):
         await hass.async_block_till_done()
 
 
-async def setup_integration_read_only(hass: HomeAssistant):
+async def setup_integration_read_only(hass: HomeAssistant) -> None:
     """Test wallbox sensor class setup for read only."""
 
     with requests_mock.Mocker() as mock_request:
