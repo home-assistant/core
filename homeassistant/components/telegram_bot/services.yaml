@@ -708,6 +708,8 @@ send_poll:
     allows_multiple_answers:
       name: Allow Multiple Answers
       description: If the poll allows multiple answers, defaults to False
+      selector:
+        boolean:
     open_period:
       name: Open Period
       description: Amount of time in seconds the poll will be active after creation, 5-600.
