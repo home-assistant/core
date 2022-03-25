@@ -75,7 +75,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_form_cannot_authenticate(hass):
+async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -165,7 +165,7 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
     assert result2["data"]["station"] == "12345"
 
 
-async def test_form_reauth(hass: HomeAssistant):
+async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test we handle reauth flow."""
     await setup_integration(hass)
     assert entry.state == config_entries.ConfigEntryState.LOADED
