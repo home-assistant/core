@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.async_add_executor_job(api.connect)
     except (
         ConnectionRefusedError,
-        socket.timeout,  # pylint:disable=no-member
+        socket.timeout,
         SSLError,
     ) as ex:
         raise ConfigEntryNotReady("Connection to Deluge Daemon failed") from ex

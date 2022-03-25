@@ -230,7 +230,6 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
 
         return _async_step
 
-    # pylint: disable-next=no-self-use
     @abstractmethod
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
