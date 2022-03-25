@@ -104,12 +104,14 @@ SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
 SERVICE_ZIGBEE_BIND = "service_zigbee_bind"
 IEEE_SERVICE = "ieee_based_service"
 
+IEEE_SCHEMA = vol.All(cv.string, EUI64.convert)
+
 SERVICE_PERMIT_PARAMS = {
-    vol.Optional(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+    vol.Optional(ATTR_IEEE): IEEE_SCHEMA,
     vol.Optional(ATTR_DURATION, default=60): vol.All(
         vol.Coerce(int), vol.Range(0, 254)
     ),
-    vol.Inclusive(ATTR_SOURCE_IEEE, "install_code"): vol.All(cv.string, EUI64.convert),
+    vol.Inclusive(ATTR_SOURCE_IEEE, "install_code"): IEEE_SCHEMA,
     vol.Inclusive(ATTR_INSTALL_CODE, "install_code"): vol.All(
         cv.string, convert_install_code
     ),
@@ -126,12 +128,12 @@ SERVICE_SCHEMAS = {
     IEEE_SERVICE: vol.Schema(
         vol.All(
             cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
-            {vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert)},
+            {vol.Required(ATTR_IEEE): IEEE_SCHEMA},
         )
     ),
     SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
         {
-            vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
@@ -142,7 +144,7 @@ SERVICE_SCHEMAS = {
     ),
     SERVICE_WARNING_DEVICE_SQUAWK: vol.Schema(
         {
-            vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
             vol.Optional(
                 ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_SQUAWK_MODE_ARMED
             ): cv.positive_int,
@@ -156,7 +158,7 @@ SERVICE_SCHEMAS = {
     ),
     SERVICE_WARNING_DEVICE_WARN: vol.Schema(
         {
-            vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
             vol.Optional(
                 ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_MODE_EMERGENCY
             ): cv.positive_int,
@@ -177,7 +179,7 @@ SERVICE_SCHEMAS = {
     ),
     SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.Schema(
         {
-            vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
@@ -322,7 +324,7 @@ async def websocket_get_groups(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/device",
-        vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -503,7 +505,7 @@ async def websocket_remove_group_members(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/reconfigure",
-        vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -553,7 +555,7 @@ async def websocket_update_topology(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/clusters",
-        vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -594,7 +596,7 @@ async def websocket_device_clusters(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/clusters/attributes",
-        vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
         vol.Required(ATTR_ENDPOINT_ID): int,
         vol.Required(ATTR_CLUSTER_ID): int,
         vol.Required(ATTR_CLUSTER_TYPE): str,
@@ -641,7 +643,7 @@ async def websocket_device_cluster_attributes(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/clusters/commands",
-        vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
         vol.Required(ATTR_ENDPOINT_ID): int,
         vol.Required(ATTR_CLUSTER_ID): int,
         vol.Required(ATTR_CLUSTER_TYPE): str,
@@ -701,7 +703,7 @@ async def websocket_device_cluster_commands(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/clusters/attributes/value",
-        vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
         vol.Required(ATTR_ENDPOINT_ID): int,
         vol.Required(ATTR_CLUSTER_ID): int,
         vol.Required(ATTR_CLUSTER_TYPE): str,
@@ -756,7 +758,7 @@ async def websocket_read_zigbee_cluster_attributes(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/bindable",
-        vol.Required(ATTR_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -789,8 +791,8 @@ async def websocket_get_bindable_devices(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/bind",
-        vol.Required(ATTR_SOURCE_IEEE): vol.All(cv.string, EUI64.convert),
-        vol.Required(ATTR_TARGET_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
+        vol.Required(ATTR_TARGET_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -817,8 +819,8 @@ async def websocket_bind_devices(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/unbind",
-        vol.Required(ATTR_SOURCE_IEEE): vol.All(cv.string, EUI64.convert),
-        vol.Required(ATTR_TARGET_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
+        vol.Required(ATTR_TARGET_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -862,7 +864,7 @@ def is_cluster_binding(value: Any) -> ClusterBinding:
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/groups/bind",
-        vol.Required(ATTR_SOURCE_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
         vol.Required(GROUP_ID): cv.positive_int,
         vol.Required(BINDINGS): vol.All(cv.ensure_list, [is_cluster_binding]),
     }
@@ -884,7 +886,7 @@ async def websocket_bind_group(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/groups/unbind",
-        vol.Required(ATTR_SOURCE_IEEE): vol.All(cv.string, EUI64.convert),
+        vol.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
         vol.Required(GROUP_ID): cv.positive_int,
         vol.Required(BINDINGS): vol.All(cv.ensure_list, [is_cluster_binding]),
     }
