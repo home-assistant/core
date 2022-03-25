@@ -2,12 +2,19 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
+import contextlib
 from datetime import datetime, timedelta
 from typing import Any
 
+from async_upnp_client.aiohttp import AiohttpSessionRequester
+from async_upnp_client.client import UpnpDevice, UpnpService
+from async_upnp_client.client_factory import UpnpFactory
+from async_upnp_client.exceptions import UpnpConnectionError
 import voluptuous as vol
 from wakeonlan import send_magic_packet
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -24,12 +31,14 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
@@ -53,6 +62,7 @@ SUPPORT_SAMSUNGTV = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_NEXT_TRACK
@@ -70,6 +80,16 @@ SCAN_INTERVAL_PLUS_OFF_TIME = entity_component.DEFAULT_SCAN_INTERVAL + timedelta
 
 # Max delay waiting for app_list to return, as some TVs simply ignore the request
 APP_LIST_DELAY = 3
+
+
+class UpnpServiceType(StrEnum):
+    """Known Upnp service types for Samsung TV."""
+
+    AVTransport = "urn:schemas-upnp-org:service:AVTransport:1"
+    ConnectionManager = "urn:schemas-upnp-org:service:ConnectionManager:1"
+    MainTVAgent2 = "urn:samsung.com:service:MainTVAgent2:1"
+    RenderingControl = "urn:schemas-upnp-org:service:RenderingControl:1"
+    StreamSplicing = "urn:schemas-rvualliance-org:service:StreamSplicing:1"
 
 
 async def async_setup_entry(
@@ -142,6 +162,8 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._bridge.register_reauth_callback(self.access_denied)
         self._bridge.register_app_list_callback(self._app_list_callback)
 
+        self._upnp_device: UpnpDevice | None = None
+
     def _update_sources(self) -> None:
         self._attr_source_list = list(SOURCES)
         if app_list := self._app_list:
@@ -179,20 +201,66 @@ class SamsungTVDevice(MediaPlayerEntity):
                 STATE_ON if await self._bridge.async_is_on() else STATE_OFF
             )
 
-        if self._attr_state == STATE_ON and not self._app_list_event.is_set():
-            await self._bridge.async_request_app_list()
-            if self._app_list_event.is_set():
-                # The try+wait_for is a bit expensive so we should try not to
-                # enter it unless we have to (Python 3.11 will have zero cost try)
-                return
-            try:
-                await asyncio.wait_for(self._app_list_event.wait(), APP_LIST_DELAY)
-            except asyncio.TimeoutError as err:
-                # No need to try again
-                self._app_list_event.set()
-                LOGGER.debug(
-                    "Failed to load app list from %s: %s", self._host, err.__repr__()
+        if self._attr_state == STATE_ON:
+            startup_tasks: list[Coroutine[Any, Any, None]] = []
+
+            if not self._app_list_event.is_set():
+                startup_tasks.append(self._async_startup_app_list())
+
+            if not self._upnp_device:
+                startup_tasks.append(self._async_startup_upnp())
+
+            await asyncio.gather(*startup_tasks)
+
+            if service := self._get_upnp_service(UpnpServiceType.RenderingControl):
+                action = service.action("GetVolume")
+                get_volume = await action.async_call(InstanceID=0, Channel="Master")
+                LOGGER.debug("Upnp GetVolume on %s: %s", self._host, get_volume)
+                if (volume_level := get_volume.get("CurrentVolume")) is not None:
+                    self._attr_volume_level = volume_level / 100
+
+                action = service.action("GetMute")
+                get_mute = await action.async_call(InstanceID=0, Channel="Master")
+                LOGGER.debug("Upnp GetMute on %s: %s", self._host, get_mute)
+                if (is_muted := get_mute.get("CurrentMute")) is not None:
+                    self._attr_is_volume_muted = is_muted
+
+    def _get_upnp_service(self, service_name: UpnpServiceType) -> UpnpService | None:
+        if self._upnp_device is None:
+            return None
+        return self._upnp_device.services.get(service_name)
+
+    async def _async_startup_app_list(self) -> None:
+        await self._bridge.async_request_app_list()
+        if self._app_list_event.is_set():
+            # The try+wait_for is a bit expensive so we should try not to
+            # enter it unless we have to (Python 3.11 will have zero cost try)
+            return
+        try:
+            await asyncio.wait_for(self._app_list_event.wait(), APP_LIST_DELAY)
+        except asyncio.TimeoutError as err:
+            # No need to try again
+            self._app_list_event.set()
+            LOGGER.debug(
+                "Failed to load app list from %s: %s", self._host, err.__repr__()
+            )
+
+    async def _async_startup_upnp(self) -> None:
+        if self._upnp_device is None:
+            session = async_get_clientsession(self.hass)
+            upnp_requester = AiohttpSessionRequester(session)
+            upnp_factory = UpnpFactory(upnp_requester)
+            with contextlib.suppress(UpnpConnectionError):
+                self._upnp_device = await upnp_factory.async_create_device(
+                    f"http://{self._host}:9197/dmr"
                 )
+        if self._upnp_device is not None:
+            # First time that upnp_device is not None => try to get upnp source list
+            if service := self._upnp_device.services.get(UpnpServiceType.MainTVAgent2):
+                source_list = await service.action("GetSourceList").async_call()
+                LOGGER.debug("Upnp source list on %s: %s", self._host, source_list)
+            else:
+                LOGGER.debug("Upnp source list not supported on: %s", self._host)
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
@@ -232,6 +300,13 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Turn off media player."""
         self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
         await self._bridge.async_power_off()
+
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set volume level on the media player."""
+        if service := self._get_upnp_service(UpnpServiceType.RenderingControl):
+            await service.action("SetVolume").async_call(
+                InstanceID=0, Channel="Master", DesiredVolume=int(volume * 100)
+            )
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""

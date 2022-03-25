@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import copy
 from datetime import datetime, timedelta
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import NVR, Camera, Event, Sensor
@@ -79,9 +79,6 @@ async def sensor_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    # 5 from all, 5 from sense, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 22, 17)
-
     yield sensor_obj
 
     Sensor.__config__.validate_assignment = True
@@ -119,7 +116,7 @@ async def sensor_none_fixture(
     await hass.async_block_till_done()
 
     # 4 from all, 5 from sense, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 22, 17)
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
     yield sensor_obj
 
@@ -168,9 +165,6 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    # 3 from all, 8 from camera, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 24, 16)
-
     yield camera_obj
 
     Camera.__config__.validate_assignment = True
@@ -180,6 +174,8 @@ async def test_sensor_setup_sensor(
     hass: HomeAssistant, mock_entry: MockEntityFixture, sensor: Sensor
 ):
     """Test sensor entity setup for sensor devices."""
+    # 5 from all, 5 from sense, 12 NVR
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
     entity_registry = er.async_get(hass)
 
@@ -189,11 +185,10 @@ async def test_sensor_setup_sensor(
         "10.0",
         "10.0",
         "none",
-        "2022-01-04T04:03:56+00:00",
-        "2022-01-04T04:04:04+00:00",
-        STATE_UNKNOWN,
     )
     for index, description in enumerate(SENSE_SENSORS):
+        if not description.entity_registry_enabled_default:
+            continue
         unique_id, entity_id = ids_from_device_description(
             Platform.SENSOR, sensor, description
         )
@@ -238,11 +233,10 @@ async def test_sensor_setup_sensor_none(
         STATE_UNAVAILABLE,
         STATE_UNAVAILABLE,
         STATE_UNAVAILABLE,
-        "2022-01-04T04:03:56+00:00",
-        "2022-01-04T04:04:04+00:00",
-        STATE_UNKNOWN,
     )
     for index, description in enumerate(SENSE_SENSORS):
+        if not description.entity_registry_enabled_default:
+            continue
         unique_id, entity_id = ids_from_device_description(
             Platform.SENSOR, sensor_none, description
         )
@@ -409,6 +403,8 @@ async def test_sensor_setup_camera(
     hass: HomeAssistant, mock_entry: MockEntityFixture, camera: Camera, now: datetime
 ):
     """Test sensor entity setup for camera devices."""
+    # 3 from all, 8 from camera, 12 NVR
+    assert_entity_counts(hass, Platform.SENSOR, 24, 14)
 
     entity_registry = er.async_get(hass)
 
@@ -417,9 +413,10 @@ async def test_sensor_setup_camera(
         "100",
         "100.0",
         "20.0",
-        STATE_UNKNOWN,
     )
     for index, description in enumerate(CAMERA_SENSORS):
+        if not description.entity_registry_enabled_default:
+            continue
         unique_id, entity_id = ids_from_device_description(
             Platform.SENSOR, camera, description
         )
@@ -501,6 +498,17 @@ async def test_sensor_setup_camera(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_SCORE] == 0
 
+
+async def test_sensor_setup_camera_with_last_trip_time(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    mock_entry: MockEntityFixture,
+    camera: Camera,
+    now: datetime,
+):
+    """Test sensor entity setup for camera devices with last trip time."""
+    entity_registry = er.async_get(hass)
+
     # Last Trip Time
     unique_id, entity_id = ids_from_device_description(
         Platform.SENSOR, camera, MOTION_TRIP_SENSORS[0]
@@ -520,6 +528,8 @@ async def test_sensor_update_motion(
     hass: HomeAssistant, mock_entry: MockEntityFixture, camera: Camera, now: datetime
 ):
     """Test sensor motion entity."""
+    # 3 from all, 8 from camera, 12 NVR
+    assert_entity_counts(hass, Platform.SENSOR, 24, 14)
 
     _, entity_id = ids_from_device_description(
         Platform.SENSOR, camera, MOTION_SENSORS[0]
@@ -563,6 +573,8 @@ async def test_sensor_update_alarm(
     hass: HomeAssistant, mock_entry: MockEntityFixture, sensor: Sensor, now: datetime
 ):
     """Test sensor motion entity."""
+    # 5 from all, 5 from sense, 12 NVR
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
     _, entity_id = ids_from_device_description(
         Platform.SENSOR, sensor, SENSE_SENSORS[4]
@@ -600,6 +612,16 @@ async def test_sensor_update_alarm(
     assert state
     assert state.state == "smoke"
     await time_changed(hass, 10)
+
+
+async def test_sensor_update_alarm_with_last_trip_time(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    mock_entry: MockEntityFixture,
+    sensor: Sensor,
+    now: datetime,
+):
+    """Test sensor motion entity with last trip time."""
 
     # Last Trip Time
     unique_id, entity_id = ids_from_device_description(
