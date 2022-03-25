@@ -43,7 +43,7 @@ from homeassistant.components.samsungtv.const import (
 )
 from homeassistant.components.samsungtv.media_player import (
     SUPPORT_SAMSUNGTV,
-    UpnpServiceType,
+    UPNP_SVC_RENDERINGCONTROL,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -1295,12 +1295,12 @@ async def test_volume_control_upnp(
 ) -> None:
     """Test for Upnp volume control."""
     upnp_get_volume = upnp_get_action_mock(
-        upnp_device, UpnpServiceType.RenderingControl, "GetVolume"
+        upnp_device, UPNP_SVC_RENDERINGCONTROL, "GetVolume"
     )
     upnp_get_volume.async_call.return_value = {"CurrentVolume": 44}
 
     upnp_get_mute = upnp_get_action_mock(
-        upnp_device, UpnpServiceType.RenderingControl, "GetMute"
+        upnp_device, UPNP_SVC_RENDERINGCONTROL, "GetMute"
     )
     upnp_get_mute.async_call.return_value = {"CurrentMute": False}
 
@@ -1310,7 +1310,7 @@ async def test_volume_control_upnp(
 
     # Upnp action succeeds
     upnp_set_volume = upnp_get_action_mock(
-        upnp_device, UpnpServiceType.RenderingControl, "SetVolume"
+        upnp_device, UPNP_SVC_RENDERINGCONTROL, "SetVolume"
     )
     assert await hass.services.async_call(
         DOMAIN,
@@ -1334,7 +1334,7 @@ async def test_volume_control_upnp(
 
 
 @pytest.mark.usefixtures("remotews")
-async def test_volume_control_no_upnp(
+async def test_upnp_not_available(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for volume control when Upnp is not available."""
@@ -1347,33 +1347,21 @@ async def test_volume_control_no_upnp(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
         True,
     )
-    assert (
-        f"Upnp service {UpnpServiceType.RenderingControl} is not available"
-        in caplog.text
-    )
+    assert "Upnp services are not available" in caplog.text
 
 
 @pytest.mark.usefixtures("remotews", "upnp_device")
-async def test_upnp_app_list_not_available(
+async def test_upnp_missing_service(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for volume control when Upnp is not available."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
 
-    assert "Upnp source list not supported on" in caplog.text
-
-
-@pytest.mark.usefixtures("remotews")
-async def test_upnp_app_list_available(
-    hass: HomeAssistant, upnp_device: Mock, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test for volume control when Upnp is not available."""
-    upnp_get_source_list = upnp_get_action_mock(
-        upnp_device, UpnpServiceType.MainTVAgent2, "GetSourceList"
+    # Upnp action fails
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+        True,
     )
-    # TODO: get a real sample
-    upnp_get_source_list.async_call.return_value = {}
-
-    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
-
-    assert "Upnp source list on fake_host: {" in caplog.text
+    assert f"Upnp service {UPNP_SVC_RENDERINGCONTROL} is not available" in caplog.text
