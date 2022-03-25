@@ -19,6 +19,7 @@ from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_SESSION_ID,
+    CONF_SSDP_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
     LEGACY_PORT,
@@ -1160,10 +1161,10 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
 
 
 @pytest.mark.usefixtures("remotews")
-async def test_update_missing_mac_unique_id_added_from_ssdp(
+async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     hass: HomeAssistant,
 ) -> None:
-    """Test missing mac and unique id added via ssdp."""
+    """Test missing mac, ssdp_location, and unique id added via ssdp."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
     with patch(
@@ -1185,6 +1186,41 @@ async def test_update_missing_mac_unique_id_added_from_ssdp(
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
+    assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+@pytest.mark.usefixtures("remotews")
+async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssdp(
+    hass: HomeAssistant,
+) -> None:
+    """Test missing mac and unique id with outdated ssdp_location added via ssdp."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_OLD_ENTRY, CONF_SSDP_LOCATION: "https://1.2.3.4:555/test"},
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.samsungtv.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.samsungtv.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=MOCK_SSDP_DATA,
+        )
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1290,6 +1326,36 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     assert result["reason"] == "not_supported"
     assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
     assert entry.unique_id is None
+
+
+@pytest.mark.usefixtures("remotews")
+async def test_update_mac_sdp_location_unique_id_added_from_ssdp(
+    hass: HomeAssistant,
+) -> None:
+    """Test missing mac, ssdp_location, and unique id added via ssdp."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.samsungtv.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.samsungtv.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=MOCK_SSDP_DATA,
+        )
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
+    assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
 @pytest.mark.usefixtures("remote")
