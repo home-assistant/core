@@ -4,6 +4,7 @@ from datetime import timedelta
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.updater import BroadlinkSP4UpdateManager
 from homeassistant.const import Platform
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.util import dt
 
@@ -81,9 +82,7 @@ async def test_a1_sensor_update(hass):
         "light": 3,
         "noise": 2,
     }
-    await hass.helpers.entity_component.async_update_entity(
-        next(iter(sensors)).entity_id
-    )
+    await async_update_entity(hass, next(iter(sensors)).entity_id)
     assert mock_setup.api.check_sensors_raw.call_count == 2
 
     sensors_and_states = {
@@ -144,9 +143,7 @@ async def test_rm_pro_sensor_update(hass):
     assert len(sensors) == 1
 
     mock_setup.api.check_sensors.return_value = {"temperature": 25.8}
-    await hass.helpers.entity_component.async_update_entity(
-        next(iter(sensors)).entity_id
-    )
+    await async_update_entity(hass, next(iter(sensors)).entity_id)
     assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
@@ -178,9 +175,7 @@ async def test_rm_pro_filter_crazy_temperature(hass):
     assert len(sensors) == 1
 
     mock_setup.api.check_sensors.return_value = {"temperature": -7}
-    await hass.helpers.entity_component.async_update_entity(
-        next(iter(sensors)).entity_id
-    )
+    await async_update_entity(hass, next(iter(sensors)).entity_id)
     assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
@@ -258,9 +253,7 @@ async def test_rm4_pro_hts2_sensor_update(hass):
     assert len(sensors) == 2
 
     mock_setup.api.check_sensors.return_value = {"temperature": 16.8, "humidity": 34.0}
-    await hass.helpers.entity_component.async_update_entity(
-        next(iter(sensors)).entity_id
-    )
+    await async_update_entity(hass, next(iter(sensors)).entity_id)
     assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
