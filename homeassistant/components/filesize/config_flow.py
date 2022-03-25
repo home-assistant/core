@@ -48,7 +48,6 @@ class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 get_path = validate_path(self.hass, user_input[CONF_FILE_PATH])
-                fullpath = str(get_path.absolute())
             except NotValidError:
                 errors["base"] = "not_valid"
             except NotAllowedError:
