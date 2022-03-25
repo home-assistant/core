@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(BATTERY_LIMIT, default=BATTERY_LIMIT_DEFAULT): vol.All(
+        vol.Optional(BATTERY_LIMIT, default=BATTERY_LIMIT_DEFAULT): vol.All(
             cv.positive_int, vol.Range(1, 100)
         ),
         vol.Optional(STATION_ID): cv.positive_int,
@@ -56,7 +56,7 @@ class PubliBikeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            
+
             if (station_id := user_input.get(STATION_ID)) is not None:
                 try:
                     id_valid = await self._is_valid_station_id(station_id)

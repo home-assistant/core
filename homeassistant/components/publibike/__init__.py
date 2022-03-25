@@ -50,14 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             publi_bike.findNearestStationTo, location
         )
 
-    coordinator = PubliBikeDataUpdateCoordinator(hass, station)
+    coordinator = PubliBikeDataUpdateCoordinator(
+        hass, station, entry.data[BATTERY_LIMIT]
+    )
 
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
-        "station": station,
-        BATTERY_LIMIT: entry.data[BATTERY_LIMIT],
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -68,9 +68,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class PubliBikeDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator class to manage fetching PubliBike data from single endpoint."""
 
-    def __init__(self, hass: HomeAssistant, station: Station) -> None:
+    def __init__(
+        self, hass: HomeAssistant, station: Station, battery_limit: int
+    ) -> None:
         """Initialize global PubliBike station data updater."""
         self.station = station
+        self.battery_limit = battery_limit
+        self.available_ebikes = 0
         self._hass = hass
         super().__init__(
             hass,
@@ -82,3 +86,13 @@ class PubliBikeDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> None:
         """Refresh state of the station."""
         await self._hass.async_add_executor_job(self.station.refresh)
+        if self.battery_limit:
+            self.available_ebikes = len(
+                [
+                    bike
+                    for bike in self.station.ebikes
+                    if bike.batteryLevel >= self.battery_limit
+                ]
+            )
+        else:
+            self.available_ebikes = len(self.station.ebikes)

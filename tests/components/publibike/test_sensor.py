@@ -18,10 +18,6 @@ async def _assert_states(hass):
     assert state.state == "1"
     expected_attributes = {
         "All E-bikes": 2,
-        "Bike 1001": 1,
-        "Bike 1002": 100,
-        "Station name": "test_station",
-        "Station ID": 123,
         "friendly_name": "test_station - E-bikes",
     }
     for key, value in expected_attributes.items():
@@ -29,8 +25,6 @@ async def _assert_states(hass):
     state = hass.states.get("sensor.test_station_bikes")
     assert state.state == "2"
     expected_attributes = {
-        "Station name": "test_station",
-        "Station ID": 123,
         "friendly_name": "test_station - Bikes",
     }
     for key, value in expected_attributes.items():
