@@ -26,12 +26,8 @@ from . import (  # noqa: F401
     security,
     smartenergy,
 )
-from .. import (
-    const,
-    device as zha_core_device,
-    discovery as zha_disc,
-    registries as zha_regs,
-)
+from .. import const, discovery as zha_disc, registries as zha_regs
+from ..device import DeviceStatus
 
 if TYPE_CHECKING:
     from ...entity import ZhaEntity
@@ -154,7 +150,7 @@ class Channels:
         channels: list[base.ZigbeeChannel],
     ):
         """Signal new entity addition."""
-        if self.zha_device.status == zha_core_device.DeviceStatus.INITIALIZED:
+        if self.zha_device.status == DeviceStatus.INITIALIZED:
             return
 
         self.zha_device.hass.data[const.DATA_ZHA][component].append(
