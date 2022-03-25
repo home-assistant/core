@@ -132,7 +132,6 @@ def websocket_command(
 
     def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
-        # pylint: disable=protected-access
         func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
         func._ws_command = command  # type: ignore[attr-defined]
         return func
