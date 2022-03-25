@@ -5,7 +5,8 @@ from abc import abstractmethod
 from collections.abc import Callable, Mapping
 import copy
 from dataclasses import dataclass
-from typing import Any
+import types
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -21,7 +22,7 @@ class HelperFlowError(Exception):
 
 
 @dataclass
-class HelperFlowStep:
+class HelperFlowFormStep:
     """Define a helper config or options flow step."""
 
     # Optional schema for requesting and validating user input. If schema validation
@@ -42,13 +43,21 @@ class HelperFlowStep:
     next_step: Callable[[dict[str, Any]], str | None] = lambda _: None
 
 
+@dataclass
+class HelperFlowMenuStep:
+    """Define a helper config or options flow menu step."""
+
+    # Menu options
+    options: list[str] | dict[str, str]
+
+
 class HelperCommonFlowHandler:
     """Handle a config or options flow for helper."""
 
     def __init__(
         self,
         handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
-        flow: dict[str, HelperFlowStep],
+        flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep],
         config_entry: config_entries.ConfigEntry | None,
     ) -> None:
         """Initialize a common handler."""
@@ -60,24 +69,48 @@ class HelperCommonFlowHandler:
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a step."""
-        next_step_id: str = step_id
+        if isinstance(self._flow[step_id], HelperFlowFormStep):
+            return await self._async_form_step(step_id, user_input)
+        return await self._async_menu_step(step_id, user_input)
 
-        if user_input is not None and self._flow[next_step_id].schema is not None:
+    async def _async_form_step(
+        self, step_id: str, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a form step."""
+        form_step: HelperFlowFormStep = cast(HelperFlowFormStep, self._flow[step_id])
+
+        if (
+            user_input is not None
+            and (data_schema := form_step.schema)
+            and data_schema.schema
+            and not self._handler.show_advanced_options
+        ):
+            # Add advanced field default if not set
+            for key in data_schema.schema.keys():
+                if isinstance(key, (vol.Optional, vol.Required)):
+                    if (
+                        key.description
+                        and key.description.get("advanced")
+                        and key.default is not vol.UNDEFINED
+                        and key not in self._options
+                    ):
+                        user_input[str(key.schema)] = key.default()
+
+        if user_input is not None and form_step.schema is not None:
             # Do extra validation of user input
             try:
-                user_input = self._flow[next_step_id].validate_user_input(user_input)
+                user_input = form_step.validate_user_input(user_input)
             except HelperFlowError as exc:
-                return self._show_next_step(next_step_id, exc, user_input)
+                return self._show_next_step(step_id, exc, user_input)
 
         if user_input is not None:
             # User input was validated successfully, update options
             self._options.update(user_input)
 
-        if self._flow[next_step_id].next_step and (
-            user_input is not None or self._flow[next_step_id].schema is None
-        ):
+        next_step_id: str = step_id
+        if form_step.next_step and (user_input is not None or form_step.schema is None):
             # Get next step
-            next_step_id_or_end_flow = self._flow[next_step_id].next_step(self._options)
+            next_step_id_or_end_flow = form_step.next_step(self._options)
             if next_step_id_or_end_flow is None:
                 # Flow done, create entry or update config entry options
                 return self._handler.async_create_entry(data=self._options)
@@ -92,14 +125,28 @@ class HelperCommonFlowHandler:
         error: HelperFlowError | None = None,
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
-        """Show step for next step."""
+        """Show form for next step."""
+        form_step: HelperFlowFormStep = cast(
+            HelperFlowFormStep, self._flow[next_step_id]
+        )
+
         options = dict(self._options)
         if user_input:
             options.update(user_input)
-        if (data_schema := self._flow[next_step_id].schema) and data_schema.schema:
+        if (data_schema := form_step.schema) and data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
             schema = {}
             for key, val in data_schema.schema.items():
+
+                if isinstance(key, vol.Marker):
+                    # Exclude advanced field
+                    if (
+                        key.description
+                        and key.description.get("advanced")
+                        and not self._handler.show_advanced_options
+                    ):
+                        continue
+
                 new_key = key
                 if key in options and isinstance(key, vol.Marker):
                     # Copy the marker to not modify the flow schema
@@ -115,12 +162,22 @@ class HelperCommonFlowHandler:
             step_id=next_step_id, data_schema=data_schema, errors=errors
         )
 
+    async def _async_menu_step(
+        self, step_id: str, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a menu step."""
+        form_step: HelperFlowMenuStep = cast(HelperFlowMenuStep, self._flow[step_id])
+        return self._handler.async_show_menu(
+            step_id=step_id,
+            menu_options=form_step.options,
+        )
+
 
 class HelperConfigFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow for helper integrations."""
 
-    config_flow: dict[str, HelperFlowStep]
-    options_flow: dict[str, HelperFlowStep] | None = None
+    config_flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep]
+    options_flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep] | None = None
 
     VERSION = 1
 
@@ -146,7 +203,7 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
 
         # Create flow step methods for each step defined in the flow schema
         for step in cls.config_flow:
-            setattr(cls, f"async_step_{step}", cls._async_step)
+            setattr(cls, f"async_step_{step}", cls._async_step(step))
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -160,12 +217,19 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
         """Return options flow support for this handler."""
         return cls.options_flow is not None
 
-    async def _async_step(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Handle a config flow step."""
-        step_id = self.cur_step["step_id"] if self.cur_step else "user"
-        result = await self._common_handler.async_step(step_id, user_input)
+    @staticmethod
+    def _async_step(step_id: str) -> Callable:
+        """Generate a step handler."""
 
-        return result
+        async def _async_step(
+            self: HelperConfigFlowHandler, user_input: dict[str, Any] | None = None
+        ) -> FlowResult:
+            """Handle a config flow step."""
+            # pylint: disable-next=protected-access
+            result = await self._common_handler.async_step(step_id, user_input)
+            return result
+
+        return _async_step
 
     # pylint: disable-next=no-self-use
     @abstractmethod
@@ -224,13 +288,25 @@ class HelperOptionsFlowHandler(config_entries.OptionsFlow):
         self._async_options_flow_finished = async_options_flow_finished
 
         for step in options_flow:
-            setattr(self, f"async_step_{step}", self._async_step)
+            setattr(
+                self,
+                f"async_step_{step}",
+                types.MethodType(self._async_step(step), self),
+            )
 
-    async def _async_step(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Handle an options flow step."""
-        # pylint: disable-next=unsubscriptable-object # self.cur_step is a dict
-        step_id = self.cur_step["step_id"] if self.cur_step else "init"
-        return await self._common_handler.async_step(step_id, user_input)
+    @staticmethod
+    def _async_step(step_id: str) -> Callable:
+        """Generate a step handler."""
+
+        async def _async_step(
+            self: HelperConfigFlowHandler, user_input: dict[str, Any] | None = None
+        ) -> FlowResult:
+            """Handle an options flow step."""
+            # pylint: disable-next=protected-access
+            result = await self._common_handler.async_step(step_id, user_input)
+            return result
+
+        return _async_step
 
     @callback
     def async_create_entry(  # pylint: disable=arguments-differ
