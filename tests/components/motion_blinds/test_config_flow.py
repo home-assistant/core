@@ -383,13 +383,6 @@ async def test_change_connection_settings(hass):
     )
     config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.data[CONF_HOST] == TEST_HOST
-    assert config_entry.data[CONF_API_KEY] == TEST_API_KEY
-    assert config_entry.data[const.CONF_INTERFACE] == TEST_HOST_HA
-
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
