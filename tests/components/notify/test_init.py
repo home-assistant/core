@@ -19,12 +19,13 @@ from tests.common import MockPlatform, mock_platform
 class MockNotifyPlatform(MockPlatform):
     """Help to set up test notify service."""
 
-    def __init__(self, async_get_service=None):
+    def __init__(self, async_get_service=None, get_service=None):
         """Return the notify service."""
         super().__init__()
-        if not async_get_service:
-            return
-        self.async_get_service = async_get_service
+        if get_service:
+            self.get_service = get_service
+        if async_get_service:
+            self.async_get_service = async_get_service
 
 
 async def test_same_targets(hass: HomeAssistant):
@@ -149,11 +150,11 @@ async def test_invalid_platform(hass, caplog, tmp_path):
 async def test_invalid_service(hass, caplog, tmp_path):
     """Test service setup with an invalid service object or platform."""
 
-    async def async_get_service(hass, config, discovery_info=None):
+    def get_service(hass, config, discovery_info=None):
         """Return None for an invalid notify service."""
         return None
 
-    loaded_platform = MockNotifyPlatform(async_get_service=async_get_service)
+    loaded_platform = MockNotifyPlatform(get_service=get_service)
     mock_platform(hass, "testnotify.notify", loaded_platform)
     integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
     integration.file_path = tmp_path
