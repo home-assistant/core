@@ -163,6 +163,7 @@ homeassistant.components.pure_energie.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
+homeassistant.components.recorder.history
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
 homeassistant.components.recorder.statistics
