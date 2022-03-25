@@ -30,6 +30,7 @@ TEST_TITLE = f"RabbitAir-{TEST_MAC.replace(':', '')}"
 
 ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host=TEST_HOST,
+    addresses=[TEST_HOST],
     port=9009,
     hostname=f"{TEST_NAME}.local.",
     type="_rabbitair._udp.local.",
