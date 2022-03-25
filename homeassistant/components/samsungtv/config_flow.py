@@ -167,9 +167,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     METHOD_WEBSOCKET,
                 )
                 raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+            LOGGER.debug("Host:%s did not return device info", self._host)
             return False
         dev_info = info.get("device", {})
         if (device_type := dev_info.get("type")) != "Samsung SmartTV":
+            LOGGER.debug(
+                "Host:%s has type: %s which is not supported", self._host, device_type
+            )
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         self._model = dev_info.get("modelName")
         name = dev_info.get("name")
