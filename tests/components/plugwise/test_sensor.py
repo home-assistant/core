@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import MockConfigEntry
 
@@ -27,9 +28,7 @@ async def test_adam_climate_sensor_entities(
     assert state
     assert float(state.state) == 7.37
 
-    await hass.helpers.entity_component.async_update_entity(
-        "sensor.zone_lisa_wk_battery"
-    )
+    await async_update_entity(hass, "sensor.zone_lisa_wk_battery")
 
     state = hass.states.get("sensor.zone_lisa_wk_battery")
     assert state
