@@ -1189,6 +1189,9 @@ p1monitor==1.0.1
 # homeassistant.components.shiftr
 paho-mqtt==1.6.1
 
+# homeassistant.components.yolink
+paho-mqtt==1.6.1
+
 # homeassistant.components.panasonic_bluray
 panacotta==0.1
 
@@ -1433,6 +1436,9 @@ pydaikin==2.7.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
+
+# homeassistant.components.yolink
+pydantic==1.9.0
 
 # homeassistant.components.deconz
 pydeconz==92
@@ -2478,6 +2484,9 @@ yeelight==0.7.10
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
+
+# homeassistant.components.yolink
+yolink-client==0.0.5
 
 # homeassistant.components.youless
 youless-api==0.16
