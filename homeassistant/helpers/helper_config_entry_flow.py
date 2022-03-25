@@ -207,7 +207,6 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
 
     config_flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep]
     options_flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep] | None = None
-    singleton = False
 
     VERSION = 1
 
@@ -254,9 +253,6 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
             self: HelperConfigFlowHandler, user_input: dict[str, Any] | None = None
         ) -> FlowResult:
             """Handle a config flow step."""
-            # pylint: disable-next=protected-access
-            if self.singleton and self._async_current_entries():
-                return self.async_abort(reason="single_instance_allowed")
             # pylint: disable-next=protected-access
             result = await self._common_handler.async_step(step_id, user_input)
             return result
