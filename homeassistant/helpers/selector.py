@@ -300,6 +300,9 @@ class EntitySelector(Selector):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
 
+        include_entities = self.config.get("include_entities")
+        exclude_entities = self.config.get("exclude_entities")
+
         def validate(e_or_u: str) -> str:
             e_or_u = cv.entity_id_or_uuid(e_or_u)
             if not valid_entity_id(e_or_u):
@@ -311,6 +314,10 @@ class EntitySelector(Selector):
                         f"Entity {e_or_u} belongs to domain {domain}, "
                         f"expected {allowed_domain}"
                     )
+            if include_entities:
+                vol.In(include_entities)(e_or_u)
+            if exclude_entities:
+                vol.NotIn(exclude_entities)(e_or_u)
             return e_or_u
 
         if not self.config["multiple"]:

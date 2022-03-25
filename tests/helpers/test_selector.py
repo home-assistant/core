@@ -132,6 +132,26 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections):
                 ["sensor.abc123", "light.def456"],
             ),
         ),
+        (
+            {
+                "include_entities": ["sensor.abc123", "sensor.def456", "sensor.ghi789"],
+                "exclude_entities": ["sensor.ghi789", "sensor.jkl123"],
+            },
+            ("sensor.abc123", FAKE_UUID),
+            ("sensor.ghi789", "sensor.jkl123"),
+        ),
+        (
+            {
+                "multiple": True,
+                "include_entities": ["sensor.abc123", "sensor.def456", "sensor.ghi789"],
+                "exclude_entities": ["sensor.ghi789", "sensor.jkl123"],
+            },
+            (["sensor.abc123", "sensor.def456"], ["sensor.abc123", FAKE_UUID]),
+            (
+                ["sensor.abc123", "sensor.jkl123"],
+                ["sensor.abc123", "sensor.ghi789"],
+            ),
+        ),
     ),
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections):
