@@ -82,7 +82,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_INSTALL,
         {
             vol.Optional(ATTR_VERSION): cv.string,
-            vol.Optional(ATTR_BACKUP): cv.boolean,
+            vol.Optional(ATTR_BACKUP, default=False): cv.boolean,
         },
         async_install,
         [UpdateEntityFeature.INSTALL],
@@ -128,7 +128,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
 
     # If backup is requested, but not supported by the entity.
     if (
-        backup := service_call.data.get(ATTR_BACKUP)
+        backup := service_call.data[ATTR_BACKUP]
     ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
         raise HomeAssistantError(f"Backup is not supported for {entity.name}")
 
@@ -245,10 +245,7 @@ class UpdateEntity(RestoreEntity):
         self.async_write_ha_state()
 
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update.
 
@@ -260,12 +257,7 @@ class UpdateEntity(RestoreEntity):
         """
         await self.hass.async_add_executor_job(self.install, version, backup)
 
-    def install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
-    ) -> None:
+    def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update.
 
         Version can be specified to install a specific version. When `None`, the
@@ -323,9 +315,7 @@ class UpdateEntity(RestoreEntity):
 
     @final
     async def async_install_with_progress(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
+        self, version: str | None, backup: bool
     ) -> None:
         """Install update and handle progress if needed.
 

@@ -147,7 +147,7 @@ aiohomekit==0.7.16
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.3.0
+aiohue==4.4.1
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -298,7 +298,7 @@ bimmer_connected==0.8.11
 blebox_uniapi==1.3.3
 
 # homeassistant.components.blink
-blinkpy==0.18.0
+blinkpy==0.19.0
 
 # homeassistant.components.bond
 bond-api==0.1.16
@@ -372,6 +372,9 @@ debugpy==1.5.1
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
 defusedxml==0.7.1
+
+# homeassistant.components.deluge
+deluge-client==1.7.1
 
 # homeassistant.components.denonavr
 denonavr==0.10.10
@@ -450,7 +453,7 @@ fnvhash==0.1.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast_solar==2.1.0
+forecast_solar==2.2.0
 
 # homeassistant.components.freebox
 freebox-api==0.0.10
@@ -559,7 +562,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220317.0
+home-assistant-frontend==20220322.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -674,7 +677,7 @@ minio==5.0.10
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.1
+motionblinds==0.6.2
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -850,7 +853,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.6
+py-synologydsm-api==1.0.7
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -899,7 +902,7 @@ pyatmo==6.2.4
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.14
+pyaussiebb==0.0.15
 
 # homeassistant.components.balboa
 pybalboa==0.13
@@ -1169,7 +1172,7 @@ pyrituals==0.0.6
 pyruckus==0.12
 
 # homeassistant.components.sensibo
-pysensibo==1.0.8
+pysensibo==1.0.9
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1342,7 +1345,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async,encrypted]==2.4.0
+samsungtvws[async,encrypted]==2.5.0
 
 # homeassistant.components.dhcp
 scapy==2.4.5

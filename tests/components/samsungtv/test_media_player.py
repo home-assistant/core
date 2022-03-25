@@ -8,7 +8,10 @@ import pytest
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
-from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
+from samsungtvws.encrypted.remote import (
+    SamsungTVEncryptedCommand,
+    SamsungTVEncryptedWSAsyncRemote,
+)
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
@@ -28,6 +31,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
 )
 from homeassistant.components.samsungtv.const import (
+    CONF_MODEL,
     CONF_ON_ACTION,
     DOMAIN as SAMSUNGTV_DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
@@ -72,8 +76,8 @@ import homeassistant.util.dt as dt_util
 from . import setup_samsungtv_entry
 from .const import (
     MOCK_ENTRYDATA_ENCRYPTED_WS,
-    SAMPLE_APP_LIST,
     SAMPLE_DEVICE_INFO_FRAME,
+    SAMPLE_EVENT_ED_INSTALLED_APP,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -175,7 +179,6 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock()
-        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.token = "123456789"
         remote_class.return_value = remote
 
@@ -213,7 +216,6 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock()
-        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.token = "987654321"
         remote_class.return_value = remote
         assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
@@ -593,7 +595,7 @@ async def test_send_key_unhandled_response(hass: HomeAssistant, remote: Mock) ->
 async def test_send_key_websocketexception(hass: HomeAssistant, remotews: Mock) -> None:
     """Testing unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIGWS)
-    remotews.send_command = Mock(side_effect=WebSocketException("Boom"))
+    remotews.send_commands = Mock(side_effect=WebSocketException("Boom"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -607,11 +609,9 @@ async def test_send_key_websocketexception_encrypted(
     """Testing unhandled response exception."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
     remoteencws.send_commands = Mock(side_effect=WebSocketException("Boom"))
-    with pytest.raises(HomeAssistantError) as exc_info:
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        assert exc_info.match("media_player.fake does not support this service.")
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
@@ -619,7 +619,7 @@ async def test_send_key_websocketexception_encrypted(
 async def test_send_key_os_error_ws(hass: HomeAssistant, remotews: Mock) -> None:
     """Testing unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIGWS)
-    remotews.send_command = Mock(side_effect=OSError("Boom"))
+    remotews.send_commands = Mock(side_effect=OSError("Boom"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -633,11 +633,9 @@ async def test_send_key_os_error_ws_encrypted(
     """Testing unhandled response exception."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
     remoteencws.send_commands = Mock(side_effect=OSError("Boom"))
-    with pytest.raises(HomeAssistantError) as exc_info:
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        assert exc_info.match("media_player.fake does not support this service.")
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
@@ -738,26 +736,27 @@ async def test_turn_off_websocket(
     hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
+    remotews.app_list_data = SAMPLE_EVENT_ED_INSTALLED_APP
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
-    remotews.send_command.reset_mock()
+    remotews.send_commands.reset_mock()
 
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remotews.send_command.call_count == 1
-    commands = remotews.send_command.call_args_list[0].args[0]
+    assert remotews.send_commands.call_count == 1
+    commands = remotews.send_commands.call_args_list[0].args[0]
     assert len(commands) == 1
     assert isinstance(commands[0], SendRemoteKey)
     assert commands[0].params["DataOfCmd"] == "KEY_POWER"
 
     # commands not sent : power off in progress
-    remotews.send_command.reset_mock()
+    remotews.send_commands.reset_mock()
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -769,7 +768,7 @@ async def test_turn_off_websocket(
         True,
     )
     assert "TV is powering off, not sending launch_app command" in caplog.text
-    remotews.send_command.assert_not_called()
+    remotews.send_commands.assert_not_called()
 
 
 async def test_turn_off_websocket_frame(
@@ -783,14 +782,14 @@ async def test_turn_off_websocket_frame(
     ):
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
-    remotews.send_command.reset_mock()
+    remotews.send_commands.reset_mock()
 
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remotews.send_command.call_count == 1
-    commands = remotews.send_command.call_args_list[0].args[0]
+    assert remotews.send_commands.call_count == 1
+    commands = remotews.send_commands.call_args_list[0].args[0]
     assert len(commands) == 3
     assert isinstance(commands[0], SendRemoteKey)
     assert commands[0].params["Cmd"] == "Press"
@@ -806,22 +805,64 @@ async def test_turn_off_encrypted_websocket(
     hass: HomeAssistant, remoteencws: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data = deepcopy(MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data[CONF_MODEL] = "UE48UNKNOWN"
+    await setup_samsungtv_entry(hass, entry_data)
 
     remoteencws.send_commands.reset_mock()
 
-    with pytest.raises(HomeAssistantError) as exc_info:
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        assert exc_info.match("media_player.fake does not support this service.")
+    caplog.clear()
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    # key called
+    assert remoteencws.send_commands.call_count == 1
+    commands = remoteencws.send_commands.call_args_list[0].args[0]
+    assert len(commands) == 2
+    assert isinstance(command := commands[0], SamsungTVEncryptedCommand)
+    assert command.body["param3"] == "KEY_POWEROFF"
+    assert isinstance(command := commands[1], SamsungTVEncryptedCommand)
+    assert command.body["param3"] == "KEY_POWER"
+    assert "Unknown power_off command for UE48UNKNOWN (fake_host)" in caplog.text
 
     # commands not sent : power off in progress
-    with pytest.raises(HomeAssistantError) as exc_info:
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        assert exc_info.match("media_player.fake does not support this service.")
+    remoteencws.send_commands.reset_mock()
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert "TV is powering off, not sending keys: ['KEY_VOLUP']" in caplog.text
+    remoteencws.send_commands.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("model", "expected_key_type"),
+    [("UE50H6400", "KEY_POWEROFF"), ("UN75JU641D", "KEY_POWER")],
+)
+async def test_turn_off_encrypted_websocket_key_type(
+    hass: HomeAssistant,
+    remoteencws: Mock,
+    caplog: pytest.LogCaptureFixture,
+    model: str,
+    expected_key_type: str,
+) -> None:
+    """Test for turn_off."""
+    entry_data = deepcopy(MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data[CONF_MODEL] = model
+    await setup_samsungtv_entry(hass, entry_data)
+
+    remoteencws.send_commands.reset_mock()
+
+    caplog.clear()
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    # key called
+    assert remoteencws.send_commands.call_count == 1
+    commands = remoteencws.send_commands.call_args_list[0].args[0]
+    assert len(commands) == 1
+    assert isinstance(command := commands[0], SamsungTVEncryptedCommand)
+    assert command.body["param3"] == expected_key_type
+    assert "Unknown power_off command for" not in caplog.text
 
 
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
@@ -868,11 +909,10 @@ async def test_turn_off_encryptedws_os_error(
     caplog.set_level(logging.DEBUG)
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
     remoteencws.close = Mock(side_effect=OSError("BOOM"))
-    with pytest.raises(HomeAssistantError) as exc_info:
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        assert exc_info.match("media_player.fake does not support this service.")
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert "Error closing connection" in caplog.text
 
 
 async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:
@@ -1157,7 +1197,7 @@ async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
 async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
     """Test for play_media."""
     await setup_samsungtv(hass, MOCK_CONFIGWS)
-    remotews.send_command.reset_mock()
+    remotews.send_commands.reset_mock()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -1169,8 +1209,8 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
         },
         True,
     )
-    assert remotews.send_command.call_count == 1
-    commands = remotews.send_command.call_args_list[0].args[0]
+    assert remotews.send_commands.call_count == 1
+    commands = remotews.send_commands.call_args_list[0].args[0]
     assert len(commands) == 1
     assert isinstance(commands[0], ChannelEmitCommand)
     assert commands[0].params["data"]["appId"] == "3201608010191"
@@ -1178,8 +1218,9 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
 
 async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
     """Test for select_source."""
+    remotews.app_list_data = SAMPLE_EVENT_ED_INSTALLED_APP
     await setup_samsungtv(hass, MOCK_CONFIGWS)
-    remotews.send_command.reset_mock()
+    remotews.send_commands.reset_mock()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -1187,8 +1228,8 @@ async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Deezer"},
         True,
     )
-    assert remotews.send_command.call_count == 1
-    commands = remotews.send_command.call_args_list[0].args[0]
+    assert remotews.send_commands.call_count == 1
+    commands = remotews.send_commands.call_args_list[0].args[0]
     assert len(commands) == 1
     assert isinstance(commands[0], ChannelEmitCommand)
     assert commands[0].params["data"]["appId"] == "3201608010191"
@@ -1203,7 +1244,7 @@ async def test_websocket_unsupported_remote_control(
     assert entry.data[CONF_METHOD] == METHOD_WEBSOCKET
     assert entry.data[CONF_PORT] == 8001
 
-    remotews.send_command.reset_mock()
+    remotews.send_commands.reset_mock()
 
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -1217,8 +1258,8 @@ async def test_websocket_unsupported_remote_control(
     )
 
     # key called
-    assert remotews.send_command.call_count == 1
-    commands = remotews.send_command.call_args_list[0].args[0]
+    assert remotews.send_commands.call_count == 1
+    commands = remotews.send_commands.call_args_list[0].args[0]
     assert len(commands) == 1
     assert isinstance(commands[0], SendRemoteKey)
     assert commands[0].params["DataOfCmd"] == "KEY_POWER"

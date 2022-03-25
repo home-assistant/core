@@ -66,6 +66,7 @@ FLOWS = {
         "crownstone",
         "daikin",
         "deconz",
+        "deluge",
         "denonavr",
         "devolo_home_control",
         "devolo_home_network",
@@ -400,6 +401,7 @@ FLOWS = {
         "zwave_me"
     ],
     "helper": [
-        "derivative"
+        "derivative",
+        "tod"
     ]
 }

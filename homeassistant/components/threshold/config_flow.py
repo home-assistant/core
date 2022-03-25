@@ -11,7 +11,8 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
     HelperFlowError,
-    HelperFlowStep,
+    HelperFlowFormStep,
+    HelperFlowMenuStep,
 )
 
 from .const import CONF_HYSTERESIS, CONF_LOWER, CONF_UPPER, DEFAULT_HYSTERESIS, DOMAIN
@@ -43,12 +44,12 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW = {
-    "user": HelperFlowStep(CONFIG_SCHEMA, validate_user_input=_validate_mode)
+CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
+    "user": HelperFlowFormStep(CONFIG_SCHEMA, validate_user_input=_validate_mode)
 }
 
-OPTIONS_FLOW = {
-    "init": HelperFlowStep(OPTIONS_SCHEMA, validate_user_input=_validate_mode)
+OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
+    "init": HelperFlowFormStep(OPTIONS_SCHEMA, validate_user_input=_validate_mode)
 }
 
 

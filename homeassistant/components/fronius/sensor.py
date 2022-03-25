@@ -51,7 +51,6 @@ if TYPE_CHECKING:
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-ELECTRIC_CHARGE_AMPERE_HOURS: Final = "Ah"
 ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
 
 PLATFORM_SCHEMA = vol.All(
@@ -631,13 +630,13 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="capacity_maximum",
         name="Capacity maximum",
-        native_unit_of_measurement=ELECTRIC_CHARGE_AMPERE_HOURS,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="capacity_designed",
         name="Capacity designed",
-        native_unit_of_measurement=ELECTRIC_CHARGE_AMPERE_HOURS,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
