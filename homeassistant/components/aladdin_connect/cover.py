@@ -7,7 +7,6 @@ from typing import Any, Final
 from aladdin_connect import AladdinConnectClient
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.components.cover import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     CoverDeviceClass,
@@ -22,17 +21,12 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    DOMAIN,
-    NOTIFICATION_ID,
-    NOTIFICATION_TITLE,
-    STATES_MAP,
-    SUPPORTED_FEATURES,
-)
+from .const import DOMAIN, STATES_MAP, SUPPORTED_FEATURES
 from .model import DoorDevice
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -72,7 +66,8 @@ async def async_setup_entry(
     acc = AladdinConnectClient(username, password)
     try:
         if not await hass.async_add_executor_job(acc.login):
-            raise ValueError("Username or Password is incorrect")
+            raise ConfigEntryAuthFailed
+
         doors = await hass.async_add_executor_job(acc.get_doors)
         async_add_entities(
             (AladdinDevice(acc, door) for door in doors),
@@ -80,12 +75,7 @@ async def async_setup_entry(
         )
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
-        persistent_notification.create(
-            hass,
-            "Error: {ex}<br />You will need to reload integration after fixing.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
+        raise ConfigEntryNotReady from ex
 
 
 class AladdinDevice(CoverEntity):
