@@ -258,6 +258,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             # First time that upnp_device is not None => try to get upnp source list
             if service := self._upnp_device.services.get(UpnpServiceType.MainTVAgent2):
                 source_list = await service.action("GetSourceList").async_call()
+                # TODO: parse the result and populate list
                 LOGGER.debug("Upnp source list on %s: %s", self._host, source_list)
             else:
                 LOGGER.debug("Upnp source list not supported on: %s", self._host)

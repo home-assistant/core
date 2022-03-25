@@ -1371,6 +1371,7 @@ async def test_upnp_app_list_available(
     upnp_get_source_list = upnp_get_action_mock(
         upnp_device, UpnpServiceType.MainTVAgent2, "GetSourceList"
     )
+    # TODO: get a real sample
     upnp_get_source_list.async_call.return_value = {}
 
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
