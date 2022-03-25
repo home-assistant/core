@@ -56,12 +56,18 @@ def _strip_uuid(udn: str) -> str:
     return udn[5:] if udn.startswith("uuid:") else udn
 
 
-def _entry_is_complete(entry: config_entries.ConfigEntry) -> bool:
-    """Return True if the config entry information is complete."""
+def _entry_is_complete(
+    entry: config_entries.ConfigEntry, ssdp_location: str | None
+) -> bool:
+    """Return True if the config entry information is complete.
+
+    If we do not have an ssdp location we consider it complete
+    as some TVs will not support SSDP/UPNP
+    """
     return bool(
         entry.unique_id
         and entry.data.get(CONF_MAC)
-        and entry.data.get(CONF_SSDP_LOCATION)
+        and (not ssdp_location or entry.data.get(CONF_SSDP_LOCATION))
     )
 
 
@@ -124,7 +130,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._udn, raise_on_progress=raise_on_progress)
         if (
             entry := self._async_update_existing_matching_entry()
-        ) and _entry_is_complete(entry):
+        ) and _entry_is_complete(entry, self._ssdp_location):
             raise data_entry_flow.AbortFlow("already_configured")
 
     def _async_update_and_abort_for_matching_unique_id(self) -> None:
@@ -260,10 +266,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 or (is_unique_match and self.unique_id != entry.unique_id)
             ):
                 entry_kw_args["unique_id"] = self.unique_id
-            update_ssdp_location = self._ssdp_location and not entry.data.get(
-                CONF_SSDP_LOCATION
+            data = entry.data
+            update_ssdp_location = (
+                self._ssdp_location
+                and data.get(CONF_SSDP_LOCATION) != self._ssdp_location
             )
-            update_mac = self._mac and not entry.data.get(CONF_MAC)
+            update_mac = self._mac and not data.get(CONF_MAC)
             if update_ssdp_location or update_mac:
                 entry_kw_args["data"] = {**entry.data}
                 if update_ssdp_location:
