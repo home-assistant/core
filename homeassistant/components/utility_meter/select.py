@@ -86,6 +86,7 @@ class TariffSelect(SelectEntity, RestoreEntity):
         self._tariffs = tariffs
         self._attr_icon = TARIFF_ICON
         self._attr_should_poll = False
+        self._attr_unique_id = f"utility_meter {name}"
         self._add_legacy_entities = add_legacy_entities
 
     @property
@@ -123,7 +124,7 @@ class LegacyTariffSelect(Entity):
     def __init__(self, tracked_entity_id):
         """Initialize the entity."""
         self._attr_icon = TARIFF_ICON
-        # Set name to influence enity_id
+        # Set name to influence entity_id
         self._attr_name = split_entity_id(tracked_entity_id)[1]
         self.tracked_entity_id = tracked_entity_id
 
