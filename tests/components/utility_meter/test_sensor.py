@@ -3,20 +3,22 @@ from contextlib import contextmanager
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.components.select.const import (
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
 from homeassistant.components.utility_meter.const import (
-    ATTR_TARIFF,
     ATTR_VALUE,
     DAILY,
     DOMAIN,
     HOURLY,
     QUARTER_HOURLY,
     SERVICE_CALIBRATE_METER,
-    SERVICE_SELECT_TARIFF,
 )
 from homeassistant.components.utility_meter.sensor import (
     ATTR_LAST_RESET,
@@ -117,9 +119,9 @@ async def test_state(hass):
     assert state.attributes.get("status") == PAUSED
 
     await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SELECT_TARIFF,
-        {ATTR_ENTITY_ID: "utility_meter.energy_bill", ATTR_TARIFF: "offpeak"},
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.energy_bill", "option": "offpeak"},
         blocking=True,
     )
 
@@ -343,7 +345,7 @@ async def test_restore_state(hass):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    state = hass.states.get("utility_meter.energy_bill")
+    state = hass.states.get("select.energy_bill")
     assert state.state == "onpeak"
 
     state = hass.states.get("sensor.energy_bill_onpeak")

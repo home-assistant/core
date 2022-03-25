@@ -187,7 +187,9 @@ async def async_setup_entry(
     )
 
 
-class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
+class FluxLight(
+    FluxOnOffEntity, CoordinatorEntity[FluxLedUpdateCoordinator], LightEntity
+):
     """Representation of a Flux light."""
 
     _attr_supported_features = SUPPORT_TRANSITION | SUPPORT_EFFECT

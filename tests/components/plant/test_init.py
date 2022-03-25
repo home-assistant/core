@@ -1,9 +1,6 @@
 """Unit tests for platform/plant.py."""
 from datetime import datetime, timedelta
 
-import pytest
-
-from homeassistant.components import recorder
 import homeassistant.components.plant as plant
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -12,12 +9,12 @@ from homeassistant.const import (
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from tests.common import init_recorder_component
+from tests.common import async_init_recorder_component
+from tests.components.recorder.common import async_wait_recording_done_without_instance
 
 GOOD_DATA = {
     "moisture": 50,
@@ -148,19 +145,13 @@ async def test_state_problem_if_unavailable(hass):
     assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
 
-@pytest.mark.skipif(
-    plant.ENABLE_LOAD_HISTORY is False,
-    reason="tests for loading from DB are unstable, thus"
-    "this feature is turned of until tests become"
-    "stable",
-)
 async def test_load_from_db(hass):
     """Test bootstrapping the brightness history from the database.
 
     This test can should only be executed if the loading of the history
     is enabled via plant.ENABLE_LOAD_HISTORY.
     """
-    init_recorder_component(hass)
+    await async_init_recorder_component(hass)
     plant_name = "wise_plant"
     for value in [20, 30, 10]:
 
@@ -169,7 +160,7 @@ async def test_load_from_db(hass):
         )
         await hass.async_block_till_done()
     # wait for the recorder to really store the data
-    hass.data[recorder.DATA_INSTANCE].block_till_done()
+    await async_wait_recording_done_without_instance(hass)
 
     assert await async_setup_component(
         hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
@@ -177,7 +168,7 @@ async def test_load_from_db(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(f"plant.{plant_name}")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_PROBLEM
     max_brightness = state.attributes.get(plant.ATTR_MAX_BRIGHTNESS_HISTORY)
     assert max_brightness == 30
 

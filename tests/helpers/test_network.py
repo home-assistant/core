@@ -681,6 +681,9 @@ async def test_is_hass_url(hass):
     assert hass.config.external_url is None
 
     assert is_hass_url(hass, "http://example.com") is False
+    assert is_hass_url(hass, "bad_url") is False
+    assert is_hass_url(hass, "bad_url.com") is False
+    assert is_hass_url(hass, "http:/bad_url.com") is False
 
     hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
     assert is_hass_url(hass, "http://192.168.123.123:8123") is True
