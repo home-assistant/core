@@ -493,7 +493,8 @@ class StatisticsSensor(SensorEntity):
             limit=self._samples_max_buffer_size,
             include_start_time_state=False,
         )
-        return entity_states.get(lower_entity_id, [])
+        # Need to cast since minimal responses is not passed in
+        return cast(list[State], entity_states.get(lower_entity_id, []))
 
     async def _initialize_from_database(self) -> None:
         """Initialize the list of states from the database.
