@@ -6,46 +6,21 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
-    SensorEntity,
-)
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    CONF_BEAT,
-    CONF_DATE,
-    CONF_DATE_TIME,
-    CONF_DATE_TIME_ISO,
-    CONF_DATE_TIME_UTC,
-    CONF_TIME,
-    CONF_TIME_DATE,
-    CONF_TIME_UTC,
-    DOMAIN,
-)
+from .const import CONF_DISPLAY_OPTION, DOMAIN, OPTION_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 TIME_STR_FORMAT = "%H:%M"
-
-OPTION_TYPES = {
-    CONF_TIME: "Time",
-    CONF_DATE: "Date",
-    CONF_DATE_TIME: "Date & Time",
-    CONF_DATE_TIME_UTC: "Date & Time (UTC)",
-    CONF_DATE_TIME_ISO: "Date & Time (ISO)",
-    CONF_TIME_DATE: "Time & Date",
-    CONF_BEAT: "Internet Time",
-    CONF_TIME_UTC: "Time (UTC)",
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -63,13 +38,16 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up Time & Date sensors."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
+    for option in config[CONF_DISPLAY_OPTIONS]:
+        if not option:
+            continue
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={CONF_DISPLAY_OPTION: option},
+            )
         )
-    )
 
 
 async def async_setup_entry(
@@ -82,24 +60,9 @@ async def async_setup_entry(
         _LOGGER.error("Timezone is not set in Home Assistant configuration")
         return False
 
+    option = config_entry.options[CONF_DISPLAY_OPTION]
     unique_id = config_entry.entry_id
-    registry = er.async_get(hass)
-    enabled_options = [opt for opt in OPTION_TYPES if config_entry.options[opt]]
-    disabled_options = [opt for opt in OPTION_TYPES if not config_entry.options[opt]]
-
-    for option in disabled_options:
-        entity_id = registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, f"{unique_id}_{option}"
-        )
-        if entity_id:
-            registry.async_remove(entity_id)
-
-    async_add_entities(
-        [
-            TimeDateSensor(hass, option, f"{unique_id}_{option}")
-            for option in enabled_options
-        ]
-    )
+    async_add_entities([TimeDateSensor(hass, option, unique_id)])
 
 
 class TimeDateSensor(SensorEntity):

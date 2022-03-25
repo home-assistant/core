@@ -15,16 +15,7 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
-        options={
-            "beat": False,
-            "date": False,
-            "date_time": False,
-            "date_time_iso": False,
-            "date_time_utc": False,
-            "time": False,
-            "time_date": False,
-            "time_utc": True,
-        },
+        options={"display_option": "time_utc"},
         title="Time & Date",
     )
     config_entry.add_to_hass(hass)

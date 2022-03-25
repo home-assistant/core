@@ -1257,7 +1257,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                     continue
                 raise data_entry_flow.AbortFlow("already_configured")
 
-    async def async_set_unique_id(
+    @callback
+    def async_set_unique_id_cb(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True
     ) -> ConfigEntry | None:
         """Set a unique ID for the config flow.
@@ -1286,6 +1287,17 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 return entry
 
         return None
+
+    async def async_set_unique_id(
+        self, unique_id: str | None = None, *, raise_on_progress: bool = True
+    ) -> ConfigEntry | None:
+        """Set a unique ID for the config flow.
+
+        Returns optionally existing config entry with same ID.
+        """
+        return self.async_set_unique_id_cb(
+            unique_id, raise_on_progress=raise_on_progress
+        )
 
     @callback
     def _set_confirm_only(
