@@ -94,7 +94,7 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T")  # pylint: disable=invalid-name
+T = TypeVar("T")
 
 
 SERVICE_PURGE = "purge"
