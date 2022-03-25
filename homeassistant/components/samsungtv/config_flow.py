@@ -45,6 +45,7 @@ from .const import (
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
+    UPNP_SVC_RENDERINGCONTROL,
     WEBSOCKET_PORTS,
 )
 
@@ -316,7 +317,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
         model_name: str = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
-        self._ssdp_location = discovery_info.ssdp_location
+        if discovery_info.ssdp_st == UPNP_SVC_RENDERINGCONTROL:
+            self._ssdp_location = discovery_info.ssdp_location
         self._udn = self._upnp_udn = _strip_uuid(
             discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         )
