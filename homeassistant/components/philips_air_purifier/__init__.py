@@ -14,7 +14,7 @@ PLATFORMS: list[str] = [Platform.FAN]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Philips Air Purifier from a config entry."""
 
-    client = ReliableClient(entry.data["host"], port=COAP_PORT)
+    client = ReliableClient(hass.loop, entry.data["host"], port=COAP_PORT)
     client.start()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client

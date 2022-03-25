@@ -96,8 +96,9 @@ class ReliableClient:
           Only one of the clients seems receive responses in this case.
     """
 
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self, loop: asyncio.AbstractEventLoop, host: str, port: int) -> None:
         """Create a client. Does not connect yet."""
+        self._loop = loop
         self._host = host
         self._port = port
         self._background_task: asyncio.Task | None = None
@@ -124,7 +125,7 @@ class ReliableClient:
         if self._background_task is not None:
             return
 
-        self._background_task = asyncio.create_task(self._connection_loop())
+        self._background_task = self._loop.create_task(self._connection_loop())
 
     def stop(self):
         """Stop the client and close all open connections."""
@@ -154,9 +155,9 @@ class ReliableClient:
             # Reset status timeout
             self._last_status_at = datetime.now(timezone.utc)
 
-            observe_task = asyncio.create_task(self._observe_status(client))
-            status_watchdog = asyncio.create_task(self._status_watchdog())
-            command_loop = asyncio.create_task(self._command_loop(client))
+            observe_task = self._loop.create_task(self._observe_status(client))
+            status_watchdog = self._loop.create_task(self._status_watchdog())
+            command_loop = self._loop.create_task(self._command_loop(client))
             await asyncio.wait(
                 [command_loop, status_watchdog, self._shutdown],
                 return_when=FIRST_COMPLETED,
