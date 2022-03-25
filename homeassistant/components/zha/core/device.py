@@ -133,7 +133,7 @@ class ZHADevice(LogMixin):
                 self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
             )
         )
-        self.status = DeviceStatus.CREATED
+        self.status: DeviceStatus = DeviceStatus.CREATED
         self._channels = channels.Channels(self)
 
     @property
