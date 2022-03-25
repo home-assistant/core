@@ -9,7 +9,16 @@
                 "data": {
                     "show_on_map": "Op kaart tonen?"
                 },
-                "description": "Wilt u het International Space Station configureren?"
+                "description": "Wilt u International Space Station configureren?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Toon op kaart"
+                }
             }
         }
     }

@@ -12,6 +12,7 @@
             "too_many_requests": "Te veel verzoeken, probeer het later opnieuw.",
             "unknown": "Onverwachte fout"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

@@ -11,7 +11,7 @@ from bimmer_connected.vehicle import ConnectedDriveVehicle
 import voluptuous as vol
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_NAME,
@@ -33,7 +33,6 @@ import homeassistant.util.dt as dt_util
 from .const import (
     ATTRIBUTION,
     CONF_ACCOUNT,
-    CONF_ALLOWED_REGIONS,
     CONF_READ_ONLY,
     DATA_ENTRIES,
     DATA_HASS_CONFIG,
@@ -44,16 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "bmw_connected_drive"
 ATTR_VIN = "vin"
 
-ACCOUNT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_REGION): vol.In(CONF_ALLOWED_REGIONS),
-        vol.Optional(CONF_READ_ONLY): cv.boolean,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: ACCOUNT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 SERVICE_SCHEMA = vol.Schema(
     vol.Any(
@@ -91,16 +81,9 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the BMW Connected Drive component from configuration.yaml."""
+    # Store full yaml config in data for platform.NOTIFY
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][DATA_HASS_CONFIG] = config
-
-    if DOMAIN in config:
-        for entry_config in config[DOMAIN].values():
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
-                )
-            )
 
     return True
 

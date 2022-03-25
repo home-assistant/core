@@ -172,6 +172,7 @@ def main():
     write_version(bumped)
     write_version_metadata(bumped)
     write_ci_workflow(bumped)
+    print(bumped)
 
     if not arguments.commit:
         return

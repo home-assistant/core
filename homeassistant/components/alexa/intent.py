@@ -12,7 +12,7 @@ from .const import DOMAIN, SYN_RESOLUTION_MATCH
 
 _LOGGER = logging.getLogger(__name__)
 
-HANDLERS = Registry()
+HANDLERS = Registry()  # type: ignore[var-annotated]
 
 INTENTS_API_ENDPOINT = "/api/alexa"
 

@@ -329,6 +329,8 @@ class DPCode(StrEnum):
     SWITCH_4 = "switch_4"  # Switch 4
     SWITCH_5 = "switch_5"  # Switch 5
     SWITCH_6 = "switch_6"  # Switch 6
+    SWITCH_7 = "switch_7"  # Switch 7
+    SWITCH_8 = "switch_8"  # Switch 8
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
     SWITCH_CHARGE = "switch_charge"
     SWITCH_CONTROLLER = "switch_controller"
@@ -371,6 +373,8 @@ class DPCode(StrEnum):
     TOTAL_TIME = "total_time"
     TOTAL_PM = "total_pm"
     TVOC = "tvoc"
+    UPPER_TEMP = "upper_temp"
+    UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"

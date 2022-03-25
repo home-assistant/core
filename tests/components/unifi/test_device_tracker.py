@@ -54,23 +54,6 @@ async def test_tracked_wireless_clients(
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
-    # State change signalling works without events
-
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MESSAGE_CLIENT},
-            "data": [client],
-        }
-    )
-    await hass.async_block_till_done()
-
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_NOT_HOME
-    assert client_state.attributes["ip"] == "10.0.0.1"
-    assert client_state.attributes["mac"] == "00:00:00:00:00:01"
-    assert client_state.attributes["hostname"] == "client"
-    assert client_state.attributes["host_name"] == "client"
-
     # Updated timestamp marks client as home
 
     client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
@@ -93,7 +76,7 @@ async def test_tracked_wireless_clients(
 
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
-    # Same timestamp again means client is away
+    # Same timestamp doesn't explicitly mark client as away
 
     mock_unifi_websocket(
         data={
@@ -103,7 +86,7 @@ async def test_tracked_wireless_clients(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_HOME
 
 
 async def test_tracked_clients(

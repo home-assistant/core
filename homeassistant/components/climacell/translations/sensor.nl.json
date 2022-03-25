@@ -6,7 +6,7 @@
             "moderate": "Gematigd",
             "unhealthy": "Ongezond",
             "unhealthy_for_sensitive_groups": "Ongezond voor gevoelige groepen",
-            "very_unhealthy": "Heel ongezond"
+            "very_unhealthy": "Zeer ongezond"
         },
         "climacell__pollen_index": {
             "high": "Hoog",

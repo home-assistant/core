@@ -1,6 +1,6 @@
 {
   "page": 1,
-  "pageSize": 10,
+  "pageSize": 50,
   "sortKey": "airDateUtc",
   "sortDirection": "descending",
   "totalRecords": 2,

@@ -11,7 +11,7 @@
             "unknown": "Onverwachte fout",
             "wrong_version": "Uw powerwall gebruikt een softwareversie die niet wordt ondersteund. Overweeg om dit probleem te upgraden of te melden, zodat het kan worden opgelost."
         },
-        "flow_title": "({ip_adres})",
+        "flow_title": "{name} ({ip_address})",
         "step": {
             "confirm_discovery": {
                 "description": "Wilt u {name} ({ip_address}) instellen?",

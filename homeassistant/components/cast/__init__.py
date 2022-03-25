@@ -12,7 +12,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
@@ -113,3 +113,13 @@ async def _register_cast_platform(
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove Home Assistant Cast user."""
     await home_assistant_cast.async_remove_user(hass, entry)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove cast config entry from a device.
+
+    The actual cleanup is done in CastMediaPlayerEntity.async_will_remove_from_hass.
+    """
+    return True

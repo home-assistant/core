@@ -14,7 +14,12 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -147,6 +152,7 @@ class ViCareWater(WaterHeaterEntity):
             "name": self._device_config.getModel(),
             "manufacturer": "Viessmann",
             "model": (DOMAIN, self._device_config.getModel()),
+            "configuration_url": "https://developer.viessmann.com/",
         }
 
     @property
@@ -191,9 +197,14 @@ class ViCareWater(WaterHeaterEntity):
         return VICARE_TEMP_WATER_MAX
 
     @property
+    def target_temperature_step(self) -> float:
+        """Set target temperature step to wholes."""
+        return PRECISION_WHOLE
+
+    @property
     def precision(self):
         """Return the precision of the system."""
-        return PRECISION_WHOLE
+        return PRECISION_TENTHS
 
     @property
     def current_operation(self):

@@ -13,6 +13,7 @@ from .coordinator import LookinDataUpdateCoordinator
 class LookinData:
     """Data for the lookin integration."""
 
+    host: str
     lookin_udp_subs: LookinUDPSubscriptions
     lookin_device: Device
     meteo_coordinator: LookinDataUpdateCoordinator

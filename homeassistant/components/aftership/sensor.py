@@ -15,7 +15,10 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -128,9 +131,7 @@ class AfterShipSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                UPDATE_TOPIC, self._force_update
-            )
+            async_dispatcher_connect(self.hass, UPDATE_TOPIC, self._force_update)
         )
 
     async def _force_update(self) -> None:
@@ -149,10 +150,10 @@ class AfterShipSensor(SensorEntity):
 
         status_to_ignore = {"delivered"}
         status_counts: dict[str, int] = {}
-        trackings = []
+        parsed_trackings = []
         not_delivered_count = 0
 
-        for track in trackings:
+        for track in trackings["trackings"]:
             status = track["tag"].lower()
             name = (
                 track["tracking_number"] if track["title"] is None else track["title"]
@@ -163,7 +164,7 @@ class AfterShipSensor(SensorEntity):
                 else track["checkpoints"][-1]
             )
             status_counts[status] = status_counts.get(status, 0) + 1
-            trackings.append(
+            parsed_trackings.append(
                 {
                     "name": name,
                     "tracking_number": track["tracking_number"],
@@ -183,7 +184,7 @@ class AfterShipSensor(SensorEntity):
 
         self._attributes = {
             **status_counts,
-            ATTR_TRACKINGS: trackings,
+            ATTR_TRACKINGS: parsed_trackings,
         }
 
         self._state = not_delivered_count

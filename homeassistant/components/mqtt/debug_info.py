@@ -154,7 +154,81 @@ def update_trigger_discovery_data(hass, discovery_hash, discovery_payload):
 
 def remove_trigger_discovery_data(hass, discovery_hash):
     """Remove discovery data."""
-    hass.data[DATA_MQTT_DEBUG_INFO]["triggers"][discovery_hash]["discovery_data"] = None
+    hass.data[DATA_MQTT_DEBUG_INFO]["triggers"].pop(discovery_hash)
+
+
+def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
+    mqtt_debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
+    entity_info = mqtt_debug_info["entities"][entity_id]
+    subscriptions = [
+        {
+            "topic": topic,
+            "messages": [
+                {
+                    "payload": str(msg.payload),
+                    "qos": msg.qos,
+                    "retain": msg.retain,
+                    "time": msg.timestamp,
+                    "topic": msg.topic,
+                }
+                for msg in subscription["messages"]
+            ],
+        }
+        for topic, subscription in entity_info["subscriptions"].items()
+    ]
+    transmitted = [
+        {
+            "topic": topic,
+            "messages": [
+                {
+                    "payload": str(msg.payload),
+                    "qos": msg.qos,
+                    "retain": msg.retain,
+                    "time": msg.timestamp,
+                    "topic": msg.topic,
+                }
+                for msg in subscription["messages"]
+            ],
+        }
+        for topic, subscription in entity_info["transmitted"].items()
+    ]
+    discovery_data = {
+        "topic": entity_info["discovery_data"].get(ATTR_DISCOVERY_TOPIC, ""),
+        "payload": entity_info["discovery_data"].get(ATTR_DISCOVERY_PAYLOAD, ""),
+    }
+
+    return {
+        "entity_id": entity_id,
+        "subscriptions": subscriptions,
+        "discovery_data": discovery_data,
+        "transmitted": transmitted,
+    }
+
+
+def _info_for_trigger(hass: HomeAssistant, trigger_key: str) -> dict[str, Any]:
+    mqtt_debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
+    trigger = mqtt_debug_info["triggers"][trigger_key]
+    discovery_data = None
+    if trigger["discovery_data"] is not None:
+        discovery_data = {
+            "topic": trigger["discovery_data"][ATTR_DISCOVERY_TOPIC],
+            "payload": trigger["discovery_data"][ATTR_DISCOVERY_PAYLOAD],
+        }
+    return {"discovery_data": discovery_data, "trigger_key": trigger_key}
+
+
+def info_for_config_entry(hass):
+    """Get debug info for all entities and triggers."""
+    mqtt_info = {"entities": [], "triggers": []}
+    mqtt_debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
+
+    for entity_id in mqtt_debug_info["entities"]:
+        mqtt_info["entities"].append(_info_for_entity(hass, entity_id))
+
+    for trigger_key in mqtt_debug_info["triggers"]:
+        mqtt_info["triggers"].append(_info_for_trigger(hass, trigger_key))
+
+    return mqtt_info
 
 
 def info_for_device(hass, device_id):
@@ -162,7 +236,7 @@ def info_for_device(hass, device_id):
     mqtt_info = {"entities": [], "triggers": []}
     entity_registry = er.async_get(hass)
 
-    entries = hass.helpers.entity_registry.async_entries_for_device(
+    entries = er.async_entries_for_device(
         entity_registry, device_id, include_disabled_entities=True
     )
     mqtt_debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
@@ -170,60 +244,12 @@ def info_for_device(hass, device_id):
         if entry.entity_id not in mqtt_debug_info["entities"]:
             continue
 
-        entity_info = mqtt_debug_info["entities"][entry.entity_id]
-        subscriptions = [
-            {
-                "topic": topic,
-                "messages": [
-                    {
-                        "payload": str(msg.payload),
-                        "qos": msg.qos,
-                        "retain": msg.retain,
-                        "time": msg.timestamp,
-                        "topic": msg.topic,
-                    }
-                    for msg in list(subscription["messages"])
-                ],
-            }
-            for topic, subscription in entity_info["subscriptions"].items()
-        ]
-        transmitted = [
-            {
-                "topic": topic,
-                "messages": [
-                    {
-                        "payload": str(msg.payload),
-                        "qos": msg.qos,
-                        "retain": msg.retain,
-                        "time": msg.timestamp,
-                        "topic": msg.topic,
-                    }
-                    for msg in list(subscription["messages"])
-                ],
-            }
-            for topic, subscription in entity_info["transmitted"].items()
-        ]
-        discovery_data = {
-            "topic": entity_info["discovery_data"].get(ATTR_DISCOVERY_TOPIC, ""),
-            "payload": entity_info["discovery_data"].get(ATTR_DISCOVERY_PAYLOAD, ""),
-        }
-        mqtt_info["entities"].append(
-            {
-                "entity_id": entry.entity_id,
-                "subscriptions": subscriptions,
-                "discovery_data": discovery_data,
-                "transmitted": transmitted,
-            }
-        )
+        mqtt_info["entities"].append(_info_for_entity(hass, entry.entity_id))
 
-    for trigger in mqtt_debug_info["triggers"].values():
-        if trigger["device_id"] != device_id or trigger["discovery_data"] is None:
+    for trigger_key, trigger in mqtt_debug_info["triggers"].items():
+        if trigger["device_id"] != device_id:
             continue
 
-        discovery_data = {
-            "topic": trigger["discovery_data"][ATTR_DISCOVERY_TOPIC],
-            "payload": trigger["discovery_data"][ATTR_DISCOVERY_PAYLOAD],
-        }
-        mqtt_info["triggers"].append({"discovery_data": discovery_data})
+        mqtt_info["triggers"].append(_info_for_trigger(hass, trigger_key))
 
     return mqtt_info

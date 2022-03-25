@@ -153,11 +153,17 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         effect = kwargs.get(ATTR_EFFECT)
         transition = kwargs.get(ATTR_TRANSITION)
 
-        if hs_color:
+        if effect:
+            if effect not in self.effect_list:
+                raise ValueError(
+                    f"Attempting to apply effect not in the effect list: '{effect}'"
+                )
+            await self._nanoleaf.set_effect(effect)
+        elif hs_color:
             hue, saturation = hs_color
             await self._nanoleaf.set_hue(int(hue))
             await self._nanoleaf.set_saturation(int(saturation))
-        if color_temp_mired:
+        elif color_temp_mired:
             await self._nanoleaf.set_color_temperature(
                 mired_to_kelvin(color_temp_mired)
             )
@@ -172,12 +178,6 @@ class NanoleafLight(NanoleafEntity, LightEntity):
             await self._nanoleaf.turn_on()
             if brightness:
                 await self._nanoleaf.set_brightness(int(brightness / 2.55))
-        if effect:
-            if effect not in self.effect_list:
-                raise ValueError(
-                    f"Attempting to apply effect not in the effect list: '{effect}'"
-                )
-            await self._nanoleaf.set_effect(effect)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""

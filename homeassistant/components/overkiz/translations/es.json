@@ -10,6 +10,7 @@
             "too_many_requests": "Demasiadas solicitudes, int\u00e9ntalo de nuevo m\u00e1s tarde.",
             "unknown": "Error inesperado"
         },
+        "flow_title": "Puerta de enlace: {gateway_id}",
         "step": {
             "user": {
                 "data": {

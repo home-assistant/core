@@ -1,13 +1,14 @@
 """Http views to control the config manager."""
 from __future__ import annotations
 
+import asyncio
 from http import HTTPStatus
 
 from aiohttp import web
 import aiohttp.web_exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
@@ -48,11 +49,36 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
 
     async def get(self, request):
         """List available config entries."""
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
 
-        return self.json(
-            [entry_json(entry) for entry in hass.config_entries.async_entries()]
-        )
+        kwargs = {}
+        if "domain" in request.query:
+            kwargs["domain"] = request.query["domain"]
+
+        entries = hass.config_entries.async_entries(**kwargs)
+
+        if "type" not in request.query:
+            return self.json([entry_json(entry) for entry in entries])
+
+        integrations = {}
+        type_filter = request.query["type"]
+
+        # Fetch all the integrations so we can check their type
+        for integration in await asyncio.gather(
+            *(
+                loader.async_get_integration(hass, domain)
+                for domain in {entry.domain for entry in entries}
+            )
+        ):
+            integrations[integration.domain] = integration
+
+        entries = [
+            entry
+            for entry in entries
+            if integrations[entry.domain].integration_type == type_filter
+        ]
+
+        return self.json([entry_json(entry) for entry in entries])
 
 
 class ConfigManagerEntryResourceView(HomeAssistantView):
@@ -88,15 +114,17 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
             raise Unauthorized(config_entry_id=entry_id, permission="remove")
 
         hass = request.app["hass"]
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if not entry:
+            return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
+        assert isinstance(entry, config_entries.ConfigEntry)
 
         try:
-            result = await hass.config_entries.async_reload(entry_id)
+            await hass.config_entries.async_reload(entry_id)
         except config_entries.OperationNotAllowed:
             return self.json_message("Entry cannot be reloaded", HTTPStatus.FORBIDDEN)
-        except config_entries.UnknownEntry:
-            return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
 
-        return self.json({"require_restart": not result})
+        return self.json({"require_restart": not entry.state.recoverable})
 
 
 def _prepare_config_flow_result_json(result, prepare_result_json):
@@ -177,7 +205,10 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
     async def get(self, request):
         """List available flow handlers."""
         hass = request.app["hass"]
-        return self.json(await async_get_config_flows(hass))
+        kwargs = {}
+        if "type" in request.query:
+            kwargs["type_filter"] = request.query["type"]
+        return self.json(await async_get_config_flows(hass, **kwargs))
 
 
 class OptionManagerFlowIndexView(FlowManagerIndexView):
@@ -317,8 +348,7 @@ async def config_entry_update(hass, connection, msg):
 @websocket_api.async_response
 async def config_entry_disable(hass, connection, msg):
     """Disable config entry."""
-    disabled_by = msg["disabled_by"]
-    if disabled_by is not None:
+    if (disabled_by := msg["disabled_by"]) is not None:
         disabled_by = config_entries.ConfigEntryDisabler(disabled_by)
 
     result = False
@@ -388,6 +418,7 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "source": entry.source,
         "state": entry.state.value,
         "supports_options": supports_options,
+        "supports_remove_device": entry.supports_remove_device,
         "supports_unload": entry.supports_unload,
         "pref_disable_new_entities": entry.pref_disable_new_entities,
         "pref_disable_polling": entry.pref_disable_polling,

@@ -355,7 +355,7 @@ class SensorEntity(Entity):
             hasattr(self, "_attr_unit_of_measurement")
             and self._attr_unit_of_measurement is not None
         ):
-            return self._attr_unit_of_measurement  # type: ignore
+            return self._attr_unit_of_measurement  # type: ignore[unreachable]
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
@@ -397,7 +397,10 @@ class SensorEntity(Entity):
         # Received a date value
         if value is not None and device_class == DEVICE_CLASS_DATE:
             try:
-                return value.isoformat()  # type: ignore
+                # We cast the value, to avoid using isinstance, but satisfy
+                # typechecking. The errors are guarded in this try.
+                value = cast(date, value)
+                return value.isoformat()
             except (AttributeError, TypeError) as err:
                 raise ValueError(
                     f"Invalid date: {self.entity_id} has a date device class "
@@ -434,7 +437,7 @@ class SensorEntity(Entity):
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
-                temp = units.temperature(float(value), unit_of_measurement)  # type: ignore
+                temp = units.temperature(float(value), unit_of_measurement)  # type: ignore[arg-type]
                 value = round(temp) if prec == 0 else round(temp, prec)
 
         return value

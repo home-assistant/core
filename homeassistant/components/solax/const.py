@@ -2,3 +2,5 @@
 
 
 DOMAIN = "solax"
+
+MANUFACTURER = "SolaX Power"

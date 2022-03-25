@@ -538,16 +538,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if not entities:
             entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
         ent_reg = entity_registry.async_get(self.hass)
-        entity_cat_entities = set()
+        excluded_entities = set()
         for entity_id in all_supported_entities:
             if ent_reg_ent := ent_reg.async_get(entity_id):
-                if ent_reg_ent.entity_category is not None:
-                    entity_cat_entities.add(entity_id)
+                if (
+                    ent_reg_ent.entity_category is not None
+                    or ent_reg_ent.hidden_by is not None
+                ):
+                    excluded_entities.add(entity_id)
         # Remove entity category entities since we will exclude them anyways
         all_supported_entities = {
             k: v
             for k, v in all_supported_entities.items()
-            if k not in entity_cat_entities
+            if k not in excluded_entities
         }
         # Strip out entities that no longer exist to prevent error in the UI
         default_value = [

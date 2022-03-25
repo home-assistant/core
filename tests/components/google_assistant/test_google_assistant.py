@@ -21,6 +21,7 @@ from homeassistant.components import (
 from homeassistant.components.climate import const as climate
 from homeassistant.components.humidifier import const as humidifier
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.helpers import entity_registry as er
 
 from . import DEMO_DEVICES
 
@@ -151,11 +152,27 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
         suggested_object_id="system_switch",
         entity_category="system",
     )
+    entity_entry4 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_hidden_integration_id",
+        suggested_object_id="hidden_integration_switch",
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
+    entity_entry5 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_hidden_user_id",
+        suggested_object_id="hidden_user_switch",
+        hidden_by=er.RegistryEntryHider.USER,
+    )
 
     # These should not show up in the sync request
     hass_fixture.states.async_set(entity_entry1.entity_id, "on")
     hass_fixture.states.async_set(entity_entry2.entity_id, "something_else")
     hass_fixture.states.async_set(entity_entry3.entity_id, "blah")
+    hass_fixture.states.async_set(entity_entry4.entity_id, "foo")
+    hass_fixture.states.async_set(entity_entry5.entity_id, "bar")
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}

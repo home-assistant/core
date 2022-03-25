@@ -41,8 +41,7 @@ async def async_validate_trigger_config(hass: "HomeAssistant", config: ConfigTyp
     device_id = config[CONF_DEVICE_ID]
     # lookup device in HASS DeviceRegistry
     dev_reg: dr.DeviceRegistry = dr.async_get(hass)
-    device_entry = dev_reg.async_get(device_id)
-    if device_entry is None:
+    if (device_entry := dev_reg.async_get(device_id)) is None:
         raise InvalidDeviceAutomationConfig(f"Device ID {device_id} is not valid")
 
     for conf_entry_id in device_entry.config_entries:
@@ -64,8 +63,7 @@ async def async_attach_trigger(
     device_id = config[CONF_DEVICE_ID]
     # lookup device in HASS DeviceRegistry
     dev_reg: dr.DeviceRegistry = dr.async_get(hass)
-    device_entry = dev_reg.async_get(device_id)
-    if device_entry is None:
+    if (device_entry := dev_reg.async_get(device_id)) is None:
         raise InvalidDeviceAutomationConfig(f"Device ID {device_id} is not valid")
 
     for conf_entry_id in device_entry.config_entries:
@@ -90,8 +88,7 @@ async def async_get_triggers(hass: "HomeAssistant", device_id: str):
         return []
     # lookup device in HASS DeviceRegistry
     dev_reg: dr.DeviceRegistry = dr.async_get(hass)
-    device_entry = dev_reg.async_get(device_id)
-    if device_entry is None:
+    if (device_entry := dev_reg.async_get(device_id)) is None:
         raise ValueError(f"Device ID {device_id} is not valid")
 
     # Iterate all config entries for this device

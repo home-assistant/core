@@ -450,9 +450,7 @@ class EDL21Entity(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
-        unit = self._telegram.get("unit")
-
-        if unit is None:
+        if (unit := self._telegram.get("unit")) is None:
             return None
 
         return SENSOR_UNIT_MAPPING[unit]

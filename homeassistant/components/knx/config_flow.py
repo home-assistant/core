@@ -317,7 +317,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
             CONF_KNX_TUNNELING,
             CONF_KNX_ROUTING,
         ]
-        self.current_config = self.config_entry.data  # type: ignore
+        self.current_config = self.config_entry.data  # type: ignore[assignment]
 
         data_schema = {
             vol.Required(

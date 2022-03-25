@@ -35,7 +35,7 @@ async def async_setup_entry(
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[FluxSwitch | FluxRemoteAccessSwitch | FluxMusicSwitch] = []
     base_unique_id = entry.unique_id or entry.entry_id
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME, entry.title)
 
     if coordinator.device.device_type == DeviceType.Switch:
         entities.append(FluxSwitch(coordinator, base_unique_id, name, None))
@@ -52,7 +52,9 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class FluxSwitch(FluxOnOffEntity, CoordinatorEntity, SwitchEntity):
+class FluxSwitch(
+    FluxOnOffEntity, CoordinatorEntity[FluxLedUpdateCoordinator], SwitchEntity
+):
     """Representation of a Flux switch."""
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
@@ -73,7 +75,7 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(device, entry)
-        self._attr_name = f"{entry.data[CONF_NAME]} Remote Access"
+        self._attr_name = f"{entry.data.get(CONF_NAME, entry.title)} Remote Access"
         base_unique_id = entry.unique_id or entry.entry_id
         self._attr_unique_id = f"{base_unique_id}_remote_access"
 

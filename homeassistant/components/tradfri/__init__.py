@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from pytradfri import Gateway, PytradfriError, RequestError
+from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -149,7 +149,7 @@ async def async_setup_entry(
             )
             groups = await api(groups_commands, timeout=TIMEOUT_API)
 
-    except PytradfriError as exc:
+    except RequestError as exc:
         await factory.shutdown()
         raise ConfigEntryNotReady from exc
 

@@ -302,7 +302,7 @@ async def test_ssdp_update_uuid(hass, client):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert entry.unique_id == MOCK_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN][5:]
+    assert entry.unique_id == MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:]
 
 
 async def test_ssdp_not_update_uuid(hass, client):
@@ -326,9 +326,9 @@ async def test_ssdp_not_update_uuid(hass, client):
 
 async def test_form_abort_uuid_configured(hass, client):
     """Test abort if uuid is already configured, verify host update."""
-    entry = await setup_webostv(hass, MOCK_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN][5:])
+    entry = await setup_webostv(hass, MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:])
     assert client
-    assert entry.unique_id == MOCK_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN][5:]
+    assert entry.unique_id == MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:]
     assert entry.data[CONF_HOST] == HOST
 
     result = await hass.config_entries.flow.async_init(

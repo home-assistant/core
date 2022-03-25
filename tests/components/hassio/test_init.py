@@ -55,7 +55,7 @@ def mock_all(aioclient_mock, request):
     )
     aioclient_mock.get(
         "http://127.0.0.1/core/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
     )
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
@@ -65,7 +65,7 @@ def mock_all(aioclient_mock, request):
         "http://127.0.0.1/supervisor/info",
         json={
             "result": "ok",
-            "data": {"version_latest": "1.0.0"},
+            "data": {"version_latest": "1.0.0", "version": "1.0.0"},
             "addons": [
                 {
                     "name": "test",
@@ -138,6 +138,8 @@ def mock_all(aioclient_mock, request):
             },
         },
     )
+    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
+    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
@@ -397,12 +399,18 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     await hass.services.async_call(
         "hassio",
         "backup_partial",
-        {"addons": ["test"], "folders": ["ssl"], "password": "123456"},
+        {
+            "homeassistant": True,
+            "addons": ["test"],
+            "folders": ["ssl"],
+            "password": "123456",
+        },
     )
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 12
     assert aioclient_mock.mock_calls[-1][2] == {
+        "homeassistant": True,
         "addons": ["test"],
         "folders": ["ssl"],
         "password": "123456",
@@ -490,12 +498,15 @@ async def test_device_registry_calls(hass):
     """Test device registry entries for hassio."""
     dev_reg = async_get(hass)
     supervisor_mock_data = {
+        "version": "1.0.0",
+        "version_latest": "1.0.0",
         "addons": [
             {
                 "name": "test",
                 "state": "started",
                 "slug": "test",
                 "installed": True,
+                "icon": False,
                 "update_available": False,
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
@@ -507,12 +518,13 @@ async def test_device_registry_calls(hass):
                 "state": "started",
                 "slug": "test2",
                 "installed": True,
+                "icon": False,
                 "update_available": False,
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
                 "url": "https://github.com",
             },
-        ]
+        ],
     }
     os_mock_data = {
         "board": "odroid-n2",
@@ -533,21 +545,24 @@ async def test_device_registry_calls(hass):
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 3
+        assert len(dev_reg.devices) == 5
 
     supervisor_mock_data = {
+        "version": "1.0.0",
+        "version_latest": "1.0.0",
         "addons": [
             {
                 "name": "test2",
                 "state": "started",
                 "slug": "test2",
                 "installed": True,
+                "icon": False,
                 "update_available": False,
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
                 "url": "https://github.com",
             },
-        ]
+        ],
     }
 
     # Test that when addon is removed, next update will remove the add-on and subsequent updates won't
@@ -560,19 +575,22 @@ async def test_device_registry_calls(hass):
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 2
+        assert len(dev_reg.devices) == 4
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 2
+        assert len(dev_reg.devices) == 4
 
     supervisor_mock_data = {
+        "version": "1.0.0",
+        "version_latest": "1.0.0",
         "addons": [
             {
                 "name": "test2",
                 "slug": "test2",
                 "state": "started",
                 "installed": True,
+                "icon": False,
                 "update_available": False,
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
@@ -583,12 +601,13 @@ async def test_device_registry_calls(hass):
                 "slug": "test3",
                 "state": "stopped",
                 "installed": True,
+                "icon": False,
                 "update_available": False,
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
                 "url": "https://github.com",
             },
-        ]
+        ],
     }
 
     # Test that when addon is added, next update will reload the entry so we register
@@ -602,4 +621,4 @@ async def test_device_registry_calls(hass):
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 3
+        assert len(dev_reg.devices) == 5

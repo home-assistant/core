@@ -32,6 +32,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import trigger
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_DATA_TYPE,
@@ -49,7 +50,11 @@ from .const import (
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
-from .device_automation_helpers import CONF_SUBTYPE, NODE_STATUSES
+from .device_automation_helpers import (
+    CONF_SUBTYPE,
+    NODE_STATUSES,
+    generate_config_parameter_subtype,
+)
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
@@ -75,14 +80,6 @@ SCENE_ACTIVATION_VALUE_NOTIFICATION = "event.value_notification.scene_activation
 CONFIG_PARAMETER_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.config_parameter"
 VALUE_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.value"
 NODE_STATUS = "state.node_status"
-
-VALUE_SCHEMA = vol.Any(
-    bool,
-    vol.Coerce(int),
-    vol.Coerce(float),
-    cv.boolean,
-    cv.string,
-)
 
 
 NOTIFICATION_EVENT_CC_MAPPINGS = (
@@ -353,7 +350,7 @@ async def async_get_triggers(
                 ATTR_PROPERTY_KEY: config_value.property_key,
                 ATTR_ENDPOINT: config_value.endpoint,
                 ATTR_COMMAND_CLASS: config_value.command_class,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]

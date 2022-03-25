@@ -56,10 +56,10 @@ async def async_setup_entry(
     async_add_entities([AccuWeatherEntity(name, coordinator)])
 
 
-class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
+class AccuWeatherEntity(
+    CoordinatorEntity[AccuWeatherDataUpdateCoordinator], WeatherEntity
+):
     """Define an AccuWeather entity."""
-
-    coordinator: AccuWeatherDataUpdateCoordinator
 
     def __init__(
         self, name: str, coordinator: AccuWeatherDataUpdateCoordinator
