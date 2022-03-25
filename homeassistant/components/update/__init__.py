@@ -1,273 +1,345 @@
-"""Support for Update."""
+"""Component to allow for providing device or service updates."""
 from __future__ import annotations
 
-import asyncio
-import dataclasses
+from dataclasses import dataclass
+from datetime import timedelta
 import logging
-from typing import Any, Protocol
+from typing import Any, Final, final
 
-import async_timeout
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.backports.enum import StrEnum
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import integration_platform, storage
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.config_validation import (
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.entity import EntityCategory, EntityDescription
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+
+from .const import (
+    ATTR_BACKUP,
+    ATTR_CURRENT_VERSION,
+    ATTR_IN_PROGRESS,
+    ATTR_LATEST_VERSION,
+    ATTR_RELEASE_SUMMARY,
+    ATTR_RELEASE_URL,
+    ATTR_SKIPPED_VERSION,
+    ATTR_TITLE,
+    ATTR_VERSION,
+    DOMAIN,
+    SERVICE_INSTALL,
+    SERVICE_SKIP,
+    UpdateEntityFeature,
+)
+
+SCAN_INTERVAL = timedelta(minutes=15)
+
+ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "update"
-INFO_CALLBACK_TIMEOUT = 5
-STORAGE_VERSION = 1
+
+class UpdateDeviceClass(StrEnum):
+    """Device class for update."""
+
+    FIRMWARE = "firmware"
 
 
-class IntegrationUpdateFailed(HomeAssistantError):
-    """Error to indicate an update has failed."""
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(UpdateDeviceClass))
+
+
+__all__ = [
+    "ATTR_BACKUP",
+    "ATTR_VERSION",
+    "DEVICE_CLASSES_SCHEMA",
+    "DOMAIN",
+    "PLATFORM_SCHEMA_BASE",
+    "PLATFORM_SCHEMA",
+    "SERVICE_INSTALL",
+    "SERVICE_SKIP",
+    "UpdateDeviceClass",
+    "UpdateEntity",
+    "UpdateEntityDescription",
+    "UpdateEntityFeature",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Update integration."""
-    hass.data[DOMAIN] = UpdateManager(hass=hass)
-    websocket_api.async_register_command(hass, handle_info)
-    websocket_api.async_register_command(hass, handle_update)
-    websocket_api.async_register_command(hass, handle_skip)
+    """Set up Select entities."""
+    component = hass.data[DOMAIN] = EntityComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
+    await component.async_setup(config)
+
+    component.async_register_entity_service(
+        SERVICE_INSTALL,
+        {
+            vol.Optional(ATTR_VERSION): cv.string,
+            vol.Optional(ATTR_BACKUP, default=False): cv.boolean,
+        },
+        async_install,
+        [UpdateEntityFeature.INSTALL],
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SKIP,
+        {},
+        UpdateEntity.async_skip.__name__,
+    )
+
     return True
 
 
-@websocket_api.websocket_command({vol.Required("type"): "update/info"})
-@websocket_api.async_response
-async def handle_info(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Get pending updates from all platforms."""
-    manager: UpdateManager = hass.data[DOMAIN]
-    updates = await manager.gather_updates()
-    connection.send_result(msg["id"], updates)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "update/skip",
-        vol.Required("domain"): str,
-        vol.Required("identifier"): str,
-        vol.Required("version"): str,
-    }
-)
-@websocket_api.async_response
-async def handle_skip(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Skip an update."""
-    manager: UpdateManager = hass.data[DOMAIN]
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
-    if not await manager.domain_is_valid(msg["domain"]):
-        connection.send_error(
-            msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
+
+async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None:
+    """Service call wrapper to validate the call."""
+    # If version is not specified, but no update is available.
+    if (version := service_call.data.get(ATTR_VERSION)) is None and (
+        entity.current_version == entity.latest_version or entity.latest_version is None
+    ):
+        raise HomeAssistantError(f"No update available for {entity.name}")
+
+    # If version is specified, but not supported by the entity.
+    if (
+        version is not None
+        and not entity.supported_features & UpdateEntityFeature.SPECIFIC_VERSION
+    ):
+        raise HomeAssistantError(
+            f"Installing a specific version is not supported for {entity.name}"
         )
-        return
 
-    manager.skip_update(msg["domain"], msg["identifier"], msg["version"])
-    connection.send_result(msg["id"])
+    # If backup is requested, but not supported by the entity.
+    if (
+        backup := service_call.data[ATTR_BACKUP]
+    ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
+        raise HomeAssistantError(f"Backup is not supported for {entity.name}")
 
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "update/update",
-        vol.Required("domain"): str,
-        vol.Required("identifier"): str,
-        vol.Required("version"): str,
-        vol.Optional("backup"): bool,
-    }
-)
-@websocket_api.async_response
-async def handle_update(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Handle an update."""
-    manager: UpdateManager = hass.data[DOMAIN]
-
-    if not await manager.domain_is_valid(msg["domain"]):
-        connection.send_error(
-            msg["id"],
-            websocket_api.ERR_NOT_FOUND,
-            f"{msg['domain']} is not a supported domain",
+    # Update is already in progress.
+    if entity.in_progress is not False:
+        raise HomeAssistantError(
+            f"Update installation already in progress for {entity.name}"
         )
-        return
 
-    try:
-        await manager.perform_update(
-            domain=msg["domain"],
-            identifier=msg["identifier"],
-            version=msg["version"],
-            backup=msg.get("backup"),
-        )
-    except IntegrationUpdateFailed as err:
-        connection.send_error(
-            msg["id"],
-            "update_failed",
-            str(err),
-        )
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception(
-            "Update of %s to version %s failed",
-            msg["identifier"],
-            msg["version"],
-        )
-        connection.send_error(
-            msg["id"],
-            "update_failed",
-            "Unknown Error",
-        )
-    else:
-        connection.send_result(msg["id"])
+    await entity.async_install_with_progress(version, backup)
 
 
-class UpdatePlatformProtocol(Protocol):
-    """Define the format that update platforms can have."""
+@dataclass
+class UpdateEntityDescription(EntityDescription):
+    """A class that describes update entities."""
 
-    async def async_list_updates(self, hass: HomeAssistant) -> list[UpdateDescription]:
-        """List all updates available in the integration."""
+    device_class: UpdateDeviceClass | str | None = None
+    entity_category: EntityCategory | None = EntityCategory.CONFIG
 
-    async def async_perform_update(
-        self,
-        hass: HomeAssistant,
-        identifier: str,
-        version: str,
-        **kwargs: Any,
+
+class UpdateEntity(RestoreEntity):
+    """Representation of an update entity."""
+
+    entity_description: UpdateEntityDescription
+    _attr_current_version: str | None = None
+    _attr_device_class: UpdateDeviceClass | str | None
+    _attr_in_progress: bool | int = False
+    _attr_latest_version: str | None = None
+    _attr_release_summary: str | None = None
+    _attr_release_url: str | None = None
+    _attr_state: None = None
+    _attr_supported_features: int = 0
+    _attr_title: str | None = None
+    __skipped_version: str | None = None
+    __in_progress: bool = False
+
+    @property
+    def current_version(self) -> str | None:
+        """Version currently in use."""
+        return self._attr_current_version
+
+    @property
+    def device_class(self) -> UpdateDeviceClass | str | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
+
+    @property
+    def entity_category(self) -> EntityCategory | str | None:
+        """Return the category of the entity, if any."""
+        if hasattr(self, "_attr_entity_category"):
+            return self._attr_entity_category
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_category
+        if self.supported_features & UpdateEntityFeature.INSTALL:
+            return EntityCategory.CONFIG
+        return EntityCategory.DIAGNOSTIC
+
+    @property
+    def in_progress(self) -> bool | int | None:
+        """Update installation progress.
+
+        Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
+
+        Can either return a boolean (True if in progress, False if not)
+        or an integer to indicate the progress in from 0 to 100%.
+        """
+        return self._attr_in_progress
+
+    @property
+    def latest_version(self) -> str | None:
+        """Latest version available for install."""
+        return self._attr_latest_version
+
+    @property
+    def release_summary(self) -> str | None:
+        """Summary of the release notes or changelog.
+
+        This is not suitable for long changelogs, but merely suitable
+        for a short excerpt update description of max 255 characters.
+        """
+        return self._attr_release_summary
+
+    @property
+    def release_url(self) -> str | None:
+        """URL to the full release notes of the latest version available."""
+        return self._attr_release_url
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return self._attr_supported_features
+
+    @property
+    def title(self) -> str | None:
+        """Title of the software.
+
+        This helps to differentiate between the device or entity name
+        versus the title of the software installed.
+        """
+        return self._attr_title
+
+    @final
+    async def async_skip(self) -> None:
+        """Skip the current offered version to update."""
+        if (latest_version := self.latest_version) is None:
+            raise HomeAssistantError(f"Cannot skip an unknown version for {self.name}")
+        if self.current_version == latest_version:
+            raise HomeAssistantError(f"No update available to skip for {self.name}")
+        self.__skipped_version = latest_version
+        self.async_write_ha_state()
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
-        """Perform an update."""
+        """Install an update.
 
+        Version can be specified to install a specific version. When `None`, the
+        latest version needs to be installed.
 
-@dataclasses.dataclass()
-class UpdateDescription:
-    """Describe an update update."""
+        The backup parameter indicates a backup should be taken before
+        installing the update.
+        """
+        await self.hass.async_add_executor_job(self.install, version, backup)
 
-    identifier: str
-    name: str
-    current_version: str
-    available_version: str
-    changelog_content: str | None = None
-    changelog_url: str | None = None
-    icon_url: str | None = None
-    supports_backup: bool = False
+    def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
+        """Install an update.
 
+        Version can be specified to install a specific version. When `None`, the
+        latest version needs to be installed.
 
-class UpdateManager:
-    """Update manager for the update integration."""
+        The backup parameter indicates a backup should be taken before
+        installing the update.
+        """
+        raise NotImplementedError()
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the update manager."""
-        self._hass = hass
-        self._store = storage.Store(
-            hass=hass,
-            version=STORAGE_VERSION,
-            key=DOMAIN,
-        )
-        self._skip: set[str] = set()
-        self._platforms: dict[str, UpdatePlatformProtocol] = {}
-        self._loaded = False
+    @property
+    @final
+    def state(self) -> str | None:
+        """Return the entity state."""
+        if (current_version := self.current_version) is None or (
+            latest_version := self.latest_version
+        ) is None:
+            return None
 
-    async def add_platform(
-        self,
-        hass: HomeAssistant,
-        integration_domain: str,
-        platform: UpdatePlatformProtocol,
-    ) -> None:
-        """Add a platform to the update manager."""
-        self._platforms[integration_domain] = platform
+        if latest_version not in (current_version, self.__skipped_version):
+            return STATE_ON
+        return STATE_OFF
 
-    async def _load(self) -> None:
-        """Load platforms and data from storage."""
-        await integration_platform.async_process_integration_platforms(
-            self._hass, DOMAIN, self.add_platform
-        )
-        from_storage = await self._store.async_load()
-        if isinstance(from_storage, dict):
-            self._skip = set(from_storage["skipped"])
+    @final
+    @property
+    def state_attributes(self) -> dict[str, Any] | None:
+        """Return state attributes."""
+        if (release_summary := self.release_summary) is not None:
+            release_summary = release_summary[:255]
 
-        self._loaded = True
+        # If entity supports progress, return the in_progress value.
+        # Otherwise, we use the internal progress value.
+        if self.supported_features & UpdateEntityFeature.PROGRESS:
+            in_progress = self.in_progress
+        else:
+            in_progress = self.__in_progress
 
-    async def gather_updates(self) -> list[dict[str, Any]]:
-        """Gather updates."""
-        if not self._loaded:
-            await self._load()
-
-        updates: dict[str, list[UpdateDescription] | None] = {}
-
-        for domain, update_descriptions in zip(
-            self._platforms,
-            await asyncio.gather(
-                *(
-                    self._get_integration_info(integration_domain, registration)
-                    for integration_domain, registration in self._platforms.items()
-                )
-            ),
+        # Clear skipped version in case it matches the current version or
+        # the latest version diverged.
+        if (
+            self.__skipped_version == self.current_version
+            or self.__skipped_version != self.latest_version
         ):
-            updates[domain] = update_descriptions
+            self.__skipped_version = None
 
-        return [
-            {
-                "domain": integration_domain,
-                **dataclasses.asdict(description),
-            }
-            for integration_domain, update_descriptions in updates.items()
-            if update_descriptions is not None
-            for description in update_descriptions
-            if f"{integration_domain}_{description.identifier}_{description.available_version}"
-            not in self._skip
-        ]
+        return {
+            ATTR_CURRENT_VERSION: self.current_version,
+            ATTR_IN_PROGRESS: in_progress,
+            ATTR_LATEST_VERSION: self.latest_version,
+            ATTR_RELEASE_SUMMARY: release_summary,
+            ATTR_RELEASE_URL: self.release_url,
+            ATTR_SKIPPED_VERSION: self.__skipped_version,
+            ATTR_TITLE: self.title,
+        }
 
-    async def domain_is_valid(self, domain: str) -> bool:
-        """Return if the domain is valid."""
-        if not self._loaded:
-            await self._load()
-        return domain in self._platforms
-
-    @callback
-    def _data_to_save(self) -> dict[str, Any]:
-        """Schedule storing the data."""
-        return {"skipped": list(self._skip)}
-
-    async def perform_update(
-        self,
-        domain: str,
-        identifier: str,
-        version: str,
-        **kwargs: Any,
+    @final
+    async def async_install_with_progress(
+        self, version: str | None, backup: bool
     ) -> None:
-        """Perform an update."""
-        await self._platforms[domain].async_perform_update(
-            hass=self._hass,
-            identifier=identifier,
-            version=version,
-            **kwargs,
-        )
+        """Install update and handle progress if needed.
 
-    @callback
-    def skip_update(self, domain: str, identifier: str, version: str) -> None:
-        """Skip an update."""
-        self._skip.add(f"{domain}_{identifier}_{version}")
-        self._store.async_delay_save(self._data_to_save, 60)
-
-    async def _get_integration_info(
-        self,
-        integration_domain: str,
-        platform: UpdatePlatformProtocol,
-    ) -> list[UpdateDescription] | None:
-        """Get integration update details."""
+        Handles setting the in_progress state in case the entity doesn't
+        support it natively.
+        """
+        if not self.supported_features & UpdateEntityFeature.PROGRESS:
+            self.__in_progress = True
+            self.async_write_ha_state()
 
         try:
-            async with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
-                return await platform.async_list_updates(hass=self._hass)
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Timeout while getting updates from %s", integration_domain)
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error fetching info from %s", integration_domain)
-        return None
+            await self.async_install(version, backup)
+        finally:
+            # No matter what happens, we always stop progress in the end
+            self._attr_in_progress = False
+            self.__in_progress = False
+            self.async_write_ha_state()
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the update entity is added to hass.
+
+        It is used to restore the skipped version, if any.
+        """
+        await super().async_internal_added_to_hass()
+        state = await self.async_get_last_state()
+        if state is not None and state.attributes.get(ATTR_SKIPPED_VERSION) is not None:
+            self.__skipped_version = state.attributes[ATTR_SKIPPED_VERSION]

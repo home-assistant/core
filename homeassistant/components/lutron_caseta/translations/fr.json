@@ -66,11 +66,11 @@
             "stop_2": "Arr\u00eat 2",
             "stop_3": "Arr\u00eat 3",
             "stop_4": "Arr\u00eat 4",
-            "stop_all": "Arr\u00eate tout"
+            "stop_all": "Arr\u00eater tout"
         },
         "trigger_type": {
-            "press": "\" {subtype} \" appuy\u00e9",
-            "release": "\" {subtype} \" publi\u00e9"
+            "press": "\u00ab\u00a0{subtype}\u00a0\u00bb enfonc\u00e9",
+            "release": "\u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9"
         }
     }
 }

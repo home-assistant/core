@@ -5,7 +5,7 @@ from collections.abc import AsyncIterable, Iterable
 from typing import Final, cast
 from unittest.mock import Mock, create_autospec, patch, seal
 
-from async_upnp_client import UpnpDevice, UpnpService
+from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.utils import absolute_url
 import pytest
 

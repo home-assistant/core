@@ -392,6 +392,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             )
             self.mesh_role = MeshRoles.NONE
             for mac, info in hosts.items():
+                if info.ip_address:
+                    info.wan_access = self._get_wan_access(info.ip_address)
                 if self.manage_device_info(info, mac, consider_home):
                     new_device = True
             self.send_signal_device_update(new_device)
@@ -815,7 +817,7 @@ class FritzData:
     profile_switches: dict = field(default_factory=dict)
 
 
-class FritzDeviceBase(update_coordinator.CoordinatorEntity):
+class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
     """Entity base class for a device connected to a FRITZ!Box device."""
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:

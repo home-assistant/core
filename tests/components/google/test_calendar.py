@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import patch
 
 import httplib2
 import pytest
@@ -15,6 +15,8 @@ from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.util.dt as dt_util
 
 from .conftest import TEST_YAML_ENTITY, TEST_YAML_ENTITY_NAME
+
+from tests.common import async_fire_time_changed
 
 TEST_ENTITY = TEST_YAML_ENTITY
 TEST_ENTITY_NAME = TEST_YAML_ENTITY_NAME
@@ -50,8 +52,16 @@ TEST_EVENT = {
 
 
 @pytest.fixture(autouse=True)
-def mock_test_setup(mock_calendars_yaml, mock_token_read):
+def mock_test_setup(
+    hass,
+    mock_calendars_yaml,
+    test_api_calendar,
+    mock_calendars_list,
+    config_entry,
+):
     """Fixture that pulls in the default fixtures for tests in this file."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    config_entry.add_to_hass(hass)
     return
 
 
@@ -252,13 +262,71 @@ async def test_all_day_offset_event(hass, mock_events_list_items, component_setu
     }
 
 
-async def test_update_error(hass, calendar_resource, component_setup):
-    """Test that the calendar handles a server error."""
-    calendar_resource.return_value.get = Mock(
-        side_effect=httplib2.ServerNotFoundError("unit test")
-    )
-    assert await component_setup()
+async def test_update_error(
+    hass, calendar_resource, component_setup, test_api_calendar
+):
+    """Test that the calendar update handles a server error."""
 
+    now = dt_util.now()
+    with patch("homeassistant.components.google.api.google_discovery.build") as mock:
+        mock.return_value.calendarList.return_value.list.return_value.execute.return_value = {
+            "items": [test_api_calendar]
+        }
+        mock.return_value.events.return_value.list.return_value.execute.return_value = {
+            "items": [
+                {
+                    **TEST_EVENT,
+                    "start": {
+                        "dateTime": (now + datetime.timedelta(minutes=-30)).isoformat()
+                    },
+                    "end": {
+                        "dateTime": (now + datetime.timedelta(minutes=30)).isoformat()
+                    },
+                }
+            ]
+        }
+        assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == "on"
+
+    # Advance time to avoid throttling
+    now += datetime.timedelta(minutes=30)
+    with patch(
+        "homeassistant.components.google.api.google_discovery.build",
+        side_effect=httplib2.ServerNotFoundError("unit test"),
+    ), patch("homeassistant.util.utcnow", return_value=now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # No change
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == "on"
+
+    # Advance time beyond update/throttle point
+    now += datetime.timedelta(minutes=30)
+    with patch(
+        "homeassistant.components.google.api.google_discovery.build"
+    ) as mock, patch("homeassistant.util.utcnow", return_value=now):
+        mock.return_value.events.return_value.list.return_value.execute.return_value = {
+            "items": [
+                {
+                    **TEST_EVENT,
+                    "start": {
+                        "dateTime": (now + datetime.timedelta(minutes=30)).isoformat()
+                    },
+                    "end": {
+                        "dateTime": (now + datetime.timedelta(minutes=60)).isoformat()
+                    },
+                }
+            ]
+        }
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # State updated
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
     assert state.state == "off"
@@ -284,11 +352,12 @@ async def test_http_event_api_failure(
     hass, hass_client, calendar_resource, component_setup
 ):
     """Test the Rest API response during a calendar failure."""
-    calendar_resource.side_effect = httplib2.ServerNotFoundError("unit test")
-
     assert await component_setup()
 
     client = await hass_client()
+
+    calendar_resource.side_effect = httplib2.ServerNotFoundError("unit test")
+
     response = await client.get(upcoming_event_url())
     assert response.status == HTTPStatus.OK
     # A failure to talk to the server results in an empty list of events
@@ -352,3 +421,19 @@ async def test_opaque_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert (len(events) > 0) == expect_visible_event
+
+
+async def test_scan_calendar_error(
+    hass,
+    calendar_resource,
+    component_setup,
+    test_api_calendar,
+):
+    """Test that the calendar update handles a server error."""
+    with patch(
+        "homeassistant.components.google.api.google_discovery.build",
+        side_effect=httplib2.ServerNotFoundError("unit test"),
+    ):
+        assert await component_setup()
+
+    assert not hass.states.get(TEST_ENTITY)

@@ -10,7 +10,8 @@
             "already_in_progress": "\u69cb\u6210\u30d5\u30ed\u30fc\u306f\u3059\u3067\u306b\u9032\u884c\u4e2d\u3067\u3059",
             "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "connection_error": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c"
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "upnp_not_configured": "\u30c7\u30d0\u30a4\u30b9\u306bUPnP\u306e\u8a2d\u5b9a\u304c\u3042\u308a\u307e\u305b\u3093\u3002"
         },
         "flow_title": "{name}",
         "step": {

@@ -6,7 +6,7 @@ import dataclasses
 from typing import Final
 from unittest.mock import Mock, patch
 
-from async_upnp_client import UpnpError
+from async_upnp_client.exceptions import UpnpError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow

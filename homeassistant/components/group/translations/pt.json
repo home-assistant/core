@@ -1,4 +1,33 @@
 {
+    "config": {
+        "step": {
+            "media_player": {
+                "data": {
+                    "entities": "Membros",
+                    "name": "Nome"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "fan_options": {
+                "data": {
+                    "entities": "Membros"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Membros"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Membros"
+                }
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Fechada",

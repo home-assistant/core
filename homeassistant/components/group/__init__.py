@@ -11,6 +11,7 @@ from typing import Any, Union, cast
 import voluptuous as vol
 
 from homeassistant import core as ha
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -27,8 +28,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback, split_entity_id
-from homeassistant.helpers import start
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er, start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
@@ -38,6 +38,8 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+from .const import CONF_HIDE_MEMBERS
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -216,6 +218,44 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
             groups.append(group.entity_id)
 
     return groups
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    hass.config_entries.async_setup_platforms(entry, (entry.options["group_type"],))
+    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
+    return True
+
+
+async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update listener, called when the config entry options are changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        entry, (entry.options["group_type"],)
+    )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    # Unhide the group members
+    registry = er.async_get(hass)
+
+    if not entry.options[CONF_HIDE_MEMBERS]:
+        return
+
+    for member in entry.options[CONF_ENTITIES]:
+        if not (entity_id := er.async_resolve_entity_id(registry, member)):
+            continue
+        if (entity_entry := registry.async_get(entity_id)) is None:
+            continue
+        if entity_entry.hidden_by != er.RegistryEntryHider.INTEGRATION:
+            continue
+
+        registry.async_update_entity(entity_id, hidden_by=None)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

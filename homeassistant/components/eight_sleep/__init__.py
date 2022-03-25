@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Union
 
 from pyeight.eight import EightSleep
 from pyeight.user import EightUser
@@ -28,8 +29,6 @@ from homeassistant.helpers.update_coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PARTNER = "partner"
-
 DATA_EIGHT = "eight_sleep"
 DATA_HEAT = "heat"
 DATA_USER = "user"
@@ -42,9 +41,6 @@ USER_ENTITY = "user"
 
 HEAT_SCAN_INTERVAL = timedelta(seconds=60)
 USER_SCAN_INTERVAL = timedelta(seconds=300)
-
-SIGNAL_UPDATE_HEAT = "eight_heat_update"
-SIGNAL_UPDATE_USER = "eight_user_update"
 
 NAME_MAP = {
     "left_current_sleep": "Left Sleep Session",
@@ -82,16 +78,12 @@ SERVICE_EIGHT_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_PARTNER),
-            vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_PARTNER): cv.boolean,
-                }
-            ),
-        )
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+            }
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -227,7 +219,11 @@ class EightSleepUserDataCoordinator(DataUpdateCoordinator):
         await self.api.update_user_data()
 
 
-class EightSleepBaseEntity(CoordinatorEntity):
+class EightSleepBaseEntity(
+    CoordinatorEntity[
+        Union[EightSleepUserDataCoordinator, EightSleepHeatDataCoordinator]
+    ]
+):
     """The base Eight Sleep entity class."""
 
     def __init__(

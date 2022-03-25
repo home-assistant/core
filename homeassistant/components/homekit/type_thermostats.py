@@ -285,20 +285,19 @@ class Thermostat(HomeAccessory):
                 CHAR_CURRENT_HUMIDITY, value=50
             )
 
-        fan_modes = self.fan_modes = {
-            fan_mode.lower(): fan_mode
-            for fan_mode in attributes.get(ATTR_FAN_MODES, [])
-        }
+        fan_modes = {}
         self.ordered_fan_speeds = []
-        if (
-            features & SUPPORT_FAN_MODE
-            and fan_modes
-            and PRE_DEFINED_FAN_MODES.intersection(fan_modes)
-        ):
-            self.ordered_fan_speeds = [
-                speed for speed in ORDERED_FAN_SPEEDS if speed in fan_modes
-            ]
-            self.fan_chars.append(CHAR_ROTATION_SPEED)
+
+        if features & SUPPORT_FAN_MODE:
+            fan_modes = {
+                fan_mode.lower(): fan_mode
+                for fan_mode in attributes.get(ATTR_FAN_MODES) or []
+            }
+            if fan_modes and PRE_DEFINED_FAN_MODES.intersection(fan_modes):
+                self.ordered_fan_speeds = [
+                    speed for speed in ORDERED_FAN_SPEEDS if speed in fan_modes
+                ]
+                self.fan_chars.append(CHAR_ROTATION_SPEED)
 
         if FAN_AUTO in fan_modes and (FAN_ON in fan_modes or self.ordered_fan_speeds):
             self.fan_chars.append(CHAR_TARGET_FAN_STATE)

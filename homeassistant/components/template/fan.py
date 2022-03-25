@@ -11,7 +11,6 @@ from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     ENTITY_ID_FORMAT,
@@ -250,7 +249,6 @@ class TemplateFan(TemplateEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,
@@ -258,7 +256,6 @@ class TemplateFan(TemplateEntity, FanEntity):
         """Turn on the fan."""
         await self._on_script.async_run(
             {
-                ATTR_SPEED: speed,
                 ATTR_PERCENTAGE: percentage,
                 ATTR_PRESET_MODE: preset_mode,
             },
@@ -270,8 +267,6 @@ class TemplateFan(TemplateEntity, FanEntity):
             await self.async_set_preset_mode(preset_mode)
         elif percentage is not None:
             await self.async_set_percentage(percentage)
-        elif speed is not None:
-            await self.async_set_speed(speed)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
