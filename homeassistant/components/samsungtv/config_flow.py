@@ -67,7 +67,7 @@ def _entry_is_complete(
     return bool(
         entry.unique_id
         and entry.data.get(CONF_MAC)
-        and (not ssdp_location or entry.data.get(CONF_SSDP_LOCATION) == ssdp_location)
+        and (not ssdp_location or entry.data.get(CONF_SSDP_LOCATION))
     )
 
 

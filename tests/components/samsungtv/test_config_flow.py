@@ -1329,11 +1329,15 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
 
 
 @pytest.mark.usefixtures("remotews")
-async def test_update_mac_sdp_location_unique_id_added_from_ssdp(
+async def test_update_ssdp_location_unique_id_added_from_ssdp(
     hass: HomeAssistant,
 ) -> None:
-    """Test missing mac, ssdp_location, and unique id added via ssdp."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
+    """Test missing ssdp_location, and unique id added via ssdp."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        unique_id=None,
+    )
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.samsungtv.async_setup",
