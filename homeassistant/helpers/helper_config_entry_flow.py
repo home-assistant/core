@@ -181,7 +181,6 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
 
-    # pylint: disable-next=arguments-differ
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Initialize a subclass."""
         super().__init_subclass__(**kwargs)
