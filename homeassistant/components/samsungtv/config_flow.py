@@ -309,6 +309,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._manufacturer or not self._manufacturer.lower().startswith(
             "samsung"
         ):
+            LOGGER.debug(
+                "Aborting flow since manufacturer:%s is not samsung", self._manufacturer
+            )
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_ssdp(
@@ -319,6 +322,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         model_name: str = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
         if discovery_info.ssdp_st == UPNP_SVC_RENDERINGCONTROL:
             self._ssdp_location = discovery_info.ssdp_location
+            LOGGER.debug("Set SSDP location to: %s", self._ssdp_location)
         self._udn = self._upnp_udn = _strip_uuid(
             discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         )
