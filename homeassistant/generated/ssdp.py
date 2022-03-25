@@ -225,6 +225,9 @@ SSDP = {
     "samsungtv": [
         {
             "st": "urn:samsung.com:device:RemoteControlReceiver:1"
+        },
+        {
+            "st": "urn:schemas-upnp-org:service:RenderingControl:1"
         }
     ],
     "songpal": [
