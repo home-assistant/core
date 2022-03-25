@@ -210,6 +210,12 @@ def log_config_state_fixture():
     }
 
 
+@pytest.fixture(name="config_entry_diagnostics", scope="session")
+def config_entry_diagnostics_fixture():
+    """Load the config entry diagnostics fixture data."""
+    return json.loads(load_fixture("zwave_js/config_entry_diagnostics.json"))
+
+
 @pytest.fixture(name="multisensor_6_state", scope="session")
 def multisensor_6_state_fixture():
     """Load the multisensor 6 node state fixture data."""

@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util.network import is_ipv4_address
 
 from .const import DOMAIN
 
@@ -86,6 +87,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
+        if not is_ipv4_address(discovery_info.host):
+            return self.async_abort(reason="not_ipv4_address")
         serial = discovery_info.properties["serialnum"]
         await self.async_set_unique_id(serial)
         self.ip_address = discovery_info.host

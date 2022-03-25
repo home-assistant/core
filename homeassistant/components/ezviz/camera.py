@@ -228,8 +228,6 @@ async def async_setup_entry(
 class EzvizCamera(EzvizEntity, Camera):
     """An implementation of a Ezviz security camera."""
 
-    coordinator: EzvizDataUpdateCoordinator
-
     def __init__(
         self,
         hass: HomeAssistant,
