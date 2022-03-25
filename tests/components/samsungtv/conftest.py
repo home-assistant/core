@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from async_upnp_client.client import UpnpDevice
+from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
 from samsungctl import Remote
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
@@ -34,6 +36,28 @@ def app_list_delay_fixture() -> None:
     """Patch APP_LIST_DELAY."""
     with patch("homeassistant.components.samsungtv.media_player.APP_LIST_DELAY", 0):
         yield
+
+
+@pytest.fixture(name="upnp_factory", autouse=True)
+def upnp_factory_fixture() -> Mock:
+    """Patch UpnpFactory."""
+    with patch(
+        "homeassistant.components.samsungtv.media_player.UpnpFactory",
+        autospec=True,
+    ) as upnp_factory_class:
+        upnp_factory: Mock = upnp_factory_class.return_value
+        upnp_factory.async_create_device.side_effect = UpnpConnectionError
+        yield upnp_factory
+
+
+@pytest.fixture(name="upnp_device")
+async def upnp_device_fixture(upnp_factory: Mock) -> Mock:
+    """Patch async_upnp_client."""
+    upnp_device = Mock(UpnpDevice)
+    upnp_device.services = {}
+
+    with patch.object(upnp_factory, "async_create_device", side_effect=[upnp_device]):
+        yield upnp_device
 
 
 @pytest.fixture(name="remote")
