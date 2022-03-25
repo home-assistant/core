@@ -114,7 +114,7 @@ def commit(session, work):
 
 def execute(
     qry: Query, to_native: bool = False, validate_entity_ids: bool = True
-) -> list | None:
+) -> list:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -157,7 +157,7 @@ def execute(
                 raise
             time.sleep(QUERY_RETRY_WAIT)
 
-    return None
+    assert False  # unreachable
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
