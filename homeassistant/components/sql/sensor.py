@@ -6,15 +6,16 @@ import decimal
 import logging
 
 import sqlalchemy
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -33,18 +34,11 @@ def redact_credentials(data: str) -> str:
     return DB_URL_RE.sub("//****:****@", data)
 
 
-def validate_sql_select(value: str) -> str:
-    """Validate that value is a SQL SELECT query."""
-    if not value.lstrip().lower().startswith("select"):
-        raise vol.Invalid("Only SELECT queries allowed")
-    return value
-
-
 _QUERY_SCHEME = vol.Schema(
     {
         vol.Required(CONF_COLUMN_NAME): cv.string,
         vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
+        vol.Required(CONF_QUERY): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
@@ -94,19 +88,25 @@ async def async_setup_entry(
     name: str = entry.data[CONF_NAME]
     query_str: str = entry.data[CONF_QUERY]
     unit: str | None = entry.data.get(CONF_UNIT_OF_MEASUREMENT)
-    value_template: Template | None = Template(entry.data.get(CONF_VALUE_TEMPLATE))
+    template: str | None = entry.data.get(CONF_VALUE_TEMPLATE)
     column_name: str = entry.data[CONF_COLUMN_NAME]
 
-    try:
-        value_template.ensure_valid()
-    except TemplateError:
-        value_template = None
+    if template is not None:
+        try:
+            value_template = Template(str(template))
+            value_template.ensure_valid()
+        except TemplateError:
+            value_template = None
 
     if value_template is not None:
         value_template.hass = hass
 
-    engine = sqlalchemy.create_engine(db_url)
-    sessmaker = scoped_session(sessionmaker(bind=engine))
+    try:
+        engine = sqlalchemy.create_engine(db_url)
+        sessmaker = scoped_session(sessionmaker(bind=engine))
+    except SQLAlchemyError as err:
+        _LOGGER.error("Can not open database %s", {redact_credentials(str(err))})
+        return
 
     # MSSQL uses TOP and not LIMIT
     if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
@@ -163,7 +163,7 @@ class SQLSensor(SensorEntity):
         sess: scoped_session = self.sessionmaker()
         try:
             result = sess.execute(self._query)
-        except sqlalchemy.exc.SQLAlchemyError as err:
+        except SQLAlchemyError as err:
             _LOGGER.error(
                 "Error executing query %s: %s",
                 self._query,

@@ -1,16 +1,17 @@
 """The test for the sql sensor platform."""
 import os
+from unittest.mock import patch
 
 import pytest
-import voluptuous as vol
+from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.sql.const import DOMAIN
-from homeassistant.components.sql.sensor import validate_sql_select
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from tests.common import get_test_config_dir, MockConfigEntry
+from tests.common import MockConfigEntry, get_test_config_dir
 
 
 @pytest.fixture(autouse=True)
@@ -46,6 +47,30 @@ async def test_query(hass: HomeAssistant) -> None:
     assert state.attributes["value"] == 5
 
 
+async def test_import_query(hass: HomeAssistant) -> None:
+    """Test the SQL sensor."""
+    config = {
+        "sensor": {
+            "platform": "sql",
+            "db_url": "sqlite://",
+            "queries": [
+                {
+                    "name": "count_tables",
+                    "query": "SELECT 5 as value",
+                    "column": "value",
+                }
+            ],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN)
+    data = hass.config_entries.async_entries(DOMAIN)[0].data
+    assert data[CONF_NAME] == "Select value SQL query"
+
+
 async def test_query_value_template(hass: HomeAssistant) -> None:
     """Test the SQL sensor."""
     config = {
@@ -68,6 +93,30 @@ async def test_query_value_template(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "5"
+
+
+async def test_query_value_template_invalid(hass: HomeAssistant) -> None:
+    """Test the SQL sensor."""
+    config = {
+        "db_url": "sqlite://",
+        "query": "SELECT 5.01 as value",
+        "column": "value",
+        "name": "count_tables",
+        "value_template": "{{ value | dontwork }}",
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=config,
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "5.01"
 
 
 async def test_query_limit(hass: HomeAssistant) -> None:
@@ -124,33 +173,6 @@ async def test_query_no_value(
     assert text in caplog.text
 
 
-async def test_invalid_query(hass: HomeAssistant) -> None:
-    """Test the SQL sensor for invalid queries."""
-    with pytest.raises(vol.Invalid):
-        validate_sql_select("DROP TABLE *")
-
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT * value FROM sqlite_master;",
-        "column": "value",
-        "name": "count_tables",
-    }
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data=config,
-        entry_id="1",
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.count_tables")
-    assert state.state == STATE_UNKNOWN
-
-
 @pytest.mark.parametrize(
     "url,expected_patterns,not_expected_patterns",
     [
@@ -166,14 +188,14 @@ async def test_invalid_query(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_invalid_url(
+async def test_invalid_url_setup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     url: str,
     expected_patterns: str,
     not_expected_patterns: str,
 ):
-    """Test credentials in url is not logged."""
+    """Test invalid db url with redacted credentials."""
     config = {
         "db_url": url,
         "query": "SELECT 5 as value",
@@ -189,8 +211,12 @@ async def test_invalid_url(
     )
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.sql.sensor.sqlalchemy.create_engine",
+        side_effect=SQLAlchemyError(url),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     for pattern in not_expected_patterns:
         assert pattern not in caplog.text
