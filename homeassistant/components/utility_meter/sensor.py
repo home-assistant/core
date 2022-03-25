@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
@@ -182,9 +183,12 @@ async def async_setup_platform(
     for conf in discovery_info.values():
         meter = conf[CONF_METER]
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
+        conf_meter_name = hass.data[DATA_UTILITY][meter].get(
+            CONF_NAME, meter
+        )  # to be deprecated in 2022.7 in favor of conf_meter_name = meter
         conf_sensor_tariff = conf.get(CONF_TARIFF)
         conf_sensor_name = (
-            f"{meter} {conf_sensor_tariff}" if conf_sensor_tariff else meter
+            f"{meter} {conf_sensor_tariff}" if conf_sensor_tariff else conf_meter_name
         )
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
