@@ -14,7 +14,9 @@ from tests.common import MockConfigEntry
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "5.6.7.8"
 TEST_HOST_HA = "9.10.11.12"
+TEST_HOST_ANY = "any"
 TEST_API_KEY = "12ab345c-d67e-8f"
+TEST_API_KEY2 = "f8e76dc5-43ba-21"
 TEST_MAC = "ab:cd:ef:gh"
 TEST_MAC2 = "ij:kl:mn:op"
 TEST_DEVICE_LIST = {TEST_MAC: Mock()}
@@ -76,6 +78,9 @@ def motion_blinds_connect_fixture(mock_get_source_ip):
     ), patch(
         "homeassistant.components.motion_blinds.gateway.MotionGateway.device_list",
         TEST_DEVICE_LIST,
+    ), patch(
+        "homeassistant.components.motion_blinds.gateway.MotionGateway.mac",
+        TEST_MAC,
     ), patch(
         "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_1,
@@ -362,3 +367,45 @@ async def test_options_flow(hass):
     assert config_entry.options == {
         const.CONF_WAIT_FOR_PUSH: False,
     }
+
+
+async def test_change_connection_settings(hass):
+    """Test changing connection settings by issuing a second user config flow."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_MAC,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_API_KEY: TEST_API_KEY,
+            const.CONF_INTERFACE: TEST_HOST_HA,
+        },
+        title=DEFAULT_GATEWAY_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST2},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: TEST_API_KEY2, const.CONF_INTERFACE: TEST_HOST_ANY},
+    )
+
+    assert result["type"] == "abort"
+    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.data[CONF_API_KEY] == TEST_API_KEY2
+    assert config_entry.data[const.CONF_INTERFACE] == TEST_HOST_ANY

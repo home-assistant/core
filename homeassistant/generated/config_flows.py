@@ -98,6 +98,7 @@ FLOWS = {
         "ezviz",
         "faa_delays",
         "fibaro",
+        "filesize",
         "fireservicerota",
         "fivem",
         "fjaraskupan",
