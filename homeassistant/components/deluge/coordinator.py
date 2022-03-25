@@ -53,7 +53,7 @@ class DelugeDataUpdateCoordinator(DataUpdateCoordinator):
             )
         except (
             ConnectionRefusedError,
-            socket.timeout,  # pylint:disable=no-member
+            socket.timeout,
             SSLError,
             FailedToReconnectException,
         ) as ex:
