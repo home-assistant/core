@@ -308,6 +308,8 @@ tests/components/fan/* @home-assistant/core
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
 tests/components/file/* @fabaff
+homeassistant/components/filesize/* @gjohansson-ST
+tests/components/filesize/* @gjohansson-ST
 homeassistant/components/filter/* @dgomes
 tests/components/filter/* @dgomes
 homeassistant/components/fireservicerota/* @cyberjunky
