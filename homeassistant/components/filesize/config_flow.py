@@ -54,6 +54,7 @@ class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
             except NotAllowedError:
                 errors["base"] = "not_allowed"
             else:
+                fullpath = str(get_path.absolute())            
                 await self.async_set_unique_id(fullpath)
                 self._abort_if_unique_id_configured()
 
