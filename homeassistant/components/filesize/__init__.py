@@ -18,16 +18,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
 
     path = entry.data[CONF_FILE_PATH]
-    try:
-        await hass.async_add_executor_job(pathlib.Path, path)
-    except OSError as error:
-        _LOGGER.error("Can not access file %s, error %s", path, error)
-        raise ConfigEntryNotReady(
-            f"Can not access file {path}, error {error}"
-        ) from error
+    get_path = await hass.async_add_executor_job(pathlib.Path, path)
+
+    if not get_path.exists() and not get_path.is_file():
+        raise ConfigEntryNotReady(f"Can not access file {path}")
 
     if not hass.config.is_allowed_path(path):
-        _LOGGER.error("Filepath %s is not valid or allowed", path)
         raise ConfigEntryNotReady(f"Filepath {path} is not valid or allowed")
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

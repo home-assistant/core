@@ -1,6 +1,5 @@
 """The tests for the filesize sensor."""
 import os
-from unittest.mock import patch
 
 from homeassistant.const import CONF_FILE_PATH, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -19,25 +18,6 @@ async def test_invalid_path(
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id=TEST_FILE, data={CONF_FILE_PATH: TEST_FILE}
     )
-
-    state = hass.states.get("sensor." + TEST_FILE_NAME)
-    assert not state
-
-
-async def test_cannot_access_file(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test that an invalid path is caught."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.filesize.sensor.pathlib",
-        side_effect=OSError("Can not access"),
-    ):
-        hass.config_entries.async_update_entry(
-            mock_config_entry, unique_id=TEST_FILE, data={CONF_FILE_PATH: TEST_FILE}
-        )
-        await hass.async_block_till_done()
 
     state = hass.states.get("sensor." + TEST_FILE_NAME)
     assert not state

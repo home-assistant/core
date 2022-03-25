@@ -59,14 +59,11 @@ async def async_setup_entry(
     """Set up the platform from config entry."""
 
     path = entry.data[CONF_FILE_PATH]
-    try:
-        get_path = await hass.async_add_executor_job(pathlib.Path, path)
-        fullpath = str(get_path.absolute())
-    except OSError as error:
-        _LOGGER.error("Can not access file %s, error %s", path, error)
-        return
+    get_path = await hass.async_add_executor_job(pathlib.Path, path)
+    fullpath = str(get_path.absolute())
 
-    async_add_entities([FilesizeEntity(fullpath, entry.entry_id)], True)
+    if get_path.exists() and get_path.is_file():
+        async_add_entities([FilesizeEntity(fullpath, entry.entry_id)], True)
 
 
 class FilesizeEntity(SensorEntity):
