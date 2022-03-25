@@ -17,7 +17,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
-AUXILIARY = "opentherm"
+AUXILIARY = "1cbf783bb11e4a7c8a6843dee3a86927"  # Opentherm device_id for mock
 
 
 async def test_load_unload_config_entry(
