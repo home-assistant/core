@@ -591,6 +591,7 @@ homeassistant/components/yandex_transport/* @rishatik92 @devbis
 homeassistant/components/yeelight/* @rytilahti @zewelor @shenxn @starkillerOG
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yi/* @bachya
+homeassistant/components/yolink/* @YoSmart-Inc
 homeassistant/components/youless/* @gjong
 homeassistant/components/zeroconf/* @bdraco
 homeassistant/components/zerproc/* @emlove
