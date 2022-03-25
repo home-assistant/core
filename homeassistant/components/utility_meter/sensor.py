@@ -182,6 +182,10 @@ async def async_setup_platform(
     for conf in discovery_info.values():
         meter = conf[CONF_METER]
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
+        conf_sensor_tariff = conf.get(CONF_TARIFF)
+        conf_sensor_name = (
+            f"{meter} {conf_sensor_tariff}" if conf_sensor_tariff else meter
+        )
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
         conf_meter_delta_values = hass.data[DATA_UTILITY][meter][
@@ -199,7 +203,7 @@ async def async_setup_platform(
             delta_values=conf_meter_delta_values,
             meter_offset=conf_meter_offset,
             meter_type=conf_meter_type,
-            name=conf.get(CONF_NAME),
+            name=conf_sensor_name,
             net_consumption=conf_meter_net_consumption,
             parent_meter=meter,
             source_entity=conf_meter_source,
@@ -248,7 +252,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._last_period = Decimal(0)
         self._last_reset = dt_util.utcnow()
         self._collecting = None
-        self._name = f"{parent_meter} {tariff}" if tariff else parent_meter
+        self._name = name
         self._unit_of_measurement = None
         self._period = meter_type
         if meter_type is not None:
@@ -265,7 +269,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._sensor_net_consumption = net_consumption
         self._tariff = tariff
         self._tariff_entity = tariff_entity
-        self._attr_unique_id = f"utility_meter{parent_meter}{tariff}"
+        self._attr_unique_id = f"utility_meter_{parent_meter}_{tariff}"
 
     def start(self, unit):
         """Initialize unit and state upon source initial update."""
