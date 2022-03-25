@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
-from rabbitair import Model, State
+from rabbitair import Model
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo
@@ -23,7 +23,7 @@ MODELS = {
 }
 
 
-class RabbitAirBaseEntity(CoordinatorEntity[State]):
+class RabbitAirBaseEntity(CoordinatorEntity[RabbitAirDataUpdateCoordinator]):
     """Base class for Rabbit Air entity."""
 
     def __init__(
@@ -54,8 +54,7 @@ class RabbitAirBaseEntity(CoordinatorEntity[State]):
     async def _set_state(self, **kwargs: Any) -> None:
         """Change the state of the device."""
         _LOGGER.debug("Set state %s", kwargs)
-        coordinator = cast(RabbitAirDataUpdateCoordinator, self.coordinator)
-        await coordinator.device.set_state(**kwargs)
+        await self.coordinator.device.set_state(**kwargs)
         # Force polling of the device, because changing one parameter often
         # causes other parameters to change as well. By getting updated status
         # we provide a better user experience, especially if the default
