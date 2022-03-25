@@ -86,7 +86,9 @@ INTEGRATION_LOAD_EXCEPTIONS = (
 )
 
 DEFAULT_CONFIG = f"""
-# Configure a default setup of Home Assistant (frontend, api, etc)
+# Load a default set of integrations. This is a meta-component. It can be removed
+# however take care; you may strongly desire the 'frontend' integration, for example.
+# Documentation: https://www.home-assistant.io/integrations/default_config/
 default_config:
 
 # Text to speech
