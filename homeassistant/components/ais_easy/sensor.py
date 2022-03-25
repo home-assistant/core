@@ -76,7 +76,7 @@ class AisEasySensor(Entity):
     @property
     def name(self):
         """Funkcja zwracająca nazwę sensora."""
-        return "Status PLC"
+        return "Sensor " + self._number
 
     @property
     def state(self):
@@ -88,7 +88,7 @@ class AisEasySensor(Entity):
     @property
     def unit_of_measurement(self):
         """Funkcja zwracająca jednostkę miary sensora."""
-        return "info"
+        return ""
 
     @property
     def icon(self):
@@ -104,14 +104,14 @@ class AisEasySensor(Entity):
             "Authorization": "Basic %s" % encoded_credentials,
             "Content-Type": "application/json",
         }
-        url = "http://" + self._host + "/api/get/data?elm=STATE"
+        url = "http://" + self._host + "/api/get/data?elm=AI(" + self._number + ")"
 
         try:
             with async_timeout.timeout(15):
                 ws_resp = await web_session.get(url, headers=header)
                 info = await ws_resp.text()
                 info_json = json.loads(info)
-                return info_json["SYSINFO"]["STATE"]
+                return info_json["OPERANDS"]["AISINGLE"][0]["V"]
 
         except Exception as e:
             _LOGGER.error("Ask Easy error: " + str(e))
