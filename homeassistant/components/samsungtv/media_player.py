@@ -10,7 +10,7 @@ from typing import Any
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.client_factory import UpnpFactory
-from async_upnp_client.exceptions import UpnpConnectionError
+from async_upnp_client.exceptions import UpnpActionResponseError, UpnpConnectionError
 import voluptuous as vol
 from wakeonlan import send_magic_packet
 
@@ -303,9 +303,21 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
-        if service := self._get_upnp_service(UpnpServiceType.RenderingControl):
+        service = self._get_upnp_service(UpnpServiceType.RenderingControl)
+        if service is None:
+            LOGGER.info(
+                "Upnp service %s is not available on %s",
+                UpnpServiceType.RenderingControl,
+                self._host,
+            )
+            return
+        try:
             await service.action("SetVolume").async_call(
                 InstanceID=0, Channel="Master", DesiredVolume=int(volume * 100)
+            )
+        except UpnpActionResponseError as err:
+            LOGGER.warning(
+                "Unable to set volume level on %s: %s", self._host, err.__repr__()
             )
 
     async def async_volume_up(self) -> None:
