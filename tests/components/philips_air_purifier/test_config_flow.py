@@ -1,6 +1,8 @@
 """Test the Philips Air Purifier config flow."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.philips_air_purifier.config_flow import CannotConnect
 from homeassistant.components.philips_air_purifier.const import DOMAIN
@@ -17,8 +19,12 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.philips_air_purifier.config_flow.PlaceholderHub.test_connection",
-        return_value=True,
+        "homeassistant.components.philips_air_purifier.config_flow.ReliableClient.test_connection",
+        return_value={
+            "name": "Air Purifier",
+            "device_id": "fake-device-id",
+            "model": "AC2889/10",
+        },
     ), patch(
         "homeassistant.components.philips_air_purifier.async_setup_entry",
         return_value=True,
@@ -32,22 +38,29 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Air Purifier"
     assert result2["data"] == {
         "host": "1.1.1.1",
+        "model": "AC2889/10",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "exception,expected_err",
+    [(CannotConnect, "cannot_connect"), (RuntimeError("unknown"), "unknown")],
+)
+async def test_form_test_connection_error(
+    hass: HomeAssistant, exception, expected_err
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.philips_air_purifier.config_flow.PlaceholderHub.test_connection",
-        side_effect=CannotConnect,
+        "homeassistant.components.philips_air_purifier.config_flow.ReliableClient.test_connection",
+        side_effect=exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -57,4 +70,4 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": expected_err}

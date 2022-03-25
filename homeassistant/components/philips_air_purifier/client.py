@@ -9,7 +9,10 @@ import enum
 import logging
 from typing import Any
 
+import async_timeout
 from phipsair import CoAPClient
+
+from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +89,14 @@ class Status:
         )
 
 
+class CannotConnect(HomeAssistantError):
+    """
+    Error to indicate we cannot connect.
+
+    Currently only used by connection test.
+    """
+
+
 class ReliableClient:
     """
     ReliableClient attempts to provide reliable communication with the Air Purifier.
@@ -114,6 +125,34 @@ class ReliableClient:
         # 5 minutes should be enough to not time out when the purifier is turned off.
         self._status_timeout = timedelta(minutes=5)
         self._shutdown: asyncio.Future = asyncio.Future()
+
+    @staticmethod
+    async def test_connection(host: str, port: int):
+        """
+        Test if we can connect to the purifier by requesting it's status.
+
+        Returns the device's name, ID, and model.
+        """
+
+        try:
+            async with async_timeout.timeout(20):
+                client = await CoAPClient.create(host=host, port=port)
+                try:
+                    status = await client.get_status()
+                finally:
+                    await client.shutdown()
+        except Exception as ex:
+            _LOGGER.error("Philips Air Purifier: Failed to connect: %s", repr(ex))
+            raise CannotConnect() from ex
+
+        if "DeviceId" in status and "name" in status:
+            return {
+                "name": status["name"],
+                "device_id": status["DeviceId"],
+                "model": status["modelid"],
+            }
+
+        raise CannotConnect()
 
     def start(self) -> None:
         """
