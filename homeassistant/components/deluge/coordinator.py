@@ -58,7 +58,7 @@ class DelugeDataUpdateCoordinator(DataUpdateCoordinator):
             FailedToReconnectException,
         ) as ex:
             raise UpdateFailed(f"Connection to Deluge Daemon Lost: {ex}") from ex
-        except Exception as ex:  # pylint:disable=broad-except
+        except Exception as ex:
             if type(ex).__name__ == "BadLoginError":
                 raise ConfigEntryAuthFailed(
                     "Credentials for Deluge client are not valid"
