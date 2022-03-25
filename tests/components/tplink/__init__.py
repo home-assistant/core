@@ -2,7 +2,14 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kasa import SmartBulb, SmartDevice, SmartDimmer, SmartPlug, SmartStrip
+from kasa import (
+    SmartBulb,
+    SmartDevice,
+    SmartDimmer,
+    SmartLightStrip,
+    SmartPlug,
+    SmartStrip,
+)
 from kasa.exceptions import SmartDeviceException
 from kasa.protocol import TPLinkSmartHomeProtocol
 
@@ -40,6 +47,10 @@ def _mocked_bulb() -> SmartBulb:
     bulb.is_strip = False
     bulb.is_plug = False
     bulb.is_dimmer = False
+    bulb.is_light_strip = False
+    bulb.has_effects = False
+    bulb.effect = None
+    bulb.effect_list = None
     bulb.hsv = (10, 30, 5)
     bulb.device_id = MAC_ADDRESS
     bulb.valid_temperature_range.min = 4000
@@ -52,6 +63,47 @@ def _mocked_bulb() -> SmartBulb:
     bulb.set_color_temp = AsyncMock()
     bulb.protocol = _mock_protocol()
     return bulb
+
+
+class MockedSmartLightStrip(SmartLightStrip):
+    """Mock a SmartLightStrip."""
+
+    def __new__(cls, *args, **kwargs):
+        """Mock a SmartLightStrip that will pass an isinstance check."""
+        return MagicMock(spec=cls)
+
+
+def _mocked_smart_light_strip() -> SmartLightStrip:
+    strip = MockedSmartLightStrip()
+    strip.update = AsyncMock()
+    strip.mac = MAC_ADDRESS
+    strip.alias = ALIAS
+    strip.model = MODEL
+    strip.host = IP_ADDRESS
+    strip.brightness = 50
+    strip.color_temp = 4000
+    strip.is_color = True
+    strip.is_strip = False
+    strip.is_plug = False
+    strip.is_dimmer = False
+    strip.is_light_strip = True
+    strip.has_effects = True
+    strip.effect = {"name": "Effect1", "enable": 1}
+    strip.effect_list = ["Effect1", "Effect2"]
+    strip.hsv = (10, 30, 5)
+    strip.device_id = MAC_ADDRESS
+    strip.valid_temperature_range.min = 4000
+    strip.valid_temperature_range.max = 9000
+    strip.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
+    strip.turn_off = AsyncMock()
+    strip.turn_on = AsyncMock()
+    strip.set_brightness = AsyncMock()
+    strip.set_hsv = AsyncMock()
+    strip.set_color_temp = AsyncMock()
+    strip.set_effect = AsyncMock()
+    strip.set_custom_effect = AsyncMock()
+    strip.protocol = _mock_protocol()
+    return strip
 
 
 def _mocked_dimmer() -> SmartDimmer:
@@ -67,6 +119,9 @@ def _mocked_dimmer() -> SmartDimmer:
     dimmer.is_strip = False
     dimmer.is_plug = False
     dimmer.is_dimmer = True
+    dimmer.is_light_strip = False
+    dimmer.effect = None
+    dimmer.effect_list = None
     dimmer.hsv = (10, 30, 5)
     dimmer.device_id = MAC_ADDRESS
     dimmer.valid_temperature_range.min = 4000

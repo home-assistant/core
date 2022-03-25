@@ -39,6 +39,7 @@ base_platforms: &base_platforms
   - homeassistant/components/stt/**
   - homeassistant/components/switch/**
   - homeassistant/components/tts/**
+  - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
   - homeassistant/components/water_heater/**
   - homeassistant/components/weather/**
@@ -128,6 +129,7 @@ other: &other
 requirements: &requirements
   - .github/workflows/**
   - homeassistant/package_constraints.txt
+  - script/pip_check
   - requirements*.txt
   - setup.cfg
 

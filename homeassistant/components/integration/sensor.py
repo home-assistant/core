@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_METHOD,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TIME_DAYS,
@@ -70,6 +71,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
             vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
             vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
@@ -125,7 +127,7 @@ async def async_setup_platform(
         name=config.get(CONF_NAME),
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE_SENSOR],
-        unique_id=None,
+        unique_id=config.get(CONF_UNIQUE_ID),
         unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT),
         unit_prefix=config[CONF_UNIT_PREFIX],
         unit_time=config[CONF_UNIT_TIME],

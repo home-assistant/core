@@ -171,6 +171,7 @@ async def ws_get_list_statistic_ids(
     statistic_ids = await get_instance(hass).async_add_executor_job(
         list_statistic_ids,
         hass,
+        None,
         msg.get("statistic_type"),
     )
     connection.send_result(msg["id"], statistic_ids)
@@ -363,7 +364,14 @@ class Filters:
         """Generate the entity filter query."""
         includes = []
         if self.included_domains:
-            includes.append(history_models.States.domain.in_(self.included_domains))
+            includes.append(
+                or_(
+                    *[
+                        history_models.States.entity_id.like(f"{domain}.%")
+                        for domain in self.included_domains
+                    ]
+                ).self_group()
+            )
         if self.included_entities:
             includes.append(history_models.States.entity_id.in_(self.included_entities))
         for glob in self.included_entity_globs:
@@ -371,7 +379,14 @@ class Filters:
 
         excludes = []
         if self.excluded_domains:
-            excludes.append(history_models.States.domain.in_(self.excluded_domains))
+            excludes.append(
+                or_(
+                    *[
+                        history_models.States.entity_id.like(f"{domain}.%")
+                        for domain in self.excluded_domains
+                    ]
+                ).self_group()
+            )
         if self.excluded_entities:
             excludes.append(history_models.States.entity_id.in_(self.excluded_entities))
         for glob in self.excluded_entity_globs:
