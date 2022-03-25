@@ -191,7 +191,7 @@ aiohomekit==0.7.16
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.3.0
+aiohue==4.4.1
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -1341,7 +1341,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.6
+py-synologydsm-api==1.0.7
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -2182,7 +2182,7 @@ sense-hat==2.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.10.2
+sense_energy==0.10.3
 
 # homeassistant.components.sentry
 sentry-sdk==1.5.5
