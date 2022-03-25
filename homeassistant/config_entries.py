@@ -1455,7 +1455,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     @callback
-    def async_create_entry(  # pylint: disable=arguments-differ
+    def async_create_entry(
         self,
         *,
         title: str,
