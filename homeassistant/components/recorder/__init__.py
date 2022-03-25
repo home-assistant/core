@@ -227,7 +227,7 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     return hass.data[DATA_INSTANCE].entity_filter(entity_id)
 
 
-def run_information(hass, point_in_time: datetime | None = None):
+def run_information(hass, point_in_time: datetime | None = None) -> RecorderRuns | None:
     """Return information about current run.
 
     There is also the run that covers point_in_time.
@@ -240,7 +240,9 @@ def run_information(hass, point_in_time: datetime | None = None):
         return run_information_with_session(session, point_in_time)
 
 
-def run_information_from_instance(hass, point_in_time: datetime | None = None):
+def run_information_from_instance(
+    hass, point_in_time: datetime | None = None
+) -> RecorderRuns | None:
     """Return information about current run from the existing instance.
 
     Does not query the database for older runs.
@@ -249,9 +251,12 @@ def run_information_from_instance(hass, point_in_time: datetime | None = None):
 
     if point_in_time is None or point_in_time > ins.recording_start:
         return ins.run_info
+    return None
 
 
-def run_information_with_session(session, point_in_time: datetime | None = None):
+def run_information_with_session(
+    session, point_in_time: datetime | None = None
+) -> RecorderRuns | None:
     """Return information about current run from the database."""
     recorder_runs = RecorderRuns
 
