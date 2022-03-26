@@ -58,7 +58,9 @@ from .const import (
     TIMEOUT_WEBSOCKET,
     VALUE_CONF_ID,
     VALUE_CONF_NAME,
+    WEBSOCKET_NO_SSL_PORT,
     WEBSOCKET_PORTS,
+    WEBSOCKET_SSL_PORT,
 )
 
 KEY_PRESS_TIMEOUT = 1.2
@@ -84,11 +86,23 @@ async def async_get_device_info(
     if bridge and bridge.port:
         return bridge.port, bridge.method, await bridge.async_device_info()
 
-    # Try websocket ports
-    for port in WEBSOCKET_PORTS:
-        bridge = SamsungTVBridge.get_bridge(hass, METHOD_WEBSOCKET, host, port)
-        if info := await bridge.async_device_info():
-            return port, METHOD_WEBSOCKET, info
+    # Try non-ssl websocket ports
+    bridge = SamsungTVBridge.get_bridge(
+        hass, METHOD_WEBSOCKET, host, WEBSOCKET_NO_SSL_PORT
+    )
+    if info := await bridge.async_device_info():
+        encrypted_bridge = SamsungTVEncryptedBridge(
+            hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
+        )
+        if await encrypted_bridge.async_can_connect():
+            return ENCRYPTED_WEBSOCKET_PORT, host, info
+        return WEBSOCKET_NO_SSL_PORT, METHOD_WEBSOCKET, info
+
+    bridge = SamsungTVBridge.get_bridge(
+        hass, METHOD_WEBSOCKET, host, WEBSOCKET_SSL_PORT
+    )
+    if info := await bridge.async_device_info():
+        return WEBSOCKET_SSL_PORT, METHOD_WEBSOCKET, info
 
     # Try legacy port
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
@@ -636,6 +650,46 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
         LOGGER.debug("Checking if TV %s is on using websocket", self.host)
         if remote := await self._async_get_remote():
             return remote.is_alive()
+        return False
+
+    async def async_can_connect(self) -> bool:
+        """Check if the encrypted port is responding."""
+        config = {
+            CONF_NAME: VALUE_CONF_NAME,
+            CONF_HOST: self.host,
+            CONF_METHOD: self.method,
+            CONF_PORT: ENCRYPTED_WEBSOCKET_PORT,
+            CONF_TIMEOUT: TIMEOUT_WEBSOCKET,
+        }
+
+        try:
+            LOGGER.debug("Try config: %s", config)
+            async with SamsungTVEncryptedWSAsyncRemote(
+                host=self.host,
+                port=ENCRYPTED_WEBSOCKET_PORT,
+                web_session=async_get_clientsession(self.hass),
+                token="",
+                session_id="",
+                timeout=TIMEOUT_WEBSOCKET,
+            ) as remote:
+                # TODO: move this into the upstream lib # pylint: disable=fixme
+                response = (
+                    await remote._web_session.get(  # pylint: disable=protected-access
+                        remote._format_rest_url(  # pylint: disable=protected-access
+                            "socket.io/1"
+                        ),
+                        timeout=TIMEOUT_WEBSOCKET,
+                    )
+                )
+        except WebSocketException as err:
+            LOGGER.debug("Working but unsupported config: %s, error: %s", config, err)
+        except (OSError, AsyncioTimeoutError, ConnectionFailure) as err:
+            LOGGER.debug("Failing config: %s, error: %s", config, err)
+        else:
+            if response.status == 200:
+                LOGGER.debug("Working config: %s", config)
+                return True
+
         return False
 
     async def async_try_connect(self) -> str:
