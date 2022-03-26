@@ -17,6 +17,7 @@ from samsungtvws.event import ED_INSTALLED_APP_EVENT
 from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
 
+from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
 import homeassistant.util.dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_WIFI
@@ -83,6 +84,31 @@ def rest_api_fixture() -> Mock:
             SAMPLE_DEVICE_INFO_WIFI
         )
         yield rest_api_class.return_value
+
+
+@pytest.fixture(name="rest_api_non_ssl_only")
+def rest_api_fixture_non_ssl_only() -> Mock:
+    """Patch the samsungtvws SamsungTVAsyncRest non-ssl only."""
+
+    class MockSamsungTVAsyncRest:
+        """Mock for a MockSamsungTVAsyncRest."""
+
+        def __init__(self, host, session, port, timeout):
+            """Mock a MockSamsungTVAsyncRest."""
+            self.port = port
+            self.host = host
+
+        async def rest_device_info(self):
+            """Mock rest_device_info to fail for ssl and work for non-ssl."""
+            if self.port == WEBSOCKET_SSL_PORT:
+                raise ResponseError
+            return SAMPLE_DEVICE_INFO_WIFI
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
+        MockSamsungTVAsyncRest,
+    ):
+        yield
 
 
 @pytest.fixture(name="rest_api_failing")

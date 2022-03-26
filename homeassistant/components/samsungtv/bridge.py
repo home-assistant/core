@@ -54,6 +54,7 @@ from .const import (
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
+    SUCCESSFUL_RESULTS,
     TIMEOUT_REQUEST,
     TIMEOUT_WEBSOCKET,
     VALUE_CONF_ID,
@@ -80,19 +81,9 @@ def mac_from_device_info(info: dict[str, Any]) -> str | None:
 
 async def async_get_device_info(
     hass: HomeAssistant,
-    bridge: SamsungTVBridge | None,
     host: str,
 ) -> tuple[str, int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
-    # Bridge is defined
-    if bridge and bridge.port:
-        return (
-            RESULT_SUCCESS,
-            bridge.port,
-            bridge.method,
-            await bridge.async_device_info(),
-        )
-
     # Try ssl websocket port
     bridge = SamsungTVBridge.get_bridge(
         hass, METHOD_WEBSOCKET, host, WEBSOCKET_SSL_PORT
@@ -109,13 +100,13 @@ async def async_get_device_info(
             "Fetching rest info via non-ssl was successful: %s, checking for encrypted",
             info,
         )
-
         encrypted_bridge = SamsungTVEncryptedBridge(
             hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
         )
-        if await encrypted_bridge.async_try_connect() != RESULT_CANNOT_CONNECT:
+        result = await encrypted_bridge.async_try_connect()
+        if result != RESULT_CANNOT_CONNECT:
             return (
-                RESULT_SUCCESS,
+                result,
                 ENCRYPTED_WEBSOCKET_PORT,
                 METHOD_ENCRYPTED_WEBSOCKET,
                 info,
@@ -125,7 +116,7 @@ async def async_get_device_info(
     # Try legacy port
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
     result = await bridge.async_try_connect()
-    if result in (RESULT_SUCCESS, RESULT_AUTH_MISSING):
+    if result in SUCCESSFUL_RESULTS:
         return result, LEGACY_PORT, METHOD_LEGACY, await bridge.async_device_info()
 
     # Failed to get info
@@ -692,13 +683,14 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 timeout=TIMEOUT_REQUEST,
             ) as remote:
                 await remote.start_listening()
-                LOGGER.debug("Working config: %s", config)
-                return RESULT_SUCCESS
         except WebSocketException as err:
             LOGGER.debug("Working but unsupported config: %s, error: %s", config, err)
             return RESULT_NOT_SUPPORTED
         except (OSError, AsyncioTimeoutError, ConnectionFailure) as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
+        else:
+            LOGGER.debug("Working config: %s", config)
+            return RESULT_SUCCESS
 
         return RESULT_CANNOT_CONNECT
 

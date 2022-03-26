@@ -269,6 +269,58 @@ async def test_user_websocket(hass: HomeAssistant) -> None:
         assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
+@pytest.mark.usefixtures("remoteencws", "rest_api_non_ssl_only")
+async def test_user_encrypted_websocket(
+    hass: HomeAssistant,
+) -> None:
+    """Test starting a flow from ssdp for a supported device populates the mac."""
+    # show form
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.SamsungTVEncryptedWSAsyncAuthenticator",
+        autospec=True,
+    ) as authenticator_mock:
+        authenticator_mock.return_value.try_pin.side_effect = [
+            None,
+            "037739871315caef138547b03e348b72",
+        ]
+        authenticator_mock.return_value.get_session_id_and_close.return_value = "1"
+
+        # entry was added
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result2["type"] == "form"
+        assert result2["step_id"] == "encrypted_pairing"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], user_input={"pin": "invalid"}
+        )
+        assert result3["step_id"] == "encrypted_pairing"
+        assert result3["errors"] == {"base": "invalid_pin"}
+
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"], user_input={"pin": "1234"}
+        )
+
+    assert result4["type"] == "create_entry"
+    assert result4["title"] == "Living Room (82GXARRS)"
+    assert result4["data"][CONF_HOST] == "fake_host"
+    assert result4["data"][CONF_NAME] == "Living Room"
+    assert result4["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result4["data"][CONF_MANUFACTURER] == "Samsung"
+    assert result4["data"][CONF_MODEL] == "82GXARRS"
+    assert result4["data"][CONF_SSDP_LOCATION] is None
+    assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
+    assert result4["data"][CONF_SESSION_ID] == "1"
+    assert result4["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
 @pytest.mark.usefixtures("remotews")
 async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
     """Test starting a flow by user with authentication."""
@@ -484,6 +536,75 @@ async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["data"][CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+@pytest.mark.usefixtures("remoteencws", "rest_api_non_ssl_only")
+async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_location(
+    hass: HomeAssistant,
+) -> None:
+    """Test starting a flow from ssdp for a supported device populates the mac."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.SamsungTVEncryptedWSAsyncAuthenticator",
+        autospec=True,
+    ) as authenticator_mock:
+        authenticator_mock.return_value.try_pin.side_effect = [
+            None,
+            "037739871315caef138547b03e348b72",
+        ]
+        authenticator_mock.return_value.get_session_id_and_close.return_value = "1"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result2["step_id"] == "encrypted_pairing"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], user_input={"pin": "invalid"}
+        )
+        assert result3["step_id"] == "encrypted_pairing"
+        assert result3["errors"] == {"base": "invalid_pin"}
+
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"], user_input={"pin": "1234"}
+        )
+
+    assert result4["type"] == "create_entry"
+    assert result4["title"] == "Living Room (82GXARRS)"
+    assert result4["data"][CONF_HOST] == "fake_host"
+    assert result4["data"][CONF_NAME] == "Living Room"
+    assert result4["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result4["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
+    assert result4["data"][CONF_MODEL] == "82GXARRS"
+    assert result4["data"][CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
+    assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
+    assert result4["data"][CONF_SESSION_ID] == "1"
+    assert result4["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+@pytest.mark.usefixtures("rest_api_non_ssl_only")
+async def test_ssdp_encrypted_websocket_not_supported(
+    hass: HomeAssistant,
+) -> None:
+    """Test starting a flow from ssdp for an unsupported device populates the mac."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+        side_effect=WebSocketException,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 async def test_ssdp_websocket_cannot_connect(
@@ -758,7 +879,7 @@ async def test_import_unknown_host(hass: HomeAssistant):
     assert result["reason"] == RESULT_UNKNOWN_HOST
 
 
-@pytest.mark.usefixtures("remote", "remotews", "rest_api")
+@pytest.mark.usefixtures("remotews", "rest_api_non_ssl_only")
 async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     """Test starting a flow from dhcp."""
     # confirm to add the entry
