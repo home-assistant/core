@@ -92,9 +92,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._id: int | None = None
         self._bridge: SamsungTVBridge | None = None
         self._device_info: dict[str, Any] | None = None
-        self._encrypted_authenticator: SamsungTVEncryptedWSAsyncAuthenticator | None = (
-            None
-        )
+        self._authenticator: SamsungTVEncryptedWSAsyncAuthenticator | None = None
 
     def _base_config_entry(self) -> dict[str, Any]:
         """Generate the base config entry without the method."""
@@ -155,23 +153,21 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _try_connect(self) -> None:
         """Try to connect and check auth."""
-        method, _info = await self._async_get_device_info_and_method()
+        method, _ = await self._async_get_device_info_and_method()
         if method is None:
             LOGGER.debug("No working config found for %s", self._host)
             raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
         LOGGER.debug("Try connect determined method to use: %s", method)
         self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
         if self._bridge.method != METHOD_WEBSOCKET:
-            # The websocket method needs to popup an auth request
-            # legacy does not need auth
-            # and encrypted gets handled in the next step
+            # Websocket method needs to popup an auth request
+            # Legacy does not need auth
+            # Encrypted Websocket gets handled in the next step
             return
         result = await self._bridge.async_try_connect()
         if result == RESULT_SUCCESS:
             return
-        if result != RESULT_CANNOT_CONNECT:
-            raise data_entry_flow.AbortFlow(result)
-        raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
+        raise data_entry_flow.AbortFlow(result)
 
     async def _async_get_device_info_and_method(
         self,
@@ -275,17 +271,17 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle a encrypted pairing."""
-        assert self._bridge is not None
         assert self._host is not None
         await self._async_start_encrypted_pairing(self._host)
-        assert self._encrypted_authenticator is not None
+        assert self._authenticator is not None
         errors: dict[str, str] = {}
 
-        if user_input is not None and (pin := user_input.get("pin")):
-            if token := await self._encrypted_authenticator.try_pin(pin):
-                session_id = (
-                    await self._encrypted_authenticator.get_session_id_and_close()
-                )
+        if user_input is not None:
+            if (
+                (pin := user_input.get("pin"))
+                and (token := await self._authenticator.try_pin(pin))
+                and (session_id := await self._authenticator.get_session_id_and_close())
+            ):
                 return self.async_create_entry(
                     data={
                         **self._base_config_entry(),
@@ -510,12 +506,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_start_encrypted_pairing(self, host: str) -> None:
-        if self._encrypted_authenticator is None:
-            self._encrypted_authenticator = SamsungTVEncryptedWSAsyncAuthenticator(
+        if self._authenticator is None:
+            self._authenticator = SamsungTVEncryptedWSAsyncAuthenticator(
                 host,
                 web_session=async_get_clientsession(self.hass),
             )
-            await self._encrypted_authenticator.start_pairing()
+            await self._authenticator.start_pairing()
 
     async def async_step_reauth_confirm_encrypted(
         self, user_input: dict[str, Any] | None = None
@@ -524,20 +520,21 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         assert self._reauth_entry
         await self._async_start_encrypted_pairing(self._reauth_entry.data[CONF_HOST])
-        assert self._encrypted_authenticator is not None
+        assert self._authenticator is not None
 
-        if user_input is not None and (pin := user_input.get("pin")):
-            if token := await self._encrypted_authenticator.try_pin(pin):
-                session_id = (
-                    await self._encrypted_authenticator.get_session_id_and_close()
-                )
-                new_data = {
-                    **self._reauth_entry.data,
-                    CONF_TOKEN: token,
-                    CONF_SESSION_ID: session_id,
-                }
+        if user_input is not None:
+            if (
+                (pin := user_input.get("pin"))
+                and (token := await self._authenticator.try_pin(pin))
+                and (session_id := await self._authenticator.get_session_id_and_close())
+            ):
                 self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=new_data
+                    self._reauth_entry,
+                    data={
+                        **self._reauth_entry.data,
+                        CONF_TOKEN: token,
+                        CONF_SESSION_ID: session_id,
+                    },
                 )
                 await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
