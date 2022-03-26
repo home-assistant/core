@@ -82,7 +82,6 @@ class FakeSchedule:
         end_date: datetime.datetime,
     ) -> list[dict[str, Any]]:
         """Get all events in a specific time frame, used by the demo calendar."""
-        _LOGGER.debug(f"Fetching events between {start_date}, {end_date}")
         assert start_date < end_date
         values = []
         for event in self.events:

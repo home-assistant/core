@@ -83,6 +83,7 @@ class CalendarEventListener:
         """Update the set of eligible events."""
         start_date = now
         end_date = now + UPDATE_INTERVAL * 2
+        _LOGGER.debug("Fetching events between %s, %s", start_date, end_date)
         events = await self._entity.async_get_events(self._hass, start_date, end_date)  # type: ignore[no-untyped-call]
 
         def trigger_time_func(event: dict[str, Any]) -> datetime.datetime:
