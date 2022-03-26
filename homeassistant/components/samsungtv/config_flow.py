@@ -86,6 +86,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._ssdp_location: str | None = None
         self._manufacturer: str | None = None
         self._model: str | None = None
+        self._method: str | None = None
         self._name: str | None = None
         self._title: str = ""
         self._id: int | None = None
@@ -152,12 +153,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _try_connect(self) -> None:
         """Try to connect and check auth."""
-        method, info = await async_get_device_info(self.hass, self._bridge, self._host)
+        method, _info = await self._async_get_device_info_and_method()
         if method is None:
             LOGGER.debug("No working config found")
             raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
-        if info is not None:
-            self._device_info = info
         LOGGER.debug("Try connect determined method to use: %s", method)
         self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
         if self._bridge.method != METHOD_WEBSOCKET:
@@ -172,27 +171,35 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise data_entry_flow.AbortFlow(result)
         raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
 
-    async def _async_get_and_check_device_info(self) -> bool:
-        """Try to get the device info."""
+    async def _async_get_device_info_and_method(
+        self,
+    ) -> tuple[str | None, dict[str, Any] | None]:
+        """Get device info and method only once."""
         if self._device_info is None:
             method, info = await async_get_device_info(
                 self.hass, self._bridge, self._host
             )
             if not info:
-                if not method:
-                    LOGGER.debug(
-                        "Samsung host %s is not supported by either %s, %s or %s methods",
-                        self._host,
-                        METHOD_LEGACY,
-                        METHOD_ENCRYPTED_WEBSOCKET,
-                        METHOD_WEBSOCKET,
-                    )
-                    raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
                 LOGGER.debug("Host:%s did not return device info", self._host)
-                return False
+                return None, None
+            self._method = method
             self._device_info = info
-        else:
-            info = self._device_info
+        return self._method, self._device_info
+
+    async def _async_get_and_check_device_info(self) -> bool:
+        """Try to get the device info."""
+        method, info = await self._async_get_device_info_and_method()
+        if not method:
+            LOGGER.debug(
+                "Samsung host %s is not supported by either %s, %s or %s methods",
+                self._host,
+                METHOD_LEGACY,
+                METHOD_ENCRYPTED_WEBSOCKET,
+                METHOD_WEBSOCKET,
+            )
+            raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+        if not info:
+            return False
         dev_info = info.get("device", {})
         assert dev_info is not None
         if (device_type := dev_info.get("type")) != "Samsung SmartTV":
