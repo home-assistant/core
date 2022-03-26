@@ -23,7 +23,12 @@ from samsungtvws.event import (
     MS_ERROR_EVENT,
     parse_installed_app,
 )
-from samsungtvws.exceptions import ConnectionFailure, HttpApiError, ResponseError
+from samsungtvws.exceptions import (
+    ConnectionFailure,
+    HttpApiError,
+    ResponseError,
+    UnauthorizedError,
+)
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
@@ -439,8 +444,11 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     "Working but unsupported config: %s, error: %s", config, err
                 )
                 result = RESULT_NOT_SUPPORTED
-            except (OSError, AsyncioTimeoutError, ConnectionFailure) as err:
-                LOGGER.debug("Failing config: %s, error: %s", config, err)
+            except UnauthorizedError as err:
+                LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
+                return RESULT_AUTH_MISSING
+            except (ConnectionFailure, OSError, AsyncioTimeoutError) as err:
+                LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
         # pylint: disable=useless-else-on-loop
         else:
             if result:
