@@ -418,6 +418,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._reauth_entry
         method = self._reauth_entry.data[CONF_METHOD]
         if user_input is not None:
+            if method == METHOD_ENCRYPTED_WEBSOCKET:
+                return await self.async_step_reauth_confirm_encrypted()
             bridge = SamsungTVBridge.get_bridge(
                 self.hass,
                 method,
@@ -439,11 +441,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors = {"base": RESULT_AUTH_MISSING}
 
         self.context["title_placeholders"] = {"device": self._title}
-        step_id = "reauth_confirm"
-        if method == METHOD_ENCRYPTED_WEBSOCKET:
-            step_id = "reauth_confirm_encrypted"
         return self.async_show_form(
-            step_id=step_id,
+            step_id="reauth_confirm",
             errors=errors,
             description_placeholders={"device": self._title},
         )
