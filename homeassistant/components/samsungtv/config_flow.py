@@ -157,7 +157,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Try to connect and check auth."""
         method, _info = await self._async_get_device_info_and_method()
         if method is None:
-            LOGGER.debug("No working config found")
+            LOGGER.debug("No working config found for %s", self._host)
             raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
         LOGGER.debug("Try connect determined method to use: %s", method)
         self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
@@ -181,7 +181,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _port, method, info = await async_get_device_info(
                 self.hass, self._bridge, self._host
             )
-            if not info:
+            if not method:
                 LOGGER.debug("Host:%s did not return device info", self._host)
                 return None, None
             self._method = method
