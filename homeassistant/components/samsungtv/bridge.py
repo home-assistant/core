@@ -68,6 +68,8 @@ KEY_PRESS_TIMEOUT = 1.2
 ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400"}
 ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
 
+REST_EXCEPTIONS = (HttpApiError, AsyncioTimeoutError, ResponseError)
+
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
     """Extract the mac address from the device info."""
@@ -94,7 +96,7 @@ async def async_get_device_info(
         encrypted_bridge = SamsungTVEncryptedBridge(
             hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
         )
-        if await encrypted_bridge.async_can_connect():
+        if await encrypted_bridge.async_try_connect() != RESULT_CANNOT_CONNECT:
             return ENCRYPTED_WEBSOCKET_PORT, METHOD_ENCRYPTED_WEBSOCKET, info
         return WEBSOCKET_NO_SSL_PORT, METHOD_WEBSOCKET, info
 
@@ -460,7 +462,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 timeout=TIMEOUT_WEBSOCKET,
             )
 
-        with contextlib.suppress(HttpApiError, AsyncioTimeoutError, ResponseError):
+        with contextlib.suppress(*REST_EXCEPTIONS):
             device_info: dict[str, Any] = await rest_api.rest_device_info()
             LOGGER.debug("Device info on %s is: %s", self.host, device_info)
             self._device_info = device_info
@@ -653,46 +655,6 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
             return remote.is_alive()
         return False
 
-    async def async_can_connect(self) -> bool:
-        """Check if the encrypted port is responding."""
-        config = {
-            CONF_NAME: VALUE_CONF_NAME,
-            CONF_HOST: self.host,
-            CONF_METHOD: self.method,
-            CONF_PORT: ENCRYPTED_WEBSOCKET_PORT,
-            CONF_TIMEOUT: TIMEOUT_WEBSOCKET,
-        }
-
-        try:
-            LOGGER.debug("Try config: %s", config)
-            async with SamsungTVEncryptedWSAsyncRemote(
-                host=self.host,
-                port=ENCRYPTED_WEBSOCKET_PORT,
-                web_session=async_get_clientsession(self.hass),
-                token="",
-                session_id="",
-                timeout=TIMEOUT_WEBSOCKET,
-            ) as remote:
-                # TODO: move this into the upstream lib # pylint: disable=fixme
-                response = (
-                    await remote._web_session.get(  # pylint: disable=protected-access
-                        remote._format_rest_url(  # pylint: disable=protected-access
-                            "socket.io/1"
-                        ),
-                        timeout=TIMEOUT_WEBSOCKET,
-                    )
-                )
-        except WebSocketException as err:
-            LOGGER.debug("Working but unsupported config: %s, error: %s", config, err)
-        except (OSError, AsyncioTimeoutError, ConnectionFailure) as err:
-            LOGGER.debug("Failing config: %s, error: %s", config, err)
-        else:
-            if response.status == 200:
-                LOGGER.debug("Working config: %s", config)
-                return True
-
-        return False
-
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
         self.port = ENCRYPTED_WEBSOCKET_PORT
@@ -742,7 +704,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 timeout=TIMEOUT_WEBSOCKET,
             )
 
-        with contextlib.suppress(HttpApiError, AsyncioTimeoutError, ResponseError):
+        with contextlib.suppress(*REST_EXCEPTIONS):
             device_info: dict[str, Any] = await rest_api.rest_device_info()
             LOGGER.debug("Device info on %s is: %s", self.host, device_info)
             self._device_info = device_info
