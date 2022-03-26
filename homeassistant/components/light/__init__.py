@@ -295,9 +295,7 @@ def filter_turn_on_params(light, params):
     if not supported_features & SUPPORT_WHITE_VALUE:
         params.pop(ATTR_WHITE_VALUE, None)
 
-    supported_color_modes = (
-        light._light_internal_supported_color_modes  # pylint:disable=protected-access
-    )
+    supported_color_modes = light._light_internal_supported_color_modes
     if not brightness_supported(supported_color_modes):
         params.pop(ATTR_BRIGHTNESS, None)
     if COLOR_MODE_COLOR_TEMP not in supported_color_modes:
@@ -368,9 +366,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
-        legacy_supported_color_modes = (
-            light._light_internal_supported_color_modes  # pylint: disable=protected-access
-        )
+        legacy_supported_color_modes = light._light_internal_supported_color_modes
         supported_color_modes = light.supported_color_modes
         # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
         # for legacy lights
