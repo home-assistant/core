@@ -57,8 +57,11 @@ async def async_setup_platform(
 ) -> None:
     """Set up the SQL sensor platform."""
     _LOGGER.warning(
-        # Config flow added in Home Assistant Core 2022.4, remove import flow in 2022.8
-        "Loading SQL via platform setup is deprecated; Please remove it from your configuration"
+        # SQL config flow added in 2022.4 and should be removed in 2022.6
+        "Configuration of the SQL sensor platform in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.6; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
     )
 
     for query in config[CONF_QUERIES]:
@@ -91,15 +94,15 @@ async def async_setup_entry(
     template: str | None = entry.data.get(CONF_VALUE_TEMPLATE)
     column_name: str = entry.data[CONF_COLUMN_NAME]
 
+    value_template: Template | None = None
     if template is not None:
         try:
-            value_template = Template(str(template))
+            value_template = Template(template)
             value_template.ensure_valid()
         except TemplateError:
             value_template = None
-
-    if value_template is not None:
-        value_template.hass = hass
+        if value_template is not None:
+            value_template.hass = hass
 
     try:
         engine = sqlalchemy.create_engine(db_url)
