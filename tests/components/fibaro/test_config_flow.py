@@ -151,7 +151,7 @@ async def test_config_flow_user_initiated_unknown_failure_1(hass):
 
         assert result["type"] == "form"
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "unknown"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_config_flow_user_initiated_unknown_failure_2(hass):
@@ -175,7 +175,7 @@ async def test_config_flow_user_initiated_unknown_failure_2(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_config_flow_import(hass):
