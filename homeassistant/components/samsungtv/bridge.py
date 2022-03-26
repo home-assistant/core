@@ -82,39 +82,54 @@ async def async_get_device_info(
     hass: HomeAssistant,
     bridge: SamsungTVBridge | None,
     host: str,
-) -> tuple[int | None, str | None, dict[str, Any] | None]:
+) -> tuple[str, int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
     # Bridge is defined
     if bridge and bridge.port:
-        return bridge.port, bridge.method, await bridge.async_device_info()
-
-    # Try non-ssl websocket ports
-    bridge = SamsungTVBridge.get_bridge(
-        hass, METHOD_WEBSOCKET, host, WEBSOCKET_NO_SSL_PORT
-    )
-    if info := await bridge.async_device_info():
-        encrypted_bridge = SamsungTVEncryptedBridge(
-            hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
+        return (
+            RESULT_SUCCESS,
+            bridge.port,
+            bridge.method,
+            await bridge.async_device_info(),
         )
-        if await encrypted_bridge.async_try_connect() != RESULT_CANNOT_CONNECT:
-            return ENCRYPTED_WEBSOCKET_PORT, METHOD_ENCRYPTED_WEBSOCKET, info
-        return WEBSOCKET_NO_SSL_PORT, METHOD_WEBSOCKET, info
 
     # Try ssl websocket port
     bridge = SamsungTVBridge.get_bridge(
         hass, METHOD_WEBSOCKET, host, WEBSOCKET_SSL_PORT
     )
     if info := await bridge.async_device_info():
-        return WEBSOCKET_SSL_PORT, METHOD_WEBSOCKET, info
+        return RESULT_SUCCESS, WEBSOCKET_SSL_PORT, METHOD_WEBSOCKET, info
+
+    # Try non-ssl websocket ports
+    bridge = SamsungTVBridge.get_bridge(
+        hass, METHOD_WEBSOCKET, host, WEBSOCKET_NO_SSL_PORT
+    )
+    if info := await bridge.async_device_info():
+        LOGGER.debug(
+            "Fetching rest info via non-ssl was successful: %s, checking for encrypted",
+            info,
+        )
+
+        encrypted_bridge = SamsungTVEncryptedBridge(
+            hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
+        )
+        if await encrypted_bridge.async_try_connect() != RESULT_CANNOT_CONNECT:
+            return (
+                RESULT_SUCCESS,
+                ENCRYPTED_WEBSOCKET_PORT,
+                METHOD_ENCRYPTED_WEBSOCKET,
+                info,
+            )
+        return RESULT_SUCCESS, WEBSOCKET_NO_SSL_PORT, METHOD_WEBSOCKET, info
 
     # Try legacy port
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
     result = await bridge.async_try_connect()
     if result in (RESULT_SUCCESS, RESULT_AUTH_MISSING):
-        return LEGACY_PORT, METHOD_LEGACY, await bridge.async_device_info()
+        return result, LEGACY_PORT, METHOD_LEGACY, await bridge.async_device_info()
 
     # Failed to get info
-    return None, None, None
+    return result, None, None, None
 
 
 class SamsungTVBridge(ABC):
