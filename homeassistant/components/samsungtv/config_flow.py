@@ -373,9 +373,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._manufacturer or not self._manufacturer.lower().startswith(
             "samsung"
         ):
-            LOGGER.debug(
-                "Aborting flow since manufacturer:%s is not samsung", self._manufacturer
-            )
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_ssdp(
