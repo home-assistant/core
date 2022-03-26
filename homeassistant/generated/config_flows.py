@@ -99,6 +99,7 @@ FLOWS = {
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
+        "filesize",
         "fireservicerota",
         "fivem",
         "fjaraskupan",

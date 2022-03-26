@@ -338,7 +338,6 @@ omit =
     homeassistant/components/fastdotcom/*
     homeassistant/components/ffmpeg/camera.py
     homeassistant/components/fibaro/*
-    homeassistant/components/filesize/sensor.py
     homeassistant/components/fints/sensor.py
     homeassistant/components/fireservicerota/__init__.py
     homeassistant/components/fireservicerota/binary_sensor.py
