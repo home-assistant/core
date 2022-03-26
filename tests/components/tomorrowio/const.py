@@ -1,6 +1,10 @@
 """Constants for tomorrowio tests."""
-from homeassistant.components.tomorrowio.const import CONF_LOCATION
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 
 API_KEY = "aa"
 

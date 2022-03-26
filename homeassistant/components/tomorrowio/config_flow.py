@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_API_VERSION,
     CONF_FRIENDLY_NAME,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
 )
@@ -31,7 +32,6 @@ from homeassistant.helpers.selector import selector
 from .const import (
     AUTO_MIGRATION_MESSAGE,
     CC_DOMAIN,
-    CONF_LOCATION,
     CONF_TIMESTEP,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,

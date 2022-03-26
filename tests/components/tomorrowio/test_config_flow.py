@@ -15,7 +15,6 @@ from homeassistant.components.tomorrowio.config_flow import (
     _get_unique_id,
 )
 from homeassistant.components.tomorrowio.const import (
-    CONF_LOCATION,
     CONF_TIMESTEP,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
@@ -26,6 +25,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_API_VERSION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
