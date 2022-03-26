@@ -15,6 +15,9 @@
       "reauth_confirm": {
         "description": "After submitting, accept the the popup on {device} requesting authorization within 30 seconds or input PIN."
       },
+      "encrypted_pairing": {
+        "description": "Please enter the PIN displayed on {device}."
+      },
       "reauth_confirm_encrypted": {
         "description": "Please enter the PIN displayed on {device}."
       }
