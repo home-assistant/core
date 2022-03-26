@@ -76,6 +76,7 @@ BLOCK_PLATFORMS: Final = [
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 BLOCK_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -90,6 +91,7 @@ RPC_PLATFORMS: Final = [
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 

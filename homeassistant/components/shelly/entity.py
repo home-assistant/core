@@ -444,7 +444,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
 
     def __init__(
         self,
-        wrapper: BlockDeviceWrapper,
+        wrapper: ShellyDeviceRestWrapper,
         attribute: str,
         description: RestEntityDescription,
     ) -> None:
@@ -489,6 +489,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
     """Helper class to represent a rpc attribute."""
 
     entity_description: RpcEntityDescription
+    wrapper: RpcDeviceWrapper
 
     def __init__(
         self,
