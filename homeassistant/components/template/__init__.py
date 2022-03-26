@@ -16,6 +16,7 @@ from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, cal
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     discovery,
+    restore_state,
     trigger as trigger_helper,
     update_coordinator,
 )
@@ -48,6 +49,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if conf is None:
             return
+
+        # Save persistent state so that upon reload it can be retrieved.
+        _LOGGER.debug("Saving %s states for reload", DOMAIN)
+        await restore_state.RestoreStateData.async_save_persistent_states(hass)
 
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
 
