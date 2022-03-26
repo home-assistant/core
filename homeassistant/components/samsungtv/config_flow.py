@@ -25,7 +25,12 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
+from .bridge import (
+    SamsungTVBridge,
+    SamsungTVEncryptedBridge,
+    async_get_device_info,
+    mac_from_device_info,
+)
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -239,9 +244,48 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._bridge.method != METHOD_LEGACY:
                 # Legacy bridge does not provide device info
                 await self._async_set_device_unique_id(raise_on_progress=False)
+            await self.async_step_encrypted_pairing()
             return self._get_entry_from_bridge()
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+
+    async def async_step_encrypted_pairing(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle a encrypted pairing."""
+        assert self._bridge is not None
+        assert self._host is not None
+        await self._async_start_encrypted_pairing(self._host)
+        assert self._encrypted_authenticator is not None
+
+        if user_input is not None and (pin := user_input.get("pin")):
+            if token := await self._encrypted_authenticator.try_pin(pin):
+                session_id = (
+                    await self._encrypted_authenticator.get_session_id_and_close()
+                )
+                return self.async_create_entry(
+                    data={
+                        CONF_HOST: self._host,
+                        CONF_MAC: self._mac,
+                        CONF_MANUFACTURER: self._manufacturer or DEFAULT_MANUFACTURER,
+                        CONF_METHOD: self._bridge.method,
+                        CONF_MODEL: self._model,
+                        CONF_NAME: self._name,
+                        CONF_PORT: self._bridge.port,
+                        CONF_TOKEN: token,
+                        CONF_SESSION_ID: session_id,
+                    },
+                    title=self._title,
+                )
+            errors = {"base": RESULT_INVALID_PIN}
+
+        self.context["title_placeholders"] = {"device": self._title}
+        return self.async_show_form(
+            step_id="encrypted_pairing",
+            errors=errors,
+            description_placeholders={"device": self._title},
+            data_schema=vol.Schema({vol.Required("pin"): str}),
+        )
 
     @callback
     def _async_get_existing_matching_entry(
@@ -388,9 +432,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             await self._try_connect()
             assert self._bridge
+            if isinstance(self._bridge, SamsungTVEncryptedBridge):
+                await self.async_step_encrypted_pairing()
             return self._get_entry_from_bridge()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm", description_placeholders={"device": self._title}
         )
@@ -447,18 +492,22 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"device": self._title},
         )
 
+    async def _async_start_encrypted_pairing(self, host: str) -> None:
+        if self._encrypted_authenticator is None:
+            self._encrypted_authenticator = SamsungTVEncryptedWSAsyncAuthenticator(
+                host,
+                web_session=async_get_clientsession(self.hass),
+            )
+            await self._encrypted_authenticator.start_pairing()
+
     async def async_step_reauth_confirm_encrypted(
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Confirm reauth (encrypted method)."""
         errors = {}
         assert self._reauth_entry
-        if self._encrypted_authenticator is None:
-            self._encrypted_authenticator = SamsungTVEncryptedWSAsyncAuthenticator(
-                self._reauth_entry.data[CONF_HOST],
-                web_session=async_get_clientsession(self.hass),
-            )
-            await self._encrypted_authenticator.start_pairing()
+        await self._async_start_encrypted_pairing(self._reauth_entry.data[CONF_HOST])
+        assert self._encrypted_authenticator is not None
 
         if user_input is not None and (pin := user_input.get("pin")):
             if token := await self._encrypted_authenticator.try_pin(pin):
