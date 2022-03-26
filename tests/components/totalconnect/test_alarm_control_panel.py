@@ -3,9 +3,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from total_connect_client.exceptions import ServiceUnavailable, TotalConnectError
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.components.totalconnect import DOMAIN
+from homeassistant.components.totalconnect import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.totalconnect.alarm_control_panel import (
     SERVICE_ALARM_ARM_AWAY_INSTANT,
     SERVICE_ALARM_ARM_HOME_INSTANT,
@@ -470,3 +471,50 @@ async def test_unknown(hass: HomeAssistant) -> None:
         await setup_platform(hass, ALARM_DOMAIN)
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
         assert mock_request.call_count == 1
+
+
+async def test_other_update_failures(hass: HomeAssistant) -> None:
+    """Test other failures seen during updates."""
+    responses = [
+        RESPONSE_DISARMED,
+        ServiceUnavailable,
+        RESPONSE_DISARMED,
+        TotalConnectError,
+        RESPONSE_DISARMED,
+        ValueError,
+    ]
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
+        # first things work as planned
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        assert mock_request.call_count == 1
+
+        # then an error: ServiceUnavailable --> UpdateFailed
+        async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+        assert mock_request.call_count == 2
+
+        # works again
+        async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL * 2)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        assert mock_request.call_count == 3
+
+        # then an error: TotalConnectError --> UpdateFailed
+        async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL * 3)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+        assert mock_request.call_count == 4
+
+        # works again
+        async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL * 4)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        assert mock_request.call_count == 5
+
+        # unknown TotalConnect status via ValueError
+        async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL * 5)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+        assert mock_request.call_count == 6
