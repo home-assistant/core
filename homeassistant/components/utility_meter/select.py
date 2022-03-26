@@ -53,10 +53,14 @@ async def async_setup_entry(
 async def async_setup_platform(hass, conf, async_add_entities, discovery_info=None):
     """Set up the utility meter select."""
     legacy_component = hass.data[DATA_LEGACY_COMPONENT]
+    meter = discovery_info[CONF_METER]
+    conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
+
     async_add_entities(
         [
             TariffSelect(
                 discovery_info[CONF_METER],
+                conf_meter_unique_id,
                 discovery_info[CONF_TARIFFS],
                 legacy_component.async_add_entities,
                 None,
@@ -78,7 +82,7 @@ async def async_setup_platform(hass, conf, async_add_entities, discovery_info=No
 class TariffSelect(SelectEntity, RestoreEntity):
     """Representation of a Tariff selector."""
 
-    def __init__(self, name, tariffs, add_legacy_entities, unique_id):
+    def __init__(self, name, unique_id, tariffs, add_legacy_entities):
         """Initialize a tariff selector."""
         self._attr_name = name
         self._attr_unique_id = unique_id
@@ -86,7 +90,7 @@ class TariffSelect(SelectEntity, RestoreEntity):
         self._tariffs = tariffs
         self._attr_icon = TARIFF_ICON
         self._attr_should_poll = False
-        self._attr_unique_id = f"utility_meter {name}"
+        self._attr_unique_id = unique_id
         self._add_legacy_entities = add_legacy_entities
 
     @property

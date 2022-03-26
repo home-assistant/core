@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
@@ -183,12 +184,16 @@ async def async_setup_platform(
     for conf in discovery_info.values():
         meter = conf[CONF_METER]
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
-        conf_meter_name = hass.data[DATA_UTILITY][meter].get(
-            CONF_NAME, meter
-        )  # to be deprecated in 2022.7 in favor of conf_meter_name = meter
+        conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
+        conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
         conf_sensor_tariff = conf.get(CONF_TARIFF)
         conf_sensor_name = (
             f"{meter} {conf_sensor_tariff}" if conf_sensor_tariff else conf_meter_name
+        )
+        conf_sensor_unique_id = (
+            f"{conf_meter_unique_id}_{conf_sensor_tariff}"
+            if conf_meter_unique_id
+            else None
         )
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
@@ -273,7 +278,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._sensor_net_consumption = net_consumption
         self._tariff = tariff
         self._tariff_entity = tariff_entity
-        self._attr_unique_id = f"utility_meter_{parent_meter}_{tariff}"
+        self._attr_unique_id = unique_id
 
     def start(self, unit):
         """Initialize unit and state upon source initial update."""

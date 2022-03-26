@@ -76,10 +76,10 @@ def max_28_days(config):
 
 METER_CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(CONF_NAME),
         {
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
             vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
             vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
                 cv.time_period, cv.positive_timedelta, max_28_days
