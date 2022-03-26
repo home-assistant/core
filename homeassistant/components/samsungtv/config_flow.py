@@ -155,23 +155,21 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _try_connect(self) -> None:
         """Try to connect and check auth."""
-        method, _info = await self._async_get_device_info_and_method()
+        method, _ = await self._async_get_device_info_and_method()
         if method is None:
             LOGGER.debug("No working config found for %s", self._host)
             raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
         LOGGER.debug("Try connect determined method to use: %s", method)
         self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
         if self._bridge.method != METHOD_WEBSOCKET:
-            # The websocket method needs to popup an auth request
-            # legacy does not need auth
-            # and encrypted gets handled in the next step
+            # Websocket method needs to popup an auth request
+            # Legacy does not need auth
+            # Encrypted Websocket gets handled in the next step
             return
         result = await self._bridge.async_try_connect()
         if result == RESULT_SUCCESS:
             return
-        if result != RESULT_CANNOT_CONNECT:
-            raise data_entry_flow.AbortFlow(result)
-        raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
+        raise data_entry_flow.AbortFlow(result)
 
     async def _async_get_device_info_and_method(
         self,
