@@ -1,9 +1,6 @@
 """Tests for the samsungtv component."""
 from __future__ import annotations
 
-from unittest.mock import Mock
-
-from async_upnp_client.client import UpnpAction, UpnpService
 
 from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
