@@ -50,7 +50,7 @@ from .const import (
 )
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
-SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_WEBSOCKET]
+SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_ENCRYPTED_WEBSOCKET, METHOD_WEBSOCKET]
 
 
 def _strip_uuid(udn: str) -> str:
