@@ -178,7 +178,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> tuple[str | None, dict[str, Any] | None]:
         """Get device info and method only once."""
         if self._device_info is None:
-            method, info = await async_get_device_info(
+            _port, method, info = await async_get_device_info(
                 self.hass, self._bridge, self._host
             )
             if not info:
