@@ -101,11 +101,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             None
         )
 
-    def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
-        """Get device entry."""
-        assert self._bridge
-
-        data = {
+    def _base_config_entry(self) -> dict[str, Any]:
+        """Generate the base config entry without the method."""
+        assert self._bridge is not None
+        return {
             CONF_HOST: self._host,
             CONF_MAC: self._mac,
             CONF_MANUFACTURER: self._manufacturer or DEFAULT_MANUFACTURER,
@@ -114,6 +113,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: self._name,
             CONF_PORT: self._bridge.port,
         }
+
+    def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
+        """Get device entry."""
+        assert self._bridge
+        data = self._base_config_entry()
         if self._bridge.token:
             data[CONF_TOKEN] = self._bridge.token
         return self.async_create_entry(
@@ -257,6 +261,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._host is not None
         await self._async_start_encrypted_pairing(self._host)
         assert self._encrypted_authenticator is not None
+        errors: dict[str, str] = {}
 
         if user_input is not None and (pin := user_input.get("pin")):
             if token := await self._encrypted_authenticator.try_pin(pin):
@@ -265,13 +270,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_create_entry(
                     data={
-                        CONF_HOST: self._host,
-                        CONF_MAC: self._mac,
-                        CONF_MANUFACTURER: self._manufacturer or DEFAULT_MANUFACTURER,
-                        CONF_METHOD: self._bridge.method,
-                        CONF_MODEL: self._model,
-                        CONF_NAME: self._name,
-                        CONF_PORT: self._bridge.port,
+                        **self._base_config_entry(),
                         CONF_TOKEN: token,
                         CONF_SESSION_ID: session_id,
                     },
