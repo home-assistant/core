@@ -73,7 +73,7 @@ async def test_rpc_config_entry_diagnostics(
             "sys": {
                 "available_updates": {
                     "beta": {"version": "some_beta_version"},
-                    "stable": {"version": "some_beta_version"},
+                    "stable": {"version": "some_new_version"},
                 }
             }
         },

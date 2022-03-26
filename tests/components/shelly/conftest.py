@@ -3,13 +3,20 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.shelly import BlockDeviceWrapper, RpcDeviceWrapper
+from homeassistant.components.shelly import (
+    BlockDeviceWrapper,
+    RpcDeviceWrapper,
+    RpcPollingWrapper,
+    ShellyDeviceRestWrapper,
+)
 from homeassistant.components.shelly.const import (
     BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     EVENT_SHELLY_CLICK,
+    REST,
     RPC,
+    RPC_POLL,
 )
 from homeassistant.setup import async_setup_component
 
@@ -68,7 +75,8 @@ MOCK_CONFIG = {
 MOCK_SHELLY = {
     "mac": "test-mac",
     "auth": False,
-    "fw": "20201124-092854/v1.9.0@57ac4ad8",
+    "fw": "lates_greatest",
+    "ver": "lates_greatest",
     "num_outputs": 2,
 }
 
@@ -89,7 +97,7 @@ MOCK_STATUS_RPC = {
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
-            "stable": {"version": "some_beta_version"},
+            "stable": {"version": "some_new_version"},
         }
     },
 }
@@ -149,8 +157,11 @@ async def coap_wrapper(hass):
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
         BLOCK
     ] = BlockDeviceWrapper(hass, config_entry, device)
-
     wrapper.async_setup()
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        REST
+    ] = ShellyDeviceRestWrapper(hass, device, config_entry)
 
     return wrapper
 
@@ -186,7 +197,10 @@ async def rpc_wrapper(hass):
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
         RPC
     ] = RpcDeviceWrapper(hass, config_entry, device)
-
     wrapper.async_setup()
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        RPC_POLL
+    ] = RpcPollingWrapper(hass, config_entry, device)
 
     return wrapper
