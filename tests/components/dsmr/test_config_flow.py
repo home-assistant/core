@@ -55,6 +55,7 @@ async def test_setup_network(hass, dsmr_connection_send_validate_fixture):
                 "dsmr_version": "2.2",
             },
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "host": "10.10.0.1",
@@ -146,6 +147,7 @@ async def test_setup_serial(com_mock, hass, dsmr_connection_send_validate_fixtur
             result["flow_id"],
             {"port": port.device, "dsmr_version": "2.2"},
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "port": port.device,
@@ -195,6 +197,7 @@ async def test_setup_serial_rfxtrx(
             result["flow_id"],
             {"port": port.device, "dsmr_version": "2.2"},
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "port": port.device,
@@ -234,6 +237,7 @@ async def test_setup_5L(com_mock, hass, dsmr_connection_send_validate_fixture):
             result["flow_id"],
             {"port": port.device, "dsmr_version": "5L"},
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "port": port.device,
@@ -274,6 +278,7 @@ async def test_setup_5S(com_mock, hass, dsmr_connection_send_validate_fixture):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"port": port.device, "dsmr_version": "5S"}
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "port": port.device,
@@ -315,6 +320,7 @@ async def test_setup_Q3D(com_mock, hass, dsmr_connection_send_validate_fixture):
             result["flow_id"],
             {"port": port.device, "dsmr_version": "Q3D"},
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "port": port.device,
@@ -364,6 +370,7 @@ async def test_setup_serial_manual(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"port": "/dev/ttyUSB0"}
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -414,6 +421,7 @@ async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_f
             result["flow_id"],
             {"port": port.device, "dsmr_version": "2.2"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "form"
     assert result["step_id"] == "setup_serial"
@@ -470,6 +478,7 @@ async def test_setup_serial_timeout(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "form"
     assert result["step_id"] == "setup_serial"
@@ -517,6 +526,7 @@ async def test_setup_serial_wrong_telegram(
         result["flow_id"],
         {"port": port.device, "dsmr_version": "2.2"},
     )
+    await hass.async_block_till_done()
 
     assert result["type"] == "form"
     assert result["step_id"] == "setup_serial"
