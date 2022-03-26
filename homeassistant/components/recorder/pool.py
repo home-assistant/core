@@ -34,9 +34,9 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
         )
 
     # Any can be switched out for ConnectionPoolEntry in the next version of sqlalchemy
-    def _do_return_conn(self, conn: Any) -> None:
+    def _do_return_conn(self, conn: Any) -> Any:
         if self.recorder_or_dbworker:
-            super()._do_return_conn(conn)
+            return super()._do_return_conn(conn)
         conn.close()
 
     def shutdown(self) -> None:

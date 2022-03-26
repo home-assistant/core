@@ -359,9 +359,7 @@ def setup_connection_for_dialect(
             version = _extract_version_from_server_response(version_string)
 
             if version and version < MIN_VERSION_SQLITE_ROWNUM:
-                instance._db_supports_row_number = (  # pylint: disable=[protected-access]
-                    False
-                )
+                instance._db_supports_row_number = False
             if not version or version < MIN_VERSION_SQLITE:
                 _warn_unsupported_version(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
@@ -383,18 +381,14 @@ def setup_connection_for_dialect(
 
             if is_maria_db:
                 if version and version < MIN_VERSION_MARIA_DB_ROWNUM:
-                    instance._db_supports_row_number = (  # pylint: disable=[protected-access]
-                        False
-                    )
+                    instance._db_supports_row_number = False
                 if not version or version < MIN_VERSION_MARIA_DB:
                     _warn_unsupported_version(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
             else:
                 if version and version < MIN_VERSION_MYSQL_ROWNUM:
-                    instance._db_supports_row_number = (  # pylint: disable=[protected-access]
-                        False
-                    )
+                    instance._db_supports_row_number = False
                 if not version or version < MIN_VERSION_MYSQL:
                     _warn_unsupported_version(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
