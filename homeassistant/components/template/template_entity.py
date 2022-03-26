@@ -462,7 +462,8 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
     def __init__(self, *args, **kwargs) -> None:
         """Template Restore Entity init."""
         super().__init__(*args, **kwargs)
-        self._restore = False
+        self._restore: bool = False
+        self._save_state: bool = True
         self._additional_data: list[str] = []
 
     def add_template_attribute(
@@ -474,6 +475,13 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
         if not template.is_static:
             self.add_additional_data(attribute)
 
+    @callback
+    def _handle_results(self, *args, **kwargs) -> None:
+        # Do not save state if handle result fails.
+        self._save_state = False
+        super()._handle_results(*args, **kwargs)
+        self._save_state = True
+
     @property
     def restore(self) -> bool:
         """Retrieve restore."""
@@ -483,6 +491,11 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
     def restore(self, restore: bool) -> None:
         """Set restore."""
         self._restore = restore
+
+    @property
+    def save_state(self) -> bool:
+        """Retrieve save state."""
+        return self._save_state
 
     @property
     def additional_data(self) -> list[str]:
@@ -546,7 +559,7 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
                 value = last_sensor_data[attribute]
             except KeyError:
                 _LOGGER.debug(
-                    "No value stored for attribute %s for entity %s",
+                    "No value stored for additional attribute %s for entity %s",
                     attribute,
                     self.entity_id,
                 )
@@ -556,26 +569,35 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
                 setattr(self, attribute, value)
             except AttributeError:
                 _LOGGER.debug(
-                    "Attribute %s does not exist in entity %s, unable to restore",
+                    "Additional attribute %s does not exist in entity %s, unable to restore",
                     attribute,
                     self.entity_id,
                 )
                 continue
 
             _LOGGER.debug(
-                "Attribute %s restored to value %s for entity %s",
+                "Additional attribute %s restored to value %s for entity %s",
                 attribute,
                 value,
                 self.entity_id,
             )
 
-        self.async_write_ha_state()
+        try:
+            self.async_write_ha_state()
+        except (TypeError, ValueError) as exc:
+            # Writing state resulted in an issue. Stop storing states for now.
+            self._save_state = False
+            _LOGGER.error(
+                "Restored state for entity %s results in exception: %s",
+                self.entity_id,
+                exc,
+            )
 
         return (last_sensor_state, last_sensor_data)
 
     @property
     def extra_restore_state_data(self) -> TemplateExtraStoredData | None:
-        """Return sensor specific state data to be restored."""
+        """Return sensor specific state data for persistent saving."""
         return (
             TemplateExtraStoredData(self, self.additional_data)
             if self.restore
@@ -583,8 +605,10 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
         )
 
     async def async_get_last_template_data(self) -> dict[str, Any] | None:
-        """Restore native_value and native_unit_of_measurement."""
+        """Return the persistent saved data."""
         if not self.restore:
+            # Return nothing if entity is not to be restored or
+            # not saving current state due to issue.
             return None
 
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
@@ -613,11 +637,19 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
 class TemplateExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
 
-    template_entity: TemplateEntity
+    template_entity: TemplateRestoreEntity
     additional_data: list[str]
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
+        if not self.template_entity.save_state:
+            # Only store not to restore data
+            _LOGGER.debug(
+                "Storing of data disabled for entity %s",
+                self.template_entity.entity_id,
+            )
+            return {}
+
         store_attributes: dict[str, Any] = {}
         for attribute in self.additional_data:
             try:
@@ -628,25 +660,26 @@ class TemplateExtraStoredData(ExtraStoredData):
                 continue
 
             _LOGGER.info(
-                "Storing additional attribute %s with value %s",
+                "Storing additional attribute %s with value %s for entity %s",
                 attribute,
                 value,
+                self.template_entity.entity_id,
             )
             store_attributes.update({attribute: value})
 
         return store_attributes
 
-    @staticmethod
-    def from_dict(restored: dict[str, Any]) -> dict[str, Any]:
+    def from_dict(self, restored: dict[str, Any]) -> dict[str, Any]:
         """Initialize a stored sensor state from a dict."""
         store_attributes: dict[str, Any] = {}
         for attribute, value in restored.items():
             value = convert_attribute_from_string(value)
 
             _LOGGER.info(
-                "Retrieved additional attribute %s with value %s",
+                "Retrieved additional attribute %s with value %s for entity %s",
                 attribute,
                 value,
+                self.template_entity.entity_id,
             )
             store_attributes.update({attribute: value})
 
