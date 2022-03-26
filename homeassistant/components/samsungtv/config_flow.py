@@ -128,11 +128,17 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> None:
         """Set the unique id from the udn."""
         assert self._host is not None
-        await self.async_set_unique_id(self._udn, raise_on_progress=raise_on_progress)
+        # Set the unique id without raising on progress in case
+        # there are two SSDP flows with for each ST
+        await self.async_set_unique_id(self._udn, raise_on_progress=False)
         if (
             entry := self._async_update_existing_matching_entry()
         ) and _entry_is_complete(entry, self._ssdp_location):
             raise data_entry_flow.AbortFlow("already_configured")
+        # Now that we have updated the config entry, we can raise
+        # if another one is progressing
+        if raise_on_progress:
+            await self.async_set_unique_id(self._udn, raise_on_progress=True)
 
     def _async_update_and_abort_for_matching_unique_id(self) -> None:
         """Abort and update host and mac if we have it."""
