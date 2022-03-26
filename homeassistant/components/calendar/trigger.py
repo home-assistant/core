@@ -97,10 +97,11 @@ class CalendarEventListener:
         event_list = [(trigger_time_func(event), event) for event in events]
         event_list.sort(key=lambda x: x[0])
 
-        def filter_upcoming(pair: tuple[datetime.datetime, dict[str, Any]]) -> bool:
-            return pair[0] >= now
-
-        self._events = list(filter(filter_upcoming, event_list))
+        self._events = [
+            (trigger_time, event)
+            for (trigger_time, event) in event_list
+            if trigger_time > now
+        ]
         _LOGGER.debug("Populated event list %s", self._events)
 
     @callback
@@ -119,7 +120,7 @@ class CalendarEventListener:
             event_datetime,
         )
 
-    async def _handle_calendar_event(self, now: Any) -> None:
+    async def _handle_calendar_event(self, now: datetime.datetime) -> None:
         """Handle calendar event."""
         _LOGGER.debug("Calendar event @ %s", now)
 
