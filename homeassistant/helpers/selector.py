@@ -78,7 +78,7 @@ SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Integration that provided the entity
         vol.Optional("integration"): str,
         # Domain the entity belongs to
-        vol.Optional("domain"): str,
+        vol.Optional("domain"): vol.Any(str, [str]),
         # Device class of the entity
         vol.Optional("device_class"): str,
     }
@@ -307,12 +307,12 @@ class EntitySelector(Selector):
             e_or_u = cv.entity_id_or_uuid(e_or_u)
             if not valid_entity_id(e_or_u):
                 return e_or_u
-            if allowed_domain := self.config.get("domain"):
+            if allowed_domains := cv.ensure_list(self.config.get("domain")):
                 domain = split_entity_id(e_or_u)[0]
-                if domain != allowed_domain:
+                if domain not in allowed_domains:
                     raise vol.Invalid(
                         f"Entity {e_or_u} belongs to domain {domain}, "
-                        f"expected {allowed_domain}"
+                        f"expected {allowed_domains}"
                     )
             if include_entities:
                 vol.In(include_entities)(e_or_u)

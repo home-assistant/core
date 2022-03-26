@@ -110,6 +110,11 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections):
         ({}, ("sensor.abc123", FAKE_UUID), (None, "abc123")),
         ({"integration": "zha"}, ("sensor.abc123", FAKE_UUID), (None, "abc123")),
         ({"domain": "light"}, ("light.abc123", FAKE_UUID), (None, "sensor.abc123")),
+        (
+            {"domain": ["light", "sensor"]},
+            ("light.abc123", "sensor.abc123", FAKE_UUID),
+            (None, "dog.abc123"),
+        ),
         ({"device_class": "motion"}, ("sensor.abc123", FAKE_UUID), (None, "abc123")),
         (
             {"integration": "zha", "domain": "light"},
