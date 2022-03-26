@@ -14,6 +14,7 @@ from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVCommand
 from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
+from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
 
 import homeassistant.util.dt as dt_util
@@ -71,7 +72,7 @@ def remote_fixture() -> Mock:
         yield remote
 
 
-@pytest.fixture(name="rest_api", autouse=True)
+@pytest.fixture(name="rest_api")
 def rest_api_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVAsyncRest."""
     with patch(
@@ -82,6 +83,17 @@ def rest_api_fixture() -> Mock:
             SAMPLE_DEVICE_INFO_WIFI
         )
         yield rest_api_class.return_value
+
+
+@pytest.fixture(name="rest_api_failing")
+def rest_api_failure_fixture() -> Mock:
+    """Patch the samsungtvws SamsungTVAsyncRest."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
+        autospec=True,
+    ) as rest_api_class:
+        rest_api_class.return_value.rest_device_info.side_effect = ResponseError
+        yield
 
 
 @pytest.fixture(name="remotews")

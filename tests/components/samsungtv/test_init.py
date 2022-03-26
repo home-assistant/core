@@ -56,6 +56,11 @@ REMOTE_CALL = {
 }
 
 
+@pytest.fixture(name="autouse_rest_api", autouse=True)
+def autouse_rest_api(rest_api) -> Mock:
+    """Enable auto use of the rest api fixture for these tests."""
+
+
 @pytest.mark.usefixtures("remotews")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test Samsung TV integration is setup."""
