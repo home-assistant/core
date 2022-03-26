@@ -157,12 +157,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _try_connect(self) -> None:
         """Try to connect and check auth."""
-        _port, method, _info = await async_get_device_info(
+        _port, method, info = await async_get_device_info(
             self.hass, self._bridge, self._host
         )
         if method is None:
             LOGGER.debug("No working config found")
             raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
+        if info is not None:
+            self._device_info = info
         LOGGER.debug("Try connect determined method to use: %s", method)
         self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
         if self._bridge.method != METHOD_WEBSOCKET:
@@ -179,22 +181,27 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_and_check_device_info(self) -> bool:
         """Try to get the device info."""
-        _port, _method, info = await async_get_device_info(
-            self.hass, self._bridge, self._host
-        )
-        if not info:
-            if not _method:
-                LOGGER.debug(
-                    "Samsung host %s is not supported by either %s, %s or %s methods",
-                    self._host,
-                    METHOD_LEGACY,
-                    METHOD_ENCRYPTED_WEBSOCKET,
-                    METHOD_WEBSOCKET,
-                )
-                raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
-            LOGGER.debug("Host:%s did not return device info", self._host)
-            return False
+        if self._device_info is None:
+            _port, _method, info = await async_get_device_info(
+                self.hass, self._bridge, self._host
+            )
+            if not info:
+                if not _method:
+                    LOGGER.debug(
+                        "Samsung host %s is not supported by either %s, %s or %s methods",
+                        self._host,
+                        METHOD_LEGACY,
+                        METHOD_ENCRYPTED_WEBSOCKET,
+                        METHOD_WEBSOCKET,
+                    )
+                    raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+                LOGGER.debug("Host:%s did not return device info", self._host)
+                return False
+            self._device_info = info
+        else:
+            info = self._device_info
         dev_info = info.get("device", {})
+        assert dev_info is not None
         if (device_type := dev_info.get("type")) != "Samsung SmartTV":
             LOGGER.debug(
                 "Host:%s has type: %s which is not supported", self._host, device_type
@@ -211,7 +218,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             partial(getmac.get_mac_address, ip=self._host)
         ):
             self._mac = mac
-        self._device_info = info
         return True
 
     async def async_step_import(
