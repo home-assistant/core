@@ -50,7 +50,11 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
@@ -241,6 +245,40 @@ async def test_user_legacy(hass: HomeAssistant) -> None:
     assert result["result"].unique_id is None
 
 
+async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
+    """Test starting a flow by user."""
+    # show form
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=AccessDenied("Boom"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        # entry was added
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+
+    with patch("homeassistant.components.samsungtv.bridge.Remote"):
+        # entry was added
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], user_input={}
+        )
+
+    # legacy tv entry created
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == "fake_name"
+    assert result3["data"][CONF_HOST] == "fake_host"
+    assert result3["data"][CONF_NAME] == "fake_name"
+    assert result3["data"][CONF_METHOD] == "legacy"
+    assert result3["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
+    assert result3["data"][CONF_MODEL] is None
+    assert result3["result"].unique_id is None
+
+
 @pytest.mark.usefixtures("remotews", "rest_api")
 async def test_user_websocket(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
@@ -332,8 +370,19 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
-        assert result["type"] == "abort"
-        assert result["reason"] == RESULT_AUTH_MISSING
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "pairing"
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError,
+    ):
+        # legacy device fails to connect after auth failed
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["reason"] == RESULT_CANNOT_CONNECT
 
 
 async def test_user_legacy_not_supported(hass: HomeAssistant) -> None:
@@ -475,7 +524,6 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=AccessDenied("Boom"),
     ):
-
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -484,16 +532,24 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
         assert result["step_id"] == "confirm"
 
         # missing authentication
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "pairing"
 
-        with patch(
-            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyBridge.async_try_connect",
-            return_value=RESULT_AUTH_MISSING,
-        ):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input="whatever"
-            )
-            assert result["type"] == "abort"
-            assert result["reason"] == RESULT_AUTH_MISSING
+    with patch("homeassistant.components.samsungtv.bridge.Remote"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "fake_model"
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_NAME] == "fake_model"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
+    assert result["data"][CONF_MODEL] == "fake_model"
+    assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
 @pytest.mark.usefixtures("remotews", "rest_api_failing")
@@ -1115,15 +1171,26 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[AccessDenied("Boom")],
+        side_effect=AccessDenied("Boom"),
     ) as remote:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
-        assert result["type"] == "abort"
-        assert result["reason"] == RESULT_AUTH_MISSING
-        assert remote.call_count == 1
-        assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "pairing"
+        assert remote.call_count == 2
+        assert remote.call_args_list == [
+            call(AUTODETECT_LEGACY),
+            call(AUTODETECT_LEGACY),
+        ]
+    with patch("homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["reason"] == RESULT_CANNOT_CONNECT
 
 
 async def test_autodetect_not_supported(hass: HomeAssistant) -> None:
