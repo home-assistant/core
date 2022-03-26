@@ -14,6 +14,7 @@ import traceback
 from typing import TYPE_CHECKING, Any, Union
 
 from serial import SerialException
+from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE
 import zigpy.device
 import zigpy.endpoint
@@ -26,10 +27,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import (
     CONNECTION_ZIGBEE,
+    DeviceRegistry,
     async_get_registry as get_dev_reg,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import (
+    EntityRegistry,
     async_entries_for_device,
     async_get_registry as get_ent_reg,
 )
@@ -93,7 +96,10 @@ if TYPE_CHECKING:
     from logging import Filter, LogRecord
 
     from ..entity import ZhaEntity
+    from .store import ZhaStorage
 
+    # pylint: disable-next=broken-collections-callable
+    # Safe inside TYPE_CHECKING block
     _LogFilterType = Union[Filter, Callable[[LogRecord], int]]
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,6 +122,13 @@ class DevicePairingStatus(Enum):
 class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
 
+    # -- Set in async_initialize --
+    zha_storage: ZhaStorage
+    ha_device_registry: DeviceRegistry
+    ha_entity_registry: EntityRegistry
+    application_controller: ControllerApplication
+    radio_description: str
+
     def __init__(
         self, hass: HomeAssistant, config: ConfigType, config_entry: ConfigEntry
     ) -> None:
@@ -128,11 +141,6 @@ class ZHAGateway:
         self._device_registry: collections.defaultdict[
             EUI64, list[EntityReference]
         ] = collections.defaultdict(list)
-        self.zha_storage = None
-        self.ha_device_registry = None
-        self.ha_entity_registry = None
-        self.application_controller = None
-        self.radio_description = None
         self._log_levels: dict[str, dict[str, int]] = {
             DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),

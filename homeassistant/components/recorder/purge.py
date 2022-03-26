@@ -204,7 +204,7 @@ def _evict_purged_states_from_old_states_cache(
 ) -> None:
     """Evict purged states from the old states cache."""
     # Make a map from old_state_id to entity_id
-    old_states = instance._old_states  # pylint: disable=protected-access
+    old_states = instance._old_states
     old_state_reversed = {
         old_state.state_id: entity_id
         for entity_id, old_state in old_states.items()
@@ -221,9 +221,7 @@ def _evict_purged_attributes_from_attributes_cache(
 ) -> None:
     """Evict purged attribute ids from the attribute ids cache."""
     # Make a map from attributes_id to the attributes json
-    state_attributes_ids = (
-        instance._state_attributes_ids  # pylint: disable=protected-access
-    )
+    state_attributes_ids = instance._state_attributes_ids
     state_attributes_ids_reversed = {
         attributes_id: attributes
         for attributes, attributes_id in state_attributes_ids.items()
@@ -378,7 +376,7 @@ def _purge_filtered_events(
     _purge_event_ids(session, event_ids)
     if EVENT_STATE_CHANGED in excluded_event_types:
         session.query(StateAttributes).delete(synchronize_session=False)
-        instance._state_attributes_ids = {}  # pylint: disable=protected-access
+        instance._state_attributes_ids = {}
 
 
 @retryable_database_job("purge")
