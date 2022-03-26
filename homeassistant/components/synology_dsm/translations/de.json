@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "reconfigure_successful": "Die Neukonfiguration war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -38,6 +39,13 @@
                 "description": "Grund: {details}",
                 "title": "Synology DSM Integration erneut authentifizieren"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Synology DSM Integration erneut authentifizieren"
+            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -56,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minuten zwischen den Scans",
+                    "snap_profile_type": "Qualit\u00e4tsstufe der Kamera-Schnappsch\u00fcsse (0:hoch 1:mittel 2:niedrig)",
                     "timeout": "Timeout (Sekunden)"
                 }
             }

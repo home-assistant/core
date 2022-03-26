@@ -1,4 +1,6 @@
 """Support for WebDav Calendar."""
+from __future__ import annotations
+
 import copy
 from datetime import datetime, timedelta
 import logging
@@ -22,8 +24,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +68,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_entities, disc_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    disc_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the WebDav Calendar platform."""
     url = config[CONF_URL]
     username = config.get(CONF_USERNAME)
@@ -161,6 +171,9 @@ class WebDavCalendarData:
         )
         event_list = []
         for event in vevent_list:
+            if not hasattr(event.instance, "vevent"):
+                _LOGGER.warning("Skipped event with missing 'vevent' property")
+                continue
             vevent = event.instance.vevent
             if not self.is_matching(vevent, self.search):
                 continue
@@ -198,6 +211,9 @@ class WebDavCalendarData:
         # and they would not be properly parsed using their original start/end dates.
         new_events = []
         for event in results:
+            if not hasattr(event.instance, "vevent"):
+                _LOGGER.warning("Skipped event with missing 'vevent' property")
+                continue
             vevent = event.instance.vevent
             for start_dt in vevent.getrruleset() or []:
                 _start_of_today = start_of_today
@@ -216,7 +232,11 @@ class WebDavCalendarData:
                     new_events.append(new_event)
                 elif _start_of_tomorrow <= start_dt:
                     break
-        vevents = [event.instance.vevent for event in results + new_events]
+        vevents = [
+            event.instance.vevent
+            for event in results + new_events
+            if hasattr(event.instance, "vevent")
+        ]
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it

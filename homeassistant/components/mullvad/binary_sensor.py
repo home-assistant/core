@@ -1,9 +1,12 @@
 """Setup Mullvad VPN Binary Sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -12,12 +15,16 @@ BINARY_SENSORS = (
     {
         CONF_ID: "mullvad_exit_ip",
         CONF_NAME: "Mullvad Exit IP",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
+        CONF_DEVICE_CLASS: BinarySensorDeviceClass.CONNECTIVITY,
     },
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Defer sensor setup to the shared sensor module."""
     coordinator = hass.data[DOMAIN]
 

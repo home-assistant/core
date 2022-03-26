@@ -1,11 +1,21 @@
 """Demo platform that has two fake binary sensors."""
+from __future__ import annotations
+
 import copy
 
 from homeassistant.components.calendar import CalendarEventDevice, get_date
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Demo Calendar platform."""
     calendar_data_future = DemoGoogleCalendarDataFuture()
     calendar_data_current = DemoGoogleCalendarDataCurrent()

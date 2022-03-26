@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from blinkpy.auth import LoginError
 from blinkpy.blinkpy import BlinkSetupError
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.blink import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -50,7 +50,7 @@ async def test_form(hass):
 
 async def test_form_2fa(hass):
     """Test we get the 2fa form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -92,7 +92,7 @@ async def test_form_2fa(hass):
 
 async def test_form_2fa_connect_error(hass):
     """Test we report a connect error during 2fa setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -131,7 +131,7 @@ async def test_form_2fa_connect_error(hass):
 
 async def test_form_2fa_invalid_key(hass):
     """Test we report an error if key is invalid."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -170,7 +170,7 @@ async def test_form_2fa_invalid_key(hass):
 
 async def test_form_2fa_unknown_error(hass):
     """Test we report an unknown error during 2fa setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

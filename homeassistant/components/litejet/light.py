@@ -8,6 +8,9 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
@@ -16,7 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_NUMBER = "number"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
 
     system = hass.data[DOMAIN]
@@ -34,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LiteJetLight(LightEntity):
     """Representation of a single LiteJet light."""
 
-    def __init__(self, config_entry, lj, i, name):
+    def __init__(self, config_entry, lj, i, name):  # pylint: disable=invalid-name
         """Initialize a LiteJet light."""
         self._config_entry = config_entry
         self._lj = lj

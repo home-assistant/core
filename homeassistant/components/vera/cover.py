@@ -5,13 +5,9 @@ from typing import Any
 
 import pyvera as veraApi
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    DOMAIN as PLATFORM_DOMAIN,
-    ENTITY_ID_FORMAT,
-    CoverEntity,
-)
+from homeassistant.components.cover import ATTR_POSITION, ENTITY_ID_FORMAT, CoverEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -29,7 +25,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraCover(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.COVER]
         ],
         True,
     )

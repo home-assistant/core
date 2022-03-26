@@ -33,7 +33,7 @@ from homeassistant.const import (
 from homeassistant.util import utcnow
 
 from .conftest import ACTIVITIES_TO_IDS, TV_DEVICE_ID, TV_DEVICE_NAME
-from .const import ENTITY_PLAY_MUSIC, ENTITY_REMOTE, ENTITY_WATCH_TV, HUB_NAME
+from .const import ENTITY_REMOTE, HUB_NAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -91,10 +91,10 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # mocks start with current activity == Watch TV
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
+    # mocks start remote with Watch TV default activity
+    state = hass.states.get(ENTITY_REMOTE)
+    assert state.state == STATE_ON
+    assert state.attributes.get("current_activity") == "Watch TV"
 
     # turn off remote
     await hass.services.async_call(
@@ -105,9 +105,9 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_OFF)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_OFF)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
+    state = hass.states.get(ENTITY_REMOTE)
+    assert state.state == STATE_OFF
+    assert state.attributes.get("current_activity") == "PowerOff"
 
     # turn on remote, restoring the last activity
     await hass.services.async_call(
@@ -118,9 +118,9 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
+    state = hass.states.get(ENTITY_REMOTE)
+    assert state.state == STATE_ON
+    assert state.attributes.get("current_activity") == "Watch TV"
 
     # send new activity command, with activity name
     await hass.services.async_call(
@@ -131,9 +131,9 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_OFF)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_ON)
+    state = hass.states.get(ENTITY_REMOTE)
+    assert state.state == STATE_ON
+    assert state.attributes.get("current_activity") == "Play Music"
 
     # send new activity command, with activity id
     await hass.services.async_call(
@@ -144,9 +144,9 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
+    state = hass.states.get(ENTITY_REMOTE)
+    assert state.state == STATE_ON
+    assert state.attributes.get("current_activity") == "Watch TV"
 
 
 async def test_async_send_command(mock_hc, harmony_client, hass, mock_write_config):

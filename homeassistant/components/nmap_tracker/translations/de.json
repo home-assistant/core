@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Wartezeit in Sekunden, bis ein Ger\u00e4tetracker als nicht zu Hause markiert wird, nachdem er nicht gesehen wurde.",
                     "exclude": "Netzwerkadressen (kommagetrennt), die von der \u00dcberpr\u00fcfung ausgeschlossen werden sollen",
                     "home_interval": "Mindestanzahl von Minuten zwischen den Scans aktiver Ger\u00e4te (Batterie schonen)",
                     "hosts": "Netzwerkadressen (kommagetrennt) zum Scannen",

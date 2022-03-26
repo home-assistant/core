@@ -5,20 +5,25 @@ from homeassistant.components.device_tracker.const import (
     DOMAIN,
     SOURCE_TYPE_GPS,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN as OT_DOMAIN
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up OwnTracks based off an entry."""
     # Restore previously loaded devices
     dev_reg = await device_registry.async_get_registry(hass)
@@ -50,8 +55,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     if entities:
         async_add_entities(entities)
-
-    return True
 
 
 class OwnTracksEntity(TrackerEntity, RestoreEntity):
@@ -117,9 +120,9 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("source_type", SOURCE_TYPE_GPS)
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {"name": self.name, "identifiers": {(OT_DOMAIN, self._dev_id)}}
+        return DeviceInfo(identifiers={(OT_DOMAIN, self._dev_id)}, name=self.name)
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
@@ -129,9 +132,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         if self._data:
             return
 
-        state = await self.async_get_last_state()
-
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             return
 
         attr = state.attributes

@@ -27,12 +27,11 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     __version__,
 )
-from homeassistant.core import SOURCE_STORAGE, HomeAssistantError
+from homeassistant.core import ConfigSource, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import async_get_integration
-from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 
 from tests.common import get_test_config_dir, patch_yaml_files
@@ -41,11 +40,9 @@ CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
 SECRET_PATH = os.path.join(CONFIG_DIR, SECRET_YAML)
 VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
-GROUP_PATH = os.path.join(CONFIG_DIR, config_util.GROUP_CONFIG_PATH)
 AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, config_util.AUTOMATION_CONFIG_PATH)
 SCRIPTS_PATH = os.path.join(CONFIG_DIR, config_util.SCRIPT_CONFIG_PATH)
 SCENES_PATH = os.path.join(CONFIG_DIR, config_util.SCENE_CONFIG_PATH)
-ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
 def create_file(path):
@@ -54,9 +51,10 @@ def create_file(path):
         pass
 
 
+@pytest.fixture(autouse=True)
 def teardown():
     """Clean up."""
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
+    yield
 
     if os.path.isfile(YAML_PATH):
         os.remove(YAML_PATH)
@@ -66,9 +64,6 @@ def teardown():
 
     if os.path.isfile(VERSION_PATH):
         os.remove(VERSION_PATH)
-
-    if os.path.isfile(GROUP_PATH):
-        os.remove(GROUP_PATH)
 
     if os.path.isfile(AUTOMATIONS_PATH):
         os.remove(AUTOMATIONS_PATH)
@@ -82,12 +77,16 @@ def teardown():
 
 async def test_create_default_config(hass):
     """Test creation of default config."""
+    assert not os.path.isfile(YAML_PATH)
+    assert not os.path.isfile(SECRET_PATH)
+    assert not os.path.isfile(VERSION_PATH)
+    assert not os.path.isfile(AUTOMATIONS_PATH)
+
     await config_util.async_create_default_config(hass)
 
     assert os.path.isfile(YAML_PATH)
     assert os.path.isfile(SECRET_PATH)
     assert os.path.isfile(VERSION_PATH)
-    assert os.path.isfile(GROUP_PATH)
     assert os.path.isfile(AUTOMATIONS_PATH)
 
 
@@ -96,6 +95,7 @@ async def test_ensure_config_exists_creates_config(hass):
 
     If not creates a new config file.
     """
+    assert not os.path.isfile(YAML_PATH)
     with patch("builtins.print") as mock_print:
         await config_util.async_ensure_config_exists(hass)
 
@@ -395,7 +395,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.currency == "EUR"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
-    assert hass.config.config_source == SOURCE_STORAGE
+    assert hass.config.config_source is ConfigSource.STORAGE
 
 
 async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_storage):
@@ -425,7 +425,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
-    assert hass.config.config_source == SOURCE_STORAGE
+    assert hass.config.config_source is ConfigSource.STORAGE
 
 
 async def test_updating_configuration(hass, hass_storage):
@@ -444,6 +444,7 @@ async def test_updating_configuration(hass, hass_storage):
         },
         "key": "core.config",
         "version": 1,
+        "minor_version": 1,
     }
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(
@@ -485,7 +486,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
-    assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.config_source is ConfigSource.YAML
 
 
 async def test_loading_configuration(hass):
@@ -520,7 +521,7 @@ async def test_loading_configuration(hass):
     assert "/etc" in hass.config.allowlist_external_dirs
     assert "/usr" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
-    assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.config_source is ConfigSource.YAML
     assert hass.config.legacy_templates is True
     assert hass.config.currency == "EUR"
 
@@ -549,7 +550,7 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.time_zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
-    assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.config_source is ConfigSource.YAML
     assert hass.config.currency == "EUR"
 
 
@@ -1054,23 +1055,20 @@ async def test_component_config_exceptions(hass, caplog):
 
     # component.PLATFORM_SCHEMA
     caplog.clear()
-    assert (
-        await config_util.async_process_component_config(
-            hass,
-            {"test_domain": {"platform": "test_platform"}},
-            integration=Mock(
-                domain="test_domain",
-                get_platform=Mock(return_value=None),
-                get_component=Mock(
-                    return_value=Mock(
-                        spec=["PLATFORM_SCHEMA_BASE"],
-                        PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
-                    )
-                ),
+    assert await config_util.async_process_component_config(
+        hass,
+        {"test_domain": {"platform": "test_platform"}},
+        integration=Mock(
+            domain="test_domain",
+            get_platform=Mock(return_value=None),
+            get_component=Mock(
+                return_value=Mock(
+                    spec=["PLATFORM_SCHEMA_BASE"],
+                    PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
+                )
             ),
-        )
-        == {"test_domain": []}
-    )
+        ),
+    ) == {"test_domain": []}
     assert "ValueError: broken" in caplog.text
     assert (
         "Unknown error validating test_platform platform config with test_domain component platform schema"
@@ -1089,20 +1087,15 @@ async def test_component_config_exceptions(hass, caplog):
             )
         ),
     ):
-        assert (
-            await config_util.async_process_component_config(
-                hass,
-                {"test_domain": {"platform": "test_platform"}},
-                integration=Mock(
-                    domain="test_domain",
-                    get_platform=Mock(return_value=None),
-                    get_component=Mock(
-                        return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])
-                    ),
-                ),
-            )
-            == {"test_domain": []}
-        )
+        assert await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {"platform": "test_platform"}},
+            integration=Mock(
+                domain="test_domain",
+                get_platform=Mock(return_value=None),
+                get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+            ),
+        ) == {"test_domain": []}
         assert "ValueError: broken" in caplog.text
         assert (
             "Unknown error validating config for test_platform platform for test_domain component with PLATFORM_SCHEMA"

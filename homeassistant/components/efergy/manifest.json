@@ -1,7 +1,10 @@
 {
   "domain": "efergy",
   "name": "Efergy",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/efergy",
-  "codeowners": [],
-  "iot_class": "cloud_polling"
+  "requirements": ["pyefergy==22.1.1"],
+  "codeowners": ["@tkdrob"],
+  "iot_class": "cloud_polling",
+  "loggers": ["iso4217", "pyefergy"]
 }

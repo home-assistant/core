@@ -7,28 +7,20 @@ from pysma.exceptions import (
     SmaReadException,
 )
 
-from homeassistant import setup
 from homeassistant.components.sma.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
 
-from . import (
-    MOCK_DEVICE,
-    MOCK_IMPORT,
-    MOCK_IMPORT_DICT,
-    MOCK_SETUP_DATA,
-    MOCK_USER_INPUT,
-    _patch_async_setup_entry,
-)
+from . import MOCK_DEVICE, MOCK_USER_INPUT, _patch_async_setup_entry
 
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -46,7 +38,7 @@ async def test_form(hass):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT["host"]
-    assert result["data"] == MOCK_SETUP_DATA
+    assert result["data"] == MOCK_USER_INPUT
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -149,45 +141,3 @@ async def test_form_already_configured(hass, mock_config_entry):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
-
-
-async def test_import(hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch("pysma.SMA.new_session", return_value=True), patch(
-        "pysma.SMA.device_info", return_value=MOCK_DEVICE
-    ), patch(
-        "pysma.SMA.close_session", return_value=True
-    ), _patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=MOCK_IMPORT,
-        )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == MOCK_USER_INPUT["host"]
-    assert result["data"] == MOCK_IMPORT
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_sensor_dict(hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch("pysma.SMA.new_session", return_value=True), patch(
-        "pysma.SMA.device_info", return_value=MOCK_DEVICE
-    ), patch(
-        "pysma.SMA.close_session", return_value=True
-    ), _patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=MOCK_IMPORT_DICT,
-        )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == MOCK_USER_INPUT["host"]
-    assert result["data"] == MOCK_IMPORT_DICT
-    assert len(mock_setup_entry.mock_calls) == 1

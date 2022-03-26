@@ -1,10 +1,14 @@
-"""Fixtures for UniFi methods."""
+"""Fixtures for UniFi Network methods."""
 from __future__ import annotations
 
 from unittest.mock import patch
 
 from aiounifi.websocket import SIGNAL_CONNECTION_STATE, SIGNAL_DATA
 import pytest
+
+from homeassistant.helpers import device_registry as dr
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -34,3 +38,27 @@ def mock_discovery():
         return_value=None,
     ) as mock:
         yield mock
+
+
+@pytest.fixture
+def mock_device_registry(hass):
+    """Mock device registry."""
+    dev_reg = dr.async_get(hass)
+    config_entry = MockConfigEntry(domain="something_else")
+
+    for idx, device in enumerate(
+        (
+            "00:00:00:00:00:01",
+            "00:00:00:00:00:02",
+            "00:00:00:00:00:03",
+            "00:00:00:00:00:04",
+            "00:00:00:00:00:05",
+            "00:00:00:00:01:01",
+            "00:00:00:00:02:02",
+        )
+    ):
+        dev_reg.async_get_or_create(
+            name=f"Device {idx}",
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, device)},
+        )

@@ -33,14 +33,20 @@
             "button": "Nupp",
             "button1": "Esimene nupp",
             "button2": "Teine nupp",
-            "button3": "Kolmas nupp"
+            "button3": "Kolmas nupp",
+            "button4": "Neljas nupp"
         },
         "trigger_type": {
+            "btn_down": "{subtype} nupp vajutatud",
+            "btn_up": "{subtype} nupp vabastatud",
             "double": "Nuppu  {subtype}  topeltkl\u00f5psati",
+            "double_push": "{subtype} topeltkl\u00f5ps",
             "long": "Nuppu \"{subtype}\" hoiti all",
+            "long_push": "{subtype} pikk vajutus",
             "long_single": "Nuppu {subtype} hoiti all ja seej\u00e4rel kl\u00f5psati",
             "single": "Nuppu {subtype} kl\u00f5psati",
             "single_long": "Nuppu {subtype} kl\u00f5psati \u00fcks kord ja seej\u00e4rel hoiti all",
+            "single_push": "{subtype} l\u00fchike vajutus",
             "triple": "Nuppu {subtype} kl\u00f5psati kolm korda"
         }
     }

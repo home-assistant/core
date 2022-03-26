@@ -7,9 +7,10 @@
             "can_reach_cloud_auth": "Authentifizierungsserver erreichbar",
             "google_enabled": "Google aktiviert",
             "logged_in": "Angemeldet",
-            "relayer_connected": "Relay Verbunden",
+            "relayer_connected": "Relay verbunden",
             "remote_connected": "Remote verbunden",
             "remote_enabled": "Remote aktiviert",
+            "remote_server": "Remote-Server",
             "subscription_expiration": "Ablauf des Abonnements"
         }
     }

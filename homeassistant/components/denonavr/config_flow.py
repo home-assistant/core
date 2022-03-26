@@ -111,8 +111,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             # check if IP address is set manually
-            host = user_input.get(CONF_HOST)
-            if host:
+            if host := user_input.get(CONF_HOST):
                 self.host = host
                 return await self.async_step_connect()
 
@@ -212,7 +211,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Denon AVR.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -220,21 +219,23 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # Filter out non-Denon AVRs#1
         if (
-            discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER)
+            discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER)
             not in SUPPORTED_MANUFACTURERS
         ):
             return self.async_abort(reason="not_denonavr_manufacturer")
 
         # Check if required information is present to set the unique_id
         if (
-            ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info
-            or ssdp.ATTR_UPNP_SERIAL not in discovery_info
+            ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info.upnp
+            or ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp
         ):
             return self.async_abort(reason="not_denonavr_missing")
 
-        self.model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME].replace("*", "")
-        self.serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
-        self.host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+        self.model_name = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME].replace(
+            "*", ""
+        )
+        self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        self.host = urlparse(discovery_info.ssdp_location).hostname
 
         if self.model_name in IGNORED_MODELS:
             return self.async_abort(reason="not_denonavr_manufacturer")
@@ -246,7 +247,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host)
+                    "name": discovery_info.upnp.get(
+                        ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host
+                    )
                 }
             }
         )

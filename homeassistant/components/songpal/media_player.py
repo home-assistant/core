@@ -1,4 +1,6 @@
 """Support for Songpal-enabled (Sony) media devices."""
+from __future__ import annotations
+
 import asyncio
 from collections import OrderedDict
 import logging
@@ -32,6 +34,9 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
 )
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
 
@@ -53,7 +58,10 @@ INITIAL_RETRY_DELAY = 10
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: dict, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up from legacy configuration file. Obsolete."""
     _LOGGER.error(
@@ -62,7 +70,9 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up songpal media player."""
     name = config_entry.data[CONF_NAME]
@@ -202,19 +212,24 @@ class SongpalEntity(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo.macAddr
+        return self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr)},
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "manufacturer": "Sony Corporation",
-            "name": self.name,
-            "sw_version": self._sysinfo.version,
-            "model": self._model,
-        }
+        connections = set()
+        if self._sysinfo.macAddr:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr))
+        if self._sysinfo.wirelessMacAddr:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.wirelessMacAddr))
+        return DeviceInfo(
+            connections=connections,
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Sony Corporation",
+            model=self._model,
+            name=self.name,
+            sw_version=self._sysinfo.version,
+        )
 
     @property
     def available(self):

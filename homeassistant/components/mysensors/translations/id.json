@@ -10,11 +10,13 @@
             "invalid_ip": "Alamat IP tidak valid",
             "invalid_persistence_file": "File persistensi tidak valid",
             "invalid_port": "Nomor port tidak valid",
+            "invalid_publish_topic": "Topik publish tidak valid",
             "invalid_serial": "Port serial tidak valid",
             "invalid_subscribe_topic": "Topik langganan tidak valid",
             "invalid_version": "Versi MySensors tidak valid",
             "not_a_number": "Masukkan angka",
             "port_out_of_range": "Nilai port minimal 1 dan maksimal 65535",
+            "same_topic": "Topik subscribe dan publish sama",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
@@ -27,11 +29,14 @@
             "invalid_ip": "Alamat IP tidak valid",
             "invalid_persistence_file": "File persistensi tidak valid",
             "invalid_port": "Nomor port tidak valid",
+            "invalid_publish_topic": "Topik publish tidak valid",
             "invalid_serial": "Port serial tidak valid",
             "invalid_subscribe_topic": "Topik langganan tidak valid",
             "invalid_version": "Versi MySensors tidak valid",
+            "mqtt_required": "Integrasi MQTT belum disiapkan",
             "not_a_number": "Masukkan angka",
             "port_out_of_range": "Nilai port minimal 1 dan maksimal 65535",
+            "same_topic": "Topik subscribe dan publish sama",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {

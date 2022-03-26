@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+            "not_zha_device": "Denne enheten er ikke en zha -enhet",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
+            "usb_probe_failed": "Kunne ikke unders\u00f8ke usb -enheten"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Vil du konfigurere {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Radio type"

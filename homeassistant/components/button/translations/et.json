@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "press": "Vajuta nuppu {entity_name}"
+        },
+        "trigger_type": {
+            "pressed": "Vajutati nuppu {entity_name}"
+        }
+    },
+    "title": "Nupp"
+}

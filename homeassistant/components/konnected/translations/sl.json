@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Naprava je \u017ee konfigurirana",
             "already_in_progress": "Konfiguracijski tok za napravo je \u017ee v teku.",
+            "cannot_connect": "Povezava ni uspela",
             "not_konn_panel": "Ni prepoznana kot Konnected.io naprava",
             "unknown": "Pri\u0161lo je do neznane napake"
         },

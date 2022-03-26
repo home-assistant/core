@@ -10,7 +10,8 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_key": "Kunci API"
+                    "api_key": "Kunci API",
+                    "description": "Autentikasi ulang dengan akun Ambee Anda."
                 }
             },
             "user": {
@@ -19,7 +20,8 @@
                     "latitude": "Lintang",
                     "longitude": "Bujur",
                     "name": "Nama"
-                }
+                },
+                "description": "Siapkan Ambee Anda untuk diintegrasikan dengan Home Assistant."
             }
         }
     }

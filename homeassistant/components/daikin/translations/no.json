@@ -5,6 +5,7 @@
             "cannot_connect": "Tilkobling mislyktes"
         },
         "error": {
+            "api_password": "Ugyldig godkjenning,  bruk enten API -n\u00f8kkel eller passord.",
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"

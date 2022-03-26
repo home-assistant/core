@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "Primo pulsante",
+            "2": "Secondo pulsante",
+            "3": "Terzo pulsante",
+            "4": "Quarto pulsante",
             "button_1": "Primo pulsante",
             "button_2": "Secondo pulsante",
             "button_3": "Terzo pulsante",
@@ -47,11 +51,16 @@
             "turn_on": "Acceso"
         },
         "trigger_type": {
+            "double_short_release": "Entrambi \"{subtype}\" rilasciati",
+            "initial_press": "Pulsante \"{subtype}\" premuto inizialmente",
+            "long_release": "Pulsante \"{subtype}\" rilasciato dopo una pressione prolungata",
             "remote_button_long_release": "Pulsante \"{subtype}\" rilasciato dopo una lunga pressione",
             "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
             "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
             "remote_double_button_long_press": "Entrambi i \"{subtype}\" rilasciati dopo una lunga pressione",
-            "remote_double_button_short_press": "Entrambi i \"{subtype}\" rilasciati"
+            "remote_double_button_short_press": "Entrambi i \"{subtype}\" rilasciati",
+            "repeat": "Pulsante \"{subtype}\" tenuto premuto",
+            "short_release": "Pulsante \"{subtype}\" rilasciato dopo una breve pressione"
         }
     },
     "options": {
@@ -59,7 +68,9 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Consenti gruppi Hue",
-                    "allow_unreachable": "Consentire alle lampadine irraggiungibili di segnalare correttamente il loro stato"
+                    "allow_hue_scenes": "Consenti scene Tonalit\u00e0",
+                    "allow_unreachable": "Consenti alle lampadine irraggiungibili di segnalare correttamente il loro stato",
+                    "ignore_availability": "Ignora lo stato di connettivit\u00e0 per i dispositivi indicati"
                 }
             }
         }

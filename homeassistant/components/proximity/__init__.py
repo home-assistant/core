@@ -15,9 +15,11 @@ from homeassistant.const import (
     LENGTH_MILES,
     LENGTH_YARD,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.distance import convert
 from homeassistant.util.location import distance
 
@@ -64,18 +66,20 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup_proximity_component(hass, name, config):
+def setup_proximity_component(
+    hass: HomeAssistant, name: str, config: ConfigType
+) -> bool:
     """Set up the individual proximity component."""
-    ignored_zones = config.get(CONF_IGNORED_ZONES)
-    proximity_devices = config.get(CONF_DEVICES)
-    tolerance = config.get(CONF_TOLERANCE)
+    ignored_zones: list[str] = config[CONF_IGNORED_ZONES]
+    proximity_devices: list[str] = config[CONF_DEVICES]
+    tolerance: int = config[CONF_TOLERANCE]
     proximity_zone = name
-    unit_of_measurement = config.get(
+    unit_of_measurement: str = config.get(
         CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
     )
-    zone_id = f"zone.{config.get(CONF_ZONE)}"
+    zone_id = f"zone.{config[CONF_ZONE]}"
 
-    proximity = Proximity(
+    proximity = Proximity(  # type:ignore[no-untyped-call]
         hass,
         proximity_zone,
         DEFAULT_DIST_TO_ZONE,
@@ -96,7 +100,7 @@ def setup_proximity_component(hass, name, config):
     return True
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Get the zones and offsets from configuration.yaml."""
     for zone, proximity_config in config[DOMAIN].items():
         setup_proximity_component(hass, zone, proximity_config)
@@ -164,9 +168,7 @@ class Proximity(Entity):
 
         # Check for devices in the monitored zone.
         for device in self.proximity_devices:
-            device_state = self.hass.states.get(device)
-
-            if device_state is None:
+            if (device_state := self.hass.states.get(device)) is None:
                 devices_to_calculate = True
                 continue
 

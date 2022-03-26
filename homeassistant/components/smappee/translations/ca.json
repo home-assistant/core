@@ -15,7 +15,7 @@
                 "data": {
                     "environment": "Entorn"
                 },
-                "description": "Configura el teu Smappee per a integrar-lo amb Home Assistant."
+                "description": "Configura la integraci\u00f3 de Smappee amb Home Assistant."
             },
             "local": {
                 "data": {

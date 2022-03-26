@@ -7,9 +7,12 @@
             "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Kas seadistada {name} \u2013 {model} ( {host} )?"
+            },
             "user": {
                 "data": {
-                    "host": "Twinkly seadme host (v\u00f5i IP-aadress)"
+                    "host": "Host"
                 },
                 "description": "Seadista oma Twinkly LED riba",
                 "title": ""

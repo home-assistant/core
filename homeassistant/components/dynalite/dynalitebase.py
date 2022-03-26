@@ -1,15 +1,16 @@
 """Support for the Dynalite devices as entities."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from homeassistant.components.dynalite.bridge import DynaliteBridge
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .bridge import DynaliteBridge
 from .const import DOMAIN, LOGGER
 
 
@@ -63,11 +64,11 @@ class DynaliteBase(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "name": self.name,
-            "manufacturer": "Dynalite",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.unique_id)},
+            manufacturer="Dynalite",
+            name=self.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Added to hass so need to register to dispatch."""

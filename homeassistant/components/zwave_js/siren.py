@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import ToneID
+from zwave_js_server.const.command_class.sound_switch import ToneID
 
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenEntity
 from homeassistant.components.siren.const import (
@@ -68,8 +68,10 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
             self._attr_supported_features |= SUPPORT_TONES
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return whether device is on."""
+        if self.info.primary_value.value is None:
+            return None
         return bool(self.info.primary_value.value)
 
     async def async_set_value(

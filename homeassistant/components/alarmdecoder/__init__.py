@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -35,7 +36,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["alarm_control_panel", "sensor", "binary_sensor"]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -150,7 +155,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     _LOGGER.debug("AlarmDecoder options updated: %s", entry.as_dict()["options"])
     await hass.config_entries.async_reload(entry.entry_id)

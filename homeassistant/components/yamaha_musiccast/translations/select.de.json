@@ -1,0 +1,52 @@
+{
+    "state": {
+        "yamaha_musiccast__dimmer": {
+            "auto": "Automatisch"
+        },
+        "yamaha_musiccast__zone_equalizer_mode": {
+            "auto": "Automatisch",
+            "bypass": "Bypass",
+            "manual": "Manuell"
+        },
+        "yamaha_musiccast__zone_link_audio_delay": {
+            "audio_sync": "Audio-Synchronisation",
+            "audio_sync_off": "Audio-Synchronisation Aus",
+            "audio_sync_on": "Audio-Synchronisation Ein",
+            "balanced": "Ausgeglichen",
+            "lip_sync": "Lippensynchronisation"
+        },
+        "yamaha_musiccast__zone_link_audio_quality": {
+            "compressed": "Komprimiert",
+            "uncompressed": "Unkomprimiert"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "Geschwindigkeit",
+            "stability": "Stabilit\u00e4t",
+            "standard": "Standard"
+        },
+        "yamaha_musiccast__zone_sleep": {
+            "120 min": "120 Minuten",
+            "30 min": "30 Minuten",
+            "60 min": "60 Minuten",
+            "90 min": "90 Minuten",
+            "off": "Aus"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "Automatisch",
+            "dolby_pl": "Dolby ProLogic",
+            "dolby_pl2x_game": "Dolby ProLogic 2x Game",
+            "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
+            "dolby_pl2x_music": "Dolby ProLogic 2x Music",
+            "dolby_surround": "Dolby Surround",
+            "dts_neo6_cinema": "DTS Neo:6 Cinema",
+            "dts_neo6_music": "DTS Neo:6 Music",
+            "dts_neural_x": "DTS Neural:X",
+            "toggle": "Umschalten"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "Automatisch",
+            "bypass": "Bypass",
+            "manual": "Manuell"
+        }
+    }
+}

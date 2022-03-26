@@ -1,10 +1,11 @@
 """Test the Coinbase config flow."""
+import logging
 from unittest.mock import patch
 
 from coinbase.wallet.error import AuthenticationError
 from requests.models import Response
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.coinbase.const import (
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
@@ -26,7 +27,7 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -63,23 +64,25 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass, caplog):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    caplog.set_level(logging.DEBUG)
+
     response = Response()
     response.status_code = 401
-    api_auth_error = AuthenticationError(
+    api_auth_error_unknown = AuthenticationError(
         response,
         "authentication_error",
-        "invalid signature",
-        [{"id": "authentication_error", "message": "invalid signature"}],
+        "unknown error",
+        [{"id": "authentication_error", "message": "unknown error"}],
     )
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        side_effect=api_auth_error,
+        side_effect=api_auth_error_unknown,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -91,6 +94,53 @@ async def test_form_invalid_auth(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
+    assert "Coinbase rejected API credentials due to an unknown error" in caplog.text
+
+    api_auth_error_key = AuthenticationError(
+        response,
+        "authentication_error",
+        "invalid api key",
+        [{"id": "authentication_error", "message": "invalid api key"}],
+    )
+    with patch(
+        "coinbase.wallet.client.Client.get_current_user",
+        side_effect=api_auth_error_key,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "123456",
+                CONF_API_TOKEN: "AbCDeF",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth_key"}
+    assert "Coinbase rejected API credentials due to an invalid API key" in caplog.text
+
+    api_auth_error_secret = AuthenticationError(
+        response,
+        "authentication_error",
+        "invalid signature",
+        [{"id": "authentication_error", "message": "invalid signature"}],
+    )
+    with patch(
+        "coinbase.wallet.client.Client.get_current_user",
+        side_effect=api_auth_error_secret,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "123456",
+                CONF_API_TOKEN: "AbCDeF",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth_secret"}
+    assert (
+        "Coinbase rejected API credentials due to an invalid API secret" in caplog.text
+    )
 
 
 async def test_form_cannot_connect(hass):
@@ -191,7 +241,7 @@ async def test_form_bad_account_currency(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "currency_unavaliable"}
+    assert result2["errors"] == {"base": "currency_unavailable"}
 
 
 async def test_form_bad_exchange_rate(hass):
@@ -216,7 +266,7 @@ async def test_form_bad_exchange_rate(hass):
             },
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "exchange_rate_unavaliable"}
+    assert result2["errors"] == {"base": "exchange_rate_unavailable"}
 
 
 async def test_option_catch_all_exception(hass):

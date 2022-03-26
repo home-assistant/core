@@ -1,4 +1,5 @@
 """Test MQTT humidifiers."""
+import copy
 from unittest.mock import patch
 
 import pytest
@@ -12,7 +13,12 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
-from homeassistant.components.mqtt.humidifier import MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED
+from homeassistant.components.mqtt.humidifier import (
+    CONF_MODE_COMMAND_TOPIC,
+    CONF_MODE_STATE_TOPIC,
+    CONF_TARGET_HUMIDITY_STATE_TOPIC,
+    MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -22,6 +28,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
 
@@ -35,6 +42,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -42,6 +50,9 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -148,7 +159,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "StAtE_On")
@@ -211,6 +222,10 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     state = hass.states.get("humidifier.test")
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
 
+    async_fire_mqtt_message(hass, "state-topic", "None")
+    state = hass.states.get("humidifier.test")
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, caplog):
     """Test the controlling state via topic and JSON message."""
@@ -241,7 +256,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"ON"}')
@@ -292,6 +307,10 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     assert "Ignoring empty mode from" in caplog.text
     caplog.clear()
 
+    async_fire_mqtt_message(hass, "state-topic", '{"val": null}')
+    state = hass.states.get("humidifier.test")
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_controlling_state_via_topic_and_json_message_shared_topic(
     hass, mqtt_mock, caplog
@@ -324,7 +343,7 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(
@@ -395,7 +414,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_turn_on(hass, "humidifier.test")
@@ -489,7 +508,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_turn_on(hass, "humidifier.test")
@@ -584,7 +603,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_turn_on(hass, "humidifier.test")
@@ -672,6 +691,34 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("state_topic", "ON", None, "on"),
+        (CONF_MODE_STATE_TOPIC, "auto", ATTR_MODE, "auto"),
+        (CONF_TARGET_HUMIDITY_STATE_TOPIC, "45", ATTR_HUMIDITY, 45),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    config = copy.deepcopy(DEFAULT_CONFIG[humidifier.DOMAIN])
+    config["modes"] = ["eco", "auto"]
+    config[CONF_MODE_COMMAND_TOPIC] = "humidifier/some_mode_command_topic"
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        humidifier.DOMAIN,
+        config,
+        topic,
+        value,
+        attribute,
+        attribute_value,
+    )
+
+
 async def test_attributes(hass, mqtt_mock, caplog):
     """Test attributes."""
     assert await async_setup_component(
@@ -694,7 +741,7 @@ async def test_attributes(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(humidifier.ATTR_AVAILABLE_MODES) == [
         "eco",
         "baby",
@@ -975,10 +1022,18 @@ async def test_discovery_removal_humidifier(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_humidifier(hass, mqtt_mock, caplog):
     """Test update of discovered humidifier."""
-    data1 = '{ "name": "Beer", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
-    data2 = '{ "name": "Milk", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
+    config1 = {
+        "name": "Beer",
+        "command_topic": "test_topic",
+        "target_humidity_command_topic": "test-topic2",
+    }
+    config2 = {
+        "name": "Milk",
+        "command_topic": "test_topic",
+        "target_humidity_command_topic": "test-topic2",
+    }
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, humidifier.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, humidifier.DOMAIN, config1, config2
     )
 
 
@@ -1048,5 +1103,82 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock, humidifier.DOMAIN, DEFAULT_CONFIG, humidifier.SERVICE_TURN_ON
     )
+
+
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload,template",
+    [
+        (
+            humidifier.SERVICE_TURN_ON,
+            "command_topic",
+            None,
+            "ON",
+            None,
+        ),
+        (
+            humidifier.SERVICE_TURN_OFF,
+            "command_topic",
+            None,
+            "OFF",
+            None,
+        ),
+        (
+            humidifier.SERVICE_SET_MODE,
+            "mode_command_topic",
+            {humidifier.ATTR_MODE: "eco"},
+            "eco",
+            "mode_command_template",
+        ),
+        (
+            humidifier.SERVICE_SET_HUMIDITY,
+            "target_humidity_command_topic",
+            {humidifier.ATTR_HUMIDITY: "45"},
+            45,
+            "target_humidity_command_template",
+        ),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass,
+    mqtt_mock,
+    caplog,
+    service,
+    topic,
+    parameters,
+    payload,
+    template,
+):
+    """Test publishing MQTT payload with different encoding."""
+    domain = humidifier.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[domain])
+    if topic == "mode_command_topic":
+        config["modes"] = ["auto", "eco"]
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
+    )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = humidifier.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = humidifier.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)

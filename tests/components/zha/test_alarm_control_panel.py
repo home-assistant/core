@@ -15,9 +15,11 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
+    Platform,
 )
 
 from .common import async_enable_traffic, find_entity_id
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 
 @pytest.fixture
@@ -25,9 +27,10 @@ def zigpy_device(zigpy_device_mock):
     """Device tracker zigpy device."""
     endpoints = {
         1: {
-            "in_clusters": [security.IasAce.cluster_id],
-            "out_clusters": [],
-            "device_type": zha.DeviceType.IAS_ANCILLARY_CONTROL,
+            SIG_EP_INPUT: [security.IasAce.cluster_id],
+            SIG_EP_OUTPUT: [],
+            SIG_EP_TYPE: zha.DeviceType.IAS_ANCILLARY_CONTROL,
+            SIG_EP_PROFILE: zha.PROFILE_ID,
         }
     }
     return zigpy_device_mock(
@@ -44,7 +47,7 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).ias_ace
-    entity_id = await find_entity_id(ALARM_DOMAIN, zha_device, hass)
+    entity_id = await find_entity_id(Platform.ALARM_CONTROL_PANEL, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
     await async_enable_traffic(hass, [zha_device], enabled=False)
@@ -60,7 +63,10 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     # arm_away from HA
     cluster.client_command.reset_mock()
     await hass.services.async_call(
-        ALARM_DOMAIN, "alarm_arm_away", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        ALARM_DOMAIN,
+        "alarm_arm_away",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
@@ -80,7 +86,10 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     # trip alarm from faulty code entry
     cluster.client_command.reset_mock()
     await hass.services.async_call(
-        ALARM_DOMAIN, "alarm_arm_away", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        ALARM_DOMAIN,
+        "alarm_arm_away",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
@@ -115,7 +124,10 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     # arm_home from HA
     cluster.client_command.reset_mock()
     await hass.services.async_call(
-        ALARM_DOMAIN, "alarm_arm_home", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        ALARM_DOMAIN,
+        "alarm_arm_home",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
@@ -132,7 +144,10 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     # arm_night from HA
     cluster.client_command.reset_mock()
     await hass.services.async_call(
-        ALARM_DOMAIN, "alarm_arm_night", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        ALARM_DOMAIN,
+        "alarm_arm_night",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT

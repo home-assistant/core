@@ -1,4 +1,8 @@
 """Platform for Roth Touchline floor heating controller."""
+from __future__ import annotations
+
+from typing import NamedTuple
+
 from pytouchline import PyTouchline
 import voluptuous as vol
 
@@ -9,19 +13,30 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+
+class PresetMode(NamedTuple):
+    """Settings for preset mode."""
+
+    mode: int
+    program: int
+
 
 PRESET_MODES = {
-    "Normal": {"mode": 0, "program": 0},
-    "Night": {"mode": 1, "program": 0},
-    "Holiday": {"mode": 2, "program": 0},
-    "Pro 1": {"mode": 0, "program": 1},
-    "Pro 2": {"mode": 0, "program": 2},
-    "Pro 3": {"mode": 0, "program": 3},
+    "Normal": PresetMode(mode=0, program=0),
+    "Night": PresetMode(mode=1, program=0),
+    "Holiday": PresetMode(mode=2, program=0),
+    "Pro 1": PresetMode(mode=0, program=1),
+    "Pro 2": PresetMode(mode=0, program=2),
+    "Pro 3": PresetMode(mode=0, program=3),
 }
 
 TOUCHLINE_HA_PRESETS = {
-    (settings["mode"], settings["program"]): preset
+    (settings.mode, settings.program): preset
     for preset, settings in PRESET_MODES.items()
 }
 
@@ -30,7 +45,12 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Touchline devices."""
 
     host = config[CONF_HOST]
@@ -119,8 +139,9 @@ class Touchline(ClimateEntity):
 
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
-        self.unit.set_operation_mode(PRESET_MODES[preset_mode]["mode"])
-        self.unit.set_week_program(PRESET_MODES[preset_mode]["program"])
+        preset_mode = PRESET_MODES[preset_mode]
+        self.unit.set_operation_mode(preset_mode.mode)
+        self.unit.set_week_program(preset_mode.program)
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""

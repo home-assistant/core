@@ -93,13 +93,21 @@ async def test_form_unknown_exception(hass):
 
 async def test_config(hass):
     """Test handling of configuration imported."""
-    with patch("homeassistant.components.srp_energy.config_flow.SrpEnergyClient"):
+    with patch(
+        "homeassistant.components.srp_energy.config_flow.SrpEnergyClient"
+    ), patch(
+        "homeassistant.components.srp_energy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             SRP_ENERGY_DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data=ENTRY_CONFIG,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_integration_already_configured(hass):

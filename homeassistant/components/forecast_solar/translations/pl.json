@@ -24,7 +24,7 @@
                     "declination": "Deklinacja (0 = Poziomo, 90 = Pionowo)",
                     "modules power": "Ca\u0142kowita moc szczytowa modu\u0142\u00f3w fotowoltaicznych w watach"
                 },
-                "description": "Te warto\u015bci pozwalaj\u0105 dostosowa\u0107 wyniki dla  Solar.Forecast. Prosz\u0119 zapozna\u0107 si\u0119 z dokumentacj\u0105, je\u015bli pole jest niejasne."
+                "description": "Te warto\u015bci pozwalaj\u0105 dostosowa\u0107 wyniki dla Solar.Forecast. Prosz\u0119 zapozna\u0107 si\u0119 z dokumentacj\u0105, je\u015bli pole jest niejasne."
             }
         }
     }

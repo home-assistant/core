@@ -1,5 +1,7 @@
 """Support for LaMetric notifications."""
-import logging
+from __future__ import annotations
+
+from typing import Any
 
 from lmnotify import Model, SimpleFrame, Sound
 from oauthlib.oauth2 import TokenExpiredError
@@ -13,19 +15,21 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_ICON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as LAMETRIC_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-AVAILABLE_PRIORITIES = ["info", "warning", "critical"]
-AVAILABLE_ICON_TYPES = ["none", "info", "alert"]
-
-CONF_CYCLES = "cycles"
-CONF_LIFETIME = "lifetime"
-CONF_PRIORITY = "priority"
-CONF_ICON_TYPE = "icon_type"
+from . import HassLaMetricManager
+from .const import (
+    AVAILABLE_ICON_TYPES,
+    AVAILABLE_PRIORITIES,
+    CONF_CYCLES,
+    CONF_ICON_TYPE,
+    CONF_LIFETIME,
+    CONF_PRIORITY,
+    DOMAIN,
+    LOGGER,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -38,11 +42,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> LaMetricNotificationService:
     """Get the LaMetric notification service."""
-    hlmn = hass.data.get(LAMETRIC_DOMAIN)
     return LaMetricNotificationService(
-        hlmn,
+        hass.data[DOMAIN],
         config[CONF_ICON],
         config[CONF_LIFETIME] * 1000,
         config[CONF_CYCLES],
@@ -55,8 +62,14 @@ class LaMetricNotificationService(BaseNotificationService):
     """Implement the notification service for LaMetric."""
 
     def __init__(
-        self, hasslametricmanager, icon, lifetime, cycles, priority, icon_type
-    ):
+        self,
+        hasslametricmanager: HassLaMetricManager,
+        icon: str,
+        lifetime: int,
+        cycles: int,
+        priority: str,
+        icon_type: str,
+    ) -> None:
         """Initialize the service."""
         self.hasslametricmanager = hasslametricmanager
         self._icon = icon
@@ -64,14 +77,14 @@ class LaMetricNotificationService(BaseNotificationService):
         self._cycles = cycles
         self._priority = priority
         self._icon_type = icon_type
-        self._devices = []
+        self._devices: list[dict[str, Any]] = []
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to some LaMetric device."""
 
         targets = kwargs.get(ATTR_TARGET)
         data = kwargs.get(ATTR_DATA)
-        _LOGGER.debug("Targets/Data: %s/%s", targets, data)
+        LOGGER.debug("Targets/Data: %s/%s", targets, data)
         icon = self._icon
         cycles = self._cycles
         sound = None
@@ -85,16 +98,16 @@ class LaMetricNotificationService(BaseNotificationService):
             if "sound" in data:
                 try:
                     sound = Sound(category="notifications", sound_id=data["sound"])
-                    _LOGGER.debug("Adding notification sound %s", data["sound"])
+                    LOGGER.debug("Adding notification sound %s", data["sound"])
                 except AssertionError:
-                    _LOGGER.error("Sound ID %s unknown, ignoring", data["sound"])
+                    LOGGER.error("Sound ID %s unknown, ignoring", data["sound"])
             if "cycles" in data:
                 cycles = int(data["cycles"])
             if "icon_type" in data:
                 if data["icon_type"] in AVAILABLE_ICON_TYPES:
                     icon_type = data["icon_type"]
                 else:
-                    _LOGGER.warning(
+                    LOGGER.warning(
                         "Priority %s invalid, using default %s",
                         data["priority"],
                         priority,
@@ -103,13 +116,13 @@ class LaMetricNotificationService(BaseNotificationService):
                 if data["priority"] in AVAILABLE_PRIORITIES:
                     priority = data["priority"]
                 else:
-                    _LOGGER.warning(
+                    LOGGER.warning(
                         "Priority %s invalid, using default %s",
                         data["priority"],
                         priority,
                     )
         text_frame = SimpleFrame(icon, message)
-        _LOGGER.debug(
+        LOGGER.debug(
             "Icon/Message/Cycles/Lifetime: %s, %s, %d, %d",
             icon,
             message,
@@ -124,11 +137,11 @@ class LaMetricNotificationService(BaseNotificationService):
         try:
             self._devices = lmn.get_devices()
         except TokenExpiredError:
-            _LOGGER.debug("Token expired, fetching new token")
+            LOGGER.debug("Token expired, fetching new token")
             lmn.get_token()
             self._devices = lmn.get_devices()
         except RequestsConnectionError:
-            _LOGGER.warning(
+            LOGGER.warning(
                 "Problem connecting to LaMetric, using cached devices instead"
             )
         for dev in self._devices:
@@ -141,6 +154,6 @@ class LaMetricNotificationService(BaseNotificationService):
                         priority=priority,
                         icon_type=icon_type,
                     )
-                    _LOGGER.debug("Sent notification to LaMetric %s", dev["name"])
+                    LOGGER.debug("Sent notification to LaMetric %s", dev["name"])
                 except OSError:
-                    _LOGGER.warning("Cannot connect to LaMetric %s", dev["name"])
+                    LOGGER.warning("Cannot connect to LaMetric %s", dev["name"])

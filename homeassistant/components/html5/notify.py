@@ -2,6 +2,7 @@
 from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import partial
+from http import HTTPStatus
 import json
 import logging
 import time
@@ -26,13 +27,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import (
-    ATTR_NAME,
-    HTTP_BAD_REQUEST,
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_UNAUTHORIZED,
-    URL_ROOT,
-)
+from homeassistant.const import ATTR_NAME, URL_ROOT
+from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
@@ -183,17 +179,16 @@ def get_service(hass, config, discovery_info=None):
     def websocket_appkey(hass, connection, msg):
         connection.send_message(websocket_api.result_message(msg["id"], vapid_pub_key))
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_APPKEY, websocket_appkey, SCHEMA_WS_APPKEY
+    websocket_api.async_register_command(
+        hass, WS_TYPE_APPKEY, websocket_appkey, SCHEMA_WS_APPKEY
     )
 
     hass.http.register_view(HTML5PushRegistrationView(registrations, json_path))
     hass.http.register_view(HTML5PushCallbackView(registrations))
 
     gcm_api_key = config.get(ATTR_GCM_API_KEY)
-    gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
 
-    if gcm_sender_id is not None:
+    if config.get(ATTR_GCM_SENDER_ID) is not None:
         add_manifest_json_key(ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
 
     return HTML5NotificationService(
@@ -224,11 +219,11 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
         try:
             data = REGISTER_SCHEMA(data)
         except vol.Invalid as ex:
-            return self.json_message(humanize_error(data, ex), HTTP_BAD_REQUEST)
+            return self.json_message(humanize_error(data, ex), HTTPStatus.BAD_REQUEST)
 
         devname = data.get(ATTR_NAME)
         data.pop(ATTR_NAME, None)
@@ -252,7 +247,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
                 self.registrations.pop(name)
 
             return self.json_message(
-                "Error saving registration.", HTTP_INTERNAL_SERVER_ERROR
+                "Error saving registration.", HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
     def find_registration_name(self, data, suggested=None):
@@ -269,7 +264,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         subscription = data.get(ATTR_SUBSCRIPTION)
 
@@ -295,7 +290,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         except HomeAssistantError:
             self.registrations[found] = reg
             return self.json_message(
-                "Error saving registration.", HTTP_INTERNAL_SERVER_ERROR
+                "Error saving registration.", HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
         return self.json_message("Push notification subscriber unregistered.")
@@ -320,7 +315,9 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 2a. If decode is successful, return the payload.
         # 2b. If decode is unsuccessful, return a 401.
 
-        target_check = jwt.decode(token, verify=False)
+        target_check = jwt.decode(
+            token, algorithms=["ES256", "HS256"], options={"verify_signature": False}
+        )
         if target_check.get(ATTR_TARGET) in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
@@ -328,18 +325,16 @@ class HTML5PushCallbackView(HomeAssistantView):
                 return jwt.decode(token, key, algorithms=["ES256", "HS256"])
 
         return self.json_message(
-            "No target found in JWT", status_code=HTTP_UNAUTHORIZED
+            "No target found in JWT", status_code=HTTPStatus.UNAUTHORIZED
         )
 
     # The following is based on code from Auth0
     # https://auth0.com/docs/quickstart/backend/python
     def check_authorization_header(self, request):
         """Check the authorization header."""
-
-        auth = request.headers.get(AUTHORIZATION)
-        if not auth:
+        if not (auth := request.headers.get(AUTHORIZATION)):
             return self.json_message(
-                "Authorization header is expected", status_code=HTTP_UNAUTHORIZED
+                "Authorization header is expected", status_code=HTTPStatus.UNAUTHORIZED
             )
 
         parts = auth.split()
@@ -347,19 +342,21 @@ class HTML5PushCallbackView(HomeAssistantView):
         if parts[0].lower() != "bearer":
             return self.json_message(
                 "Authorization header must start with Bearer",
-                status_code=HTTP_UNAUTHORIZED,
+                status_code=HTTPStatus.UNAUTHORIZED,
             )
         if len(parts) != 2:
             return self.json_message(
                 "Authorization header must be Bearer token",
-                status_code=HTTP_UNAUTHORIZED,
+                status_code=HTTPStatus.UNAUTHORIZED,
             )
 
         token = parts[1]
         try:
             payload = self.decode_jwt(token)
         except jwt.exceptions.InvalidTokenError:
-            return self.json_message("token is invalid", status_code=HTTP_UNAUTHORIZED)
+            return self.json_message(
+                "token is invalid", status_code=HTTPStatus.UNAUTHORIZED
+            )
         return payload
 
     async def post(self, request):
@@ -371,7 +368,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         event_payload = {
             ATTR_TAG: data.get(ATTR_TAG),
@@ -409,7 +406,7 @@ class HTML5NotificationService(BaseNotificationService):
         self.registrations = registrations
         self.registrations_json_path = json_path
 
-        async def async_dismiss_message(service):
+        async def async_dismiss_message(service: ServiceCall) -> None:
             """Handle dismissing notification message service calls."""
             kwargs = {}
 
@@ -464,9 +461,7 @@ class HTML5NotificationService(BaseNotificationService):
             ATTR_TITLE: kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
         }
 
-        data = kwargs.get(ATTR_DATA)
-
-        if data:
+        if data := kwargs.get(ATTR_DATA):
             # Pick out fields that should go into the notification directly vs
             # into the notification data dictionary.
 
@@ -497,9 +492,8 @@ class HTML5NotificationService(BaseNotificationService):
         if priority not in ["normal", "high"]:
             priority = DEFAULT_PRIORITY
         payload["timestamp"] = timestamp * 1000  # Javascript ms since epoch
-        targets = kwargs.get(ATTR_TARGET)
 
-        if not targets:
+        if not (targets := kwargs.get(ATTR_TARGET)):
             targets = self.registrations.keys()
 
         for target in list(targets):
@@ -557,7 +551,7 @@ def add_jwt(timestamp, target, tag, jwt_secret):
         ATTR_TARGET: target,
         ATTR_TAG: tag,
     }
-    return jwt.encode(jwt_claims, jwt_secret).decode("utf-8")
+    return jwt.encode(jwt_claims, jwt_secret)
 
 
 def create_vapid_headers(vapid_email, subscription_info, vapid_private_key):

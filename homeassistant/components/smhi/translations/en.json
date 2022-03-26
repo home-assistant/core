@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
         "error": {
             "name_exists": "Name already exists",
             "wrong_location": "Location Sweden only"

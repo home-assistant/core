@@ -4,7 +4,7 @@ from unittest.mock import patch
 from aioguardian.errors import GuardianError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.guardian import CONF_UID, DOMAIN
 from homeassistant.components.guardian.config_flow import (
     async_get_pin_from_discovery_hostname,
@@ -16,32 +16,23 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from tests.common import MockConfigEntry
 
 
-async def test_duplicate_error(hass, ping_client):
+async def test_duplicate_error(hass, config, config_entry, setup_guardian):
     """Test that errors are shown when duplicate entries are added."""
-    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
-
-    MockConfigEntry(domain=DOMAIN, unique_id="guardian_3456", data=conf).add_to_hass(
-        hass
-    )
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=conf
+        DOMAIN, context={"source": SOURCE_USER}, data=config
     )
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_connect_error(hass):
+async def test_connect_error(hass, config):
     """Test that the config entry errors out if the device cannot connect."""
-    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
-
     with patch(
         "aioguardian.client.Client.connect",
         side_effect=GuardianError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=conf
+            DOMAIN, context={"source": SOURCE_USER}, data=config
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
@@ -59,10 +50,8 @@ async def test_get_pin_from_uid():
     assert pin == "3456"
 
 
-async def test_step_user(hass, ping_client):
+async def test_step_user(hass, config, setup_guardian):
     """Test the user step."""
-    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -70,7 +59,7 @@ async def test_step_user(hass, ping_client):
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=conf
+        DOMAIN, context={"source": SOURCE_USER}, data=config
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "ABCDEF123456"
@@ -81,16 +70,17 @@ async def test_step_user(hass, ping_client):
     }
 
 
-async def test_step_zeroconf(hass, ping_client):
+async def test_step_zeroconf(hass, setup_guardian):
     """Test the zeroconf step."""
-    zeroconf_data = {
-        "host": "192.168.1.100",
-        "port": 7777,
-        "hostname": "GVC1-ABCD.local.",
-        "type": "_api._udp.local.",
-        "name": "Guardian Valve Controller API._api._udp.local.",
-        "properties": {"_raw": {}},
-    }
+    zeroconf_data = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.100",
+        addresses=["192.168.1.100"],
+        port=7777,
+        hostname="GVC1-ABCD.local.",
+        type="_api._udp.local.",
+        name="Guardian Valve Controller API._api._udp.local.",
+        properties={"_raw": {}},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_data
@@ -112,14 +102,15 @@ async def test_step_zeroconf(hass, ping_client):
 
 async def test_step_zeroconf_already_in_progress(hass):
     """Test the zeroconf step aborting because it's already in progress."""
-    zeroconf_data = {
-        "host": "192.168.1.100",
-        "port": 7777,
-        "hostname": "GVC1-ABCD.local.",
-        "type": "_api._udp.local.",
-        "name": "Guardian Valve Controller API._api._udp.local.",
-        "properties": {"_raw": {}},
-    }
+    zeroconf_data = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.100",
+        addresses=["192.168.1.100"],
+        port=7777,
+        hostname="GVC1-ABCD.local.",
+        type="_api._udp.local.",
+        name="Guardian Valve Controller API._api._udp.local.",
+        properties={"_raw": {}},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_data
@@ -134,13 +125,13 @@ async def test_step_zeroconf_already_in_progress(hass):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_step_dhcp(hass, ping_client):
+async def test_step_dhcp(hass, setup_guardian):
     """Test the dhcp step."""
-    dhcp_data = {
-        IP_ADDRESS: "192.168.1.100",
-        HOSTNAME: "GVC1-ABCD.local.",
-        MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
-    }
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip="192.168.1.100",
+        hostname="GVC1-ABCD.local.",
+        macaddress="aa:bb:cc:dd:ee:ff",
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=dhcp_data
@@ -162,11 +153,11 @@ async def test_step_dhcp(hass, ping_client):
 
 async def test_step_dhcp_already_in_progress(hass):
     """Test the zeroconf step aborting because it's already in progress."""
-    dhcp_data = {
-        IP_ADDRESS: "192.168.1.100",
-        HOSTNAME: "GVC1-ABCD.local.",
-        MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
-    }
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip="192.168.1.100",
+        hostname="GVC1-ABCD.local.",
+        macaddress="aa:bb:cc:dd:ee:ff",
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=dhcp_data
@@ -179,3 +170,45 @@ async def test_step_dhcp_already_in_progress(hass):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_in_progress"
+
+
+async def test_step_dhcp_already_setup_match_mac(hass):
+    """Test we abort if the device is already setup with matching unique id and discovered via DHCP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"}, unique_id="guardian_ABCD"
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=dhcp.DhcpServiceInfo(
+            ip="192.168.1.100",
+            hostname="GVC1-ABCD.local.",
+            macaddress="aa:bb:cc:dd:ab:cd",
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_step_dhcp_already_setup_match_ip(hass):
+    """Test we abort if the device is already setup with matching ip and discovered via DHCP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
+        unique_id="guardian_0000",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=dhcp.DhcpServiceInfo(
+            ip="192.168.1.100",
+            hostname="GVC1-ABCD.local.",
+            macaddress="aa:bb:cc:dd:ab:cd",
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"

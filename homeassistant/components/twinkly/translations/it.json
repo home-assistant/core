@@ -7,9 +7,12 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Vuoi configurare {name} - {model} ({host})?"
+            },
             "user": {
                 "data": {
-                    "host": "Host (o indirizzo IP) del tuo dispositivo twinkly"
+                    "host": "Host"
                 },
                 "description": "Configura la tua stringa led Twinkly",
                 "title": "Twinkly"

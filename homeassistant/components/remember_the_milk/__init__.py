@@ -6,10 +6,13 @@ import os
 from rtmapi import Rtm, RtmRequestFailedException
 import voluptuous as vol
 
+from homeassistant.components import configurator
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, CONF_TOKEN, STATE_OK
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 
 # httplib2 is a transitive dependency from RtmAPI. If this dependency is not
 # set explicitly, the library does not work.
@@ -47,7 +50,7 @@ SERVICE_SCHEMA_CREATE_TASK = vol.Schema(
 SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({vol.Required(CONF_ID): cv.string})
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Remember the milk component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -103,7 +106,6 @@ def _register_new_account(
     hass, account_name, api_key, shared_secret, stored_rtm_config, component
 ):
     request_id = None
-    configurator = hass.components.configurator
     api = Rtm(api_key, shared_secret, "write", None)
     url, frob = api.authenticate_desktop()
     _LOGGER.debug("Sent authentication request to server")
@@ -115,7 +117,7 @@ def _register_new_account(
         if api.token is None:
             _LOGGER.error("Failed to register, please try again")
             configurator.notify_errors(
-                request_id, "Failed to register, please try again."
+                hass, request_id, "Failed to register, please try again."
             )
             return
 
@@ -132,9 +134,10 @@ def _register_new_account(
             component,
         )
 
-        configurator.request_done(request_id)
+        configurator.request_done(hass, request_id)
 
     request_id = configurator.async_request_config(
+        hass,
         f"{DOMAIN} - {account_name}",
         callback=register_account_callback,
         description=(
@@ -268,7 +271,7 @@ class RememberTheMilk(Entity):
             self._token_valid = True
         return self._token_valid
 
-    def create_task(self, call):
+    def create_task(self, call: ServiceCall) -> None:
         """Create a new task on Remember The Milk.
 
         You can use the smart syntax to define the attributes of a new task,
@@ -276,7 +279,7 @@ class RememberTheMilk(Entity):
         due date to today.
         """
         try:
-            task_name = call.data.get(CONF_NAME)
+            task_name = call.data[CONF_NAME]
             hass_id = call.data.get(CONF_ID)
             rtm_id = None
             if hass_id is not None:
@@ -318,12 +321,10 @@ class RememberTheMilk(Entity):
                 self._name,
                 rtm_exception,
             )
-            return False
-        return True
 
-    def complete_task(self, call):
+    def complete_task(self, call: ServiceCall) -> None:
         """Complete a task that was previously created by this component."""
-        hass_id = call.data.get(CONF_ID)
+        hass_id = call.data[CONF_ID]
         rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
         if rtm_id is None:
             _LOGGER.error(
@@ -332,7 +333,7 @@ class RememberTheMilk(Entity):
                 hass_id,
                 self._name,
             )
-            return False
+            return
         try:
             result = self._rtm_api.rtm.timelines.create()
             timeline = result.timeline.value
@@ -352,7 +353,6 @@ class RememberTheMilk(Entity):
                 self._name,
                 rtm_exception,
             )
-        return True
 
     @property
     def name(self):

@@ -5,14 +5,14 @@
             "import_failed": "Nem siker\u00fclt import\u00e1lni a konfigur\u00e1ci\u00f3t"
         },
         "error": {
-            "connection_refused": "A kapcsolat megtagadva a gazdag\u00e9phez val\u00f3 csatlakoz\u00e1skor",
-            "connection_timeout": "T\u00fall\u00e9p\u00e9s, amikor ehhez a gazdag\u00e9phez kapcsol\u00f3dik",
-            "resolve_failed": "Ez a gazdag\u00e9p nem oldhat\u00f3 fel"
+            "connection_refused": "A kapcsolat megtagadva a g\u00e9phez val\u00f3 csatlakoz\u00e1skor",
+            "connection_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s, ehhez a c\u00edmhez kapcsol\u00f3d\u00e1skor",
+            "resolve_failed": "Ez a c\u00edm nem oldhat\u00f3 fel"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "name": "A tan\u00fas\u00edtv\u00e1ny neve",
                     "port": "Port"
                 },

@@ -1,19 +1,20 @@
 """Platform for switch integration."""
-import logging
-
 import async_timeout
 from smarttub import SpaPump
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import API_TIMEOUT, ATTR_PUMPS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up switch entities for the pumps on the tub."""
 
     controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]

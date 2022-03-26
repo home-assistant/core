@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "no_devices_found": "Keine weiteren Ger\u00e4te gefunden"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "usb_confirm": {
+                "description": "Dies ist eine Integration f\u00fcr Festnetzanrufe mit einem CX93001 Sprachmodem. Damit k\u00f6nnen Anrufer-ID-Informationen mit einer Option zum Abweisen eines eingehenden Anrufs abgerufen werden.",
+                "title": "Telefonmodem"
+            },
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "port": "Port"
+                },
+                "description": "Dies ist eine Integration f\u00fcr Festnetzanrufe mit einem CX93001 Sprachmodem. Damit k\u00f6nnen Anrufer-ID-Informationen mit einer Option zum Abweisen eines eingehenden Anrufs abgerufen werden.",
+                "title": "Telefonmodem"
+            }
+        }
+    }
+}

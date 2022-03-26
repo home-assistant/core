@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller site is al geconfigureerd",
+            "already_configured": "Unifi Network site is al geconfigureerd",
             "configuration_updated": "Configuratie bijgewerkt.",
             "reauth_successful": "Herauthenticatie was succesvol"
         },
@@ -21,7 +21,7 @@
                     "username": "Gebruikersnaam",
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
-                "title": "Stel de UniFi-controller in"
+                "title": "Stel de UniFi Network controller in"
             }
         }
     },
@@ -34,7 +34,7 @@
                     "poe_clients": "Sta POE-controle van gebruikers toe"
                 },
                 "description": "Configureer clientbesturingen \n\n Maak schakelaars voor serienummers waarvoor u de netwerktoegang wilt beheren.",
-                "title": "UniFi-opties 2/3"
+                "title": "UniFi Network opties 2/3"
             },
             "device_tracker": {
                 "data": {
@@ -46,7 +46,7 @@
                     "track_wired_clients": "Inclusief bedrade netwerkcli\u00ebnten"
                 },
                 "description": "Apparaattracking configureren",
-                "title": "UniFi-opties 1/3"
+                "title": "UniFi Network opties 1/3"
             },
             "init": {
                 "data": {
@@ -60,7 +60,7 @@
                     "track_clients": "Volg netwerkclients",
                     "track_devices": "Volg netwerkapparaten (Ubiquiti-apparaten)"
                 },
-                "description": "Configureer UniFi-integratie"
+                "description": "Configureer UniFi network integratie"
             },
             "statistics_sensors": {
                 "data": {
@@ -68,7 +68,7 @@
                     "allow_uptime_sensors": "Uptime-sensoren voor netwerkclients"
                 },
                 "description": "Configureer statistische sensoren",
-                "title": "UniFi-opties 3/3"
+                "title": "UniFi Network opties 3/3"
             }
         }
     }

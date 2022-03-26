@@ -14,7 +14,7 @@
             "other": "\u00dcres",
             "setup_network": {
                 "data": {
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "port": "Port"
                 },
                 "title": "V\u00e1lassza ki a csatlakoz\u00e1si c\u00edmet"
@@ -39,6 +39,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Parancs k\u00fcld\u00e9se: {subtype}",
+            "send_status": "\u00c1llapotfriss\u00edt\u00e9s k\u00fcld\u00e9se: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Be\u00e9rkezett parancs: {alt\u00edpus}",
+            "status": "Be\u00e9rkezett st\u00e1tusz: {subtype}"
+        }
+    },
     "one": "\u00dcres",
     "options": {
         "error": {
@@ -56,6 +66,7 @@
                     "debug": "Enged\u00e9lyezze a hibakeres\u00e9st",
                     "device": "V\u00e1lassza ki a konfigur\u00e1lni k\u00edv\u00e1nt eszk\u00f6zt",
                     "event_code": "\u00cdrja be a hozz\u00e1adni k\u00edv\u00e1nt esem\u00e9ny k\u00f3dj\u00e1t",
+                    "protocols": "Protokollok",
                     "remove_device": "V\u00e1lassza ki a t\u00f6r\u00f6lni k\u00edv\u00e1nt eszk\u00f6zt"
                 },
                 "title": "Rfxtrx opci\u00f3k"

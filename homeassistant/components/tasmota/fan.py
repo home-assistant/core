@@ -109,11 +109,10 @@ class TasmotaFan(
             tasmota_speed = percentage_to_ordered_list_item(
                 ORDERED_NAMED_FAN_SPEEDS, percentage
             )
-            self._tasmota_entity.set_speed(tasmota_speed)
+            await self._tasmota_entity.set_speed(tasmota_speed)
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
@@ -129,4 +128,4 @@ class TasmotaFan(
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        self._tasmota_entity.set_speed(tasmota_const.FAN_SPEED_OFF)
+        await self._tasmota_entity.set_speed(tasmota_const.FAN_SPEED_OFF)

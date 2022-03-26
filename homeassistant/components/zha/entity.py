@@ -10,6 +10,7 @@ from typing import Any
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
 from homeassistant.helpers import entity
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -34,11 +35,13 @@ from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
-UPDATE_GROUP_FROM_CHILD_DELAY = 0.2
+UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
 
 
 class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
+
+    unique_id_suffix: str | None = None
 
     def __init__(self, unique_id: str, zha_device: ZhaDeviceType, **kwargs) -> None:
         """Init ZHA entity."""
@@ -46,6 +49,8 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._force_update: bool = False
         self._should_poll: bool = False
         self._unique_id: str = unique_id
+        if self.unique_id_suffix:
+            self._unique_id += f"-{self.unique_id_suffix}"
         self._state: Any = None
         self._extra_state_attributes: dict[str, Any] = {}
         self._zha_device: ZhaDeviceType = zha_device
@@ -87,14 +92,14 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
         ieee = zha_device_info["ieee"]
-        return {
-            "connections": {(CONNECTION_ZIGBEE, ieee)},
-            "identifiers": {(DOMAIN, ieee)},
-            ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
-            ATTR_MODEL: zha_device_info[ATTR_MODEL],
-            ATTR_NAME: zha_device_info[ATTR_NAME],
-            "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
-        }
+        return entity.DeviceInfo(
+            connections={(CONNECTION_ZIGBEE, ieee)},
+            identifiers={(DOMAIN, ieee)},
+            manufacturer=zha_device_info[ATTR_MANUFACTURER],
+            model=zha_device_info[ATTR_MODEL],
+            name=zha_device_info[ATTR_NAME],
+            via_device=(DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+        )
 
     @callback
     def async_state_changed(self) -> None:
@@ -141,6 +146,16 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 class ZhaEntity(BaseZhaEntity, RestoreEntity):
     """A base class for non group ZHA entities."""
 
+    def __init_subclass__(cls, id_suffix: str | None = None, **kwargs) -> None:
+        """Initialize subclass.
+
+        :param id_suffix: suffix to add to the unique_id of the entity. Used for multi
+                          entities using the same channel/cluster id for the entity.
+        """
+        super().__init_subclass__(**kwargs)
+        if id_suffix:
+            cls.unique_id_suffix = id_suffix
+
     def __init__(
         self,
         unique_id: str,
@@ -151,12 +166,27 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
         ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
-        ch_names = [ch.cluster.ep_attribute for ch in channels]
-        ch_names = ", ".join(sorted(ch_names))
+        ch_names = ", ".join(sorted(ch.name for ch in channels))
         self._name: str = f"{zha_device.name} {ieeetail} {ch_names}"
+        if self.unique_id_suffix:
+            self._name += f" {self.unique_id_suffix}"
         self.cluster_channels: dict[str, ChannelType] = {}
         for channel in channels:
             self.cluster_channels[channel.name] = channel
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        return cls(unique_id, zha_device, channels, **kwargs)
 
     @property
     def available(self) -> bool:
@@ -175,8 +205,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 
         if not self.zha_device.is_mains_powered:
             # mains powered devices will get real time state
-            last_state = await self.async_get_last_state()
-            if last_state:
+            if last_state := await self.async_get_last_state():
                 self.async_restore_last_state(last_state)
 
         self.async_accept_signal(
@@ -230,11 +259,22 @@ class ZhaGroupEntity(BaseZhaEntity):
         self._entity_ids: list[str] = entity_ids
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
         self._handled_group_membership = False
+        self._change_listener_debouncer: Debouncer | None = None
 
     @property
     def available(self) -> bool:
         """Return entity availability."""
         return self._available
+
+    @classmethod
+    def create_entity(
+        cls, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
+    ) -> ZhaGroupEntity | None:
+        """Group Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        return cls(entity_ids, unique_id, group_id, zha_device, **kwargs)
 
     async def _handle_group_membership_changed(self):
         """Handle group membership changed."""
@@ -256,6 +296,14 @@ class ZhaGroupEntity(BaseZhaEntity):
             signal_override=True,
         )
 
+        if self._change_listener_debouncer is None:
+            self._change_listener_debouncer = Debouncer(
+                self.hass,
+                self,
+                cooldown=UPDATE_GROUP_FROM_CHILD_DELAY,
+                immediate=False,
+                function=functools.partial(self.async_update_ha_state, True),
+            )
         self._async_unsub_state_changed = async_track_state_change_event(
             self.hass, self._entity_ids, self.async_state_changed_listener
         )
@@ -271,10 +319,7 @@ class ZhaGroupEntity(BaseZhaEntity):
     def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
         # Delay to ensure that we get updates from all members before updating the group
-        self.hass.loop.call_later(
-            UPDATE_GROUP_FROM_CHILD_DELAY,
-            lambda: self.async_schedule_update_ha_state(True),
-        )
+        self.hass.create_task(self._change_listener_debouncer.async_call())
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""

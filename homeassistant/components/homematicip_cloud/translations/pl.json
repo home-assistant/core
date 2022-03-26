@@ -21,7 +21,7 @@
                 "title": "Wybierz punkt dost\u0119pu HomematicIP"
             },
             "link": {
-                "description": "Naci\u015bnij niebieski przycisk na punkcie dost\u0119pu i przycisk przesy\u0142ania, aby zarejestrowa\u0107 HomematicIP w Home Assistant. \n\n![Umiejscowienie przycisku na mostku](/static/images/config_flows/config_homematicip_cloud.png)",
+                "description": "Naci\u015bnij niebieski przycisk na punkcie dost\u0119pu i przycisk \"Zatwierd\u017a\", aby zarejestrowa\u0107 HomematicIP w Home Assistant. \n\n![Umiejscowienie przycisku na mostku](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Po\u0142\u0105czenie z punktem dost\u0119pu"
             }
         }

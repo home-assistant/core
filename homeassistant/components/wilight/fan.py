@@ -20,6 +20,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -33,8 +34,8 @@ SUPPORTED_FEATURES = SUPPORT_SET_SPEED | SUPPORT_DIRECTION
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up WiLight lights from a config entry."""
     parent = hass.data[DOMAIN][entry.entry_id]
 
@@ -86,8 +87,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         ):
             return 0
 
-        wl_speed = self._status.get("speed")
-        if wl_speed is None:
+        if (wl_speed := self._status.get("speed")) is None:
             return None
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, wl_speed)
 
@@ -108,7 +108,6 @@ class WiLightFan(WiLightDevice, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,

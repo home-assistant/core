@@ -56,7 +56,8 @@
         "invalid_api_key": "Invalid API key",
         "invalid_auth": "Invalid authentication",
         "invalid_host": "Invalid hostname or IP address",
-        "unknown": "Unexpected error"
+        "unknown": "Unexpected error",
+        "timeout_connect": "Timeout establishing connection"
       },
       "abort": {
         "single_instance_allowed": "Already configured. Only a single configuration possible.",
@@ -72,7 +73,8 @@
         "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
         "oauth2_no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
         "reauth_successful": "Re-authentication was successful",
-        "unknown_authorize_url_generation": "Unknown error generating an authorize URL."
+        "unknown_authorize_url_generation": "Unknown error generating an authorize URL.",
+        "cloud_not_connected": "Not connected to Home Assistant Cloud."
       }
     }
   }

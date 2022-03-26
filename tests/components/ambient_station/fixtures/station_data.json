@@ -1,0 +1,43 @@
+{
+  "devices": [
+    {
+      "macAddress": "12:34:56:78:90:AB",
+      "lastData": {
+        "dateutc": 1642631880000,
+        "tempinf": 70.9,
+        "humidityin": 29,
+        "baromrelin": 29.953,
+        "baromabsin": 25.016,
+        "tempf": 21,
+        "humidity": 87,
+        "winddir": 25,
+        "windspeedmph": 0.2,
+        "windgustmph": 1.1,
+        "maxdailygust": 9.2,
+        "hourlyrainin": 0,
+        "eventrainin": 0,
+        "dailyrainin": 0,
+        "weeklyrainin": 0,
+        "monthlyrainin": 0.409,
+        "totalrainin": 35.398,
+        "solarradiation": 11.62,
+        "uv": 0,
+        "batt_co2": 1,
+        "feelsLike": 21,
+        "dewPoint": 17.75,
+        "feelsLikein": 69.1,
+        "dewPointin": 37,
+        "lastRain": "2022-01-07T19:45:00.000Z",
+        "deviceId": "1234567890abcdef12345678",
+        "tz": "America/New York",
+        "date": "2022-01-19T22:38:00.000Z"
+      },
+      "info": {
+        "name": "Side Yard",
+        "location": "Home"
+      },
+      "apiKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  ],
+  "method": "subscribe"
+}

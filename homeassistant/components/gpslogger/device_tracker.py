@@ -11,6 +11,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN as GPL_DOMAIN, TRACKER_UPDATE
@@ -24,8 +26,8 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Configure a dispatcher connection based on a config entry."""
 
     @callback
@@ -111,9 +113,9 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(GPL_DOMAIN, self._unique_id)}}
+        return DeviceInfo(identifiers={(GPL_DOMAIN, self._unique_id)}, name=self._name)
 
     @property
     def source_type(self):
@@ -131,8 +133,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         if self._location is not None:
             return
 
-        state = await self.async_get_last_state()
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             self._location = (None, None)
             self._accuracy = None
             self._attributes = {

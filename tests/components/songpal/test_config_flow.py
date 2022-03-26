@@ -1,5 +1,6 @@
 """Test the songpal config flow."""
 import copy
+import dataclasses
 from unittest.mock import patch
 
 from homeassistant.components import ssdp
@@ -26,17 +27,21 @@ from tests.common import MockConfigEntry
 
 UDN = "uuid:1234"
 
-SSDP_DATA = {
-    ssdp.ATTR_UPNP_UDN: UDN,
-    ssdp.ATTR_UPNP_FRIENDLY_NAME: FRIENDLY_NAME,
-    ssdp.ATTR_SSDP_LOCATION: f"http://{HOST}:52323/dmr.xml",
-    "X_ScalarWebAPI_DeviceInfo": {
-        "X_ScalarWebAPI_BaseURL": ENDPOINT,
-        "X_ScalarWebAPI_ServiceList": {
-            "X_ScalarWebAPI_ServiceType": ["guide", "system", "audio", "avContent"],
+SSDP_DATA = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location=f"http://{HOST}:52323/dmr.xml",
+    upnp={
+        ssdp.ATTR_UPNP_UDN: UDN,
+        ssdp.ATTR_UPNP_FRIENDLY_NAME: FRIENDLY_NAME,
+        "X_ScalarWebAPI_DeviceInfo": {
+            "X_ScalarWebAPI_BaseURL": ENDPOINT,
+            "X_ScalarWebAPI_ServiceList": {
+                "X_ScalarWebAPI_ServiceType": ["guide", "system", "audio", "avContent"],
+            },
         },
     },
-}
+)
 
 
 def _flow_next(hass, flow_id):
@@ -150,8 +155,9 @@ def _create_mock_config_entry(hass):
 
 async def test_ssdp_bravia(hass):
     """Test discovering a bravia TV."""
-    ssdp_data = copy.deepcopy(SSDP_DATA)
-    ssdp_data["X_ScalarWebAPI_DeviceInfo"]["X_ScalarWebAPI_ServiceList"][
+    ssdp_data = dataclasses.replace(SSDP_DATA)
+    ssdp_data.upnp = copy.deepcopy(ssdp_data.upnp)
+    ssdp_data.upnp["X_ScalarWebAPI_DeviceInfo"]["X_ScalarWebAPI_ServiceList"][
         "X_ScalarWebAPI_ServiceType"
     ].append("videoScreen")
     result = await hass.config_entries.flow.async_init(

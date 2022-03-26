@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "L\u00fcliti olem"
+                },
+                "description": "Vali valgusti l\u00fcliti"
+            }
+        }
+    },
     "device_automation": {
         "action_type": {
             "toggle": "Muuda {entity_name} olekut",
@@ -10,6 +20,8 @@
             "is_on": "{entity_name} on sisse l\u00fclitatud"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} l\u00fclitus sisse v\u00f5i v\u00e4lja",
+            "toggled": "{entity_name} l\u00fclitus sisse v\u00f5i v\u00e4lja",
             "turned_off": "{entity_name} l\u00fclitus v\u00e4lja",
             "turned_on": "{entity_name} l\u00fclitus sisse"
         }

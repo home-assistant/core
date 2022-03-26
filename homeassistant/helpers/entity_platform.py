@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-import logging
-from logging import Logger
+from logging import Logger, getLogger
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Callable, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -42,7 +42,7 @@ from . import (
     service,
 )
 from .device_registry import DeviceRegistry
-from .entity_registry import DISABLED_INTEGRATION, EntityRegistry
+from .entity_registry import EntityRegistry, RegistryEntryDisabler
 from .event import async_call_later, async_track_time_interval
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -59,7 +59,7 @@ PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = getLogger(__name__)
 
 
 class AddEntitiesCallback(Protocol):
@@ -172,7 +172,7 @@ class EntityPlatform:
         def async_create_setup_task() -> Coroutine:
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
-                return platform.async_setup_platform(  # type: ignore
+                return platform.async_setup_platform(  # type: ignore[no-any-return,union-attr]
                     hass,
                     platform_config,
                     self._async_schedule_add_entities,
@@ -183,7 +183,7 @@ class EntityPlatform:
             # we don't want to track this task in case it blocks startup.
             return hass.loop.run_in_executor(  # type: ignore[return-value]
                 None,
-                platform.setup_platform,  # type: ignore
+                platform.setup_platform,  # type: ignore[union-attr]
                 hass,
                 platform_config,
                 self._schedule_add_entities,
@@ -456,25 +456,46 @@ class EntityPlatform:
 
             device_info = entity.device_info
             device_id = None
+            device = None
 
             if config_entry_id is not None and device_info is not None:
-                processed_dev_info = {"config_entry_id": config_entry_id}
+                processed_dev_info: dict[str, str | None] = {
+                    "config_entry_id": config_entry_id
+                }
                 for key in (
                     "connections",
+                    "default_manufacturer",
+                    "default_model",
+                    "default_name",
+                    "entry_type",
                     "identifiers",
                     "manufacturer",
                     "model",
                     "name",
-                    "default_manufacturer",
-                    "default_model",
-                    "default_name",
-                    "sw_version",
-                    "entry_type",
-                    "via_device",
                     "suggested_area",
+                    "sw_version",
+                    "hw_version",
+                    "via_device",
                 ):
                     if key in device_info:
-                        processed_dev_info[key] = device_info[key]  # type: ignore[misc]
+                        processed_dev_info[key] = device_info[key]  # type: ignore[literal-required]
+
+                if "configuration_url" in device_info:
+                    if device_info["configuration_url"] is None:
+                        processed_dev_info["configuration_url"] = None
+                    else:
+                        configuration_url = str(device_info["configuration_url"])
+                        if urlparse(configuration_url).scheme in [
+                            "http",
+                            "https",
+                            "homeassistant",
+                        ]:
+                            processed_dev_info["configuration_url"] = configuration_url
+                        else:
+                            _LOGGER.warning(
+                                "Ignoring invalid device configuration_url '%s'",
+                                configuration_url,
+                            )
 
                 try:
                     device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
@@ -482,26 +503,32 @@ class EntityPlatform:
                 except RequiredParameterMissing:
                     pass
 
-            disabled_by: str | None = None
+            disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
-                disabled_by = DISABLED_INTEGRATION
+                disabled_by = RegistryEntryDisabler.INTEGRATION
 
             entry = entity_registry.async_get_or_create(
                 self.domain,
                 self.platform_name,
                 entity.unique_id,
-                suggested_object_id=suggested_object_id,
+                capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
                 device_id=device_id,
-                known_object_ids=self.entities.keys(),
                 disabled_by=disabled_by,
-                capabilities=entity.capability_attributes,
-                supported_features=entity.supported_features,
-                device_class=entity.device_class,
-                unit_of_measurement=entity.unit_of_measurement,
-                original_name=entity.name,
+                entity_category=entity.entity_category,
+                known_object_ids=self.entities.keys(),
+                original_device_class=entity.device_class,
                 original_icon=entity.icon,
+                original_name=entity.name,
+                suggested_object_id=suggested_object_id,
+                supported_features=entity.supported_features,
+                unit_of_measurement=entity.unit_of_measurement,
             )
+
+            if device and device.disabled and not entry.disabled:
+                entry = entity_registry.async_update_entity(
+                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
+                )
 
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id
@@ -716,8 +743,7 @@ current_platform: ContextVar[EntityPlatform | None] = ContextVar(
 @callback
 def async_get_current_platform() -> EntityPlatform:
     """Get the current platform from context."""
-    platform = current_platform.get()
-    if platform is None:
+    if (platform := current_platform.get()) is None:
         raise RuntimeError("Cannot get non-set current platform")
     return platform
 

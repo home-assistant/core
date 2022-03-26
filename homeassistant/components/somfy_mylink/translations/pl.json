@@ -30,7 +30,7 @@
                     "reverse": "Roleta/pokrywa jest odwr\u00f3cona"
                 },
                 "description": "Konfiguracja opcji dla \"{entity_id}\"",
-                "title": "Konfigurowanie encji"
+                "title": "Konfiguracja encji"
             },
             "init": {
                 "data": {

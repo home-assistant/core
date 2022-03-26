@@ -4,6 +4,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Mapping
+from datetime import datetime, timedelta
+from http import HTTPStatus
 import logging
 import pprint
 
@@ -15,16 +17,14 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
-from homeassistant.helpers.area_registry import AreaEntry
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.helpers import area_registry, device_registry, entity_registry, start
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
+from homeassistant.util.dt import utcnow
 
 from . import trait
 from .const import (
@@ -37,6 +37,7 @@ from .const import (
     NOT_EXPOSE_LOCAL,
     SOURCE_LOCAL,
     STORE_AGENT_USER_IDS,
+    STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
 from .error import SmartHomeError
 
@@ -44,48 +45,33 @@ SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _get_entity_and_device(
-    hass, entity_id
-) -> tuple[RegistryEntry, DeviceEntry] | None:
-    """Fetch the entity and device entries for a entity_id."""
-    dev_reg, ent_reg = await gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
-    )
+@callback
+def _get_registry_entries(
+    hass: HomeAssistant, entity_id: str
+) -> tuple[device_registry.DeviceEntry, area_registry.AreaEntry]:
+    """Get registry entries."""
+    ent_reg = entity_registry.async_get(hass)
+    dev_reg = device_registry.async_get(hass)
+    area_reg = area_registry.async_get(hass)
 
-    entity_entry = ent_reg.async_get(entity_id)
-    if not entity_entry:
-        return None, None
-    device_entry = dev_reg.devices.get(entity_entry.device_id)
-    return entity_entry, device_entry
+    if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
+        device_entry = dev_reg.devices.get(entity_entry.device_id)
+    else:
+        device_entry = None
 
-
-async def _get_area(hass, entity_entry, device_entry) -> AreaEntry | None:
-    """Calculate the area for an entity."""
     if entity_entry and entity_entry.area_id:
         area_id = entity_entry.area_id
     elif device_entry and device_entry.area_id:
         area_id = device_entry.area_id
     else:
-        return None
+        area_id = None
 
-    area_reg = await hass.helpers.area_registry.async_get_registry()
-    return area_reg.areas.get(area_id)
+    if area_id is not None:
+        area_entry = area_reg.async_get_area(area_id)
+    else:
+        area_entry = None
 
-
-async def _get_device_info(device_entry) -> dict[str, str] | None:
-    """Retrieve the device info for a device."""
-    if not device_entry:
-        return None
-
-    device_info = {}
-    if device_entry.manufacturer:
-        device_info["manufacturer"] = device_entry.manufacturer
-    if device_entry.model:
-        device_info["model"] = device_entry.model
-    if device_entry.sw_version:
-        device_info["swVersion"] = device_entry.sw_version
-    return device_info
+    return device_entry, area_entry
 
 
 class AbstractConfig(ABC):
@@ -99,21 +85,21 @@ class AbstractConfig(ABC):
         self._store = None
         self._google_sync_unsub = {}
         self._local_sdk_active = False
+        self._local_last_active: datetime | None = None
 
     async def async_initialize(self):
         """Perform async initialization of config."""
         self._store = GoogleConfigStore(self.hass)
-        await self._store.async_load()
+        await self._store.async_initialize()
 
-        if self.hass.state == CoreState.running:
-            await self.async_sync_entities_all()
+        if not self.enabled:
             return
 
         async def sync_google(_):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, sync_google)
+        start.async_at_start(self.hass, sync_google)
 
     @property
     def enabled(self):
@@ -146,17 +132,30 @@ class AbstractConfig(ABC):
         return False
 
     @property
-    def local_sdk_webhook_id(self):
-        """Return the local SDK webhook ID.
+    def is_local_connected(self) -> bool:
+        """Return if local is connected."""
+        return (
+            self._local_last_active is not None
+            # We get a reachable devices intent every minute.
+            and self._local_last_active > utcnow() - timedelta(seconds=70)
+        )
 
-        Return None to disable the local SDK.
+    def get_local_agent_user_id(self, webhook_id):
+        """Return the user ID to be used for actions received via the local SDK.
+
+        Return None is no agent user id is found.
         """
-        return None
+        found_agent_user_id = None
+        for agent_user_id, agent_user_data in self._store.agent_user_ids.items():
+            if agent_user_data[STORE_GOOGLE_LOCAL_WEBHOOK_ID] == webhook_id:
+                found_agent_user_id = agent_user_id
+                break
 
-    @property
-    def local_sdk_user_id(self):
-        """Return the user ID to be used for actions received via the local SDK."""
-        raise NotImplementedError
+        return found_agent_user_id
+
+    def get_local_webhook_id(self, agent_user_id):
+        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
+        return self._store.agent_user_ids[agent_user_id][STORE_GOOGLE_LOCAL_WEBHOOK_ID]
 
     @abstractmethod
     def get_agent_user_id(self, context):
@@ -205,7 +204,7 @@ class AbstractConfig(ABC):
         # Remove any pending sync
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
         status = await self._async_request_sync_devices(agent_user_id)
-        if status == 404:
+        if status == HTTPStatus.NOT_FOUND:
             await self.async_disconnect_agent_user(agent_user_id)
         return status
 
@@ -248,40 +247,66 @@ class AbstractConfig(ABC):
         raise NotImplementedError
 
     async def async_connect_agent_user(self, agent_user_id: str):
-        """Add an synced and known agent_user_id.
+        """Add a synced and known agent_user_id.
 
-        Called when a completed sync response have been sent to Google.
+        Called before sending a sync response to Google.
         """
         self._store.add_agent_user_id(agent_user_id)
 
     async def async_disconnect_agent_user(self, agent_user_id: str):
         """Turn off report state and disable further state reporting.
 
-        Called when the user disconnects their account from Google.
+        Called when:
+         - The user disconnects their account from Google.
+         - When the cloud configuration is initialized
+         - When sync entities fails with 404
         """
         self._store.pop_agent_user_id(agent_user_id)
 
     @callback
     def async_enable_local_sdk(self):
         """Enable the local SDK."""
-        webhook_id = self.local_sdk_webhook_id
+        setup_successful = True
+        setup_webhook_ids = []
 
-        if webhook_id is None:
+        # Don't enable local SDK if ssl is enabled
+        if self.hass.config.api and self.hass.config.api.use_ssl:
+            self._local_sdk_active = False
             return
 
-        try:
-            webhook.async_register(
-                self.hass,
-                DOMAIN,
-                "Local Support",
-                webhook_id,
-                self._handle_local_webhook,
+        for user_agent_id, _ in self._store.agent_user_ids.items():
+
+            if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
+                setup_successful = False
+                break
+
+            try:
+                webhook.async_register(
+                    self.hass,
+                    DOMAIN,
+                    "Local Support for " + user_agent_id,
+                    webhook_id,
+                    self._handle_local_webhook,
+                    local_only=True,
+                )
+                setup_webhook_ids.append(webhook_id)
+            except ValueError:
+                _LOGGER.warning(
+                    "Webhook handler %s for agent user id %s is already defined!",
+                    webhook_id,
+                    user_agent_id,
+                )
+                setup_successful = False
+                break
+
+        if not setup_successful:
+            _LOGGER.warning(
+                "Local fulfillment failed to setup, falling back to cloud fulfillment"
             )
-        except ValueError:
-            _LOGGER.info("Webhook handler is already defined!")
-            return
+            for setup_webhook_id in setup_webhook_ids:
+                webhook.async_unregister(self.hass, setup_webhook_id)
 
-        self._local_sdk_active = True
+        self._local_sdk_active = setup_successful
 
     @callback
     def async_disable_local_sdk(self):
@@ -289,7 +314,11 @@ class AbstractConfig(ABC):
         if not self._local_sdk_active:
             return
 
-        webhook.async_unregister(self.hass, self.local_sdk_webhook_id)
+        for agent_user_id in self._store.agent_user_ids:
+            webhook.async_unregister(
+                self.hass, self.get_local_webhook_id(agent_user_id)
+            )
+
         self._local_sdk_active = False
 
     async def _handle_local_webhook(self, hass, webhook_id, request):
@@ -298,16 +327,37 @@ class AbstractConfig(ABC):
         # pylint: disable=import-outside-toplevel
         from . import smart_home
 
+        self._local_last_active = utcnow()
         payload = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Received local message:\n%s\n", pprint.pformat(payload))
+            _LOGGER.debug(
+                "Received local message from %s (JS %s):\n%s\n",
+                request.remote,
+                request.headers.get("HA-Cloud-Version", "unknown"),
+                pprint.pformat(payload),
+            )
 
         if not self.enabled:
             return json_response(smart_home.turned_off_response(payload))
 
+        if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
+            # No agent user linked to this webhook, means that the user has somehow unregistered
+            # removing webhook and stopping processing of this request.
+            _LOGGER.error(
+                "Cannot process request for webhook %s as no linked agent user is found:\n%s\n",
+                webhook_id,
+                pprint.pformat(payload),
+            )
+            webhook.async_unregister(self.hass, webhook_id)
+            return None
+
         result = await smart_home.async_handle_message(
-            self.hass, self, self.local_sdk_user_id, payload, SOURCE_LOCAL
+            self.hass,
+            self,
+            agent_user_id,
+            payload,
+            SOURCE_LOCAL,
         )
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -326,7 +376,32 @@ class GoogleConfigStore:
         """Initialize a configuration store."""
         self._hass = hass
         self._store = Store(hass, self._STORAGE_VERSION, self._STORAGE_KEY)
-        self._data = {STORE_AGENT_USER_IDS: {}}
+        self._data = None
+
+    async def async_initialize(self):
+        """Finish initializing the ConfigStore."""
+        should_save_data = False
+        if (data := await self._store.async_load()) is None:
+            # if the store is not found create an empty one
+            # Note that the first request is always a cloud request,
+            # and that will store the correct agent user id to be used for local requests
+            data = {
+                STORE_AGENT_USER_IDS: {},
+            }
+            should_save_data = True
+
+        for agent_user_id, agent_user_data in data[STORE_AGENT_USER_IDS].items():
+            if STORE_GOOGLE_LOCAL_WEBHOOK_ID not in agent_user_data:
+                data[STORE_AGENT_USER_IDS][agent_user_id] = {
+                    **agent_user_data,
+                    STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+                }
+                should_save_data = True
+
+        if should_save_data:
+            await self._store.async_save(data)
+
+        self._data = data
 
     @property
     def agent_user_ids(self):
@@ -337,7 +412,9 @@ class GoogleConfigStore:
     def add_agent_user_id(self, agent_user_id):
         """Add an agent user id to store."""
         if agent_user_id not in self._data[STORE_AGENT_USER_IDS]:
-            self._data[STORE_AGENT_USER_IDS][agent_user_id] = {}
+            self._data[STORE_AGENT_USER_IDS][agent_user_id] = {
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+            }
             self._store.async_delay_save(lambda: self._data, 1.0)
 
     @callback
@@ -346,12 +423,6 @@ class GoogleConfigStore:
         if agent_user_id in self._data[STORE_AGENT_USER_IDS]:
             self._data[STORE_AGENT_USER_IDS].pop(agent_user_id, None)
             self._store.async_delay_save(lambda: self._data, 1.0)
-
-    async def async_load(self):
-        """Store current configuration to disk."""
-        data = await self._store.async_load()
-        if data:
-            self._data = data
 
 
 class RequestData:
@@ -472,62 +543,70 @@ class GoogleEntity:
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
         )
 
-    async def sync_serialize(self, agent_user_id):
+    def sync_serialize(self, agent_user_id, instance_uuid):
         """Serialize entity for a SYNC response.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
         """
         state = self.state
-
+        traits = self.traits()
         entity_config = self.config.entity_config.get(state.entity_id, {})
         name = (entity_config.get(CONF_NAME) or state.name).strip()
-        domain = state.domain
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        entity_entry, device_entry = await _get_entity_and_device(
-            self.hass, state.entity_id
-        )
 
-        traits = self.traits()
+        # Find entity/device/area registry entries
+        device_entry, area_entry = _get_registry_entries(self.hass, self.entity_id)
 
-        device_type = get_google_type(domain, device_class)
-
+        # Build the device info
         device = {
             "id": state.entity_id,
             "name": {"name": name},
             "attributes": {},
             "traits": [trait.name for trait in traits],
             "willReportState": self.config.should_report_state,
-            "type": device_type,
+            "type": get_google_type(
+                state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
+            ),
         }
 
-        # use aliases
-        aliases = entity_config.get(CONF_ALIASES)
-        if aliases:
+        # Add aliases
+        if aliases := entity_config.get(CONF_ALIASES):
             device["name"]["nicknames"] = [name] + aliases
 
+        # Add local SDK info if enabled
         if self.config.is_local_sdk_active and self.should_expose_local():
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
-                "webhookId": self.config.local_sdk_webhook_id,
+                "webhookId": self.config.get_local_webhook_id(agent_user_id),
                 "httpPort": self.hass.http.server_port,
                 "httpSSL": self.hass.config.api.use_ssl,
-                "uuid": await self.hass.helpers.instance_id.async_get(),
+                "uuid": instance_uuid,
                 "baseUrl": get_url(self.hass, prefer_external=True),
                 "proxyDeviceId": agent_user_id,
             }
 
+        # Add trait sync attributes
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
 
-        room = entity_config.get(CONF_ROOM_HINT)
-        if room:
+        # Add roomhint
+        if room := entity_config.get(CONF_ROOM_HINT):
             device["roomHint"] = room
-        else:
-            area = await _get_area(self.hass, entity_entry, device_entry)
-            if area and area.name:
-                device["roomHint"] = area.name
+        elif area_entry and area_entry.name:
+            device["roomHint"] = area_entry.name
 
-        device_info = await _get_device_info(device_entry)
+        # Add deviceInfo
+        if not device_entry:
+            return device
+
+        device_info = {}
+
+        if device_entry.manufacturer:
+            device_info["manufacturer"] = device_entry.manufacturer
+        if device_entry.model:
+            device_info["model"] = device_entry.model
+        if device_entry.sw_version:
+            device_info["swVersion"] = device_entry.sw_version
+
         if device_info:
             device["deviceInfo"] = device_info
 
@@ -600,7 +679,9 @@ def deep_update(target, source):
 
 
 @callback
-def async_get_entities(hass, config) -> list[GoogleEntity]:
+def async_get_entities(
+    hass: HomeAssistant, config: AbstractConfig
+) -> list[GoogleEntity]:
     """Return all entities that are supported by Google."""
     entities = []
     for state in hass.states.async_all():

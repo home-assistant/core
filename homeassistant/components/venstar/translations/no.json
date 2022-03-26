@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "pin": "PIN kode",
+                    "ssl": "Bruker et SSL-sertifikat",
+                    "username": "Brukernavn"
+                },
+                "title": "Koble til Venstar-termostaten"
+            }
+        }
+    }
+}

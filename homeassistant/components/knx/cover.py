@@ -1,17 +1,17 @@
 """Support for KNX/IP covers."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any
 
 from xknx import XKNX
 from xknx.devices import Cover as XknxCover, Device as XknxDevice
-from xknx.telegram.address import parse_device_group_address
 
+from homeassistant import config_entries
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -20,63 +20,35 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxEntity
 from .schema import CoverSchema
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover(s) for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-    platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.COVER]
 
-    _async_migrate_unique_id(hass, platform_config)
-    async_add_entities(
-        KNXCover(xknx, entity_config) for entity_config in platform_config
-    )
-
-
-@callback
-def _async_migrate_unique_id(
-    hass: HomeAssistant, platform_config: list[ConfigType]
-) -> None:
-    """Change unique_ids used in 2021.4 to include position_target GA."""
-    entity_registry = er.async_get(hass)
-    for entity_config in platform_config:
-        # normalize group address strings - ga_updown was the old uid but is optional
-        updown_addresses = entity_config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS)
-        if updown_addresses is None:
-            continue
-        ga_updown = parse_device_group_address(updown_addresses[0])
-        old_uid = str(ga_updown)
-
-        entity_id = entity_registry.async_get_entity_id("cover", DOMAIN, old_uid)
-        if entity_id is None:
-            continue
-        position_target_addresses = entity_config.get(CoverSchema.CONF_POSITION_ADDRESS)
-        ga_position_target = (
-            parse_device_group_address(position_target_addresses[0])
-            if position_target_addresses is not None
-            else None
-        )
-        new_uid = f"{ga_updown}_{ga_position_target}"
-        entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
+    async_add_entities(KNXCover(xknx, entity_config) for entity_config in config)
 
 
 class KNXCover(KnxEntity, CoverEntity):
@@ -109,20 +81,27 @@ class KNXCover(KnxEntity, CoverEntity):
         )
         self._unsubscribe_auto_updater: Callable[[], None] | None = None
 
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS) or (
-            DEVICE_CLASS_BLIND if self._device.supports_angle else None
-        )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+        _supports_tilt = False
         self._attr_supported_features = (
             SUPPORT_CLOSE | SUPPORT_OPEN | SUPPORT_SET_POSITION
         )
-        if self._device.supports_stop:
-            self._attr_supported_features |= SUPPORT_STOP | SUPPORT_STOP_TILT
-        if self._device.supports_angle:
-            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
         if self._device.step.writable:
+            _supports_tilt = True
             self._attr_supported_features |= (
                 SUPPORT_CLOSE_TILT | SUPPORT_OPEN_TILT | SUPPORT_STOP_TILT
             )
+        if self._device.supports_angle:
+            _supports_tilt = True
+            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
+        if self._device.supports_stop:
+            self._attr_supported_features |= SUPPORT_STOP
+            if _supports_tilt:
+                self._attr_supported_features |= SUPPORT_STOP_TILT
+
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS) or (
+            CoverDeviceClass.BLIND if _supports_tilt else None
+        )
         self._attr_unique_id = (
             f"{self._device.updown.group_address}_"
             f"{self._device.position_target.group_address}"

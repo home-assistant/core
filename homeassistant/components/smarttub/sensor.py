@@ -1,17 +1,17 @@
 """Platform for sensor integration."""
 from enum import Enum
-import logging
 
 import smarttub
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
-
-_LOGGER = logging.getLogger(__name__)
 
 # the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
@@ -40,7 +40,9 @@ SET_SECONDARY_FILTRATION_SCHEMA = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up sensor entities for the sensors in the tub."""
 
     controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
@@ -68,7 +70,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         "set_primary_filtration",

@@ -1,217 +1,146 @@
 """Define tests for the SimpliSafe config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-from simplipy.errors import (
-    InvalidCredentialsError,
-    PendingAuthorizationError,
-    SimplipyError,
-)
+import pytest
+from simplipy.errors import InvalidCredentialsError, SimplipyError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
+from homeassistant.const import CONF_CODE
 
 
-async def test_duplicate_error(hass):
+async def test_duplicate_error(hass, config_entry, config_code, setup_simplisafe):
     """Test that errors are shown when duplicates are added."""
-    conf = {
-        CONF_USERNAME: "user@email.com",
-        CONF_PASSWORD: "password",
-        CONF_CODE: "1234",
-    }
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="user@email.com",
-        data={
-            CONF_USERNAME: "user@email.com",
-            CONF_PASSWORD: "password",
-            CONF_CODE: "1234",
-        },
-    ).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=conf
+        DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_code
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_credentials(hass):
-    """Test that invalid credentials throws an error."""
-    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
-
+@pytest.mark.parametrize(
+    "exc,error_string",
+    [(InvalidCredentialsError, "invalid_auth"), (SimplipyError, "unknown")],
+)
+async def test_errors(hass, config_code, exc, error_string):
+    """Test that exceptions show the appropriate error."""
     with patch(
-        "homeassistant.components.simplisafe.config_flow.get_api",
-        new=AsyncMock(side_effect=InvalidCredentialsError),
+        "homeassistant.components.simplisafe.API.async_from_auth",
+        side_effect=exc,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=conf
+            DOMAIN, context={"source": SOURCE_USER}
         )
-        assert result["errors"] == {"base": "invalid_auth"}
+        assert result["step_id"] == "user"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=config_code
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": error_string}
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass, config_entry):
     """Test config flow options."""
-    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="abcde12345",
-        data=conf,
-        options={CONF_CODE: "1234"},
-    )
-    config_entry.add_to_hass(hass)
-
     with patch(
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_CODE: "4321"}
         )
-
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert config_entry.options == {CONF_CODE: "4321"}
 
 
-async def test_show_form(hass):
-    """Test that the form is served with no input."""
+async def test_step_reauth_old_format(
+    hass, config, config_code, config_entry, setup_simplisafe
+):
+    """Test the re-auth step with "old" config entries (those with user IDs)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=config
+    )
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_code
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert len(hass.config_entries.async_entries()) == 1
+    [config_entry] = hass.config_entries.async_entries(DOMAIN)
+    assert config_entry.data == config
+
+
+async def test_step_reauth_new_format(
+    hass, config, config_code, config_entry, setup_simplisafe
+):
+    """Test the re-auth step with "new" config entries (those with user IDs)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=config
+    )
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_code
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert len(hass.config_entries.async_entries()) == 1
+    [config_entry] = hass.config_entries.async_entries(DOMAIN)
+    assert config_entry.data == config
+
+
+async def test_step_reauth_wrong_account(
+    hass, api, config, config_code, config_entry, setup_simplisafe
+):
+    """Test the re-auth step returning a different account from this one."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=config
+    )
+    assert result["step_id"] == "user"
+
+    # Simulate the next auth call returning a different user ID than the one we've
+    # identified as this entry's unique ID:
+    api.user_id = "67890"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_code
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "wrong_account"
+
+    assert len(hass.config_entries.async_entries()) == 1
+    [config_entry] = hass.config_entries.async_entries(DOMAIN)
+    assert config_entry.unique_id == "12345"
+
+
+async def test_step_user(hass, config, config_code, setup_simplisafe):
+    """Test the user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-
-async def test_step_reauth(hass):
-    """Test that the reauth step works."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="user@email.com",
-        data={
-            CONF_USERNAME: "user@email.com",
-            CONF_PASSWORD: "password",
-            CONF_CODE: "1234",
-        },
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data={CONF_CODE: "1234", CONF_USERNAME: "user@email.com"},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_code
     )
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    with patch(
-        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.simplisafe.config_flow.get_api"), patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PASSWORD: "password"}
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
     assert len(hass.config_entries.async_entries()) == 1
-
-
-async def test_step_user(hass):
-    """Test that the user step works (without MFA)."""
-    conf = {
-        CONF_USERNAME: "user@email.com",
-        CONF_PASSWORD: "password",
-        CONF_CODE: "1234",
-    }
-
-    with patch(
-        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.simplisafe.config_flow.get_api", new=AsyncMock()
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=conf
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "user@email.com"
-        assert result["data"] == {
-            CONF_USERNAME: "user@email.com",
-            CONF_PASSWORD: "password",
-            CONF_CODE: "1234",
-        }
-
-
-async def test_step_user_mfa(hass):
-    """Test that the user step works when MFA is in the middle."""
-    conf = {
-        CONF_USERNAME: "user@email.com",
-        CONF_PASSWORD: "password",
-        CONF_CODE: "1234",
-    }
-
-    with patch(
-        "homeassistant.components.simplisafe.config_flow.get_api",
-        new=AsyncMock(side_effect=PendingAuthorizationError),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=conf
-        )
-        assert result["step_id"] == "mfa"
-
-    with patch(
-        "homeassistant.components.simplisafe.config_flow.get_api",
-        new=AsyncMock(side_effect=PendingAuthorizationError),
-    ):
-        # Simulate the user pressing the MFA submit button without having clicked
-        # the link in the MFA email:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        assert result["step_id"] == "mfa"
-
-    with patch(
-        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.simplisafe.config_flow.get_api", new=AsyncMock()
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "user@email.com"
-        assert result["data"] == {
-            CONF_USERNAME: "user@email.com",
-            CONF_PASSWORD: "password",
-            CONF_CODE: "1234",
-        }
-
-
-async def test_unknown_error(hass):
-    """Test that an unknown error raises the correct error."""
-    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
-
-    with patch(
-        "homeassistant.components.simplisafe.config_flow.get_api",
-        new=AsyncMock(side_effect=SimplipyError),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=conf
-        )
-        assert result["errors"] == {"base": "unknown"}
+    [config_entry] = hass.config_entries.async_entries(DOMAIN)
+    assert config_entry.data == config

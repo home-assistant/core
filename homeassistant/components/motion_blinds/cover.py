@@ -1,23 +1,28 @@
 """Support for Motion Blinds using their WLAN API."""
-
+from datetime import timedelta
 import logging
 
-from motionblinds import BlindType
+from motionblinds import DEVICE_TYPES_WIFI, BlindType
 import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHADE,
-    DEVICE_CLASS_SHUTTER,
+    CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_platform,
+)
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_point_in_time, track_point_in_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_ABSOLUTE_POSITION,
@@ -26,36 +31,42 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_GATEWAY,
+    KEY_VERSION,
     MANUFACTURER,
     SERVICE_SET_ABSOLUTE_POSITION,
+    UPDATE_INTERVAL_MOVING,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
 POSITION_DEVICE_MAP = {
-    BlindType.RollerBlind: DEVICE_CLASS_SHADE,
-    BlindType.RomanBlind: DEVICE_CLASS_SHADE,
-    BlindType.HoneycombBlind: DEVICE_CLASS_SHADE,
-    BlindType.DimmingBlind: DEVICE_CLASS_SHADE,
-    BlindType.DayNightBlind: DEVICE_CLASS_SHADE,
-    BlindType.RollerShutter: DEVICE_CLASS_SHUTTER,
-    BlindType.Switch: DEVICE_CLASS_SHUTTER,
-    BlindType.RollerGate: DEVICE_CLASS_GATE,
-    BlindType.Awning: DEVICE_CLASS_AWNING,
-    BlindType.Curtain: DEVICE_CLASS_CURTAIN,
-    BlindType.CurtainLeft: DEVICE_CLASS_CURTAIN,
-    BlindType.CurtainRight: DEVICE_CLASS_CURTAIN,
+    BlindType.RollerBlind: CoverDeviceClass.SHADE,
+    BlindType.RomanBlind: CoverDeviceClass.SHADE,
+    BlindType.HoneycombBlind: CoverDeviceClass.SHADE,
+    BlindType.DimmingBlind: CoverDeviceClass.SHADE,
+    BlindType.DayNightBlind: CoverDeviceClass.SHADE,
+    BlindType.RollerShutter: CoverDeviceClass.SHUTTER,
+    BlindType.Switch: CoverDeviceClass.SHUTTER,
+    BlindType.RollerGate: CoverDeviceClass.GATE,
+    BlindType.Awning: CoverDeviceClass.AWNING,
+    BlindType.Curtain: CoverDeviceClass.CURTAIN,
+    BlindType.CurtainLeft: CoverDeviceClass.CURTAIN,
+    BlindType.CurtainRight: CoverDeviceClass.CURTAIN,
+    BlindType.SkylightBlind: CoverDeviceClass.SHADE,
 }
 
 TILT_DEVICE_MAP = {
-    BlindType.VenetianBlind: DEVICE_CLASS_BLIND,
-    BlindType.ShangriLaBlind: DEVICE_CLASS_BLIND,
-    BlindType.DoubleRoller: DEVICE_CLASS_SHADE,
+    BlindType.VenetianBlind: CoverDeviceClass.BLIND,
+    BlindType.ShangriLaBlind: CoverDeviceClass.BLIND,
+    BlindType.DoubleRoller: CoverDeviceClass.SHADE,
+    BlindType.VerticalBlind: CoverDeviceClass.BLIND,
+    BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
+    BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
 }
 
 TDBU_DEVICE_MAP = {
-    BlindType.TopDownBottomUp: DEVICE_CLASS_SHADE,
+    BlindType.TopDownBottomUp: CoverDeviceClass.SHADE,
 }
 
 
@@ -65,31 +76,49 @@ SET_ABSOLUTE_POSITION_SCHEMA = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Motion Blind from a config entry."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    sw_version = hass.data[DOMAIN][config_entry.entry_id][KEY_VERSION]
 
     for blind in motion_gateway.device_list.values():
         if blind.type in POSITION_DEVICE_MAP:
             entities.append(
                 MotionPositionDevice(
-                    coordinator, blind, POSITION_DEVICE_MAP[blind.type], config_entry
+                    coordinator,
+                    blind,
+                    POSITION_DEVICE_MAP[blind.type],
+                    config_entry,
+                    sw_version,
                 )
             )
 
         elif blind.type in TILT_DEVICE_MAP:
             entities.append(
                 MotionTiltDevice(
-                    coordinator, blind, TILT_DEVICE_MAP[blind.type], config_entry
+                    coordinator,
+                    blind,
+                    TILT_DEVICE_MAP[blind.type],
+                    config_entry,
+                    sw_version,
                 )
             )
 
         elif blind.type in TDBU_DEVICE_MAP:
             entities.append(
                 MotionTDBUDevice(
-                    coordinator, blind, TDBU_DEVICE_MAP[blind.type], config_entry, "Top"
+                    coordinator,
+                    blind,
+                    TDBU_DEVICE_MAP[blind.type],
+                    config_entry,
+                    sw_version,
+                    "Top",
                 )
             )
             entities.append(
@@ -98,6 +127,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
                     config_entry,
+                    sw_version,
                     "Bottom",
                 )
             )
@@ -107,12 +137,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
                     config_entry,
+                    sw_version,
                     "Combined",
                 )
             )
 
         else:
-            _LOGGER.warning("Blind type '%s' not yet supported", blind.blind_type)
+            _LOGGER.warning(
+                "Blind type '%s' not yet supported, assuming RollerBlind",
+                blind.blind_type,
+            )
+            entities.append(
+                MotionPositionDevice(
+                    coordinator,
+                    blind,
+                    POSITION_DEVICE_MAP[BlindType.RollerBlind],
+                    config_entry,
+                    sw_version,
+                )
+            )
 
     async_add_entities(entities)
 
@@ -127,23 +170,38 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     """Representation of a Motion Blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, config_entry):
+    def __init__(self, coordinator, blind, device_class, config_entry, sw_version):
         """Initialize the blind."""
         super().__init__(coordinator)
 
         self._blind = blind
         self._config_entry = config_entry
+        self._requesting_position = False
+        self._previous_positions = []
+
+        if blind.device_type in DEVICE_TYPES_WIFI:
+            via_device = ()
+            connections = {(dr.CONNECTION_NETWORK_MAC, blind.mac)}
+            name = blind.blind_type
+        else:
+            via_device = (DOMAIN, blind._gateway.mac)
+            connections = {}
+            name = f"{blind.blind_type}-{blind.mac[12:]}"
+            sw_version = None
 
         self._attr_device_class = device_class
-        self._attr_name = f"{blind.blind_type}-{blind.mac[12:]}"
+        self._attr_name = name
         self._attr_unique_id = blind.mac
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, blind.mac)},
-            "manufacturer": MANUFACTURER,
-            "name": f"{blind.blind_type}-{blind.mac[12:]}",
-            "model": blind.blind_type,
-            "via_device": (DOMAIN, config_entry.unique_id),
-        }
+        self._attr_device_info = DeviceInfo(
+            connections=connections,
+            identifiers={(DOMAIN, blind.mac)},
+            manufacturer=MANUFACTURER,
+            model=blind.blind_type,
+            name=name,
+            via_device=via_device,
+            sw_version=sw_version,
+            hw_version=blind.wireless_name,
+        )
 
     @property
     def available(self):
@@ -170,6 +228,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
+        if self._blind.position is None:
+            return None
         return self._blind.position == 100
 
     async def async_added_to_hass(self):
@@ -182,23 +242,69 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self._blind.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()
 
+    async def async_scheduled_update_request(self, *_):
+        """Request a state update from the blind at a scheduled point in time."""
+        # add the last position to the list and keep the list at max 2 items
+        self._previous_positions.append(self.current_cover_position)
+        if len(self._previous_positions) > 2:
+            del self._previous_positions[: len(self._previous_positions) - 2]
+
+        await self.hass.async_add_executor_job(self._blind.Update_trigger)
+        self.async_write_ha_state()
+
+        if len(self._previous_positions) < 2 or not all(
+            self.current_cover_position == prev_position
+            for prev_position in self._previous_positions
+        ):
+            # keep updating the position @UPDATE_INTERVAL_MOVING until the position does not change.
+            async_track_point_in_time(
+                self.hass,
+                self.async_scheduled_update_request,
+                dt_util.utcnow() + timedelta(seconds=UPDATE_INTERVAL_MOVING),
+            )
+        else:
+            self._previous_positions = []
+            self._requesting_position = False
+
+    @callback
+    def async_scheduled_update_request_callback(self, now):
+        """Request a state update from the blind at a scheduled point in time using async_scheduled_update_request."""
+        self.hass.loop.create_task(self.async_scheduled_update_request())
+
+    def request_position_till_stop(self):
+        """Request the position of the blind every UPDATE_INTERVAL_MOVING seconds until it stops moving."""
+        self._previous_positions = []
+        if self._requesting_position or self.current_cover_position is None:
+            return
+
+        self._requesting_position = True
+        track_point_in_time(
+            self.hass,
+            self.async_scheduled_update_request_callback,
+            dt_util.utcnow() + timedelta(seconds=UPDATE_INTERVAL_MOVING),
+        )
+
     def open_cover(self, **kwargs):
         """Open the cover."""
         self._blind.Open()
+        self.request_position_till_stop()
 
     def close_cover(self, **kwargs):
         """Close cover."""
         self._blind.Close()
+        self.request_position_till_stop()
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         self._blind.Set_position(100 - position)
+        self.request_position_till_stop()
 
     def set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
         self._blind.Set_position(100 - position)
+        self.request_position_till_stop()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -240,9 +346,11 @@ class MotionTiltDevice(MotionPositionDevice):
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, config_entry, motor):
+    def __init__(
+        self, coordinator, blind, device_class, config_entry, sw_version, motor
+    ):
         """Initialize the blind."""
-        super().__init__(coordinator, blind, device_class, config_entry)
+        super().__init__(coordinator, blind, device_class, config_entry, sw_version)
         self._motor = motor
         self._motor_key = motor[0]
         self._attr_name = f"{blind.blind_type}-{motor}-{blind.mac[12:]}"
@@ -289,15 +397,18 @@ class MotionTDBUDevice(MotionPositionDevice):
     def open_cover(self, **kwargs):
         """Open the cover."""
         self._blind.Open(motor=self._motor_key)
+        self.request_position_till_stop()
 
     def close_cover(self, **kwargs):
         """Close cover."""
         self._blind.Close(motor=self._motor_key)
+        self.request_position_till_stop()
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific scaled position."""
         position = kwargs[ATTR_POSITION]
         self._blind.Set_scaled_position(100 - position, motor=self._motor_key)
+        self.request_position_till_stop()
 
     def set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position."""
@@ -307,6 +418,8 @@ class MotionTDBUDevice(MotionPositionDevice):
         self._blind.Set_position(
             100 - position, motor=self._motor_key, width=target_width
         )
+
+        self.request_position_till_stop()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""

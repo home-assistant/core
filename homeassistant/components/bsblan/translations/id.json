@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Perangkat sudah dikonfigurasi"
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung"
         },
         "error": {
             "cannot_connect": "Gagal terhubung"
         },
-        "flow_title": "BSB-Lan: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

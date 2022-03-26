@@ -6,18 +6,57 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-from zwave_js_server.const import THERMOSTAT_CURRENT_TEMP_PROPERTY, CommandClass
+from zwave_js_server.const import (
+    CURRENT_STATE_PROPERTY,
+    CURRENT_VALUE_PROPERTY,
+    TARGET_STATE_PROPERTY,
+    TARGET_VALUE_PROPERTY,
+    CommandClass,
+)
+from zwave_js_server.const.command_class.barrier_operator import (
+    SIGNALING_STATE_PROPERTY,
+)
+from zwave_js_server.const.command_class.color_switch import CURRENT_COLOR_PROPERTY
+from zwave_js_server.const.command_class.humidity_control import (
+    HUMIDITY_CONTROL_MODE_PROPERTY,
+)
+from zwave_js_server.const.command_class.lock import (
+    CURRENT_MODE_PROPERTY,
+    DOOR_STATUS_PROPERTY,
+    LOCKED_PROPERTY,
+)
+from zwave_js_server.const.command_class.meter import VALUE_PROPERTY
+from zwave_js_server.const.command_class.protection import LOCAL_PROPERTY, RF_PROPERTY
+from zwave_js_server.const.command_class.sound_switch import (
+    DEFAULT_TONE_ID_PROPERTY,
+    DEFAULT_VOLUME_PROPERTY,
+    TONE_ID_PROPERTY,
+)
+from zwave_js_server.const.command_class.thermostat import (
+    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+    THERMOSTAT_FAN_MODE_PROPERTY,
+    THERMOSTAT_MODE_PROPERTY,
+    THERMOSTAT_SETPOINT_PROPERTY,
+)
+from zwave_js_server.exceptions import UnknownValueData
 from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceEntry
 
+from .const import LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
+    ConfigurableFanValueMappingDataTemplate,
+    CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
-    ZwaveValueID,
+    FanValueMapping,
+    FixedFanValueMappingDataTemplate,
+    NumericSensorDataTemplate,
 )
+from .helpers import ZwaveValueID
 
 
 class DataclassMustHaveAtLeastOne:
@@ -59,14 +98,14 @@ class ZwaveDiscoveryInfo:
     assumed_state: bool
     # the home assistant platform for which an entity should be created
     platform: str
+    # helper data to use in platform setup
+    platform_data: Any
+    # additional values that need to be watched by entity
+    additional_value_ids_to_watch: set[str]
     # hint for the platform about this discovered entity
     platform_hint: str | None = ""
     # data template to use in platform logic
     platform_data_template: BaseDiscoverySchemaDataTemplate | None = None
-    # helper data to use in platform setup
-    platform_data: dict[str, Any] | None = None
-    # additional values that need to be watched by entity
-    additional_value_ids_to_watch: set[str] | None = None
     # bool to specify whether entity should be enabled by default
     entity_registry_enabled_default: bool = True
 
@@ -89,9 +128,9 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     # [optional] the value's property name must match ANY of these values
     property_name: set[str] | None = None
     # [optional] the value's property key must match ANY of these values
-    property_key: set[str | int] | None = None
+    property_key: set[str | int | None] | None = None
     # [optional] the value's property key name must match ANY of these values
-    property_key_name: set[str] | None = None
+    property_key_name: set[str | None] | None = None
     # [optional] the value's metadata_type must match ANY of these values
     type: set[str] | None = None
 
@@ -144,8 +183,8 @@ class ZWaveDiscoverySchema:
 def get_config_parameter_discovery_schema(
     property_: set[str | int] | None = None,
     property_name: set[str] | None = None,
-    property_key: set[str | int] | None = None,
-    property_key_name: set[str] | None = None,
+    property_key: set[str | int | None] | None = None,
+    property_key_name: set[str | None] | None = None,
     **kwargs: Any,
 ) -> ZWaveDiscoverySchema:
     """
@@ -172,16 +211,18 @@ def get_config_parameter_discovery_schema(
 
 SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_MULTILEVEL},
-    property={"currentValue"},
+    property={CURRENT_VALUE_PROPERTY},
     type={"number"},
 )
 
 SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
-    command_class={CommandClass.SWITCH_BINARY}, property={"currentValue"}
+    command_class={CommandClass.SWITCH_BINARY}, property={CURRENT_VALUE_PROPERTY}
 )
 
 SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
-    command_class={CommandClass.SOUND_SWITCH}, property={"toneId"}, type={"number"}
+    command_class={CommandClass.SOUND_SWITCH},
+    property={TONE_ID_PROPERTY},
+    type={"number"},
 )
 
 # For device class mapping see:
@@ -196,11 +237,35 @@ DISCOVERY_SCHEMAS = [
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # GE/Jasco fan controllers using switch multilevel CC
+    # GE/Jasco - In-Wall Smart Fan Control - 12730 / ZW4002
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="has_fan_value_mapping",
+        manufacturer_id={0x0063},
+        product_id={0x3034},
+        product_type={0x4944},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 33), (34, 67), (68, 99)]),
+        ),
+    ),
+    # GE/Jasco - In-Wall Smart Fan Control - 14287 / ZW4002
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="has_fan_value_mapping",
+        manufacturer_id={0x0063},
+        product_id={0x3131},
+        product_type={0x4944},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 32), (33, 66), (67, 99)]),
+        ),
+    ),
+    # GE/Jasco - In-Wall Smart Fan Control - 14314 / ZW4002
     ZWaveDiscoverySchema(
         platform="fan",
         manufacturer_id={0x0063},
-        product_id={0x3034, 0x3131, 0x3138},
+        product_id={0x3138},
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
@@ -216,24 +281,63 @@ DISCOVERY_SCHEMAS = [
     # The fan is endpoint 2, the light is endpoint 1.
     ZWaveDiscoverySchema(
         platform="fan",
+        hint="has_fan_value_mapping",
         manufacturer_id={0x031E},
         product_id={0x0001},
         product_type={0x000E},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
             endpoint={2},
-            property={"currentValue"},
+            property={CURRENT_VALUE_PROPERTY},
             type={"number"},
         ),
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(
+                presets={1: "breeze"}, speeds=[(2, 33), (34, 66), (67, 99)]
+            ),
+        ),
     ),
-    # Fibaro Shutter Fibaro FGS222
+    # HomeSeer HS-FC200+
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="has_fan_value_mapping",
+        manufacturer_id={0x000C},
+        product_id={0x0001},
+        product_type={0x0203},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=ConfigurableFanValueMappingDataTemplate(
+            configuration_option=ZwaveValueID(
+                property_=5, command_class=CommandClass.CONFIGURATION, endpoint=0
+            ),
+            configuration_value_to_fan_value_mapping={
+                0: FanValueMapping(speeds=[(1, 33), (34, 66), (67, 99)]),
+                1: FanValueMapping(speeds=[(1, 24), (25, 49), (50, 74), (75, 99)]),
+            },
+        ),
+    ),
+    # Fibaro Shutter Fibaro FGR222
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="window_shutter",
+        hint="window_shutter_tilt",
         manufacturer_id={0x010F},
-        product_id={0x1000},
-        product_type={0x0302},
+        product_id={0x1000, 0x1001},
+        product_type={0x0301, 0x0302},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=CoverTiltDataTemplate(
+            tilt_value_id=ZwaveValueID(
+                property_="fibaro",
+                command_class=CommandClass.MANUFACTURER_PROPRIETARY,
+                endpoint=0,
+                property_key="venetianBlindsTilt",
+            )
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.MANUFACTURER_PROPRIETARY},
+                property={"fibaro"},
+                property_key={"venetianBlindsTilt"},
+            )
+        ],
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
@@ -280,41 +384,43 @@ DISCOVERY_SCHEMAS = [
         product_type={0x0003},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
-            property={"mode"},
+            property={THERMOSTAT_MODE_PROPERTY},
             type={"number"},
         ),
         data_template=DynamicCurrentTempClimateDataTemplate(
-            {
+            lookup_table={
                 # Internal Sensor
                 "A": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=2,
                 ),
                 "AF": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=2,
                 ),
                 # External Sensor
                 "A2": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=3,
                 ),
                 "A2F": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=3,
                 ),
                 # Floor sensor
                 "F": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=4,
                 ),
             },
-            ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+            dependent_value=ZwaveValueID(
+                property_=2, command_class=CommandClass.CONFIGURATION, endpoint=0
+            ),
         ),
     ),
     # Heatit Z-TRM2fx
@@ -327,31 +433,64 @@ DISCOVERY_SCHEMAS = [
         firmware_version_range=FirmwareVersionRange(min="3.0"),
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
-            property={"mode"},
+            property={THERMOSTAT_MODE_PROPERTY},
             type={"number"},
         ),
         data_template=DynamicCurrentTempClimateDataTemplate(
-            {
+            lookup_table={
                 # External Sensor
                 "A2": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=2,
                 ),
                 "A2F": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=2,
                 ),
                 # Floor sensor
                 "F": ZwaveValueID(
-                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    CommandClass.SENSOR_MULTILEVEL,
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=3,
                 ),
             },
-            ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+            dependent_value=ZwaveValueID(
+                property_=2, command_class=CommandClass.CONFIGURATION, endpoint=0
+            ),
         ),
+    ),
+    # FortrezZ SSA1/SSA2/SSA3
+    ZWaveDiscoverySchema(
+        platform="select",
+        hint="multilevel_switch",
+        manufacturer_id={0x0084},
+        product_id={0x0107, 0x0108, 0x010B, 0x0205},
+        product_type={0x0311, 0x0313, 0x0331, 0x0341, 0x0343},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=BaseDiscoverySchemaDataTemplate(
+            {
+                0: "Off",
+                33: "Strobe ONLY",
+                66: "Siren ONLY",
+                99: "Siren & Strobe FULL Alarm",
+            },
+        ),
+    ),
+    # HomeSeer HSM-200 v1
+    ZWaveDiscoverySchema(
+        platform="light",
+        hint="black_is_off",
+        manufacturer_id={0x001E},
+        product_id={0x0001},
+        product_type={0x0004},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_COLOR},
+            property={CURRENT_COLOR_PROPERTY},
+            property_key={None},
+        ),
+        absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
     ),
     # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======
     # Door lock mode config parameter. Functionality equivalent to Notification CC
@@ -369,7 +508,7 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.LOCK,
                 CommandClass.DOOR_LOCK,
             },
-            property={"currentMode", "locked"},
+            property={CURRENT_MODE_PROPERTY, LOCKED_PROPERTY},
             type={"number", "boolean"},
         ),
     ),
@@ -382,8 +521,29 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.LOCK,
                 CommandClass.DOOR_LOCK,
             },
-            property={"doorStatus"},
+            property={DOOR_STATUS_PROPERTY},
             type={"any"},
+        ),
+    ),
+    # thermostat fan
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="thermostat_fan",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.THERMOSTAT_FAN_MODE},
+            property={THERMOSTAT_FAN_MODE_PROPERTY},
+            type={"number"},
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    # humidifier
+    # hygrostats supporting mode (and optional setpoint)
+    ZWaveDiscoverySchema(
+        platform="humidifier",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.HUMIDITY_CONTROL_MODE},
+            property={HUMIDITY_CONTROL_MODE_PROPERTY},
+            type={"number"},
         ),
     ),
     # climate
@@ -392,7 +552,7 @@ DISCOVERY_SCHEMAS = [
         platform="climate",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
-            property={"mode"},
+            property={THERMOSTAT_MODE_PROPERTY},
             type={"number"},
         ),
     ),
@@ -401,13 +561,13 @@ DISCOVERY_SCHEMAS = [
         platform="climate",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_SETPOINT},
-            property={"setpoint"},
+            property={THERMOSTAT_SETPOINT_PROPERTY},
             type={"number"},
         ),
         absent_values=[  # mode must not be present to prevent dupes
             ZWaveValueDiscoverySchema(
                 command_class={CommandClass.THERMOSTAT_MODE},
-                property={"mode"},
+                property={THERMOSTAT_MODE_PROPERTY},
                 type={"number"},
             ),
         ],
@@ -487,6 +647,7 @@ DISCOVERY_SCHEMAS = [
             },
             type={"number"},
         ),
+        data_template=NumericSensorDataTemplate(),
     ),
     ZWaveDiscoverySchema(
         platform="sensor",
@@ -495,6 +656,7 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.INDICATOR},
             type={"number"},
         ),
+        data_template=NumericSensorDataTemplate(),
         entity_registry_enabled_default=False,
     ),
     # Meter sensors for Meter CC
@@ -506,8 +668,9 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.METER,
             },
             type={"number"},
-            property={"value"},
+            property={VALUE_PROPERTY},
         ),
+        data_template=NumericSensorDataTemplate(),
     ),
     # special list sensors (Notification CC)
     ZWaveDiscoverySchema(
@@ -531,7 +694,7 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.BASIC,
             },
             type={"number"},
-            property={"currentValue"},
+            property={CURRENT_VALUE_PROPERTY},
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
@@ -539,9 +702,10 @@ DISCOVERY_SCHEMAS = [
                     CommandClass.BASIC,
                 },
                 type={"number"},
-                property={"targetValue"},
+                property={TARGET_VALUE_PROPERTY},
             )
         ],
+        data_template=NumericSensorDataTemplate(),
         entity_registry_enabled_default=False,
     ),
     # binary switches
@@ -556,7 +720,7 @@ DISCOVERY_SCHEMAS = [
         hint="barrier_event_signaling_state",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.BARRIER_OPERATOR},
-            property={"signalingState"},
+            property={SIGNALING_STATE_PROPERTY},
             type={"number"},
         ),
     ),
@@ -581,13 +745,13 @@ DISCOVERY_SCHEMAS = [
         hint="motorized_barrier",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.BARRIER_OPERATOR},
-            property={"currentState"},
+            property={CURRENT_STATE_PROPERTY},
             type={"number"},
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
                 command_class={CommandClass.BARRIER_OPERATOR},
-                property={"targetState"},
+                property={TARGET_STATE_PROPERTY},
                 type={"number"},
             ),
         ],
@@ -629,7 +793,7 @@ DISCOVERY_SCHEMAS = [
         hint="Default tone",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SOUND_SWITCH},
-            property={"defaultToneId"},
+            property={DEFAULT_TONE_ID_PROPERTY},
             type={"number"},
         ),
         required_values=[SIREN_TONE_SCHEMA],
@@ -641,7 +805,7 @@ DISCOVERY_SCHEMAS = [
         hint="volume",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SOUND_SWITCH},
-            property={"defaultVolume"},
+            property={DEFAULT_VOLUME_PROPERTY},
             type={"number"},
         ),
         required_values=[SIREN_TONE_SCHEMA],
@@ -652,7 +816,7 @@ DISCOVERY_SCHEMAS = [
         platform="select",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.PROTECTION},
-            property={"local", "rf"},
+            property={LOCAL_PROPERTY, RF_PROPERTY},
             type={"number"},
         ),
     ),
@@ -660,114 +824,138 @@ DISCOVERY_SCHEMAS = [
 
 
 @callback
-def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None, None]:
+def async_discover_node_values(
+    node: ZwaveNode, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
+) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
-        for schema in DISCOVERY_SCHEMAS:
-            # check manufacturer_id
-            if (
-                schema.manufacturer_id is not None
-                and value.node.manufacturer_id not in schema.manufacturer_id
-            ):
-                continue
+        # We don't need to rediscover an already processed value_id
+        if value.value_id in discovered_value_ids[device.id]:
+            continue
+        yield from async_discover_single_value(value, device, discovered_value_ids)
 
-            # check product_id
-            if (
-                schema.product_id is not None
-                and value.node.product_id not in schema.product_id
-            ):
-                continue
 
-            # check product_type
-            if (
-                schema.product_type is not None
-                and value.node.product_type not in schema.product_type
-            ):
-                continue
+@callback
+def async_discover_single_value(
+    value: ZwaveValue, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
+) -> Generator[ZwaveDiscoveryInfo, None, None]:
+    """Run discovery on a single ZWave value and return matching schema info."""
+    discovered_value_ids[device.id].add(value.value_id)
+    for schema in DISCOVERY_SCHEMAS:
+        # check manufacturer_id
+        if (
+            schema.manufacturer_id is not None
+            and value.node.manufacturer_id not in schema.manufacturer_id
+        ):
+            continue
 
-            # check firmware_version_range
-            if schema.firmware_version_range is not None and (
-                (
-                    schema.firmware_version_range.min is not None
-                    and schema.firmware_version_range.min_ver
-                    > AwesomeVersion(value.node.firmware_version)
-                )
-                or (
-                    schema.firmware_version_range.max is not None
-                    and schema.firmware_version_range.max_ver
-                    < AwesomeVersion(value.node.firmware_version)
-                )
-            ):
-                continue
+        # check product_id
+        if (
+            schema.product_id is not None
+            and value.node.product_id not in schema.product_id
+        ):
+            continue
 
-            # check firmware_version
-            if (
-                schema.firmware_version is not None
-                and value.node.firmware_version not in schema.firmware_version
-            ):
-                continue
+        # check product_type
+        if (
+            schema.product_type is not None
+            and value.node.product_type not in schema.product_type
+        ):
+            continue
 
-            # check device_class_basic
-            if not check_device_class(
-                value.node.device_class.basic, schema.device_class_basic
-            ):
-                continue
+        # check firmware_version_range
+        if schema.firmware_version_range is not None and (
+            (
+                schema.firmware_version_range.min is not None
+                and schema.firmware_version_range.min_ver
+                > AwesomeVersion(value.node.firmware_version)
+            )
+            or (
+                schema.firmware_version_range.max is not None
+                and schema.firmware_version_range.max_ver
+                < AwesomeVersion(value.node.firmware_version)
+            )
+        ):
+            continue
 
-            # check device_class_generic
-            if not check_device_class(
-                value.node.device_class.generic, schema.device_class_generic
-            ):
-                continue
+        # check firmware_version
+        if (
+            schema.firmware_version is not None
+            and value.node.firmware_version not in schema.firmware_version
+        ):
+            continue
 
-            # check device_class_specific
-            if not check_device_class(
-                value.node.device_class.specific, schema.device_class_specific
-            ):
-                continue
+        # check device_class_basic
+        if not check_device_class(
+            value.node.device_class.basic, schema.device_class_basic
+        ):
+            continue
 
-            # check primary value
-            if not check_value(value, schema.primary_value):
-                continue
+        # check device_class_generic
+        if not check_device_class(
+            value.node.device_class.generic, schema.device_class_generic
+        ):
+            continue
 
-            # check additional required values
-            if schema.required_values is not None and not all(
-                any(check_value(val, val_scheme) for val in node.values.values())
-                for val_scheme in schema.required_values
-            ):
-                continue
+        # check device_class_specific
+        if not check_device_class(
+            value.node.device_class.specific, schema.device_class_specific
+        ):
+            continue
 
-            # check for values that may not be present
-            if schema.absent_values is not None and any(
-                any(check_value(val, val_scheme) for val in node.values.values())
-                for val_scheme in schema.absent_values
-            ):
-                continue
+        # check primary value
+        if not check_value(value, schema.primary_value):
+            continue
 
-            # resolve helper data from template
-            resolved_data = None
-            additional_value_ids_to_watch = None
-            if schema.data_template:
+        # check additional required values
+        if schema.required_values is not None and not all(
+            any(check_value(val, val_scheme) for val in value.node.values.values())
+            for val_scheme in schema.required_values
+        ):
+            continue
+
+        # check for values that may not be present
+        if schema.absent_values is not None and any(
+            any(check_value(val, val_scheme) for val in value.node.values.values())
+            for val_scheme in schema.absent_values
+        ):
+            continue
+
+        # resolve helper data from template
+        resolved_data = None
+        additional_value_ids_to_watch = set()
+        if schema.data_template:
+            try:
                 resolved_data = schema.data_template.resolve_data(value)
-                additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(
-                    resolved_data
+            except UnknownValueData as err:
+                LOGGER.error(
+                    "Discovery for value %s on device '%s' (%s) will be skipped: %s",
+                    value,
+                    device.name_by_user or device.name,
+                    value.node,
+                    err,
                 )
-
-            # all checks passed, this value belongs to an entity
-            yield ZwaveDiscoveryInfo(
-                node=value.node,
-                primary_value=value,
-                assumed_state=schema.assumed_state,
-                platform=schema.platform,
-                platform_hint=schema.hint,
-                platform_data_template=schema.data_template,
-                platform_data=resolved_data,
-                additional_value_ids_to_watch=additional_value_ids_to_watch,
-                entity_registry_enabled_default=schema.entity_registry_enabled_default,
+                continue
+            additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(
+                resolved_data
             )
 
-            if not schema.allow_multi:
-                # break out of loop, this value may not be discovered by other schemas/platforms
-                break
+        # all checks passed, this value belongs to an entity
+        yield ZwaveDiscoveryInfo(
+            node=value.node,
+            primary_value=value,
+            assumed_state=schema.assumed_state,
+            platform=schema.platform,
+            platform_hint=schema.hint,
+            platform_data_template=schema.data_template,
+            platform_data=resolved_data,
+            additional_value_ids_to_watch=additional_value_ids_to_watch,
+            entity_registry_enabled_default=schema.entity_registry_enabled_default,
+        )
+
+        if not schema.allow_multi:
+            # return early since this value may not be discovered by other schemas/platforms
+            return
 
 
 @callback

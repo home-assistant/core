@@ -38,12 +38,12 @@ class InsecureExampleModule(MultiFactorAuthModule):
     @property
     def input_schema(self) -> vol.Schema:
         """Validate login flow input data."""
-        return vol.Schema({"pin": str})
+        return vol.Schema({vol.Required("pin"): str})
 
     @property
     def setup_schema(self) -> vol.Schema:
         """Validate async_setup_user input data."""
-        return vol.Schema({"pin": str})
+        return vol.Schema({vol.Required("pin"): str})
 
     async def async_setup_flow(self, user_id: str) -> SetupFlow:
         """Return a data entry flow handler for setup module.

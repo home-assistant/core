@@ -10,6 +10,7 @@
             "relayer_connected": "Relayer Terhubung",
             "remote_connected": "Terhubung Jarak Jauh",
             "remote_enabled": "Kontrol Jarak Jauh Diaktifkan",
+            "remote_server": "Server Daring",
             "subscription_expiration": "Masa Kedaluwarsa Langganan"
         }
     }

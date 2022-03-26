@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_value": "{entity_name} \u306e\u5024\u3092\u8a2d\u5b9a"
+        }
+    },
+    "title": "\u6570"
+}

@@ -1,146 +1,140 @@
-"""Support for Luftdaten sensors."""
-import logging
+"""Support for Sensor.Community sensors."""
+from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from typing import cast
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_SHOW_ON_MAP,
+    PERCENTAGE,
+    PRESSURE_PA,
+    TEMP_CELSIUS,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-from . import (
-    DATA_LUFTDATEN,
-    DATA_LUFTDATEN_CLIENT,
-    DEFAULT_ATTRIBUTION,
-    DOMAIN,
-    SENSORS,
-    TOPIC_UPDATE,
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
 )
-from .const import ATTR_SENSOR_ID
 
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_SENSOR_ID, CONF_SENSOR_ID, DOMAIN
+
+SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="pressure",
+        name="Pressure",
+        native_unit_of_measurement=PRESSURE_PA,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="pressure_at_sealevel",
+        name="Pressure at sealevel",
+        native_unit_of_measurement=PRESSURE_PA,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="P1",
+        name="PM10",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="P2",
+        name="PM2.5",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up a Luftdaten sensor based on a config entry."""
-    luftdaten = hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT][entry.entry_id]
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up a Sensor.Community sensor based on a config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = []
-    for sensor_type in luftdaten.sensor_conditions:
-        try:
-            name, icon, unit, device_class = SENSORS[sensor_type]
-        except KeyError:
-            _LOGGER.debug("Unknown sensor value type: %s", sensor_type)
-            continue
+    async_add_entities(
+        SensorCommunitySensor(
+            coordinator=coordinator,
+            description=description,
+            sensor_id=entry.data[CONF_SENSOR_ID],
+            show_on_map=entry.data[CONF_SHOW_ON_MAP],
+        )
+        for description in SENSORS
+        if description.key in coordinator.data
+    )
 
-        sensors.append(
-            LuftdatenSensor(
-                luftdaten,
-                sensor_type,
-                name,
-                icon,
-                unit,
-                device_class,
-                entry.data[CONF_SHOW_ON_MAP],
-            )
+
+class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
+    """Implementation of a Sensor.Community sensor."""
+
+    _attr_attribution = "Data provided by Sensor.Community"
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        *,
+        coordinator: DataUpdateCoordinator,
+        description: SensorEntityDescription,
+        sensor_id: int,
+        show_on_map: bool,
+    ) -> None:
+        """Initialize the Sensor.Community sensor."""
+        super().__init__(coordinator=coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{sensor_id}_{description.key}"
+        self._attr_extra_state_attributes = {
+            ATTR_SENSOR_ID: sensor_id,
+        }
+        self._attr_device_info = DeviceInfo(
+            configuration_url=f"https://devices.sensor.community/sensors/{sensor_id}/settings",
+            identifiers={(DOMAIN, str(sensor_id))},
+            name=f"Sensor {sensor_id}",
+            manufacturer="Sensor.Community",
         )
 
-    async_add_entities(sensors, True)
-
-
-class LuftdatenSensor(SensorEntity):
-    """Implementation of a Luftdaten sensor."""
-
-    def __init__(self, luftdaten, sensor_type, name, icon, unit, device_class, show):
-        """Initialize the Luftdaten sensor."""
-        self._async_unsub_dispatcher_connect = None
-        self.luftdaten = luftdaten
-        self._icon = icon
-        self._name = name
-        self._data = None
-        self.sensor_type = sensor_type
-        self._unit_of_measurement = unit
-        self._show_on_map = show
-        self._attrs = {}
-        self._attr_device_class = device_class
+        if show_on_map:
+            self._attr_extra_state_attributes[ATTR_LONGITUDE] = coordinator.data[
+                "longitude"
+            ]
+            self._attr_extra_state_attributes[ATTR_LATITUDE] = coordinator.data[
+                "latitude"
+            ]
 
     @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the device."""
-        if self._data is not None:
-            try:
-                return self._data[self.sensor_type]
-            except KeyError:
-                return None
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, friendly identifier for this entity."""
-        if self._data is not None:
-            try:
-                return f"{self._data['sensor_id']}_{self.sensor_type}"
-            except KeyError:
-                return None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        self._attrs[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
-
-        if self._data is not None:
-            try:
-                self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
-            except KeyError:
-                return None
-
-            on_map = ATTR_LATITUDE, ATTR_LONGITUDE
-            no_map = "lat", "long"
-            lat_format, lon_format = on_map if self._show_on_map else no_map
-            try:
-                self._attrs[lon_format] = self._data["longitude"]
-                self._attrs[lat_format] = self._data["latitude"]
-                return self._attrs
-            except KeyError:
-                return
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-    async def async_update(self):
-        """Get the latest data and update the state."""
-        try:
-            self._data = self.luftdaten.data[DATA_LUFTDATEN]
-        except KeyError:
-            return
+        if (
+            not self.coordinator.data
+            or (value := self.coordinator.data.get(self.entity_description.key)) is None
+        ):
+            return None
+        return cast(float, value)

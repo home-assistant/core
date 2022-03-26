@@ -6,19 +6,37 @@
             "single_instance_allowed": "Al geconfigureerd. Er is maar een configuratie mogelijk."
         },
         "error": {
-            "invalid_auth": "Ongeldige authenticatie"
+            "invalid_auth": "Ongeldige authenticatie",
+            "login_error": "Aanmeldingsfout ({code}): {msg}"
         },
         "flow_title": "Tuya-configuratie",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Toegangs-ID",
+                    "access_secret": "Access Secret",
+                    "country_code": "Landcode",
+                    "endpoint": "Beschikbaarheidszone",
+                    "password": "Wachtwoord",
+                    "tuya_app_type": "Mobiele app",
+                    "username": "Account"
+                },
+                "description": "Voer uw Tuya-inloggegevens in",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
-                    "country_code": "De landcode van uw account (bijvoorbeeld 1 voor de VS of 86 voor China)",
+                    "access_id": "Tuya IoT-toegangs-ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "Land",
                     "password": "Wachtwoord",
                     "platform": "De app waar uw account is geregistreerd",
+                    "region": "Regio",
+                    "tuya_project_type": "Tuya cloud project type",
                     "username": "Gebruikersnaam"
                 },
                 "description": "Voer uw Tuya-inloggegevens in.",
-                "title": "Tuya"
+                "title": "Tuya-integratie"
             }
         }
     },
@@ -55,7 +73,7 @@
                     "discovery_interval": "Polling-interval van nieuwe apparaten in seconden",
                     "list_devices": "Selecteer de te configureren apparaten of laat leeg om de configuratie op te slaan",
                     "query_device": "Selecteer apparaat dat query-methode zal gebruiken voor snellere statusupdate",
-                    "query_interval": "Peilinginterval van het apparaat in seconden"
+                    "query_interval": "Ververstijd van het apparaat in seconden"
                 },
                 "description": "Stel de waarden voor het pollinginterval niet te laag in, anders zullen de oproepen geen foutmelding in het logboek genereren",
                 "title": "Configureer Tuya opties"

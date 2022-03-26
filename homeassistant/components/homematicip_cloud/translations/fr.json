@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le point d'acc\u00e8s est d\u00e9j\u00e0 configur\u00e9",
-            "connection_aborted": "Impossible de se connecter au serveur HMIP",
-            "unknown": "Une erreur inconnue s'est produite."
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "connection_aborted": "\u00c9chec de connexion",
+            "unknown": "Erreur inattendue"
         },
         "error": {
             "invalid_sgtin_or_pin": "Code SGTIN ou PIN invalide, veuillez r\u00e9essayer.",
@@ -15,8 +15,8 @@
             "init": {
                 "data": {
                     "hapid": "ID du point d'acc\u00e8s (SGTIN)",
-                    "name": "Nom (facultatif, utilis\u00e9 comme pr\u00e9fixe de nom pour tous les p\u00e9riph\u00e9riques)",
-                    "pin": "Code PIN (facultatif)"
+                    "name": "Nom (facultatif, utilis\u00e9 comme pr\u00e9fixe de nom pour tous les appareils)",
+                    "pin": "Code PIN"
                 },
                 "title": "Choisissez le point d'acc\u00e8s HomematicIP"
             },

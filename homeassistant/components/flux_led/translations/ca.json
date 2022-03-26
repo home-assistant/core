@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "{model} {id} ({ipaddr})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vols configurar {model} {id} ({ipaddr})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Si deixes l'amfitri\u00f3 buit, s'utilitzar\u00e0 el descobriment per cercar dispositius."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_effect_colors": "Efecte personalitzat: llista d'1 a 16 colors [R,G,B]. Exemple: [255,0,255],[60,128,0]",
+                    "custom_effect_speed_pct": "Efecte personalitzat: velocitat en percentatges de l'efecte de canvi de color.",
+                    "custom_effect_transition": "Efecte personalitzat: tipus de transici\u00f3 entre colors.",
+                    "mode": "Mode de brillantor escollit."
+                }
+            }
+        }
+    }
+}

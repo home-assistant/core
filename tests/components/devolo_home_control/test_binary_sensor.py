@@ -6,6 +6,8 @@ import pytest
 from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity import EntityCategory
 
 from . import configure_integration
 from .mocks import (
@@ -32,6 +34,11 @@ async def test_binary_sensor(hass: HomeAssistant):
     state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
     assert state.state == STATE_OFF
+
+    state = hass.states.get(f"{DOMAIN}.test_2")
+    assert state is not None
+    er = entity_registry.async_get(hass)
+    assert er.async_get(f"{DOMAIN}.test_2").entity_category == EntityCategory.DIAGNOSTIC
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("Test", True))
@@ -111,4 +118,4 @@ async def test_remove_from_hass(hass: HomeAssistant):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    test_gateway.publisher.unregister.assert_called_once()
+    assert test_gateway.publisher.unregister.call_count == 2

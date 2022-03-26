@@ -1,4 +1,5 @@
 """Facebook platform for notify component."""
+from http import HTTPStatus
 import json
 import logging
 
@@ -12,7 +13,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
+from homeassistant.const import CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ class FacebookNotificationService(BaseNotificationService):
                 headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
                 timeout=10,
             )
-            if resp.status_code != HTTP_OK:
+            if resp.status_code != HTTPStatus.OK:
                 log_error(resp)
 
 

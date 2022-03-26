@@ -307,8 +307,7 @@ class SendKeys(LcnServiceCall):
             key_id = int(key) - 1
             keys[table_id][key_id] = True
 
-        delay_time = service.data[CONF_TIME]
-        if delay_time != 0:
+        if (delay_time := service.data[CONF_TIME]) != 0:
             hit = pypck.lcn_defs.SendKeyCommand.HIT
             if pypck.lcn_defs.SendKeyCommand[service.data[CONF_STATE]] != hit:
                 raise ValueError(
@@ -347,8 +346,7 @@ class LockKeys(LcnServiceCall):
         ]
         table_id = ord(service.data[CONF_TABLE]) - 65
 
-        delay_time = service.data[CONF_TIME]
-        if delay_time != 0:
+        if (delay_time := service.data[CONF_TIME]) != 0:
             if table_id != 0:
                 raise ValueError(
                     "Only table A is allowed when locking keys for a specific time."

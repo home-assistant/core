@@ -35,6 +35,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Saada k\u00e4sk: {subtype}",
+            "send_status": "Saada olekuv\u00e4rskendus: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Saabunud k\u00e4sk: {subtype}",
+            "status": "Saabunud olek: {subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "Seade on juba h\u00e4\u00e4lestatud",
@@ -51,6 +61,7 @@
                     "debug": "Luba silumine",
                     "device": "Vali seadistatav seade",
                     "event_code": "Sisesta lisatava s\u00fcndmuse kood",
+                    "protocols": "Protokollid",
                     "remove_device": "Vali eemaldatav seade"
                 },
                 "title": "Rfxtrx valikud"

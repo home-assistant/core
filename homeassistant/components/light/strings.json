@@ -14,6 +14,7 @@
       "is_off": "{entity_name} is off"
     },
     "trigger_type": {
+      "changed_states": "{entity_name} turned on or off",
       "turned_on": "{entity_name} turned on",
       "turned_off": "{entity_name} turned off"
     }

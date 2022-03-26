@@ -1,5 +1,4 @@
 """Pyaehw4a1 platform to control of Hisense AEH-W4A1 Climate Devices."""
-
 import logging
 
 from pyaehw4a1.aehw4a1 import AehW4a1
@@ -29,12 +28,15 @@ from homeassistant.components.climate.const import (
     SWING_OFF,
     SWING_VERTICAL,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_IP_ADDRESS, DOMAIN
 
@@ -131,7 +133,11 @@ def _build_entity(device):
     return ClimateAehW4a1(device)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the AEH-W4A1 climate platform."""
     # Priority 1: manual config
     if hass.data[DOMAIN].get(CONF_IP_ADDRESS):
@@ -325,8 +331,7 @@ class ClimateAehW4a1(ClimateEntity):
                 "AC at %s is off, could not set temperature", self._unique_id
             )
             return
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             _LOGGER.debug("Setting temp of %s to %s", self._unique_id, temp)
             if self._preset_mode != PRESET_NONE:
                 await self.async_set_preset_mode(PRESET_NONE)

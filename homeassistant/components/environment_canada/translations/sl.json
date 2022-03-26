@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Povezava ni uspela",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "language": "Jezik vremenskih informacij",
+                    "station": "ID vremenske postaje"
+                }
+            }
+        }
+    }
+}

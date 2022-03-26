@@ -4,7 +4,8 @@ from unittest.mock import patch
 from aiohttp.client_exceptions import ClientConnectionError
 from systembridge.exceptions import BridgeAuthenticationException
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 
@@ -27,13 +28,14 @@ FIXTURE_ZEROCONF_INPUT = {
     CONF_PORT: "9170",
 }
 
-FIXTURE_ZEROCONF = {
-    CONF_HOST: "1.1.1.1",
-    CONF_PORT: 9170,
-    "hostname": "test-bridge.local.",
-    "type": "_system-bridge._udp.local.",
-    "name": "System Bridge - test-bridge._system-bridge._udp.local.",
-    "properties": {
+FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    addresses=["1.1.1.1"],
+    port=9170,
+    hostname="test-bridge.local.",
+    type="_system-bridge._udp.local.",
+    name="System Bridge - test-bridge._system-bridge._udp.local.",
+    properties={
         "address": "http://test-bridge:9170",
         "fqdn": "test-bridge",
         "host": "test-bridge",
@@ -42,18 +44,19 @@ FIXTURE_ZEROCONF = {
         "port": "9170",
         "uuid": FIXTURE_UUID,
     },
-}
+)
 
-FIXTURE_ZEROCONF_BAD = {
-    CONF_HOST: "1.1.1.1",
-    CONF_PORT: 9170,
-    "hostname": "test-bridge.local.",
-    "type": "_system-bridge._udp.local.",
-    "name": "System Bridge - test-bridge._system-bridge._udp.local.",
-    "properties": {
+FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    addresses=["1.1.1.1"],
+    port=9170,
+    hostname="test-bridge.local.",
+    type="_system-bridge._udp.local.",
+    name="System Bridge - test-bridge._system-bridge._udp.local.",
+    properties={
         "something": "bad",
     },
-}
+)
 
 
 FIXTURE_INFORMATION = {
@@ -80,9 +83,7 @@ FIXTURE_BASE_URL = (
     f"http://{FIXTURE_USER_INPUT[CONF_HOST]}:{FIXTURE_USER_INPUT[CONF_PORT]}"
 )
 
-FIXTURE_ZEROCONF_BASE_URL = (
-    f"http://{FIXTURE_ZEROCONF[CONF_HOST]}:{FIXTURE_ZEROCONF[CONF_PORT]}"
-)
+FIXTURE_ZEROCONF_BASE_URL = f"http://{FIXTURE_ZEROCONF.host}:{FIXTURE_ZEROCONF.port}"
 
 
 async def test_user_flow(
@@ -279,7 +280,7 @@ async def test_zeroconf_flow(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -314,7 +315,7 @@ async def test_zeroconf_cannot_connect(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf cannot connect flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -342,7 +343,7 @@ async def test_zeroconf_bad_zeroconf_info(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf cannot connect flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},

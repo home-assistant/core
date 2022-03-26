@@ -1,22 +1,26 @@
 """Provides device automations for Tasmota."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Callable
+from typing import Any
 
 import attr
 from hatasmota.models import DiscoveryHashType
 from hatasmota.trigger import TasmotaTrigger, TasmotaTriggerConfig
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
@@ -49,7 +53,7 @@ class TriggerInstance:
     """Attached trigger settings."""
 
     action: AutomationActionType = attr.ib()
-    automation_info: dict = attr.ib()
+    automation_info: AutomationTriggerInfo = attr.ib()
     trigger: Trigger = attr.ib()
     remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
@@ -93,7 +97,7 @@ class Trigger:
     trigger_instances: list[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(
-        self, action: AutomationActionType, automation_info: dict
+        self, action: AutomationActionType, automation_info: AutomationTriggerInfo
     ) -> Callable[[], None]:
         """Add Tasmota trigger."""
         instance = TriggerInstance(action, automation_info, self)
@@ -216,7 +220,7 @@ async def async_setup_trigger(
         hass, TASMOTA_DISCOVERY_ENTITY_UPDATED.format(*discovery_hash), discovery_update
     )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         set(),
         {(CONNECTION_NETWORK_MAC, tasmota_trigger.cfg.mac)},
@@ -259,7 +263,9 @@ async def async_remove_triggers(hass: HomeAssistant, device_id: str) -> None:
             device_trigger.remove_update_signal()
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for a Tasmota device."""
     triggers: list[dict[str, str]] = []
 
@@ -287,7 +293,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: Callable,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a device trigger."""
     if DEVICE_TRIGGERS not in hass.data:

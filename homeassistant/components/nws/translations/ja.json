@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d4c\u5ea6",
+                    "station": "METAR station code"
+                },
+                "description": "METAR station code\u304c\u6307\u5b9a\u3055\u308c\u3066\u3044\u306a\u3044\u5834\u5408\u3001\u7def\u5ea6\u3068\u7d4c\u5ea6\u3092\u4f7f\u7528\u3057\u3066\u6700\u3082\u8fd1\u3044\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u304c\u691c\u7d22\u3055\u308c\u307e\u3059\u3002\u4eca\u306e\u3068\u3053\u308d\u3001API\u30ad\u30fc\u306f\u4f55\u3067\u3082\u304b\u307e\u3044\u307e\u305b\u3093\u3002\u6709\u52b9\u306a\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9\u3092\u4f7f\u7528\u3059\u308b\u3053\u3068\u3092\u304a\u52e7\u3081\u3057\u307e\u3059\u3002",
+                "title": "\u30a2\u30e1\u30ea\u30ab\u56fd\u7acb\u6c17\u8c61\u5c40\u306b\u63a5\u7d9a"
+            }
+        }
+    }
+}

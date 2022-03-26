@@ -1,5 +1,5 @@
 """Constants for the ScreenLogic integration."""
-from screenlogicpy.const import COLOR_MODE
+from screenlogicpy.const import CIRCUIT_FUNCTION, COLOR_MODE
 
 from homeassistant.util import slugify
 
@@ -13,4 +13,4 @@ SUPPORTED_COLOR_MODES = {
     slugify(name): num for num, name in COLOR_MODE.NAME_FOR_NUM.items()
 }
 
-DISCOVERED_GATEWAYS = "_discovered_gateways"
+LIGHT_CIRCUIT_FUNCTIONS = {CIRCUIT_FUNCTION.INTELLIBRITE, CIRCUIT_FUNCTION.LIGHT}

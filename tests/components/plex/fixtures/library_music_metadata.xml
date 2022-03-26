@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MediaContainer size="0" totalSize="10" allowSync="1" art="/:/resources/artist-fanart.jpg" identifier="com.plexapp.plugins.library" librarySectionID="3" librarySectionTitle="Music" librarySectionUUID="ba0c2140-c6ef-448a-9d1b-31020741d014" mediaTagPrefix="/system/bundle/media/flags/" mediaTagVersion="1628745015" nocache="1" offset="0" sortAsc="1" thumb="/:/resources/artist.png" title1="Music" title2="All Artists" viewGroup="artist" viewMode="131124">
+    <Meta>
+        <Type key="/library/sections/3/all?type=8" type="artist" title="Artists" active="1">
+            <Filter filter="genre" filterType="string" key="/library/sections/3/genre?type=8" title="Genre" type="filter" />
+            <Filter filter="mood" filterType="string" key="/library/sections/3/mood?type=8" title="Mood" type="filter" />
+            <Filter filter="style" filterType="string" key="/library/sections/3/style?type=8" title="Style" type="filter" />
+            <Filter filter="country" filterType="string" key="/library/sections/3/country?type=8" title="Country" type="filter" />
+            <Filter filter="collection" filterType="string" key="/library/sections/3/collection?type=8" title="Collection" type="filter" />
+            <Filter filter="unmatched" filterType="boolean" key="/library/sections/3/unmatched" title="Unmatched" type="filter" />
+            <Sort active="1" activeDirection="asc" default="asc" defaultDirection="asc" descKey="titleSort:desc" firstCharacterKey="/library/sections/3/firstCharacter" key="titleSort" title="Title" />
+            <Sort defaultDirection="desc" descKey="userRating:desc" key="userRating" title="Rating" />
+            <Sort defaultDirection="desc" descKey="addedAt:desc" key="addedAt" title="Date Added" />
+            <Sort defaultDirection="desc" descKey="lastViewedAt:desc" key="lastViewedAt" title="Date Played" />
+            <Sort defaultDirection="desc" descKey="viewCount:desc" key="viewCount" title="Plays" />
+            <Sort defaultDirection="desc" descKey="random:desc" key="random" title="Randomly" />
+            <Field key="artist.title" title="Artist Title" type="string" />
+            <Field key="artist.userRating" subType="rating" title="Artist Rating" type="integer" />
+            <Field key="artist.genre" title="Artist Genre" type="tag" />
+            <Field key="artist.collection" title="Artist Collection" type="tag" />
+            <Field key="artist.country" title="Artist Country" type="tag" />
+            <Field key="artist.mood" title="Artist Mood" type="tag" />
+            <Field key="artist.style" title="Artist Style" type="tag" />
+            <Field key="artist.addedAt" title="Date Artist Added" type="date" />
+            <Field key="artist.lastViewedAt" title="Artist Last Played" type="date" />
+            <Field key="artist.unmatched" title="Unmatched" type="boolean" />
+        </Type>
+        <Type key="/library/sections/3/all?type=9" type="album" title="Albums" active="0">
+            <Filter filter="genre" filterType="string" key="/library/sections/3/genre?type=9" title="Genre" type="filter" />
+            <Filter filter="mood" filterType="string" key="/library/sections/3/mood?type=9" title="Mood" type="filter" />
+            <Filter filter="style" filterType="string" key="/library/sections/3/style?type=9" title="Style" type="filter" />
+            <Filter filter="year" filterType="integer" key="/library/sections/3/year?type=9" title="Year" type="filter" />
+            <Filter filter="decade" filterType="integer" key="/library/sections/3/decade?type=9" title="Decade" type="filter" />
+            <Filter filter="studio" filterType="string" key="/library/sections/3/studio?type=9" title="Record Label" type="filter" />
+            <Filter filter="format" filterType="string" key="/library/sections/3/format?type=9" title="Format" type="filter" />
+            <Filter filter="subformat" filterType="string" key="/library/sections/3/subformat?type=9" title="Type" type="filter" />
+            <Filter filter="collection" filterType="string" key="/library/sections/3/collection?type=9" title="Collection" type="filter" />
+            <Filter filter="label" filterType="string" key="/library/sections/3/label?type=9" title="Labels" type="filter" />
+            <Filter filter="source" filterType="string" key="/library/sections/3/source?type=9" title="Source" type="filter" />
+            <Filter filter="unmatched" filterType="boolean" key="/library/sections/3/unmatched" title="Unmatched" type="filter" />
+            <Sort defaultDirection="asc" descKey="titleSort:desc" firstCharacterKey="/library/sections/3/firstCharacter?type=9" key="titleSort" title="Title" />
+            <Sort default="asc" defaultDirection="asc" descKey="artist.titleSort:desc,album.titleSort,album.index,album.id,album.originallyAvailableAt" firstCharacterKey="/library/sections/3/firstCharacter?type=9" key="artist.titleSort,album.titleSort,album.index,album.id,album.originallyAvailableAt" title="Album Artist" />
+            <Sort defaultDirection="desc" descKey="year:desc" key="year" title="Year" />
+            <Sort defaultDirection="desc" descKey="originallyAvailableAt:desc" key="originallyAvailableAt" title="Release Date" />
+            <Sort defaultDirection="desc" descKey="rating:desc" key="rating" title="Critic Rating" />
+            <Sort defaultDirection="desc" descKey="userRating:desc" key="userRating" title="Rating" />
+            <Sort defaultDirection="desc" descKey="addedAt:desc" key="addedAt" title="Date Added" />
+            <Sort defaultDirection="desc" descKey="lastViewedAt:desc" key="lastViewedAt" title="Date Played" />
+            <Sort defaultDirection="desc" descKey="viewCount:desc" key="viewCount" title="Plays" />
+            <Sort defaultDirection="desc" descKey="random:desc" key="random" title="Randomly" />
+            <Field key="album.title" title="Album Title" type="string" />
+            <Field key="album.year" subType="year" title="Year" type="integer" />
+            <Field key="album.decade" subType="decade" title="Album Decade" type="integer" />
+            <Field key="album.genre" title="Album Genre" type="tag" />
+            <Field key="album.viewCount" title="Album Plays" type="integer" />
+            <Field key="album.lastViewedAt" title="Album Last Played" type="date" />
+            <Field key="album.userRating" subType="rating" title="Album Rating" type="integer" />
+            <Field key="album.rating" subType="rating" title="Album Critic Rating" type="integer" />
+            <Field key="album.decade" subType="decade" title="Album Decade" type="integer" />
+            <Field key="album.studio" title="Record Label" type="string" />
+            <Field key="album.mood" title="Album Mood" type="tag" />
+            <Field key="album.style" title="Album Style" type="tag" />
+            <Field key="album.format" title="Album Format" type="tag" />
+            <Field key="album.subformat" title="Album Type" type="tag" />
+            <Field key="album.collection" title="Album Collection" type="tag" />
+            <Field key="album.addedAt" title="Date Album Added" type="date" />
+            <Field key="album.originallyAvailableAt" title="Date Album Released" type="date" />
+            <Field key="album.unmatched" title="Unmatched" type="boolean" />
+            <Field key="album.source" title="Album Source" type="tag" />
+            <Field key="album.label" title="Label" type="tag" />
+        </Type>
+        <Type key="/library/sections/3/all?type=10" type="track" title="Tracks" active="0">
+            <Filter filter="mood" filterType="string" key="/library/sections/3/mood?type=10" title="Mood" type="filter" />
+            <Filter filter="userRating" filterType="string" key="/library/sections/3/userRating?type=10" title="Rating" type="filter" />
+            <Filter filter="source" filterType="string" key="/library/sections/3/source?type=10" title="Source" type="filter" />
+            <Sort defaultDirection="asc" descKey="titleSort:desc" firstCharacterKey="/library/sections/3/firstCharacter?type=10" key="titleSort" title="Title" />
+            <Sort default="asc" defaultDirection="asc" descKey="artist.titleSort:desc,album.titleSort,album.year,track.absoluteIndex,track.index,track.titleSort,track.id" firstCharacterKey="/library/sections/3/firstCharacter?type=10" key="artist.titleSort,album.titleSort,album.year,track.absoluteIndex,track.index,track.titleSort,track.id" title="Album Artist" />
+            <Sort defaultDirection="desc" descKey="originalTitle:desc" key="originalTitle" title="Artist" />
+            <Sort defaultDirection="asc" descKey="album.titleSort:desc" key="album.titleSort" title="Album" />
+            <Sort defaultDirection="desc" descKey="userRating:desc" key="userRating" title="Rating" />
+            <Sort defaultDirection="desc" descKey="duration:desc" key="duration" title="Duration" />
+            <Sort defaultDirection="desc" descKey="viewCount:desc" key="viewCount" title="Plays" />
+            <Sort defaultDirection="desc" descKey="addedAt:desc" key="addedAt" title="Date Added" />
+            <Sort defaultDirection="desc" descKey="lastViewedAt:desc" key="lastViewedAt" title="Date Played" />
+            <Sort defaultDirection="desc" descKey="lastRatedAt:desc" key="lastRatedAt" title="Date Rated" />
+            <Sort defaultDirection="desc" descKey="random:desc" key="random" title="Randomly" />
+            <Sort defaultDirection="desc" descKey="ratingCount:desc" key="ratingCount" title="Popularity" />
+            <Sort defaultDirection="desc" descKey="mediaBitrate:desc" key="mediaBitrate" title="Bitrate" />
+            <Field key="track.mood" title="Track Mood" type="tag" />
+            <Field key="track.title" title="Track Title" type="string" />
+            <Field key="track.viewCount" title="Track Plays" type="integer" />
+            <Field key="track.lastViewedAt" title="Track Last Played" type="date" />
+            <Field key="track.skipCount" title="Track Skips" type="integer" />
+            <Field key="track.lastSkippedAt" title="Track Last Skipped" type="date" />
+            <Field key="track.userRating" subType="rating" title="Track Rating" type="integer" />
+            <Field key="track.lastRatedAt" title="Track Last Rated" type="date" />
+            <Field key="track.addedAt" title="Track Added At" type="date" />
+            <Field key="track.mediaSize" subType="fileSize" title="File Size" type="integer" />
+            <Field key="track.mediaBitrate" subType="bitrate" title="Bitrate" type="integer" />
+            <Field key="track.trash" title="Trash" type="boolean" />
+            <Field key="track.source" title="Track Source" type="tag" />
+        </Type>
+        <Type key="/library/sections/3/folder" type="folder" title="Folders" active="0">
+        </Type>
+        <FieldType type="tag">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+        </FieldType>
+        <FieldType type="integer">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+            <Operator key="&gt;&gt;=" title="is greater than" />
+            <Operator key="&lt;&lt;=" title="is less than" />
+        </FieldType>
+        <FieldType type="string">
+            <Operator key="=" title="contains" />
+            <Operator key="!=" title="does not contain" />
+            <Operator key="==" title="is" />
+            <Operator key="!==" title="is not" />
+            <Operator key="&lt;=" title="begins with" />
+            <Operator key="&gt;=" title="ends with" />
+        </FieldType>
+        <FieldType type="boolean">
+            <Operator key="=" title="is true" />
+            <Operator key="!=" title="is false" />
+        </FieldType>
+        <FieldType type="date">
+            <Operator key="&lt;&lt;=" title="is before" />
+            <Operator key="&gt;&gt;=" title="is after" />
+        </FieldType>
+        <FieldType type="subtitleLanguage">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+        </FieldType>
+        <FieldType type="audioLanguage">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+        </FieldType>
+        <FieldType type="resolution">
+            <Operator key="=" title="is" />
+        </FieldType>
+    </Meta>
+</MediaContainer>

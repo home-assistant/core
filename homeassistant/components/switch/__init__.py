@@ -8,6 +8,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
@@ -25,7 +26,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-DOMAIN = "switch"
+from .const import DOMAIN
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -40,14 +42,23 @@ PROP_TO_ATTR = {
     "today_energy_kwh": ATTR_TODAY_ENERGY_KWH,
 }
 
-DEVICE_CLASS_OUTLET = "outlet"
-DEVICE_CLASS_SWITCH = "switch"
-
-DEVICE_CLASSES = [DEVICE_CLASS_OUTLET, DEVICE_CLASS_SWITCH]
-
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
-
 _LOGGER = logging.getLogger(__name__)
+
+
+class SwitchDeviceClass(StrEnum):
+    """Device class for switches."""
+
+    OUTLET = "outlet"
+    SWITCH = "switch"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(SwitchDeviceClass))
+
+# DEVICE_CLASS* below are deprecated as of 2021.12
+# use the SwitchDeviceClass enum instead.
+DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
+DEVICE_CLASS_OUTLET = SwitchDeviceClass.OUTLET.value
+DEVICE_CLASS_SWITCH = SwitchDeviceClass.SWITCH.value
 
 
 @bind_hass
@@ -89,18 +100,30 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SwitchEntityDescription(ToggleEntityDescription):
     """A class that describes switch entities."""
 
+    device_class: SwitchDeviceClass | str | None = None
+
 
 class SwitchEntity(ToggleEntity):
     """Base class for switch entities."""
 
     entity_description: SwitchEntityDescription
     _attr_current_power_w: float | None = None
+    _attr_device_class: SwitchDeviceClass | str | None
     _attr_today_energy_kwh: float | None = None
 
     @property
     def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
         return self._attr_current_power_w
+
+    @property
+    def device_class(self) -> SwitchDeviceClass | str | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
 
     @property
     def today_energy_kwh(self) -> float | None:
@@ -114,20 +137,7 @@ class SwitchEntity(ToggleEntity):
         data = {}
 
         for prop, attr in PROP_TO_ATTR.items():
-            value = getattr(self, prop)
-            if value is not None:
+            if (value := getattr(self, prop)) is not None:
                 data[attr] = value
 
         return data
-
-
-class SwitchDevice(SwitchEntity):
-    """Representation of a switch (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "SwitchDevice is deprecated, modify %s to extend SwitchEntity",
-            cls.__name__,
-        )

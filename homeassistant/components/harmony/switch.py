@@ -2,18 +2,22 @@
 import logging
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .connection_state import ConnectionStateMixin
 from .const import DOMAIN, HARMONY_DATA
 from .data import HarmonyData
+from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up harmony activity switches."""
     data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     activities = data.activities
@@ -27,47 +31,24 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(switches, True)
 
 
-class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
+class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
     """Switch representation of a Harmony activity."""
 
     def __init__(self, name: str, activity: dict, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySwitch class."""
-        super().__init__()
-        self._name = name
+        super().__init__(data=data)
         self._activity_name = activity["label"]
         self._activity_id = activity["id"]
-        self._data = data
-
-    @property
-    def name(self):
-        """Return the Harmony activity's name."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return f"activity_{self._activity_id}"
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return self._data.device_info(DOMAIN)
+        self._attr_entity_registry_enabled_default = False
+        self._attr_unique_id = f"activity_{self._activity_id}"
+        self._attr_name = name
+        self._attr_device_info = self._data.device_info(DOMAIN)
 
     @property
     def is_on(self):
         """Return if the current activity is the one for this switch."""
         _, activity_name = self._data.current_activity
         return activity_name == self._activity_name
-
-    @property
-    def should_poll(self):
-        """Return that we shouldn't be polled."""
-        return False
-
-    @property
-    def available(self):
-        """Return True if we're connected to the Hub, otherwise False."""
-        return self._data.available
 
     async def async_turn_on(self, **kwargs):
         """Start this activity."""

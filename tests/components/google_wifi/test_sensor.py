@@ -1,5 +1,6 @@
 """The tests for the Google Wifi platform."""
 from datetime import datetime, timedelta
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import homeassistant.components.google_wifi.sensor as google_wifi
@@ -33,7 +34,7 @@ MOCK_DATA_MISSING = '{"software": {},' '"system": {},' '"wan": {}}'
 async def test_setup_minimum(hass, requests_mock):
     """Test setup with minimum configuration."""
     resource = f"http://{google_wifi.DEFAULT_HOST}{google_wifi.ENDPOINT}"
-    requests_mock.get(resource, status_code=200)
+    requests_mock.get(resource, status_code=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
         "sensor",
@@ -45,7 +46,7 @@ async def test_setup_minimum(hass, requests_mock):
 async def test_setup_get(hass, requests_mock):
     """Test setup with full configuration."""
     resource = f"http://localhost{google_wifi.ENDPOINT}"
-    requests_mock.get(resource, status_code=200)
+    requests_mock.get(resource, status_code=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
         "sensor",
@@ -74,15 +75,15 @@ def setup_api(hass, data, requests_mock):
     now = datetime(1970, month=1, day=1)
     sensor_dict = {}
     with patch("homeassistant.util.dt.now", return_value=now):
-        requests_mock.get(resource, text=data, status_code=200)
-        conditions = google_wifi.MONITORED_CONDITIONS.keys()
+        requests_mock.get(resource, text=data, status_code=HTTPStatus.OK)
+        conditions = google_wifi.SENSOR_KEYS
         api = google_wifi.GoogleWifiAPI("localhost", conditions)
-    for condition, cond_list in google_wifi.MONITORED_CONDITIONS.items():
-        sensor_dict[condition] = {
-            "sensor": google_wifi.GoogleWifiSensor(api, NAME, condition),
-            "name": f"{NAME}_{condition}",
-            "units": cond_list[1],
-            "icon": cond_list[2],
+    for desc in google_wifi.SENSOR_TYPES:
+        sensor_dict[desc.key] = {
+            "sensor": google_wifi.GoogleWifiSensor(api, NAME, desc),
+            "name": f"{NAME}_{desc.key}",
+            "units": desc.native_unit_of_measurement,
+            "icon": desc.icon,
         }
     for name in sensor_dict:
         sensor = sensor_dict[name]["sensor"]

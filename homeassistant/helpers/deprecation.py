@@ -1,10 +1,11 @@
 """Deprecation helpers for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 import inspect
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
 
@@ -87,7 +88,7 @@ def deprecated_class(replacement: str) -> Any:
         """Decorate class as deprecated."""
 
         @functools.wraps(cls)
-        def deprecated_cls(*args: tuple, **kwargs: dict[str, Any]) -> Any:
+        def deprecated_cls(*args: Any, **kwargs: Any) -> Any:
             """Wrap for the original class."""
             _print_deprecation_warning(cls, replacement, "class")
             return cls(*args, **kwargs)
@@ -104,7 +105,7 @@ def deprecated_function(replacement: str) -> Callable[..., Callable]:
         """Decorate function as deprecated."""
 
         @functools.wraps(func)
-        def deprecated_func(*args: tuple, **kwargs: dict[str, Any]) -> Any:
+        def deprecated_func(*args: Any, **kwargs: Any) -> Any:
             """Wrap for the original function."""
             _print_deprecation_warning(func, replacement, "function")
             return func(*args, **kwargs)

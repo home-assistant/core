@@ -1,4 +1,5 @@
 """RESTful platform for notify component."""
+from http import HTTPStatus
 import logging
 
 import requests
@@ -22,11 +23,8 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    HTTP_BAD_REQUEST,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import Template
@@ -203,20 +201,23 @@ class RestNotificationService(BaseNotificationService):
             )
 
         if (
-            response.status_code >= HTTP_INTERNAL_SERVER_ERROR
+            response.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR
             and response.status_code < 600
         ):
             _LOGGER.exception(
                 "Server error. Response %d: %s:", response.status_code, response.reason
             )
         elif (
-            response.status_code >= HTTP_BAD_REQUEST
-            and response.status_code < HTTP_INTERNAL_SERVER_ERROR
+            response.status_code >= HTTPStatus.BAD_REQUEST
+            and response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             _LOGGER.exception(
                 "Client error. Response %d: %s:", response.status_code, response.reason
             )
-        elif response.status_code >= HTTP_OK and response.status_code < 300:
+        elif (
+            response.status_code >= HTTPStatus.OK
+            and response.status_code < HTTPStatus.MULTIPLE_CHOICES
+        ):
             _LOGGER.debug(
                 "Success. Response %d: %s:", response.status_code, response.reason
             )

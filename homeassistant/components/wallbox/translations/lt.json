@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Slapta\u017eodis",
+                    "username": "Prisijungimo vardas"
+                }
+            }
+        }
+    }
+}

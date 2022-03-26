@@ -1,13 +1,19 @@
 """Support gathering system information of hosts which are running glances."""
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES, GlancesSensorEntityDescription
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Glances sensors."""
 
     client = hass.data[DOMAIN][config_entry.entry_id]
@@ -38,6 +44,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             description,
                         )
                     )
+        elif description.type == "raid":
+            for raid_device in client.api.data[description.type]:
+                dev.append(GlancesSensor(client, name, raid_device, description))
         elif client.api.data[description.type]:
             dev.append(
                 GlancesSensor(
@@ -110,8 +119,7 @@ class GlancesSensor(SensorEntity):
 
     async def async_update(self):  # noqa: C901
         """Get the latest data from REST API."""
-        value = self.glances_data.api.data
-        if value is None:
+        if (value := self.glances_data.api.data) is None:
             return
 
         if self.entity_description.type == "fs":
@@ -121,14 +129,14 @@ class GlancesSensor(SensorEntity):
                     break
             if self.entity_description.key == "disk_free":
                 try:
-                    self._state = round(disk["free"] / 1024 ** 3, 1)
+                    self._state = round(disk["free"] / 1024**3, 1)
                 except KeyError:
                     self._state = round(
-                        (disk["size"] - disk["used"]) / 1024 ** 3,
+                        (disk["size"] - disk["used"]) / 1024**3,
                         1,
                     )
             elif self.entity_description.key == "disk_use":
-                self._state = round(disk["used"] / 1024 ** 3, 1)
+                self._state = round(disk["used"] / 1024**3, 1)
             elif self.entity_description.key == "disk_use_percent":
                 self._state = disk["percent"]
         elif self.entity_description.key == "battery":
@@ -162,15 +170,15 @@ class GlancesSensor(SensorEntity):
         elif self.entity_description.key == "memory_use_percent":
             self._state = value["mem"]["percent"]
         elif self.entity_description.key == "memory_use":
-            self._state = round(value["mem"]["used"] / 1024 ** 2, 1)
+            self._state = round(value["mem"]["used"] / 1024**2, 1)
         elif self.entity_description.key == "memory_free":
-            self._state = round(value["mem"]["free"] / 1024 ** 2, 1)
+            self._state = round(value["mem"]["free"] / 1024**2, 1)
         elif self.entity_description.key == "swap_use_percent":
             self._state = value["memswap"]["percent"]
         elif self.entity_description.key == "swap_use":
-            self._state = round(value["memswap"]["used"] / 1024 ** 3, 1)
+            self._state = round(value["memswap"]["used"] / 1024**3, 1)
         elif self.entity_description.key == "swap_free":
-            self._state = round(value["memswap"]["free"] / 1024 ** 3, 1)
+            self._state = round(value["memswap"]["free"] / 1024**3, 1)
         elif self.entity_description.key == "processor_load":
             # Windows systems don't provide load details
             try:
@@ -211,6 +219,10 @@ class GlancesSensor(SensorEntity):
                 for container in value["docker"]["containers"]:
                     if container["Status"] == "running" or "Up" in container["Status"]:
                         mem_use += container["memory"]["usage"]
-                    self._state = round(mem_use / 1024 ** 2, 1)
+                    self._state = round(mem_use / 1024**2, 1)
             except KeyError:
                 self._state = STATE_UNAVAILABLE
+        elif self.entity_description.type == "raid":
+            for raid_device, raid in value["raid"].items():
+                if raid_device == self._sensor_name_prefix:
+                    self._state = raid[self.entity_description.key]

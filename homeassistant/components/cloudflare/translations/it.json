@@ -15,14 +15,14 @@
             "reauth_confirm": {
                 "data": {
                     "api_token": "Token API",
-                    "description": "Eseguire nuovamente l'autenticazione con l'account Cloudflare."
+                    "description": "Esegui nuovamente l'autenticazione con l'account Cloudflare."
                 }
             },
             "records": {
                 "data": {
                     "records": "Record"
                 },
-                "title": "Scegliere i record da aggiornare"
+                "title": "Scegli i record da aggiornare"
             },
             "user": {
                 "data": {
@@ -35,7 +35,7 @@
                 "data": {
                     "zone": "Zona"
                 },
-                "title": "Scegliere la zona da aggiornare"
+                "title": "Scegli la zona da aggiornare"
             }
         }
     }

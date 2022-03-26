@@ -31,6 +31,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.temperature import convert as convert_temperature
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -96,7 +97,7 @@ SET_OPERATION_MODE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up water_heater devices."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -350,15 +351,3 @@ async def async_service_temperature_set(entity, service):
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-
-
-class WaterHeaterDevice(WaterHeaterEntity):
-    """Representation of a water heater (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "WaterHeaterDevice is deprecated, modify %s to extend WaterHeaterEntity",
-            cls.__name__,
-        )

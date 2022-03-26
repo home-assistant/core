@@ -22,9 +22,9 @@ async def test_caching_data(hass):
     """Test that we cache data."""
     now = dt_util.utcnow()
     stored_states = [
-        StoredState(State("input_boolean.b0", "on"), now),
-        StoredState(State("input_boolean.b1", "on"), now),
-        StoredState(State("input_boolean.b2", "on"), now),
+        StoredState(State("input_boolean.b0", "on"), None, now),
+        StoredState(State("input_boolean.b1", "on"), None, now),
+        StoredState(State("input_boolean.b2", "on"), None, now),
     ]
 
     data = await RestoreStateData.async_get_instance(hass)
@@ -32,7 +32,7 @@ async def test_caching_data(hass):
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -59,7 +59,7 @@ async def test_periodic_write(hass):
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -105,7 +105,7 @@ async def test_save_persistent_states(hass):
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -160,9 +160,9 @@ async def test_hass_starting(hass):
 
     now = dt_util.utcnow()
     stored_states = [
-        StoredState(State("input_boolean.b0", "on"), now),
-        StoredState(State("input_boolean.b1", "on"), now),
-        StoredState(State("input_boolean.b2", "on"), now),
+        StoredState(State("input_boolean.b0", "on"), None, now),
+        StoredState(State("input_boolean.b1", "on"), None, now),
+        StoredState(State("input_boolean.b2", "on"), None, now),
     ]
 
     data = await RestoreStateData.async_get_instance(hass)
@@ -170,7 +170,8 @@ async def test_hass_starting(hass):
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.state = CoreState.not_running
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -224,15 +225,16 @@ async def test_dump_data(hass):
     data = await RestoreStateData.async_get_instance(hass)
     now = dt_util.utcnow()
     data.last_states = {
-        "input_boolean.b0": StoredState(State("input_boolean.b0", "off"), now),
-        "input_boolean.b1": StoredState(State("input_boolean.b1", "off"), now),
-        "input_boolean.b2": StoredState(State("input_boolean.b2", "off"), now),
-        "input_boolean.b3": StoredState(State("input_boolean.b3", "off"), now),
+        "input_boolean.b0": StoredState(State("input_boolean.b0", "off"), None, now),
+        "input_boolean.b1": StoredState(State("input_boolean.b1", "off"), None, now),
+        "input_boolean.b2": StoredState(State("input_boolean.b2", "off"), None, now),
+        "input_boolean.b3": StoredState(State("input_boolean.b3", "off"), None, now),
         "input_boolean.b4": StoredState(
             State("input_boolean.b4", "off"),
+            None,
             datetime(1985, 10, 26, 1, 22, tzinfo=dt_util.UTC),
         ),
-        "input_boolean.b5": StoredState(State("input_boolean.b5", "off"), now),
+        "input_boolean.b5": StoredState(State("input_boolean.b5", "off"), None, now),
     }
 
     with patch(

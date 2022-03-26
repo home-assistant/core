@@ -1,20 +1,36 @@
 """Support for August sensors."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+from typing import Generic, TypeVar
 
 from yalexs.activity import ActivityType
+from yalexs.doorbell import Doorbell
+from yalexs.keypad import KeypadDetail
+from yalexs.lock import Lock, LockDetail
 
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import AugustData
 from .const import (
     ATTR_OPERATION_AUTORELOCK,
     ATTR_OPERATION_KEYPAD,
     ATTR_OPERATION_METHOD,
     ATTR_OPERATION_REMOTE,
-    DATA_AUGUST,
     DOMAIN,
     OPERATION_METHOD_AUTORELOCK,
     OPERATION_METHOD_KEYPAD,
@@ -26,29 +42,61 @@ from .entity import AugustEntityMixin
 _LOGGER = logging.getLogger(__name__)
 
 
-def _retrieve_device_battery_state(detail):
+def _retrieve_device_battery_state(detail: LockDetail) -> int:
     """Get the latest state of the sensor."""
     return detail.battery_level
 
 
-def _retrieve_linked_keypad_battery_state(detail):
+def _retrieve_linked_keypad_battery_state(detail: KeypadDetail) -> int | None:
     """Get the latest state of the sensor."""
     return detail.battery_percentage
 
 
-SENSOR_TYPES_BATTERY = {
-    "device_battery": {"state_provider": _retrieve_device_battery_state},
-    "linked_keypad_battery": {"state_provider": _retrieve_linked_keypad_battery_state},
-}
+_T = TypeVar("_T", LockDetail, KeypadDetail)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+@dataclass
+class AugustRequiredKeysMixin(Generic[_T]):
+    """Mixin for required keys."""
+
+    value_fn: Callable[[_T], int | None]
+
+
+@dataclass
+class AugustSensorEntityDescription(
+    SensorEntityDescription, AugustRequiredKeysMixin[_T]
+):
+    """Describes August sensor entity."""
+
+
+SENSOR_TYPE_DEVICE_BATTERY = AugustSensorEntityDescription[LockDetail](
+    key="device_battery",
+    name="Battery",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=_retrieve_device_battery_state,
+)
+
+SENSOR_TYPE_KEYPAD_BATTERY = AugustSensorEntityDescription[KeypadDetail](
+    key="linked_keypad_battery",
+    name="Battery",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=_retrieve_linked_keypad_battery_state,
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the August sensors."""
-    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
-    entities = []
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[SensorEntity] = []
     migrate_unique_id_devices = []
     operation_sensors = []
-    batteries = {
+    batteries: dict[str, list[Doorbell | Lock]] = {
         "device_battery": [],
         "linked_keypad_battery": [],
     }
@@ -60,9 +108,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         operation_sensors.append(device)
 
     for device in batteries["device_battery"]:
-        state_provider = SENSOR_TYPES_BATTERY["device_battery"]["state_provider"]
         detail = data.get_device_detail(device.device_id)
-        if detail is None or state_provider(detail) is None:
+        if detail is None or SENSOR_TYPE_DEVICE_BATTERY.value_fn(detail) is None:
             _LOGGER.debug(
                 "Not adding battery sensor for %s because it is not present",
                 device.device_name,
@@ -72,7 +119,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "Adding battery sensor for %s",
             device.device_name,
         )
-        entities.append(AugustBatterySensor(data, "device_battery", device, device))
+        entities.append(
+            AugustBatterySensor[LockDetail](
+                data, device, device, SENSOR_TYPE_DEVICE_BATTERY
+            )
+        )
 
     for device in batteries["linked_keypad_battery"]:
         detail = data.get_device_detail(device.device_id)
@@ -87,8 +138,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "Adding keypad battery sensor for %s",
             device.device_name,
         )
-        keypad_battery_sensor = AugustBatterySensor(
-            data, "linked_keypad_battery", detail.keypad, device
+        keypad_battery_sensor = AugustBatterySensor[KeypadDetail](
+            data, detail.keypad, device, SENSOR_TYPE_KEYPAD_BATTERY
         )
         entities.append(keypad_battery_sensor)
         migrate_unique_id_devices.append(keypad_battery_sensor)
@@ -204,29 +255,35 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         return f"{self._device_id}_lock_operator"
 
 
-class AugustBatterySensor(AugustEntityMixin, SensorEntity):
+class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
     """Representation of an August sensor."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    entity_description: AugustSensorEntityDescription[_T]
+    _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(self, data, sensor_type, device, old_device):
+    def __init__(
+        self,
+        data: AugustData,
+        device,
+        old_device,
+        description: AugustSensorEntityDescription[_T],
+    ):
         """Initialize the sensor."""
         super().__init__(data, device)
-        self._sensor_type = sensor_type
+        self.entity_description = description
         self._old_device = old_device
-        self._attr_name = f"{device.device_name} Battery"
-        self._attr_unique_id = f"{self._device_id}_{sensor_type}"
+        self._attr_name = f"{device.device_name} {description.name}"
+        self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._update_from_data()
 
     @callback
     def _update_from_data(self):
         """Get the latest state of the sensor."""
-        state_provider = SENSOR_TYPES_BATTERY[self._sensor_type]["state_provider"]
-        self._attr_native_value = state_provider(self._detail)
+        self._attr_native_value = self.entity_description.value_fn(self._detail)
         self._attr_available = self._attr_native_value is not None
 
     @property
     def old_unique_id(self) -> str:
         """Get the old unique id of the device sensor."""
-        return f"{self._old_device.device_id}_{self._sensor_type}"
+        return f"{self._old_device.device_id}_{self.entity_description.key}"

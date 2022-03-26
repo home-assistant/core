@@ -11,9 +11,11 @@ import requests
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import ATTRIBUTION, DOMAIN
@@ -24,7 +26,11 @@ FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Ring Door Bell and StickUp Camera."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
 
@@ -52,6 +58,7 @@ class RingCam(RingEntityMixin, Camera):
         self._last_event = None
         self._last_video_id = None
         self._video_url = None
+        self._image = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
 
     async def async_added_to_hass(self):
@@ -80,6 +87,7 @@ class RingCam(RingEntityMixin, Camera):
             self._last_event = None
             self._last_video_id = None
             self._video_url = None
+            self._image = None
             self._expires_at = dt_util.utcnow()
             self.async_write_ha_state()
 
@@ -106,12 +114,18 @@ class RingCam(RingEntityMixin, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        if self._video_url is None:
-            return
+        if self._image is None and self._video_url:
+            image = await ffmpeg.async_get_image(
+                self.hass,
+                self._video_url,
+                width=width,
+                height=height,
+            )
 
-        return await ffmpeg.async_get_image(
-            self.hass, self._video_url, width=width, height=height
-        )
+            if image:
+                self._image = image
+
+        return self._image
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
@@ -143,6 +157,9 @@ class RingCam(RingEntityMixin, Camera):
         utcnow = dt_util.utcnow()
         if self._last_video_id == self._last_event["id"] and utcnow <= self._expires_at:
             return
+
+        if self._last_video_id != self._last_event["id"]:
+            self._image = None
 
         try:
             video_url = await self.hass.async_add_executor_job(

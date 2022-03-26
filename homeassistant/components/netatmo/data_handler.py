@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from itertools import islice
 import logging
 from time import time
@@ -32,23 +32,23 @@ _LOGGER = logging.getLogger(__name__)
 CAMERA_DATA_CLASS_NAME = "AsyncCameraData"
 WEATHERSTATION_DATA_CLASS_NAME = "AsyncWeatherStationData"
 HOMECOACH_DATA_CLASS_NAME = "AsyncHomeCoachData"
-HOMEDATA_DATA_CLASS_NAME = "AsyncHomeData"
-HOMESTATUS_DATA_CLASS_NAME = "AsyncHomeStatus"
+CLIMATE_TOPOLOGY_CLASS_NAME = "AsyncClimateTopology"
+CLIMATE_STATE_CLASS_NAME = "AsyncClimate"
 PUBLICDATA_DATA_CLASS_NAME = "AsyncPublicData"
 
 DATA_CLASSES = {
     WEATHERSTATION_DATA_CLASS_NAME: pyatmo.AsyncWeatherStationData,
     HOMECOACH_DATA_CLASS_NAME: pyatmo.AsyncHomeCoachData,
     CAMERA_DATA_CLASS_NAME: pyatmo.AsyncCameraData,
-    HOMEDATA_DATA_CLASS_NAME: pyatmo.AsyncHomeData,
-    HOMESTATUS_DATA_CLASS_NAME: pyatmo.AsyncHomeStatus,
+    CLIMATE_TOPOLOGY_CLASS_NAME: pyatmo.AsyncClimateTopology,
+    CLIMATE_STATE_CLASS_NAME: pyatmo.AsyncClimate,
     PUBLICDATA_DATA_CLASS_NAME: pyatmo.AsyncPublicData,
 }
 
 BATCH_SIZE = 3
 DEFAULT_INTERVALS = {
-    HOMEDATA_DATA_CLASS_NAME: 900,
-    HOMESTATUS_DATA_CLASS_NAME: 300,
+    CLIMATE_TOPOLOGY_CLASS_NAME: 3600,
+    CLIMATE_STATE_CLASS_NAME: 300,
     CAMERA_DATA_CLASS_NAME: 900,
     WEATHERSTATION_DATA_CLASS_NAME: 600,
     HOMECOACH_DATA_CLASS_NAME: 300,
@@ -58,23 +58,33 @@ SCAN_INTERVAL = 60
 
 
 @dataclass
+class NetatmoDevice:
+    """Netatmo device class."""
+
+    data_handler: NetatmoDataHandler
+    device: pyatmo.climate.NetatmoModule
+    parent_id: str
+    state_class_name: str
+
+
+@dataclass
 class NetatmoDataClass:
     """Class for keeping track of Netatmo data class metadata."""
 
     name: str
     interval: int
     next_scan: float
-    subscriptions: list[CALLBACK_TYPE]
+    subscriptions: list[CALLBACK_TYPE | None]
 
 
 class NetatmoDataHandler:
     """Manages the Netatmo data handling."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize self."""
         self.hass = hass
-        self._auth = hass.data[DOMAIN][entry.entry_id][AUTH]
-        self.listeners: list[CALLBACK_TYPE] = []
+        self.config_entry = config_entry
+        self._auth = hass.data[DOMAIN][config_entry.entry_id][AUTH]
         self.data_classes: dict = {}
         self.data: dict = {}
         self._queue: deque = deque()
@@ -87,7 +97,7 @@ class NetatmoDataHandler:
             self.hass, self.async_update, timedelta(seconds=SCAN_INTERVAL)
         )
 
-        self.listeners.append(
+        self.config_entry.async_on_unload(
             async_dispatcher_connect(
                 self.hass,
                 f"signal-{DOMAIN}-webhook-None",
@@ -95,7 +105,19 @@ class NetatmoDataHandler:
             )
         )
 
-    async def async_update(self, event_time: timedelta) -> None:
+        await asyncio.gather(
+            *[
+                self.register_data_class(data_class, data_class, None)
+                for data_class in (
+                    CLIMATE_TOPOLOGY_CLASS_NAME,
+                    CAMERA_DATA_CLASS_NAME,
+                    WEATHERSTATION_DATA_CLASS_NAME,
+                    HOMECOACH_DATA_CLASS_NAME,
+                )
+            ]
+        )
+
+    async def async_update(self, event_time: datetime) -> None:
         """
         Update device.
 
@@ -120,11 +142,6 @@ class NetatmoDataHandler:
         """Prioritize data retrieval for given data class entry."""
         self.data_classes[data_class_entry].next_scan = time()
         self._queue.rotate(-(self._queue.index(self.data_classes[data_class_entry])))
-
-    async def async_cleanup(self) -> None:
-        """Clean up the Netatmo data handler."""
-        for listener in self.listeners:
-            listener()
 
     async def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
@@ -167,7 +184,7 @@ class NetatmoDataHandler:
         self,
         data_class_name: str,
         data_class_entry: str,
-        update_callback: CALLBACK_TYPE,
+        update_callback: CALLBACK_TYPE | None,
         **kwargs: Any,
     ) -> None:
         """Register data class."""
@@ -189,7 +206,11 @@ class NetatmoDataHandler:
             self._auth, **kwargs
         )
 
-        await self.async_fetch_data(data_class_entry)
+        try:
+            await self.async_fetch_data(data_class_entry)
+        except KeyError:
+            self.data_classes.pop(data_class_entry)
+            raise
 
         self._queue.append(self.data_classes[data_class_entry])
         _LOGGER.debug("Data class %s added", data_class_entry)

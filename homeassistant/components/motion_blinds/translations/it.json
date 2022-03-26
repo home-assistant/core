@@ -6,13 +6,15 @@
             "connection_error": "Impossibile connettersi"
         },
         "error": {
-            "discovery_error": "Impossibile rilevare un Motion Gateway"
+            "discovery_error": "Impossibile rilevare un Motion Gateway",
+            "invalid_interface": "Interfaccia di rete non valida"
         },
         "flow_title": "Tende Motion",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "Chiave API"
+                    "api_key": "Chiave API",
+                    "interface": "L'interfaccia di rete da utilizzare"
                 },
                 "description": "Avrai bisogno della chiave API di 16 caratteri, consulta https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key per le istruzioni",
                 "title": "Motion Blinds"
@@ -31,6 +33,17 @@
                 },
                 "description": "Connetti il tuo Motion Gateway, se l'indirizzo IP non \u00e8 impostato, sar\u00e0 utilizzato il rilevamento automatico",
                 "title": "Tende Motion"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "Attendi il push multicast all'aggiornamento"
+                },
+                "description": "Specifica le impostazioni opzionali",
+                "title": "Motion Blinds"
             }
         }
     }

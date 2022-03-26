@@ -5,7 +5,7 @@
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid"
         },
-        "flow_title": "OVO Energy: {username}",
+        "flow_title": "{username}",
         "step": {
             "reauth": {
                 "data": {

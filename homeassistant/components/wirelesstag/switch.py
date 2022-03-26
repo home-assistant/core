@@ -1,59 +1,85 @@
 """Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
+from __future__ import annotations
+
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as WIRELESSTAG_DOMAIN, WirelessTagBaseSensor
 
-ARM_TEMPERATURE = "temperature"
-ARM_HUMIDITY = "humidity"
-ARM_MOTION = "motion"
-ARM_LIGHT = "light"
-ARM_MOISTURE = "moisture"
+SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
+        key="temperature",
+        name="Arm Temperature",
+    ),
+    SwitchEntityDescription(
+        key="humidity",
+        name="Arm Humidity",
+    ),
+    SwitchEntityDescription(
+        key="motion",
+        name="Arm Motion",
+    ),
+    SwitchEntityDescription(
+        key="light",
+        name="Arm Light",
+    ),
+    SwitchEntityDescription(
+        key="moisture",
+        name="Arm Moisture",
+    ),
+)
 
-# Switch types: Name, tag sensor type
-SWITCH_TYPES = {
-    ARM_TEMPERATURE: ["Arm Temperature", "temperature"],
-    ARM_HUMIDITY: ["Arm Humidity", "humidity"],
-    ARM_MOTION: ["Arm Motion", "motion"],
-    ARM_LIGHT: ["Arm Light", "light"],
-    ARM_MOISTURE: ["Arm Moisture", "moisture"],
-}
+SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SWITCH_TYPES)]
+            cv.ensure_list, [vol.In(SWITCH_KEYS)]
         )
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up switches for a Wireless Sensor Tags."""
-    platform = hass.data.get(WIRELESSTAG_DOMAIN)
+    platform = hass.data[WIRELESSTAG_DOMAIN]
 
-    switches = []
     tags = platform.load_tags()
-    for switch_type in config.get(CONF_MONITORED_CONDITIONS):
-        for tag in tags.values():
-            if switch_type in tag.allowed_monitoring_types:
-                switches.append(WirelessTagSwitch(platform, tag, switch_type))
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    entities = [
+        WirelessTagSwitch(platform, tag, description)
+        for tag in tags.values()
+        for description in SWITCH_TYPES
+        if description.key in monitored_conditions
+        and description.key in tag.allowed_monitoring_types
+    ]
 
-    add_entities(switches, True)
+    add_entities(entities, True)
 
 
 class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
     """A switch implementation for Wireless Sensor Tags."""
 
-    def __init__(self, api, tag, switch_type):
+    def __init__(self, api, tag, description: SwitchEntityDescription):
         """Initialize a switch for Wireless Sensor Tag."""
         super().__init__(api, tag)
-        self._switch_type = switch_type
-        self.sensor_type = SWITCH_TYPES[self._switch_type][1]
-        self._name = f"{self._tag.name} {SWITCH_TYPES[self._switch_type][0]}"
+        self.entity_description = description
+        self._name = f"{self._tag.name} {description.name}"
 
     def turn_on(self, **kwargs):
         """Turn on the switch."""
@@ -75,5 +101,5 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
     @property
     def principal_value(self):
         """Provide actual value of switch."""
-        attr_name = f"is_{self.sensor_type}_sensor_armed"
+        attr_name = f"is_{self.entity_description.key}_sensor_armed"
         return getattr(self._tag, attr_name, False)

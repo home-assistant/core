@@ -1,6 +1,7 @@
 """Aiohttp test utils."""
 import asyncio
 from contextlib import contextmanager
+from http import HTTPStatus
 import json as _json
 import re
 from unittest import mock
@@ -9,6 +10,7 @@ from urllib.parse import parse_qs
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from aiohttp.streams import StreamReader
+from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
@@ -19,7 +21,7 @@ RETYPE = type(re.compile(""))
 def mock_stream(data):
     """Mock a stream with data."""
     protocol = mock.Mock(_reading_paused=False)
-    stream = StreamReader(protocol, limit=2 ** 16)
+    stream = StreamReader(protocol, limit=2**16)
     stream.feed_data(data)
     stream.feed_eof()
     return stream
@@ -40,7 +42,7 @@ class AiohttpClientMocker:
         url,
         *,
         auth=None,
-        status=200,
+        status=HTTPStatus.OK,
         text=None,
         data=None,
         content=None,
@@ -156,7 +158,7 @@ class AiohttpClientMockResponse:
         self,
         method,
         url,
-        status=200,
+        status=HTTPStatus.OK,
         response=None,
         json=None,
         text=None,
@@ -179,7 +181,7 @@ class AiohttpClientMockResponse:
         self.response = response
         self.exc = exc
         self.side_effect = side_effect
-        self._headers = headers or {}
+        self._headers = CIMultiDict(headers or {})
         self._cookies = {}
 
         if cookies:

@@ -70,7 +70,7 @@ def setup_cors(app: Application, origins: list[str]) -> None:
         cors.add(route, config)
         cors_added.add(path_str)
 
-    app["allow_cors"] = lambda route: _allow_cors(
+    app["allow_all_cors"] = lambda route: _allow_cors(
         route,
         {
             "*": aiohttp_cors.ResourceOptions(
@@ -79,12 +79,7 @@ def setup_cors(app: Application, origins: list[str]) -> None:
         },
     )
 
-    if not origins:
-        return
-
-    async def cors_startup(app: Application) -> None:
-        """Initialize CORS when app starts up."""
-        for resource in list(app.router.resources()):
-            _allow_cors(resource)
-
-    app.on_startup.append(cors_startup)
+    if origins:
+        app["allow_configured_cors"] = _allow_cors
+    else:
+        app["allow_configured_cors"] = lambda _: None

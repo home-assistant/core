@@ -4,6 +4,7 @@
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
             "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "create_entry": {
@@ -12,6 +13,10 @@
         "step": {
             "pick_implementation": {
                 "title": "Scegli il metodo di autenticazione"
+            },
+            "reauth_confirm": {
+                "description": "L'integrazione Netatmo deve autenticare nuovamente il tuo account",
+                "title": "Autentica nuovamente l'integrazione"
             }
         }
     },
@@ -42,14 +47,14 @@
             "public_weather": {
                 "data": {
                     "area_name": "Nome dell'area",
-                    "lat_ne": "Latitudine angolo Nord-Est",
-                    "lat_sw": "Latitudine angolo Sud-Ovest",
-                    "lon_ne": "Logitudine angolo Nord-Est",
-                    "lon_sw": "Logitudine angolo Sud-Ovest",
+                    "lat_ne": "Latitudine angolo nord-est",
+                    "lat_sw": "Latitudine angolo sud-ovest",
+                    "lon_ne": "Logitudine angolo norde-st",
+                    "lon_sw": "Logitudine angolo sud-ovest",
                     "mode": "Calcolo",
                     "show_on_map": "Mostra sulla mappa"
                 },
-                "description": "Configurare un sensore meteorologico pubblico per un'area.",
+                "description": "Configura un sensore meteorologico pubblico per un'area.",
                 "title": "Sensore meteorologico pubblico Netatmo"
             },
             "public_weather_areas": {

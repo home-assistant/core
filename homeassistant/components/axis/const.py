@@ -1,10 +1,7 @@
 """Constants for the Axis component."""
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import Platform
 
 LOGGER = logging.getLogger(__package__)
 
@@ -22,4 +19,4 @@ DEFAULT_STREAM_PROFILE = "No stream profile"
 DEFAULT_TRIGGER_TIME = 0
 DEFAULT_VIDEO_SOURCE = "No video source"
 
-PLATFORMS = [BINARY_SENSOR_DOMAIN, CAMERA_DOMAIN, LIGHT_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.LIGHT, Platform.SWITCH]

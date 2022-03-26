@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.spider.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -27,7 +27,7 @@ def spider_fixture() -> Mock:
 
 async def test_user(hass, spider):
     """Test user config."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -57,7 +57,7 @@ async def test_user(hass, spider):
 
 async def test_import(hass, spider):
     """Test import step."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.spider.async_setup",
         return_value=True,

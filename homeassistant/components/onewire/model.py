@@ -1,21 +1,32 @@
 """Type definitions for 1-Wire integration."""
 from __future__ import annotations
 
-from typing import TypedDict
+from dataclasses import dataclass
+
+from pi1wire import OneWireInterface
+
+from homeassistant.helpers.entity import DeviceInfo
 
 
-class DeviceComponentDescription(TypedDict, total=False):
-    """Device component description class."""
+@dataclass
+class OWDeviceDescription:
+    """OWDeviceDescription device description class."""
 
-    path: str
-    name: str
-    type: str
-    default_disabled: bool
+    device_info: DeviceInfo
 
 
-class OWServerDeviceDescription(TypedDict):
+@dataclass
+class OWDirectDeviceDescription(OWDeviceDescription):
+    """SysBus device description class."""
+
+    interface: OneWireInterface
+
+
+@dataclass
+class OWServerDeviceDescription(OWDeviceDescription):
     """OWServer device description class."""
 
-    path: str
     family: str
+    id: str
+    path: str
     type: str

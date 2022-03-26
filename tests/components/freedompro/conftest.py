@@ -1,4 +1,8 @@
 """Fixtures for Freedompro integration tests."""
+from __future__ import annotations
+
+from copy import deepcopy
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -7,6 +11,22 @@ from homeassistant.components.freedompro.const import DOMAIN
 
 from tests.common import MockConfigEntry
 from tests.components.freedompro.const import DEVICES, DEVICES_STATE
+
+
+@pytest.fixture(autouse=True)
+def mock_freedompro():
+    """Mock freedompro get_list and get_states."""
+    with patch(
+        "homeassistant.components.freedompro.get_list",
+        return_value={
+            "state": True,
+            "devices": DEVICES,
+        },
+    ), patch(
+        "homeassistant.components.freedompro.get_states",
+        return_value=DEVICES_STATE,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -21,19 +41,9 @@ async def init_integration(hass) -> MockConfigEntry:
         },
     )
 
-    with patch(
-        "homeassistant.components.freedompro.get_list",
-        return_value={
-            "state": True,
-            "devices": DEVICES,
-        },
-    ), patch(
-        "homeassistant.components.freedompro.get_states",
-        return_value=DEVICES_STATE,
-    ):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     return entry
 
@@ -65,3 +75,8 @@ async def init_integration_no_state(hass) -> MockConfigEntry:
         await hass.async_block_till_done()
 
     return entry
+
+
+def get_states_response_for_uid(uid: str) -> list[dict[str, Any]]:
+    """Return a deepcopy of the device state list for specific uid."""
+    return deepcopy([resp for resp in DEVICES_STATE if resp["uid"] == uid])

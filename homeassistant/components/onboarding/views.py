@@ -1,15 +1,20 @@
 """Onboarding views."""
-import asyncio
+from __future__ import annotations
 
+import asyncio
+from http import HTTPStatus
+
+from aiohttp.web_exceptions import HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.components import person
 from homeassistant.components.auth import indieauth
 from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_FORBIDDEN
 from homeassistant.core import callback
+from homeassistant.helpers.system_info import async_get_system_info
 
 from .const import (
     DEFAULT_AREAS,
@@ -25,6 +30,7 @@ from .const import (
 async def async_setup(hass, data, store):
     """Set up the onboarding view."""
     hass.http.register_view(OnboardingView(data, store))
+    hass.http.register_view(InstallationTypeOnboardingView(data))
     hass.http.register_view(UserOnboardingView(data, store))
     hass.http.register_view(CoreConfigOnboardingView(data, store))
     hass.http.register_view(IntegrationOnboardingView(data, store))
@@ -50,10 +56,31 @@ class OnboardingView(HomeAssistantView):
         )
 
 
+class InstallationTypeOnboardingView(HomeAssistantView):
+    """Return the installation type during onboarding."""
+
+    requires_auth = False
+    url = "/api/onboarding/installation_type"
+    name = "api:onboarding:installation_type"
+
+    def __init__(self, data):
+        """Initialize the onboarding installation type view."""
+        self._data = data
+
+    async def get(self, request):
+        """Return the onboarding status."""
+        if self._data["done"]:
+            raise HTTPUnauthorized()
+
+        hass = request.app["hass"]
+        info = await async_get_system_info(hass)
+        return self.json({"installation_type": info["installation_type"]})
+
+
 class _BaseOnboardingView(HomeAssistantView):
     """Base class for onboarding."""
 
-    step = None
+    step: str | None = None
 
     def __init__(self, data, store):
         """Initialize the onboarding view."""
@@ -100,12 +127,14 @@ class UserOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("User step already done", HTTP_FORBIDDEN)
+                return self.json_message("User step already done", HTTPStatus.FORBIDDEN)
 
             provider = _async_get_hass_provider(hass)
             await provider.async_initialize()
 
-            user = await hass.auth.async_create_user(data["name"], [GROUP_ID_ADMIN])
+            user = await hass.auth.async_create_user(
+                data["name"], group_ids=[GROUP_ID_ADMIN]
+            )
             await hass.async_add_executor_job(
                 provider.data.add_auth, data["username"], data["password"]
             )
@@ -115,9 +144,7 @@ class UserOnboardingView(_BaseOnboardingView):
             await provider.data.async_save()
             await hass.auth.async_link_user(user, credentials)
             if "person" in hass.config.components:
-                await hass.components.person.async_create_person(
-                    data["name"], user_id=user.id
-                )
+                await person.async_create_person(hass, data["name"], user_id=user.id)
 
             # Create default areas using the users supplied language.
             translations = await hass.helpers.translation.async_get_translations(
@@ -135,9 +162,10 @@ class UserOnboardingView(_BaseOnboardingView):
 
             # Return authorization code for fetching tokens and connect
             # during onboarding.
-            auth_code = hass.components.auth.create_auth_code(
-                data["client_id"], credentials
-            )
+            # pylint: disable=import-outside-toplevel
+            from homeassistant.components.auth import create_auth_code
+
+            auth_code = create_auth_code(hass, data["client_id"], credentials)
             return self.json({"auth_code": auth_code})
 
 
@@ -155,22 +183,32 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
         async with self._lock:
             if self._async_is_done():
                 return self.json_message(
-                    "Core config step already done", HTTP_FORBIDDEN
+                    "Core config step already done", HTTPStatus.FORBIDDEN
                 )
 
             await self._async_mark_done(hass)
 
-            await hass.config_entries.flow.async_init(
-                "met", context={"source": "onboarding"}
-            )
+            # Integrations to set up when finishing onboarding
+            onboard_integrations = ["met", "radio_browser"]
+
+            # pylint: disable=import-outside-toplevel
+            from homeassistant.components import hassio
 
             if (
-                hass.components.hassio.is_hassio()
-                and "raspberrypi" in hass.components.hassio.get_core_info()["machine"]
+                hassio.is_hassio(hass)
+                and "raspberrypi" in hassio.get_core_info(hass)["machine"]
             ):
-                await hass.config_entries.flow.async_init(
-                    "rpi_power", context={"source": "onboarding"}
+                onboard_integrations.append("rpi_power")
+
+            # Set up integrations after onboarding
+            await asyncio.gather(
+                *(
+                    hass.config_entries.flow.async_init(
+                        domain, context={"source": "onboarding"}
+                    )
+                    for domain in onboard_integrations
                 )
+            )
 
             return self.json({})
 
@@ -193,7 +231,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
         async with self._lock:
             if self._async_is_done():
                 return self.json_message(
-                    "Integration step already done", HTTP_FORBIDDEN
+                    "Integration step already done", HTTPStatus.FORBIDDEN
                 )
 
             await self._async_mark_done(hass)
@@ -203,18 +241,21 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                 request.app["hass"], data["client_id"], data["redirect_uri"]
             ):
                 return self.json_message(
-                    "invalid client id or redirect uri", HTTP_BAD_REQUEST
+                    "invalid client id or redirect uri", HTTPStatus.BAD_REQUEST
                 )
 
             refresh_token = await hass.auth.async_get_refresh_token(refresh_token_id)
             if refresh_token is None or refresh_token.credential is None:
                 return self.json_message(
-                    "Credentials for user not available", HTTP_FORBIDDEN
+                    "Credentials for user not available", HTTPStatus.FORBIDDEN
                 )
 
             # Return authorization code so we can redirect user and log them in
-            auth_code = hass.components.auth.create_auth_code(
-                data["client_id"], refresh_token.credential
+            # pylint: disable=import-outside-toplevel
+            from homeassistant.components.auth import create_auth_code
+
+            auth_code = create_auth_code(
+                hass, data["client_id"], refresh_token.credential
             )
             return self.json({"auth_code": auth_code})
 
@@ -233,7 +274,7 @@ class AnalyticsOnboardingView(_BaseOnboardingView):
         async with self._lock:
             if self._async_is_done():
                 return self.json_message(
-                    "Analytics config step already done", HTTP_FORBIDDEN
+                    "Analytics config step already done", HTTPStatus.FORBIDDEN
                 )
 
             await self._async_mark_done(hass)

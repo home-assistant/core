@@ -1,9 +1,14 @@
 """Make sure that an Arlo Baby can be setup."""
 
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
+from homeassistant.components.sensor import SensorStateClass
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 
 from tests.components.homekit_controller.common import (
-    Helper,
+    HUB_TEST_ACCESSORY_ID,
+    DeviceTestInfo,
+    EntityTestInfo,
+    assert_devices_and_entities_created,
     setup_accessories_from_file,
     setup_test_accessories,
 )
@@ -12,73 +17,68 @@ from tests.components.homekit_controller.common import (
 async def test_arlo_baby_setup(hass):
     """Test that an Arlo Baby can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "arlo_baby.json")
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    sensors = [
-        (
-            "camera.arlobabya0",
-            "homekit-00A0000000000-aid:1",
-            "ArloBabyA0",
+    await assert_devices_and_entities_created(
+        hass,
+        DeviceTestInfo(
+            unique_id=HUB_TEST_ACCESSORY_ID,
+            name="ArloBabyA0",
+            model="ABC1000",
+            manufacturer="Netgear, Inc",
+            sw_version="1.10.931",
+            hw_version="",
+            serial_number="00A0000000000",
+            devices=[],
+            entities=[
+                EntityTestInfo(
+                    entity_id="camera.arlobabya0",
+                    unique_id="homekit-00A0000000000-aid:1",
+                    friendly_name="ArloBabyA0",
+                    state="idle",
+                ),
+                EntityTestInfo(
+                    entity_id="binary_sensor.arlobabya0",
+                    unique_id="homekit-00A0000000000-500",
+                    friendly_name="ArloBabyA0",
+                    state="off",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.arlobabya0_battery",
+                    unique_id="homekit-00A0000000000-700",
+                    friendly_name="ArloBabyA0 Battery",
+                    unit_of_measurement=PERCENTAGE,
+                    state="82",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.arlobabya0_humidity",
+                    unique_id="homekit-00A0000000000-900",
+                    friendly_name="ArloBabyA0 Humidity",
+                    unit_of_measurement=PERCENTAGE,
+                    state="60.099998",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.arlobabya0_temperature",
+                    unique_id="homekit-00A0000000000-1000",
+                    friendly_name="ArloBabyA0 Temperature",
+                    unit_of_measurement=TEMP_CELSIUS,
+                    state="24.0",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.arlobabya0_air_quality",
+                    unique_id="homekit-00A0000000000-aid:1-sid:800-cid:802",
+                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                    friendly_name="ArloBabyA0 Air Quality",
+                    state="1",
+                ),
+                EntityTestInfo(
+                    entity_id="light.arlobabya0",
+                    unique_id="homekit-00A0000000000-1100",
+                    friendly_name="ArloBabyA0",
+                    supported_features=SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+                    capabilities={"supported_color_modes": ["hs"]},
+                    state="off",
+                ),
+            ],
         ),
-        (
-            "binary_sensor.arlobabya0",
-            "homekit-00A0000000000-500",
-            "ArloBabyA0",
-        ),
-        (
-            "sensor.arlobabya0_battery",
-            "homekit-00A0000000000-700",
-            "ArloBabyA0 Battery",
-        ),
-        (
-            "sensor.arlobabya0_humidity",
-            "homekit-00A0000000000-900",
-            "ArloBabyA0 Humidity",
-        ),
-        (
-            "sensor.arlobabya0_temperature",
-            "homekit-00A0000000000-1000",
-            "ArloBabyA0 Temperature",
-        ),
-        (
-            "sensor.arlobabya0_air_quality",
-            "homekit-00A0000000000-aid:1-sid:800-cid:802",
-            "ArloBabyA0 - Air Quality",
-        ),
-        (
-            "light.arlobabya0",
-            "homekit-00A0000000000-1100",
-            "ArloBabyA0",
-        ),
-    ]
-
-    device_ids = set()
-
-    for (entity_id, unique_id, friendly_name) in sensors:
-        entry = entity_registry.async_get(entity_id)
-        assert entry.unique_id == unique_id
-
-        helper = Helper(
-            hass,
-            entity_id,
-            pairing,
-            accessories[0],
-            config_entry,
-        )
-        state = await helper.poll_and_get_state()
-        assert state.attributes["friendly_name"] == friendly_name
-
-        device = device_registry.async_get(entry.device_id)
-        assert device.manufacturer == "Netgear, Inc"
-        assert device.name == "ArloBabyA0"
-        assert device.model == "ABC1000"
-        assert device.sw_version == "1.10.931"
-        assert device.via_device_id is None
-
-        device_ids.add(entry.device_id)
-
-    # All entities should be part of same device
-    assert len(device_ids) == 1
+    )

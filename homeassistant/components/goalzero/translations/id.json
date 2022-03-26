@@ -11,6 +11,10 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "confirm_discovery": {
+                "description": "Dianjurkan untuk menggunakan reservasi DHCP pada router Anda. Jika tidak diatur, perangkat mungkin tidak tersedia hingga Home Assistant mendeteksi alamat IP baru. Lihat panduan pengguna router Anda.",
+                "title": "Goal Zero Yeti"
+            },
             "user": {
                 "data": {
                     "host": "Host",

@@ -8,7 +8,9 @@
   ],
   "codeowners": [
     "@Danielhiversen",
-    "@zhulik"
+    "@zhulik",
+    "@bieniu"
   ],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["aiotractive"]
 }

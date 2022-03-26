@@ -118,14 +118,6 @@ homeassistant.util.pressure
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.ruamel\_yaml
--------------------------------
-
-.. automodule:: homeassistant.util.ruamel_yaml
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 homeassistant.util.ssl
 ----------------------
 

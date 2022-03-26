@@ -1,4 +1,6 @@
 """The smtp component."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "smtp"
-PLATFORMS = ["notify"]
+PLATFORMS = [Platform.NOTIFY]

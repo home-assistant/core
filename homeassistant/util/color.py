@@ -3,10 +3,18 @@ from __future__ import annotations
 
 import colorsys
 import math
+from typing import NamedTuple, cast
 
 import attr
 
-# mypy: disallow-any-generics
+
+class RGBColor(NamedTuple):
+    """RGB hex values."""
+
+    r: int
+    g: int
+    b: int
+
 
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
@@ -15,156 +23,156 @@ import attr
 # This lets "dark seagreen" and "dark sea green" both match the same
 # color "darkseagreen".
 COLORS = {
-    "aliceblue": (240, 248, 255),
-    "antiquewhite": (250, 235, 215),
-    "aqua": (0, 255, 255),
-    "aquamarine": (127, 255, 212),
-    "azure": (240, 255, 255),
-    "beige": (245, 245, 220),
-    "bisque": (255, 228, 196),
-    "black": (0, 0, 0),
-    "blanchedalmond": (255, 235, 205),
-    "blue": (0, 0, 255),
-    "blueviolet": (138, 43, 226),
-    "brown": (165, 42, 42),
-    "burlywood": (222, 184, 135),
-    "cadetblue": (95, 158, 160),
-    "chartreuse": (127, 255, 0),
-    "chocolate": (210, 105, 30),
-    "coral": (255, 127, 80),
-    "cornflowerblue": (100, 149, 237),
-    "cornsilk": (255, 248, 220),
-    "crimson": (220, 20, 60),
-    "cyan": (0, 255, 255),
-    "darkblue": (0, 0, 139),
-    "darkcyan": (0, 139, 139),
-    "darkgoldenrod": (184, 134, 11),
-    "darkgray": (169, 169, 169),
-    "darkgreen": (0, 100, 0),
-    "darkgrey": (169, 169, 169),
-    "darkkhaki": (189, 183, 107),
-    "darkmagenta": (139, 0, 139),
-    "darkolivegreen": (85, 107, 47),
-    "darkorange": (255, 140, 0),
-    "darkorchid": (153, 50, 204),
-    "darkred": (139, 0, 0),
-    "darksalmon": (233, 150, 122),
-    "darkseagreen": (143, 188, 143),
-    "darkslateblue": (72, 61, 139),
-    "darkslategray": (47, 79, 79),
-    "darkslategrey": (47, 79, 79),
-    "darkturquoise": (0, 206, 209),
-    "darkviolet": (148, 0, 211),
-    "deeppink": (255, 20, 147),
-    "deepskyblue": (0, 191, 255),
-    "dimgray": (105, 105, 105),
-    "dimgrey": (105, 105, 105),
-    "dodgerblue": (30, 144, 255),
-    "firebrick": (178, 34, 34),
-    "floralwhite": (255, 250, 240),
-    "forestgreen": (34, 139, 34),
-    "fuchsia": (255, 0, 255),
-    "gainsboro": (220, 220, 220),
-    "ghostwhite": (248, 248, 255),
-    "gold": (255, 215, 0),
-    "goldenrod": (218, 165, 32),
-    "gray": (128, 128, 128),
-    "green": (0, 128, 0),
-    "greenyellow": (173, 255, 47),
-    "grey": (128, 128, 128),
-    "honeydew": (240, 255, 240),
-    "hotpink": (255, 105, 180),
-    "indianred": (205, 92, 92),
-    "indigo": (75, 0, 130),
-    "ivory": (255, 255, 240),
-    "khaki": (240, 230, 140),
-    "lavender": (230, 230, 250),
-    "lavenderblush": (255, 240, 245),
-    "lawngreen": (124, 252, 0),
-    "lemonchiffon": (255, 250, 205),
-    "lightblue": (173, 216, 230),
-    "lightcoral": (240, 128, 128),
-    "lightcyan": (224, 255, 255),
-    "lightgoldenrodyellow": (250, 250, 210),
-    "lightgray": (211, 211, 211),
-    "lightgreen": (144, 238, 144),
-    "lightgrey": (211, 211, 211),
-    "lightpink": (255, 182, 193),
-    "lightsalmon": (255, 160, 122),
-    "lightseagreen": (32, 178, 170),
-    "lightskyblue": (135, 206, 250),
-    "lightslategray": (119, 136, 153),
-    "lightslategrey": (119, 136, 153),
-    "lightsteelblue": (176, 196, 222),
-    "lightyellow": (255, 255, 224),
-    "lime": (0, 255, 0),
-    "limegreen": (50, 205, 50),
-    "linen": (250, 240, 230),
-    "magenta": (255, 0, 255),
-    "maroon": (128, 0, 0),
-    "mediumaquamarine": (102, 205, 170),
-    "mediumblue": (0, 0, 205),
-    "mediumorchid": (186, 85, 211),
-    "mediumpurple": (147, 112, 219),
-    "mediumseagreen": (60, 179, 113),
-    "mediumslateblue": (123, 104, 238),
-    "mediumspringgreen": (0, 250, 154),
-    "mediumturquoise": (72, 209, 204),
-    "mediumvioletred": (199, 21, 133),
-    "midnightblue": (25, 25, 112),
-    "mintcream": (245, 255, 250),
-    "mistyrose": (255, 228, 225),
-    "moccasin": (255, 228, 181),
-    "navajowhite": (255, 222, 173),
-    "navy": (0, 0, 128),
-    "navyblue": (0, 0, 128),
-    "oldlace": (253, 245, 230),
-    "olive": (128, 128, 0),
-    "olivedrab": (107, 142, 35),
-    "orange": (255, 165, 0),
-    "orangered": (255, 69, 0),
-    "orchid": (218, 112, 214),
-    "palegoldenrod": (238, 232, 170),
-    "palegreen": (152, 251, 152),
-    "paleturquoise": (175, 238, 238),
-    "palevioletred": (219, 112, 147),
-    "papayawhip": (255, 239, 213),
-    "peachpuff": (255, 218, 185),
-    "peru": (205, 133, 63),
-    "pink": (255, 192, 203),
-    "plum": (221, 160, 221),
-    "powderblue": (176, 224, 230),
-    "purple": (128, 0, 128),
-    "red": (255, 0, 0),
-    "rosybrown": (188, 143, 143),
-    "royalblue": (65, 105, 225),
-    "saddlebrown": (139, 69, 19),
-    "salmon": (250, 128, 114),
-    "sandybrown": (244, 164, 96),
-    "seagreen": (46, 139, 87),
-    "seashell": (255, 245, 238),
-    "sienna": (160, 82, 45),
-    "silver": (192, 192, 192),
-    "skyblue": (135, 206, 235),
-    "slateblue": (106, 90, 205),
-    "slategray": (112, 128, 144),
-    "slategrey": (112, 128, 144),
-    "snow": (255, 250, 250),
-    "springgreen": (0, 255, 127),
-    "steelblue": (70, 130, 180),
-    "tan": (210, 180, 140),
-    "teal": (0, 128, 128),
-    "thistle": (216, 191, 216),
-    "tomato": (255, 99, 71),
-    "turquoise": (64, 224, 208),
-    "violet": (238, 130, 238),
-    "wheat": (245, 222, 179),
-    "white": (255, 255, 255),
-    "whitesmoke": (245, 245, 245),
-    "yellow": (255, 255, 0),
-    "yellowgreen": (154, 205, 50),
+    "aliceblue": RGBColor(240, 248, 255),
+    "antiquewhite": RGBColor(250, 235, 215),
+    "aqua": RGBColor(0, 255, 255),
+    "aquamarine": RGBColor(127, 255, 212),
+    "azure": RGBColor(240, 255, 255),
+    "beige": RGBColor(245, 245, 220),
+    "bisque": RGBColor(255, 228, 196),
+    "black": RGBColor(0, 0, 0),
+    "blanchedalmond": RGBColor(255, 235, 205),
+    "blue": RGBColor(0, 0, 255),
+    "blueviolet": RGBColor(138, 43, 226),
+    "brown": RGBColor(165, 42, 42),
+    "burlywood": RGBColor(222, 184, 135),
+    "cadetblue": RGBColor(95, 158, 160),
+    "chartreuse": RGBColor(127, 255, 0),
+    "chocolate": RGBColor(210, 105, 30),
+    "coral": RGBColor(255, 127, 80),
+    "cornflowerblue": RGBColor(100, 149, 237),
+    "cornsilk": RGBColor(255, 248, 220),
+    "crimson": RGBColor(220, 20, 60),
+    "cyan": RGBColor(0, 255, 255),
+    "darkblue": RGBColor(0, 0, 139),
+    "darkcyan": RGBColor(0, 139, 139),
+    "darkgoldenrod": RGBColor(184, 134, 11),
+    "darkgray": RGBColor(169, 169, 169),
+    "darkgreen": RGBColor(0, 100, 0),
+    "darkgrey": RGBColor(169, 169, 169),
+    "darkkhaki": RGBColor(189, 183, 107),
+    "darkmagenta": RGBColor(139, 0, 139),
+    "darkolivegreen": RGBColor(85, 107, 47),
+    "darkorange": RGBColor(255, 140, 0),
+    "darkorchid": RGBColor(153, 50, 204),
+    "darkred": RGBColor(139, 0, 0),
+    "darksalmon": RGBColor(233, 150, 122),
+    "darkseagreen": RGBColor(143, 188, 143),
+    "darkslateblue": RGBColor(72, 61, 139),
+    "darkslategray": RGBColor(47, 79, 79),
+    "darkslategrey": RGBColor(47, 79, 79),
+    "darkturquoise": RGBColor(0, 206, 209),
+    "darkviolet": RGBColor(148, 0, 211),
+    "deeppink": RGBColor(255, 20, 147),
+    "deepskyblue": RGBColor(0, 191, 255),
+    "dimgray": RGBColor(105, 105, 105),
+    "dimgrey": RGBColor(105, 105, 105),
+    "dodgerblue": RGBColor(30, 144, 255),
+    "firebrick": RGBColor(178, 34, 34),
+    "floralwhite": RGBColor(255, 250, 240),
+    "forestgreen": RGBColor(34, 139, 34),
+    "fuchsia": RGBColor(255, 0, 255),
+    "gainsboro": RGBColor(220, 220, 220),
+    "ghostwhite": RGBColor(248, 248, 255),
+    "gold": RGBColor(255, 215, 0),
+    "goldenrod": RGBColor(218, 165, 32),
+    "gray": RGBColor(128, 128, 128),
+    "green": RGBColor(0, 128, 0),
+    "greenyellow": RGBColor(173, 255, 47),
+    "grey": RGBColor(128, 128, 128),
+    "honeydew": RGBColor(240, 255, 240),
+    "hotpink": RGBColor(255, 105, 180),
+    "indianred": RGBColor(205, 92, 92),
+    "indigo": RGBColor(75, 0, 130),
+    "ivory": RGBColor(255, 255, 240),
+    "khaki": RGBColor(240, 230, 140),
+    "lavender": RGBColor(230, 230, 250),
+    "lavenderblush": RGBColor(255, 240, 245),
+    "lawngreen": RGBColor(124, 252, 0),
+    "lemonchiffon": RGBColor(255, 250, 205),
+    "lightblue": RGBColor(173, 216, 230),
+    "lightcoral": RGBColor(240, 128, 128),
+    "lightcyan": RGBColor(224, 255, 255),
+    "lightgoldenrodyellow": RGBColor(250, 250, 210),
+    "lightgray": RGBColor(211, 211, 211),
+    "lightgreen": RGBColor(144, 238, 144),
+    "lightgrey": RGBColor(211, 211, 211),
+    "lightpink": RGBColor(255, 182, 193),
+    "lightsalmon": RGBColor(255, 160, 122),
+    "lightseagreen": RGBColor(32, 178, 170),
+    "lightskyblue": RGBColor(135, 206, 250),
+    "lightslategray": RGBColor(119, 136, 153),
+    "lightslategrey": RGBColor(119, 136, 153),
+    "lightsteelblue": RGBColor(176, 196, 222),
+    "lightyellow": RGBColor(255, 255, 224),
+    "lime": RGBColor(0, 255, 0),
+    "limegreen": RGBColor(50, 205, 50),
+    "linen": RGBColor(250, 240, 230),
+    "magenta": RGBColor(255, 0, 255),
+    "maroon": RGBColor(128, 0, 0),
+    "mediumaquamarine": RGBColor(102, 205, 170),
+    "mediumblue": RGBColor(0, 0, 205),
+    "mediumorchid": RGBColor(186, 85, 211),
+    "mediumpurple": RGBColor(147, 112, 219),
+    "mediumseagreen": RGBColor(60, 179, 113),
+    "mediumslateblue": RGBColor(123, 104, 238),
+    "mediumspringgreen": RGBColor(0, 250, 154),
+    "mediumturquoise": RGBColor(72, 209, 204),
+    "mediumvioletred": RGBColor(199, 21, 133),
+    "midnightblue": RGBColor(25, 25, 112),
+    "mintcream": RGBColor(245, 255, 250),
+    "mistyrose": RGBColor(255, 228, 225),
+    "moccasin": RGBColor(255, 228, 181),
+    "navajowhite": RGBColor(255, 222, 173),
+    "navy": RGBColor(0, 0, 128),
+    "navyblue": RGBColor(0, 0, 128),
+    "oldlace": RGBColor(253, 245, 230),
+    "olive": RGBColor(128, 128, 0),
+    "olivedrab": RGBColor(107, 142, 35),
+    "orange": RGBColor(255, 165, 0),
+    "orangered": RGBColor(255, 69, 0),
+    "orchid": RGBColor(218, 112, 214),
+    "palegoldenrod": RGBColor(238, 232, 170),
+    "palegreen": RGBColor(152, 251, 152),
+    "paleturquoise": RGBColor(175, 238, 238),
+    "palevioletred": RGBColor(219, 112, 147),
+    "papayawhip": RGBColor(255, 239, 213),
+    "peachpuff": RGBColor(255, 218, 185),
+    "peru": RGBColor(205, 133, 63),
+    "pink": RGBColor(255, 192, 203),
+    "plum": RGBColor(221, 160, 221),
+    "powderblue": RGBColor(176, 224, 230),
+    "purple": RGBColor(128, 0, 128),
+    "red": RGBColor(255, 0, 0),
+    "rosybrown": RGBColor(188, 143, 143),
+    "royalblue": RGBColor(65, 105, 225),
+    "saddlebrown": RGBColor(139, 69, 19),
+    "salmon": RGBColor(250, 128, 114),
+    "sandybrown": RGBColor(244, 164, 96),
+    "seagreen": RGBColor(46, 139, 87),
+    "seashell": RGBColor(255, 245, 238),
+    "sienna": RGBColor(160, 82, 45),
+    "silver": RGBColor(192, 192, 192),
+    "skyblue": RGBColor(135, 206, 235),
+    "slateblue": RGBColor(106, 90, 205),
+    "slategray": RGBColor(112, 128, 144),
+    "slategrey": RGBColor(112, 128, 144),
+    "snow": RGBColor(255, 250, 250),
+    "springgreen": RGBColor(0, 255, 127),
+    "steelblue": RGBColor(70, 130, 180),
+    "tan": RGBColor(210, 180, 140),
+    "teal": RGBColor(0, 128, 128),
+    "thistle": RGBColor(216, 191, 216),
+    "tomato": RGBColor(255, 99, 71),
+    "turquoise": RGBColor(64, 224, 208),
+    "violet": RGBColor(238, 130, 238),
+    "wheat": RGBColor(245, 222, 179),
+    "white": RGBColor(255, 255, 255),
+    "whitesmoke": RGBColor(245, 245, 245),
+    "yellow": RGBColor(255, 255, 0),
+    "yellowgreen": RGBColor(154, 205, 50),
     # And...
-    "homeassistant": (3, 169, 244),
+    "homeassistant": RGBColor(3, 169, 244),
 }
 
 
@@ -186,7 +194,7 @@ class GamutType:
     blue: XYPoint = attr.ib()
 
 
-def color_name_to_rgb(color_name: str) -> tuple[int, int, int]:
+def color_name_to_rgb(color_name: str) -> RGBColor:
     """Convert color name to RGB hex value."""
     # COLORS map has no spaces in it, so make the color_name have no
     # spaces in it as well for matching purposes
@@ -208,7 +216,7 @@ def color_RGB_to_xy(
 
 
 # Taken from:
-# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+# https://github.com/PhilipsHue/PhilipsHueSDK-iOS-OSX/blob/00187a3/ApplicationDesignNotes/RGB%20to%20xy%20Color%20conversion.md
 # License: Code is given as is. Use at your own risk and discretion.
 def color_RGB_to_xy_brightness(
     iR: int, iG: int, iB: int, Gamut: GamutType | None = None
@@ -258,7 +266,7 @@ def color_xy_to_RGB(
 
 
 # Converted to Python from Obj-C, original source from:
-# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+# https://github.com/PhilipsHue/PhilipsHueSDK-iOS-OSX/blob/00187a3/ApplicationDesignNotes/RGB%20to%20xy%20Color%20conversion.md
 def color_xy_brightness_to_RGB(
     vX: float, vY: float, ibrightness: int, Gamut: GamutType | None = None
 ) -> tuple[int, int, int]:
@@ -289,7 +297,7 @@ def color_xy_brightness_to_RGB(
     r, g, b = map(
         lambda x: (12.92 * x)
         if (x <= 0.0031308)
-        else ((1.0 + 0.055) * pow(x, (1.0 / 2.4)) - 0.055),
+        else ((1.0 + 0.055) * cast(float, pow(x, (1.0 / 2.4))) - 0.055),
         [r, g, b],
     )
 
@@ -394,8 +402,8 @@ def color_hs_to_xy(
     return color_RGB_to_xy(*color_hs_to_RGB(iH, iS), Gamut)
 
 
-def _match_max_scale(
-    input_colors: tuple[int, ...], output_colors: tuple[int, ...]
+def match_max_scale(
+    input_colors: tuple[int, ...], output_colors: tuple[float, ...]
 ) -> tuple[int, ...]:
     """Match the maximum value of the output to the input."""
     max_in = max(input_colors)
@@ -416,7 +424,7 @@ def color_rgb_to_rgbw(r: int, g: int, b: int) -> tuple[int, int, int, int]:
 
     # Match the output maximum value to the input. This ensures the full
     # channel range is used.
-    return _match_max_scale((r, g, b), rgbw)  # type: ignore
+    return match_max_scale((r, g, b), rgbw)  # type: ignore[return-value]
 
 
 def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
@@ -426,7 +434,7 @@ def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
 
     # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
-    return _match_max_scale((r, g, b, w), rgb)  # type: ignore
+    return match_max_scale((r, g, b, w), rgb)  # type: ignore[return-value]
 
 
 def color_rgb_to_rgbww(
@@ -440,7 +448,9 @@ def color_rgb_to_rgbww(
     w_r, w_g, w_b = color_temperature_to_rgb(color_temp_kelvin)
 
     # Find the ratio of the midpoint white in the input rgb channels
-    white_level = min(r / w_r, g / w_g, b / w_b)
+    white_level = min(
+        r / w_r if w_r else 0, g / w_g if w_g else 0, b / w_b if w_b else 0
+    )
 
     # Subtract the white portion from the rgb channels.
     rgb = (r - w_r * white_level, g - w_g * white_level, b - w_b * white_level)
@@ -448,7 +458,7 @@ def color_rgb_to_rgbww(
 
     # Match the output maximum value to the input. This ensures the full
     # channel range is used.
-    return _match_max_scale((r, g, b), rgbww)  # type: ignore
+    return match_max_scale((r, g, b), rgbww)  # type: ignore[return-value]
 
 
 def color_rgbww_to_rgb(
@@ -462,7 +472,10 @@ def color_rgbww_to_rgb(
     except ZeroDivisionError:
         ct_ratio = 0.5
     color_temp_mired = min_mireds + ct_ratio * mired_range
-    color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+    if color_temp_mired:
+        color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+    else:
+        color_temp_kelvin = 0
     w_r, w_g, w_b = color_temperature_to_rgb(color_temp_kelvin)
     white_level = max(cw, ww) / 255
 
@@ -471,7 +484,7 @@ def color_rgbww_to_rgb(
 
     # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
-    return _match_max_scale((r, g, b, cw, ww), rgb)  # type: ignore
+    return match_max_scale((r, g, b, cw, ww), rgb)  # type: ignore[return-value]
 
 
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:
@@ -516,6 +529,36 @@ def color_temperature_to_rgb(
     blue = _get_blue(tmp_internal)
 
     return red, green, blue
+
+
+def color_temperature_to_rgbww(
+    temperature: int, brightness: int, min_mireds: int, max_mireds: int
+) -> tuple[int, int, int, int, int]:
+    """Convert color temperature in mireds to rgbcw."""
+    mired_range = max_mireds - min_mireds
+    cold = ((max_mireds - temperature) / mired_range) * brightness
+    warm = brightness - cold
+    return (0, 0, 0, round(cold), round(warm))
+
+
+def rgbww_to_color_temperature(
+    rgbww: tuple[int, int, int, int, int], min_mireds: int, max_mireds: int
+) -> tuple[int, int]:
+    """Convert rgbcw to color temperature in mireds."""
+    _, _, _, cold, warm = rgbww
+    return while_levels_to_color_temperature(cold, warm, min_mireds, max_mireds)
+
+
+def while_levels_to_color_temperature(
+    cold: int, warm: int, min_mireds: int, max_mireds: int
+) -> tuple[int, int]:
+    """Convert whites to color temperature in mireds."""
+    brightness = warm / 255 + cold / 255
+    if brightness == 0:
+        return (max_mireds, 0)
+    return round(
+        ((cold / 255 / brightness) * (min_mireds - max_mireds)) + max_mireds
+    ), min(255, round(brightness * 255))
 
 
 def _clamp(color_component: float, minimum: float = 0, maximum: float = 255) -> float:

@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "Alan Kimli\u011fi",
+                    "name": "Ad",
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "Alan Kodu",
+                    "name": "Ad",
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Kod, gerekli basamak say\u0131s\u0131yla e\u015fle\u015fmiyor"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kilitler i\u00e7in varsay\u0131lan kod, hi\u00e7biri verilmezse kullan\u0131l\u0131r",
+                    "lock_code_digits": "Kilitler i\u00e7in PIN kodundaki hane say\u0131s\u0131"
+                }
+            }
+        }
+    }
+}

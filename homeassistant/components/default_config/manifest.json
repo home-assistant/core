@@ -11,6 +11,7 @@
     "frontend",
     "history",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",
@@ -29,11 +30,11 @@
     "system_health",
     "tag",
     "timer",
-    "updater",
+    "usb",
     "webhook",
     "zeroconf",
     "zone"
   ],
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

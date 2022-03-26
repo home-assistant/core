@@ -8,7 +8,7 @@ from axis.event_stream import OPERATION_INITIALIZED
 import pytest
 import respx
 
-from homeassistant.components import axis
+from homeassistant.components import axis, zeroconf
 from homeassistant.components.axis.const import (
     CONF_EVENTS,
     CONF_MODEL,
@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 
@@ -323,6 +324,13 @@ async def test_device_setup(hass):
     assert device.name == ENTRY_CONFIG[CONF_NAME]
     assert device.unique_id == FORMATTED_MAC
 
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_device(
+        identifiers={(AXIS_DOMAIN, device.unique_id)}
+    )
+
+    assert device_entry.configuration_url == device.api.config.url
+
 
 async def test_device_info(hass):
     """Verify other path of device information works."""
@@ -375,12 +383,15 @@ async def test_update_address(hass):
         mock_default_vapix_requests(respx, "2.3.4.5")
         await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,
-            data={
-                "host": "2.3.4.5",
-                "port": 80,
-                "name": "name",
-                "properties": {"macaddress": MAC},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="2.3.4.5",
+                addresses=["2.3.4.5"],
+                hostname="mock_hostname",
+                name="name",
+                port=80,
+                properties={"macaddress": MAC},
+                type="mock_type",
+            ),
             context={"source": SOURCE_ZEROCONF},
         )
         await hass.async_block_till_done()

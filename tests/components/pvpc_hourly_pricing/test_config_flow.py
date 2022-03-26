@@ -12,7 +12,6 @@ from homeassistant.components.pvpc_hourly_pricing import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
@@ -32,7 +31,7 @@ async def test_config_flow(
     - Check removal and add again to check state restoration
     - Configure options to change power and tariff to "2.0TD"
     """
-    hass.config.time_zone = dt_util.get_time_zone("Europe/Madrid")
+    hass.config.set_time_zone("Europe/Madrid")
     tst_config = {
         CONF_NAME: "test",
         ATTR_TARIFF: TARIFFS[1],
@@ -90,10 +89,9 @@ async def test_config_flow(
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         check_valid_state(state, tariff=TARIFFS[1])
-        price_pbc = state.state
         assert pvpc_aioclient_mock.call_count == 2
-        assert state.attributes["period"] == "P2"
-        assert state.attributes["next_period"] == "P1"
+        assert state.attributes["period"] == "P1"
+        assert state.attributes["next_period"] == "P2"
         assert state.attributes["available_power"] == 4600
 
         # check options flow
@@ -111,10 +109,8 @@ async def test_config_flow(
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
-        price_cym = state.state
         check_valid_state(state, tariff=TARIFFS[0])
         assert pvpc_aioclient_mock.call_count == 3
         assert state.attributes["period"] == "P2"
         assert state.attributes["next_period"] == "P1"
         assert state.attributes["available_power"] == 3000
-        assert price_cym < price_pbc

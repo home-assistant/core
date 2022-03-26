@@ -1,7 +1,6 @@
 """Config flow for ZHA."""
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import serial.tools.list_ports
@@ -9,8 +8,9 @@ import voluptuous as vol
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.components import usb, zeroconf
+from homeassistant.const import CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .core.const import (
     CONF_BAUDRATE,
@@ -25,17 +25,19 @@ SUPPORTED_PORT_SETTINGS = (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
 )
+DECONZ_DOMAIN = "deconz"
 
 
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self):
         """Initialize flow instance."""
         self._device_path = None
         self._radio_type = None
+        self._title = None
 
     async def async_step_user(self, user_input=None):
         """Handle a zha config flow start."""
@@ -61,7 +63,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             port = ports[list_of_ports.index(user_selection)]
             dev_path = await self.hass.async_add_executor_job(
-                get_serial_by_id, port.device
+                usb.get_serial_by_id, port.device
             )
             auto_detected_data = await detect_radios(dev_path)
             if auto_detected_data is not None:
@@ -92,20 +94,89 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema),
         )
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+        """Handle usb discovery."""
+        vid = discovery_info.vid
+        pid = discovery_info.pid
+        serial_number = discovery_info.serial_number
+        device = discovery_info.device
+        manufacturer = discovery_info.manufacturer
+        description = discovery_info.description
+        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        if current_entry := await self.async_set_unique_id(unique_id):
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_DEVICE: {
+                        **current_entry.data.get(CONF_DEVICE, {}),
+                        CONF_DEVICE_PATH: dev_path,
+                    },
+                }
+            )
+        # Check if already configured
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        # If they already have a discovery for deconz
+        # we ignore the usb discovery as they probably
+        # want to use it there instead
+        if self.hass.config_entries.flow.async_progress_by_handler(DECONZ_DOMAIN):
+            return self.async_abort(reason="not_zha_device")
+        for entry in self.hass.config_entries.async_entries(DECONZ_DOMAIN):
+            if entry.source != config_entries.SOURCE_IGNORE:
+                return self.async_abort(reason="not_zha_device")
+
+        self._device_path = dev_path
+        self._title = usb.human_readable_device_name(
+            dev_path,
+            serial_number,
+            manufacturer,
+            description,
+            vid,
+            pid,
+        )
+        self._set_confirm_only()
+        self.context["title_placeholders"] = {CONF_NAME: self._title}
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(self, user_input=None):
+        """Confirm a discovery."""
+        if user_input is not None:
+            auto_detected_data = await detect_radios(self._device_path)
+            if auto_detected_data is None:
+                # This path probably will not happen now that we have
+                # more precise USB matching unless there is a problem
+                # with the device
+                return self.async_abort(reason="usb_probe_failed")
+            return self.async_create_entry(
+                title=self._title,
+                data=auto_detected_data,
+            )
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={CONF_NAME: self._title},
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.
-        local_name = discovery_info["hostname"][:-1]
+        local_name = discovery_info.hostname[:-1]
         node_name = local_name[: -len(".local")]
-        host = discovery_info[CONF_HOST]
+        host = discovery_info.host
         device_path = f"socket://{host}:6638"
 
-        await self.async_set_unique_id(node_name)
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_DEVICE: {CONF_DEVICE_PATH: device_path},
-            }
-        )
+        if current_entry := await self.async_set_unique_id(node_name):
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_DEVICE: {
+                        **current_entry.data.get(CONF_DEVICE, {}),
+                        CONF_DEVICE_PATH: device_path,
+                    },
+                }
+            )
 
         # Check if already configured
         if self._async_current_entries():
@@ -131,7 +202,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._device_path = user_input.get(CONF_DEVICE_PATH)
             if await app_cls.probe(user_input):
                 serial_by_id = await self.hass.async_add_executor_job(
-                    get_serial_by_id, user_input[CONF_DEVICE_PATH]
+                    usb.get_serial_by_id, user_input[CONF_DEVICE_PATH]
                 )
                 user_input[CONF_DEVICE_PATH] = serial_by_id
                 return self.async_create_entry(
@@ -167,19 +238,10 @@ async def detect_radios(dev_path: str) -> dict[str, Any] | None:
     """Probe all radio types on the device port."""
     for radio in RadioType:
         dev_config = radio.controller.SCHEMA_DEVICE({CONF_DEVICE_PATH: dev_path})
-        if await radio.controller.probe(dev_config):
+        probe_result = await radio.controller.probe(dev_config)
+        if probe_result:
+            if isinstance(probe_result, dict):
+                return {CONF_RADIO_TYPE: radio.name, CONF_DEVICE: probe_result}
             return {CONF_RADIO_TYPE: radio.name, CONF_DEVICE: dev_config}
 
     return None
-
-
-def get_serial_by_id(dev_path: str) -> str:
-    """Return a /dev/serial/by-id match for given device if available."""
-    by_id = "/dev/serial/by-id"
-    if not os.path.isdir(by_id):
-        return dev_path
-
-    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
-        if os.path.realpath(path) == dev_path:
-            return path
-    return dev_path

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a kapcsolat l\u00e9trehoz\u00e1sa sor\u00e1n",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                }
+            }
+        }
+    }
+}

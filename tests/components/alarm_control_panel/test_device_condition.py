@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN, const
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -112,7 +113,9 @@ async def test_get_conditions(
         }
         for condition in expected_condition_types
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert_lists_same(conditions, expected_conditions)
 
 

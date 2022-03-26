@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from iaqualink import AqualinkClient, AqualinkLoginException
+from iaqualink.client import AqualinkClient
+from iaqualink.exception import (
+    AqualinkServiceException,
+    AqualinkServiceUnauthorizedException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -32,20 +35,26 @@ class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             try:
-                aqualink = AqualinkClient(username, password)
-                await aqualink.login()
-                return self.async_create_entry(title=username, data=user_input)
-            except AqualinkLoginException:
+                async with AqualinkClient(username, password):
+                    pass
+            except AqualinkServiceUnauthorizedException:
+                errors["base"] = "invalid_auth"
+            except AqualinkServiceException:
                 errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(title=username, data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
             ),
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: ConfigType | None = None):
+    async def async_step_import(self, user_input: dict[str, Any] | None = None):
         """Occurs when an entry is setup through config."""
         return await self.async_step_user(user_input)

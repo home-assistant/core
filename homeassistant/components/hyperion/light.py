@@ -1,11 +1,11 @@
 """Support for Hyperion-NG remotes."""
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable
+from typing import Any
 
 from hyperion import client, const
 
@@ -85,7 +85,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> bool:
+) -> None:
     """Set up a Hyperion platform from config entry."""
 
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
@@ -122,7 +122,6 @@ async def async_setup_entry(
             )
 
     listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
-    return True
 
 
 class HyperionBaseLight(LightEntity):
@@ -240,12 +239,13 @@ class HyperionBaseLight(LightEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._instance_name,
-            "manufacturer": HYPERION_MANUFACTURER_NAME,
-            "model": HYPERION_MODEL_NAME,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=self._instance_name,
+            configuration_url=self._client.remote_url,
+        )
 
     def _get_option(self, key: str) -> Any:
         """Get a value from the provided options."""

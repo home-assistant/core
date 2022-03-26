@@ -2,13 +2,20 @@
 
 from unittest.mock import patch
 
+from pydeconz.sensor import (
+    ANCILLARY_CONTROL_ARMED_AWAY,
+    ANCILLARY_CONTROL_EMERGENCY,
+    ANCILLARY_CONTROL_FIRE,
+    ANCILLARY_CONTROL_INVALID_CODE,
+    ANCILLARY_CONTROL_PANIC,
+)
+
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.deconz_event import (
     CONF_DECONZ_ALARM_EVENT,
     CONF_DECONZ_EVENT,
 )
 from homeassistant.const import (
-    CONF_CODE,
     CONF_DEVICE_ID,
     CONF_EVENT,
     CONF_ID,
@@ -73,9 +80,9 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
     assert (
         len(async_entries_for_config_entry(device_registry, config_entry.entry_id)) == 7
     )
-    assert hass.states.get("sensor.switch_2_battery_level").state == "100"
-    assert hass.states.get("sensor.switch_3_battery_level").state == "100"
-    assert hass.states.get("sensor.switch_4_battery_level").state == "100"
+    assert hass.states.get("sensor.switch_2_battery").state == "100"
+    assert hass.states.get("sensor.switch_3_battery").state == "100"
+    assert hass.states.get("sensor.switch_4_battery").state == "100"
 
     captured_events = async_capture_events(hass, CONF_DECONZ_EVENT)
 
@@ -200,39 +207,69 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
 async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
     """Test successful creation of deconz alarm events."""
     data = {
+        "alarmsystems": {
+            "0": {
+                "name": "default",
+                "config": {
+                    "armmode": "armed_away",
+                    "configured": True,
+                    "disarmed_entry_delay": 0,
+                    "disarmed_exit_delay": 0,
+                    "armed_away_entry_delay": 120,
+                    "armed_away_exit_delay": 120,
+                    "armed_away_trigger_duration": 120,
+                    "armed_stay_entry_delay": 120,
+                    "armed_stay_exit_delay": 120,
+                    "armed_stay_trigger_duration": 120,
+                    "armed_night_entry_delay": 120,
+                    "armed_night_exit_delay": 120,
+                    "armed_night_trigger_duration": 120,
+                },
+                "state": {"armstate": "armed_away", "seconds_remaining": 0},
+                "devices": {
+                    "00:00:00:00:00:00:00:01-00": {},
+                    "00:15:8d:00:02:af:95:f9-01-0101": {
+                        "armmask": "AN",
+                        "trigger": "state/vibration",
+                    },
+                },
+            }
+        },
         "sensors": {
             "1": {
                 "config": {
-                    "armed": "disarmed",
-                    "enrolled": 0,
+                    "battery": 95,
+                    "enrolled": 1,
                     "on": True,
-                    "panel": "disarmed",
                     "pending": [],
                     "reachable": True,
                 },
                 "ep": 1,
-                "etag": "3c4008d74035dfaa1f0bb30d24468b12",
-                "lastseen": "2021-04-02T13:07Z",
-                "manufacturername": "Universal Electronics Inc",
-                "modelid": "URC4450BC0-X-R",
+                "etag": "5aaa1c6bae8501f59929539c6e8f44d6",
+                "lastseen": "2021-07-25T18:07Z",
+                "manufacturername": "lk",
+                "modelid": "ZB-KeypadGeneric-D0002",
                 "name": "Keypad",
                 "state": {
-                    "action": "armed_away,1111,55",
-                    "lastupdated": "2021-04-02T13:08:18.937",
+                    "action": "invalid_code",
+                    "lastupdated": "2021-07-25T18:02:51.172",
                     "lowbattery": False,
-                    "tampered": True,
+                    "panel": "exit_delay",
+                    "seconds_remaining": 55,
+                    "tampered": False,
                 },
+                "swversion": "3.13",
                 "type": "ZHAAncillaryControl",
-                "uniqueid": "00:00:00:00:00:00:00:01-01-0501",
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
             }
-        }
+        },
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 4
     # 1 alarm control device + 2 additional devices for deconz service and host
     assert (
         len(async_entries_for_config_entry(device_registry, config_entry.entry_id)) == 3
@@ -240,14 +277,14 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
 
     captured_events = async_capture_events(hass, CONF_DECONZ_ALARM_EVENT)
 
-    # Armed away event
+    # Emergency event
 
     event_changed_sensor = {
         "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"action": "armed_away,1234,1"},
+        "state": {"action": ANCILLARY_CONTROL_EMERGENCY},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -261,86 +298,113 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         CONF_ID: "keypad",
         CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
         CONF_DEVICE_ID: device.id,
-        CONF_EVENT: "armed_away",
-        CONF_CODE: "1234",
+        CONF_EVENT: ANCILLARY_CONTROL_EMERGENCY,
     }
 
-    # Unsupported events
-
-    # Bad action string; string is None
+    # Fire event
 
     event_changed_sensor = {
         "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"action": None},
+        "state": {"action": ANCILLARY_CONTROL_FIRE},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert len(captured_events) == 1
+    device = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
+    )
 
-    # Bad action string; empty string
+    assert len(captured_events) == 2
+    assert captured_events[1].data == {
+        CONF_ID: "keypad",
+        CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
+        CONF_DEVICE_ID: device.id,
+        CONF_EVENT: ANCILLARY_CONTROL_FIRE,
+    }
+
+    # Invalid code event
 
     event_changed_sensor = {
         "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"action": ""},
+        "state": {"action": ANCILLARY_CONTROL_INVALID_CODE},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert len(captured_events) == 1
+    device = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
+    )
 
-    # Bad action string; too few ","
+    assert len(captured_events) == 3
+    assert captured_events[2].data == {
+        CONF_ID: "keypad",
+        CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
+        CONF_DEVICE_ID: device.id,
+        CONF_EVENT: ANCILLARY_CONTROL_INVALID_CODE,
+    }
+
+    # Panic event
 
     event_changed_sensor = {
         "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"action": "armed_away,1234"},
+        "state": {"action": ANCILLARY_CONTROL_PANIC},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert len(captured_events) == 1
+    device = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
+    )
 
-    # Bad action string; unsupported command
+    assert len(captured_events) == 4
+    assert captured_events[3].data == {
+        CONF_ID: "keypad",
+        CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
+        CONF_DEVICE_ID: device.id,
+        CONF_EVENT: ANCILLARY_CONTROL_PANIC,
+    }
+
+    # Only care for changes to specific action events
 
     event_changed_sensor = {
         "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"action": "unsupported,1234,1"},
+        "state": {"action": ANCILLARY_CONTROL_ARMED_AWAY},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert len(captured_events) == 1
+    assert len(captured_events) == 4
 
-    # Only care for changes to action
+    # Only care for action events
 
     event_changed_sensor = {
         "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "config": {"panel": "armed_away"},
+        "state": {"panel": ANCILLARY_CONTROL_ARMED_AWAY},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert len(captured_events) == 1
+    assert len(captured_events) == 4
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 4
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 

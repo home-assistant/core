@@ -1,4 +1,6 @@
 """Device tracker for Synology SRM routers."""
+from __future__ import annotations
+
 import logging
 
 import synology_srm
@@ -6,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -17,7 +19,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +30,7 @@ DEFAULT_PORT = 8001
 DEFAULT_SSL = True
 DEFAULT_VERIFY_SSL = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
@@ -66,7 +70,7 @@ ATTRIBUTE_ALIAS = {
 }
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return Synology SRM scanner."""
     scanner = SynologySrmDeviceScanner(config[DOMAIN])
 
@@ -106,12 +110,11 @@ class SynologySrmDeviceScanner(DeviceScanner):
         device = next(
             (result for result in self.devices if result["mac"] == device), None
         )
-        filtered_attributes = {}
+        filtered_attributes: dict[str, str] = {}
         if not device:
             return filtered_attributes
         for attribute, alias in ATTRIBUTE_ALIAS.items():
-            value = device.get(attribute)
-            if value is None:
+            if (value := device.get(attribute)) is None:
                 continue
             attr = alias or attribute
             filtered_attributes[attr] = value

@@ -9,6 +9,7 @@
                     "advertise_ip": "Umumkan Alamat IP",
                     "advertise_port": "Umumkan Port",
                     "host_ip": "Alamat IP Host",
+                    "listen_port": "Port untuk Mendengarkan",
                     "name": "Nama",
                     "upnp_bind_multicast": "Bind multicast (True/False)"
                 },

@@ -1,7 +1,6 @@
 """Base class for pilight."""
 import voluptuous as vol
 
-from homeassistant.components.pilight import DOMAIN, EVENT, SERVICE_NAME
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
@@ -13,6 +12,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import DOMAIN, EVENT, SERVICE_NAME
 from .const import (
     CONF_ECHO,
     CONF_OFF,
@@ -86,8 +86,7 @@ class PilightBaseDevice(RestoreEntity):
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._is_on = state.state == STATE_ON
             self._brightness = state.attributes.get("brightness")
 

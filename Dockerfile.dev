@@ -6,6 +6,8 @@ RUN \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        # Additional library needed by some tests and accordingly by VScode Tests Discovery
+        bluez \
         libudev-dev \
         libavformat-dev \
         libavcodec-dev \
@@ -15,6 +17,7 @@ RUN \
         libswresample-dev \
         libavfilter-dev \
         libpcap-dev \
+        libturbojpeg0 \
         git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -28,11 +31,12 @@ RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
 WORKDIR /workspaces
 
 # Install Python dependencies from requirements
-COPY requirements.txt requirements_test.txt requirements_test_pre_commit.txt ./
+COPY requirements.txt ./
 COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
-RUN pip3 install -r requirements.txt \
-   && pip3 install -r requirements_test.txt \
-   && rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
+RUN pip3 install -r requirements.txt --use-deprecated=legacy-resolver
+COPY requirements_test.txt requirements_test_pre_commit.txt ./
+RUN pip3 install -r requirements_test.txt --use-deprecated=legacy-resolver
+RUN rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash

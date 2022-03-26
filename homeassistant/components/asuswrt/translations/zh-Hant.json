@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_host": "\u7121\u6548\u4e3b\u6a5f\u540d\u7a31\u6216 IP \u4f4d\u5740",
-            "pwd_and_ssh": "\u50c5\u63d0\u4f9b\u5bc6\u78bc\u6216 SSH \u5bc6\u9470\u6a94\u6848",
-            "pwd_or_ssh": "\u8acb\u8f38\u5165\u5bc6\u78bc\u6216 SSH \u5bc6\u9470\u6a94\u6848",
-            "ssh_not_file": "\u627e\u4e0d\u5230 SSH \u5bc6\u9470\u6a94\u6848",
+            "pwd_and_ssh": "\u50c5\u63d0\u4f9b\u5bc6\u78bc\u6216 SSH \u91d1\u9470\u6a94\u6848",
+            "pwd_or_ssh": "\u8acb\u8f38\u5165\u5bc6\u78bc\u6216 SSH \u91d1\u9470\u6a94\u6848",
+            "ssh_not_file": "\u627e\u4e0d\u5230 SSH \u91d1\u9470\u6a94\u6848",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
@@ -20,7 +20,7 @@
                     "password": "\u5bc6\u78bc",
                     "port": "\u901a\u8a0a\u57e0",
                     "protocol": "\u4f7f\u7528\u901a\u8a0a\u606f\u5354\u5b9a",
-                    "ssh_key": "SSH \u5bc6\u9470\u6a94\u6848\u8def\u5f91\uff08\u975e\u5bc6\u78bc\uff09",
+                    "ssh_key": "SSH \u91d1\u9470\u6a94\u6848\u8def\u5f91\uff08\u975e\u5bc6\u78bc\uff09",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
                 "description": "\u8a2d\u5b9a\u6240\u9700\u53c3\u6578\u4ee5\u9023\u7dda\u81f3\u8def\u7531\u5668",

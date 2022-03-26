@@ -1,5 +1,5 @@
 """The tests for the hassio component."""
-
+from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
@@ -29,7 +29,7 @@ async def test_ingress_request_get(hassio_client, build_type, aioclient_mock):
     )
 
     # Check we got right response
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "test"
 
@@ -69,7 +69,7 @@ async def test_ingress_request_post(hassio_client, build_type, aioclient_mock):
     )
 
     # Check we got right response
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "test"
 
@@ -109,7 +109,7 @@ async def test_ingress_request_put(hassio_client, build_type, aioclient_mock):
     )
 
     # Check we got right response
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "test"
 
@@ -149,7 +149,7 @@ async def test_ingress_request_delete(hassio_client, build_type, aioclient_mock)
     )
 
     # Check we got right response
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "test"
 
@@ -189,7 +189,7 @@ async def test_ingress_request_patch(hassio_client, build_type, aioclient_mock):
     )
 
     # Check we got right response
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "test"
 
@@ -229,7 +229,7 @@ async def test_ingress_request_options(hassio_client, build_type, aioclient_mock
     )
 
     # Check we got right response
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "test"
 
@@ -302,4 +302,4 @@ async def test_ingress_missing_peername(hassio_client, aioclient_mock, caplog):
     assert "Can't set forward_for header, missing peername" in caplog.text
 
     # Check we got right response
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST

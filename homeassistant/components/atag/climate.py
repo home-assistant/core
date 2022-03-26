@@ -12,9 +12,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import CLIMATE, DOMAIN, AtagEntity
+from . import DOMAIN, AtagEntity
 
 PRESET_MAP = {
     "Manual": "manual",
@@ -28,10 +31,12 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Load a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([AtagThermostat(coordinator, CLIMATE)])
+    async_add_entities([AtagThermostat(coordinator, Platform.CLIMATE)])
 
 
 class AtagThermostat(AtagEntity, ClimateEntity):
@@ -47,7 +52,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         self._attr_temperature_unit = coordinator.data.climate.temp_unit
 
     @property
-    def hvac_mode(self) -> str | None:
+    def hvac_mode(self) -> str | None:  # type: ignore[override]
         """Return hvac operation ie. heat, cool mode."""
         if self.coordinator.data.climate.hvac_mode in HVAC_MODES:
             return self.coordinator.data.climate.hvac_mode

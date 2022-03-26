@@ -8,11 +8,18 @@
             "unknown": "Beklenmeyen hata"
         },
         "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "\u0130ki ad\u0131ml\u0131 kimlik do\u011frulama kodu"
+                },
+                "title": "\u0130ki fakt\u00f6rl\u00fc kimlik do\u011frulama"
+            },
             "user": {
                 "data": {
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "title": "Ring hesab\u0131yla oturum a\u00e7\u0131n"
             }
         }
     }

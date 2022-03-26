@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mjpeg_url": "URL MJPEG",
+                    "name": "Nome",
+                    "password": "Senha",
+                    "still_image_url": "URL da imagem est\u00e1tica",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Verifique o certificado SSL"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "mjpeg_url": "URL MJPEG",
+                    "name": "Nome",
+                    "password": "Senha",
+                    "still_image_url": "URL da imagem est\u00e1tica",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Verifique o certificado SSL"
+                }
+            }
+        }
+    }
+}

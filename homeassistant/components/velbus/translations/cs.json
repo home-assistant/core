@@ -10,7 +10,8 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Jm\u00e9no tohoto p\u0159ipojen\u00ed velbus"
+                    "name": "Jm\u00e9no tohoto p\u0159ipojen\u00ed velbus",
+                    "port": "P\u0159ipojovac\u00ed \u0159et\u011bzec"
                 }
             }
         }

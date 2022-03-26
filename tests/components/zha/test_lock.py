@@ -7,10 +7,16 @@ import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.lock import DOMAIN
-from homeassistant.const import STATE_LOCKED, STATE_UNAVAILABLE, STATE_UNLOCKED
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.const import (
+    STATE_LOCKED,
+    STATE_UNAVAILABLE,
+    STATE_UNLOCKED,
+    Platform,
+)
 
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import mock_coro
 
@@ -28,9 +34,9 @@ async def lock(hass, zigpy_device_mock, zha_device_joined_restored):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [closures.DoorLock.cluster_id, general.Basic.cluster_id],
-                "out_clusters": [],
-                "device_type": zigpy.profiles.zha.DeviceType.DOOR_LOCK,
+                SIG_EP_INPUT: [closures.DoorLock.cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.DOOR_LOCK,
             }
         },
     )
@@ -43,7 +49,7 @@ async def test_lock(hass, lock):
     """Test zha lock platform."""
 
     zha_device, cluster = lock
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = await find_entity_id(Platform.LOCK, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_UNLOCKED
@@ -91,7 +97,7 @@ async def async_lock(hass, cluster, entity_id):
     ):
         # lock via UI
         await hass.services.async_call(
-            DOMAIN, "lock", {"entity_id": entity_id}, blocking=True
+            LOCK_DOMAIN, "lock", {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
@@ -105,7 +111,7 @@ async def async_unlock(hass, cluster, entity_id):
     ):
         # lock via UI
         await hass.services.async_call(
-            DOMAIN, "unlock", {"entity_id": entity_id}, blocking=True
+            LOCK_DOMAIN, "unlock", {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False

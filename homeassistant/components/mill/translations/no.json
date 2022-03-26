@@ -7,11 +7,25 @@
             "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Passord",
                     "username": "Brukernavn"
                 }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "IP adresse"
+                },
+                "description": "Lokal IP-adresse til enheten."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Velg tilkoblingstype",
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Velg tilkoblingstype. Lokal krever generasjon 3 varmeovner"
             }
         }
     }

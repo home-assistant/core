@@ -1,5 +1,5 @@
 """Support for Aqualink pool lights."""
-from iaqualink import AqualinkLightEffect
+import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -11,15 +11,21 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AqualinkEntity, refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
+from .utils import await_or_reraise
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered lights."""
     devs = []
@@ -48,24 +54,20 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
         This handles brightness and light effects for lights that do support
         them.
         """
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        effect = kwargs.get(ATTR_EFFECT)
-
         # For now I'm assuming lights support either effects or brightness.
-        if effect:
-            effect = AqualinkLightEffect[effect].value
-            await self.dev.set_effect(effect)
-        elif brightness:
+        if effect_name := kwargs.get(ATTR_EFFECT):
+            await await_or_reraise(self.dev.set_effect_by_name(effect_name))
+        elif brightness := kwargs.get(ATTR_BRIGHTNESS):
             # Aqualink supports percentages in 25% increments.
             pct = int(round(brightness * 4.0 / 255)) * 25
-            await self.dev.set_brightness(pct)
+            await await_or_reraise(self.dev.set_brightness(pct))
         else:
-            await self.dev.turn_on()
+            await await_or_reraise(self.dev.turn_on())
 
     @refresh_system
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the light."""
-        await self.dev.turn_off()
+        await await_or_reraise(self.dev.turn_off())
 
     @property
     def brightness(self) -> int:
@@ -78,12 +80,12 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
     @property
     def effect(self) -> str:
         """Return the current light effect if supported."""
-        return AqualinkLightEffect(self.dev.effect).name
+        return self.dev.effect
 
     @property
     def effect_list(self) -> list:
         """Return supported light effects."""
-        return list(AqualinkLightEffect.__members__)
+        return list(self.dev.supported_light_effects)
 
     @property
     def supported_features(self) -> int:

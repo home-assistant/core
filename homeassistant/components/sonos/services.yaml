@@ -87,41 +87,6 @@ clear_sleep_timer:
     device:
       integration: sonos
 
-set_option:
-  name: Set option
-  description: Set Sonos sound options.
-  target:
-    device:
-      integration: sonos
-  fields:
-    buttons_enabled:
-      name: Buttons enabled
-      description: Enable control buttons on the device
-      example: "true"
-      selector:
-        boolean:
-    crossfade:
-      name: Crossfade
-      description: Enable crossfade on the device
-      example: "true"
-      selector:
-        boolean:
-    night_sound:
-      name: Night sound
-      description: Enable Night Sound mode
-      selector:
-        boolean:
-    speech_enhance:
-      name: Speech enhance
-      description: Enable Speech Enhancement mode
-      selector:
-        boolean:
-    status_light:
-      name: Status light
-      description: Enable Status (LED) Light
-      selector:
-        boolean:
-
 play_queue:
   name: Play queue
   description: Start playing the queue from the first item.

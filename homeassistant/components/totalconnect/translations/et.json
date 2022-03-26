@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Konto on juba seadistatud",
+            "no_locations": "Kasutaja jaoks ei ole asukohti saadaval, kontrolli TotalConnecti seadeid.",
             "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {

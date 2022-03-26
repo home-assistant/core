@@ -5,8 +5,11 @@
         "title": "Twinkly",
         "description": "Set up your Twinkly led string",
         "data": {
-          "host": "Host (or IP address) of your twinkly device"
+          "host": "[%key:common::config_flow::data::host%]"
         }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {name} - {model} ({host})?"
       }
     },
     "error": {

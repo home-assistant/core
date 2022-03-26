@@ -133,12 +133,13 @@ class BrWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        if self._data and self._data.condition:
-            ccode = self._data.condition.get(CONDCODE)
-            if ccode:
-                conditions = self.hass.data[DOMAIN].get(DATA_CONDITION)
-                if conditions:
-                    return conditions.get(ccode)
+        if (
+            self._data
+            and self._data.condition
+            and (ccode := self._data.condition.get(CONDCODE))
+            and (conditions := self.hass.data[DOMAIN].get(DATA_CONDITION))
+        ):
+            return conditions.get(ccode)
 
     @property
     def temperature(self):

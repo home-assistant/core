@@ -4,7 +4,7 @@
             "no_plants": "Aucune plante n'a \u00e9t\u00e9 trouv\u00e9e sur ce compte"
         },
         "error": {
-            "invalid_auth": "Authentification incorrecte"
+            "invalid_auth": "Authentification non valide"
         },
         "step": {
             "plant": {

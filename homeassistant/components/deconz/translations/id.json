@@ -11,11 +11,11 @@
         "error": {
             "no_key": "Tidak bisa mendapatkan kunci API"
         },
-        "flow_title": "Gateway Zigbee deCONZ ({host})",
+        "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
-                "description": "Ingin mengonfigurasi Home Assistant untuk terhubung ke gateway deCONZ yang disediakan oleh add-on Supervisor {addon}?",
-                "title": "Gateway Zigbee deCONZ melalui add-on Supervisor"
+                "description": "Ingin mengonfigurasi Home Assistant untuk terhubung ke gateway deCONZ yang disediakan oleh add-on: {addon}?",
+                "title": "Gateway Zigbee deCONZ melalui add-on Home Assistant"
             },
             "link": {
                 "description": "Buka gateway deCONZ Anda untuk mendaftarkan ke Home Assistant. \n\n1. Buka pengaturan sistem deCONZ \n2. Tekan tombol \"Authenticate app\"",

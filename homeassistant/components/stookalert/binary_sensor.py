@@ -1,86 +1,56 @@
-"""This component provides support for Stookalert Binary Sensor."""
+"""This integration provides support for Stookalert Binary Sensor."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import stookalert
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_SAFETY,
-    PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import CONF_PROVINCE, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=60)
-CONF_PROVINCE = "province"
-DEFAULT_DEVICE_CLASS = DEVICE_CLASS_SAFETY
-DEFAULT_NAME = "Stookalert"
-ATTRIBUTION = "Data provided by rivm.nl"
-PROVINCES = [
-    "Drenthe",
-    "Flevoland",
-    "Friesland",
-    "Gelderland",
-    "Groningen",
-    "Limburg",
-    "Noord-Brabant",
-    "Noord-Holland",
-    "Overijssel",
-    "Utrecht",
-    "Zeeland",
-    "Zuid-Holland",
-]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_PROVINCE): vol.In(PROVINCES),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Stookalert binary sensor platform."""
-    province = config[CONF_PROVINCE]
-    name = config[CONF_NAME]
-    api_handler = stookalert.stookalert(province)
-    add_entities([StookalertBinarySensor(name, api_handler)], update_before_add=True)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Stookalert binary sensor from a config entry."""
+    client = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([StookalertBinarySensor(client, entry)], update_before_add=True)
 
 
 class StookalertBinarySensor(BinarySensorEntity):
-    """An implementation of RIVM Stookalert."""
+    """Defines a Stookalert binary sensor."""
 
-    def __init__(self, name, api_handler):
+    _attr_attribution = "Data provided by rivm.nl"
+    _attr_device_class = BinarySensorDeviceClass.SAFETY
+
+    def __init__(self, client: stookalert.stookalert, entry: ConfigEntry) -> None:
         """Initialize a Stookalert device."""
-        self._name = name
-        self._api_handler = api_handler
+        self._client = client
+        self._attr_name = f"Stookalert {entry.data[CONF_PROVINCE]}"
+        self._attr_unique_id = entry.unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.entry_id}")},
+            name=entry.data[CONF_PROVINCE],
+            manufacturer="RIVM",
+            model="Stookalert",
+            entry_type=DeviceEntryType.SERVICE,
+            configuration_url="https://www.rivm.nl/stookalert",
+        )
 
-    @property
-    def extra_state_attributes(self):
-        """Return the attribute(s) of the sensor."""
-        state_attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-        if self._api_handler.last_updated is not None:
-            state_attr["last_updated"] = self._api_handler.last_updated.isoformat()
-
-        return state_attr
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return True if the Alert is active."""
-        return self._api_handler.state == 1
-
-    @property
-    def device_class(self):
-        """Return the device class of this binary sensor."""
-        return DEFAULT_DEVICE_CLASS
-
-    def update(self):
+    def update(self) -> None:
         """Update the data from the Stookalert handler."""
-        self._api_handler.get_alerts()
+        self._client.get_alerts()
+        self._attr_is_on = self._client.state == 1

@@ -1,13 +1,9 @@
 """Config flow for Mullvad VPN integration."""
-import logging
-
 from mullvad_api import MullvadAPI, MullvadAPIError
 
 from homeassistant import config_entries
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

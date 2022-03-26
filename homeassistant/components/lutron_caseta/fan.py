@@ -6,6 +6,9 @@ import logging
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
 
 from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -20,7 +23,11 @@ DEFAULT_ON_PERCENTAGE = 50
 ORDERED_NAMED_FAN_SPEEDS = [FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Lutron Caseta fan platform.
 
     Adds fan controllers from the Caseta bridge associated with the config_entry
@@ -65,7 +72,6 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,

@@ -19,7 +19,7 @@
                 "title": "Po\u0142\u0105cz si\u0119 automatycznie z urz\u0105dzeniem"
             },
             "link": {
-                "description": "Naci\u015bnij i przytrzymaj przycisk Home na {name} a\u017c urz\u0105dzenie wygeneruje d\u017awi\u0119k (oko\u0142o dwie sekundy), a nast\u0119pnie prze\u015blij w ci\u0105gu 30 sekund.",
+                "description": "Naci\u015bnij i przytrzymaj przycisk Home na {name} a\u017c urz\u0105dzenie wygeneruje d\u017awi\u0119k (oko\u0142o dwie sekundy), a nast\u0119pnie zatwierd\u017a w ci\u0105gu 30 sekund.",
                 "title": "Odzyskiwanie has\u0142a"
             },
             "link_manual": {
@@ -34,7 +34,7 @@
                     "blid": "BLID",
                     "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "W Twojej sieci nie wykryto urz\u0105dzenia Roomba ani Braava. BLID to cz\u0119\u015b\u0107 nazwy hosta urz\u0105dzenia po `iRobot-` lub 'Roomba-'. Post\u0119puj zgodnie z instrukcjami podanymi w dokumentacji pod adresem: {auth_help_url}",
+                "description": "W Twojej sieci nie wykryto urz\u0105dzenia Roomba ani Braava.",
                 "title": "R\u0119czne po\u0142\u0105czenie z urz\u0105dzeniem"
             },
             "user": {

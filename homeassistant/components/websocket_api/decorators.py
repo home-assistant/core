@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 
@@ -69,6 +71,7 @@ def ws_require_user(
     allow_system_user: bool = True,
     only_active_user: bool = True,
     only_inactive_user: bool = False,
+    only_supervisor: bool = False,
 ) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
     """Decorate function validating login user exist in current WS connection.
 
@@ -110,6 +113,10 @@ def ws_require_user(
                 output_error("only_inactive_user", "Not allowed as active user")
                 return
 
+            if only_supervisor and connection.user.name != HASSIO_USER_NAME:
+                output_error("only_supervisor", "Only allowed as Supervisor")
+                return
+
             return func(hass, connection, msg)
 
         return check_current_user
@@ -125,7 +132,6 @@ def websocket_command(
 
     def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
-        # pylint: disable=protected-access
         func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
         func._ws_command = command  # type: ignore[attr-defined]
         return func

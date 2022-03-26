@@ -1,18 +1,23 @@
 """Config flow for Yeelight integration."""
+import asyncio
 import logging
 from urllib.parse import urlparse
 
 import voluptuous as vol
 import yeelight
 from yeelight.aio import AsyncBulb
+from yeelight.main import get_known_models
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components import dhcp, ssdp, zeroconf
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import (
+from .const import (
+    CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
     CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
@@ -21,9 +26,14 @@ from . import (
     CONF_TRANSITION,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
-    YeelightScanner,
-    _async_unique_name,
 )
+from .device import (
+    _async_unique_name,
+    async_format_id,
+    async_format_model,
+    async_format_model_id,
+)
+from .scanner import YeelightScanner
 
 MODEL_UNKNOWN = "unknown"
 
@@ -47,23 +57,52 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_model = None
         self._discovered_ip = None
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle discovery from homekit."""
-        self._discovered_ip = discovery_info["host"]
+        self._discovered_ip = discovery_info.host
         return await self._async_handle_discovery()
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery from dhcp."""
-        self._discovered_ip = discovery_info[IP_ADDRESS]
+        self._discovered_ip = discovery_info.ip
         return await self._async_handle_discovery()
 
-    async def async_step_ssdp(self, discovery_info):
-        """Handle discovery from ssdp."""
-        self._discovered_ip = urlparse(discovery_info["location"]).hostname
-        await self.async_set_unique_id(discovery_info["id"])
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self._discovered_ip}, reload_on_update=False
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle discovery from zeroconf."""
+        self._discovered_ip = discovery_info.host
+        await self.async_set_unique_id(
+            "{0:#0{1}x}".format(int(discovery_info.name[-26:-18]), 18)
         )
+        return await self._async_handle_discovery_with_unique_id()
+
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+        """Handle discovery from ssdp."""
+        self._discovered_ip = urlparse(discovery_info.ssdp_headers["location"]).hostname
+        await self.async_set_unique_id(discovery_info.ssdp_headers["id"])
+        return await self._async_handle_discovery_with_unique_id()
+
+    async def _async_handle_discovery_with_unique_id(self):
+        """Handle any discovery with a unique id."""
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.unique_id != self.unique_id and self.unique_id != entry.data.get(
+                CONF_ID
+            ):
+                continue
+            reload = entry.state == ConfigEntryState.SETUP_RETRY
+            if entry.data.get(CONF_HOST) != self._discovered_ip:
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_HOST: self._discovered_ip}
+                )
+                reload = True
+            if reload:
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+            return self.async_abort(reason="already_configured")
         return await self._async_handle_discovery()
 
     async def _async_handle_discovery(self):
@@ -72,6 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == self._discovered_ip:
                 return self.async_abort(reason="already_in_progress")
+        self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
 
         try:
             self._discovered_model = await self._async_try_connect(
@@ -92,12 +132,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         if user_input is not None:
             return self.async_create_entry(
-                title=f"{self._discovered_model} {self.unique_id}",
-                data={CONF_ID: self.unique_id, CONF_HOST: self._discovered_ip},
+                title=async_format_model_id(self._discovered_model, self.unique_id),
+                data={
+                    CONF_ID: self.unique_id,
+                    CONF_HOST: self._discovered_ip,
+                    CONF_MODEL: self._discovered_model,
+                },
             )
 
         self._set_confirm_only()
-        placeholders = {"model": self._discovered_model, "host": self._discovered_ip}
+        placeholders = {
+            "id": async_format_id(self.unique_id),
+            "model": async_format_model(self._discovered_model),
+            "host": self._discovered_ip,
+        }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders
@@ -118,7 +166,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"{model} {self.unique_id}", data=user_input
+                    title=async_format_model_id(model, self.unique_id),
+                    data={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_ID: self.unique_id,
+                        CONF_MODEL: model,
+                    },
                 )
 
         user_input = user_input or {}
@@ -140,7 +193,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = urlparse(capabilities["location"]).hostname
             return self.async_create_entry(
                 title=_async_unique_name(capabilities),
-                data={CONF_ID: unique_id, CONF_HOST: host},
+                data={
+                    CONF_ID: unique_id,
+                    CONF_HOST: host,
+                    CONF_MODEL: capabilities["model"],
+                },
             )
 
         configured_devices = {
@@ -158,7 +215,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 continue  # ignore configured devices
             model = capabilities["model"]
             host = urlparse(capabilities["location"]).hostname
-            name = f"{host} {model} {unique_id}"
+            model_id = async_format_model_id(model, unique_id)
+            name = f"{model_id} ({host})"
             self._discovered_devices[unique_id] = capabilities
             devices_name[unique_id] = name
 
@@ -206,7 +264,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await bulb.async_listen(lambda _: True)
             await bulb.async_get_properties()
             await bulb.async_stop_listening()
-        except yeelight.BulbException as err:
+        except (asyncio.TimeoutError, yeelight.BulbException) as err:
             _LOGGER.error("Failed to get properties from %s: %s", host, err)
             raise CannotConnect from err
         _LOGGER.debug("Get properties: %s", bulb.last_properties)
@@ -222,31 +280,45 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
-        if user_input is not None:
-            options = {**self._config_entry.options}
-            options.update(user_input)
-            return self.async_create_entry(title="", data=options)
-
+        data = self._config_entry.data
         options = self._config_entry.options
+        detected_model = data.get(CONF_DETECTED_MODEL)
+        model = options[CONF_MODEL] or detected_model
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title="", data={CONF_MODEL: model, **options, **user_input}
+            )
+
+        schema_dict = {}
+        known_models = get_known_models()
+        if is_unknown_model := model not in known_models:
+            known_models.insert(0, model)
+
+        if is_unknown_model or model != detected_model:
+            schema_dict.update(
+                {
+                    vol.Optional(CONF_MODEL, default=model): vol.In(known_models),
+                }
+            )
+        schema_dict.update(
+            {
+                vol.Required(
+                    CONF_TRANSITION, default=options[CONF_TRANSITION]
+                ): cv.positive_int,
+                vol.Required(CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]): bool,
+                vol.Required(
+                    CONF_SAVE_ON_CHANGE, default=options[CONF_SAVE_ON_CHANGE]
+                ): bool,
+                vol.Required(
+                    CONF_NIGHTLIGHT_SWITCH, default=options[CONF_NIGHTLIGHT_SWITCH]
+                ): bool,
+            }
+        )
+
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_MODEL, default=options[CONF_MODEL]): str,
-                    vol.Required(
-                        CONF_TRANSITION, default=options[CONF_TRANSITION]
-                    ): cv.positive_int,
-                    vol.Required(
-                        CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]
-                    ): bool,
-                    vol.Required(
-                        CONF_SAVE_ON_CHANGE, default=options[CONF_SAVE_ON_CHANGE]
-                    ): bool,
-                    vol.Required(
-                        CONF_NIGHTLIGHT_SWITCH, default=options[CONF_NIGHTLIGHT_SWITCH]
-                    ): bool,
-                }
-            ),
+            data_schema=vol.Schema(schema_dict),
         )
 
 

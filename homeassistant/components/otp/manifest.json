@@ -2,8 +2,9 @@
   "domain": "otp",
   "name": "One-Time Password (OTP)",
   "documentation": "https://www.home-assistant.io/integrations/otp",
-  "requirements": ["pyotp==2.3.0"],
+  "requirements": ["pyotp==2.6.0"],
   "codeowners": [],
   "quality_scale": "internal",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pyotp"]
 }

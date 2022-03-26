@@ -1,18 +1,29 @@
 """Support to manage a shopping list."""
+from http import HTTPStatus
 import logging
 import uuid
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import http, websocket_api
+from homeassistant.components import frontend, http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import ATTR_NAME, HTTP_BAD_REQUEST, HTTP_NOT_FOUND
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_NAME
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json, save_json
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    SERVICE_ADD_ITEM,
+    SERVICE_CLEAR_COMPLETED_ITEMS,
+    SERVICE_COMPLETE_ALL,
+    SERVICE_COMPLETE_ITEM,
+    SERVICE_INCOMPLETE_ALL,
+    SERVICE_INCOMPLETE_ITEM,
+)
 
 ATTR_COMPLETE = "complete"
 
@@ -22,11 +33,6 @@ EVENT = "shopping_list_updated"
 ITEM_UPDATE_SCHEMA = vol.Schema({ATTR_COMPLETE: bool, ATTR_NAME: str})
 PERSISTENCE = ".shopping_list.json"
 
-SERVICE_ADD_ITEM = "add_item"
-SERVICE_COMPLETE_ITEM = "complete_item"
-SERVICE_INCOMPLETE_ITEM = "incomplete_item"
-SERVICE_COMPLETE_ALL = "complete_all"
-SERVICE_INCOMPLETE_ALL = "incomplete_all"
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): vol.Any(None, cv.string)})
 SERVICE_LIST_SCHEMA = vol.Schema({})
 
@@ -57,7 +63,7 @@ SCHEMA_WEBSOCKET_CLEAR_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the shopping list."""
 
     if DOMAIN not in config:
@@ -72,21 +78,19 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up shopping list from config flow."""
 
-    async def add_item_service(call):
+    async def add_item_service(call: ServiceCall) -> None:
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME)
-        if name is not None:
+        if (name := call.data.get(ATTR_NAME)) is not None:
             await data.async_add(name)
 
-    async def complete_item_service(call):
+    async def complete_item_service(call: ServiceCall) -> None:
         """Mark the item provided via `name` as completed."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME)
-        if name is None:
+        if (name := call.data.get(ATTR_NAME)) is None:
             return
         try:
             item = [item for item in data.items if item["name"] == name][0]
@@ -95,11 +99,10 @@ async def async_setup_entry(hass, config_entry):
         else:
             await data.async_update(item["id"], {"name": name, "complete": True})
 
-    async def incomplete_item_service(call):
+    async def incomplete_item_service(call: ServiceCall) -> None:
         """Mark the item provided via `name` as incomplete."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME)
-        if name is None:
+        if (name := call.data.get(ATTR_NAME)) is None:
             return
         try:
             item = [item for item in data.items if item["name"] == name][0]
@@ -108,13 +111,17 @@ async def async_setup_entry(hass, config_entry):
         else:
             await data.async_update(item["id"], {"name": name, "complete": False})
 
-    async def complete_all_service(call):
+    async def complete_all_service(call: ServiceCall) -> None:
         """Mark all items in the list as complete."""
         await data.async_update_list({"complete": True})
 
-    async def incomplete_all_service(call):
+    async def incomplete_all_service(call: ServiceCall) -> None:
         """Mark all items in the list as incomplete."""
         await data.async_update_list({"complete": False})
+
+    async def clear_completed_items_service(call: ServiceCall) -> None:
+        """Clear all completed items from the list."""
+        await data.async_clear_completed()
 
     data = hass.data[DOMAIN] = ShoppingData(hass)
     await data.async_load()
@@ -143,28 +150,42 @@ async def async_setup_entry(hass, config_entry):
         incomplete_all_service,
         schema=SERVICE_LIST_SCHEMA,
     )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAR_COMPLETED_ITEMS,
+        clear_completed_items_service,
+        schema=SERVICE_LIST_SCHEMA,
+    )
 
     hass.http.register_view(ShoppingListView)
     hass.http.register_view(CreateShoppingListItemView)
     hass.http.register_view(UpdateShoppingListItemView)
     hass.http.register_view(ClearCompletedItemsView)
 
-    hass.components.frontend.async_register_built_in_panel(
-        "shopping-list", "shopping_list", "mdi:cart"
+    frontend.async_register_built_in_panel(
+        hass, "shopping-list", "shopping_list", "mdi:cart"
     )
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_ITEMS, websocket_handle_items, SCHEMA_WEBSOCKET_ITEMS
+    websocket_api.async_register_command(
+        hass,
+        WS_TYPE_SHOPPING_LIST_ITEMS,
+        websocket_handle_items,
+        SCHEMA_WEBSOCKET_ITEMS,
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_ADD_ITEM, websocket_handle_add, SCHEMA_WEBSOCKET_ADD_ITEM
+    websocket_api.async_register_command(
+        hass,
+        WS_TYPE_SHOPPING_LIST_ADD_ITEM,
+        websocket_handle_add,
+        SCHEMA_WEBSOCKET_ADD_ITEM,
     )
-    hass.components.websocket_api.async_register_command(
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_SHOPPING_LIST_UPDATE_ITEM,
         websocket_handle_update,
         SCHEMA_WEBSOCKET_UPDATE_ITEM,
     )
-    hass.components.websocket_api.async_register_command(
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS,
         websocket_handle_clear,
         SCHEMA_WEBSOCKET_CLEAR_ITEMS,
@@ -280,9 +301,9 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
             request.app["hass"].bus.async_fire(EVENT)
             return self.json(item)
         except KeyError:
-            return self.json_message("Item not found", HTTP_NOT_FOUND)
+            return self.json_message("Item not found", HTTPStatus.NOT_FOUND)
         except vol.Invalid:
-            return self.json_message("Item not found", HTTP_BAD_REQUEST)
+            return self.json_message("Item not found", HTTPStatus.BAD_REQUEST)
 
 
 class CreateShoppingListItemView(http.HomeAssistantView):

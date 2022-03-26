@@ -14,7 +14,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Cl\u00e9 API"
+                    "api_key": "Cl\u00e9 d'API"
                 },
                 "description": "Veuillez entrer la cl\u00e9 API obtenue aupr\u00e8s d'ecobee.com.",
                 "title": "Cl\u00e9 API ecobee"

@@ -14,6 +14,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 
 from tests.common import MockEntity
 
@@ -32,27 +33,53 @@ def init(empty=False):
                 name="Simple cover",
                 is_on=True,
                 unique_id="unique_cover",
-                supports_tilt=False,
+                supported_features=SUPPORT_OPEN | SUPPORT_CLOSE,
             ),
             MockCover(
                 name="Set position cover",
                 is_on=True,
                 unique_id="unique_set_pos_cover",
                 current_cover_position=50,
-                supports_tilt=False,
+                supported_features=SUPPORT_OPEN
+                | SUPPORT_CLOSE
+                | SUPPORT_STOP
+                | SUPPORT_SET_POSITION,
+            ),
+            MockCover(
+                name="Simple tilt cover",
+                is_on=True,
+                unique_id="unique_tilt_cover",
+                supported_features=SUPPORT_OPEN
+                | SUPPORT_CLOSE
+                | SUPPORT_OPEN_TILT
+                | SUPPORT_CLOSE_TILT,
             ),
             MockCover(
                 name="Set tilt position cover",
                 is_on=True,
                 unique_id="unique_set_pos_tilt_cover",
                 current_cover_tilt_position=50,
-                supports_tilt=True,
+                supported_features=SUPPORT_OPEN
+                | SUPPORT_CLOSE
+                | SUPPORT_OPEN_TILT
+                | SUPPORT_CLOSE_TILT
+                | SUPPORT_STOP_TILT
+                | SUPPORT_SET_TILT_POSITION,
             ),
             MockCover(
-                name="Tilt cover",
+                name="All functions cover",
                 is_on=True,
-                unique_id="unique_tilt_cover",
-                supports_tilt=True,
+                unique_id="unique_all_functions_cover",
+                current_cover_position=50,
+                current_cover_tilt_position=50,
+                supported_features=SUPPORT_OPEN
+                | SUPPORT_CLOSE
+                | SUPPORT_STOP
+                | SUPPORT_SET_POSITION
+                | SUPPORT_OPEN_TILT
+                | SUPPORT_CLOSE_TILT
+                | SUPPORT_STOP_TILT
+                | SUPPORT_SET_TILT_POSITION,
             ),
         ]
     )
@@ -71,7 +98,53 @@ class MockCover(MockEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
+        if self.supported_features & SUPPORT_STOP:
+            return self.current_cover_position == 0
+
+        if "state" in self._values:
+            return self._values["state"] == STATE_CLOSED
         return False
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        if self.supported_features & SUPPORT_STOP:
+            if "state" in self._values:
+                return self._values["state"] == STATE_OPENING
+
+        return False
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        if self.supported_features & SUPPORT_STOP:
+            if "state" in self._values:
+                return self._values["state"] == STATE_CLOSING
+
+        return False
+
+    def open_cover(self, **kwargs) -> None:
+        """Open cover."""
+        if self.supported_features & SUPPORT_STOP:
+            self._values["state"] = STATE_OPENING
+        else:
+            self._values["state"] = STATE_OPEN
+
+    def close_cover(self, **kwargs) -> None:
+        """Close cover."""
+        if self.supported_features & SUPPORT_STOP:
+            self._values["state"] = STATE_CLOSING
+        else:
+            self._values["state"] = STATE_CLOSED
+
+    def stop_cover(self, **kwargs) -> None:
+        """Stop cover."""
+        self._values["state"] = STATE_CLOSED if self.is_closed else STATE_OPEN
+
+    @property
+    def state(self):
+        """Fake State."""
+        return CoverEntity.state.fget(self)
 
     @property
     def current_cover_position(self):
@@ -82,26 +155,3 @@ class MockCover(MockEntity, CoverEntity):
     def current_cover_tilt_position(self):
         """Return current position of cover tilt."""
         return self._handle("current_cover_tilt_position")
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
-
-        if self._handle("supports_tilt"):
-            supported_features |= (
-                SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
-            )
-
-        if self.current_cover_position is not None:
-            supported_features |= SUPPORT_SET_POSITION
-
-        if self.current_cover_tilt_position is not None:
-            supported_features |= (
-                SUPPORT_OPEN_TILT
-                | SUPPORT_CLOSE_TILT
-                | SUPPORT_STOP_TILT
-                | SUPPORT_SET_TILT_POSITION
-            )
-
-        return supported_features

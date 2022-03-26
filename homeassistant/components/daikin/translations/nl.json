@@ -5,6 +5,7 @@
             "cannot_connect": "Kon niet verbinden"
         },
         "error": {
+            "api_password": "Ongeldige authenticatie, gebruik API-sleutel of wachtwoord.",
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"

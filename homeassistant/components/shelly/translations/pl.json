@@ -33,14 +33,20 @@
             "button": "przycisk",
             "button1": "pierwszy",
             "button2": "drugi",
-            "button3": "trzeci"
+            "button3": "trzeci",
+            "button4": "Czwarty przycisk"
         },
         "trigger_type": {
+            "btn_down": "przycisk {subtype} zostanie wci\u015bni\u0119ty",
+            "btn_up": "przycisk {subtype} zostanie puszczony",
             "double": "przycisk \"{subtype}\" zostanie dwukrotnie naci\u015bni\u0119ty",
-            "long": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty",
+            "double_push": "przycisk {subtype} zostanie dwukrotnie naci\u015bni\u0119ty",
+            "long": "przycisk {subtype} zostanie d\u0142ugo naci\u015bni\u0119ty",
+            "long_push": "przycisk {subtype} zostanie d\u0142ugo naci\u015bni\u0119ty",
             "long_single": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty, a nast\u0119pnie pojedynczo naci\u015bni\u0119ty",
             "single": "przycisk \"{subtype}\" zostanie pojedynczo naci\u015bni\u0119ty",
             "single_long": "przycisk \"{subtype}\" pojedynczo naci\u015bni\u0119ty, a nast\u0119pnie d\u0142ugo naci\u015bni\u0119ty",
+            "single_push": "przycisk {subtype} zostanie pojedynczo naci\u015bni\u0119ty",
             "triple": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
         }
     }

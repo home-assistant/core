@@ -2,15 +2,22 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpnpDataUpdateCoordinator, UpnpEntity
-from .const import DOMAIN, LOGGER, WANSTATUS
+from . import UpnpBinarySensorEntityDescription, UpnpDataUpdateCoordinator, UpnpEntity
+from .const import DOMAIN, LOGGER, WAN_STATUS
+
+BINARYSENSOR_ENTITY_DESCRIPTIONS: tuple[UpnpBinarySensorEntityDescription, ...] = (
+    UpnpBinarySensorEntityDescription(
+        key=WAN_STATUS,
+        name="wan status",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -21,34 +28,33 @@ async def async_setup_entry(
     """Set up the UPnP/IGD sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    LOGGER.debug("Adding binary sensor")
-
-    sensors = [
-        UpnpStatusBinarySensor(coordinator),
+    entities = [
+        UpnpStatusBinarySensor(
+            coordinator=coordinator,
+            entity_description=entity_description,
+        )
+        for entity_description in BINARYSENSOR_ENTITY_DESCRIPTIONS
+        if coordinator.data.get(entity_description.key) is not None
     ]
-    async_add_entities(sensors)
+    LOGGER.debug("Adding binary_sensor entities: %s", entities)
+    async_add_entities(entities)
 
 
 class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     """Class for UPnP/IGD binary sensors."""
 
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    entity_description: UpnpBinarySensorEntityDescription
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
+        entity_description: UpnpBinarySensorEntityDescription,
     ) -> None:
         """Initialize the base sensor."""
-        super().__init__(coordinator)
-        self._attr_name = f"{coordinator.device.name} wan status"
-        self._attr_unique_id = f"{coordinator.device.udn}_wanstatus"
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self.coordinator.data.get(WANSTATUS)
+        super().__init__(coordinator=coordinator, entity_description=entity_description)
 
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data[WANSTATUS] == "Connected"
+        return self.coordinator.data[self.entity_description.key] == "Connected"

@@ -44,10 +44,11 @@ async def test_import(hass):
 )
 async def test_user_setup(hass, mock_bridge):
     """Test we can finish a config flow."""
-    with patch("homeassistant.components.switcher_kis.utils.asyncio.sleep"):
+    with patch("homeassistant.components.switcher_kis.utils.DISCOVERY_TIME_SEC", 0):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+    await hass.async_block_till_done()
 
     assert mock_bridge.is_running is False
     assert len(hass.data[DOMAIN][DATA_DISCOVERY].result()) == 2
@@ -68,10 +69,11 @@ async def test_user_setup(hass, mock_bridge):
 
 async def test_user_setup_abort_no_devices_found(hass, mock_bridge):
     """Test we abort a config flow if no devices found."""
-    with patch("homeassistant.components.switcher_kis.utils.asyncio.sleep"):
+    with patch("homeassistant.components.switcher_kis.utils.DISCOVERY_TIME_SEC", 0):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+    await hass.async_block_till_done()
 
     assert mock_bridge.is_running is False
     assert len(hass.data[DOMAIN][DATA_DISCOVERY].result()) == 0

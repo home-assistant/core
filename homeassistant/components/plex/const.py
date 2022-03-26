@@ -1,5 +1,7 @@
 """Constants for the Plex component."""
-from homeassistant.const import __version__
+from datetime import timedelta
+
+from homeassistant.const import Platform, __version__
 
 DOMAIN = "plex"
 NAME_FORMAT = "Plex ({})"
@@ -12,11 +14,12 @@ DEFAULT_VERIFY_SSL = True
 
 PLEXTV_THROTTLE = 60
 
+CLIENT_SCAN_INTERVAL = timedelta(minutes=10)
 DEBOUNCE_TIMEOUT = 1
 DISPATCHERS = "dispatchers"
 GDM_DEBOUNCER = "gdm_debouncer"
 GDM_SCANNER = "gdm_scanner"
-PLATFORMS = frozenset(["media_player", "sensor"])
+PLATFORMS = frozenset([Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.SENSOR])
 PLATFORMS_COMPLETED = "platforms_completed"
 PLAYER_SOURCE = "player_source"
 SERVERS = "servers"

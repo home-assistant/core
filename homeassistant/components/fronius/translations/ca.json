@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "invalid_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Vols afegir {device} a Home Assistant?"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Configura l'adre\u00e7a IP o el nom d'amfitri\u00f3 local del teu dispositiu Fronius.",
+                "title": "Fronius SolarNet"
+            }
+        }
+    }
+}

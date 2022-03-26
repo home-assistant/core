@@ -1,5 +1,4 @@
 """Test the sia config flow."""
-import logging
 from unittest.mock import patch
 
 import pytest
@@ -20,9 +19,6 @@ from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
-
 
 BASIS_CONFIG_ENTRY_ID = 1
 BASIC_CONFIG = {
@@ -207,6 +203,13 @@ async def test_abort_form(hass):
     )
     assert get_abort["type"] == "abort"
     assert get_abort["reason"] == "already_configured"
+
+
+@pytest.fixture(autouse=True)
+def mock_sia():
+    """Mock SIAClient."""
+    with patch("homeassistant.components.sia.hub.SIAClient", autospec=True):
+        yield
 
 
 @pytest.mark.parametrize(

@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "api_ratelimit": "API D\u00edjkorl\u00e1t t\u00fall\u00e9pve",
+            "api_ratelimit": "API maxim\u00e1lis lek\u00e9r\u00e9ssz\u00e1m t\u00fall\u00e9pve",
             "unknown": "V\u00e1ratlan hiba"
         },
         "error": {
-            "api_ratelimit": "API D\u00edjkorl\u00e1t t\u00fall\u00e9pve",
+            "api_ratelimit": "API maxim\u00e1lis lek\u00e9r\u00e9ssz\u00e1m t\u00fall\u00e9pve",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unknown": "V\u00e1ratlan hiba"
         },

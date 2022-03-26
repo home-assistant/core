@@ -12,26 +12,48 @@
                 "data": {
                     "include_domains": "Domeinen om op te nemen"
                 },
-                "description": "Kies de domeinen die moeten worden opgenomen. Alle ondersteunde entiteiten in het domein zullen worden opgenomen. Voor elke tv-mediaspeler, camera, activiteiten gebaseerde afstandsbediening en slot wordt een afzonderlijke HomeKit-instantie in accessoiremodus aangemaakt.",
+                "description": "Kies de domeinen die moeten worden opgenomen. Alle ondersteunde entiteiten in het domein zullen worden opgenomen, behalve de gecategoriseerde entiteiten. Voor elke tv-mediaspeler, camera, activiteiten gebaseerde afstandsbediening en slot wordt een afzonderlijke HomeKit-instantie in accessoiremodus aangemaakt.",
                 "title": "Selecteer domeinen die u wilt opnemen"
             }
         }
     },
     "options": {
         "step": {
+            "accessory": {
+                "data": {
+                    "entities": "Entiteit"
+                },
+                "title": "Selecteer de entiteit voor het accessoire"
+            },
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (deactiveer als je de homekit.start service handmatig aanroept)"
+                    "auto_start": "Autostart (deactiveer als je de homekit.start service handmatig aanroept)",
+                    "devices": "Apparaten (triggers)"
                 },
-                "description": "Deze instellingen hoeven alleen te worden aangepast als HomeKit niet functioneert.",
+                "description": "Voor elk geselecteerd apparaat worden programmeerbare schakelaars gemaakt. Wanneer een apparaattrigger wordt geactiveerd, kan HomeKit worden geconfigureerd om een automatisering of sc\u00e8ne uit te voeren.",
                 "title": "Geavanceerde configuratie"
             },
             "cameras": {
                 "data": {
+                    "camera_audio": "Camera's die audio ondersteunen",
                     "camera_copy": "Camera's die native H.264-streams ondersteunen"
                 },
                 "description": "Controleer alle camera's die native H.264-streams ondersteunen. Als de camera geen H.264-stream uitvoert, transcodeert het systeem de video naar H.264 voor HomeKit. Transcodering vereist een performante CPU en het is onwaarschijnlijk dat dit werkt op computers met \u00e9\u00e9n bord.",
-                "title": "Selecteer de videocodec van de camera."
+                "title": "Cameraconfiguratie"
+            },
+            "exclude": {
+                "data": {
+                    "entities": "Entiteiten"
+                },
+                "description": "Alle \"{domains}\"-entiteiten zullen worden opgenomen, behalve de uitgesloten entiteiten en gecategoriseerde entiteiten.",
+                "title": "Selecteer de entiteiten die moeten worden uitgesloten"
+            },
+            "include": {
+                "data": {
+                    "entities": "Entiteiten"
+                },
+                "description": "Alle \" {domains} \"-entiteiten zullen worden opgenomen, tenzij specifieke entiteiten zijn geselecteerd.",
+                "title": "Selecteer de entiteiten die moeten worden opgenomen"
             },
             "include_exclude": {
                 "data": {
@@ -43,11 +65,13 @@
             },
             "init": {
                 "data": {
+                    "domains": "Domeinen om op te nemen",
                     "include_domains": "Domeinen om op te nemen",
-                    "mode": "modus"
+                    "include_exclude_mode": "Inclusiemodus",
+                    "mode": "HomeKit-modus"
                 },
                 "description": "HomeKit kan worden geconfigureerd om een brug of een enkel accessoire te tonen. In de accessoiremodus kan slechts \u00e9\u00e9n entiteit worden gebruikt. De accessoiremodus is vereist om mediaspelers met de tv-apparaatklasse correct te laten werken. Entiteiten in de \"Op te nemen domeinen\" zullen worden blootgesteld aan HomeKit. U kunt op het volgende scherm selecteren welke entiteiten u wilt opnemen of uitsluiten van deze lijst.",
-                "title": "Selecteer domeinen om zichtbaar te maken."
+                "title": "Selecteer modus en domeinen."
             },
             "yaml": {
                 "description": "Deze invoer wordt beheerd via YAML",

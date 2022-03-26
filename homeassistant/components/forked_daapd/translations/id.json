@@ -12,7 +12,7 @@
             "wrong_password": "Kata sandi salah.",
             "wrong_server_type": "Integrasi forked-daapd membutuhkan server forked-daapd dengan versi >= 27.0."
         },
-        "flow_title": "forked-daapd server: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

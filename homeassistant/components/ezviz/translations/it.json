@@ -34,7 +34,7 @@
                     "url": "URL",
                     "username": "Nome utente"
                 },
-                "description": "Specificare manualmente l'URL dell'area geografica",
+                "description": "Specifica manualmente l'URL dell'area geografica",
                 "title": "Connettiti all'URL personalizzato di Ezviz"
             }
         }

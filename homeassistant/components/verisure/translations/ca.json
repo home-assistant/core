@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El compte ja ha estat configurat",
+            "already_configured": "El compte ja est\u00e0 configurat",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
@@ -33,7 +33,7 @@
     },
     "options": {
         "error": {
-            "code_format_mismatch": "El codi PIN predeterminat no coincideix amb el nombre de d\u00edgits correcte"
+            "code_format_mismatch": "El codi PIN predeterminat no cont\u00e9 el nombre de d\u00edgits adequat"
         },
         "step": {
             "init": {

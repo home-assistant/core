@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "mqtt_required": "\u672a\u914d\u7f6e MQTT \u96c6\u6210"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "persistence_file": "\u6301\u4e45\u6027\u6587\u4ef6\uff08\u7559\u7a7a\u5c06\u81ea\u52a8\u751f\u6210\uff09",
+                    "topic_in_prefix": "\u8f93\u5165\u4e3b\u9898\u524d\u7f00 (topic_in_prefix)",
+                    "topic_out_prefix": "\u8f93\u51fa\u4e3b\u9898\u524d\u7f00 (topic_out_prefix)",
+                    "version": "MySensor \u7248\u672c"
+                },
+                "description": "MQTT \u7f51\u5173\u8bbe\u7f6e"
+            }
+        }
+    }
+}

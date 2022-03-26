@@ -5,6 +5,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import time
+from typing import Optional, cast
 
 from aiohttp import ClientError, ClientSession
 import async_timeout
@@ -32,6 +33,7 @@ from homeassistant.helpers import (
     network,
     storage,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
 from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
@@ -65,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Almond component."""
     hass.data[DOMAIN] = {}
 
@@ -166,7 +168,7 @@ async def _configure_almond_for_ha(
 
     _LOGGER.debug("Configuring Almond to connect to Home Assistant at %s", hass_url)
     store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    data = await store.async_load()
+    data = cast(Optional[dict], await store.async_load())
 
     if data is None:
         data = {}
@@ -176,7 +178,9 @@ async def _configure_almond_for_ha(
         user = await hass.auth.async_get_user(data["almond_user"])
 
     if user is None:
-        user = await hass.auth.async_create_system_user("Almond", [GROUP_ID_ADMIN])
+        user = await hass.auth.async_create_system_user(
+            "Almond", group_ids=[GROUP_ID_ADMIN]
+        )
         data["almond_user"] = user.id
         await store.async_save(data)
 
@@ -191,7 +195,7 @@ async def _configure_almond_for_ha(
 
     # Store token in Almond
     try:
-        with async_timeout.timeout(30):
+        async with async_timeout.timeout(30):
             await api.async_create_device(
                 {
                     "kind": "io.home-assistant",
@@ -204,7 +208,7 @@ async def _configure_almond_for_ha(
             )
     except (asyncio.TimeoutError, ClientError) as err:
         if isinstance(err, asyncio.TimeoutError):
-            msg = "Request timeout"
+            msg: str | ClientError = "Request timeout"
         else:
             msg = err
         _LOGGER.warning("Unable to configure Almond: %s", msg)
@@ -217,7 +221,7 @@ async def _configure_almond_for_ha(
             await hass.auth.async_remove_refresh_token(token)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Almond."""
     conversation.async_set_agent(hass, None)
     return True

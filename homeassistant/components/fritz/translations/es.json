@@ -8,6 +8,7 @@
         "error": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "cannot_connect": "No se pudo conectar",
             "connection_error": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
@@ -18,7 +19,7 @@
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
                 },
-                "description": "Descubierto FRITZ!Box: {nombre}\n\nConfigurar FRITZ!Box Tools para controlar tu {nombre}",
+                "description": "Descubierto FRITZ!Box: {name}\n\nConfigurar FRITZ!Box Tools para controlar tu {name}",
                 "title": "Configurar FRITZ!Box Tools"
             },
             "reauth_confirm": {
@@ -40,6 +41,12 @@
                 "title": "Configurar FRITZ!Box Tools - obligatorio"
             },
             "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                },
                 "description": "Configure las herramientas de FRITZ! Box para controlar su FRITZ! Box.\n M\u00ednimo necesario: nombre de usuario, contrase\u00f1a.",
                 "title": "Configurar las herramientas de FRITZ! Box"
             }

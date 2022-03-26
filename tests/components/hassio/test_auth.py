@@ -1,5 +1,6 @@
 """The tests for the hassio component."""
 
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 from homeassistant.auth.providers.homeassistant import InvalidAuth
@@ -17,7 +18,7 @@ async def test_auth_success(hass, hassio_client_supervisor):
         )
 
         # Check we got right response
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         mock_login.assert_called_with("test", "123456")
 
 
@@ -33,7 +34,7 @@ async def test_auth_fails_no_supervisor(hass, hassio_client):
         )
 
         # Check we got right response
-        assert resp.status == 401
+        assert resp.status == HTTPStatus.UNAUTHORIZED
         assert not mock_login.called
 
 
@@ -49,7 +50,7 @@ async def test_auth_fails_no_auth(hass, hassio_noauth_client):
         )
 
         # Check we got right response
-        assert resp.status == 401
+        assert resp.status == HTTPStatus.UNAUTHORIZED
         assert not mock_login.called
 
 
@@ -66,7 +67,7 @@ async def test_login_error(hass, hassio_client_supervisor):
         )
 
         # Check we got right response
-        assert resp.status == 404
+        assert resp.status == HTTPStatus.NOT_FOUND
         mock_login.assert_called_with("test", "123456")
 
 
@@ -80,7 +81,7 @@ async def test_login_no_data(hass, hassio_client_supervisor):
         resp = await hassio_client_supervisor.post("/api/hassio_auth")
 
         # Check we got right response
-        assert resp.status == 400
+        assert resp.status == HTTPStatus.BAD_REQUEST
         assert not mock_login.called
 
 
@@ -96,7 +97,7 @@ async def test_login_no_username(hass, hassio_client_supervisor):
         )
 
         # Check we got right response
-        assert resp.status == 400
+        assert resp.status == HTTPStatus.BAD_REQUEST
         assert not mock_login.called
 
 
@@ -117,7 +118,7 @@ async def test_login_success_extra(hass, hassio_client_supervisor):
         )
 
         # Check we got right response
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         mock_login.assert_called_with("test", "123456")
 
 
@@ -133,7 +134,7 @@ async def test_password_success(hass, hassio_client_supervisor):
         )
 
         # Check we got right response
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         mock_change.assert_called_with("test", "123456")
 
 
@@ -145,7 +146,7 @@ async def test_password_fails_no_supervisor(hass, hassio_client):
     )
 
     # Check we got right response
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_password_fails_no_auth(hass, hassio_noauth_client):
@@ -156,7 +157,7 @@ async def test_password_fails_no_auth(hass, hassio_noauth_client):
     )
 
     # Check we got right response
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_password_no_user(hass, hassio_client_supervisor):
@@ -167,4 +168,4 @@ async def test_password_no_user(hass, hassio_client_supervisor):
     )
 
     # Check we got right response
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND

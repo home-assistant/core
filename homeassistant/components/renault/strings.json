@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "kamereon_no_account": "Unable to find Kamereon account."
+      "kamereon_no_account": "Unable to find Kamereon account",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]"
@@ -13,6 +14,13 @@
           "kamereon_account_id": "Kamereon account id"
         },
         "title": "Select Kamereon account id"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Please update your password for {username}",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {

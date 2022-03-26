@@ -34,7 +34,7 @@
                     "blid": "",
                     "host": "Vert"
                 },
-                "description": "Ingen Roomba eller Braava har blitt oppdaget i nettverket ditt. BLID er delen av enhetens vertsnavn etter `iRobot-` eller `Roomba-`. F\u00f8lg trinnene som er beskrevet i dokumentasjonen p\u00e5: {auth_help_url}",
+                "description": "Ingen Roomba eller Braava er oppdaget p\u00e5 nettverket ditt.",
                 "title": "Koble til enheten manuelt"
             },
             "user": {

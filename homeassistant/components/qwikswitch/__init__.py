@@ -1,4 +1,6 @@
 """Support for Qwikswitch devices."""
+from __future__ import annotations
+
 import logging
 
 from pyqwikswitch.async_ import QSUsb
@@ -13,12 +15,15 @@ from homeassistant.const import (
     CONF_URL,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,9 +97,7 @@ class QSEntity(Entity):
     async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                self.qsid, self.update_packet
-            )
+            async_dispatcher_connect(self.hass, self.qsid, self.update_packet)
         )
 
 
@@ -130,7 +133,7 @@ class QSToggleEntity(QSEntity):
         self.hass.data[DOMAIN].devices.set_value(self.qsid, 0)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Qwiskswitch component setup."""
 
     # Add cmd's to in /&listen packets will fire events
@@ -163,7 +166,12 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = qsusb
 
-    comps = {"switch": [], "light": [], "sensor": [], "binary_sensor": []}
+    comps: dict[Platform, list] = {
+        Platform.SWITCH: [],
+        Platform.LIGHT: [],
+        Platform.SENSOR: [],
+        Platform.BINARY_SENSOR: [],
+    }
 
     sensor_ids = []
     for sens in sensors:
@@ -171,9 +179,9 @@ async def async_setup(hass, config):
             _, _type = SENSORS[sens["type"]]
             sensor_ids.append(sens["id"])
             if _type is bool:
-                comps["binary_sensor"].append(sens)
+                comps[Platform.BINARY_SENSOR].append(sens)
                 continue
-            comps["sensor"].append(sens)
+            comps[Platform.SENSOR].append(sens)
             for _key in ("invert", "class"):
                 if _key in sens:
                     _LOGGER.warning(
@@ -191,9 +199,9 @@ async def async_setup(hass, config):
             if dev.qstype != QSType.relay:
                 _LOGGER.warning("You specified a switch that is not a relay %s", qsid)
                 continue
-            comps["switch"].append(qsid)
+            comps[Platform.SWITCH].append(qsid)
         elif dev.qstype in (QSType.relay, QSType.dimmer):
-            comps["light"].append(qsid)
+            comps[Platform.LIGHT].append(qsid)
         else:
             _LOGGER.warning("Ignored unknown QSUSB device: %s", dev)
             continue
@@ -221,7 +229,7 @@ async def async_setup(hass, config):
     @callback
     def async_start(_):
         """Start listening."""
-        hass.async_add_job(qsusb.listen, callback_qs_listen)
+        qsusb.listen(callback_qs_listen)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start)
 

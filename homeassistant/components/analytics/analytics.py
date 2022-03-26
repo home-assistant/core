@@ -1,5 +1,6 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
+from typing import cast
 import uuid
 
 import aiohttp
@@ -30,6 +31,7 @@ from .const import (
     ATTR_AUTOMATION_COUNT,
     ATTR_BASE,
     ATTR_BOARD,
+    ATTR_CERTIFICATE,
     ATTR_CONFIGURED,
     ATTR_CUSTOM_INTEGRATIONS,
     ATTR_DIAGNOSTICS,
@@ -64,7 +66,11 @@ class Analytics:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
         self.session = async_get_clientsession(hass)
-        self._data = {ATTR_PREFERENCES: {}, ATTR_ONBOARDED: False, ATTR_UUID: None}
+        self._data: dict = {
+            ATTR_PREFERENCES: {},
+            ATTR_ONBOARDED: False,
+            ATTR_UUID: None,
+        }
         self._store: Store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @property
@@ -103,7 +109,7 @@ class Analytics:
 
     async def load(self) -> None:
         """Load preferences."""
-        stored = await self._store.async_load()
+        stored = cast(dict, await self._store.async_load())
         if stored:
             self._data = stored
 
@@ -223,6 +229,7 @@ class Analytics:
                     )
 
         if self.preferences.get(ATTR_USAGE, False):
+            payload[ATTR_CERTIFICATE] = self.hass.http.ssl_certificate is not None
             payload[ATTR_INTEGRATIONS] = integrations
             payload[ATTR_CUSTOM_INTEGRATIONS] = custom_integrations
             if supervisor_info is not None:
@@ -250,7 +257,7 @@ class Analytics:
             )
 
         try:
-            with async_timeout.timeout(30):
+            async with async_timeout.timeout(30):
                 response = await self.session.post(self.endpoint, json=payload)
                 if response.status == 200:
                     LOGGER.info(

@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "no_locations": "Brak dost\u0119pnych lokalizacji dla tego u\u017cytkownika, sprawd\u017a ustawienia TotalConnect.",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {

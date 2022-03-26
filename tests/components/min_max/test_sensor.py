@@ -1,5 +1,4 @@
 """The test for the min/max sensor platform."""
-from os import path
 import statistics
 from unittest.mock import patch
 
@@ -15,6 +14,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.setup import async_setup_component
+
+from tests.common import get_fixture_path
 
 VALUES = [17, 20, 15.3]
 COUNT = len(VALUES)
@@ -365,11 +366,8 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "min_max/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "min_max")
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -383,7 +381,3 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.second_test")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

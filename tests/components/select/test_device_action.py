@@ -3,6 +3,7 @@ import pytest
 import voluptuous_serialize
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.select import DOMAIN
 from homeassistant.components.select.device_action import async_get_action_capabilities
 from homeassistant.core import HomeAssistant
@@ -56,7 +57,9 @@ async def test_get_actions(
             "entity_id": "select.test_5678",
         }
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 

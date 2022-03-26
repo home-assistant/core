@@ -13,7 +13,8 @@
             "cloud_login_error": "Kunne ikke logge inn p\u00e5 Xiaomi Miio Cloud, sjekk legitimasjonen.",
             "cloud_no_devices": "Ingen enheter funnet i denne Xiaomi Miio-skykontoen.",
             "no_device_selected": "Ingen enhet valgt, vennligst velg en enhet.",
-            "unknown_device": "Enhetsmodellen er ikke kjent, kan ikke konfigurere enheten ved hjelp av konfigurasjonsflyt."
+            "unknown_device": "Enhetsmodellen er ikke kjent, kan ikke konfigurere enheten ved hjelp av konfigurasjonsflyt.",
+            "wrong_token": "Kontrollsumfeil, feil token"
         },
         "flow_title": "{name}",
         "step": {

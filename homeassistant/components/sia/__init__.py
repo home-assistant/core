@@ -11,7 +11,7 @@ from .hub import SIAHub
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up sia from a config entry."""
     hub: SIAHub = SIAHub(hass, entry)
-    await hub.async_setup_hub()
+    hub.async_setup_hub()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = hub

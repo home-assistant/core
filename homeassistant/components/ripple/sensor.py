@@ -1,4 +1,6 @@
 """Support for Ripple sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from pyripple import get_balance
@@ -6,7 +8,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTRIBUTION = "Data provided by ripple.com"
 
@@ -22,7 +27,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Ripple.com sensors."""
     address = config.get(CONF_ADDRESS)
     name = config.get(CONF_NAME)
@@ -62,7 +72,5 @@ class RippleSensor(SensorEntity):
 
     def update(self):
         """Get the latest state of the sensor."""
-
-        balance = get_balance(self.address)
-        if balance is not None:
+        if (balance := get_balance(self.address)) is not None:
             self._state = balance

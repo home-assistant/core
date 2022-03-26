@@ -1,15 +1,16 @@
 """Helper class to implement include/exclude of entities and domains."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import fnmatch
 import re
-from typing import Callable
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import split_entity_id
-from homeassistant.helpers import config_validation as cv
+
+from . import config_validation as cv
 
 CONF_INCLUDE_DOMAINS = "include_domains"
 CONF_INCLUDE_ENTITY_GLOBS = "include_entity_globs"
@@ -21,19 +22,54 @@ CONF_EXCLUDE_ENTITIES = "exclude_entities"
 CONF_ENTITY_GLOBS = "entity_globs"
 
 
-def convert_filter(config: dict[str, list[str]]) -> Callable[[str], bool]:
+class EntityFilter:
+    """A entity filter."""
+
+    def __init__(self, config: dict[str, list[str]]) -> None:
+        """Init the filter."""
+        self.empty_filter: bool = sum(len(val) for val in config.values()) == 0
+        self.config = config
+        self._include_e = set(config[CONF_INCLUDE_ENTITIES])
+        self._exclude_e = set(config[CONF_EXCLUDE_ENTITIES])
+        self._include_d = set(config[CONF_INCLUDE_DOMAINS])
+        self._exclude_d = set(config[CONF_EXCLUDE_DOMAINS])
+        self._include_eg = _convert_globs_to_pattern_list(
+            config[CONF_INCLUDE_ENTITY_GLOBS]
+        )
+        self._exclude_eg = _convert_globs_to_pattern_list(
+            config[CONF_EXCLUDE_ENTITY_GLOBS]
+        )
+        self._filter: Callable[[str], bool] | None = None
+
+    def explicitly_included(self, entity_id: str) -> bool:
+        """Check if an entity is explicitly included."""
+        return entity_id in self._include_e or _test_against_patterns(
+            self._include_eg, entity_id
+        )
+
+    def explicitly_excluded(self, entity_id: str) -> bool:
+        """Check if an entity is explicitly excluded."""
+        return entity_id in self._exclude_e or _test_against_patterns(
+            self._exclude_eg, entity_id
+        )
+
+    def __call__(self, entity_id: str) -> bool:
+        """Run the filter."""
+        if self._filter is None:
+            self._filter = _generate_filter_from_sets_and_pattern_lists(
+                self._include_d,
+                self._include_e,
+                self._exclude_d,
+                self._exclude_e,
+                self._include_eg,
+                self._exclude_eg,
+            )
+        return self._filter(entity_id)
+
+
+def convert_filter(config: dict[str, list[str]]) -> EntityFilter:
     """Convert the filter schema into a filter."""
-    filt = generate_filter(
-        config[CONF_INCLUDE_DOMAINS],
-        config[CONF_INCLUDE_ENTITIES],
-        config[CONF_EXCLUDE_DOMAINS],
-        config[CONF_EXCLUDE_ENTITIES],
-        config[CONF_INCLUDE_ENTITY_GLOBS],
-        config[CONF_EXCLUDE_ENTITY_GLOBS],
-    )
-    setattr(filt, "config", config)
-    setattr(filt, "empty_filter", sum(len(val) for val in config.values()) == 0)
-    return filt
+    return EntityFilter(config)
 
 
 BASE_FILTER_SCHEMA = vol.Schema(
@@ -60,11 +96,11 @@ FILTER_SCHEMA = vol.All(BASE_FILTER_SCHEMA, convert_filter)
 
 def convert_include_exclude_filter(
     config: dict[str, dict[str, list[str]]]
-) -> Callable[[str], bool]:
+) -> EntityFilter:
     """Convert the include exclude filter schema into a filter."""
     include = config[CONF_INCLUDE]
     exclude = config[CONF_EXCLUDE]
-    filt = convert_filter(
+    return convert_filter(
         {
             CONF_INCLUDE_DOMAINS: include[CONF_DOMAINS],
             CONF_INCLUDE_ENTITY_GLOBS: include[CONF_ENTITY_GLOBS],
@@ -74,8 +110,6 @@ def convert_include_exclude_filter(
             CONF_EXCLUDE_ENTITIES: exclude[CONF_ENTITIES],
         }
     )
-    setattr(filt, "config", config)
-    return filt
 
 
 INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER = vol.Schema(
@@ -118,26 +152,39 @@ def _test_against_patterns(patterns: list[re.Pattern[str]], entity_id: str) -> b
     return False
 
 
-# It's safe since we don't modify it. And None causes typing warnings
-# pylint: disable=dangerous-default-value
+def _convert_globs_to_pattern_list(globs: list[str] | None) -> list[re.Pattern[str]]:
+    """Convert a list of globs to a re pattern list."""
+    return list(map(_glob_to_re, set(globs or [])))
+
+
 def generate_filter(
     include_domains: list[str],
     include_entities: list[str],
     exclude_domains: list[str],
     exclude_entities: list[str],
-    include_entity_globs: list[str] = [],
-    exclude_entity_globs: list[str] = [],
+    include_entity_globs: list[str] | None = None,
+    exclude_entity_globs: list[str] | None = None,
 ) -> Callable[[str], bool]:
     """Return a function that will filter entities based on the args."""
-    include_d = set(include_domains)
-    include_e = set(include_entities)
-    exclude_d = set(exclude_domains)
-    exclude_e = set(exclude_entities)
-    include_eg_set = set(include_entity_globs)
-    exclude_eg_set = set(exclude_entity_globs)
-    include_eg = list(map(_glob_to_re, include_eg_set))
-    exclude_eg = list(map(_glob_to_re, exclude_eg_set))
+    return _generate_filter_from_sets_and_pattern_lists(
+        set(include_domains),
+        set(include_entities),
+        set(exclude_domains),
+        set(exclude_entities),
+        _convert_globs_to_pattern_list(include_entity_globs),
+        _convert_globs_to_pattern_list(exclude_entity_globs),
+    )
 
+
+def _generate_filter_from_sets_and_pattern_lists(
+    include_d: set[str],
+    include_e: set[str],
+    exclude_d: set[str],
+    exclude_e: set[str],
+    include_eg: list[re.Pattern[str]],
+    exclude_eg: list[re.Pattern[str]],
+) -> Callable[[str], bool]:
+    """Generate a filter from pre-comuted sets and pattern lists."""
     have_exclude = bool(exclude_e or exclude_d or exclude_eg)
     have_include = bool(include_e or include_d or include_eg)
 

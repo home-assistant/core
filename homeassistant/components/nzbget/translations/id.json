@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Gagal terhubung"
         },
-        "flow_title": "NZBGet: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

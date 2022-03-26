@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
+        "flow_title": "{model} {id} ({host})",
         "step": {
             "pick_device": {
                 "data": {

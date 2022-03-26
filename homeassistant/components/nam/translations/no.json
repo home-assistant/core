@@ -2,16 +2,33 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "device_unsupported": "Enheten st\u00f8ttes ikke."
+            "device_unsupported": "Enheten st\u00f8ttes ikke.",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reauth_unsuccessful": "Re-autentisering mislyktes. Fjern integrasjonen og konfigurer den p\u00e5 nytt."
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
-        "flow_title": "{name}",
+        "flow_title": "{host}",
         "step": {
             "confirm_discovery": {
                 "description": "Vil du konfigurere Nettigo Air Monitor p\u00e5 {host} ?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Vennligst skriv inn brukernavn og passord."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Vennligst skriv inn riktig brukernavn og passord for verten: {host}"
             },
             "user": {
                 "data": {

@@ -1,9 +1,9 @@
 """Support for Axis devices."""
-
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_MAC, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_registry import async_migrate_entries
 
@@ -13,7 +13,7 @@ from .device import AxisNetworkDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Axis component."""
     hass.data.setdefault(AXIS_DOMAIN, {})
 
@@ -33,13 +33,13 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Axis device config entry."""
     device = hass.data[AXIS_DOMAIN].pop(config_entry.unique_id)
     return await device.async_reset()
 
 
-async def async_migrate_entry(hass, config_entry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -53,8 +53,7 @@ async def async_migrate_entry(hass, config_entry):
         config_entry.version = 2
 
     # Normalise MAC address of device which also affects entity unique IDs
-    if config_entry.version == 2:
-        old_unique_id = config_entry.unique_id
+    if config_entry.version == 2 and (old_unique_id := config_entry.unique_id):
         new_unique_id = format_mac(old_unique_id)
 
         @callback

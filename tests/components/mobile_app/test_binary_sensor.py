@@ -1,5 +1,7 @@
 """Entity tests for mobile_app."""
-from homeassistant.const import STATE_OFF
+from http import HTTPStatus
+
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers import device_registry as dr
 
 
@@ -24,7 +26,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
         },
     )
 
-    assert reg_resp.status == 201
+    assert reg_resp.status == HTTPStatus.CREATED
 
     json = await reg_resp.json()
     assert json == {"success": True}
@@ -61,7 +63,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
         },
     )
 
-    assert update_resp.status == 200
+    assert update_resp.status == HTTPStatus.OK
 
     json = await update_resp.json()
     assert json["invalid_state"]["success"] is False
@@ -101,7 +103,7 @@ async def test_sensor_must_register(hass, create_registrations, webhook_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     json = await resp.json()
     assert json["battery_state"]["success"] is False
@@ -128,7 +130,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
 
     reg_resp = await webhook_client.post(webhook_url, json=payload)
 
-    assert reg_resp.status == 201
+    assert reg_resp.status == HTTPStatus.CREATED
 
     reg_json = await reg_resp.json()
     assert reg_json == {"success": True}
@@ -149,7 +151,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
     payload["data"]["state"] = False
     dupe_resp = await webhook_client.post(webhook_url, json=payload)
 
-    assert dupe_resp.status == 201
+    assert dupe_resp.status == HTTPStatus.CREATED
     dupe_reg_json = await dupe_resp.json()
     assert dupe_reg_json == {"success": True}
     await hass.async_block_till_done()
@@ -185,7 +187,7 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
         },
     )
 
-    assert reg_resp.status == 201
+    assert reg_resp.status == HTTPStatus.CREATED
 
     json = await reg_resp.json()
     assert json == {"success": True}
@@ -196,7 +198,7 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
 
     assert entity.domain == "binary_sensor"
     assert entity.name == "Test 1 Is Charging"
-    assert entity.state == STATE_OFF  # Binary sensor defaults to off
+    assert entity.state == STATE_UNKNOWN
 
     reg_resp = await webhook_client.post(
         webhook_url,
@@ -210,7 +212,7 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
         },
     )
 
-    assert reg_resp.status == 201
+    assert reg_resp.status == HTTPStatus.CREATED
 
     json = await reg_resp.json()
     assert json == {"success": True}
@@ -221,7 +223,7 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
 
     assert entity.domain == "binary_sensor"
     assert entity.name == "Test 1 Backup Is Charging"
-    assert entity.state == STATE_OFF  # Binary sensor defaults to off
+    assert entity.state == STATE_UNKNOWN
 
 
 async def test_update_sensor_no_state(hass, create_registrations, webhook_client):
@@ -242,7 +244,7 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
         },
     )
 
-    assert reg_resp.status == 201
+    assert reg_resp.status == HTTPStatus.CREATED
 
     json = await reg_resp.json()
     assert json == {"success": True}
@@ -262,10 +264,10 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
         },
     )
 
-    assert update_resp.status == 200
+    assert update_resp.status == HTTPStatus.OK
 
     json = await update_resp.json()
     assert json == {"is_charging": {"success": True}}
 
     updated_entity = hass.states.get("binary_sensor.test_1_is_charging")
-    assert updated_entity.state == STATE_OFF  # Binary sensor defaults to off
+    assert updated_entity.state == STATE_UNKNOWN

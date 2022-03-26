@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
-            "already_configured_local_device": "Lokale(s) Ger\u00e4t(e) ist/sind bereits konfiguriert. Bitte entferne diese zuerst, bevor du ein Cloud-Ger\u00e4t konfigurierst.",
+            "already_configured_local_device": "Lokale(s) Ger\u00e4t(e) ist / sind bereits konfiguriert. Bitte entferne diese zuerst, bevor du ein Cloud-Ger\u00e4t konfigurierst.",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_mdns": "Nicht unterst\u00fctztes Ger\u00e4t f\u00fcr die Smappee-Integration.",

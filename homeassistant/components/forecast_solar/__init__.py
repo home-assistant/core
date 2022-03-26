@@ -4,42 +4,48 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from forecast_solar import ForecastSolar
-import voluptuous as vol
+from forecast_solar import Estimate, ForecastSolar
 
-from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_AZIMUTH,
     CONF_DAMPING,
     CONF_DECLINATION,
+    CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Forecast.Solar from a config entry."""
-    api_key = entry.options.get(CONF_API_KEY)
     # Our option flow may cause it to be an empty string,
     # this if statement is here to catch that.
-    if not api_key:
-        api_key = None
+    api_key = entry.options.get(CONF_API_KEY) or None
 
+    if (
+        inverter_size := entry.options.get(CONF_INVERTER_SIZE)
+    ) is not None and inverter_size > 0:
+        inverter_size = inverter_size / 1000
+
+    session = async_get_clientsession(hass)
     forecast = ForecastSolar(
         api_key=api_key,
+        session=session,
         latitude=entry.data[CONF_LATITUDE],
         longitude=entry.data[CONF_LONGITUDE],
         declination=entry.options[CONF_DECLINATION],
         azimuth=(entry.options[CONF_AZIMUTH] - 180),
         kwp=(entry.options[CONF_MODULES_POWER] / 1000),
         damping=entry.options.get(CONF_DAMPING, 0),
+        inverter=inverter_size,
     )
 
     # Free account have a resolution of 1 hour, using that as the default
@@ -48,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if api_key is not None:
         update_interval = timedelta(minutes=30)
 
-    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+    coordinator: DataUpdateCoordinator[Estimate] = DataUpdateCoordinator(
         hass,
         logging.getLogger(__name__),
         name=DOMAIN,
@@ -57,10 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-        websocket_api.async_register_command(hass, ws_list_forecasts)
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -81,22 +84,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-@websocket_api.websocket_command({vol.Required("type"): "forecast_solar/forecasts"})
-@callback
-def ws_list_forecasts(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-) -> None:
-    """Return a list of available forecasts."""
-    forecasts = {}
-
-    for config_entry_id, coordinator in hass.data[DOMAIN].items():
-        forecasts[config_entry_id] = {
-            "wh_hours": {
-                timestamp.isoformat(): val
-                for timestamp, val in coordinator.data.wh_hours.items()
-            }
-        }
-
-    connection.send_result(msg["id"], forecasts)

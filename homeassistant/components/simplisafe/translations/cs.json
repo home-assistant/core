@@ -23,6 +23,7 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Autoriza\u010dn\u00ed k\u00f3d",
                     "code": "K\u00f3d (pou\u017eit\u00fd v u\u017eivatelsk\u00e9m rozhran\u00ed Home Assistant)",
                     "password": "Heslo",
                     "username": "E-mail"

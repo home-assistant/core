@@ -27,6 +27,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -36,11 +37,13 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = []
+    entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):
             entities.append(HomematicipLightMeasuring(hap, device))
@@ -174,14 +177,14 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
                 hap, device, post="Bottom", channel=channel, is_multi_channel=True
             )
 
-        self._color_switcher = {
-            RGBColorState.WHITE: [0.0, 0.0],
-            RGBColorState.RED: [0.0, 100.0],
-            RGBColorState.YELLOW: [60.0, 100.0],
-            RGBColorState.GREEN: [120.0, 100.0],
-            RGBColorState.TURQUOISE: [180.0, 100.0],
-            RGBColorState.BLUE: [240.0, 100.0],
-            RGBColorState.PURPLE: [300.0, 100.0],
+        self._color_switcher: dict[str, tuple[float, float]] = {
+            RGBColorState.WHITE: (0.0, 0.0),
+            RGBColorState.RED: (0.0, 100.0),
+            RGBColorState.YELLOW: (60.0, 100.0),
+            RGBColorState.GREEN: (120.0, 100.0),
+            RGBColorState.TURQUOISE: (180.0, 100.0),
+            RGBColorState.BLUE: (240.0, 100.0),
+            RGBColorState.PURPLE: (300.0, 100.0),
         }
 
     @property
@@ -202,10 +205,10 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
         return int((self._func_channel.dimLevel or 0.0) * 255)
 
     @property
-    def hs_color(self) -> tuple:
+    def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         simple_rgb_color = self._func_channel.simpleRGBColorState
-        return self._color_switcher.get(simple_rgb_color, [0.0, 0.0])
+        return self._color_switcher.get(simple_rgb_color, (0.0, 0.0))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

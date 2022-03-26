@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
+            "no_locations": "Er zijn geen locaties beschikbaar voor deze gebruiker, controleer de instellingen van TotalConnect",
             "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "bad_station_id": "\u6c23\u8c61\u7ad9 ID \u7121\u6548\u3001\u907a\u5931\u6216\u8cc7\u6599\u5eab\u4e2d\u627e\u4e0d\u5230\u8a72 ID",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "error_response": "\u4f86\u81ea Environment Canada \u56de\u8986\u932f\u8aa4",
+            "too_many_attempts": "\u8207 Environment Canada \u9023\u7dda\u6b21\u6578\u70ba\u6709\u9650\u6b21\u6578\uff1b\u8acb\u65bc 60 \u79d2\u5f8c\u518d\u8a66\u4e00\u6b21",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "language": "\u6c23\u8c61\u8cc7\u8a0a\u8a9e\u8a00",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6",
+                    "station": "\u6c23\u8c61\u7ad9 ID"
+                },
+                "description": "\u5fc5\u9808\u6307\u5b9a\u6c23\u8c61\u7ad9 ID \u6216\u7d93\u5ea6/\u7def\u5ea6\u3002\u5c07\u4f7f\u7528 Home Assistant \u5b89\u88dd\u4e2d\u8a2d\u5b9a\u4e4b\u7d93\u5ea6/\u7def\u5ea6\u70ba\u9810\u8a2d\u503c\uff0c\u4e26\u4f7f\u7528\u6700\u9760\u8fd1\u7684\u6c23\u8c61\u7ad9\u8cc7\u6599\u3002\u5047\u5982\u4f7f\u7528\u6c23\u8c61\u7ad9\u4ee3\u78bc\u5247\u5fc5\u9808\u8ddf\u96a8\u4ee5\u4e0b\u683c\u5f0f\uff1aPP/\u4ee3\u78bc\uff0cPP \u70ba\u5169\u4f4d\u5b57\u6bcd\u8868\u793a\u7701/\u5dde\u3001\u800c\u4ee3\u78bc\u5247\u70ba\u6c23\u8c61\u7ad9 ID\u3002\u53ef\u4ee5\u65bc\u6b64\u8655\u627e\u5230\u6c23\u8c61\u7ad9 ID \u5217\u8868\uff1ahttps://dd.weather.gc.ca/citypage_weather/docs/site_list_towns_en.csv\u3002\u6c23\u8c61\u8cc7\u8a0a\u5247\u53ef\u8a2d\u5b9a\u70ba\u82f1\u6587\u6216\u6cd5\u6587\u3002",
+                "title": "Environment Canada\uff1a\u6c23\u8c61\u7ad9\u4f4d\u7f6e\u8207\u8a9e\u8a00"
+            }
+        }
+    }
+}

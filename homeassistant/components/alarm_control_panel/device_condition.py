@@ -5,13 +5,6 @@ from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CONDITION,
@@ -27,7 +20,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
@@ -42,6 +35,11 @@ from .const import (
     CONDITION_ARMED_VACATION,
     CONDITION_DISARMED,
     CONDITION_TRIGGERED,
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
 )
 
 CONDITION_TYPES: Final[set[str]] = {
@@ -104,12 +102,11 @@ async def async_get_conditions(
     return conditions
 
 
+@callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
     if config[CONF_TYPE] == CONDITION_TRIGGERED:
         state = STATE_ALARM_TRIGGERED
     elif config[CONF_TYPE] == CONDITION_DISARMED:

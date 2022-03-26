@@ -7,6 +7,7 @@ from homeassistant.components.growatt_server.const import (
     CONF_PLANT_ID,
     DEFAULT_URL,
     DOMAIN,
+    LOGIN_INVALID_AUTH_CODE,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
@@ -40,7 +41,7 @@ GROWATT_PLANT_LIST_RESPONSE = {
     },
     "success": True,
 }
-GROWATT_LOGIN_RESPONSE = {"userId": 123456, "userLevel": 1, "success": True}
+GROWATT_LOGIN_RESPONSE = {"user": {"id": 123456}, "userLevel": 1, "success": True}
 
 
 async def test_show_authenticate_form(hass):
@@ -61,7 +62,7 @@ async def test_incorrect_login(hass):
 
     with patch(
         "growattServer.GrowattApi.login",
-        return_value={"errCode": "102", "success": False},
+        return_value={"msg": LOGIN_INVALID_AUTH_CODE, "success": False},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT

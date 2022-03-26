@@ -1,9 +1,10 @@
 """Test the Smappee component config flow module."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow, setup
+from homeassistant.components import zeroconf
 from homeassistant.components.smappee.const import (
-    CONF_HOSTNAME,
     CONF_SERIALNUMBER,
     DOMAIN,
     ENV_CLOUD,
@@ -54,14 +55,15 @@ async def test_show_zeroconf_connection_error_form(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={
-                "host": "1.2.3.4",
-                "port": 22,
-                CONF_HOSTNAME: "Smappee1006000212.local.",
-                "type": "_ssh._tcp.local.",
-                "name": "Smappee1006000212._ssh._tcp.local.",
-                "properties": {"_raw": {}},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="1.2.3.4",
+                addresses=["1.2.3.4"],
+                port=22,
+                hostname="Smappee1006000212.local.",
+                type="_ssh._tcp.local.",
+                name="Smappee1006000212._ssh._tcp.local.",
+                properties={"_raw": {}},
+            ),
         )
 
         assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
@@ -83,14 +85,15 @@ async def test_show_zeroconf_connection_error_form_next_generation(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={
-                "host": "1.2.3.4",
-                "port": 22,
-                CONF_HOSTNAME: "Smappee5001000212.local.",
-                "type": "_ssh._tcp.local.",
-                "name": "Smappee5001000212._ssh._tcp.local.",
-                "properties": {"_raw": {}},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="1.2.3.4",
+                addresses=["1.2.3.4"],
+                port=22,
+                hostname="Smappee5001000212.local.",
+                type="_ssh._tcp.local.",
+                name="Smappee5001000212._ssh._tcp.local.",
+                properties={"_raw": {}},
+            ),
         )
 
         assert result["description_placeholders"] == {CONF_SERIALNUMBER: "5001000212"}
@@ -165,14 +168,15 @@ async def test_zeroconf_wrong_mdns(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data={
-            "host": "1.2.3.4",
-            "port": 22,
-            CONF_HOSTNAME: "example.local.",
-            "type": "_ssh._tcp.local.",
-            "name": "example._ssh._tcp.local.",
-            "properties": {"_raw": {}},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.2.3.4",
+            addresses=["1.2.3.4"],
+            port=22,
+            hostname="example.local.",
+            type="_ssh._tcp.local.",
+            name="example._ssh._tcp.local.",
+            properties={"_raw": {}},
+        ),
     )
 
     assert result["reason"] == "invalid_mdns"
@@ -275,14 +279,15 @@ async def test_zeroconf_device_exists_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={
-                "host": "1.2.3.4",
-                "port": 22,
-                CONF_HOSTNAME: "Smappee1006000212.local.",
-                "type": "_ssh._tcp.local.",
-                "name": "Smappee1006000212._ssh._tcp.local.",
-                "properties": {"_raw": {}},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="1.2.3.4",
+                addresses=["1.2.3.4"],
+                port=22,
+                hostname="Smappee1006000212.local.",
+                type="_ssh._tcp.local.",
+                name="Smappee1006000212._ssh._tcp.local.",
+                properties={"_raw": {}},
+            ),
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
@@ -324,14 +329,15 @@ async def test_zeroconf_abort_if_cloud_device_exists(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data={
-            "host": "1.2.3.4",
-            "port": 22,
-            CONF_HOSTNAME: "Smappee1006000212.local.",
-            "type": "_ssh._tcp.local.",
-            "name": "Smappee1006000212._ssh._tcp.local.",
-            "properties": {"_raw": {}},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.2.3.4",
+            addresses=["1.2.3.4"],
+            port=22,
+            hostname="Smappee1006000212.local.",
+            type="_ssh._tcp.local.",
+            name="Smappee1006000212._ssh._tcp.local.",
+            properties={"_raw": {}},
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured_device"
@@ -343,14 +349,15 @@ async def test_zeroconf_confirm_abort_if_cloud_device_exists(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data={
-            "host": "1.2.3.4",
-            "port": 22,
-            CONF_HOSTNAME: "Smappee1006000212.local.",
-            "type": "_ssh._tcp.local.",
-            "name": "Smappee1006000212._ssh._tcp.local.",
-            "properties": {"_raw": {}},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.2.3.4",
+            addresses=["1.2.3.4"],
+            port=22,
+            hostname="Smappee1006000212.local.",
+            type="_ssh._tcp.local.",
+            name="Smappee1006000212._ssh._tcp.local.",
+            properties={"_raw": {}},
+        ),
     )
 
     config_entry = MockConfigEntry(
@@ -395,7 +402,7 @@ async def test_abort_cloud_flow_if_local_device_exists(hass):
 
 
 async def test_full_user_flow(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Check full flow."""
     assert await setup.async_setup_component(
@@ -422,9 +429,9 @@ async def test_full_user_flow(
         },
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
@@ -462,14 +469,15 @@ async def test_full_zeroconf_flow(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={
-                "host": "1.2.3.4",
-                "port": 22,
-                CONF_HOSTNAME: "Smappee1006000212.local.",
-                "type": "_ssh._tcp.local.",
-                "name": "Smappee1006000212._ssh._tcp.local.",
-                "properties": {"_raw": {}},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="1.2.3.4",
+                addresses=["1.2.3.4"],
+                port=22,
+                hostname="Smappee1006000212.local.",
+                type="_ssh._tcp.local.",
+                name="Smappee1006000212._ssh._tcp.local.",
+                properties={"_raw": {}},
+            ),
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "zeroconf_confirm"
@@ -537,14 +545,15 @@ async def test_full_zeroconf_flow_next_generation(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={
-                "host": "1.2.3.4",
-                "port": 22,
-                CONF_HOSTNAME: "Smappee5001000212.local.",
-                "type": "_ssh._tcp.local.",
-                "name": "Smappee5001000212._ssh._tcp.local.",
-                "properties": {"_raw": {}},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="1.2.3.4",
+                addresses=["1.2.3.4"],
+                port=22,
+                hostname="Smappee5001000212.local.",
+                type="_ssh._tcp.local.",
+                name="Smappee5001000212._ssh._tcp.local.",
+                properties={"_raw": {}},
+            ),
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "zeroconf_confirm"

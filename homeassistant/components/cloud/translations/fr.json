@@ -10,6 +10,7 @@
             "relayer_connected": "Relais connect\u00e9",
             "remote_connected": "Contr\u00f4le \u00e0 distance connect\u00e9",
             "remote_enabled": "Contr\u00f4le \u00e0 distance activ\u00e9",
+            "remote_server": "Serveur distant",
             "subscription_expiration": "Expiration de l'abonnement"
         }
     }

@@ -6,13 +6,15 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
+            "invalid_auth_key": "Credenziali API rifiutate da Coinbase a causa di una chiave API non valida.",
+            "invalid_auth_secret": "Credenziali API rifiutate da Coinbase a causa di un segreto API non valido.",
             "unknown": "Errore imprevisto"
         },
         "step": {
             "user": {
                 "data": {
                     "api_key": "Chiave API",
-                    "api_token": " API Segreta",
+                    "api_token": "API segreta",
                     "currencies": "Valute del saldo del conto",
                     "exchange_rates": "Tassi di cambio"
                 },
@@ -23,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "Uno o pi\u00f9 dei saldi in valuta richiesti non sono forniti dalla tua API Coinbase.",
             "currency_unavaliable": "Uno o pi\u00f9 saldi in valuta richiesti non sono forniti dalla tua API Coinbase.",
+            "exchange_rate_unavailable": "Uno o pi\u00f9 dei tassi di cambio richiesti non sono forniti da Coinbase.",
             "exchange_rate_unavaliable": "Uno o pi\u00f9 dei tassi di cambio richiesti non sono forniti da Coinbase.",
             "unknown": "Errore imprevisto"
         },
@@ -34,7 +38,7 @@
                     "exchange_base": "Valuta di base per i sensori di tasso di cambio.",
                     "exchange_rate_currencies": "Tassi di cambio da segnalare."
                 },
-                "description": "Regolare le opzioni di Coinbase"
+                "description": "Regola le opzioni di Coinbase"
             }
         }
     }

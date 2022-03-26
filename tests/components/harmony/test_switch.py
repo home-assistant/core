@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry
 from homeassistant.util import utcnow
 
 from .const import ENTITY_PLAY_MUSIC, ENTITY_REMOTE, ENTITY_WATCH_TV, HUB_NAME
@@ -33,6 +34,17 @@ async def test_connection_state_changes(
 
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # check if switch entities are disabled by default
+    assert not hass.states.get(ENTITY_WATCH_TV)
+    assert not hass.states.get(ENTITY_PLAY_MUSIC)
+
+    # enable switch entities
+    ent_reg = entity_registry.async_get(hass)
+    ent_reg.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
+    ent_reg.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
+    await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     # mocks start with current activity == Watch TV
@@ -76,6 +88,13 @@ async def test_switch_toggles(mock_hc, hass, mock_write_config):
 
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # enable switch entities
+    ent_reg = entity_registry.async_get(hass)
+    ent_reg.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
+    ent_reg.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
+    await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     # mocks start with current activity == Watch TV

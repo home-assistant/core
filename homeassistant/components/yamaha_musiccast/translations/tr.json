@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "yxc_control_url_missing": "Kontrol URL'si ssdp a\u00e7\u0131klamas\u0131nda verilmez."
+        },
+        "error": {
+            "no_musiccast_device": "Bu cihaz, MusicCast Cihaz\u0131 de\u011fil gibi g\u00f6r\u00fcn\u00fcyor."
+        },
+        "flow_title": "MusicCast: {name}",
+        "step": {
+            "confirm": {
+                "description": "Kuruluma ba\u015flamak ister misiniz?"
+            },
+            "user": {
+                "data": {
+                    "host": "Sunucu"
+                },
+                "description": "Home Assistant ile entegre etmek i\u00e7in MusicCast'i kurun."
+            }
+        }
+    }
+}

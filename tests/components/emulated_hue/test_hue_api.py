@@ -1,6 +1,7 @@
 """The tests for the emulated Hue component."""
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 from ipaddress import ip_address
 import json
 from unittest.mock import patch
@@ -43,9 +44,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONTENT_TYPE_JSON,
-    HTTP_NOT_FOUND,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -209,7 +207,7 @@ def hass_hue(loop, hass):
 
 
 @pytest.fixture
-def hue_client(loop, hass_hue, aiohttp_client):
+def hue_client(loop, hass_hue, hass_client_no_auth):
     """Create web client for emulated hue api."""
     web_app = hass_hue.http.app
     config = Config(
@@ -244,6 +242,7 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 "scene.light_off": {emulated_hue.CONF_ENTITY_HIDDEN: False},
             },
         },
+        "127.0.0.1",
     )
     config.numbers = ENTITY_IDS_BY_NUMBER
 
@@ -255,14 +254,14 @@ def hue_client(loop, hass_hue, aiohttp_client):
     HueFullStateView(config).register(web_app, web_app.router)
     HueConfigView(config).register(web_app, web_app.router)
 
-    return loop.run_until_complete(aiohttp_client(web_app))
+    return loop.run_until_complete(hass_client_no_auth())
 
 
 async def test_discover_lights(hue_client):
     """Test the discovery of lights."""
     result = await hue_client.get("/api/username/lights")
 
-    assert result.status == HTTP_OK
+    assert result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
     result_json = await result.json()
@@ -295,14 +294,14 @@ async def test_discover_lights(hue_client):
 async def test_light_without_brightness_supported(hass_hue, hue_client):
     """Test that light without brightness is supported."""
     light_without_brightness_json = await perform_get_light_state(
-        hue_client, "light.no_brightness", HTTP_OK
+        hue_client, "light.no_brightness", HTTPStatus.OK
     )
 
     assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
     assert light_without_brightness_json["type"] == "On/Off light"
 
 
-async def test_lights_all_dimmable(hass, aiohttp_client):
+async def test_lights_all_dimmable(hass, hass_client_no_auth):
     """Test CONF_LIGHTS_ALL_DIMMABLE."""
     # create a lamp without brightness support
     hass.states.async_set("light.no_brightness", "on", {})
@@ -322,13 +321,13 @@ async def test_lights_all_dimmable(hass, aiohttp_client):
             {emulated_hue.DOMAIN: hue_config},
         )
         await hass.async_block_till_done()
-    config = Config(None, hue_config)
+    config = Config(None, hue_config, "127.0.0.1")
     config.numbers = ENTITY_IDS_BY_NUMBER
     web_app = hass.http.app
     HueOneLightStateView(config).register(web_app, web_app.router)
-    client = await aiohttp_client(web_app)
+    client = await hass_client_no_auth()
     light_without_brightness_json = await perform_get_light_state(
-        client, "light.no_brightness", HTTP_OK
+        client, "light.no_brightness", HTTPStatus.OK
     )
     assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
     assert light_without_brightness_json["type"] == "Dimmable light"
@@ -359,7 +358,7 @@ async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
     )
     no_brightness_result_json = await no_brightness_result.json()
 
-    assert no_brightness_result.status == HTTP_OK
+    assert no_brightness_result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in no_brightness_result.headers["content-type"]
     assert len(no_brightness_result_json) == 1
 
@@ -401,7 +400,7 @@ async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client):
 
     no_brightness_result_json = await no_brightness_result.json()
 
-    assert no_brightness_result.status == HTTP_OK
+    assert no_brightness_result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in no_brightness_result.headers["content-type"]
     assert len(no_brightness_result_json) == 1
 
@@ -429,7 +428,7 @@ async def test_reachable_for_state(hass_hue, hue_client, state, is_reachable):
 
     hass_hue.states.async_set(entity_id, state)
 
-    state_json = await perform_get_light_state(hue_client, entity_id, HTTP_OK)
+    state_json = await perform_get_light_state(hue_client, entity_id, HTTPStatus.OK)
 
     assert state_json["state"]["reachable"] == is_reachable, state_json
 
@@ -438,7 +437,7 @@ async def test_discover_full_state(hue_client):
     """Test the discovery of full state."""
     result = await hue_client.get(f"/api/{HUE_API_USERNAME}")
 
-    assert result.status == HTTP_OK
+    assert result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
     result_json = await result.json()
@@ -488,7 +487,7 @@ async def test_discover_config(hue_client):
     """Test the discovery of configuration."""
     result = await hue_client.get(f"/api/{HUE_API_USERNAME}/config")
 
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
     config_json = await result.json()
@@ -525,7 +524,7 @@ async def test_discover_config(hue_client):
     # Test without username
     result = await hue_client.get("/api/config")
 
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
     config_json = await result.json()
@@ -534,7 +533,7 @@ async def test_discover_config(hue_client):
     # Test with wrong username username
     result = await hue_client.get("/api/wronguser/config")
 
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
     config_json = await result.json()
@@ -556,7 +555,7 @@ async def test_get_light_state(hass_hue, hue_client):
     )
 
     office_json = await perform_get_light_state(
-        hue_client, "light.ceiling_lights", HTTP_OK
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
     )
 
     assert office_json["state"][HUE_API_STATE_ON] is True
@@ -567,7 +566,7 @@ async def test_get_light_state(hass_hue, hue_client):
     # Check all lights view
     result = await hue_client.get("/api/username/lights")
 
-    assert result.status == HTTP_OK
+    assert result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
     result_json = await result.json()
@@ -589,7 +588,7 @@ async def test_get_light_state(hass_hue, hue_client):
     )
 
     office_json = await perform_get_light_state(
-        hue_client, "light.ceiling_lights", HTTP_OK
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
     )
 
     assert office_json["state"][HUE_API_STATE_ON] is False
@@ -598,10 +597,14 @@ async def test_get_light_state(hass_hue, hue_client):
     assert office_json["state"][HUE_API_STATE_SAT] == 0
 
     # Make sure bedroom light isn't accessible
-    await perform_get_light_state(hue_client, "light.bed_light", HTTP_UNAUTHORIZED)
+    await perform_get_light_state(
+        hue_client, "light.bed_light", HTTPStatus.UNAUTHORIZED
+    )
 
     # Make sure kitchen light isn't accessible
-    await perform_get_light_state(hue_client, "light.kitchen_lights", HTTP_UNAUTHORIZED)
+    await perform_get_light_state(
+        hue_client, "light.kitchen_lights", HTTPStatus.UNAUTHORIZED
+    )
 
 
 async def test_put_light_state(hass, hass_hue, hue_client):
@@ -652,7 +655,7 @@ async def test_put_light_state(hass, hass_hue, hue_client):
 
     # go through api to get the state back
     ceiling_json = await perform_get_light_state(
-        hue_client, "light.ceiling_lights", HTTP_OK
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
     )
     assert ceiling_json["state"][HUE_API_STATE_BRI] == 123
     assert ceiling_json["state"][HUE_API_STATE_HUE] == 4369
@@ -671,7 +674,7 @@ async def test_put_light_state(hass, hass_hue, hue_client):
 
     # go through api to get the state back
     ceiling_json = await perform_get_light_state(
-        hue_client, "light.ceiling_lights", HTTP_OK
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
     )
     assert ceiling_json["state"][HUE_API_STATE_BRI] == 254
     assert ceiling_json["state"][HUE_API_STATE_HUE] == 4369
@@ -689,7 +692,7 @@ async def test_put_light_state(hass, hass_hue, hue_client):
 
     # go through api to get the state back
     ceiling_json = await perform_get_light_state(
-        hue_client, "light.ceiling_lights", HTTP_OK
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
     )
     assert ceiling_json["state"][HUE_API_STATE_BRI] == 100
     assert hass.states.get("light.ceiling_lights").attributes[light.ATTR_XY_COLOR] == (
@@ -703,7 +706,7 @@ async def test_put_light_state(hass, hass_hue, hue_client):
 
     ceiling_result_json = await ceiling_result.json()
 
-    assert ceiling_result.status == HTTP_OK
+    assert ceiling_result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in ceiling_result.headers["content-type"]
 
     assert len(ceiling_result_json) == 1
@@ -712,7 +715,7 @@ async def test_put_light_state(hass, hass_hue, hue_client):
     ceiling_lights = hass_hue.states.get("light.ceiling_lights")
     assert ceiling_lights.state == STATE_OFF
     ceiling_json = await perform_get_light_state(
-        hue_client, "light.ceiling_lights", HTTP_OK
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
     )
     # Removed assert HUE_API_STATE_BRI == 0 as Hue API states bri must be 1..254
     assert ceiling_json["state"][HUE_API_STATE_HUE] == 0
@@ -722,13 +725,13 @@ async def test_put_light_state(hass, hass_hue, hue_client):
     bedroom_result = await perform_put_light_state(
         hass_hue, hue_client, "light.bed_light", True
     )
-    assert bedroom_result.status == HTTP_UNAUTHORIZED
+    assert bedroom_result.status == HTTPStatus.UNAUTHORIZED
 
     # Make sure we can't change the kitchen light state
     kitchen_result = await perform_put_light_state(
         hass_hue, hue_client, "light.kitchen_lights", True
     )
-    assert kitchen_result.status == HTTP_UNAUTHORIZED
+    assert kitchen_result.status == HTTPStatus.UNAUTHORIZED
 
     # Turn the ceiling lights on first and color temp.
     await hass_hue.services.async_call(
@@ -793,7 +796,7 @@ async def test_put_light_state_script(hass, hass_hue, hue_client):
 
     script_result_json = await script_result.json()
 
-    assert script_result.status == HTTP_OK
+    assert script_result.status == HTTPStatus.OK
     assert len(script_result_json) == 2
 
     kitchen_light = hass_hue.states.get("light.kitchen_lights")
@@ -816,7 +819,7 @@ async def test_put_light_state_climate_set_temperature(hass_hue, hue_client):
 
     hvac_result_json = await hvac_result.json()
 
-    assert hvac_result.status == HTTP_OK
+    assert hvac_result.status == HTTPStatus.OK
     assert len(hvac_result_json) == 2
 
     hvac = hass_hue.states.get("climate.hvac")
@@ -827,7 +830,7 @@ async def test_put_light_state_climate_set_temperature(hass_hue, hue_client):
     ecobee_result = await perform_put_light_state(
         hass_hue, hue_client, "climate.ecobee", True
     )
-    assert ecobee_result.status == HTTP_UNAUTHORIZED
+    assert ecobee_result.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_put_light_state_humidifier_set_humidity(hass_hue, hue_client):
@@ -849,7 +852,7 @@ async def test_put_light_state_humidifier_set_humidity(hass_hue, hue_client):
 
     humidifier_result_json = await humidifier_result.json()
 
-    assert humidifier_result.status == HTTP_OK
+    assert humidifier_result.status == HTTPStatus.OK
     assert len(humidifier_result_json) == 2
 
     hvac = hass_hue.states.get("humidifier.humidifier")
@@ -860,7 +863,7 @@ async def test_put_light_state_humidifier_set_humidity(hass_hue, hue_client):
     hygrostat_result = await perform_put_light_state(
         hass_hue, hue_client, "humidifier.hygrostat", True
     )
-    assert hygrostat_result.status == HTTP_UNAUTHORIZED
+    assert hygrostat_result.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_put_light_state_media_player(hass_hue, hue_client):
@@ -883,7 +886,7 @@ async def test_put_light_state_media_player(hass_hue, hue_client):
 
     mp_result_json = await mp_result.json()
 
-    assert mp_result.status == HTTP_OK
+    assert mp_result.status == HTTPStatus.OK
     assert len(mp_result_json) == 2
 
     walkman = hass_hue.states.get("media_player.walkman")
@@ -916,7 +919,7 @@ async def test_open_cover_without_position(hass_hue, hue_client):
     # Go through the API to turn it on
     cover_result = await perform_put_light_state(hass_hue, hue_client, cover_id, True)
 
-    assert cover_result.status == HTTP_OK
+    assert cover_result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in cover_result.headers["content-type"]
 
     for _ in range(11):
@@ -936,7 +939,7 @@ async def test_open_cover_without_position(hass_hue, hue_client):
     # Go through the API to turn it off
     cover_result = await perform_put_light_state(hass_hue, hue_client, cover_id, False)
 
-    assert cover_result.status == HTTP_OK
+    assert cover_result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in cover_result.headers["content-type"]
 
     for _ in range(11):
@@ -985,7 +988,7 @@ async def test_set_position_cover(hass_hue, hue_client):
         hass_hue, hue_client, cover_id, False, brightness
     )
 
-    assert cover_result.status == HTTP_OK
+    assert cover_result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in cover_result.headers["content-type"]
 
     cover_result_json = await cover_result.json()
@@ -1025,22 +1028,19 @@ async def test_put_light_state_fan(hass_hue, hue_client):
 
     fan_result_json = await fan_result.json()
 
-    assert fan_result.status == HTTP_OK
+    assert fan_result.status == HTTPStatus.OK
     assert len(fan_result_json) == 2
 
     living_room_fan = hass_hue.states.get("fan.living_room_fan")
     assert living_room_fan.state == "on"
-    assert living_room_fan.attributes[fan.ATTR_SPEED] == fan.SPEED_MEDIUM
+    assert living_room_fan.attributes[fan.ATTR_PERCENTAGE] == 43
 
     # Check setting the brightness of a fan to 0, 33%, 66% and 100% will respectively turn it off, low, medium or high
     # We also check non-cached GET value to exercise the code.
     await perform_put_light_state(
         hass_hue, hue_client, "fan.living_room_fan", True, brightness=0
     )
-    assert (
-        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
-        == fan.SPEED_OFF
-    )
+    assert hass_hue.states.get("fan.living_room_fan").state == STATE_OFF
     await perform_put_light_state(
         hass_hue,
         hue_client,
@@ -1049,13 +1049,12 @@ async def test_put_light_state_fan(hass_hue, hue_client):
         brightness=round(33 * 254 / 100),
     )
     assert (
-        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
-        == fan.SPEED_LOW
+        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_PERCENTAGE] == 33
     )
     with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
         await asyncio.sleep(0.000001)
         fan_json = await perform_get_light_state(
-            hue_client, "fan.living_room_fan", HTTP_OK
+            hue_client, "fan.living_room_fan", HTTPStatus.OK
         )
         assert round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 33
 
@@ -1067,16 +1066,15 @@ async def test_put_light_state_fan(hass_hue, hue_client):
         brightness=round(66 * 254 / 100),
     )
     assert (
-        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
-        == fan.SPEED_MEDIUM
+        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_PERCENTAGE] == 66
     )
     with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
         await asyncio.sleep(0.000001)
         fan_json = await perform_get_light_state(
-            hue_client, "fan.living_room_fan", HTTP_OK
+            hue_client, "fan.living_room_fan", HTTPStatus.OK
         )
         assert (
-            round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 67
+            round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 66
         )  # small rounding error in inverse operation
 
     await perform_put_light_state(
@@ -1087,13 +1085,13 @@ async def test_put_light_state_fan(hass_hue, hue_client):
         brightness=round(100 * 254 / 100),
     )
     assert (
-        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
-        == fan.SPEED_HIGH
+        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_PERCENTAGE]
+        == 100
     )
     with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
         await asyncio.sleep(0.000001)
         fan_json = await perform_get_light_state(
-            hue_client, "fan.living_room_fan", HTTP_OK
+            hue_client, "fan.living_room_fan", HTTPStatus.OK
         )
         assert round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 100
 
@@ -1115,18 +1113,18 @@ async def test_put_with_form_urlencoded_content_type(hass_hue, hue_client):
         data=data,
     )
 
-    assert result.status == 400
+    assert result.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_entity_not_found(hue_client):
     """Test for entity which are not found."""
     result = await hue_client.get("/api/username/lights/98")
 
-    assert result.status == HTTP_NOT_FOUND
+    assert result.status == HTTPStatus.NOT_FOUND
 
     result = await hue_client.put("/api/username/lights/98/state")
 
-    assert result.status == HTTP_NOT_FOUND
+    assert result.status == HTTPStatus.NOT_FOUND
 
 
 async def test_allowed_methods(hue_client):
@@ -1135,17 +1133,17 @@ async def test_allowed_methods(hue_client):
         "/api/username/lights/ENTITY_NUMBERS_BY_ID[light.ceiling_lights]/state"
     )
 
-    assert result.status == 405
+    assert result.status == HTTPStatus.METHOD_NOT_ALLOWED
 
     result = await hue_client.put(
         "/api/username/lights/ENTITY_NUMBERS_BY_ID[light.ceiling_lights]"
     )
 
-    assert result.status == 405
+    assert result.status == HTTPStatus.METHOD_NOT_ALLOWED
 
     result = await hue_client.put("/api/username/lights")
 
-    assert result.status == 405
+    assert result.status == HTTPStatus.METHOD_NOT_ALLOWED
 
 
 async def test_proper_put_state_request(hue_client):
@@ -1158,7 +1156,7 @@ async def test_proper_put_state_request(hue_client):
         data=json.dumps({HUE_API_STATE_ON: 1234}),
     )
 
-    assert result.status == 400
+    assert result.status == HTTPStatus.BAD_REQUEST
 
     # Test proper brightness value parsing
     result = await hue_client.put(
@@ -1168,7 +1166,7 @@ async def test_proper_put_state_request(hue_client):
         data=json.dumps({HUE_API_STATE_ON: True, HUE_API_STATE_BRI: "Hello world!"}),
     )
 
-    assert result.status == 400
+    assert result.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_get_empty_groups_state(hue_client):
@@ -1176,7 +1174,7 @@ async def test_get_empty_groups_state(hue_client):
     # Test proper on value parsing
     result = await hue_client.get("/api/username/groups")
 
-    assert result.status == HTTP_OK
+    assert result.status == HTTPStatus.OK
 
     result_json = await result.json()
 
@@ -1204,7 +1202,7 @@ async def perform_put_test_on_ceiling_lights(
         hass_hue, hue_client, "light.ceiling_lights", True, 56, content_type
     )
 
-    assert office_result.status == HTTP_OK
+    assert office_result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in office_result.headers["content-type"]
 
     office_result_json = await office_result.json()
@@ -1223,7 +1221,7 @@ async def perform_get_light_state_by_number(client, entity_number, expected_stat
 
     assert result.status == expected_status
 
-    if expected_status == HTTP_OK:
+    if expected_status == HTTPStatus.OK:
         assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
         return await result.json()
@@ -1304,15 +1302,15 @@ async def test_external_ip_blocked(hue_client):
     ):
         for getUrl in getUrls:
             result = await hue_client.get(getUrl)
-            assert result.status == HTTP_UNAUTHORIZED
+            assert result.status == HTTPStatus.UNAUTHORIZED
 
         for postUrl in postUrls:
             result = await hue_client.post(postUrl)
-            assert result.status == HTTP_UNAUTHORIZED
+            assert result.status == HTTPStatus.UNAUTHORIZED
 
         for putUrl in putUrls:
             result = await hue_client.put(putUrl)
-            assert result.status == HTTP_UNAUTHORIZED
+            assert result.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_unauthorized_user_blocked(hue_client):
@@ -1322,7 +1320,7 @@ async def test_unauthorized_user_blocked(hue_client):
     ]
     for getUrl in getUrls:
         result = await hue_client.get(getUrl)
-        assert result.status == HTTP_OK
+        assert result.status == HTTPStatus.OK
 
         result_json = await result.json()
         assert result_json[0]["error"]["description"] == "unauthorized user"
@@ -1370,7 +1368,7 @@ async def test_put_then_get_cached_properly(hass, hass_hue, hue_client):
 
     # go through api to get the state back, the value returned should match those set in the last PUT request.
     ceiling_json = await perform_get_light_state(
-        hue_client, "light.ceiling_lights", HTTP_OK
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
     )
 
     assert ceiling_json["state"][HUE_API_STATE_HUE] == 4369
@@ -1387,7 +1385,7 @@ async def test_put_then_get_cached_properly(hass, hass_hue, hue_client):
 
     # go through api to get the state back
     ceiling_json = await perform_get_light_state(
-        hue_client, "light.ceiling_lights", HTTP_OK
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
     )
 
     # Now it should be the real value as the state of the entity has changed to OFF.
@@ -1429,7 +1427,7 @@ async def test_put_then_get_cached_properly(hass, hass_hue, hue_client):
 
     # go through api to get the state back, the value returned should match those set in the last PUT request.
     ceiling_json = await perform_get_light_state(
-        hue_client, "light.ceiling_lights", HTTP_OK
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
     )
 
     # With no wait, we must be reading what we set via the PUT call.
@@ -1442,7 +1440,7 @@ async def test_put_then_get_cached_properly(hass, hass_hue, hue_client):
 
         # go through api to get the state back, the value returned should now match the actual values.
         ceiling_json = await perform_get_light_state(
-            hue_client, "light.ceiling_lights", HTTP_OK
+            hue_client, "light.ceiling_lights", HTTPStatus.OK
         )
 
         # Once we're after the cached duration, we should see the real value.
@@ -1495,7 +1493,7 @@ async def test_put_than_get_when_service_call_fails(hass, hass_hue, hue_client):
     # go through api to get the state back, the value returned should NOT match those set in the last PUT request
     # as the waiting to check the state change timed out
     ceiling_json = await perform_get_light_state(
-        hue_client, "light.ceiling_lights", HTTP_OK
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
     )
 
     assert ceiling_json["state"][HUE_API_STATE_ON] is False
@@ -1505,7 +1503,7 @@ async def test_get_invalid_entity(hass, hass_hue, hue_client):
     """Test the setting of light states and an immediate readback reads the same values."""
 
     # Check that we get an error with an invalid entity number.
-    await perform_get_light_state_by_number(hue_client, 999, HTTP_NOT_FOUND)
+    await perform_get_light_state_by_number(hue_client, 999, HTTPStatus.NOT_FOUND)
 
 
 async def test_put_light_state_scene(hass, hass_hue, hue_client):
@@ -1523,7 +1521,7 @@ async def test_put_light_state_scene(hass, hass_hue, hue_client):
     )
 
     scene_result_json = await scene_result.json()
-    assert scene_result.status == HTTP_OK
+    assert scene_result.status == HTTPStatus.OK
     assert len(scene_result_json) == 1
 
     assert hass_hue.states.get("light.kitchen_lights").state == STATE_ON

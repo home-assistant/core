@@ -29,6 +29,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "Prvi gumb",
+            "2": "Drugi gumb",
+            "3": "Tretji gumb",
+            "4": "\u010cetrti gumb",
             "button_1": "Prvi gumb",
             "button_2": "Drugi gumb",
             "button_3": "Tretji gumb",
@@ -52,7 +56,8 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_hue_groups": "Dovoli skupine Hue"
+                    "allow_hue_groups": "Dovoli skupine Hue",
+                    "allow_hue_scenes": "Dovoli Hue scene"
                 }
             }
         }

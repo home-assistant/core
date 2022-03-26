@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "reauth_successful": "Re-authentication was successful"
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -38,6 +39,13 @@
                 "description": "Reason: {details}",
                 "title": "Synology DSM Reauthenticate Integration"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Synology DSM Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -56,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutes between scans",
+                    "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)",
                     "timeout": "Timeout (seconds)"
                 }
             }

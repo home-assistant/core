@@ -16,10 +16,12 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -40,7 +42,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["light"]
+PLATFORMS = [Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -85,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _, model, mac_address = controller_unique_id.split("_", 3)
     entry_data[CONF_DIRECTOR_MODEL] = model.upper()
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, controller_unique_id)},
@@ -113,13 +115,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update when config_entry options update."""
     _LOGGER.debug("Config entry was updated, rerunning setup")
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -147,7 +149,6 @@ class Control4Entity(CoordinatorEntity):
     def __init__(
         self,
         entry_data: dict,
-        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
@@ -158,9 +159,9 @@ class Control4Entity(CoordinatorEntity):
     ) -> None:
         """Initialize a Control4 entity."""
         super().__init__(coordinator)
-        self.entry = entry
         self.entry_data = entry_data
-        self._name = name
+        self._attr_name = name
+        self._attr_unique_id = str(idx)
         self._idx = idx
         self._controller_unique_id = entry_data[CONF_CONTROLLER_UNIQUE_ID]
         self._device_name = device_name
@@ -169,23 +170,12 @@ class Control4Entity(CoordinatorEntity):
         self._device_id = device_id
 
     @property
-    def name(self):
-        """Return name of entity."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return str(self._idx)
-
-    @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return info of parent Control4 device of entity."""
-        return {
-            "config_entry_id": self.entry.entry_id,
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": self._device_manufacturer,
-            "model": self._device_model,
-            "via_device": (DOMAIN, self._controller_unique_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self._device_id))},
+            manufacturer=self._device_manufacturer,
+            model=self._device_model,
+            name=self._device_name,
+            via_device=(DOMAIN, self._controller_unique_id),
+        )

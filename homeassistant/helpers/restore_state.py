@@ -1,27 +1,23 @@
 """Support for restoring entity states on startup."""
 from __future__ import annotations
 
+from abc import abstractmethod
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CoreState,
-    HomeAssistant,
-    State,
-    callback,
-    valid_entity_id,
-)
+from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.singleton import singleton
-from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
+
+from . import start
+from .entity import Entity
+from .event import async_track_time_interval
+from .json import JSONEncoder
+from .singleton import singleton
+from .storage import Store
 
 DATA_RESTORE_STATE_TASK = "restore_state_task"
 
@@ -36,69 +32,103 @@ STATE_DUMP_INTERVAL = timedelta(minutes=15)
 # How long should a saved state be preserved if the entity no longer exists
 STATE_EXPIRATION = timedelta(days=7)
 
+_StoredStateT = TypeVar("_StoredStateT", bound="StoredState")
+
+
+class ExtraStoredData:
+    """Object to hold extra stored data."""
+
+    @abstractmethod
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data.
+
+        Must be serializable by Home Assistant's JSONEncoder.
+        """
+
+
+class RestoredExtraData(ExtraStoredData):
+    """Object to hold extra stored data loaded from storage."""
+
+    def __init__(self, json_dict: dict[str, Any]) -> None:
+        """Object to hold extra stored data."""
+        self.json_dict = json_dict
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return self.json_dict
+
 
 class StoredState:
     """Object to represent a stored state."""
 
-    def __init__(self, state: State, last_seen: datetime) -> None:
+    def __init__(
+        self,
+        state: State,
+        extra_data: ExtraStoredData | None,
+        last_seen: datetime,
+    ) -> None:
         """Initialize a new stored state."""
-        self.state = state
+        self.extra_data = extra_data
         self.last_seen = last_seen
+        self.state = state
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the stored state."""
-        return {"state": self.state.as_dict(), "last_seen": self.last_seen}
+        result = {
+            "state": self.state.as_dict(),
+            "extra_data": self.extra_data.as_dict() if self.extra_data else None,
+            "last_seen": self.last_seen,
+        }
+        return result
 
     @classmethod
-    def from_dict(cls, json_dict: dict) -> StoredState:
+    def from_dict(cls: type[_StoredStateT], json_dict: dict) -> _StoredStateT:
         """Initialize a stored state from a dict."""
+        extra_data_dict = json_dict.get("extra_data")
+        extra_data = RestoredExtraData(extra_data_dict) if extra_data_dict else None
         last_seen = json_dict["last_seen"]
 
         if isinstance(last_seen, str):
             last_seen = dt_util.parse_datetime(last_seen)
 
-        return cls(State.from_dict(json_dict["state"]), last_seen)
+        return cls(
+            cast(State, State.from_dict(json_dict["state"])), extra_data, last_seen
+        )
 
 
 class RestoreStateData:
     """Helper class for managing the helper saved data."""
 
-    @classmethod
-    async def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
+    @staticmethod
+    @singleton(DATA_RESTORE_STATE_TASK)
+    async def async_get_instance(hass: HomeAssistant) -> RestoreStateData:
         """Get the singleton instance of this data helper."""
+        data = RestoreStateData(hass)
 
-        @singleton(DATA_RESTORE_STATE_TASK)
-        async def load_instance(hass: HomeAssistant) -> RestoreStateData:
-            """Get the singleton instance of this data helper."""
-            data = cls(hass)
+        try:
+            stored_states = await data.store.async_load()
+        except HomeAssistantError as exc:
+            _LOGGER.error("Error loading last states", exc_info=exc)
+            stored_states = None
 
-            try:
-                stored_states = await data.store.async_load()
-            except HomeAssistantError as exc:
-                _LOGGER.error("Error loading last states", exc_info=exc)
-                stored_states = None
+        if stored_states is None:
+            _LOGGER.debug("Not creating cache - no saved states found")
+            data.last_states = {}
+        else:
+            data.last_states = {
+                item["state"]["entity_id"]: StoredState.from_dict(item)
+                for item in stored_states
+                if valid_entity_id(item["state"]["entity_id"])
+            }
+            _LOGGER.debug("Created cache with %s", list(data.last_states))
 
-            if stored_states is None:
-                _LOGGER.debug("Not creating cache - no saved states found")
-                data.last_states = {}
-            else:
-                data.last_states = {
-                    item["state"]["entity_id"]: StoredState.from_dict(item)
-                    for item in stored_states
-                    if valid_entity_id(item["state"]["entity_id"])
-                }
-                _LOGGER.debug("Created cache with %s", list(data.last_states))
+        async def hass_start(hass: HomeAssistant) -> None:
+            """Start the restore state task."""
+            data.async_setup_dump()
 
-            if hass.state == CoreState.running:
-                data.async_setup_dump()
-            else:
-                hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_START, data.async_setup_dump
-                )
+        start.async_at_start(hass, hass_start)
 
-            return data
-
-        return cast(RestoreStateData, await load_instance(hass))
+        return data
 
     @classmethod
     async def async_save_persistent_states(cls, hass: HomeAssistant) -> None:
@@ -113,7 +143,7 @@ class RestoreStateData:
             hass, STORAGE_VERSION, STORAGE_KEY, encoder=JSONEncoder
         )
         self.last_states: dict[str, StoredState] = {}
-        self.entity_ids: set[str] = set()
+        self.entities: dict[str, RestoreEntity] = {}
 
     @callback
     def async_get_stored_states(self) -> list[StoredState]:
@@ -129,16 +159,18 @@ class RestoreStateData:
         current_entity_ids = {
             state.entity_id
             for state in all_states
-            if not state.attributes.get(entity_registry.ATTR_RESTORED)
+            if not state.attributes.get(ATTR_RESTORED)
         }
 
         # Start with the currently registered states
         stored_states = [
-            StoredState(state, now)
+            StoredState(
+                state, self.entities[state.entity_id].extra_restore_state_data, now
+            )
             for state in all_states
-            if state.entity_id in self.entity_ids and
+            if state.entity_id in self.entities and
             # Ignore all states that are entity registry placeholders
-            not state.attributes.get(entity_registry.ATTR_RESTORED)
+            not state.attributes.get(ATTR_RESTORED)
         ]
         expiration_time = now - STATE_EXPIRATION
 
@@ -197,12 +229,14 @@ class RestoreStateData:
         )
 
     @callback
-    def async_restore_entity_added(self, entity_id: str) -> None:
+    def async_restore_entity_added(self, entity: RestoreEntity) -> None:
         """Store this entity's state when hass is shutdown."""
-        self.entity_ids.add(entity_id)
+        self.entities[entity.entity_id] = entity
 
     @callback
-    def async_restore_entity_removed(self, entity_id: str) -> None:
+    def async_restore_entity_removed(
+        self, entity_id: str, extra_data: ExtraStoredData | None
+    ) -> None:
         """Unregister this entity from saving state."""
         # When an entity is being removed from hass, store its last state. This
         # allows us to support state restoration if the entity is removed, then
@@ -213,16 +247,18 @@ class RestoreStateData:
         if state is not None:
             state = State.from_dict(_encode_complex(state.as_dict()))
         if state is not None:
-            self.last_states[entity_id] = StoredState(state, dt_util.utcnow())
+            self.last_states[entity_id] = StoredState(
+                state, extra_data, dt_util.utcnow()
+            )
 
-        self.entity_ids.remove(entity_id)
+        self.entities.pop(entity_id)
 
 
 def _encode(value: Any) -> Any:
     """Little helper to JSON encode a value."""
     try:
         return JSONEncoder.default(
-            None,  # type: ignore
+            None,  # type: ignore[arg-type]
             value,
         )
     except TypeError:
@@ -253,7 +289,7 @@ class RestoreEntity(Entity):
             super().async_internal_added_to_hass(),
             RestoreStateData.async_get_instance(self.hass),
         )
-        data.async_restore_entity_added(self.entity_id)
+        data.async_restore_entity_added(self)
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -261,15 +297,37 @@ class RestoreEntity(Entity):
             super().async_internal_will_remove_from_hass(),
             RestoreStateData.async_get_instance(self.hass),
         )
-        data.async_restore_entity_removed(self.entity_id)
+        data.async_restore_entity_removed(self.entity_id, self.extra_restore_state_data)
 
-    async def async_get_last_state(self) -> State | None:
-        """Get the entity state from the previous run."""
+    async def _async_get_restored_data(self) -> StoredState | None:
+        """Get data stored for an entity, if any."""
         if self.hass is None or self.entity_id is None:
             # Return None if this entity isn't added to hass yet
             _LOGGER.warning("Cannot get last state. Entity not added to hass")  # type: ignore[unreachable]
             return None
-        data = await RestoreStateData.async_get_instance(self.hass)
+        data = cast(
+            RestoreStateData, await RestoreStateData.async_get_instance(self.hass)
+        )
         if self.entity_id not in data.last_states:
             return None
-        return data.last_states[self.entity_id].state
+        return data.last_states[self.entity_id]
+
+    async def async_get_last_state(self) -> State | None:
+        """Get the entity state from the previous run."""
+        if (stored_state := await self._async_get_restored_data()) is None:
+            return None
+        return stored_state.state
+
+    async def async_get_last_extra_data(self) -> ExtraStoredData | None:
+        """Get the entity specific state data from the previous run."""
+        if (stored_state := await self._async_get_restored_data()) is None:
+            return None
+        return stored_state.extra_data
+
+    @property
+    def extra_restore_state_data(self) -> ExtraStoredData | None:
+        """Return entity specific state data to be restored.
+
+        Implemented by platform classes.
+        """
+        return None

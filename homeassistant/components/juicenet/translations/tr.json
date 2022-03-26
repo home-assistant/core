@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_token": "API Belirteci"
+                    "api_token": "API Anahtar\u0131"
                 },
                 "description": "API Belirtecine https://home.juice.net/Manage adresinden ihtiyac\u0131n\u0131z olacak.",
                 "title": "JuiceNet'e ba\u011flan\u0131n"

@@ -60,6 +60,12 @@ def mock_account_with_no_robots() -> MagicMock:
 
 
 @pytest.fixture
+def mock_account_with_sleeping_robot() -> MagicMock:
+    """Mock a Litter-Robot account with a sleeping robot."""
+    return create_mock_account({"sleepModeActive": "102:00:00"})
+
+
+@pytest.fixture
 def mock_account_with_error() -> MagicMock:
     """Mock a Litter-Robot account with error."""
     return create_mock_account({"unitStatus": "BR"})

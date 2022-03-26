@@ -10,7 +10,8 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import EvoChild
@@ -27,7 +28,10 @@ STATE_ATTRS_DHW = ["dhwId", "activeFaults", "stateStatus", "temperatureStatus"]
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Create a DHW controller."""
     if discovery_info is None:
@@ -58,11 +62,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
 
         self._precision = PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
         self._supported_features = SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE
-
-    @property
-    def state(self):
-        """Return the current state."""
-        return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
 
     @property
     def current_operation(self) -> str:

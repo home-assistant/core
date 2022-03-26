@@ -1,12 +1,10 @@
 """Freebox component constants."""
+from __future__ import annotations
+
 import socket
 
-from homeassistant.const import (
-    DATA_RATE_KILOBYTES_PER_SECOND,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-)
+from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, PERCENTAGE, Platform
 
 DOMAIN = "freebox"
 SERVICE_REBOOT = "reboot"
@@ -19,7 +17,7 @@ APP_DESC = {
 }
 API_VERSION = "v6"
 
-PLATFORMS = ["device_tracker", "sensor", "switch"]
+PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 
@@ -27,51 +25,39 @@ DEFAULT_DEVICE_NAME = "Unknown device"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-# Sensor
-SENSOR_NAME = "name"
-SENSOR_UNIT = "unit"
-SENSOR_ICON = "icon"
-SENSOR_DEVICE_CLASS = "device_class"
 
-CONNECTION_SENSORS = {
-    "rate_down": {
-        SENSOR_NAME: "Freebox download speed",
-        SENSOR_UNIT: DATA_RATE_KILOBYTES_PER_SECOND,
-        SENSOR_ICON: "mdi:download-network",
-        SENSOR_DEVICE_CLASS: None,
-    },
-    "rate_up": {
-        SENSOR_NAME: "Freebox upload speed",
-        SENSOR_UNIT: DATA_RATE_KILOBYTES_PER_SECOND,
-        SENSOR_ICON: "mdi:upload-network",
-        SENSOR_DEVICE_CLASS: None,
-    },
-}
+CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="rate_down",
+        name="Freebox download speed",
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        icon="mdi:download-network",
+    ),
+    SensorEntityDescription(
+        key="rate_up",
+        name="Freebox upload speed",
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        icon="mdi:upload-network",
+    ),
+)
+CONNECTION_SENSORS_KEYS: list[str] = [desc.key for desc in CONNECTION_SENSORS]
 
-CALL_SENSORS = {
-    "missed": {
-        SENSOR_NAME: "Freebox missed calls",
-        SENSOR_UNIT: None,
-        SENSOR_ICON: "mdi:phone-missed",
-        SENSOR_DEVICE_CLASS: None,
-    },
-}
+CALL_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="missed",
+        name="Freebox missed calls",
+        icon="mdi:phone-missed",
+    ),
+)
 
-DISK_PARTITION_SENSORS = {
-    "partition_free_space": {
-        SENSOR_NAME: "free space",
-        SENSOR_UNIT: PERCENTAGE,
-        SENSOR_ICON: "mdi:harddisk",
-        SENSOR_DEVICE_CLASS: None,
-    },
-}
-
-TEMPERATURE_SENSOR_TEMPLATE = {
-    SENSOR_NAME: None,
-    SENSOR_UNIT: TEMP_CELSIUS,
-    SENSOR_ICON: "mdi:thermometer",
-    SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-}
+DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="partition_free_space",
+        name="free space",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:harddisk",
+    ),
+)
 
 # Icons
 DEVICE_ICONS = {

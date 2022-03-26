@@ -7,10 +7,13 @@ import async_timeout
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant.const import __version__ as current_version
+from homeassistant.components import hassio
+from homeassistant.const import Platform, __version__ as current_version
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery, update_coordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,18 +56,12 @@ class Updater:
         self.newest_version = newest_version
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the updater component."""
-    conf = config.get(DOMAIN, {})
-
-    for option in (CONF_COMPONENT_REPORTING, CONF_REPORTING):
-        if option in conf:
-            _LOGGER.warning(
-                "Analytics reporting with the option '%s' "
-                "is deprecated and you should remove that from your configuration. "
-                "The analytics part of this integration has moved to the new 'analytics' integration",
-                option,
-            )
+    _LOGGER.warning(
+        "The updater integration has been deprecated and will be removed in 2022.5, "
+        "please remove it from your configuration"
+    )
 
     async def check_new_version() -> Updater:
         """Check if a new version is available and report if one is."""
@@ -77,8 +74,8 @@ async def async_setup(hass, config):
         _LOGGER.debug("Fetched version %s: %s", newest, release_notes)
 
         # Load data from Supervisor
-        if hass.components.hassio.is_hassio():
-            core_info = hass.components.hassio.get_core_info()
+        if hassio.is_hassio(hass):
+            core_info = hassio.get_core_info(hass)
             newest = core_info["version_latest"]
 
         # Validate version
@@ -115,7 +112,7 @@ async def async_setup(hass, config):
     asyncio.create_task(coordinator.async_refresh())
 
     hass.async_create_task(
-        discovery.async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
     )
 
     return True
@@ -125,7 +122,7 @@ async def get_newest_version(hass):
     """Get the newest Home Assistant version."""
     session = async_get_clientsession(hass)
 
-    with async_timeout.timeout(30):
+    async with async_timeout.timeout(30):
         req = await session.get(UPDATER_URL)
 
     try:

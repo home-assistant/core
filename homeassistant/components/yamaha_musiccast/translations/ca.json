@@ -16,7 +16,7 @@
                 "data": {
                     "host": "Amfitri\u00f3"
                 },
-                "description": "Configura MusicCast per a integrar-lo amb Home Assistant."
+                "description": "Configura la integraci\u00f3 de MusicCast amb Home Assistant."
             }
         }
     }

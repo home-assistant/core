@@ -2,18 +2,17 @@
 import logging
 
 from miio import AirQualityMonitor, AirQualityMonitorCGDN1, DeviceException
-import voluptuous as vol
 
-from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.air_quality import AirQualityEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_MODEL,
-    DOMAIN,
     MODEL_AIRQUALITYMONITOR_B1,
     MODEL_AIRQUALITYMONITOR_CGDN1,
     MODEL_AIRQUALITYMONITOR_S1,
@@ -29,14 +28,6 @@ ATTR_CO2E = "carbon_dioxide_equivalent"
 ATTR_TVOC = "total_volatile_organic_compounds"
 ATTR_TEMP = "temperature"
 ATTR_HUM = "humidity"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 PROP_TO_ATTR = {
     "carbon_dioxide_equivalent": ATTR_CO2E,
@@ -129,8 +120,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         data = {}
 
         for prop, attr in PROP_TO_ATTR.items():
-            value = getattr(self, prop)
-            if value is not None:
+            if (value := getattr(self, prop)) is not None:
                 data[attr] = value
 
         return data
@@ -249,22 +239,11 @@ DEVICE_MAP = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Miio configuration from YAML."""
-    _LOGGER.warning(
-        "Loading Xiaomi Miio Air Quality via platform setup is deprecated. "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Xiaomi Air Quality from a config entry."""
     entities = []
 

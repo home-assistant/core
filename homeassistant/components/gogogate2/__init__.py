@@ -1,15 +1,13 @@
 """The gogogate2 component."""
 
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant
 
 from .common import get_data_update_coordinator
 from .const import DEVICE_TYPE_GOGOGATE2
 
-PLATFORMS = [COVER, SENSOR]
+PLATFORMS = [Platform.COVER, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

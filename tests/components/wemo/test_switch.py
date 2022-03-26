@@ -1,11 +1,13 @@
 """Tests for the Wemo switch entity."""
 
 import pytest
+from pywemo.exceptions import ActionException
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
@@ -29,12 +31,6 @@ test_async_update_locked_multiple_callbacks = (
 )
 test_async_update_locked_callback_and_update = (
     entity_test_helpers.test_async_update_locked_callback_and_update
-)
-test_async_locked_update_with_exception = (
-    entity_test_helpers.test_async_locked_update_with_exception
-)
-test_async_update_with_timeout_and_recovery = (
-    entity_test_helpers.test_async_update_with_timeout_and_recovery
 )
 
 
@@ -78,3 +74,19 @@ async def test_switch_update_entity(hass, pywemo_registry, pywemo_device, wemo_e
         blocking=True,
     )
     assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
+
+
+async def test_available_after_update(
+    hass, pywemo_registry, pywemo_device, wemo_entity
+):
+    """Test the avaliability when an On call fails and after an update."""
+    pywemo_device.on.side_effect = ActionException
+    pywemo_device.get_state.return_value = 1
+    await entity_test_helpers.test_avaliable_after_update(
+        hass, pywemo_registry, pywemo_device, wemo_entity, SWITCH_DOMAIN
+    )
+
+
+async def test_turn_off_state(hass, wemo_entity):
+    """Test that the device state is updated after turning off."""
+    await entity_test_helpers.test_turn_off_state(hass, wemo_entity, SWITCH_DOMAIN)

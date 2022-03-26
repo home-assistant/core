@@ -6,18 +6,18 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "no_server_found": "Impossible de d\u00e9couvrir automatiquement le serveur.",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Logitech Squeezebox: {host}",
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {
                     "host": "H\u00f4te",
                     "password": "Mot de passe",
                     "port": "Port",
-                    "username": "Username"
+                    "username": "Nom d'utilisateur"
                 },
                 "title": "Modifier les informations de connexion"
             },

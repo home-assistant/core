@@ -300,12 +300,16 @@ async def test_config_flow_ssdp(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
-            ssdp.ATTR_UPNP_MODEL_NAME: TEST_MODEL,
-            ssdp.ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
-            ssdp.ATTR_SSDP_LOCATION: TEST_SSDP_LOCATION,
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
+                ssdp.ATTR_UPNP_MODEL_NAME: TEST_MODEL,
+                ssdp.ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
+            },
+        ),
     )
 
     assert result["type"] == "form"
@@ -336,12 +340,16 @@ async def test_config_flow_ssdp_not_denon(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_UPNP_MANUFACTURER: "NotSupported",
-            ssdp.ATTR_UPNP_MODEL_NAME: TEST_MODEL,
-            ssdp.ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
-            ssdp.ATTR_SSDP_LOCATION: TEST_SSDP_LOCATION,
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER: "NotSupported",
+                ssdp.ATTR_UPNP_MODEL_NAME: TEST_MODEL,
+                ssdp.ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
+            },
+        ),
     )
 
     assert result["type"] == "abort"
@@ -357,10 +365,14 @@ async def test_config_flow_ssdp_missing_info(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
-            ssdp.ATTR_SSDP_LOCATION: TEST_SSDP_LOCATION,
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
+            },
+        ),
     )
 
     assert result["type"] == "abort"
@@ -376,12 +388,16 @@ async def test_config_flow_ssdp_ignored_model(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
-            ssdp.ATTR_UPNP_MODEL_NAME: TEST_IGNORED_MODEL,
-            ssdp.ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
-            ssdp.ATTR_SSDP_LOCATION: TEST_SSDP_LOCATION,
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
+                ssdp.ATTR_UPNP_MODEL_NAME: TEST_IGNORED_MODEL,
+                ssdp.ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
+            },
+        ),
     )
 
     assert result["type"] == "abort"

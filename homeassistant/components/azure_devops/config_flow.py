@@ -3,13 +3,9 @@ from aioazuredevops.client import DevOpsClient
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.azure_devops.const import (
-    CONF_ORG,
-    CONF_PAT,
-    CONF_PROJECT,
-    DOMAIN,
-)
 from homeassistant.config_entries import ConfigFlow
+
+from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DOMAIN
 
 
 class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):

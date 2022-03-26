@@ -61,7 +61,7 @@ async def test_sensor_disabled(hass, mock_bridge):
     assert entry
     assert entry.unique_id == unique_id
     assert entry.disabled is True
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
     updated_entry = registry.async_update_entity(
