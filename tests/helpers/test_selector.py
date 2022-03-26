@@ -384,6 +384,11 @@ def test_attribute_selector_schema(schema, valid_selections, invalid_selections)
             ({"seconds": 10},),
             (None, {}),
         ),
+        (
+            {"enable_day": True},
+            ({"seconds": 10},),
+            (None, {}),
+        ),
     ),
 )
 def test_duration_selector_schema(schema, valid_selections, invalid_selections):
