@@ -4,9 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
-
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_API_KEY,
     DEGREE,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
@@ -24,11 +20,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import as_utc, get_time_zone
 
@@ -168,10 +163,11 @@ def _to_iso_format(measuretime: str) -> str:
     return as_utc(time_obj.replace(tzinfo=STOCKHOLM_TIMEZONE)).isoformat()
 
 
-class TrafikverketWeatherStation(CoordinatorEntity, SensorEntity):
+class TrafikverketWeatherStation(
+    CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Trafikverket sensor."""
 
-    coordinator: TVDataUpdateCoordinator
     entity_description: TrafikverketSensorEntityDescription
     _attr_attribution = ATTRIBUTION
 
@@ -208,7 +204,7 @@ class TrafikverketWeatherStation(CoordinatorEntity, SensorEntity):
         return state
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return extra attributes."""
         return {
             ATTR_MEASURE_TIME: _to_iso_format(self.coordinator.data.measure_time),

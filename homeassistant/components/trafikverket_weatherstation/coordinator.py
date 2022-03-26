@@ -20,21 +20,21 @@ _LOGGER = logging.getLogger(__name__)
 TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 
-class TVDataUpdateCoordinator(DataUpdateCoordinator):
+class TVDataUpdateCoordinator(DataUpdateCoordinator[WeatherStationInfo]):
     """A Sensibo Data Update Coordinator."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Sensibo coordinator."""
-        self._weather_api = TrafikverketWeather(
-            async_get_clientsession(hass), entry.data[CONF_API_KEY]
-        )
-        self._station = entry.data[CONF_STATION]
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=TIME_BETWEEN_UPDATES,
         )
+        self._weather_api = TrafikverketWeather(
+            async_get_clientsession(hass), entry.data[CONF_API_KEY]
+        )
+        self._station = entry.data[CONF_STATION]
 
     async def _async_update_data(self) -> WeatherStationInfo:
         """Fetch data from Trafikverket."""
