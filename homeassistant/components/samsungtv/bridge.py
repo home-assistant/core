@@ -23,7 +23,12 @@ from samsungtvws.event import (
     MS_ERROR_EVENT,
     parse_installed_app,
 )
-from samsungtvws.exceptions import ConnectionFailure, HttpApiError
+from samsungtvws.exceptions import (
+    ConnectionFailure,
+    HttpApiError,
+    ResponseError,
+    UnauthorizedError,
+)
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
@@ -54,6 +59,7 @@ from .const import (
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
+    SUCCESSFUL_RESULTS,
     TIMEOUT_REQUEST,
     TIMEOUT_WEBSOCKET,
     VALUE_CONF_ID,
@@ -66,6 +72,8 @@ KEY_PRESS_TIMEOUT = 1.2
 ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400"}
 ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
 
+REST_EXCEPTIONS = (HttpApiError, AsyncioTimeoutError, ResponseError)
+
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
     """Extract the mac address from the device info."""
@@ -76,36 +84,39 @@ def mac_from_device_info(info: dict[str, Any]) -> str | None:
 
 async def async_get_device_info(
     hass: HomeAssistant,
-    bridge: SamsungTVBridge | None,
     host: str,
-) -> tuple[int | None, str | None, dict[str, Any] | None]:
+) -> tuple[str, int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
-    # Bridge is defined
-    if bridge and bridge.port:
-        return bridge.port, bridge.method, await bridge.async_device_info()
-
-    # Try websocket ports
+    # Try the websocket ssl and non-ssl ports
     for port in WEBSOCKET_PORTS:
         bridge = SamsungTVBridge.get_bridge(hass, METHOD_WEBSOCKET, host, port)
         if info := await bridge.async_device_info():
-            return port, METHOD_WEBSOCKET, info
-
-    # Try encrypted websocket port
-    bridge = SamsungTVBridge.get_bridge(
-        hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
-    )
-    result = await bridge.async_try_connect()
-    if result == RESULT_SUCCESS:
-        return port, METHOD_ENCRYPTED_WEBSOCKET, await bridge.async_device_info()
+            LOGGER.debug(
+                "Fetching rest info via %s was successful: %s, checking for encrypted",
+                port,
+                info,
+            )
+            encrypted_bridge = SamsungTVEncryptedBridge(
+                hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
+            )
+            result = await encrypted_bridge.async_try_connect()
+            if result != RESULT_CANNOT_CONNECT:
+                return (
+                    result,
+                    ENCRYPTED_WEBSOCKET_PORT,
+                    METHOD_ENCRYPTED_WEBSOCKET,
+                    info,
+                )
+            return RESULT_SUCCESS, port, METHOD_WEBSOCKET, info
 
     # Try legacy port
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
     result = await bridge.async_try_connect()
-    if result in (RESULT_SUCCESS, RESULT_AUTH_MISSING):
-        return LEGACY_PORT, METHOD_LEGACY, await bridge.async_device_info()
+    if result in SUCCESSFUL_RESULTS:
+        return result, LEGACY_PORT, METHOD_LEGACY, await bridge.async_device_info()
 
     # Failed to get info
-    return None, None, None
+    return result, None, None, None
 
 
 class SamsungTVBridge(ABC):
@@ -433,8 +444,11 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     "Working but unsupported config: %s, error: %s", config, err
                 )
                 result = RESULT_NOT_SUPPORTED
-            except (OSError, AsyncioTimeoutError, ConnectionFailure) as err:
-                LOGGER.debug("Failing config: %s, error: %s", config, err)
+            except UnauthorizedError as err:
+                LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
+                return RESULT_AUTH_MISSING
+            except (ConnectionFailure, OSError, AsyncioTimeoutError) as err:
+                LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
         # pylint: disable=useless-else-on-loop
         else:
             if result:
@@ -453,7 +467,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 timeout=TIMEOUT_WEBSOCKET,
             )
 
-        with contextlib.suppress(HttpApiError, AsyncioTimeoutError):
+        with contextlib.suppress(*REST_EXCEPTIONS):
             device_info: dict[str, Any] = await rest_api.rest_device_info()
             LOGGER.debug("Device info on %s is: %s", self.host, device_info)
             self._device_info = device_info
@@ -654,8 +668,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
             CONF_PORT: self.port,
-            # We need this high timeout because waiting for auth popup is just an open socket
-            CONF_TIMEOUT: TIMEOUT_REQUEST,
+            CONF_TIMEOUT: TIMEOUT_WEBSOCKET,
         }
 
         try:
@@ -669,13 +682,14 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 timeout=TIMEOUT_REQUEST,
             ) as remote:
                 await remote.start_listening()
-                LOGGER.debug("Working config: %s", config)
-                return RESULT_SUCCESS
         except WebSocketException as err:
             LOGGER.debug("Working but unsupported config: %s, error: %s", config, err)
             return RESULT_NOT_SUPPORTED
         except (OSError, AsyncioTimeoutError, ConnectionFailure) as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
+        else:
+            LOGGER.debug("Working config: %s", config)
+            return RESULT_SUCCESS
 
         return RESULT_CANNOT_CONNECT
 
@@ -696,7 +710,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 timeout=TIMEOUT_WEBSOCKET,
             )
 
-        with contextlib.suppress(HttpApiError, AsyncioTimeoutError):
+        with contextlib.suppress(*REST_EXCEPTIONS):
             device_info: dict[str, Any] = await rest_api.rest_device_info()
             LOGGER.debug("Device info on %s is: %s", self.host, device_info)
             self._device_info = device_info
