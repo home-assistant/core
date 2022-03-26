@@ -1619,13 +1619,13 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
         assert result["type"] == "form"
-        assert result["step_id"] == "reauth_confirm_encrypted"
+        assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {}
 
         # First time on reauth_confirm_encrypted
         # creates the authenticator, start pairing and requests PIN
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=None
+            result["flow_id"], user_input={}
         )
         assert result["type"] == "form"
         assert result["step_id"] == "reauth_confirm_encrypted"
