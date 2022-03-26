@@ -459,13 +459,15 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remote", "remotews", "rest_api")
-async def test_ssdp_websocket_success_populates_mac_address(
+@pytest.mark.usefixtures("remotews", "rest_api")
+async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     hass: HomeAssistant,
 ) -> None:
     """Test starting a flow from ssdp for a supported device populates the mac."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
     )
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
@@ -480,6 +482,7 @@ async def test_ssdp_websocket_success_populates_mac_address(
     assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["data"][CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 

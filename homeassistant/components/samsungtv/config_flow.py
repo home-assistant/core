@@ -106,6 +106,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MODEL: self._model,
             CONF_NAME: self._name,
             CONF_PORT: self._bridge.port,
+            CONF_SSDP_LOCATION: self._ssdp_location,
         }
 
     def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
