@@ -100,6 +100,7 @@ async def async_get_device_info(
             return WEBSOCKET_NO_SSL_PORT, METHOD_ENCRYPTED_WEBSOCKET, info
         return WEBSOCKET_NO_SSL_PORT, METHOD_WEBSOCKET, info
 
+    # Try ssl websocket port
     bridge = SamsungTVBridge.get_bridge(
         hass, METHOD_WEBSOCKET, host, WEBSOCKET_SSL_PORT
     )
