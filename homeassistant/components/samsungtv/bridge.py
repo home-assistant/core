@@ -23,7 +23,7 @@ from samsungtvws.event import (
     MS_ERROR_EVENT,
     parse_installed_app,
 )
-from samsungtvws.exceptions import ConnectionFailure, HttpApiError
+from samsungtvws.exceptions import ConnectionFailure, HttpApiError, ResponseError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
@@ -457,7 +457,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 timeout=TIMEOUT_WEBSOCKET,
             )
 
-        with contextlib.suppress(HttpApiError, AsyncioTimeoutError):
+        with contextlib.suppress(HttpApiError, AsyncioTimeoutError, ResponseError):
             device_info: dict[str, Any] = await rest_api.rest_device_info()
             LOGGER.debug("Device info on %s is: %s", self.host, device_info)
             self._device_info = device_info
@@ -700,7 +700,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 timeout=TIMEOUT_WEBSOCKET,
             )
 
-        with contextlib.suppress(HttpApiError, AsyncioTimeoutError):
+        with contextlib.suppress(HttpApiError, AsyncioTimeoutError, ResponseError):
             device_info: dict[str, Any] = await rest_api.rest_device_info()
             LOGGER.debug("Device info on %s is: %s", self.host, device_info)
             self._device_info = device_info
