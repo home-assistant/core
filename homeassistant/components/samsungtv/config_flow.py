@@ -45,6 +45,7 @@ from .const import (
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
+    SUCCESSFUL_RESULTS,
     UPNP_SVC_RENDERINGCONTROL,
     WEBSOCKET_PORTS,
 )
@@ -106,6 +107,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MODEL: self._model,
             CONF_NAME: self._name,
             CONF_PORT: self._bridge.port,
+            CONF_SSDP_LOCATION: self._ssdp_location,
         }
 
     def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
@@ -176,9 +178,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> tuple[str, str | None, dict[str, Any] | None]:
         """Get device info and method only once."""
         if self._connect_result is None:
-            result, _, method, info = await async_get_device_info(
-                self.hass, self._bridge, self._host
-            )
+            result, _, method, info = await async_get_device_info(self.hass, self._host)
             self._connect_result = result
             self._method = method
             self._device_info = info
@@ -189,15 +189,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_and_check_device_info(self) -> bool:
         """Try to get the device info."""
-        result, method, info = await self._async_get_device_info_and_method()
-        if not method:
-            LOGGER.debug(
-                "Samsung host %s is not supported by either %s, %s or %s methods",
-                self._host,
-                METHOD_LEGACY,
-                METHOD_ENCRYPTED_WEBSOCKET,
-                METHOD_WEBSOCKET,
-            )
+        result, _method, info = await self._async_get_device_info_and_method()
+        if result not in SUCCESSFUL_RESULTS:
             raise data_entry_flow.AbortFlow(result)
         if not info:
             return False
