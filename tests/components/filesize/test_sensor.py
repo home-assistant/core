@@ -4,8 +4,11 @@ import os
 from homeassistant.const import CONF_FILE_PATH, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.setup import async_setup_component
 
 from . import TEST_FILE, TEST_FILE_NAME, create_file
+
+from homeassistant.components.filesize.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -69,3 +72,23 @@ async def test_state_unavailable(
 
     state = hass.states.get("sensor.file_txt_size")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_import_query(hass: HomeAssistant, tmpdir: str) -> None:
+    """Test import from yaml."""
+    testfile = f"{tmpdir}/file.txt"
+    create_file(testfile)
+    hass.config.allowlist_external_dirs = {tmpdir}
+    config = {
+        "sensor": {
+            "platform": "filesize",
+            "file_paths": [testfile],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN)
+    data = hass.config_entries.async_entries(DOMAIN)[0].data
+    assert data[CONF_FILE_PATH] == testfile
