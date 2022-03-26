@@ -239,7 +239,6 @@ class FanEntity(ToggleEntity):
         """Set the direction of the fan."""
         await self.hass.async_add_executor_job(self.set_direction, direction)
 
-    # pylint: disable=arguments-differ
     def turn_on(
         self,
         percentage: int | None = None,
@@ -249,7 +248,6 @@ class FanEntity(ToggleEntity):
         """Turn on the fan."""
         raise NotImplementedError()
 
-    # pylint: disable=arguments-differ
     async def async_turn_on(
         self,
         percentage: int | None = None,
