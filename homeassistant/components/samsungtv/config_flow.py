@@ -149,6 +149,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         updates = {CONF_HOST: self._host}
         if self._mac:
             updates[CONF_MAC] = self._mac
+        if self._ssdp_location:
+            updates[CONF_SSDP_LOCATION] = self._ssdp_location
         self._abort_if_unique_id_configured(updates=updates)
 
     async def _try_connect(self) -> None:
