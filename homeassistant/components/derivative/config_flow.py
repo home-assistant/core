@@ -41,10 +41,10 @@ UNIT_PREFIXES = [
     {"value": "T", "label": "P (peta)"},
 ]
 TIME_UNITS = [
-    {"value": TIME_SECONDS, "label": "s (seconds)"},
-    {"value": TIME_MINUTES, "label": "min (minutes)"},
-    {"value": TIME_HOURS, "label": "h (hours)"},
-    {"value": TIME_DAYS, "label": "d (days)"},
+    {"value": TIME_SECONDS, "label": "Seconds"},
+    {"value": TIME_MINUTES, "label": "Minutes"},
+    {"value": TIME_HOURS, "label": "Hours"},
+    {"value": TIME_DAYS, "label": "Days"},
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
