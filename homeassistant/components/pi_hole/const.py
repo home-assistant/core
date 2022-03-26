@@ -17,7 +17,6 @@ from homeassistant.const import PERCENTAGE
 
 DOMAIN = "pi_hole"
 
-CONF_LOCATION = "location"
 CONF_STATISTICS_ONLY = "statistics_only"
 
 DEFAULT_LOCATION = "admin"
