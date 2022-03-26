@@ -29,7 +29,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt
 
 from .common import (
@@ -62,6 +62,8 @@ ENTITY_ID_2 = "alarm_control_panel.test_partition_2"
 CODE = "-1"
 DATA = {ATTR_ENTITY_ID: ENTITY_ID}
 DELAY = timedelta(seconds=10)
+
+REAUTH = "homeassistant.config_entries.ConfigEntry.async_start_reauth"
 
 
 async def test_attributes(hass: HomeAssistant) -> None:
@@ -127,13 +129,13 @@ async def test_arm_home_failure(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 2
 
         # usercode is invalid
-        with pytest.raises(ConfigEntryAuthFailed) as err:
+        with patch(REAUTH) as config_entry_reauth:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_HOME, DATA, blocking=True
             )
             await hass.async_block_till_done()
-        assert f"{err.value}" == "TotalConnect usercode is invalid. Did not arm home."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        config_entry_reauth.assert_called()
         assert mock_request.call_count == 3
 
 
@@ -175,16 +177,13 @@ async def test_arm_home_instant_failure(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 2
 
         # usercode is invalid
-        with pytest.raises(ConfigEntryAuthFailed) as err:
+        with patch(REAUTH) as config_entry_reauth:
             await hass.services.async_call(
                 DOMAIN, SERVICE_ALARM_ARM_HOME_INSTANT, DATA, blocking=True
             )
             await hass.async_block_till_done()
-        assert (
-            f"{err.value}"
-            == "TotalConnect usercode is invalid. Did not arm home instant."
-        )
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        config_entry_reauth.assert_called()
         assert mock_request.call_count == 3
 
 
@@ -226,16 +225,13 @@ async def test_arm_away_instant_failure(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 2
 
         # usercode is invalid
-        with pytest.raises(ConfigEntryAuthFailed) as err:
+        with patch(REAUTH) as config_entry_reauth:
             await hass.services.async_call(
                 DOMAIN, SERVICE_ALARM_ARM_AWAY_INSTANT, DATA, blocking=True
             )
             await hass.async_block_till_done()
-        assert (
-            f"{err.value}"
-            == "TotalConnect usercode is invalid. Did not arm away instant."
-        )
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        config_entry_reauth.assert_called()
         assert mock_request.call_count == 3
 
 
@@ -276,13 +272,13 @@ async def test_arm_away_failure(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 2
 
         # usercode is invalid
-        with pytest.raises(ConfigEntryAuthFailed) as err:
+        with patch(REAUTH) as config_entry_reauth:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_AWAY, DATA, blocking=True
             )
             await hass.async_block_till_done()
-        assert f"{err.value}" == "TotalConnect usercode is invalid. Did not arm away."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        config_entry_reauth.assert_called()
         assert mock_request.call_count == 3
 
 
@@ -327,13 +323,13 @@ async def test_disarm_failure(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 2
 
         # usercode is invalid
-        with pytest.raises(ConfigEntryAuthFailed) as err:
+        with patch(REAUTH) as config_entry_reauth:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA, blocking=True
             )
             await hass.async_block_till_done()
-        assert f"{err.value}" == "TotalConnect usercode is invalid. Did not disarm."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
+        config_entry_reauth.assert_called()
         assert mock_request.call_count == 3
 
 
@@ -374,13 +370,13 @@ async def test_arm_night_failure(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 2
 
         # usercode is invalid
-        with pytest.raises(ConfigEntryAuthFailed) as err:
+        with patch(REAUTH) as config_entry_reauth:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_NIGHT, DATA, blocking=True
             )
             await hass.async_block_till_done()
-        assert f"{err.value}" == "TotalConnect usercode is invalid. Did not arm night."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        config_entry_reauth.assert_called()
         assert mock_request.call_count == 3
 
 
