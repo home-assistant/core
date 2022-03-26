@@ -4,17 +4,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fiblary3.common.exceptions import HTTPException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 
-from . import FibaroController
+from . import FibaroAuthFailed, FibaroConnectFailed, FibaroController
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,16 +27,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _connect_to_fibaro(data: dict[str, Any]) -> tuple[bool, FibaroController]:
+def _connect_to_fibaro(data: dict[str, Any]) -> FibaroController:
     """Validate the user input allows us to connect to fibaro."""
     controller = FibaroController(data)
-    connected = controller.connect()
-    if connected:
-        _LOGGER.debug(
-            "Successful connection to fibaro home center with url %s", data[CONF_URL]
-        )
-
-    return connected, controller
+    controller.connect_with_error_handling()
+    return controller
 
 
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -46,9 +39,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    connected, controller = await hass.async_add_executor_job(_connect_to_fibaro, data)
-    if not connected:
-        raise CannotConnect
+    controller = await hass.async_add_executor_job(_connect_to_fibaro, data)
 
     _LOGGER.debug(
         "Successfully connected to fibaro home center %s with name %s",
@@ -72,17 +63,10 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await _validate_input(self.hass, user_input)
-            except CannotConnect:
+            except FibaroConnectFailed:
                 errors["base"] = "cannot_connect"
-            except HTTPException as http_ex:
-                if http_ex.details == "Forbidden":
-                    errors["base"] = "invalid_auth"
-                else:
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            except FibaroAuthFailed:
+                errors["base"] = "invalid_auth"
             else:
                 await self.async_set_unique_id(info["serial_number"])
                 self._abort_if_unique_id_configured()
@@ -95,7 +79,3 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: ConfigType | None) -> FlowResult:
         """Import a config entry."""
         return await self.async_step_user(import_config)
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""

@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from fiblary3.client.v4.client import Client as FibaroClient, StateHandler
+from fiblary3.common.exceptions import HTTPException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -22,7 +23,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -155,6 +156,23 @@ class FibaroController:
         self._read_devices()
         self._read_scenes()
         return True
+
+    def connect_with_error_handling(self) -> None:
+        """Translate connect errors to easily differentiate auth and connect failures.
+
+        When there is a better error handling in the used library this can be improved.
+        """
+        try:
+            connected = self.connect()
+            if not connected:
+                raise FibaroConnectFailed("Connect status is false")
+        except HTTPException as http_ex:
+            if http_ex.details == "Forbidden":
+                raise FibaroAuthFailed from http_ex
+
+            raise FibaroConnectFailed from http_ex
+        except Exception as ex:
+            raise FibaroConnectFailed from ex
 
     def enable_state_handler(self):
         """Start StateHandler thread for monitoring updates."""
@@ -387,22 +405,23 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
-def _init_controller(data: dict[str, Any]) -> tuple[bool, FibaroController]:
+def _init_controller(data: dict[str, Any]) -> FibaroController:
     """Validate the user input allows us to connect to fibaro."""
     controller = FibaroController(data)
-    connected = controller.connect()
-    return connected, controller
+    controller.connect_with_error_handling()
+    return controller
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Fibaro Component."""
-    connected, controller = await hass.async_add_executor_job(
-        _init_controller, entry.data
-    )
-    if not connected:
+    try:
+        controller = await hass.async_add_executor_job(_init_controller, entry.data)
+    except FibaroConnectFailed as connect_ex:
         raise ConfigEntryNotReady(
             f"Could not connect to controller at {entry.data[CONF_URL]}"
-        )
+        ) from connect_ex
+    except FibaroAuthFailed:
+        return False
 
     data: dict[str, Any] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
@@ -556,3 +575,11 @@ class FibaroDevice(Entity):
             pass
 
         return attr
+
+
+class FibaroConnectFailed(HomeAssistantError):
+    """Error to indicate we cannot connect to fibaro home center."""
+
+
+class FibaroAuthFailed(HomeAssistantError):
+    """Error to indicate that authentication failed on fibaro home center."""
