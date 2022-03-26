@@ -55,7 +55,6 @@ from .const import (
 )
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
-SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_ENCRYPTED_WEBSOCKET, METHOD_WEBSOCKET]
 
 
 def _strip_uuid(udn: str) -> str:
@@ -158,14 +157,24 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _try_connect(self) -> None:
         """Try to connect and check auth."""
-        for method in SUPPORTED_METHODS:
-            self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
-            result = await self._bridge.async_try_connect()
-            if result == RESULT_SUCCESS:
-                return
-            if result != RESULT_CANNOT_CONNECT:
-                raise data_entry_flow.AbortFlow(result)
-        LOGGER.debug("No working config found")
+        _port, method, _info = await async_get_device_info(
+            self.hass, self._bridge, self._host
+        )
+        if method is None:
+            LOGGER.debug("No working config found")
+            raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
+        LOGGER.debug("Try connect determined method to use: %s", method)
+        self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
+        if self._bridge.method != METHOD_WEBSOCKET:
+            # The websocket method needs to popup an auth request
+            # legacy does not need auth
+            # and encrypted gets handled in the next step
+            return
+        result = await self._bridge.async_try_connect()
+        if result == RESULT_SUCCESS:
+            return
+        if result != RESULT_CANNOT_CONNECT:
+            raise data_entry_flow.AbortFlow(result)
         raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
 
     async def _async_get_and_check_device_info(self) -> bool:
@@ -248,7 +257,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._bridge.method != METHOD_LEGACY:
                 # Legacy bridge does not provide device info
                 await self._async_set_device_unique_id(raise_on_progress=False)
-            await self.async_step_encrypted_pairing()
+            if isinstance(self._bridge, SamsungTVEncryptedBridge):
+                await self.async_step_encrypted_pairing()
             return self._get_entry_from_bridge()
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)

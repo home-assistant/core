@@ -19,7 +19,7 @@
         "description": "Please enter the PIN displayed on {device}."
       },
       "reauth_confirm_encrypted": {
-        "description": "Please enter the PIN displayed on {device}."
+        "description": "[%key:component::samsungtv::config::step::encrypted_pairing::description%]"
       }
     },
     "error": {

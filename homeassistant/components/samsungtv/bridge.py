@@ -702,8 +702,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
             CONF_PORT: self.port,
-            # We need this high timeout because waiting for auth popup is just an open socket
-            CONF_TIMEOUT: TIMEOUT_REQUEST,
+            CONF_TIMEOUT: TIMEOUT_WEBSOCKET,
         }
 
         try:
