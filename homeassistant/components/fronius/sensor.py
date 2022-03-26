@@ -51,7 +51,6 @@ if TYPE_CHECKING:
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-ELECTRIC_CHARGE_AMPERE_HOURS: Final = "Ah"
 ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
 
 PLATFORM_SCHEMA = vol.All(

@@ -82,7 +82,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'samsungtv', 'macaddress': '4844F7*'},
     {'domain': 'samsungtv', 'macaddress': '8CEA48*'},
     {'domain': 'screenlogic', 'registered_devices': True},
-    {'domain': 'screenlogic', 'hostname': 'pentair: *', 'macaddress': '00C033*'},
+    {'domain': 'screenlogic', 'hostname': 'pentair*', 'macaddress': '00C033*'},
     {'domain': 'sense', 'hostname': 'sense-*', 'macaddress': '009D6B*'},
     {'domain': 'sense', 'hostname': 'sense-*', 'macaddress': 'DCEFCA*'},
     {'domain': 'sense', 'hostname': 'sense-*', 'macaddress': 'A4D578*'},

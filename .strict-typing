@@ -82,6 +82,7 @@ homeassistant.components.esphome.*
 homeassistant.components.energy.*
 homeassistant.components.evil_genius_labs.*
 homeassistant.components.fastdotcom.*
+homeassistant.components.filesize.*
 homeassistant.components.fitbit.*
 homeassistant.components.flunearyou.*
 homeassistant.components.flux_led.*
@@ -163,9 +164,11 @@ homeassistant.components.pure_energie.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
+homeassistant.components.recorder.history
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
 homeassistant.components.recorder.statistics
+homeassistant.components.recorder.util
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.ridwell.*
