@@ -89,7 +89,7 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
         except AuthenticationError as exception:
             # should only encounter if password changes during operation
             raise ConfigEntryAuthFailed(
-                "TotalConnect authentication failed during operation"
+                "TotalConnect authentication failed during operation."
             ) from exception
         except ServiceUnavailable as exception:
             raise UpdateFailed(
