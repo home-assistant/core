@@ -165,6 +165,7 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
     ) -> None:
         """Initialize the data object."""
         super().__init__(coordinator)
+        base_name = path.split('/')[-1]
         self._attr_name = f"{base_name} {description.name}"
         self._attr_unique_id = (
             entry_id if description.key == "file" else f"{entry_id}-{description.key}"
