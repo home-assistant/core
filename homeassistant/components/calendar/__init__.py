@@ -165,7 +165,7 @@ class CalendarEventDevice(Entity):
         }
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the calendar event."""
         if (event := self.event) is None:
             return STATE_OFF
@@ -217,8 +217,8 @@ class CalendarEventView(http.HomeAssistantView):
             end_date = dt.parse_datetime(end)
         except (ValueError, AttributeError):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
-        assert start_date
-        assert end_date
+        if start_date is None or end_date is None:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
         event_list = await entity.async_get_events(
             request.app["hass"], start_date, end_date
         )
