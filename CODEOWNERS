@@ -306,6 +306,8 @@ tests/components/faa_delays/* @ntilley905
 homeassistant/components/fan/* @home-assistant/core
 tests/components/fan/* @home-assistant/core
 homeassistant/components/fastdotcom/* @rohankapoorcom
+homeassistant/components/fibaro/* @rappenze
+tests/components/fibaro/* @rappenze
 homeassistant/components/file/* @fabaff
 tests/components/file/* @fabaff
 homeassistant/components/filesize/* @gjohansson-ST
