@@ -135,7 +135,6 @@ class CalendarEventListener:
         self._unsub_event = None
         self._listen_next_calendar_event()
 
-    @callback
     async def _handle_refresh(self, now: datetime.datetime) -> None:
         """Handle core config update."""
         _LOGGER.debug("Refresh events @ %s", now)

@@ -57,7 +57,7 @@ async def now() -> datetime.datetime:
 class FakeSchedule:
     """Test fixture class for return events in a specific date range."""
 
-    def __init__(self, now: datetime.datetime):
+    def __init__(self, now: datetime.datetime) -> None:
         """Initiailize FakeSchedule."""
         # Map of event start time to event
         self.events: list[dict[str, Any]] = []
