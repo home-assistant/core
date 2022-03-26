@@ -1,7 +1,7 @@
 """Sensor component for PECO outage counter."""
 import asyncio
 from datetime import timedelta
-from typing import Final, cast
+from typing import Final
 
 from peco import BadJSONError, HttpError
 
@@ -49,13 +49,10 @@ async def async_setup_entry(
     async def async_update_data() -> dict[str, float]:
         """Fetch data from API."""
         try:
-            data = (
-                cast(dict[str, float], await api.get_outage_totals(websession))
+            data: dict[str, float] = (
+                await api.get_outage_totals(websession)
                 if county == "TOTAL"
-                else cast(
-                    dict[str, float],
-                    await api.get_outage_count(county, websession),
-                )
+                else await api.get_outage_count(county, websession)
             )
         except HttpError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
