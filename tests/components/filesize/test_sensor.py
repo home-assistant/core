@@ -1,14 +1,13 @@
 """The tests for the filesize sensor."""
 import os
 
+from homeassistant.components.filesize.const import DOMAIN
 from homeassistant.const import CONF_FILE_PATH, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from . import TEST_FILE, TEST_FILE_NAME, create_file
-
-from homeassistant.components.filesize.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
