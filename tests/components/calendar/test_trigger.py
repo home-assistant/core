@@ -68,7 +68,7 @@ class FakeSchedule:
     ) -> dict[str, Any]:
         """Create a new fake event, used by tests."""
         event_data = {
-            "title": "Event %s" % secrets.token_hex(16),  # Arbitrary unique data
+            "title": f"Event {secrets.token_hex(16)}",  # Arbitrary unique data
             "dt_start": (self.now + start_timedelta).isoformat(),
             "dt_end": (self.now + end_timedelta).isoformat(),
         }
@@ -82,7 +82,7 @@ class FakeSchedule:
         end_date: datetime.datetime,
     ) -> list[dict[str, Any]]:
         """Get all events in a specific time frame, used by the demo calendar."""
-        _LOGGER.debug("Fetching events between %s, %s", start_date, end_date)
+        _LOGGER.debug(f"Fetching events between {start_date}, {end_date}")
         assert start_date < end_date
         values = []
         for event in self.events:
@@ -160,7 +160,7 @@ def mock_update_interval() -> Generator[None, None, None]:
 
 async def fire_time(hass: HomeAssistant, trigger_time: datetime.datetime) -> None:
     """Fire an alarm and wait."""
-    _LOGGER.debug("Firing alarm @ %s", trigger_time)
+    _LOGGER.debug("Firing alarm @ {trigger_time}")
     with patch("homeassistant.util.dt.utcnow", return_value=trigger_time):
         async_fire_time_changed(hass, trigger_time)
         await hass.async_block_till_done()
