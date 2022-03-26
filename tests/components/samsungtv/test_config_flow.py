@@ -5,7 +5,12 @@ from unittest.mock import ANY, AsyncMock, Mock, call, patch
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
-from samsungtvws.exceptions import ConnectionFailure, HttpApiError, ResponseError
+from samsungtvws.exceptions import (
+    ConnectionFailure,
+    HttpApiError,
+    ResponseError,
+    UnauthorizedError,
+)
 from websockets import frames
 from websockets.exceptions import (
     ConnectionClosedError,
@@ -372,6 +377,7 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "pairing"
+        assert result["errors"] == {"base": "auth_missing"}
 
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -436,6 +442,43 @@ async def test_user_websocket_access_denied(
     assert result["type"] == "abort"
     assert result["reason"] == RESULT_NOT_SUPPORTED
     assert "Please check the Device Connection Manager on your TV" in caplog.text
+
+
+@pytest.mark.usefixtures("rest_api")
+async def test_user_websocket_auth_retry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test starting a flow by user for not supported device."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+        side_effect=UnauthorizedError,
+    ):
+        # websocket device not supported
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "pairing"
+    assert result["errors"] == {"base": "auth_missing"}
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Living Room (82GXARRS)"
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_NAME] == "Living Room"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung"
+    assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
 async def test_user_not_successful(hass: HomeAssistant) -> None:
@@ -537,6 +580,7 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "pairing"
+        assert result["errors"] == {"base": "auth_missing"}
 
     with patch("homeassistant.components.samsungtv.bridge.Remote"):
         result = await hass.config_entries.flow.async_configure(
@@ -1178,6 +1222,8 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "pairing"
+        assert result["errors"] == {"base": "auth_missing"}
+
         assert remote.call_count == 2
         assert remote.call_args_list == [
             call(AUTODETECT_LEGACY),
