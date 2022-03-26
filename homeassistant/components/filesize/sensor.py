@@ -39,7 +39,6 @@ ICON = "mdi:file"
 SENSOR_TYPES = (
     SensorEntityDescription(
         key="file",
-        entity_registry_enabled_default=True,
         icon=ICON,
         name="Size",
         native_unit_of_measurement=DATA_MEGABYTES,
