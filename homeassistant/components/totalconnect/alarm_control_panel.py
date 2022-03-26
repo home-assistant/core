@@ -1,8 +1,6 @@
 """Interfaces with TotalConnect alarm control panels."""
-import logging
-
 from total_connect_client import ArmingHelper
-from total_connect_client.exceptions import BadResultCodeError
+from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
@@ -22,14 +20,12 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
 SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
@@ -179,6 +175,10 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Disarm synchronous."""
         try:
             ArmingHelper(self._partition).disarm()
+        except UsercodeInvalid as error:
+            raise ConfigEntryAuthFailed(
+                "TotalConnect usercode is invalid. Did not disarm."
+            ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
                 f"TotalConnect failed to disarm {self._name}."
@@ -193,6 +193,10 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Arm home synchronous."""
         try:
             ArmingHelper(self._partition).arm_stay()
+        except UsercodeInvalid as error:
+            raise ConfigEntryAuthFailed(
+                "TotalConnect usercode is invalid. Did not arm home."
+            ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
                 f"TotalConnect failed to arm home {self._name}."
@@ -207,6 +211,10 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Arm away synchronous."""
         try:
             ArmingHelper(self._partition).arm_away()
+        except UsercodeInvalid as error:
+            raise ConfigEntryAuthFailed(
+                "TotalConnect usercode is invalid. Did not arm away."
+            ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
                 f"TotalConnect failed to arm away {self._name}."
@@ -221,6 +229,10 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Arm night synchronous."""
         try:
             ArmingHelper(self._partition).arm_stay_night()
+        except UsercodeInvalid as error:
+            raise ConfigEntryAuthFailed(
+                "TotalConnect usercode is invalid. Did not arm night."
+            ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
                 f"TotalConnect failed to arm night {self._name}."
@@ -235,6 +247,10 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Arm home instant synchronous."""
         try:
             ArmingHelper(self._partition).arm_stay_instant()
+        except UsercodeInvalid as error:
+            raise ConfigEntryAuthFailed(
+                "TotalConnect usercode is invalid. Did not arm home instant."
+            ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
                 f"TotalConnect failed to arm home instant {self._name}."
@@ -249,6 +265,10 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Arm away instant synchronous."""
         try:
             ArmingHelper(self._partition).arm_away_instant()
+        except UsercodeInvalid as error:
+            raise ConfigEntryAuthFailed(
+                "TotalConnect usercode is invalid. Did not arm away instant."
+            ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
                 f"TotalConnect failed to arm away instant {self._name}."
