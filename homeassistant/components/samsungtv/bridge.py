@@ -59,9 +59,7 @@ from .const import (
     TIMEOUT_WEBSOCKET,
     VALUE_CONF_ID,
     VALUE_CONF_NAME,
-    WEBSOCKET_NO_SSL_PORT,
     WEBSOCKET_PORTS,
-    WEBSOCKET_SSL_PORT,
 )
 
 KEY_PRESS_TIMEOUT = 1.2
@@ -84,34 +82,27 @@ async def async_get_device_info(
     host: str,
 ) -> tuple[str, int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
-    # Try ssl websocket port
-    bridge = SamsungTVBridge.get_bridge(
-        hass, METHOD_WEBSOCKET, host, WEBSOCKET_SSL_PORT
-    )
-    if info := await bridge.async_device_info():
-        return RESULT_SUCCESS, WEBSOCKET_SSL_PORT, METHOD_WEBSOCKET, info
-
-    # Try non-ssl websocket ports
-    bridge = SamsungTVBridge.get_bridge(
-        hass, METHOD_WEBSOCKET, host, WEBSOCKET_NO_SSL_PORT
-    )
-    if info := await bridge.async_device_info():
-        LOGGER.debug(
-            "Fetching rest info via non-ssl was successful: %s, checking for encrypted",
-            info,
-        )
-        encrypted_bridge = SamsungTVEncryptedBridge(
-            hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
-        )
-        result = await encrypted_bridge.async_try_connect()
-        if result != RESULT_CANNOT_CONNECT:
-            return (
-                result,
-                ENCRYPTED_WEBSOCKET_PORT,
-                METHOD_ENCRYPTED_WEBSOCKET,
+    # Try the websocket ssl and non-ssl ports
+    for port in WEBSOCKET_PORTS:
+        bridge = SamsungTVBridge.get_bridge(hass, METHOD_WEBSOCKET, host, port)
+        if info := await bridge.async_device_info():
+            LOGGER.debug(
+                "Fetching rest info via %s was successful: %s, checking for encrypted",
+                port,
                 info,
             )
-        return RESULT_SUCCESS, WEBSOCKET_NO_SSL_PORT, METHOD_WEBSOCKET, info
+            encrypted_bridge = SamsungTVEncryptedBridge(
+                hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
+            )
+            result = await encrypted_bridge.async_try_connect()
+            if result != RESULT_CANNOT_CONNECT:
+                return (
+                    result,
+                    ENCRYPTED_WEBSOCKET_PORT,
+                    METHOD_ENCRYPTED_WEBSOCKET,
+                    info,
+                )
+            return RESULT_SUCCESS, port, METHOD_WEBSOCKET, info
 
     # Try legacy port
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
