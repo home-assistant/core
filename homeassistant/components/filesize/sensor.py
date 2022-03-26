@@ -173,7 +173,7 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
-            name=path.split("/")[-1],
+            name=base_name,
         )
 
     @property
