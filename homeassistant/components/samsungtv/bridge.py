@@ -95,7 +95,9 @@ async def async_get_device_info(
             hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
         )
         if await encrypted_bridge.async_can_connect():
-            return ENCRYPTED_WEBSOCKET_PORT, host, info
+            # We want the port that the rest api answers on
+            # here as we will override the port for the websocket
+            return WEBSOCKET_NO_SSL_PORT, METHOD_ENCRYPTED_WEBSOCKET, info
         return WEBSOCKET_NO_SSL_PORT, METHOD_WEBSOCKET, info
 
     bridge = SamsungTVBridge.get_bridge(

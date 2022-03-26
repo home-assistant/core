@@ -167,9 +167,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not info:
             if not _method:
                 LOGGER.debug(
-                    "Samsung host %s is not supported by either %s or %s methods",
+                    "Samsung host %s is not supported by either %s, %s or %s methods",
                     self._host,
                     METHOD_LEGACY,
+                    METHOD_ENCRYPTED_WEBSOCKET,
                     METHOD_WEBSOCKET,
                 )
                 raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
