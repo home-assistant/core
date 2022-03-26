@@ -13,6 +13,5 @@ COUNTY_LIST: Final = [
     "YORK",
     "TOTAL",
 ]
-CONFIG_FLOW_COUNTIES: Final = [{county: county.capitalize()} for county in COUNTY_LIST]
 SCAN_INTERVAL: Final = 9
 CONF_COUNTY: Final = "county"
