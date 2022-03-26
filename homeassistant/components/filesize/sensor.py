@@ -38,8 +38,11 @@ async def async_setup_platform(
 ) -> None:
     """Set up the file size sensor."""
     _LOGGER.warning(
-        # Filesize config flow added in 2022.4 and should be removed in 2022.8
-        "Loading filesize via platform setup is deprecated; Please remove it from your configuration"
+        # Filesize config flow added in 2022.4 and should be removed in 2022.6
+        "Configuration of the Filesize sensor platform in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.6; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
     )
     for path in config[CONF_FILE_PATHS]:
         hass.async_create_task(
