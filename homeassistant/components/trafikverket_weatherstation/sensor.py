@@ -1,13 +1,9 @@
 """Weather information for air and road temperature (by Trafikverket)."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime
 import logging
-
-import aiohttp
-from pytrafikverket.trafikverket_weather import TrafikverketWeather, WeatherStationInfo
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_API_KEY,
     DEGREE,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
@@ -25,26 +20,25 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import Throttle
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import as_utc, get_time_zone
 
 from .const import (
-    ATTR_ACTIVE,
     ATTR_MEASURE_TIME,
     ATTRIBUTION,
     CONF_STATION,
     DOMAIN,
     NONE_IS_ZERO_SENSORS,
 )
+from .coordinator import TVDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-
-SCAN_INTERVAL = timedelta(seconds=300)
+STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
 
 
 @dataclass
@@ -151,12 +145,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 
-    web_session = async_get_clientsession(hass)
-    weather_api = TrafikverketWeather(web_session, entry.data[CONF_API_KEY])
+    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
         TrafikverketWeatherStation(
-            weather_api, entry.entry_id, entry.data[CONF_STATION], description
+            coordinator, entry.entry_id, entry.data[CONF_STATION], description
         )
         for description in SENSOR_TYPES
     ]
@@ -164,7 +157,15 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class TrafikverketWeatherStation(SensorEntity):
+def _to_iso_format(measuretime: str) -> str:
+    """Return isoformatted utc time."""
+    time_obj = datetime.strptime(measuretime, "%Y-%m-%dT%H:%M:%S")
+    return as_utc(time_obj.replace(tzinfo=STOCKHOLM_TIMEZONE)).isoformat()
+
+
+class TrafikverketWeatherStation(
+    CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Trafikverket sensor."""
 
     entity_description: TrafikverketSensorEntityDescription
@@ -172,17 +173,16 @@ class TrafikverketWeatherStation(SensorEntity):
 
     def __init__(
         self,
-        weather_api: TrafikverketWeather,
+        coordinator: TVDataUpdateCoordinator,
         entry_id: str,
         sensor_station: str,
         description: TrafikverketSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{sensor_station} {description.name}"
         self._attr_unique_id = f"{entry_id}_{description.key}"
-        self._station = sensor_station
-        self._weather_api = weather_api
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
@@ -191,26 +191,26 @@ class TrafikverketWeatherStation(SensorEntity):
             name=sensor_station,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
-        self._weather: WeatherStationInfo | None = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self) -> None:
-        """Get the latest data from Trafikverket and updates the states."""
-        try:
-            self._weather = await self._weather_api.async_get_weather(self._station)
-        except (asyncio.TimeoutError, aiohttp.ClientError, ValueError) as error:
-            _LOGGER.error("Could not fetch weather data: %s", error)
-            return
-        self._attr_native_value = getattr(
-            self._weather, self.entity_description.api_key
+    @property
+    def native_value(self) -> StateType:
+        """Return state of sensor."""
+        state: StateType = getattr(
+            self.coordinator.data, self.entity_description.api_key
         )
-        if (
-            self._attr_native_value is None
-            and self.entity_description.key in NONE_IS_ZERO_SENSORS
-        ):
-            self._attr_native_value = 0
+        # For zero value state the api reports back None for certain sensors.
+        if state is None and self.entity_description.key in NONE_IS_ZERO_SENSORS:
+            return 0
+        return state
 
-        self._attr_extra_state_attributes = {
-            ATTR_ACTIVE: self._weather.active,
-            ATTR_MEASURE_TIME: self._weather.measure_time,
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return extra attributes."""
+        return {
+            ATTR_MEASURE_TIME: _to_iso_format(self.coordinator.data.measure_time),
         }
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.data.active and super().available
