@@ -271,7 +271,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle a encrypted pairing."""
-        assert self._bridge is not None
         assert self._host is not None
         await self._async_start_encrypted_pairing(self._host)
         assert self._authenticator is not None
