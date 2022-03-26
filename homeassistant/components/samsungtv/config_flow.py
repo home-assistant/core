@@ -154,24 +154,15 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             updates[CONF_SSDP_LOCATION] = self._ssdp_location
         self._abort_if_unique_id_configured(updates=updates)
 
-    async def _try_connect(self) -> None:
-        """Try to connect and check auth."""
+    async def _async_create_bridge(self) -> None:
+        """Create the bridge."""
         result, method, _info = await self._async_get_device_info_and_method()
-        if result != RESULT_SUCCESS:
+        if result not in SUCCESSFUL_RESULTS:
             LOGGER.debug("No working config found for %s", self._host)
             raise data_entry_flow.AbortFlow(result)
         assert method is not None
-        LOGGER.debug("Try connect determined method to use: %s", method)
         self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
-        if self._bridge.method != METHOD_WEBSOCKET:
-            # Websocket method needs to popup an auth request
-            # Legacy does not need auth
-            # Encrypted Websocket gets handled in the next step
-            return
-        result = await self._bridge.async_try_connect()
-        if result == RESULT_SUCCESS:
-            return
-        raise data_entry_flow.AbortFlow(result)
+        return
 
     async def _async_get_device_info_and_method(
         self,
@@ -251,7 +242,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         if user_input is not None:
             await self._async_set_name_host_from_input(user_input)
-            await self._try_connect()
+            await self._async_create_bridge()
             assert self._bridge
             self._async_abort_entries_match({CONF_HOST: self._host})
             if self._bridge.method != METHOD_LEGACY:
@@ -259,9 +250,31 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self._async_set_device_unique_id(raise_on_progress=False)
             if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
                 return await self.async_step_encrypted_pairing()
-            return self._get_entry_from_bridge()
+            return await self.async_step_pairing({})
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+
+    async def async_step_pairing(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle a pairing by accepting the message on the TV."""
+        assert self._bridge is not None
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            result = await self._bridge.async_try_connect()
+            if result == RESULT_SUCCESS:
+                return self._get_entry_from_bridge()
+            if result != RESULT_AUTH_MISSING:
+                raise data_entry_flow.AbortFlow(result)
+            errors = {"base": RESULT_AUTH_MISSING}
+
+        self.context["title_placeholders"] = {"device": self._title}
+        return self.async_show_form(
+            step_id="pairing",
+            errors=errors,
+            description_placeholders={"device": self._title},
+            data_schema=vol.Schema({}),
+        )
 
     async def async_step_encrypted_pairing(
         self, user_input: dict[str, Any] | None = None
@@ -435,12 +448,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
-
-            await self._try_connect()
+            await self._async_create_bridge()
             assert self._bridge
             if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
                 return await self.async_step_encrypted_pairing()
-            return self._get_entry_from_bridge()
+            return await self.async_step_pairing({})
 
         return self.async_show_form(
             step_id="confirm", description_placeholders={"device": self._title}
