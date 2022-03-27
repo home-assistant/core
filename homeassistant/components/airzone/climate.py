@@ -121,7 +121,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
                     params[API_MODE] = mode
             params[API_ON] = 1
         _LOGGER.debug("Set hvac_mode=%s params=%s", hvac_mode, params)
-        await self.async_update_hvac_params(params)
+        await self._async_update_hvac_params(params)
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
