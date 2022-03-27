@@ -101,15 +101,14 @@ def normalize_event(event: dict[str, Any]) -> dict[str, Any]:
     return normalized_event
 
 
-def calculate_offset(event: dict[str, Any], offset: str) -> dict[str, Any]:
-    """Calculate event offset.
+def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.timedelta]:
+    """Extract the offset from the event summary.
 
-    Return the updated event with the offset_time included.
+    Return a tuple with the updated event summary and offset time.
     """
-    summary = event.get("summary", "")
     # check if we have an offset tag in the message
     # time is HH:MM or MM
-    reg = f"{offset}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)"
+    reg = f"{offset_prefix}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)"
     search = re.search(reg, summary)
     if search and search.group(1):
         time = search.group(1)
@@ -121,21 +120,16 @@ def calculate_offset(event: dict[str, Any], offset: str) -> dict[str, Any]:
 
         offset_time = time_period_str(time)
         summary = (summary[: search.start()] + summary[search.end() :]).strip()
-        event["summary"] = summary
-    else:
-        offset_time = datetime.timedelta()  # default it
-
-    event["offset_time"] = offset_time
-    return event
+        return (summary, offset_time)
+    return (summary, datetime.timedelta())
 
 
-def is_offset_reached(event: dict[str, Any]) -> bool:
+def is_offset_reached(
+    start: datetime.datetime, offset_time: datetime.timedelta
+) -> bool:
     """Have we reached the offset time specified in the event title."""
-    start = get_date(event["start"])
-    offset_time: datetime.timedelta = event["offset_time"]
-    if start is None or offset_time == datetime.timedelta():
+    if offset_time == datetime.timedelta():
         return False
-
     return start + offset_time <= dt.now(start.tzinfo)
 
 
