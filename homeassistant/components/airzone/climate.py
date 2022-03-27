@@ -56,19 +56,15 @@ async def async_setup_entry(
 ) -> None:
     """Add Airzone sensors from a config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    entities = []
-    for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
-        entities.append(
-            AirzoneClimate(
-                coordinator,
-                entry,
-                system_zone_id,
-                zone_data,
-            )
+    async_add_entities(
+        AirzoneClimate(
+            coordinator,
+            entry,
+            system_zone_id,
+            zone_data,
         )
-
-    async_add_entities(entities)
+        for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items()
+    )
 
 
 class AirzoneClimate(AirzoneEntity, ClimateEntity):
