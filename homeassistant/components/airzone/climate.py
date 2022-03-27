@@ -132,7 +132,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
             API_SET_POINT: temp,
         }
         _LOGGER.debug("Set temp=%s params=%s", temp, params)
-        await self.async_update_hvac_params(params)
+        await self._async_update_hvac_params(params)
 
     @property
     def current_temperature(self) -> float | None:
