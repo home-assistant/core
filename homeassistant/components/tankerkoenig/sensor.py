@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -107,6 +107,7 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
         self._street = station["street"]
         self._price = station[fuel_type]
         self._show_on_map = show_on_map
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def name(self):
