@@ -144,6 +144,7 @@ REST_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "fwupdate": RestBinarySensorDescription(
+        # Deprecated, scheduled to be removed in 2022.6 (#68719)
         key="fwupdate",
         name="Firmware Update",
         device_class=BinarySensorDeviceClass.UPDATE,
@@ -176,6 +177,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "fwupdate": RpcBinarySensorDescription(
+        # Deprecated, scheduled to be removed in 2022.6 (#68719)
         key="sys",
         sub_key="available_updates",
         name="Firmware Update",

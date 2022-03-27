@@ -38,13 +38,16 @@ class ShellyButtonDescription(ButtonEntityDescription, ShellyButtonDescriptionMi
 
 BUTTONS: Final = [
     ShellyButtonDescription(
+        # Deprecated, scheduled to be removed in 2022.6 (#68719)
         key="ota_update",
         name="OTA Update",
         device_class=ButtonDeviceClass.UPDATE,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda wrapper: wrapper.async_trigger_ota_update(),
     ),
     ShellyButtonDescription(
+        # Deprecated, scheduled to be removed in 2022.6 (#68719)
         key="ota_update_beta",
         name="OTA Update Beta",
         device_class=ButtonDeviceClass.UPDATE,
