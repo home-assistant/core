@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -196,7 +197,6 @@ async def async_setup_platform(
         here_client,
         here_travel_time_config,
     )
-    await coordinator.async_config_entry_first_refresh()
 
     sensor = HERETravelTimeSensor(name, traffic_mode, coordinator)
 
@@ -239,6 +239,11 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         self._traffic_mode = traffic_mode
         self._attr_native_unit_of_measurement = TIME_MINUTES
         self._attr_name = name
+
+    async def async_added_to_hass(self) -> None:
+        """Wait for start so origin and destination entities can be resolved."""
+        await super().async_added_to_hass()
+        async_at_start(self.hass, self.async_update)
 
     @property
     def native_value(self) -> str | None:
