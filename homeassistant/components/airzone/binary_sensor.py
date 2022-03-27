@@ -7,7 +7,6 @@ from typing import Any, Final
 
 from aioairzone.const import (
     AZD_AIR_DEMAND,
-    AZD_DEMAND,
     AZD_ERRORS,
     AZD_FLOOR_DEMAND,
     AZD_NAME,
@@ -39,13 +38,14 @@ class AirzoneBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
     AirzoneBinarySensorEntityDescription(
-        attributes={
-            "air": AZD_AIR_DEMAND,
-            "floor": AZD_FLOOR_DEMAND,
-        },
         device_class=DEVICE_CLASS_RUNNING,
-        key=AZD_DEMAND,
-        name="Demand",
+        key=AZD_AIR_DEMAND,
+        name="Air Demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=DEVICE_CLASS_RUNNING,
+        key=AZD_FLOOR_DEMAND,
+        name="Floor Demand",
     ),
     AirzoneBinarySensorEntityDescription(
         attributes={

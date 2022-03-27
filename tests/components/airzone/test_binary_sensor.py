@@ -10,42 +10,47 @@ async def test_airzone_create_binary_sensors(hass):
 
     await async_init_integration(hass)
 
-    state = hass.states.get("binary_sensor.despacho_demand")
+    state = hass.states.get("binary_sensor.despacho_air_demand")
     assert state.state == STATE_OFF
-    assert state.attributes.get("air") == 0
-    assert state.attributes.get("floor") == 0
+
+    state = hass.states.get("binary_sensor.despacho_floor_demand")
+    assert state.state == STATE_OFF
 
     state = hass.states.get("binary_sensor.despacho_problem")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.dorm_1_demand")
+    state = hass.states.get("binary_sensor.dorm_1_air_demand")
     assert state.state == STATE_OFF
-    assert state.attributes.get("air") == 0
-    assert state.attributes.get("floor") == 0
+
+    state = hass.states.get("binary_sensor.dorm_1_floor_demand")
+    assert state.state == STATE_OFF
 
     state = hass.states.get("binary_sensor.dorm_1_problem")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.dorm_2_demand")
+    state = hass.states.get("binary_sensor.dorm_2_air_demand")
     assert state.state == STATE_OFF
-    assert state.attributes.get("air") == 0
-    assert state.attributes.get("floor") == 0
+
+    state = hass.states.get("binary_sensor.dorm_2_floor_demand")
+    assert state.state == STATE_OFF
 
     state = hass.states.get("binary_sensor.dorm_2_problem")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.dorm_ppal_demand")
+    state = hass.states.get("binary_sensor.dorm_ppal_air_demand")
     assert state.state == STATE_ON
-    assert state.attributes.get("air") == 1
-    assert state.attributes.get("floor") == 0
+
+    state = hass.states.get("binary_sensor.dorm_ppal_floor_demand")
+    assert state.state == STATE_OFF
 
     state = hass.states.get("binary_sensor.dorm_ppal_problem")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.salon_demand")
+    state = hass.states.get("binary_sensor.salon_air_demand")
     assert state.state == STATE_OFF
-    assert state.attributes.get("air") == 0
-    assert state.attributes.get("floor") == 0
+
+    state = hass.states.get("binary_sensor.salon_floor_demand")
+    assert state.state == STATE_OFF
 
     state = hass.states.get("binary_sensor.salon_problem")
     assert state.state == STATE_OFF
