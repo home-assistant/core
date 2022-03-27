@@ -28,6 +28,19 @@ class MockNotifyPlatform(MockPlatform):
             self.async_get_service = async_get_service
 
 
+def mock_notify_platform(
+    hass, tmp_path, integration="notify", async_get_service=None, get_service=None
+):
+    """Specialize the mock platform for notify."""
+    loaded_platform = MockNotifyPlatform(async_get_service, get_service)
+    if integration is not None:
+        mock_platform(hass, f"{integration}.notify", loaded_platform)
+        integration = hass.data[DATA_INTEGRATIONS][integration]
+        integration.file_path = tmp_path
+
+    return loaded_platform
+
+
 async def test_same_targets(hass: HomeAssistant):
     """Test not changing the targets in a notify service."""
     test = NotificationService(hass)
@@ -131,17 +144,22 @@ async def test_warn_template(hass, caplog):
 
 async def test_invalid_platform(hass, caplog, tmp_path):
     """Test service setup with an invalid platform."""
-    loaded_platform = MockNotifyPlatform()
-    mock_platform(hass, "testnotify.notify", loaded_platform)
-    integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
-    integration.file_path = tmp_path
+    mock_notify_platform(hass, tmp_path, "testnotify1")
+    # Setup the platform
+    await async_setup_component(
+        hass, "notify", {"notify": [{"platform": "testnotify1"}]}
+    )
+    await hass.async_block_till_done()
+    assert "Invalid notify platform" in caplog.text
+    caplog.clear()
     # Setup the second testnotify2 platform dynamically
+    mock_notify_platform(hass, tmp_path, "testnotify2")
     await async_load_platform(
         hass,
         "notify",
-        "testnotify",
-        {"notify": [{"platform": "testnotify"}]},
-        hass_config={"notify": [{"platform": "testnotify"}]},
+        "testnotify2",
+        {"notify": {}},
+        hass_config={"notify": [{"platform": "testnotify2"}]},
     )
     await hass.async_block_till_done()
     assert "Invalid notify platform" in caplog.text
@@ -154,10 +172,7 @@ async def test_invalid_service(hass, caplog, tmp_path):
         """Return None for an invalid notify service."""
         return None
 
-    loaded_platform = MockNotifyPlatform(get_service=get_service)
-    mock_platform(hass, "testnotify.notify", loaded_platform)
-    integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
-    integration.file_path = tmp_path
+    mock_notify_platform(hass, tmp_path, "testnotify", get_service=get_service)
     # Setup the second testnotify2 platform dynamically
     await async_load_platform(
         hass,
@@ -188,10 +203,9 @@ async def test_platform_setup_with_error(hass, caplog, tmp_path):
         """Return None for an invalid notify service."""
         raise Exception("Setup error")
 
-    loaded_platform = MockNotifyPlatform(async_get_service=async_get_service)
-    mock_platform(hass, "testnotify.notify", loaded_platform)
-    integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
-    integration.file_path = tmp_path
+    mock_notify_platform(
+        hass, tmp_path, "testnotify", async_get_service=async_get_service
+    )
     # Setup the second testnotify2 platform dynamically
     await async_load_platform(
         hass,
@@ -204,7 +218,7 @@ async def test_platform_setup_with_error(hass, caplog, tmp_path):
     assert "Error setting up platform testnotify" in caplog.text
 
 
-async def test_reload_with_notify_platform_reload(hass, caplog, tmp_path):
+async def test_reload_with_notify_builtin_platform_reload(hass, caplog, tmp_path):
     """Test reload using the notify platform reload method."""
 
     async def async_get_service(hass, config, discovery_info=None):
@@ -213,8 +227,9 @@ async def test_reload_with_notify_platform_reload(hass, caplog, tmp_path):
         return NotificationService(hass, targetlist, "testnotify")
 
     # platform with service
-    loaded_platform = MockNotifyPlatform(async_get_service=async_get_service)
-    mock_platform(hass, "testnotify.notify", loaded_platform)
+    mock_notify_platform(
+        hass, tmp_path, "testnotify", async_get_service=async_get_service
+    )
 
     # Perform a reload using the notify module for testnotify (without services)
     await notify.async_reload(hass, "testnotify")
@@ -260,9 +275,10 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
     integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
     integration.file_path = tmp_path
 
-    # Initialize a second platform
-    loaded_platform2 = MockNotifyPlatform(async_get_service=async_get_service2)
-    mock_platform(hass, "testnotify2.notify", loaded_platform2)
+    # Initialize a second platform testnotify2
+    mock_notify_platform(
+        hass, tmp_path, "testnotify2", async_get_service=async_get_service2
+    )
 
     # Setup the testnotify platform
     await async_setup_component(
@@ -282,7 +298,7 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
         hass,
         "notify",
         "testnotify2",
-        {"notify": [{"platform": "testnotify2"}]},
+        {"notify": {}},
         hass_config={"notify": [{"platform": "testnotify"}]},
     )
     await hass.async_block_till_done()
@@ -291,9 +307,7 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
     assert hass.services.has_service(notify.DOMAIN, "testnotify2_d")
     assert get_service_called.call_count == 1
     assert get_service_called.call_args[0][0] == {}
-    assert get_service_called.call_args[0][1] == {
-        "notify": [{"platform": "testnotify2"}]
-    }
+    assert get_service_called.call_args[0][1] == {"notify": {}}
     get_service_called.reset_mock()
 
     # Perform a reload
