@@ -161,7 +161,7 @@ async def test_invalid_platform(hass, caplog, tmp_path):
         hass,
         "notify",
         "testnotify2",
-        {"notify": {}},
+        {},
         hass_config={"notify": [{"platform": "testnotify2"}]},
     )
     await hass.async_block_till_done()
