@@ -207,7 +207,11 @@ class DurationSelector(Selector):
 
     selector_type = "duration"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("enable_day"): cv.boolean,
+        }
+    )
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
