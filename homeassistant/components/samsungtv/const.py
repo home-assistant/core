@@ -46,4 +46,4 @@ UPNP_SVC_RENDERING_CONTROL = "urn:schemas-upnp-org:service:RenderingControl:1"
 UPNP_SVC_MAIN_TV_AGENT = "urn:samsung.com:service:MainTVAgent2:1"
 
 # Time to wait before reloading entry upon device config change
-ENTRY_RELOAD_COOLDOWN = 10
+ENTRY_RELOAD_COOLDOWN = 5

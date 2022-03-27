@@ -187,14 +187,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     bridge.register_update_config_entry_callback(_update_config_entry)
 
-    # Allow bridge to force the reload of the config_entry
-    @callback
-    def _reload_config_entry() -> None:
-        """Update config entry with the new token."""
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
-
-    bridge.register_reload_callback(_reload_config_entry)
-
     async def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
         LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
