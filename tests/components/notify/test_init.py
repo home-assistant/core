@@ -181,7 +181,7 @@ async def test_invalid_service(hass, caplog, tmp_path):
         hass,
         "notify",
         "testnotify",
-        {"notify": [{"platform": "testnotify"}]},
+        {},
         hass_config={"notify": [{"platform": "testnotify"}]},
     )
     await hass.async_block_till_done()
@@ -214,7 +214,7 @@ async def test_platform_setup_with_error(hass, caplog, tmp_path):
         hass,
         "notify",
         "testnotify",
-        {"notify": [{"platform": "testnotify"}]},
+        {},
         hass_config={"notify": [{"platform": "testnotify"}]},
     )
     await hass.async_block_till_done()
@@ -295,7 +295,7 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
         hass,
         "notify",
         "testnotify2",
-        {"notify": {}},
+        {},
         hass_config={"notify": [{"platform": "testnotify"}]},
     )
     await hass.async_block_till_done()
@@ -304,7 +304,7 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
     assert hass.services.has_service(notify.DOMAIN, "testnotify2_d")
     assert get_service_called.call_count == 1
     assert get_service_called.call_args[0][0] == {}
-    assert get_service_called.call_args[0][1] == {"notify": {}}
+    assert get_service_called.call_args[0][1] == {}
     get_service_called.reset_mock()
 
     # Perform a reload
