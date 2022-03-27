@@ -1,7 +1,7 @@
 """Support for Synology DSM update platform."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 
@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMBaseEntity
 from .const import (
@@ -50,15 +49,6 @@ class SynoDSMUpdateEntity(SynologyDSMBaseEntity, UpdateEntity):
     """Mixin for update entity specific attributes."""
 
     entity_description: SynologyDSMUpdateEntityEntityDescription
-
-    def __init__(
-        self,
-        api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
-        description: SynologyDSMUpdateEntityEntityDescription,
-    ) -> None:
-        """Initialize the Synology DSM binary_sensor entity."""
-        super().__init__(api, coordinator, description)
 
     @property
     def current_version(self) -> str | None:
