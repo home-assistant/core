@@ -20,7 +20,7 @@
     {
       "manufacturer": "Samsung Electronics",
       "st": "urn:schemas-upnp-org:service:RenderingControl:1"
-    }    
+    }
   ],
   "zeroconf": [
     {"type":"_airplay._tcp.local.","properties":{"manufacturer":"samsung*"}}
