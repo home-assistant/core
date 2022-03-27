@@ -148,17 +148,12 @@ class SamsungTVBridge(ABC):
         self.token: str | None = None
         self.session_id: str | None = None
         self._reauth_callback: CALLBACK_TYPE | None = None
-        self._reload_callback: CALLBACK_TYPE | None = None
         self._update_config_entry: Callable[[Mapping[str, Any]], None] | None = None
         self._app_list_callback: Callable[[dict[str, str]], None] | None = None
 
     def register_reauth_callback(self, func: CALLBACK_TYPE) -> None:
         """Register a callback function."""
         self._reauth_callback = func
-
-    def register_reload_callback(self, func: CALLBACK_TYPE) -> None:
-        """Register a callback function."""
-        self._reload_callback = func
 
     def register_update_config_entry_callback(
         self, func: Callable[[Mapping[str, Any]], None]
@@ -210,11 +205,6 @@ class SamsungTVBridge(ABC):
         """Notify access denied callback."""
         if self._reauth_callback is not None:
             self._reauth_callback()
-
-    def _notify_reload_callback(self) -> None:
-        """Notify reload callback."""
-        if self._reload_callback is not None:
-            self._reload_callback()
 
     def _notify_update_config_entry(self, updates: Mapping[str, Any]) -> None:
         """Notify update config callback."""
@@ -596,7 +586,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             ) == "unrecognized method value : ms.remote.control":
                 LOGGER.error(
                     "Your TV seems to be unsupported by SamsungTVWSBridge"
-                    " and needs a PIN: '%s'. Reloading",
+                    " and needs a PIN: '%s'. Updating config entry",
                     message,
                 )
                 self._notify_update_config_entry(
@@ -605,7 +595,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
                         CONF_PORT: ENCRYPTED_WEBSOCKET_PORT,
                     }
                 )
-                self._notify_reload_callback()
 
     async def async_power_off(self) -> None:
         """Send power off command to remote."""
