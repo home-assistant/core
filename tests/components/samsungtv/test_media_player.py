@@ -13,7 +13,7 @@ from samsungtvws.encrypted.remote import (
     SamsungTVEncryptedCommand,
     SamsungTVEncryptedWSAsyncRemote,
 )
-from samsungtvws.exceptions import ConnectionFailure, HttpApiError
+from samsungtvws.exceptions import ConnectionFailure, HttpApiError, UnauthorizedError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
@@ -481,6 +481,24 @@ async def test_update_ws_connection_closed(
 
     with patch.object(
         remotews, "start_listening", side_effect=ConnectionClosedError(None, None)
+    ), patch.object(remotews, "is_alive", return_value=False):
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
+async def test_update_ws_unauthorized_error(
+    hass: HomeAssistant, mock_now: datetime, remotews: Mock
+) -> None:
+    """Testing update tv unauthorized failure exception."""
+    await setup_samsungtv(hass, MOCK_CONFIGWS)
+
+    with patch.object(
+        remotews, "start_listening", side_effect=UnauthorizedError
     ), patch.object(remotews, "is_alive", return_value=False):
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
