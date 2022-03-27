@@ -15,7 +15,7 @@ VALUE_CONF_ID = "ha.component.samsung"
 CONF_DESCRIPTION = "description"
 CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
-CONF_SSDP_LOCATION = "ssdp_location"
+CONF_SSDP_RENDERING_CONTROL_LOCATION = "ssdp_rendering_control_location"
 CONF_ON_ACTION = "turn_on_action"
 CONF_SESSION_ID = "session_id"
 

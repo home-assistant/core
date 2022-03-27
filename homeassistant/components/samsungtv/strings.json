@@ -14,7 +14,7 @@
       },
       "pairing": {
         "description": "[%key:component::samsungtv::config::step::confirm::description%]"
-      },      
+      },
       "reauth_confirm": {
         "description": "After submitting, accept the the popup on {device} requesting authorization within 30 seconds or input PIN."
       },

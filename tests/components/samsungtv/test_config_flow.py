@@ -24,7 +24,7 @@ from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_SESSION_ID,
-    CONF_SSDP_LOCATION,
+    CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
     LEGACY_PORT,
@@ -358,7 +358,7 @@ async def test_user_encrypted_websocket(
     assert result4["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung"
     assert result4["data"][CONF_MODEL] == "82GXARRS"
-    assert result4["data"][CONF_SSDP_LOCATION] is None
+    assert result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION] is None
     assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
     assert result4["data"][CONF_SESSION_ID] == "1"
     assert result4["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -634,7 +634,10 @@ async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "82GXARRS"
-    assert result["data"][CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
+    assert (
+        result["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION]
+        == "https://fake_host:12345/test"
+    )
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -683,7 +686,10 @@ async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_l
     assert result4["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result4["data"][CONF_MODEL] == "82GXARRS"
-    assert result4["data"][CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
+    assert (
+        result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION]
+        == "https://fake_host:12345/test"
+    )
     assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
     assert result4["data"][CONF_SESSION_ID] == "1"
     assert result4["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -1405,7 +1411,7 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     # Wrong st
-    assert CONF_SSDP_LOCATION not in entry.data
+    assert CONF_SSDP_RENDERING_CONTROL_LOCATION not in entry.data
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1416,7 +1422,10 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
     """Test missing mac and unique id with outdated ssdp_location with the wrong st added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_SSDP_LOCATION: "https://1.2.3.4:555/test"},
+        data={
+            **MOCK_OLD_ENTRY,
+            CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
+        },
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1440,7 +1449,9 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     # Wrong ST, ssdp location should not change
-    assert entry.data[CONF_SSDP_LOCATION] == "https://1.2.3.4:555/test"
+    assert (
+        entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION] == "https://1.2.3.4:555/test"
+    )
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1451,7 +1462,10 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
     """Test missing mac and unique id with outdated ssdp_location with the correct st added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_SSDP_LOCATION: "https://1.2.3.4:555/test"},
+        data={
+            **MOCK_OLD_ENTRY,
+            CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
+        },
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1475,7 +1489,10 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     # Correct ST, ssdp location should change
-    assert entry.data[CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
+    assert (
+        entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
+        == "https://fake_host:12345/test"
+    )
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1510,7 +1527,10 @@ async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     # Correct ST, ssdp location should be added
-    assert entry.data[CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
+    assert (
+        entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
+        == "https://fake_host:12345/test"
+    )
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1649,7 +1669,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     # Wrong st
-    assert CONF_SSDP_LOCATION not in entry.data
+    assert CONF_SSDP_RENDERING_CONTROL_LOCATION not in entry.data
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1684,7 +1704,10 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_con
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     # Correct st
-    assert entry.data[CONF_SSDP_LOCATION] == "https://fake_host:12345/test"
+    assert (
+        entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
+        == "https://fake_host:12345/test"
+    )
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
