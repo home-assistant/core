@@ -24,8 +24,9 @@ async def test_kira_sensor(hass: HomeAssistant):
     hass.data[kira.DOMAIN][kira.CONF_SENSOR]["kira"] = mock_kira
     kira.setup_platform(hass, TEST_CONFIG, add_entities, DISCOVERY_INFO)
     assert len(DEVICES) == 1
+
     sensor = DEVICES[0]
-    sensor.name == "kira"
+    assert sensor.name == "kira"
     sensor.hass = hass
 
     code_name = "FAKE_CODE"
