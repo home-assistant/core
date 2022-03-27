@@ -124,7 +124,7 @@ class DebouncedEntryReloader:
         """Init the debounced entry reloader."""
         self.hass = hass
         self.entry = entry
-        self.original_data = dict(self.entry.data)
+        self.token = self.entry.data.get(CONF_TOKEN)
         self._debounced_reload = Debouncer(
             hass,
             LOGGER,
@@ -135,8 +135,11 @@ class DebouncedEntryReloader:
 
     async def async_call(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Start the countdown for a reload."""
-        if entry.data.get(CONF_TOKEN) != self.original_data.get(CONF_TOKEN):
+        if (new_token := entry.data.get(CONF_TOKEN)) != self.token:
+            LOGGER.debug("Skipping reload as its a token update")
+            self.token = new_token
             return  # Token updates should not trigger a reload
+        LOGGER.debug("Calling debouncer to get a reload after cooldown")
         await self._debounced_reload.async_call()
 
     @callback
@@ -198,6 +201,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await _async_update_ssdp_locations(hass, entry)
 
+    # We must not await after we setup the reload or there
+    # will be a race where the config flow will see the entry
+    # as not loaded and may reload it
     debounced_reloader = DebouncedEntryReloader(hass, entry)
     entry.async_on_unload(debounced_reloader.async_cancel)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))

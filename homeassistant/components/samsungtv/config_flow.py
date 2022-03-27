@@ -360,42 +360,52 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Returns the existing entry if it was updated.
         """
         entry, is_unique_match = self._async_get_existing_matching_entry()
-        if entry:
-            entry_kw_args: dict = {}
-            if self.unique_id and (
-                entry.unique_id is None
-                or (is_unique_match and self.unique_id != entry.unique_id)
-            ):
-                entry_kw_args["unique_id"] = self.unique_id
-            data: dict[str, Any] = dict(entry.data)
-            update_ssdp_rendering_control_location = (
-                self._ssdp_rendering_control_location
-                and data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
-                != self._ssdp_rendering_control_location
+        if not entry:
+            return None
+        entry_kw_args: dict = {}
+        if (
+            self.unique_id
+            and entry.unique_id is None
+            or (is_unique_match and self.unique_id != entry.unique_id)
+        ):
+            entry_kw_args["unique_id"] = self.unique_id
+        data: dict[str, Any] = dict(entry.data)
+        update_ssdp_rendering_control_location = (
+            self._ssdp_rendering_control_location
+            and data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+            != self._ssdp_rendering_control_location
+        )
+        update_ssdp_main_tv_agent_location = (
+            self._ssdp_main_tv_agent_location
+            and data.get(CONF_SSDP_MAIN_TV_AGENT_LOCATION)
+            != self._ssdp_main_tv_agent_location
+        )
+        update_mac = self._mac and not data.get(CONF_MAC)
+        if (
+            update_ssdp_rendering_control_location
+            or update_ssdp_main_tv_agent_location
+            or update_mac
+        ):
+            if update_ssdp_rendering_control_location:
+                data[
+                    CONF_SSDP_RENDERING_CONTROL_LOCATION
+                ] = self._ssdp_rendering_control_location
+            if update_ssdp_main_tv_agent_location:
+                data[
+                    CONF_SSDP_MAIN_TV_AGENT_LOCATION
+                ] = self._ssdp_main_tv_agent_location
+            if update_mac:
+                data[CONF_MAC] = self._mac
+            entry_kw_args["data"] = data
+        if not entry_kw_args:
+            return None
+        LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
+        self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
+        if entry.state != config_entries.ConfigEntryState.LOADED:
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(entry.entry_id)
             )
-            update_ssdp_main_tv_agent_location = (
-                self._ssdp_main_tv_agent_location
-                and data.get(CONF_SSDP_MAIN_TV_AGENT_LOCATION)
-                != self._ssdp_main_tv_agent_location
-            )
-            update_mac = self._mac and not data.get(CONF_MAC)
-            if update_ssdp_rendering_control_location or update_mac:
-                if update_ssdp_rendering_control_location:
-                    data[
-                        CONF_SSDP_RENDERING_CONTROL_LOCATION
-                    ] = self._ssdp_rendering_control_location
-                if update_ssdp_main_tv_agent_location:
-                    data[
-                        CONF_SSDP_MAIN_TV_AGENT_LOCATION
-                    ] = self._ssdp_main_tv_agent_location
-                if update_mac:
-                    data[CONF_MAC] = self._mac
-                entry_kw_args["data"] = data
-            if entry_kw_args:
-                LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
-                self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
-                return entry
-        return None
+        return entry
 
     async def _async_start_discovery_with_mac_address(self) -> None:
         """Start discovery."""
