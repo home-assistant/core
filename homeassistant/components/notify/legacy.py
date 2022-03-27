@@ -116,9 +116,6 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
         """Handle for discovered platform."""
         await async_setup_platform(platform, discovery_info=info)
 
-    if hass.data[NOTIFY_DISCOVERY_DISPATCHER] is not None:
-        return
-
     hass.data[NOTIFY_DISCOVERY_DISPATCHER] = discovery.async_listen_platform(
         hass, DOMAIN, async_platform_discovered
     )
