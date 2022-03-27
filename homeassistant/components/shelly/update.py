@@ -66,7 +66,7 @@ BLOCK_UPDATE_ENTITIES: Final = {
     ),
     "fwupdate_beta": RestUpdateEntityDescription(
         key="fwupdate_beta",
-        name="Firmware Update Beta",
+        name="Beta Firmware Update",
         entity_registry_enabled_default=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         current_version=lambda update: update.get("old_version"),
