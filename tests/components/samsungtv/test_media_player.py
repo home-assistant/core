@@ -356,7 +356,8 @@ async def test_update_off_ws_with_power_state(
         await hass.async_block_till_done()
 
     remotews.start_listening.assert_called_once()
-    rest_api.rest_device_info.assert_called_once()
+    # Once to init the device, once to check the power state
+    assert len(rest_api.rest_device_info.mock_calls) == 2
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
