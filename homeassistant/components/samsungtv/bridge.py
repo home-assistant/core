@@ -541,6 +541,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     err.__repr__(),
                 )
                 self._notify_reauth_callback()
+                self._remote = None
             except ConnectionClosedError as err:
                 LOGGER.info(
                     "Failed to get remote for %s: %s",
