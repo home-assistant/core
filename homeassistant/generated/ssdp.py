@@ -227,7 +227,7 @@ SSDP = {
             "st": "urn:samsung.com:device:RemoteControlReceiver:1"
         },
         {
-            "st": "rn:samsung.com:service:MainTVAgent2:1"
+            "st": "urn:samsung.com:service:MainTVAgent2:1"
         },
         {
             "manufacturer": "Samsung",
