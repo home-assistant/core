@@ -204,7 +204,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if not self._app_list_event.is_set():
             startup_tasks.append(self._async_startup_app_list())
 
-        if not self._upnp_device:
+        if not self._upnp_device and self._ssdp_rendering_control_location:
             startup_tasks.append(self._async_startup_upnp())
 
         await asyncio.gather(*startup_tasks)
@@ -240,7 +240,8 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
 
     async def _async_startup_upnp(self) -> None:
-        if self._upnp_device is None and self._ssdp_rendering_control_location:
+        assert self._ssdp_rendering_control_location is not None
+        if self._upnp_device is None:
             session = async_get_clientsession(self.hass)
             upnp_requester = AiohttpSessionRequester(session)
             upnp_factory = UpnpFactory(upnp_requester)
