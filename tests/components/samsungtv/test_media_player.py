@@ -80,7 +80,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import setup_samsungtv_entry, upnp_get_action_mock
+from . import (
+    async_wait_config_entry_reload,
+    setup_samsungtv_entry,
+    upnp_get_action_mock,
+)
 from .const import (
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_FRAME,
@@ -1301,8 +1305,8 @@ async def test_websocket_unsupported_remote_control(
         "'unrecognized method value : ms.remote.control'" in caplog.text
     )
 
+    await async_wait_config_entry_reload(hass)
     # ensure reauth triggered, and method/port updated
-    await hass.async_block_till_done()
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
