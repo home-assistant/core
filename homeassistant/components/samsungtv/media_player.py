@@ -54,6 +54,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
+    UPNP_SVC_RENDERINGCONTROL,
 )
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -80,9 +81,6 @@ SCAN_INTERVAL_PLUS_OFF_TIME = entity_component.DEFAULT_SCAN_INTERVAL + timedelta
 
 # Max delay waiting for app_list to return, as some TVs simply ignore the request
 APP_LIST_DELAY = 3
-
-
-UPNP_SVC_RENDERINGCONTROL = "urn:schemas-upnp-org:service:RenderingControl:1"
 
 
 async def async_setup_entry(
