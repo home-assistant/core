@@ -534,16 +534,21 @@ class SamsungTVWSBridge(SamsungTVBridge):
             )
             try:
                 await self._remote.start_listening(self._remote_event)
-            except ConnectionClosedError as err:
-                # This is only happening when the auth was switched to DENY
-                # A removed auth will lead to socket timeout because waiting
-                # for auth popup is just an open socket
+            except UnauthorizedError as err:
                 LOGGER.info(
                     "Failed to get remote for %s, re-authentication required: %s",
                     self.host,
                     err.__repr__(),
                 )
                 self._notify_reauth_callback()
+                self._remote = None
+            except ConnectionClosedError as err:
+                LOGGER.info(
+                    "Failed to get remote for %s: %s",
+                    self.host,
+                    err.__repr__(),
+                )
+                self._remote = None
             except ConnectionFailure as err:
                 LOGGER.warning(
                     "Unexpected ConnectionFailure trying to get remote for %s, "
