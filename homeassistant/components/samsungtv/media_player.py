@@ -54,6 +54,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
+    UPNP_SVC_RENDERINGCONTROL,
 )
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -62,7 +63,6 @@ SUPPORT_SAMSUNGTV = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_NEXT_TRACK
@@ -80,9 +80,6 @@ SCAN_INTERVAL_PLUS_OFF_TIME = entity_component.DEFAULT_SCAN_INTERVAL + timedelta
 
 # Max delay waiting for app_list to return, as some TVs simply ignore the request
 APP_LIST_DELAY = 3
-
-
-UPNP_SVC_RENDERINGCONTROL = "urn:schemas-upnp-org:service:RenderingControl:1"
 
 
 async def async_setup_entry(
@@ -117,9 +114,8 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._config_entry = config_entry
         self._host: str | None = config_entry.data[CONF_HOST]
         self._mac: str | None = config_entry.data.get(CONF_MAC)
-        self._ssdp_location = (
-            config_entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
-            or f"http://{self._host}:9197/dmr"
+        self._ssdp_rendering_control_location = config_entry.data.get(
+            CONF_SSDP_RENDERING_CONTROL_LOCATION
         )
         self._on_script = on_script
         # Assume that the TV is in Play mode
@@ -138,6 +134,8 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._on_script or self._mac:
             # Add turn-on if on_script or mac is available
             self._attr_supported_features |= SUPPORT_TURN_ON
+        if self._ssdp_rendering_control_location:
+            self._attr_supported_features |= SUPPORT_VOLUME_SET
 
         self._attr_device_info = DeviceInfo(
             name=self.name,
@@ -198,29 +196,33 @@ class SamsungTVDevice(MediaPlayerEntity):
                 STATE_ON if await self._bridge.async_is_on() else STATE_OFF
             )
 
-        if self._attr_state == STATE_ON:
-            startup_tasks: list[Coroutine[Any, Any, None]] = []
+        if self._attr_state != STATE_ON:
+            return
 
-            if not self._app_list_event.is_set():
-                startup_tasks.append(self._async_startup_app_list())
+        startup_tasks: list[Coroutine[Any, Any, None]] = []
 
-            if not self._upnp_device:
-                startup_tasks.append(self._async_startup_upnp())
+        if not self._app_list_event.is_set():
+            startup_tasks.append(self._async_startup_app_list())
 
-            await asyncio.gather(*startup_tasks)
+        if not self._upnp_device and self._ssdp_rendering_control_location:
+            startup_tasks.append(self._async_startup_upnp())
 
-            if service := self._get_upnp_service():
-                action = service.action("GetVolume")
-                get_volume = await action.async_call(InstanceID=0, Channel="Master")
-                LOGGER.debug("Upnp GetVolume on %s: %s", self._host, get_volume)
-                if (volume_level := get_volume.get("CurrentVolume")) is not None:
-                    self._attr_volume_level = volume_level / 100
+        await asyncio.gather(*startup_tasks)
 
-                action = service.action("GetMute")
-                get_mute = await action.async_call(InstanceID=0, Channel="Master")
-                LOGGER.debug("Upnp GetMute on %s: %s", self._host, get_mute)
-                if (is_muted := get_mute.get("CurrentMute")) is not None:
-                    self._attr_is_volume_muted = is_muted
+        if not (service := self._get_upnp_service()):
+            return
+
+        action = service.action("GetVolume")
+        get_volume = await action.async_call(InstanceID=0, Channel="Master")
+        LOGGER.debug("Upnp GetVolume on %s: %s", self._host, get_volume)
+        if (volume_level := get_volume.get("CurrentVolume")) is not None:
+            self._attr_volume_level = volume_level / 100
+
+        action = service.action("GetMute")
+        get_mute = await action.async_call(InstanceID=0, Channel="Master")
+        LOGGER.debug("Upnp GetMute on %s: %s", self._host, get_mute)
+        if (is_muted := get_mute.get("CurrentMute")) is not None:
+            self._attr_is_volume_muted = is_muted
 
     async def _async_startup_app_list(self) -> None:
         await self._bridge.async_request_app_list()
@@ -238,13 +240,14 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
 
     async def _async_startup_upnp(self) -> None:
+        assert self._ssdp_rendering_control_location is not None
         if self._upnp_device is None:
             session = async_get_clientsession(self.hass)
             upnp_requester = AiohttpSessionRequester(session)
             upnp_factory = UpnpFactory(upnp_requester)
             with contextlib.suppress(UpnpConnectionError):
                 self._upnp_device = await upnp_factory.async_create_device(
-                    self._ssdp_location
+                    self._ssdp_rendering_control_location
                 )
 
     def _get_upnp_service(self, log: bool = False) -> UpnpService | None:
