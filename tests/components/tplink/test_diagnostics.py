@@ -38,7 +38,7 @@ async def test_diagnostics(
     """Test diagnostics for config entry."""
     diagnostics_data = json.loads(load_fixture(fixture_file, "tplink"))
 
-    mocked_dev._last_update = diagnostics_data["device_last_response"]
+    mocked_dev.internal_state = diagnostics_data["device_last_response"]
 
     config_entry = await initialize_config_entry_for_device(hass, mocked_dev)
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)

@@ -2,6 +2,7 @@
 from enocean.protocol.packet import Packet
 from enocean.utils import combine_hex
 
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
@@ -18,8 +19,8 @@ class EnOceanEntity(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_RECEIVE_MESSAGE, self._message_received_callback
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RECEIVE_MESSAGE, self._message_received_callback
             )
         )
 

@@ -80,10 +80,8 @@ async def async_setup_entry(
     async_add_entities([device])
 
 
-class ValloxFan(CoordinatorEntity, FanEntity):
+class ValloxFan(CoordinatorEntity[ValloxDataUpdateCoordinator], FanEntity):
     """Representation of the fan."""
-
-    coordinator: ValloxDataUpdateCoordinator
 
     def __init__(
         self,

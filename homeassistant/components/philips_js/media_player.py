@@ -79,10 +79,11 @@ async def async_setup_entry(
     )
 
 
-class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
+class PhilipsTVMediaPlayer(
+    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], MediaPlayerEntity
+):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    coordinator: PhilipsTVDataUpdateCoordinator
     _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(
@@ -424,7 +425,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Return root media objects."""
 
         return BrowseMedia(
-            title="Library",
+            title="Philips TV",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="",
             media_content_type="",
