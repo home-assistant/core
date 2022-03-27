@@ -10,7 +10,9 @@ async def test_entry_diagnostics(hass, hass_client):
     """Test config entry diagnostics."""
     entry = await init_integration(hass)
 
-    coordinator_data = json.loads(load_fixture("current_conditions_data.json"))
+    coordinator_data = json.loads(
+        load_fixture("current_conditions_data.json", "accuweather")
+    )
     coordinator_data["forecast"] = {}
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
