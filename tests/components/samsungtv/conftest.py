@@ -98,6 +98,16 @@ def rest_api_failure_fixture() -> Mock:
         yield
 
 
+@pytest.fixture(name="remoteencws_failing")
+def remoteencws_failing_fixture():
+    """Patch the samsungtvws SamsungTVEncryptedWSAsyncRemote."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+        side_effect=OSError,
+    ):
+        yield
+
+
 @pytest.fixture(name="remotews")
 def remotews_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
