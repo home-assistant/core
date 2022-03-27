@@ -64,13 +64,13 @@ async def test_sensor_available(
         assert sensor_entity.state != "unavailable"
 
         if sensor == "total_customers_out":
-            assert sensor_entity.state == "123"
+            assert sensor_entity.state == "123.0"
         elif sensor == "total_percent_customers_out":
             assert sensor_entity.state == "15.589"
         elif sensor == "total_outage_count":
-            assert sensor_entity.state == "456"
+            assert sensor_entity.state == "456.0"
         elif sensor == "total_customers_served":
-            assert sensor_entity.state == "789"
+            assert sensor_entity.state == "789.0"
 
     # County Test
     aioclient_mock.clear_requests()
@@ -123,13 +123,13 @@ async def test_sensor_available(
         assert sensor_entity.state != "unavailable"
 
         if sensor == "bucks_customers_out":
-            assert sensor_entity.state == "123"
+            assert sensor_entity.state == "123.0"
         elif sensor == "bucks_percent_customers_out":
             assert sensor_entity.state == "15.589"
         elif sensor == "bucks_outage_count":
-            assert sensor_entity.state == "456"
+            assert sensor_entity.state == "456.0"
         elif sensor == "bucks_customers_served":
-            assert sensor_entity.state == "789"
+            assert sensor_entity.state == "789.0"
 
 
 async def test_http_error(
