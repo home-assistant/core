@@ -6,7 +6,8 @@
     "getmac==0.8.2",
     "samsungctl[websocket]==0.7.1",
     "samsungtvws[async,encrypted]==2.5.0",
-    "wakeonlan==2.0.1"
+    "wakeonlan==2.0.1",
+    "async-upnp-client==0.27.0"
   ],
   "ssdp": [
     {
