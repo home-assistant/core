@@ -56,7 +56,12 @@ REMOTE_CALL = {
 }
 
 
-@pytest.mark.usefixtures("remotews")
+@pytest.fixture(name="autouse_rest_api", autouse=True)
+def autouse_rest_api(rest_api) -> Mock:
+    """Enable auto use of the rest api fixture for these tests."""
+
+
+@pytest.mark.usefixtures("remotews", "remoteencws_failing")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test Samsung TV integration is setup."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
@@ -98,7 +103,7 @@ async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant) 
     assert config_entries_domain[0].state == ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("remotews")
+@pytest.mark.usefixtures("remotews", "remoteencws_failing")
 async def test_setup_from_yaml_without_port_device_online(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is online."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
@@ -127,7 +132,7 @@ async def test_setup_duplicate_config(
     assert "duplicate host entries found" in caplog.text
 
 
-@pytest.mark.usefixtures("remote", "remotews")
+@pytest.mark.usefixtures("remote", "remotews", "remoteencws_failing")
 async def test_setup_duplicate_entries(hass: HomeAssistant) -> None:
     """Test duplicate setup of platform."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
@@ -138,7 +143,7 @@ async def test_setup_duplicate_entries(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("media_player")) == 1
 
 
-@pytest.mark.usefixtures("remotews")
+@pytest.mark.usefixtures("remotews", "remoteencws_failing")
 async def test_setup_h_j_model(
     hass: HomeAssistant, rest_api: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:

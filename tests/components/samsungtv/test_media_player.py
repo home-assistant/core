@@ -141,6 +141,11 @@ MOCK_CONFIG_NOTURNON = {
 }
 
 
+@pytest.fixture(name="autouse_rest_api", autouse=True)
+def autouse_rest_api(rest_api) -> Mock:
+    """Enable auto use of the rest api fixture for these tests."""
+
+
 @pytest.fixture(name="delay")
 def delay_fixture():
     """Patch the delay script function."""

@@ -1,5 +1,5 @@
 """Tests for the samsungtv component."""
-
+from __future__ import annotations
 
 from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
