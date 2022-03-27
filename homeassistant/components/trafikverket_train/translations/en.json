@@ -1,14 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is already configured"
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "invalid_station": "Could not find a station with the specified name",
             "more_stations": "Found multiple stations with the specified name",
-            "invalid_time": "Invalid time provided"
+            "invalid_time": "Invalid time provided",
+            "incorrect_api_key": "Invalid API key for selected account"
         },
         "step": {
             "user": {
@@ -18,6 +20,11 @@
                     "from": "From station",
                     "time": "Time (optional)",
                     "weekday": "Days"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
                 }
             }
         }

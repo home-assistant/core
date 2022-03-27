@@ -1,7 +1,6 @@
 """Adds config flow for Trafikverket Train integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pytrafikverket import TrafikverketTrain
@@ -16,7 +15,9 @@ import homeassistant.util.dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+ERROR_INVALID_AUTH = "Source: Security, message: Invalid authentication"
+ERROR_INVALID_STATION = "Could not find a station with the specified name"
+ERROR_MULTIPLE_STATION = "Found multiple stations with the specified name"
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -29,6 +30,11 @@ DATA_SCHEMA = vol.Schema(
         ),
     }
 )
+DATA_SCHEMA_REAUTH = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+    }
+)
 
 
 class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -39,29 +45,77 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     entry: config_entries.ConfigEntry
 
     async def validate_input(
-        self, sensor_api: str, train_from: str, train_to: str
-    ) -> str:
+        self, api_key: str, train_from: str, train_to: str
+    ) -> None:
         """Validate input from user input."""
         web_session = async_get_clientsession(self.hass)
-        train_api = TrafikverketTrain(web_session, sensor_api)
-        try:
-            await train_api.async_get_train_station(train_from)
-            await train_api.async_get_train_station(train_to)
-        except ValueError as err:
-            return str(err)
-        return "connected"
+        train_api = TrafikverketTrain(web_session, api_key)
+        await train_api.async_get_train_station(train_from)
+        await train_api.async_get_train_station(train_to)
+
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle re-authentication with Trafikverket."""
+
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm re-authentication with Trafikverket."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+            api_key = user_input[CONF_API_KEY]
+
+            try:
+                await self.validate_input(
+                    api_key, self.entry.data[CONF_FROM], self.entry.data[CONF_TO]
+                )
+            except ValueError as err:
+                if str(err) == ERROR_INVALID_AUTH:
+                    errors["base"] = "invalid_auth"
+                elif str(err) == ERROR_INVALID_STATION:
+                    errors["base"] = "invalid_station"
+                elif str(err) == ERROR_MULTIPLE_STATION:
+                    errors["base"] = "more_stations"
+                else:
+                    errors["base"] = "cannot_connect"
+            else:
+                assert self.entry is not None
+
+                if (
+                    f"{self.entry.data[CONF_FROM]}-{self.entry.data[CONF_TO]}-{self.entry.data.get(CONF_TIME)}-{self.entry.data[CONF_WEEKDAY]}"
+                    == self.entry.unique_id
+                ):
+                    self.hass.config_entries.async_update_entry(
+                        self.entry,
+                        data={
+                            **self.entry.data,
+                            CONF_API_KEY: api_key,
+                        },
+                    )
+                    await self.hass.config_entries.async_reload(self.entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=DATA_SCHEMA_REAUTH,
+            errors=errors,
+        )
 
     async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
         """Import a configuration from config.yaml."""
 
-        self._async_abort_entries_match(config)
         return await self.async_step_user(user_input=config)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the user step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
@@ -70,43 +124,41 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             train_time = user_input.get(CONF_TIME)
             train_days = user_input[CONF_WEEKDAY]
 
-            name = (
-                f"{train_from} to {train_to} at {train_time}"
-                if train_time
-                else f"{train_from} to {train_to}"
-            )
-
-            validate = await self.validate_input(api_key, train_from, train_to)
-
+            name = f"{train_from} to {train_to}"
             if train_time:
-                validate = (
-                    "Invalid time"
-                    if bool(dt_util.parse_time(train_time) is None)
-                    else validate
-                )
+                name = f"{train_from} to {train_to} at {train_time}"
 
-            if validate == "connected":
-                return self.async_create_entry(
-                    title=name,
-                    data={
-                        CONF_API_KEY: api_key,
-                        CONF_NAME: name,
-                        CONF_FROM: train_from,
-                        CONF_TO: train_to,
-                        CONF_TIME: train_time,
-                        CONF_WEEKDAY: train_days,
-                    },
-                )
-            if validate == "Source: Security, message: Invalid authentication":
-                errors["base"] = "invalid_auth"
-            elif validate == "Could not find a station with the specified name":
-                errors["base"] = "invalid_station"
-            elif validate == "Found multiple stations with the specified name":
-                errors["base"] = "more_stations"
-            elif validate == "Invalid time":
-                errors["base"] = "invalid_time"
+            try:
+                await self.validate_input(api_key, train_from, train_to)
+            except ValueError as err:
+                if str(err) == ERROR_INVALID_AUTH:
+                    errors["base"] = "invalid_auth"
+                elif str(err) == ERROR_INVALID_STATION:
+                    errors["base"] = "invalid_station"
+                elif str(err) == ERROR_MULTIPLE_STATION:
+                    errors["base"] = "more_stations"
+                else:
+                    errors["base"] = "cannot_connect"
             else:
-                errors["base"] = "cannot_connect"
+                if train_time:
+                    if bool(dt_util.parse_time(train_time) is None):
+                        errors["base"] = "invalid_time"
+                if not errors:
+                    await self.async_set_unique_id(
+                        f"{train_from}-{train_to}-{train_time}-{train_days}"
+                    )
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=name,
+                        data={
+                            CONF_API_KEY: api_key,
+                            CONF_NAME: name,
+                            CONF_FROM: train_from,
+                            CONF_TO: train_to,
+                            CONF_TIME: train_time,
+                            CONF_WEEKDAY: train_days,
+                        },
+                    )
 
         return self.async_show_form(
             step_id="user",

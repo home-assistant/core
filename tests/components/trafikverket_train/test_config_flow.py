@@ -12,7 +12,7 @@ from homeassistant.components.trafikverket_train.const import (
     CONF_TO,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -108,7 +108,10 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
             CONF_NAME: "Stockholm C to Uppsala C",
             CONF_FROM: "Stockholm C",
             CONF_TO: "Uppsala C",
+            CONF_TIME: "10:00",
+            CONF_WEEKDAY: WEEKDAYS,
         },
+        unique_id=f"Stockholm C-Uppsala C-10:00-{WEEKDAYS}",
     ).add_to_hass(hass)
 
     with patch(
@@ -125,6 +128,8 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
                 CONF_API_KEY: "1234567890",
                 CONF_FROM: "Stockholm C",
                 CONF_TO: "Uppsala C",
+                CONF_TIME: "10:00",
+                CONF_WEEKDAY: WEEKDAYS,
             },
         )
         await hass.async_block_till_done()
@@ -204,3 +209,143 @@ async def test_flow_fails_incorrect_time(hass: HomeAssistant) -> None:
         )
 
     assert result6["errors"] == {"base": "invalid_time"}
+
+
+async def test_reauth_flow(hass: HomeAssistant) -> None:
+    """Test a reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "1234567890",
+            CONF_NAME: "Stockholm C to Uppsala C at 10:00",
+            CONF_FROM: "Stockholm C",
+            CONF_TO: "Uppsala C",
+            CONF_TIME: "10:00",
+            CONF_WEEKDAY: WEEKDAYS,
+        },
+        unique_id=f"Stockholm C-Uppsala C-10:00-{WEEKDAYS}",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": entry.unique_id,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+    ), patch(
+        "homeassistant.components.trafikverket_train.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "1234567891"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert entry.data == {
+        "api_key": "1234567891",
+        "name": "Stockholm C to Uppsala C at 10:00",
+        "from": "Stockholm C",
+        "to": "Uppsala C",
+        "time": "10:00",
+        "weekday": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+    }
+
+
+@pytest.mark.parametrize(
+    "sideeffect,p_error",
+    [
+        (
+            ValueError("Source: Security, message: Invalid authentication"),
+            "invalid_auth",
+        ),
+        (
+            ValueError("Could not find a station with the specified name"),
+            "invalid_station",
+        ),
+        (
+            ValueError("Found multiple stations with the specified name"),
+            "more_stations",
+        ),
+        (
+            ValueError("Unknown"),
+            "cannot_connect",
+        ),
+    ],
+)
+async def test_reauth_flow_error(
+    hass: HomeAssistant, sideeffect: Exception, p_error: str
+) -> None:
+    """Test a reauthentication flow with error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "1234567890",
+            CONF_NAME: "Stockholm C to Uppsala C at 10:00",
+            CONF_FROM: "Stockholm C",
+            CONF_TO: "Uppsala C",
+            CONF_TIME: "10:00",
+            CONF_WEEKDAY: WEEKDAYS,
+        },
+        unique_id=f"Stockholm C-Uppsala C-10:00-{WEEKDAYS}",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": entry.unique_id,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    with patch(
+        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+        side_effect=sideeffect,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "1234567890"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": p_error}
+
+    with patch(
+        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+    ), patch(
+        "homeassistant.components.trafikverket_train.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "1234567891"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert entry.data == {
+        "api_key": "1234567891",
+        "name": "Stockholm C to Uppsala C at 10:00",
+        "from": "Stockholm C",
+        "to": "Uppsala C",
+        "time": "10:00",
+        "weekday": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+    }

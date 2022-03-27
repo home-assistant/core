@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -50,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_TO): cv.string,
                 vol.Required(CONF_FROM): cv.string,
-                vol.Optional(CONF_TIME): cv.string,
+                vol.Optional(CONF_TIME): cv.time,
                 vol.Optional(CONF_WEEKDAY, default=WEEKDAYS): vol.All(
                     cv.ensure_list, [vol.In(WEEKDAYS)]
                 ),
@@ -73,11 +74,12 @@ async def async_setup_platform(
     )
 
     for train in config[CONF_TRAINS]:
+
         new_config = {
             CONF_API_KEY: config[CONF_API_KEY],
             CONF_FROM: train[CONF_FROM],
             CONF_TO: train[CONF_TO],
-            CONF_TIME: train.get(CONF_TIME),
+            CONF_TIME: str(train.get(CONF_TIME)),
             CONF_WEEKDAY: train.get(CONF_WEEKDAY, WEEKDAYS),
         }
         hass.async_create_task(
@@ -102,14 +104,10 @@ async def async_setup_entry(
         from_station = await train_api.async_get_train_station(entry.data[CONF_FROM])
     except ValueError as error:
         if "Invalid authentication" in error.args[0]:
-            _LOGGER.error("Unable to set up up component: %s", error)
-            return
-        _LOGGER.error(
-            "Problem when trying station %s to %s. Error: %s ",
-            entry.data[CONF_FROM],
-            entry.data[CONF_TO],
-            error,
-        )
+            raise ConfigEntryAuthFailed from error
+        raise ConfigEntryNotReady(
+            f"Problem when trying station {entry.data[CONF_FROM]} to {entry.data[CONF_TO]}. Error: {error} "
+        ) from error
 
     train_time = (
         parse_time(entry.data.get(CONF_TIME, "")) if entry.data.get(CONF_TIME) else None
@@ -176,7 +174,7 @@ class TrainSensor(SensorEntity):
         """Initialize the sensor."""
         self._train_api = train_api
         self._attr_name = name
-        self._attr_unique_id = f"{name}, {departuretime}, {weekday}"
+        self._attr_unique_id = f"{from_station}-{to_station}-{departuretime}-{weekday}"
         self._from_station = from_station
         self._to_station = to_station
         self._weekday = weekday
