@@ -54,7 +54,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
-    UPNP_SVC_RENDERINGCONTROL,
+    UPNP_SVC_RENDERING_CONTROL,
 )
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -255,13 +255,13 @@ class SamsungTVDevice(MediaPlayerEntity):
                 LOGGER.info("Upnp services are not available on %s", self._host)
             return None
 
-        if service := self._upnp_device.services.get(UPNP_SVC_RENDERINGCONTROL):
+        if service := self._upnp_device.services.get(UPNP_SVC_RENDERING_CONTROL):
             return service
 
         if log:
             LOGGER.info(
                 "Upnp service %s is not available on %s",
-                UPNP_SVC_RENDERINGCONTROL,
+                UPNP_SVC_RENDERING_CONTROL,
                 self._host,
             )
         return None

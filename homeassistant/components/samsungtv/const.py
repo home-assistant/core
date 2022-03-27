@@ -16,6 +16,7 @@ CONF_DESCRIPTION = "description"
 CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
 CONF_SSDP_RENDERING_CONTROL_LOCATION = "ssdp_rendering_control_location"
+CONF_SSDP_MAIN_TV_AGENT_LOCATION = "ssdp_main_tv_agent_location"
 CONF_ON_ACTION = "turn_on_action"
 CONF_SESSION_ID = "session_id"
 
@@ -41,4 +42,8 @@ WEBSOCKET_PORTS = (WEBSOCKET_SSL_PORT, WEBSOCKET_NO_SSL_PORT)
 
 SUCCESSFUL_RESULTS = {RESULT_AUTH_MISSING, RESULT_SUCCESS}
 
-UPNP_SVC_RENDERINGCONTROL = "urn:schemas-upnp-org:service:RenderingControl:1"
+UPNP_SVC_RENDERING_CONTROL = "urn:schemas-upnp-org:service:RenderingControl:1"
+UPNP_SRV_MAIN_TV_AGENT = "urn:samsung.com:service:MainTVAgent2:1"
+
+# Time to wait before reloading entry upon device config change
+ENTRY_RELOAD_COOLDOWN = 10

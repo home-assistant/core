@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 
 from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
@@ -33,6 +34,7 @@ from .const import (
     CONF_SESSION_ID,
     DEFAULT_NAME,
     DOMAIN,
+    ENTRY_RELOAD_COOLDOWN,
     LEGACY_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
@@ -109,6 +111,36 @@ def _async_get_device_bridge(
     )
 
 
+class DebouncedEntryReloader:
+    """Reload only after the timer expires."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Init the debounced entry reloader."""
+        self.hass = hass
+        self.entry = entry
+        self._debounced_reload = Debouncer(
+            hass,
+            LOGGER,
+            cooldown=ENTRY_RELOAD_COOLDOWN,
+            immediate=False,
+            function=self._async_reload_entry,
+        )
+
+    async def async_call(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Start the countdown for a reload."""
+        await self._debounced_reload.async_call()
+
+    @callback
+    def async_cancel(self) -> None:
+        """Cancel any pending reload."""
+        self._debounced_reload.async_cancel()
+
+    async def _async_reload_entry(self) -> None:
+        """Reload entry."""
+        LOGGER.debug("Reloading entry %s", self.entry.title)
+        await self.hass.config_entries.async_reload(self.entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
 
@@ -144,6 +176,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
+
+    debounced_reloader = DebouncedEntryReloader(hass, entry)
+    entry.async_on_unload(debounced_reloader.async_cancel)
+    entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
     hass.data[DOMAIN][entry.entry_id] = bridge
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
