@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Final
 
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
+from yarl import URL
 
 from homeassistant.components.update import UpdateEntity
 from homeassistant.config_entries import ConfigEntry
@@ -65,10 +66,14 @@ class SynoDSMUpdateEntity(SynologyDSMBaseEntity, UpdateEntity):
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        base_url = "http://update.synology.com/autoupdate/whatsnew.php?"
-        if (details := self._api.upgrade.available_version_details) is not None:
-            url = f"{base_url}model={self._api.information.model}&update_version={details['buildnumber']}"
-            if details.get("nano") > 0:
-                return f"{url}-{details['nano']}"
-            return url
-        return None
+        if (details := self._api.upgrade.available_version_details) is None:
+            return None
+
+        url = URL("http://update.synology.com/autoupdate/whatsnew.php")
+        query = {"model": self._api.information.model}
+        if details.get("nano") > 0:
+            query["update_version"] = f"{details['buildnumber']}-{details['nano']}"
+        else:
+            query["update_version"] = details["buildnumber"]
+
+        return url.update_query(query).human_repr()
