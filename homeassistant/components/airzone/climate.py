@@ -102,7 +102,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         try:
             await self.coordinator.airzone.put_hvac(params)
         except (AirzoneError, ClientConnectorError) as error:
-            _LOGGER.error(error)
+            raise HomeAssistantError(f"Failed to set zone {self.name}: {error}") from error
         else:
             self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
 
