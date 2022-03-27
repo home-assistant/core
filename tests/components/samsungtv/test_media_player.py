@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
 
+from async_upnp_client.exceptions import UpnpActionResponseError
 import pytest
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
@@ -21,6 +22,7 @@ from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
     MEDIA_TYPE_APP,
@@ -33,13 +35,17 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.samsungtv.const import (
     CONF_MODEL,
     CONF_ON_ACTION,
+    CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DOMAIN as SAMSUNGTV_DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
     METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_WEBSOCKET,
     TIMEOUT_WEBSOCKET,
 )
-from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
+from homeassistant.components.samsungtv.media_player import (
+    SUPPORT_SAMSUNGTV,
+    UPNP_SVC_RENDERINGCONTROL,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -62,6 +68,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_ON,
@@ -73,7 +80,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import setup_samsungtv_entry
+from . import setup_samsungtv_entry, upnp_get_action_mock
 from .const import (
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_FRAME,
@@ -119,6 +126,7 @@ MOCK_ENTRY_WS = {
     CONF_NAME: "fake",
     CONF_PORT: 8001,
     CONF_TOKEN: "123456789",
+    CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://any",
 }
 
 
@@ -1304,3 +1312,81 @@ async def test_websocket_unsupported_remote_control(
     assert entry.data[CONF_PORT] == ENCRYPTED_WEBSOCKET_PORT
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("remotews")
+async def test_volume_control_upnp(
+    hass: HomeAssistant, upnp_device: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for Upnp volume control."""
+    upnp_get_volume = upnp_get_action_mock(
+        upnp_device, UPNP_SVC_RENDERINGCONTROL, "GetVolume"
+    )
+    upnp_get_volume.async_call.return_value = {"CurrentVolume": 44}
+
+    upnp_get_mute = upnp_get_action_mock(
+        upnp_device, UPNP_SVC_RENDERINGCONTROL, "GetMute"
+    )
+    upnp_get_mute.async_call.return_value = {"CurrentMute": False}
+
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    upnp_get_volume.async_call.assert_called_once()
+    upnp_get_mute.async_call.assert_called_once()
+
+    # Upnp action succeeds
+    upnp_set_volume = upnp_get_action_mock(
+        upnp_device, UPNP_SVC_RENDERINGCONTROL, "SetVolume"
+    )
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        True,
+    )
+    assert "Unable to set volume level on" not in caplog.text
+
+    # Upnp action failed
+    upnp_set_volume.async_call.side_effect = UpnpActionResponseError(
+        status=500, error_code=501, error_desc="Action Failed"
+    )
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+        True,
+    )
+    assert "Unable to set volume level on" in caplog.text
+
+
+@pytest.mark.usefixtures("remotews")
+async def test_upnp_not_available(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for volume control when Upnp is not available."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+
+    # Upnp action fails
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+        True,
+    )
+    assert "Upnp services are not available" in caplog.text
+
+
+@pytest.mark.usefixtures("remotews", "upnp_device")
+async def test_upnp_missing_service(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for volume control when Upnp is not available."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+
+    # Upnp action fails
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+        True,
+    )
+    assert f"Upnp service {UPNP_SVC_RENDERINGCONTROL} is not available" in caplog.text
