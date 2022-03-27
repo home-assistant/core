@@ -402,6 +402,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
         self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
         if entry.state != config_entries.ConfigEntryState.LOADED:
+            # If its loaded it already has a reload listener in place
+            # and we do not want to trigger multiple reloads
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(entry.entry_id)
             )
