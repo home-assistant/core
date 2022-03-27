@@ -103,6 +103,6 @@ class PecoSensor(
         self.entity_description = description
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> int:
         """Return the value of the sensor."""
-        return float(getattr(self.coordinator.data, self.entity_description.key))
+        return int(getattr(self.coordinator.data, self.entity_description.key))
