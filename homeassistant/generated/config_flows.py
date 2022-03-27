@@ -66,6 +66,7 @@ FLOWS = {
         "crownstone",
         "daikin",
         "deconz",
+        "deluge",
         "denonavr",
         "devolo_home_control",
         "devolo_home_network",
@@ -96,6 +97,8 @@ FLOWS = {
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
+        "fibaro",
+        "filesize",
         "fireservicerota",
         "fivem",
         "fjaraskupan",
@@ -337,6 +340,7 @@ FLOWS = {
         "tasmota",
         "tellduslive",
         "tesla_wall_connector",
+        "threshold",
         "tibber",
         "tile",
         "tolo",
@@ -398,6 +402,7 @@ FLOWS = {
         "zwave_me"
     ],
     "helper": [
-        "derivative"
+        "derivative",
+        "tod"
     ]
 }

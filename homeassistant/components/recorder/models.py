@@ -22,6 +22,7 @@ from sqlalchemy import (
     distinct,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql
+from sqlalchemy.engine.row import Row
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
@@ -527,8 +528,6 @@ class LazyState(State):
 
     __slots__ = [
         "_row",
-        "entity_id",
-        "state",
         "_attributes",
         "_last_changed",
         "_last_updated",
@@ -536,7 +535,9 @@ class LazyState(State):
         "_attr_cache",
     ]
 
-    def __init__(self, row, attr_cache=None):  # pylint: disable=super-init-not-called
+    def __init__(  # pylint: disable=super-init-not-called
+        self, row: Row, attr_cache: dict[str, dict[str, Any]] | None = None
+    ) -> None:
         """Init the lazy state."""
         self._row = row
         self.entity_id = self._row.entity_id

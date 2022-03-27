@@ -210,6 +210,8 @@ tests/components/deconz/* @Kane610
 homeassistant/components/default_config/* @home-assistant/core
 tests/components/default_config/* @home-assistant/core
 homeassistant/components/delijn/* @bollewolle @Emilv2
+homeassistant/components/deluge/* @tkdrob
+tests/components/deluge/* @tkdrob
 homeassistant/components/demo/* @home-assistant/core
 tests/components/demo/* @home-assistant/core
 homeassistant/components/denonavr/* @ol-iver @starkillerOG
@@ -304,8 +306,12 @@ tests/components/faa_delays/* @ntilley905
 homeassistant/components/fan/* @home-assistant/core
 tests/components/fan/* @home-assistant/core
 homeassistant/components/fastdotcom/* @rohankapoorcom
+homeassistant/components/fibaro/* @rappenze
+tests/components/fibaro/* @rappenze
 homeassistant/components/file/* @fabaff
 tests/components/file/* @fabaff
+homeassistant/components/filesize/* @gjohansson-ST
+tests/components/filesize/* @gjohansson-ST
 homeassistant/components/filter/* @dgomes
 tests/components/filter/* @dgomes
 homeassistant/components/fireservicerota/* @cyberjunky

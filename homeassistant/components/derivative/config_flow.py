@@ -18,7 +18,8 @@ from homeassistant.const import (
 from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
-    HelperFlowStep,
+    HelperFlowFormStep,
+    HelperFlowMenuStep,
 )
 
 from .const import (
@@ -40,10 +41,10 @@ UNIT_PREFIXES = [
     {"value": "T", "label": "P (peta)"},
 ]
 TIME_UNITS = [
-    {"value": TIME_SECONDS, "label": "s (seconds)"},
-    {"value": TIME_MINUTES, "label": "min (minutes)"},
-    {"value": TIME_HOURS, "label": "h (hours)"},
-    {"value": TIME_DAYS, "label": "d (days)"},
+    {"value": TIME_SECONDS, "label": "Seconds"},
+    {"value": TIME_MINUTES, "label": "Minutes"},
+    {"value": TIME_HOURS, "label": "Hours"},
+    {"value": TIME_DAYS, "label": "Days"},
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -77,9 +78,13 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW = {"user": HelperFlowStep(CONFIG_SCHEMA)}
+CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
+    "user": HelperFlowFormStep(CONFIG_SCHEMA)
+}
 
-OPTIONS_FLOW = {"init": HelperFlowStep(OPTIONS_SCHEMA)}
+OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
+    "init": HelperFlowFormStep(OPTIONS_SCHEMA)
+}
 
 
 class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
