@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Final
 
+from aioairzone.common import OperationMode
 from aioairzone.const import (
     API_MODE,
     API_ON,
@@ -27,28 +29,56 @@ from aiohttp.client_exceptions import ClientConnectorError
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AirzoneEntity
-from .const import (
-    API_TEMPERATURE_STEP,
-    DOMAIN,
-    HVAC_ACTION_LIB_TO_HASS,
-    HVAC_MODE_HASS_TO_LIB,
-    HVAC_MODE_LIB_TO_HASS,
-    TEMP_UNIT_LIB_TO_HASS,
-)
+from .const import API_TEMPERATURE_STEP, DOMAIN, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+HVAC_ACTION_LIB_TO_HASS: Final[dict[OperationMode, str]] = {
+    OperationMode.STOP: CURRENT_HVAC_OFF,
+    OperationMode.COOLING: CURRENT_HVAC_COOL,
+    OperationMode.HEATING: CURRENT_HVAC_HEAT,
+    OperationMode.FAN: CURRENT_HVAC_FAN,
+    OperationMode.DRY: CURRENT_HVAC_DRY,
+}
+HVAC_MODE_LIB_TO_HASS: Final[dict[OperationMode, str]] = {
+    OperationMode.STOP: HVAC_MODE_OFF,
+    OperationMode.COOLING: HVAC_MODE_COOL,
+    OperationMode.HEATING: HVAC_MODE_HEAT,
+    OperationMode.FAN: HVAC_MODE_FAN_ONLY,
+    OperationMode.DRY: HVAC_MODE_DRY,
+    OperationMode.AUTO: HVAC_MODE_HEAT_COOL,
+}
+HVAC_MODE_HASS_TO_LIB: Final[dict[str, OperationMode]] = {
+    HVAC_MODE_OFF: OperationMode.STOP,
+    HVAC_MODE_COOL: OperationMode.COOLING,
+    HVAC_MODE_HEAT: OperationMode.HEATING,
+    HVAC_MODE_FAN_ONLY: OperationMode.FAN,
+    HVAC_MODE_DRY: OperationMode.DRY,
+    HVAC_MODE_HEAT_COOL: OperationMode.AUTO,
+}
 
 
 async def async_setup_entry(
@@ -95,14 +125,16 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         ]
         if HVAC_MODE_OFF not in self._attr_hvac_modes:
             self._attr_hvac_modes.append(HVAC_MODE_OFF)
-        self._async_update_attrs()        
+        self._async_update_attrs()
 
-    async def async_update_hvac_params(self, params) -> None:
+    async def _async_update_hvac_params(self, params) -> None:
         """Send HVAC parameters to API."""
         try:
             await self.coordinator.airzone.put_hvac(params)
         except (AirzoneError, ClientConnectorError) as error:
-            raise HomeAssistantError(f"Failed to set zone {self.name}: {error}") from error
+            raise HomeAssistantError(
+                f"Failed to set zone {self.name}: {error}"
+            ) from error
         else:
             self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
 
@@ -138,22 +170,21 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()
+        self.async_write_ha_state()
 
     @callback
     def _async_update_attrs(self) -> None:
+        """Update climate attributes."""
         self._attr_current_temperature = self.get_zone_value(AZD_TEMP)
         self._attr_current_humidity = self.get_zone_value(AZD_HUMIDITY)
         if self.get_zone_value(AZD_ON):
+            mode = self.get_zone_value(AZD_MODE)
+            self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS[mode]
             if self.get_zone_value(AZD_DEMAND):
-                self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[
-                    self.get_zone_value(AZD_MODE)
-                ]
+                self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[mode]
             else:
                 self._attr_hvac_action = CURRENT_HVAC_IDLE
         else:
             self._attr_hvac_action = CURRENT_HVAC_OFF
-        if self.get_zone_value(AZD_ON):
-            self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS[self.get_zone_value(AZD_MODE)]
-        else:
             self._attr_hvac_mode = HVAC_MODE_OFF
         self._attr_target_temperature = self.get_zone_value(AZD_TEMP_SET)

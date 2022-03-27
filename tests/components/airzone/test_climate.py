@@ -36,6 +36,7 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.exceptions import HomeAssistantError
 
 from .util import async_init_integration
 
@@ -220,15 +221,18 @@ async def test_airzone_climate_set_temp_error(hass):
         "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
         side_effect=AirzoneError,
     ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: "climate.dorm_2",
-                ATTR_TEMPERATURE: 20.5,
-            },
-            blocking=True,
-        )
+        try:
+            await hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_TEMPERATURE,
+                {
+                    ATTR_ENTITY_ID: "climate.dorm_2",
+                    ATTR_TEMPERATURE: 20.5,
+                },
+                blocking=True,
+            )
+        except HomeAssistantError:
+            pass
 
         state = hass.states.get("climate.dorm_2")
         assert state.attributes.get(ATTR_TEMPERATURE) == 19.5
