@@ -34,7 +34,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Modbus sensors."""
 
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
 
     sensors: list[ModbusRegisterSensor | SlaveSensor] = []
@@ -101,6 +101,9 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
                 return
             self._lazy_errors = self._lazy_error_count
             self._attr_available = False
+            self._attr_native_value = None
+            if self._coordinator:
+                self._coordinator.async_set_updated_data(None)
             self.async_write_ha_state()
             return
 

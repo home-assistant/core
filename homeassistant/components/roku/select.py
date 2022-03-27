@@ -12,11 +12,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import roku_exception_handler
 from .const import DOMAIN
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
-from .helpers import format_channel_name
+from .helpers import format_channel_name, roku_exception_handler
 
 
 @dataclass
@@ -163,7 +162,7 @@ class RokuSelectEntity(RokuEntity, SelectEntity):
         """Return a set of selectable options."""
         return self.entity_description.options_fn(self.coordinator.data)
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         await self.entity_description.set_fn(

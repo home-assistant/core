@@ -99,9 +99,9 @@ class SmartyFan(FanEntity):
         self._smarty_fan_speed = fan_speed
         self.schedule_update_ha_state()
 
-    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
+    def turn_on(self, percentage=None, preset_mode=None, **kwargs):
         """Turn on the fan."""
-        _LOGGER.debug("Turning on fan. Speed is %s", speed)
+        _LOGGER.debug("Turning on fan. percentage is %s", percentage)
         self.set_percentage(percentage or DEFAULT_ON_PERCENTAGE)
 
     def turn_off(self, **kwargs):

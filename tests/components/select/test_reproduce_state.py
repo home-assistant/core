@@ -9,6 +9,7 @@ from homeassistant.components.select.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
@@ -24,7 +25,8 @@ async def test_reproducing_states(
         {ATTR_OPTIONS: ["option_one", "option_two", "option_three"]},
     )
 
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("select.test", "option_two"),
         ],
@@ -35,7 +37,8 @@ async def test_reproducing_states(
     assert calls[0].data == {ATTR_ENTITY_ID: "select.test", ATTR_OPTION: "option_two"}
 
     # Calling it again should not do anything
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("select.test", "option_one"),
         ],
@@ -43,15 +46,11 @@ async def test_reproducing_states(
     assert len(calls) == 1
 
     # Restoring an invalid state should not work either
-    await hass.helpers.state.async_reproduce_state(
-        [State("select.test", "option_four")]
-    )
+    await async_reproduce_state(hass, [State("select.test", "option_four")])
     assert len(calls) == 1
     assert "Invalid state specified" in caplog.text
 
     # Restoring an state for an invalid entity ID logs a warning
-    await hass.helpers.state.async_reproduce_state(
-        [State("select.non_existing", "option_three")]
-    )
+    await async_reproduce_state(hass, [State("select.non_existing", "option_three")])
     assert len(calls) == 1
     assert "Unable to find entity" in caplog.text

@@ -29,9 +29,9 @@
             },
             "user": {
                 "data": {
-                    "type": "\u9023\u7dda\u985e\u578b"
+                    "type": "\u9023\u7dda\u985e\u5225"
                 },
-                "title": "\u9078\u64c7\u9023\u7dda\u985e\u578b"
+                "title": "\u9078\u64c7\u9023\u7dda\u985e\u5225"
             }
         }
     },
@@ -59,7 +59,7 @@
                 "data": {
                     "automatic_add": "\u958b\u555f\u81ea\u52d5\u65b0\u589e",
                     "debug": "\u958b\u555f\u9664\u932f",
-                    "device": "\u9078\u64c7\u88dd\u7f6e\u4ee5\u8a2d\u5b9a",
+                    "device": "\u9078\u64c7\u6240\u8981\u8a2d\u5b9a\u7684\u88dd\u7f6e",
                     "event_code": "\u8f38\u5165\u4e8b\u4ef6\u4ee3\u78bc\u4ee5\u65b0\u589e",
                     "protocols": "\u901a\u8a0a\u5354\u5b9a",
                     "remove_device": "\u9078\u64c7\u88dd\u7f6e\u4ee5\u522a\u9664"

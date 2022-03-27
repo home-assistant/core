@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "invalid_auth_key": "Identifiants API rejet\u00e9s par Coinbase en raison d'une cl\u00e9 API non valide.",
             "invalid_auth_secret": "Identifiants API rejet\u00e9s par Coinbase en raison d'un secret API non valide.",
             "unknown": "Erreur inattendue"

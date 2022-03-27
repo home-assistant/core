@@ -19,16 +19,10 @@ from homeassistant.const import STATE_OPEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    DEFAULT_SIGNAL_REPETITIONS,
-    DeviceTuple,
-    RfxtrxCommandEntity,
-    async_setup_platform_entry,
-)
+from . import DeviceTuple, RfxtrxCommandEntity, async_setup_platform_entry
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
-    CONF_SIGNAL_REPETITIONS,
     CONF_VENETIAN_BLIND_MODE,
     CONST_VENETIAN_BLIND_MODE_EU,
     CONST_VENETIAN_BLIND_MODE_US,
@@ -59,7 +53,6 @@ async def async_setup_entry(
             RfxtrxCover(
                 event.device,
                 device_id,
-                entity_info.get(CONF_SIGNAL_REPETITIONS, DEFAULT_SIGNAL_REPETITIONS),
                 venetian_blind_mode=entity_info.get(CONF_VENETIAN_BLIND_MODE),
                 event=event if auto else None,
             )
@@ -79,12 +72,11 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
-        signal_repetitions: int,
         event: rfxtrxmod.RFXtrxEvent = None,
         venetian_blind_mode: bool | None = None,
     ) -> None:
         """Initialize the RFXtrx cover device."""
-        super().__init__(device, device_id, signal_repetitions, event)
+        super().__init__(device, device_id, event)
         self._venetian_blind_mode = venetian_blind_mode
 
     async def async_added_to_hass(self):

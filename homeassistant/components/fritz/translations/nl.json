@@ -10,7 +10,8 @@
             "already_in_progress": "De configuratiestroom is al aan de gang",
             "cannot_connect": "Kan geen verbinding maken",
             "connection_error": "Kan geen verbinding maken",
-            "invalid_auth": "Ongeldige authenticatie"
+            "invalid_auth": "Ongeldige authenticatie",
+            "upnp_not_configured": "Ontbrekende UPnP instellingen op apparaat."
         },
         "flow_title": "{name}",
         "step": {

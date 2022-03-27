@@ -67,9 +67,13 @@ def test_repr_helper():
     assert util.repr_helper(5) == "5"
     assert util.repr_helper(True) == "True"
     assert util.repr_helper({"test": 1}) == "test=1"
-    assert (
-        util.repr_helper(datetime(1986, 7, 9, 12, 0, 0)) == "1986-07-09T12:00:00+00:00"
-    )
+
+    tz = dt_util.get_time_zone("Europe/Copenhagen")
+    with patch("homeassistant.util.dt.DEFAULT_TIME_ZONE", tz):
+        assert (
+            util.repr_helper(datetime(1986, 7, 9, 12, 0, 0))
+            == "1986-07-09T12:00:00+02:00"
+        )
 
 
 def test_convert():

@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "New Integration sensor",
+        "description": "Precision controls the number of decimal digits in the output.\nThe sum will be scaled according to the selected metric prefix and integration time.",
+        "data": {
+          "method": "Integration method",
+          "name": "Name",
+          "round": "Precision",
+          "source": "Input sensor",
+          "unit_prefix": "Metric prefix",
+          "unit_time": "Integration time"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "description": "Precision controls the number of decimal digits in the output.",
+        "data": {
+          "round": "[%key:component::integration::config::step::user::data::round%]"
+        }
+      }
+    }
+  }
+}

@@ -12,6 +12,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSource,
@@ -35,9 +36,8 @@ async def async_get_media_source(hass: HomeAssistant) -> RadioMediaSource:
     """Set up Radio Browser media source."""
     # Radio browser support only a single config entry
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    radios = hass.data[DOMAIN]
 
-    return RadioMediaSource(hass, radios, entry)
+    return RadioMediaSource(hass, entry)
 
 
 class RadioMediaSource(MediaSource):
@@ -45,26 +45,33 @@ class RadioMediaSource(MediaSource):
 
     name = "Radio Browser"
 
-    def __init__(
-        self, hass: HomeAssistant, radios: RadioBrowser, entry: ConfigEntry
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize CameraMediaSource."""
         super().__init__(DOMAIN)
         self.hass = hass
         self.entry = entry
-        self.radios = radios
+
+    @property
+    def radios(self) -> RadioBrowser | None:
+        """Return the radio browser."""
+        return self.hass.data.get(DOMAIN)
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
-        station = await self.radios.station(uuid=item.identifier)
+        radios = self.radios
+
+        if radios is None:
+            raise Unresolvable("Radio Browser not initialized")
+
+        station = await radios.station(uuid=item.identifier)
         if not station:
-            raise BrowseError("Radio station is no longer available")
+            raise Unresolvable("Radio station is no longer available")
 
         if not (mime_type := self._async_get_station_mime_type(station)):
-            raise BrowseError("Could not determine stream type of radio station")
+            raise Unresolvable("Could not determine stream type of radio station")
 
         # Register "click" with Radio Browser
-        await self.radios.station_click(uuid=station.uuid)
+        await radios.station_click(uuid=station.uuid)
 
         return PlayMedia(station.url, mime_type)
 
@@ -73,6 +80,11 @@ class RadioMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
+        radios = self.radios
+
+        if radios is None:
+            raise BrowseError("Radio Browser not initialized")
+
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
@@ -83,10 +95,10 @@ class RadioMediaSource(MediaSource):
             can_expand=True,
             children_media_class=MEDIA_CLASS_DIRECTORY,
             children=[
-                *await self._async_build_popular(item),
-                *await self._async_build_by_tag(item),
-                *await self._async_build_by_language(item),
-                *await self._async_build_by_country(item),
+                *await self._async_build_popular(radios, item),
+                *await self._async_build_by_tag(radios, item),
+                *await self._async_build_by_language(radios, item),
+                *await self._async_build_by_country(radios, item),
             ],
         )
 
@@ -100,7 +112,9 @@ class RadioMediaSource(MediaSource):
         return mime_type
 
     @callback
-    def _async_build_stations(self, stations: list[Station]) -> list[BrowseMediaSource]:
+    def _async_build_stations(
+        self, radios: RadioBrowser, stations: list[Station]
+    ) -> list[BrowseMediaSource]:
         """Build list of media sources from radio stations."""
         items: list[BrowseMediaSource] = []
 
@@ -126,23 +140,23 @@ class RadioMediaSource(MediaSource):
         return items
 
     async def _async_build_by_country(
-        self, item: MediaSourceItem
+        self, radios: RadioBrowser, item: MediaSourceItem
     ) -> list[BrowseMediaSource]:
         """Handle browsing radio stations by country."""
         category, _, country_code = (item.identifier or "").partition("/")
         if country_code:
-            stations = await self.radios.stations(
+            stations = await radios.stations(
                 filter_by=FilterBy.COUNTRY_CODE_EXACT,
                 filter_term=country_code,
                 hide_broken=True,
                 order=Order.NAME,
                 reverse=False,
             )
-            return self._async_build_stations(stations)
+            return self._async_build_stations(radios, stations)
 
         # We show country in the root additionally, when there is no item
         if not item.identifier or category == "country":
-            countries = await self.radios.countries(order=Order.NAME)
+            countries = await radios.countries(order=Order.NAME)
             return [
                 BrowseMediaSource(
                     domain=DOMAIN,
@@ -160,22 +174,22 @@ class RadioMediaSource(MediaSource):
         return []
 
     async def _async_build_by_language(
-        self, item: MediaSourceItem
+        self, radios: RadioBrowser, item: MediaSourceItem
     ) -> list[BrowseMediaSource]:
         """Handle browsing radio stations by language."""
         category, _, language = (item.identifier or "").partition("/")
         if category == "language" and language:
-            stations = await self.radios.stations(
+            stations = await radios.stations(
                 filter_by=FilterBy.LANGUAGE_EXACT,
                 filter_term=language,
                 hide_broken=True,
                 order=Order.NAME,
                 reverse=False,
             )
-            return self._async_build_stations(stations)
+            return self._async_build_stations(radios, stations)
 
         if category == "language":
-            languages = await self.radios.languages(order=Order.NAME, hide_broken=True)
+            languages = await radios.languages(order=Order.NAME, hide_broken=True)
             return [
                 BrowseMediaSource(
                     domain=DOMAIN,
@@ -206,17 +220,17 @@ class RadioMediaSource(MediaSource):
         return []
 
     async def _async_build_popular(
-        self, item: MediaSourceItem
+        self, radios: RadioBrowser, item: MediaSourceItem
     ) -> list[BrowseMediaSource]:
         """Handle browsing popular radio stations."""
         if item.identifier == "popular":
-            stations = await self.radios.stations(
+            stations = await radios.stations(
                 hide_broken=True,
                 limit=250,
                 order=Order.CLICK_COUNT,
                 reverse=True,
             )
-            return self._async_build_stations(stations)
+            return self._async_build_stations(radios, stations)
 
         if not item.identifier:
             return [
@@ -234,22 +248,22 @@ class RadioMediaSource(MediaSource):
         return []
 
     async def _async_build_by_tag(
-        self, item: MediaSourceItem
+        self, radios: RadioBrowser, item: MediaSourceItem
     ) -> list[BrowseMediaSource]:
         """Handle browsing radio stations by tags."""
         category, _, tag = (item.identifier or "").partition("/")
         if category == "tag" and tag:
-            stations = await self.radios.stations(
+            stations = await radios.stations(
                 filter_by=FilterBy.TAG_EXACT,
                 filter_term=tag,
                 hide_broken=True,
                 order=Order.NAME,
                 reverse=False,
             )
-            return self._async_build_stations(stations)
+            return self._async_build_stations(radios, stations)
 
         if category == "tag":
-            tags = await self.radios.tags(
+            tags = await radios.tags(
                 hide_broken=True,
                 limit=100,
                 order=Order.STATION_COUNT,

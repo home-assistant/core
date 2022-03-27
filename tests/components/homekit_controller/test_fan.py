@@ -95,7 +95,7 @@ async def test_turn_on(hass, utcnow):
     await hass.services.async_call(
         "fan",
         "turn_on",
-        {"entity_id": "fan.testdevice", "speed": "high"},
+        {"entity_id": "fan.testdevice", "percentage": 100},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -109,7 +109,7 @@ async def test_turn_on(hass, utcnow):
     await hass.services.async_call(
         "fan",
         "turn_on",
-        {"entity_id": "fan.testdevice", "speed": "medium"},
+        {"entity_id": "fan.testdevice", "percentage": 66},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -123,7 +123,7 @@ async def test_turn_on(hass, utcnow):
     await hass.services.async_call(
         "fan",
         "turn_on",
-        {"entity_id": "fan.testdevice", "speed": "low"},
+        {"entity_id": "fan.testdevice", "percentage": 33},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -196,8 +196,8 @@ async def test_set_speed(hass, utcnow):
 
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {"entity_id": "fan.testdevice", "speed": "high"},
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 100},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -209,8 +209,8 @@ async def test_set_speed(hass, utcnow):
 
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {"entity_id": "fan.testdevice", "speed": "medium"},
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 66},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -222,8 +222,8 @@ async def test_set_speed(hass, utcnow):
 
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {"entity_id": "fan.testdevice", "speed": "low"},
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 33},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -235,8 +235,8 @@ async def test_set_speed(hass, utcnow):
 
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {"entity_id": "fan.testdevice", "speed": "off"},
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 0},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -291,7 +291,6 @@ async def test_speed_read(hass, utcnow):
             CharacteristicsTypes.ROTATION_SPEED: 100,
         },
     )
-    assert state.attributes["speed"] == "high"
     assert state.attributes["percentage"] == 100
     assert state.attributes["percentage_step"] == 1.0
 
@@ -301,7 +300,6 @@ async def test_speed_read(hass, utcnow):
             CharacteristicsTypes.ROTATION_SPEED: 50,
         },
     )
-    assert state.attributes["speed"] == "medium"
     assert state.attributes["percentage"] == 50
 
     state = await helper.async_update(
@@ -310,7 +308,6 @@ async def test_speed_read(hass, utcnow):
             CharacteristicsTypes.ROTATION_SPEED: 25,
         },
     )
-    assert state.attributes["speed"] == "low"
     assert state.attributes["percentage"] == 25
 
     state = await helper.async_update(
@@ -320,7 +317,6 @@ async def test_speed_read(hass, utcnow):
             CharacteristicsTypes.ROTATION_SPEED: 0,
         },
     )
-    assert state.attributes["speed"] == "off"
     assert state.attributes["percentage"] == 0
 
 
@@ -392,7 +388,7 @@ async def test_v2_turn_on(hass, utcnow):
     await hass.services.async_call(
         "fan",
         "turn_on",
-        {"entity_id": "fan.testdevice", "speed": "high"},
+        {"entity_id": "fan.testdevice", "percentage": 100},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -406,7 +402,7 @@ async def test_v2_turn_on(hass, utcnow):
     await hass.services.async_call(
         "fan",
         "turn_on",
-        {"entity_id": "fan.testdevice", "speed": "medium"},
+        {"entity_id": "fan.testdevice", "percentage": 66},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -420,7 +416,7 @@ async def test_v2_turn_on(hass, utcnow):
     await hass.services.async_call(
         "fan",
         "turn_on",
-        {"entity_id": "fan.testdevice", "speed": "low"},
+        {"entity_id": "fan.testdevice", "percentage": 33},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -488,8 +484,8 @@ async def test_v2_set_speed(hass, utcnow):
 
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {"entity_id": "fan.testdevice", "speed": "high"},
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 100},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -501,8 +497,8 @@ async def test_v2_set_speed(hass, utcnow):
 
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {"entity_id": "fan.testdevice", "speed": "medium"},
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 66},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -514,8 +510,8 @@ async def test_v2_set_speed(hass, utcnow):
 
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {"entity_id": "fan.testdevice", "speed": "low"},
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 33},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -527,8 +523,8 @@ async def test_v2_set_speed(hass, utcnow):
 
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {"entity_id": "fan.testdevice", "speed": "off"},
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 0},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -616,7 +612,6 @@ async def test_v2_speed_read(hass, utcnow):
             CharacteristicsTypes.ROTATION_SPEED: 100,
         },
     )
-    assert state.attributes["speed"] == "high"
     assert state.attributes["percentage"] == 100
 
     state = await helper.async_update(
@@ -625,7 +620,6 @@ async def test_v2_speed_read(hass, utcnow):
             CharacteristicsTypes.ROTATION_SPEED: 50,
         },
     )
-    assert state.attributes["speed"] == "medium"
     assert state.attributes["percentage"] == 50
 
     state = await helper.async_update(
@@ -634,7 +628,6 @@ async def test_v2_speed_read(hass, utcnow):
             CharacteristicsTypes.ROTATION_SPEED: 25,
         },
     )
-    assert state.attributes["speed"] == "low"
     assert state.attributes["percentage"] == 25
 
     state = await helper.async_update(
@@ -644,7 +637,6 @@ async def test_v2_speed_read(hass, utcnow):
             CharacteristicsTypes.ROTATION_SPEED: 0,
         },
     )
-    assert state.attributes["speed"] == "off"
     assert state.attributes["percentage"] == 0
 
 

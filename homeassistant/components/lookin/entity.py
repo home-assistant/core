@@ -52,10 +52,10 @@ class LookinDeviceMixIn:
         self._lookin_udp_subs = lookin_data.lookin_udp_subs
 
 
-class LookinDeviceCoordinatorEntity(LookinDeviceMixIn, CoordinatorEntity):
+class LookinDeviceCoordinatorEntity(
+    LookinDeviceMixIn, CoordinatorEntity[LookinDataUpdateCoordinator]
+):
     """A lookin device entity on the device itself that uses the coordinator."""
-
-    coordinator: LookinDataUpdateCoordinator
 
     _attr_should_poll = False
 
@@ -84,10 +84,10 @@ class LookinEntityMixIn:
         self._function_names = {function.name for function in self._device.functions}
 
 
-class LookinCoordinatorEntity(LookinDeviceMixIn, LookinEntityMixIn, CoordinatorEntity):
+class LookinCoordinatorEntity(
+    LookinDeviceMixIn, LookinEntityMixIn, CoordinatorEntity[LookinDataUpdateCoordinator]
+):
     """A lookin device entity for an external device that uses the coordinator."""
-
-    coordinator: LookinDataUpdateCoordinator
 
     _attr_should_poll = False
     _attr_assumed_state = True
