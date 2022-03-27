@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,16 +26,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import as_utc, get_time_zone
 
-from .const import (
-    ATTR_MEASURE_TIME,
-    ATTRIBUTION,
-    CONF_STATION,
-    DOMAIN,
-    NONE_IS_ZERO_SENSORS,
-)
+from .const import ATTRIBUTION, CONF_STATION, DOMAIN, NONE_IS_ZERO_SENSORS
 from .coordinator import TVDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
 
@@ -137,6 +128,14 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         icon="mdi:weather-pouring",
         entity_registry_enabled_default=False,
     ),
+    TrafikverketSensorEntityDescription(
+        key="measure_time",
+        api_key="measure_time",
+        name="Measure Time",
+        icon="mdi:clock",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 
@@ -147,20 +146,18 @@ async def async_setup_entry(
 
     coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
+    async_add_entities(
         TrafikverketWeatherStation(
             coordinator, entry.entry_id, entry.data[CONF_STATION], description
         )
         for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities, True)
+    )
 
 
-def _to_iso_format(measuretime: str) -> str:
+def _to_datetime(measuretime: str) -> datetime:
     """Return isoformatted utc time."""
     time_obj = datetime.strptime(measuretime, "%Y-%m-%dT%H:%M:%S")
-    return as_utc(time_obj.replace(tzinfo=STOCKHOLM_TIMEZONE)).isoformat()
+    return as_utc(time_obj.replace(tzinfo=STOCKHOLM_TIMEZONE))
 
 
 class TrafikverketWeatherStation(
@@ -193,22 +190,19 @@ class TrafikverketWeatherStation(
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return state of sensor."""
+        if self.entity_description.api_key == "measure_time":
+            return _to_datetime(self.coordinator.data.measure_time)
+
         state: StateType = getattr(
             self.coordinator.data, self.entity_description.api_key
         )
+
         # For zero value state the api reports back None for certain sensors.
         if state is None and self.entity_description.key in NONE_IS_ZERO_SENSORS:
             return 0
         return state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return extra attributes."""
-        return {
-            ATTR_MEASURE_TIME: _to_iso_format(self.coordinator.data.measure_time),
-        }
 
     @property
     def available(self) -> bool:
