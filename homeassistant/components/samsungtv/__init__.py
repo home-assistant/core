@@ -201,6 +201,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await _async_update_ssdp_locations(hass, entry)
 
+    # We must not await after we setup the reload or there
+    # will be a race where the config flow will see the entry
+    # as not loaded and may reload it
     debounced_reloader = DebouncedEntryReloader(hass, entry)
     entry.async_on_unload(debounced_reloader.async_cancel)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))

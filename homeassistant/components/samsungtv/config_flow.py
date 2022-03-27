@@ -394,6 +394,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry_kw_args:
                 LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
                 self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
+                if entry.state != config_entries.ConfigEntryState.LOADED:
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
                 return entry
         return None
 
