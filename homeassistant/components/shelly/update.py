@@ -57,6 +57,7 @@ BLOCK_UPDATE_ENTITIES: Final = {
     "fwupdate": RestUpdateEntityDescription(
         key="fwupdate",
         name="Firmware Update",
+        entity_registry_enabled_default=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         current_version=lambda update: update.get("old_version"),
         latest_version=lambda update: update.get("new_version"),
@@ -81,6 +82,7 @@ RPC_UPDATE_ENTITY: Final = {
         key="sys",
         sub_key="available_updates",
         name="Firmware Update",
+        entity_registry_enabled_default=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         current_version=lambda shelly: shelly.get("ver"),
         latest_version=lambda status: status.get("stable", {"version": None}).get(

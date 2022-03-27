@@ -1,10 +1,12 @@
 """Tests for Shelly button platform."""
 import pytest
 
+from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.components.update.const import SERVICE_INSTALL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import async_get
 
 
 @pytest.mark.parametrize(
@@ -43,6 +45,15 @@ async def test_coap_update_entity(
     """Test coap update entities."""
     assert coap_wrapper
     coap_wrapper.device.status = {**coap_wrapper.device.status, **status}
+
+    entity_registry = async_get(hass)
+    entity_registry.async_get_or_create(
+        UPDATE_DOMAIN,
+        DOMAIN,
+        "test-mac-fwupdate",
+        suggested_object_id="test_name_firmware_update",
+        disabled_by=None,
+    )
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(coap_wrapper.entry, UPDATE_DOMAIN)
@@ -103,6 +114,15 @@ async def test_rpc_update_entity(
         rpc_wrapper.device.shelly = {**rpc_wrapper.device.shelly, **shelly}
     else:
         rpc_wrapper.device.shelly = None
+
+    entity_registry = async_get(hass)
+    entity_registry.async_get_or_create(
+        UPDATE_DOMAIN,
+        DOMAIN,
+        "12345678-sys-fwupdate",
+        suggested_object_id="test_name_firmware_update",
+        disabled_by=None,
+    )
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(rpc_wrapper.entry, UPDATE_DOMAIN)
