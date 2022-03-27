@@ -265,7 +265,10 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self._currentsong.get("artist")
+        artists = self._currentsong.get("artist")
+        if isinstance(artists, list):
+            return ", ".join(artists)
+        return artists
 
     @property
     def media_album_name(self):
