@@ -33,6 +33,9 @@ def mock_notify_platform(
 ):
     """Specialize the mock platform for notify."""
     loaded_platform = MockNotifyPlatform(async_get_service, get_service)
+    services_yaml_file = tmp_path / "services.yaml"
+    services_config = yaml.dump({})
+    services_yaml_file.write_text(services_config)
     if integration is not None:
         mock_platform(hass, f"{integration}.notify", loaded_platform)
         integration = hass.data[DATA_INTEGRATIONS][integration]
@@ -264,16 +267,10 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
         targetlist = {"c": 3, "d": 4}
         return NotificationService(hass, targetlist, "testnotify2")
 
-    # Mock notify services file
-    services_yaml_file = tmp_path / "services.yaml"
-    services_config = yaml.dump(
-        {"notify": [{"description": "My custom notify service", "fields": {}}]}
+    # Mock first platform
+    mock_notify_platform(
+        hass, tmp_path, "testnotify", async_get_service=async_get_service
     )
-    services_yaml_file.write_text(services_config)
-    loaded_platform = MockNotifyPlatform(async_get_service=async_get_service)
-    mock_platform(hass, "testnotify.notify", loaded_platform)
-    integration = hass.data[DATA_INTEGRATIONS]["testnotify"]
-    integration.file_path = tmp_path
 
     # Initialize a second platform testnotify2
     mock_notify_platform(
