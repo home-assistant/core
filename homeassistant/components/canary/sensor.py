@@ -76,10 +76,8 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class CanarySensor(CoordinatorEntity, SensorEntity):
+class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity):
     """Representation of a Canary sensor."""
-
-    coordinator: CanaryDataUpdateCoordinator
 
     def __init__(
         self,

@@ -19,6 +19,7 @@ from sqlalchemy.exc import SQLAlchemyError, StatementError
 from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy.sql.expression import literal_column, true
+import voluptuous as vol
 
 from homeassistant.const import (
     PRESSURE_PA,
@@ -163,6 +164,14 @@ def valid_statistic_id(statistic_id: str) -> bool:
     return VALID_STATISTIC_ID.match(statistic_id) is not None
 
 
+def validate_statistic_id(value: str) -> str:
+    """Validate statistic ID."""
+    if valid_statistic_id(value):
+        return value
+
+    raise vol.Invalid(f"Statistics ID {value} is an invalid statistic ID")
+
+
 @dataclasses.dataclass
 class ValidationIssue:
     """Error or warning message."""
@@ -181,7 +190,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[STATISTICS_META_BAKERY] = baked.bakery()
     hass.data[STATISTICS_SHORT_TERM_BAKERY] = baked.bakery()
 
-    def entity_id_changed(event: Event) -> None:
+    def _entity_id_changed(event: Event) -> None:
         """Handle entity_id changed."""
         old_entity_id = event.data["old_entity_id"]
         entity_id = event.data["entity_id"]
@@ -190,6 +199,9 @@ def async_setup(hass: HomeAssistant) -> None:
                 (StatisticsMeta.statistic_id == old_entity_id)
                 & (StatisticsMeta.source == DOMAIN)
             ).update({StatisticsMeta.statistic_id: entity_id})
+
+    async def _async_entity_id_changed(event: Event) -> None:
+        await hass.data[DATA_INSTANCE].async_add_executor_job(_entity_id_changed, event)
 
     @callback
     def entity_registry_changed_filter(event: Event) -> bool:
@@ -202,7 +214,7 @@ def async_setup(hass: HomeAssistant) -> None:
     if hass.is_running:
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_id_changed,
+            _async_entity_id_changed,
             event_filter=entity_registry_changed_filter,
         )
 
@@ -436,7 +448,7 @@ def compile_hourly_statistics(
             }
 
     # Get last hour's last sum
-    if instance._db_supports_row_number:  # pylint: disable=[protected-access]
+    if instance._db_supports_row_number:
         subquery = (
             session.query(*QUERY_STATISTICS_SUMMARY_SUM)
             .filter(StatisticsShortTerm.start >= bindparam("start_time"))
@@ -567,6 +579,30 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     return True
 
 
+def _adjust_sum_statistics(
+    session: scoped_session,
+    table: type[Statistics | StatisticsShortTerm],
+    metadata_id: int,
+    start_time: datetime,
+    adj: float,
+) -> None:
+    """Adjust statistics in the database."""
+    try:
+        session.query(table).filter_by(metadata_id=metadata_id).filter(
+            table.start >= start_time
+        ).update(
+            {
+                table.sum: table.sum + adj,
+            },
+            synchronize_session=False,
+        )
+    except SQLAlchemyError:
+        _LOGGER.exception(
+            "Unexpected exception when updating statistics %s",
+            id,
+        )
+
+
 def _insert_statistics(
     session: scoped_session,
     table: type[Statistics | StatisticsShortTerm],
@@ -606,7 +642,7 @@ def _update_statistics(
     except SQLAlchemyError:
         _LOGGER.exception(
             "Unexpected exception when updating statistics %s:%s ",
-            id,
+            stat_id,
             statistic,
         )
 
@@ -718,21 +754,22 @@ def update_statistics_metadata(
 
 def list_statistic_ids(
     hass: HomeAssistant,
+    statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-) -> list[dict | None]:
-    """Return all statistic_ids and unit of measurement.
+) -> list[dict]:
+    """Return all statistic_ids (or filtered one) and unit of measurement.
 
     Queries the database for existing statistic_ids, as well as integrations with
     a recorder platform for statistic_ids which will be added in the next statistics
     period.
     """
     units = hass.config.units
-    statistic_ids = {}
+    result = {}
 
     # Query the database
     with session_scope(hass=hass) as session:
         metadata = get_metadata_with_session(
-            hass, session, statistic_type=statistic_type
+            hass, session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
 
         for _, meta in metadata.values():
@@ -741,8 +778,10 @@ def list_statistic_ids(
                 unit = _configured_unit(unit, units)
             meta["unit_of_measurement"] = unit
 
-        statistic_ids = {
+        result = {
             meta["statistic_id"]: {
+                "has_mean": meta["has_mean"],
+                "has_sum": meta["has_sum"],
                 "name": meta["name"],
                 "source": meta["source"],
                 "unit_of_measurement": meta["unit_of_measurement"],
@@ -754,7 +793,9 @@ def list_statistic_ids(
     for platform in hass.data[DOMAIN].values():
         if not hasattr(platform, "list_statistic_ids"):
             continue
-        platform_statistic_ids = platform.list_statistic_ids(hass, statistic_type)
+        platform_statistic_ids = platform.list_statistic_ids(
+            hass, statistic_ids=statistic_ids, statistic_type=statistic_type
+        )
 
         for statistic_id, info in platform_statistic_ids.items():
             if (unit := info["unit_of_measurement"]) is not None:
@@ -763,17 +804,19 @@ def list_statistic_ids(
             platform_statistic_ids[statistic_id]["unit_of_measurement"] = unit
 
         for key, value in platform_statistic_ids.items():
-            statistic_ids.setdefault(key, value)
+            result.setdefault(key, value)
 
     # Return a list of statistic_id + metadata
     return [
         {
             "statistic_id": _id,
+            "has_mean": info["has_mean"],
+            "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
             "unit_of_measurement": info["unit_of_measurement"],
         }
-        for _id, info in statistic_ids.items()
+        for _id, info in result.items()
     ]
 
 
@@ -1211,19 +1254,19 @@ def _filter_unique_constraint_integrity_error(
         if not isinstance(err, StatementError):
             return False
 
+        assert instance.engine is not None
+        dialect_name = instance.engine.dialect.name
+
         ignore = False
-        if (
-            instance.engine.dialect.name == "sqlite"
-            and "UNIQUE constraint failed" in str(err)
-        ):
+        if dialect_name == "sqlite" and "UNIQUE constraint failed" in str(err):
             ignore = True
         if (
-            instance.engine.dialect.name == "postgresql"
+            dialect_name == "postgresql"
             and hasattr(err.orig, "pgcode")
             and err.orig.pgcode == "23505"
         ):
             ignore = True
-        if instance.engine.dialect.name == "mysql" and hasattr(err.orig, "args"):
+        if dialect_name == "mysql" and hasattr(err.orig, "args"):
             with contextlib.suppress(TypeError):
                 if err.orig.args[0] == 1062:
                     ignore = True
@@ -1246,7 +1289,7 @@ def add_external_statistics(
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
 ) -> bool:
-    """Process an add_statistics job."""
+    """Process an add_external_statistics job."""
 
     with session_scope(
         session=instance.get_session(),  # type: ignore[misc]
@@ -1260,5 +1303,37 @@ def add_external_statistics(
                 _update_statistics(session, Statistics, stat_id, stat)
             else:
                 _insert_statistics(session, Statistics, metadata_id, stat)
+
+    return True
+
+
+@retryable_database_job("adjust_statistics")
+def adjust_statistics(
+    instance: Recorder,
+    statistic_id: str,
+    start_time: datetime,
+    sum_adjustment: float,
+) -> bool:
+    """Process an add_statistics job."""
+
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+        metadata = get_metadata_with_session(
+            instance.hass, session, statistic_ids=(statistic_id,)
+        )
+        if statistic_id not in metadata:
+            return True
+
+        tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
+            Statistics,
+            StatisticsShortTerm,
+        )
+        for table in tables:
+            _adjust_sum_statistics(
+                session,
+                table,
+                metadata[statistic_id][0],
+                start_time,
+                sum_adjustment,
+            )
 
     return True

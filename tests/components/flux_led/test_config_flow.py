@@ -34,6 +34,7 @@ from . import (
     FLUX_DISCOVERY_PARTIAL,
     IP_ADDRESS,
     MAC_ADDRESS,
+    MAC_ADDRESS_ONE_OFF,
     MODEL,
     MODEL_DESCRIPTION,
     MODEL_NUM,
@@ -546,6 +547,7 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
         CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
     }
+    assert result2["title"] == "Bulb RGBCW DDEEFF"
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -587,6 +589,46 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == MAC_ADDRESS
+
+
+async def test_mac_address_off_by_one_updated_via_discovery(hass):
+    """Test the mac address is updated when its off by one from integration discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS_ONE_OFF
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=FLUX_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == MAC_ADDRESS
+
+
+async def test_mac_address_off_by_one_not_updated_from_dhcp(hass):
+    """Test the mac address is NOT updated when its off by one from dhcp discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS_ONE_OFF
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == MAC_ADDRESS_ONE_OFF
 
 
 @pytest.mark.parametrize(

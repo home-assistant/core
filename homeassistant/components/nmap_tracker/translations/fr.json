@@ -4,7 +4,7 @@
             "already_configured": "L'emplacement est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
-            "invalid_hosts": "H\u00f4tes invalides"
+            "invalid_hosts": "H\u00f4tes non valides"
         },
         "step": {
             "user": {
@@ -20,7 +20,7 @@
     },
     "options": {
         "error": {
-            "invalid_hosts": "H\u00f4tes invalides"
+            "invalid_hosts": "H\u00f4tes non valides"
         },
         "step": {
             "init": {

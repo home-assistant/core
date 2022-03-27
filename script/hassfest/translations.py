@@ -110,6 +110,8 @@ def gen_data_entry_schema(
                 step_title_class("title"): cv.string_with_no_html,
                 vol.Optional("description"): cv.string_with_no_html,
                 vol.Optional("data"): {str: cv.string_with_no_html},
+                vol.Optional("data_description"): {str: cv.string_with_no_html},
+                vol.Optional("menu_options"): {str: cv.string_with_no_html},
             }
         },
         vol.Optional("error"): {str: cv.string_with_no_html},
@@ -124,7 +126,19 @@ def gen_data_entry_schema(
             removed_title_validator, config, integration
         )
 
-    return schema
+    def data_description_validator(value):
+        """Validate data description."""
+        for step_info in value["step"].values():
+            if "data_description" not in step_info:
+                continue
+
+            for key in step_info["data_description"]:
+                if key not in step_info["data"]:
+                    raise vol.Invalid(f"data_description key {key} is not in data")
+
+        return value
+
+    return vol.All(vol.Schema(schema), data_description_validator)
 
 
 def gen_strings_schema(config: Config, integration: Integration):

@@ -60,7 +60,6 @@ SUPPORT_VLC = (
 )
 
 _T = TypeVar("_T", bound="VlcDevice")
-_R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
@@ -89,7 +88,6 @@ def catch_vlc_errors(
         except CommandError as err:
             LOGGER.error("Command error: %s", err)
         except ConnectError as err:
-            # pylint: disable=protected-access
             if self._available:
                 LOGGER.error("Connection error: %s", err)
                 self._available = False

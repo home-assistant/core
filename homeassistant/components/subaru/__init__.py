@@ -10,6 +10,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_US
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -21,6 +22,7 @@ from .const import (
     ENTRY_COORDINATOR,
     ENTRY_VEHICLES,
     FETCH_INTERVAL,
+    MANUFACTURER,
     PLATFORMS,
     UPDATE_INTERVAL,
     VEHICLE_API_GEN,
@@ -154,3 +156,12 @@ def get_vehicle_info(controller, vin):
         VEHICLE_LAST_UPDATE: 0,
     }
     return info
+
+
+def get_device_info(vehicle_info):
+    """Return DeviceInfo object based on vehicle info."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, vehicle_info[VEHICLE_VIN])},
+        manufacturer=MANUFACTURER,
+        name=vehicle_info[VEHICLE_NAME],
+    )

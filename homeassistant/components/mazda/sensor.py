@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -35,7 +36,7 @@ class MazdaSensorRequiredKeysMixin:
     name_suffix: str
 
     # Function to determine the value for this sensor, given the coordinator data and the configured unit system
-    value: Callable[[dict, UnitSystem], StateType]
+    value: Callable[[dict[str, Any], UnitSystem], StateType]
 
 
 @dataclass
@@ -45,7 +46,7 @@ class MazdaSensorEntityDescription(
     """Describes a Mazda sensor entity."""
 
     # Function to determine whether the vehicle supports this sensor, given the coordinator data
-    is_supported: Callable[[dict], bool] = lambda data: True
+    is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
 
     # Function to determine the unit of measurement for this sensor, given the configured unit system
     # Falls back to description.native_unit_of_measurement if it is not provided

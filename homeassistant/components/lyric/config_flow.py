@@ -1,8 +1,6 @@
 """Config flow for Honeywell Lyric."""
 import logging
 
-import voluptuous as vol
-
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -27,10 +25,7 @@ class OAuth2FlowHandler(
     async def async_step_reauth_confirm(self, user_input=None):
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
+            return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict) -> dict:

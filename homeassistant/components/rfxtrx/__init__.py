@@ -30,6 +30,7 @@ from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceRegistry,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -42,13 +43,11 @@ from .const import (
     CONF_PROTOCOLS,
     DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
+    DOMAIN,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
 )
 
-DOMAIN = "rfxtrx"
-
-DEFAULT_SIGNAL_REPETITIONS = 1
 DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
@@ -336,7 +335,7 @@ async def async_setup_platform_entry(
             async_add_entities(constructor(event, event, device_id, {}))
 
         config_entry.async_on_unload(
-            hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, _update)
+            async_dispatcher_connect(hass, SIGNAL_EVENT, _update)
         )
 
 
@@ -486,9 +485,7 @@ class RfxtrxEntity(RestoreEntity):
             self._apply_event(self._event)
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_EVENT, self._handle_event)
         )
 
     @property
@@ -562,15 +559,12 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
-        signal_repetitions: int = 1,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
-        self.signal_repetitions = signal_repetitions
         self._state: bool | None = None
 
     async def _async_send(self, fun, *args):
         rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]
-        for _ in range(self.signal_repetitions):
-            await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)
+        await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

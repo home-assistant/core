@@ -29,6 +29,7 @@ from .const import (
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
+    ERROR_UPNP_NOT_CONFIGURED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,6 +79,12 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
+
+        if (
+            "X_AVM-DE_UPnP1" in self.avm_wrapper.connection.services
+            and not (await self.avm_wrapper.async_get_upnp_configuration())["NewEnable"]
+        ):
+            return ERROR_UPNP_NOT_CONFIGURED
 
         return None
 
