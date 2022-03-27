@@ -92,6 +92,8 @@ async def async_setup_platform(
 class FuelPriceSensor(CoordinatorEntity, SensorEntity):
     """Contains prices for fuel in a given station."""
 
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
     def __init__(self, fuel_type, station, coordinator, name, show_on_map):
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -107,7 +109,6 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
         self._street = station["street"]
         self._price = station[fuel_type]
         self._show_on_map = show_on_map
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def name(self):
