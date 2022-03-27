@@ -1230,7 +1230,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     @callback
     def _abort_if_unique_id_configured(
         self,
-        updates: dict[Any, Any] | None = None,
+        updates: dict[str, Any] | None = None,
         reload_on_update: bool = True,
     ) -> None:
         """Abort if the unique ID is already configured."""
