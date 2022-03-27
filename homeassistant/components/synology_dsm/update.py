@@ -1,31 +1,35 @@
 """Support for Synology DSM update platform."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Final
 
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from yarl import URL
 
-from homeassistant.components.update import UpdateEntity
+from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi, SynologyDSMBaseEntity
-from .const import (
-    COORDINATOR_CENTRAL,
-    DOMAIN,
-    SYNO_API,
-    SynologyDSMUpdateEntityEntityDescription,
-)
+from .const import COORDINATOR_CENTRAL, DOMAIN, SYNO_API, SynologyDSMEntityDescription
+
+
+@dataclass
+class SynologyDSMUpdateEntityEntityDescription(
+    UpdateEntityDescription, SynologyDSMEntityDescription
+):
+    """Describes Synology DSM update entity."""
+
 
 UPDATE_ENTITIES: Final = [
     SynologyDSMUpdateEntityEntityDescription(
         api_key=SynoCoreUpgrade.API_KEY,
         key="update",
         name="DSM Update",
-        entity_category=EntityCategory.CONFIG,
+        entity_category=EntityCategory.DIAGNOSTIC,
     )
 ]
 
@@ -33,16 +37,14 @@ UPDATE_ENTITIES: Final = [
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up demo update entities."""
+    """Set up Synology DSM update entities."""
     data = hass.data[DOMAIN][entry.unique_id]
     api: SynoApi = data[SYNO_API]
     coordinator = data[COORDINATOR_CENTRAL]
 
     async_add_entities(
-        [
-            SynoDSMUpdateEntity(api, coordinator, description)
-            for description in UPDATE_ENTITIES
-        ]
+        SynoDSMUpdateEntity(api, coordinator, description)
+        for description in UPDATE_ENTITIES
     )
 
 
