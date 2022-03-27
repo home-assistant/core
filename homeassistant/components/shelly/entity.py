@@ -10,6 +10,7 @@ from aioshelly.block_device import Block
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry,
@@ -401,13 +402,17 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         block: Block,
         attribute: str,
         description: BlockEntityDescription,
+        domain: str | None = None,
     ) -> None:
         """Initialize sensor."""
         super().__init__(wrapper, block)
         self.attribute = attribute
         self.entity_description = description
 
-        self._attr_unique_id: str = f"{super().unique_id}-{self.attribute}"
+        self._attr_unique_id: str = f"{super().unique_id}"
+        if domain != Platform.SWITCH:
+            self._attr_unique_id += f"-{self.attribute}"
+
         self._attr_name = get_block_entity_name(wrapper.device, block, description.name)
 
     @property
@@ -496,13 +501,17 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         key: str,
         attribute: str,
         description: RpcEntityDescription,
+        domain: str | None = None,
     ) -> None:
         """Initialize sensor."""
         super().__init__(wrapper, key)
         self.attribute = attribute
         self.entity_description = description
 
-        self._attr_unique_id = f"{super().unique_id}-{attribute}"
+        self._attr_unique_id = f"{super().unique_id}"
+        if domain != Platform.SWITCH:
+            self._attr_unique_id += f"-{attribute}"
+
         self._attr_name = get_rpc_entity_name(wrapper.device, key, description.name)
         self._last_value = None
 
