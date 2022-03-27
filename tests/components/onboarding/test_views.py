@@ -372,13 +372,16 @@ async def test_onboarding_core_sets_up_met(hass, hass_storage, hass_client):
     await hass.async_block_till_done()
 
     client = await hass_client()
-
-    resp = await client.post("/api/onboarding/core_config")
+    with patch(
+        "homeassistant.components.met.async_setup_entry", return_value=True
+    ) as mock_setup:
+        resp = await client.post("/api/onboarding/core_config")
 
     assert resp.status == 200
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids("weather")) == 1
+    assert len(hass.config_entries.async_entries("met")) == 1
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_onboarding_core_sets_up_radio_browser(hass, hass_storage, hass_client):
