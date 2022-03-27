@@ -1,0 +1,16 @@
+{
+  "domain": "qr_generator",
+  "name": "QR Code Generator",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/qr_generator",
+  "requirements": [
+    "pyqrcode==1.2.1",
+    "pypng==0.0.21"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@DeerMaximum"
+  ],
+  "iot_class": "calculated",
+  "loggers": ["qr_generator"]
+}

@@ -1,0 +1,56 @@
+{
+    "config": {
+        "error": {
+            "invalid_color": "Invalid color",
+            "invalid_template": "Invalid template",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "advanced": {
+                "data": {
+                    "background_color": "Background color",
+                    "border": "Border",
+                    "color": "Color",
+                    "error_correction": "Error correction:",
+                    "scale": "Scale"
+                },
+                "title": "Advanced settings"
+            },
+            "user": {
+                "data": {
+                    "advanced": "Advanced settings",
+                    "name": "Name",
+                    "value_template": "Content (text or template)"
+                },
+                "title": "Create QR Code"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_color": "Invalid color",
+            "invalid_template": "Invalid template",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "advanced": {
+                "data": {
+                    "background_color": "Background color",
+                    "border": "Border",
+                    "color": "Color",
+                    "error_correction": "Error correction:",
+                    "scale": "Scale"
+                },
+                "title": "Advanced settings"
+            },
+            "init": {
+                "data": {
+                    "advanced": "Advanced settings",
+                    "name": "Name",
+                    "value_template": "Content (text or template)"
+                },
+                "title": "Edit QR Code"
+            }
+        }
+    }
+}

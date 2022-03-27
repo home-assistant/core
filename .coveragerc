@@ -940,6 +940,8 @@ omit =
     homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/sensor.py
     homeassistant/components/qnap/sensor.py
+    homeassistant/components/qr_generator/__init__.py
+    homeassistant/components/qr_generator/camera.py
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py
     homeassistant/components/qvr_pro/*
