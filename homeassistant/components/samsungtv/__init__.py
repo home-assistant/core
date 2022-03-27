@@ -43,7 +43,7 @@ from .const import (
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
-    UPNP_SRV_MAIN_TV_AGENT,
+    UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
 
@@ -155,7 +155,7 @@ async def _async_update_ssdp_locations(hass: HomeAssistant, entry: ConfigEntry) 
     updates = {}
     for ssdp_st, key in (
         (UPNP_SVC_RENDERING_CONTROL, CONF_SSDP_RENDERING_CONTROL_LOCATION),
-        (UPNP_SRV_MAIN_TV_AGENT, CONF_SSDP_MAIN_TV_AGENT_LOCATION),
+        (UPNP_SVC_MAIN_TV_AGENT, CONF_SSDP_MAIN_TV_AGENT_LOCATION),
     ):
         for discovery_info in await ssdp.async_get_discovery_info_by_st(hass, ssdp_st):
             location = discovery_info.ssdp_location

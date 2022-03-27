@@ -47,7 +47,7 @@ from .const import (
     RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
     SUCCESSFUL_RESULTS,
-    UPNP_SRV_MAIN_TV_AGENT,
+    UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
     WEBSOCKET_PORTS,
 )
@@ -432,7 +432,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "Set SSDP RenderingControl location to: %s",
                 self._ssdp_rendering_control_location,
             )
-        elif discovery_info.ssdp_st == UPNP_SRV_MAIN_TV_AGENT:
+        elif discovery_info.ssdp_st == UPNP_SVC_MAIN_TV_AGENT:
             self._ssdp_main_tv_agent_location = discovery_info.ssdp_location
             LOGGER.debug(
                 "Set SSDP MainTvAgent location to: %s",
