@@ -173,7 +173,7 @@ async def _async_create_bridge_with_updated_data(
         else:
             # When we imported from yaml we didn't setup the method
             # because we didn't know it
-            port, method, info = await async_get_device_info(hass, None, host)
+            _result, port, method, info = await async_get_device_info(hass, host)
             load_info_attempted = True
             if not port or not method:
                 raise ConfigEntryNotReady(
