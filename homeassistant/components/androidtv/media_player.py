@@ -39,6 +39,7 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_SW_VERSION,
     CONF_HOST,
+    CONF_NAME,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -128,7 +129,7 @@ async def async_setup_entry(
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
     device_type = "Android TV" if device_class == DEVICE_ANDROIDTV else "Fire TV"
-    device_name = f"{device_type} {entry.data[CONF_HOST]}"
+    device_name = entry.data.get(CONF_NAME) or f"{device_type} {entry.data[CONF_HOST]}"
 
     device_args = [
         aftv,
