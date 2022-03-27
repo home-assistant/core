@@ -134,66 +134,26 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         _LOGGER.debug("Set temp=%s params=%s", temp, params)
         await self._async_update_hvac_params(params)
 
-    @property
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        return self.get_zone_value(AZD_TEMP)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        self._async_update_attrs()
 
-    @property
-    def current_humidity(self) -> int | None:
-        """Return the current temperature."""
-        return self.get_zone_value(AZD_HUMIDITY)
-
-    @property
-    def hvac_action(self) -> str | None:
-        """Return the current running hvac operation if supported."""
+    @callback
+    def _async_update_attrs(self) -> None:
+        self._attr_current_temperature = self.get_zone_value(AZD_TEMP)
+        self._attr_current_humidity = self.get_zone_value(AZD_HUMIDITY)
         if self.get_zone_value(AZD_ON):
             if self.get_zone_value(AZD_DEMAND):
-                action = HVAC_ACTION_LIB_TO_HASS[self.get_zone_value(AZD_MODE)]
+                self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[
+                    self.get_zone_value(AZD_MODE)
+                ]
             else:
-                action = CURRENT_HVAC_IDLE
+                self._attr_hvac_action = CURRENT_HVAC_IDLE
         else:
-            action = CURRENT_HVAC_OFF
-        return action
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation mode."""
+            self._attr_hvac_action = CURRENT_HVAC_OFF
         if self.get_zone_value(AZD_ON):
-            mode = HVAC_MODE_LIB_TO_HASS[self.get_zone_value(AZD_MODE)]
+            self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS[self.get_zone_value(AZD_MODE)]
         else:
-            mode = HVAC_MODE_OFF
-        return mode
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes."""
-        res: list[str] = []
-        modes = self.get_zone_value(AZD_MODES)
-        if not modes:
-            modes = [self.get_zone_value(AZD_MODE)]
-        for mode in modes:
-            res.append(HVAC_MODE_LIB_TO_HASS[mode])
-        if HVAC_MODE_OFF not in res:
-            res.append(HVAC_MODE_OFF)
-        return res
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        return self.get_zone_value(AZD_TEMP_MAX)
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return self.get_zone_value(AZD_TEMP_MIN)
-
-    @property
-    def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        return self.get_zone_value(AZD_TEMP_SET)
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
-        return TEMP_UNIT_LIB_TO_HASS[self.get_zone_value(AZD_TEMP_UNIT)]
+            self._attr_hvac_mode = HVAC_MODE_OFF
+        self._attr_target_temperature = self.get_zone_value(AZD_TEMP_SET)
