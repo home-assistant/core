@@ -5,11 +5,13 @@ from collections.abc import Mapping
 from functools import partial
 import socket
 from typing import Any
+from urllib.parse import urlparse
 
 import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -32,6 +34,8 @@ from .const import (
     CONF_MODEL,
     CONF_ON_ACTION,
     CONF_SESSION_ID,
+    CONF_SSDP_MAIN_TV_AGENT_LOCATION,
+    CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_NAME,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
@@ -39,6 +43,8 @@ from .const import (
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
+    UPNP_SRV_MAIN_TV_AGENT,
+    UPNP_SVC_RENDERING_CONTROL,
 )
 
 
@@ -144,6 +150,24 @@ class DebouncedEntryReloader:
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
 
+async def _async_update_ssdp_locations(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update ssdp locations from discovery cache."""
+    updates = {}
+    for ssdp_st, key in (
+        (UPNP_SVC_RENDERING_CONTROL, CONF_SSDP_RENDERING_CONTROL_LOCATION),
+        (UPNP_SRV_MAIN_TV_AGENT, CONF_SSDP_MAIN_TV_AGENT_LOCATION),
+    ):
+        for discovery_info in await ssdp.async_get_discovery_info_by_st(hass, ssdp_st):
+            location = discovery_info.ssdp_location
+            host = urlparse(location).hostname
+            if host == entry.data[CONF_HOST]:
+                updates[key] = location
+                break
+
+    if updates:
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
 
@@ -180,12 +204,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
 
+    await _async_update_ssdp_locations(hass, entry)
+
     debounced_reloader = DebouncedEntryReloader(hass, entry)
     entry.async_on_unload(debounced_reloader.async_cancel)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
     hass.data[DOMAIN][entry.entry_id] = bridge
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 

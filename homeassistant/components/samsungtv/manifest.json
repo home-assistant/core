@@ -28,6 +28,7 @@
   "zeroconf": [
     {"type":"_airplay._tcp.local.","properties":{"manufacturer":"samsung*"}}
   ],
+  "dependencies": ["ssdp"],
   "dhcp": [
     {"registered_devices": true},
     {
