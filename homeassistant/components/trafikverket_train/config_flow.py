@@ -42,7 +42,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: config_entries.ConfigEntry
+    entry: config_entries.ConfigEntry | None
 
     async def validate_input(
         self, api_key: str, train_from: str, train_to: str
@@ -69,6 +69,8 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             api_key = user_input[CONF_API_KEY]
+
+            assert self.entry, "Entry not loaded"
 
             try:
                 await self.validate_input(
