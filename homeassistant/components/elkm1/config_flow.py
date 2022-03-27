@@ -50,6 +50,7 @@ PROTOCOL_MAP = {
     "serial": "serial://",
 }
 
+
 VALIDATE_TIMEOUT = 35
 
 BASE_SCHEMA = {
@@ -61,6 +62,11 @@ SECURE_PROTOCOLS = ["secure", "TLS 1.2"]
 ALL_PROTOCOLS = [*SECURE_PROTOCOLS, "non-secure", "serial"]
 DEFAULT_SECURE_PROTOCOL = "secure"
 DEFAULT_NON_SECURE_PROTOCOL = "non-secure"
+
+PORT_PROTOCOL_MAP = {
+    NON_SECURE_PORT: DEFAULT_NON_SECURE_PROTOCOL,
+    SECURE_PORT: DEFAULT_SECURE_PROTOCOL,
+}
 
 
 async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str]:
@@ -99,6 +105,13 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     return {"title": device_name, CONF_HOST: url, CONF_PREFIX: slugify(prefix)}
 
 
+def _address_from_discovery(device: ElkSystem):
+    """Append the port only if its non-standard."""
+    if device.port in STANDARD_PORTS:
+        return device.ip_address
+    return f"{device.ip_address}:{device.port}"
+
+
 def _make_url_from_data(data):
     if host := data.get(CONF_HOST):
         return host
@@ -111,7 +124,7 @@ def _make_url_from_data(data):
 def _placeholders_from_device(device: ElkSystem) -> dict[str, str]:
     return {
         "mac_address": _short_mac(device.mac_address),
-        "host": f"{device.ip_address}:{device.port}",
+        "host": _address_from_discovery(device),
     }
 
 
@@ -257,7 +270,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device = self._discovered_device
         assert device is not None
         if user_input is not None:
-            user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
+            user_input[CONF_ADDRESS] = _address_from_discovery(device)
             if self._async_current_entries():
                 user_input[CONF_PREFIX] = _short_mac(device.mac_address)
             else:
