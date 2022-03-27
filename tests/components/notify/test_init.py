@@ -33,13 +33,8 @@ def mock_notify_platform(
 ):
     """Specialize the mock platform for notify."""
     loaded_platform = MockNotifyPlatform(async_get_service, get_service)
-    services_yaml_file = tmp_path / "services.yaml"
-    services_config = yaml.dump({})
-    services_yaml_file.write_text(services_config)
-    if integration is not None:
-        mock_platform(hass, f"{integration}.notify", loaded_platform)
-        integration = hass.data[DATA_INTEGRATIONS][integration]
-        integration.file_path = tmp_path
+    mock_platform(hass, f"{integration}.notify", loaded_platform)
+    integration = hass.data[DATA_INTEGRATIONS][integration]
 
     return loaded_platform
 
