@@ -93,7 +93,7 @@ RPC_UPDATE_ENTITY: Final = {
     "fwupdate_beta": RpcUpdateEntityDescription(
         key="sys",
         sub_key="available_updates",
-        name="Firmware Update Beta",
+        name="Beta Firmware Update",
         entity_registry_enabled_default=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         current_version=lambda shelly: shelly.get("ver"),
