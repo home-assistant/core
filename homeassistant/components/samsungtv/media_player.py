@@ -50,7 +50,7 @@ from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_ON_ACTION,
-    CONF_SSDP_LOCATION,
+    CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
@@ -118,7 +118,8 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._host: str | None = config_entry.data[CONF_HOST]
         self._mac: str | None = config_entry.data.get(CONF_MAC)
         self._ssdp_location = (
-            config_entry.data.get(CONF_SSDP_LOCATION) or f"http://{self._host}:9197/dmr"
+            config_entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+            or f"http://{self._host}:9197/dmr"
         )
         self._on_script = on_script
         # Assume that the TV is in Play mode
