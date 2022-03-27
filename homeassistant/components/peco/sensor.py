@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 from typing import Final
 
-from peco import BadJSONError, HttpError
+from peco import BadJSONError, HttpError, OutageResults
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -46,10 +46,10 @@ async def async_setup_entry(
     websession = async_get_clientsession(hass)
     county: str = config_entry.data[CONF_COUNTY]
 
-    async def async_update_data() -> dict[str, float]:
+    async def async_update_data() -> OutageResults:
         """Fetch data from API."""
         try:
-            data: dict[str, float] = (
+            data: OutageResults = (
                 await api.get_outage_totals(websession)
                 if county == "TOTAL"
                 else await api.get_outage_count(county, websession)
@@ -60,11 +60,9 @@ async def async_setup_entry(
             raise UpdateFailed(f"Error parsing data: {err}") from err
         except asyncio.TimeoutError as err:
             raise UpdateFailed(f"Timeout fetching data: {err}") from err
-        if data["percent_customers_out"] < 5:
-            percent_out = round(
-                data["customers_out"] / data["customers_served"] * 100, 3
-            )
-            data["percent_customers_out"] = percent_out
+        if data.percent_customers_out < 5:
+            percent_out = round(data.customers_out / data.customers_served * 100, 3)
+            data.percent_customers_out = percent_out
         return data
 
     coordinator = DataUpdateCoordinator(
@@ -96,7 +94,7 @@ class PecoSensor(
         self,
         description: SensorEntityDescription,
         county: str,
-        coordinator: DataUpdateCoordinator[dict[str, float]],
+        coordinator: DataUpdateCoordinator[OutageResults],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -107,4 +105,4 @@ class PecoSensor(
     @property
     def native_value(self) -> float:
         """Return the value of the sensor."""
-        return self.coordinator.data[self.entity_description.key]
+        return float(getattr(self.coordinator.data, self.entity_description.key))
