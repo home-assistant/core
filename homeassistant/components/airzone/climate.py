@@ -170,7 +170,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @callback
     def _async_update_attrs(self) -> None:
