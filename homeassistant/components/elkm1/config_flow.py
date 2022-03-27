@@ -37,7 +37,9 @@ from .discovery import (
 
 CONF_DEVICE = "device"
 
+NON_SECURE_PORT = 2101
 SECURE_PORT = 2601
+STANDARD_PORTS = {NON_SECURE_PORT, SECURE_PORT}
 
 _LOGGER = logging.getLogger(__name__)
 
