@@ -35,6 +35,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.samsungtv.const import (
     CONF_MODEL,
     CONF_ON_ACTION,
+    CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DOMAIN as SAMSUNGTV_DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
     METHOD_ENCRYPTED_WEBSOCKET,
@@ -125,6 +126,7 @@ MOCK_ENTRY_WS = {
     CONF_NAME: "fake",
     CONF_PORT: 8001,
     CONF_TOKEN: "123456789",
+    CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://any",
 }
 
 

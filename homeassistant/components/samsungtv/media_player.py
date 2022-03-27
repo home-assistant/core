@@ -63,7 +63,6 @@ SUPPORT_SAMSUNGTV = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_NEXT_TRACK
@@ -115,9 +114,8 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._config_entry = config_entry
         self._host: str | None = config_entry.data[CONF_HOST]
         self._mac: str | None = config_entry.data.get(CONF_MAC)
-        self._ssdp_location = (
-            config_entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
-            or f"http://{self._host}:9197/dmr"
+        self._ssdp_rendering_control_location = config_entry.data.get(
+            CONF_SSDP_RENDERING_CONTROL_LOCATION
         )
         self._on_script = on_script
         # Assume that the TV is in Play mode
@@ -136,6 +134,8 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._on_script or self._mac:
             # Add turn-on if on_script or mac is available
             self._attr_supported_features |= SUPPORT_TURN_ON
+        if self._ssdp_rendering_control_location:
+            self._attr_supported_features |= SUPPORT_VOLUME_SET
 
         self._attr_device_info = DeviceInfo(
             name=self.name,
@@ -240,13 +240,13 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
 
     async def _async_startup_upnp(self) -> None:
-        if self._upnp_device is None:
+        if self._upnp_device is None and self._ssdp_rendering_control_location:
             session = async_get_clientsession(self.hass)
             upnp_requester = AiohttpSessionRequester(session)
             upnp_factory = UpnpFactory(upnp_requester)
             with contextlib.suppress(UpnpConnectionError):
                 self._upnp_device = await upnp_factory.async_create_device(
-                    self._ssdp_location
+                    self._ssdp_rendering_control_location
                 )
 
     def _get_upnp_service(self, log: bool = False) -> UpnpService | None:
