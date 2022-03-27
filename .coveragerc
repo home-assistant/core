@@ -197,6 +197,8 @@ omit =
     homeassistant/components/decora/light.py
     homeassistant/components/decora_wifi/light.py
     homeassistant/components/delijn/*
+    homeassistant/components/deluge/__init__.py
+    homeassistant/components/deluge/coordinator.py
     homeassistant/components/deluge/sensor.py
     homeassistant/components/deluge/switch.py
     homeassistant/components/denon/media_player.py
@@ -333,7 +335,15 @@ omit =
     homeassistant/components/faa_delays/binary_sensor.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/ffmpeg/camera.py
-    homeassistant/components/fibaro/*
+    homeassistant/components/fibaro/__init__.py
+    homeassistant/components/fibaro/binary_sensor.py
+    homeassistant/components/fibaro/climate.py
+    homeassistant/components/fibaro/cover.py
+    homeassistant/components/fibaro/light.py
+    homeassistant/components/fibaro/lock.py
+    homeassistant/components/fibaro/scene.py
+    homeassistant/components/fibaro/sensor.py
+    homeassistant/components/fibaro/switch.py
     homeassistant/components/filesize/sensor.py
     homeassistant/components/fints/sensor.py
     homeassistant/components/fireservicerota/__init__.py
@@ -896,8 +906,10 @@ omit =
     homeassistant/components/plaato/const.py
     homeassistant/components/plaato/entity.py
     homeassistant/components/plaato/sensor.py
+    homeassistant/components/plex/cast.py
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/view.py
+    homeassistant/components/plugwise/select.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/__init__.py
@@ -1061,9 +1073,6 @@ omit =
     homeassistant/components/smappee/sensor.py
     homeassistant/components/smappee/switch.py
     homeassistant/components/smarty/*
-    homeassistant/components/smarthab/__init__.py
-    homeassistant/components/smarthab/cover.py
-    homeassistant/components/smarthab/light.py
     homeassistant/components/sms/__init__.py
     homeassistant/components/sms/const.py
     homeassistant/components/sms/gateway.py
@@ -1469,6 +1478,7 @@ omit =
     homeassistant/components/zwave_me/__init__.py
     homeassistant/components/zwave_me/binary_sensor.py
     homeassistant/components/zwave_me/button.py
+    homeassistant/components/zwave_me/cover.py
     homeassistant/components/zwave_me/climate.py
     homeassistant/components/zwave_me/helpers.py
     homeassistant/components/zwave_me/light.py

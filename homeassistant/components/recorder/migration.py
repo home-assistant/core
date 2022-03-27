@@ -376,6 +376,7 @@ def _drop_foreign_key_constraints(instance, engine, table, columns):
 def _apply_update(instance, new_version, old_version):  # noqa: C901
     """Perform operations to bring schema up to date."""
     engine = instance.engine
+    dialect = engine.dialect.name
     if new_version == 1:
         _create_index(instance, "events", "ix_events_time_fired")
     elif new_version == 2:
@@ -639,7 +640,8 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
                 "ix_statistics_short_term_statistic_id_start",
             )
     elif new_version == 25:
-        _add_columns(instance, "states", ["attributes_id INTEGER(20)"])
+        big_int = "INTEGER(20)" if dialect == "mysql" else "INTEGER"
+        _add_columns(instance, "states", [f"attributes_id {big_int}"])
         _create_index(instance, "states", "ix_states_attributes_id")
 
     else:
