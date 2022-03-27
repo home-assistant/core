@@ -260,21 +260,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PREFIX] = _short_mac(device.mac_address)
             else:
                 user_input[CONF_PREFIX] = ""
-            if device.port != SECURE_PORT:
-                user_input[CONF_PROTOCOL] = DEFAULT_NON_SECURE_PROTOCOL
             errors, result = await self._async_create_or_error(user_input, False)
             if not errors:
                 return result
 
-        base_schmea = BASE_SCHEMA.copy()
-        if device.port == SECURE_PORT:
-            base_schmea[
-                vol.Required(CONF_PROTOCOL, default=DEFAULT_SECURE_PROTOCOL)
-            ] = vol.In(SECURE_PROTOCOLS)
-
         return self.async_show_form(
             step_id="discovered_connection",
-            data_schema=vol.Schema(base_schmea),
+            data_schema=vol.Schema(
+                {
+                    **BASE_SCHEMA,
+                    vol.Required(
+                        CONF_PROTOCOL, default=DEFAULT_SECURE_PROTOCOL
+                    ): vol.In(ALL_PROTOCOLS),
+                }
+            ),
             errors=errors,
             description_placeholders=_placeholders_from_device(device),
         )
@@ -334,7 +333,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
-        return (await self._async_create_or_error(user_input, True))[1]
+        errors, result = await self._async_create_or_error(user_input, True)
+        if errors:
+            return self.async_abort(reason=list(errors.values())[0])
+        return result
 
     def _url_already_configured(self, url):
         """See if we already have a elkm1 matching user input configured."""
