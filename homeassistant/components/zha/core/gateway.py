@@ -98,8 +98,6 @@ if TYPE_CHECKING:
     from ..entity import ZhaEntity
     from .store import ZhaStorage
 
-    # pylint: disable-next=broken-collections-callable
-    # Safe inside TYPE_CHECKING block
     _LogFilterType = Union[Filter, Callable[[LogRecord], int]]
 
 _LOGGER = logging.getLogger(__name__)
