@@ -1,50 +1,35 @@
 """The tests for Kira sensor platform."""
-import unittest
 from unittest.mock import MagicMock
 
 from homeassistant.components.kira import sensor as kira
-
-from tests.common import get_test_home_assistant
+from homeassistant.core import HomeAssistant
 
 TEST_CONFIG = {kira.DOMAIN: {"sensors": [{"host": "127.0.0.1", "port": 17324}]}}
-
 DISCOVERY_INFO = {"name": "kira", "device": "kira"}
 
 
-class TestKiraSensor(unittest.TestCase):
-    """Tests the Kira Sensor platform."""
+async def test_kira_sensor(hass: HomeAssistant):
+    """Test Kira's ability to send commands."""
 
-    # pylint: disable=invalid-name
     DEVICES = []
 
-    def add_entities(self, devices):
+    def add_entities(devices):
         """Mock add devices."""
         for device in devices:
-            self.DEVICES.append(device)
+            device.hass = hass
+            DEVICES.append(device)
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
-        mock_kira = MagicMock()
-        self.hass.data[kira.DOMAIN] = {kira.CONF_SENSOR: {}}
-        self.hass.data[kira.DOMAIN][kira.CONF_SENSOR]["kira"] = mock_kira
-        self.addCleanup(self.hass.stop)
+    mock_kira = MagicMock()
+    hass.data[kira.DOMAIN] = {kira.CONF_SENSOR: {}}
+    hass.data[kira.DOMAIN][kira.CONF_SENSOR]["kira"] = mock_kira
+    kira.setup_platform(hass, TEST_CONFIG, add_entities, DISCOVERY_INFO)
+    assert len(DEVICES) == 1
+    sensor = DEVICES[0]
+    sensor.name == "kira"
+    sensor.hass = hass
 
-    # pylint: disable=protected-access
-    def test_kira_sensor_callback(self):
-        """Ensure Kira sensor properly updates its attributes from callback."""
-        kira.setup_platform(self.hass, TEST_CONFIG, self.add_entities, DISCOVERY_INFO)
-        assert len(self.DEVICES) == 1
-        sensor = self.DEVICES[0]
-
-        assert sensor.name == "kira"
-
-        sensor.hass = self.hass
-
-        codeName = "FAKE_CODE"
-        deviceName = "FAKE_DEVICE"
-        codeTuple = (codeName, deviceName)
-        sensor._update_callback(codeTuple)
-
-        assert sensor.state == codeName
-        assert sensor.extra_state_attributes == {kira.CONF_DEVICE: deviceName}
+    code_name = "FAKE_CODE"
+    device_name = "FAKE_DEVICE"
+    sensor._update_callback((code_name, device_name))
+    assert sensor.state == code_name
+    assert sensor.extra_state_attributes == {kira.CONF_DEVICE: device_name}
