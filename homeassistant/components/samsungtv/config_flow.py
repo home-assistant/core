@@ -30,7 +30,7 @@ from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_SESSION_ID,
-    CONF_SSDP_LOCATION,
+    CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
@@ -58,7 +58,7 @@ def _strip_uuid(udn: str) -> str:
 
 
 def _entry_is_complete(
-    entry: config_entries.ConfigEntry, ssdp_location: str | None
+    entry: config_entries.ConfigEntry, ssdp_rendering_control_location: str | None
 ) -> bool:
     """Return True if the config entry information is complete.
 
@@ -68,7 +68,10 @@ def _entry_is_complete(
     return bool(
         entry.unique_id
         and entry.data.get(CONF_MAC)
-        and (not ssdp_location or entry.data.get(CONF_SSDP_LOCATION))
+        and (
+            not ssdp_rendering_control_location
+            or entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+        )
     )
 
 
@@ -84,7 +87,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._mac: str | None = None
         self._udn: str | None = None
         self._upnp_udn: str | None = None
-        self._ssdp_location: str | None = None
+        self._ssdp_rendering_control_location: str | None = None
         self._manufacturer: str | None = None
         self._model: str | None = None
         self._connect_result: str | None = None
@@ -107,7 +110,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MODEL: self._model,
             CONF_NAME: self._name,
             CONF_PORT: self._bridge.port,
-            CONF_SSDP_LOCATION: self._ssdp_location,
+            CONF_SSDP_RENDERING_CONTROL_LOCATION: self._ssdp_rendering_control_location,
         }
 
     def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
@@ -138,7 +141,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._udn, raise_on_progress=False)
         if (
             entry := self._async_update_existing_matching_entry()
-        ) and _entry_is_complete(entry, self._ssdp_location):
+        ) and _entry_is_complete(entry, self._ssdp_rendering_control_location):
             raise data_entry_flow.AbortFlow("already_configured")
         # Now that we have updated the config entry, we can raise
         # if another one is progressing
@@ -150,8 +153,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         updates = {CONF_HOST: self._host}
         if self._mac:
             updates[CONF_MAC] = self._mac
-        if self._ssdp_location:
-            updates[CONF_SSDP_LOCATION] = self._ssdp_location
+        if self._ssdp_rendering_control_location:
+            updates[
+                CONF_SSDP_RENDERING_CONTROL_LOCATION
+            ] = self._ssdp_rendering_control_location
         self._abort_if_unique_id_configured(updates=updates)
 
     async def _async_create_bridge(self) -> None:
@@ -345,15 +350,18 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 entry_kw_args["unique_id"] = self.unique_id
             data = entry.data
-            update_ssdp_location = (
-                self._ssdp_location
-                and data.get(CONF_SSDP_LOCATION) != self._ssdp_location
+            update_ssdp_rendering_control_location = (
+                self._ssdp_rendering_control_location
+                and data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+                != self._ssdp_rendering_control_location
             )
             update_mac = self._mac and not data.get(CONF_MAC)
-            if update_ssdp_location or update_mac:
+            if update_ssdp_rendering_control_location or update_mac:
                 entry_kw_args["data"] = {**entry.data}
-                if update_ssdp_location:
-                    entry_kw_args["data"][CONF_SSDP_LOCATION] = self._ssdp_location
+                if update_ssdp_rendering_control_location:
+                    entry_kw_args["data"][
+                        CONF_SSDP_RENDERING_CONTROL_LOCATION
+                    ] = self._ssdp_rendering_control_location
                 if update_mac:
                     entry_kw_args["data"][CONF_MAC] = self._mac
             if entry_kw_args:
@@ -395,8 +403,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
         model_name: str = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
         if discovery_info.ssdp_st == UPNP_SVC_RENDERINGCONTROL:
-            self._ssdp_location = discovery_info.ssdp_location
-            LOGGER.debug("Set SSDP location to: %s", self._ssdp_location)
+            self._ssdp_rendering_control_location = discovery_info.ssdp_location
+            LOGGER.debug(
+                "Set SSDP location to: %s", self._ssdp_rendering_control_location
+            )
         self._udn = self._upnp_udn = _strip_uuid(
             discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         )
