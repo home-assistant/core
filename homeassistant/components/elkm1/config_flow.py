@@ -279,14 +279,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 return result
 
+        default_proto = PORT_PROTOCOL_MAP.get(device.port, DEFAULT_SECURE_PROTOCOL)
         return self.async_show_form(
             step_id="discovered_connection",
             data_schema=vol.Schema(
                 {
                     **BASE_SCHEMA,
-                    vol.Required(
-                        CONF_PROTOCOL, default=DEFAULT_SECURE_PROTOCOL
-                    ): vol.In(ALL_PROTOCOLS),
+                    vol.Required(CONF_PROTOCOL, default=default_proto): vol.In(
+                        ALL_PROTOCOLS
+                    ),
                 }
             ),
             errors=errors,
