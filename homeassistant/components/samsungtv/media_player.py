@@ -207,19 +207,19 @@ class SamsungTVDevice(MediaPlayerEntity):
         if not self._upnp_device and self._ssdp_rendering_control_location:
             startup_tasks.append(self._async_startup_upnp())
 
-        await asyncio.gather(*startup_tasks)
+        if startup_tasks:
+            await asyncio.gather(*startup_tasks)
 
         if not (service := self._get_upnp_service()):
             return
 
-        action = service.action("GetVolume")
-        get_volume = await action.async_call(InstanceID=0, Channel="Master")
+        get_volume, get_mute = await asyncio.gather(
+            service.action("GetVolume").async_call(InstanceID=0, Channel="Master"),
+            service.action("GetMute").async_call(InstanceID=0, Channel="Master"),
+        )
         LOGGER.debug("Upnp GetVolume on %s: %s", self._host, get_volume)
         if (volume_level := get_volume.get("CurrentVolume")) is not None:
             self._attr_volume_level = volume_level / 100
-
-        action = service.action("GetMute")
-        get_mute = await action.async_call(InstanceID=0, Channel="Master")
         LOGGER.debug("Upnp GetMute on %s: %s", self._host, get_mute)
         if (is_muted := get_mute.get("CurrentMute")) is not None:
             self._attr_is_volume_muted = is_muted
