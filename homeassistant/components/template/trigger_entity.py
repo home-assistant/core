@@ -14,8 +14,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template, update_coordinator
+from homeassistant.helpers import template
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import (
     TriggerUpdateCoordinator,
@@ -338,7 +339,7 @@ class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
     def extra_restore_state_data(self) -> TriggerExtraStoredData | None:
         """Return sensor specific state data to be restored."""
         return (
-            TriggerExtraStoredData(self._rendered)
+            TriggerExtraStoredData(self, self._rendered)
             if self.restore
             else TriggerExtraStoredData(self, None)
         )
