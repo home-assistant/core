@@ -50,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Huawei LTE config flow."""
 
-    VERSION = 3
+    VERSION = 4
 
     @staticmethod
     @callback
@@ -88,12 +88,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors or {},
         )
-
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle import initiated config flow."""
-        return await self.async_step_user(user_input)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
