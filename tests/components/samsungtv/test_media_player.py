@@ -43,7 +43,7 @@ from homeassistant.components.samsungtv.const import (
 )
 from homeassistant.components.samsungtv.media_player import (
     SUPPORT_SAMSUNGTV,
-    UPNP_SVC_RENDERINGCONTROL,
+    UPNP_SVC_RENDERING_CONTROL,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -1300,12 +1300,12 @@ async def test_volume_control_upnp(
 ) -> None:
     """Test for Upnp volume control."""
     upnp_get_volume = upnp_get_action_mock(
-        upnp_device, UPNP_SVC_RENDERINGCONTROL, "GetVolume"
+        upnp_device, UPNP_SVC_RENDERING_CONTROL, "GetVolume"
     )
     upnp_get_volume.async_call.return_value = {"CurrentVolume": 44}
 
     upnp_get_mute = upnp_get_action_mock(
-        upnp_device, UPNP_SVC_RENDERINGCONTROL, "GetMute"
+        upnp_device, UPNP_SVC_RENDERING_CONTROL, "GetMute"
     )
     upnp_get_mute.async_call.return_value = {"CurrentMute": False}
 
@@ -1315,7 +1315,7 @@ async def test_volume_control_upnp(
 
     # Upnp action succeeds
     upnp_set_volume = upnp_get_action_mock(
-        upnp_device, UPNP_SVC_RENDERINGCONTROL, "SetVolume"
+        upnp_device, UPNP_SVC_RENDERING_CONTROL, "SetVolume"
     )
     assert await hass.services.async_call(
         DOMAIN,
@@ -1369,4 +1369,4 @@ async def test_upnp_missing_service(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
         True,
     )
-    assert f"Upnp service {UPNP_SVC_RENDERINGCONTROL} is not available" in caplog.text
+    assert f"Upnp service {UPNP_SVC_RENDERING_CONTROL} is not available" in caplog.text

@@ -118,6 +118,7 @@ class DebouncedEntryReloader:
         """Init the debounced entry reloader."""
         self.hass = hass
         self.entry = entry
+        self.original_data = dict(self.entry.data)
         self._debounced_reload = Debouncer(
             hass,
             LOGGER,
@@ -128,6 +129,8 @@ class DebouncedEntryReloader:
 
     async def async_call(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Start the countdown for a reload."""
+        if entry.data.get(CONF_TOKEN) != self.original_data.get(CONF_TOKEN):
+            return  # Token updates should not trigger a reload
         await self._debounced_reload.async_call()
 
     @callback
