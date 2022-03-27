@@ -111,7 +111,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
             CONF_TIME: "10:00",
             CONF_WEEKDAY: WEEKDAYS,
         },
-        unique_id=f"Stockholm C-Uppsala C-10:00-{WEEKDAYS}",
+        unique_id=f"stockholmc-uppsalac-10:00-{WEEKDAYS}",
     ).add_to_hass(hass)
 
     with patch(
@@ -223,7 +223,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             CONF_TIME: "10:00",
             CONF_WEEKDAY: WEEKDAYS,
         },
-        unique_id=f"Stockholm C-Uppsala C-10:00-{WEEKDAYS}",
+        unique_id=f"stockholmc-uppsalac-10:00-{WEEKDAYS}",
     )
     entry.add_to_hass(hass)
 
@@ -299,7 +299,7 @@ async def test_reauth_flow_error(
             CONF_TIME: "10:00",
             CONF_WEEKDAY: WEEKDAYS,
         },
-        unique_id=f"Stockholm C-Uppsala C-10:00-{WEEKDAYS}",
+        unique_id=f"stockholmc-uppsalac-10:00-{WEEKDAYS}",
     )
     entry.add_to_hass(hass)
 

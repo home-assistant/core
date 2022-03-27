@@ -88,10 +88,16 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 assert self.entry is not None
 
-                if (
-                    f"{self.entry.data[CONF_FROM]}-{self.entry.data[CONF_TO]}-{self.entry.data.get(CONF_TIME)}-{self.entry.data[CONF_WEEKDAY]}"
-                    == self.entry.unique_id
-                ):
+                train_from: str = self.entry.data[CONF_FROM]
+                train_to: str = self.entry.data[CONF_TO]
+                train_time: str = self.entry.data.get(CONF_TIME, "")
+
+                unique_id = (
+                    f"{train_from.casefold().replace(' ', '')}-{train_to.casefold().replace(' ', '')}"
+                    f"-{train_time.casefold().replace(' ', '')}-{self.entry.data[CONF_WEEKDAY]}"
+                )
+
+                if unique_id == self.entry.unique_id:
                     self.hass.config_entries.async_update_entry(
                         self.entry,
                         data={
@@ -120,11 +126,11 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            api_key = user_input[CONF_API_KEY]
-            train_from = user_input[CONF_FROM]
-            train_to = user_input[CONF_TO]
-            train_time = user_input.get(CONF_TIME)
-            train_days = user_input[CONF_WEEKDAY]
+            api_key: str = user_input[CONF_API_KEY]
+            train_from: str = user_input[CONF_FROM]
+            train_to: str = user_input[CONF_TO]
+            train_time: str | None = user_input.get(CONF_TIME)
+            train_days: list = user_input[CONF_WEEKDAY]
 
             name = f"{train_from} to {train_to}"
             if train_time:
@@ -146,9 +152,12 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if bool(dt_util.parse_time(train_time) is None):
                         errors["base"] = "invalid_time"
                 if not errors:
-                    await self.async_set_unique_id(
-                        f"{train_from}-{train_to}-{train_time}-{train_days}"
+                    timestr = "" if train_time is None else train_time
+                    unique_id = (
+                        f"{train_from.casefold().replace(' ', '')}-{train_to.casefold().replace(' ', '')}"
+                        f"-{timestr.casefold().replace(' ', '')}-{train_days}"
                     )
+                    await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=name,

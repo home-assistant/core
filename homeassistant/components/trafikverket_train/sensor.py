@@ -174,7 +174,6 @@ class TrainSensor(SensorEntity):
         """Initialize the sensor."""
         self._train_api = train_api
         self._attr_name = name
-        self._attr_unique_id = f"{from_station}-{to_station}-{departuretime}-{weekday}"
         self._from_station = from_station
         self._to_station = to_station
         self._weekday = weekday
@@ -186,6 +185,15 @@ class TrainSensor(SensorEntity):
             model="v1.2",
             name=name,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
+        )
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique id."""
+        timestr = "" if self._time is None else str(self._time)
+        return (
+            f"{self._from_station.casefold().replace(' ', '')}-{self._to_station.casefold().replace(' ', '')}"
+            f"-{timestr.casefold().replace(' ', '')}-{self._weekday}"
         )
 
     async def async_update(self) -> None:
