@@ -196,29 +196,33 @@ class SamsungTVDevice(MediaPlayerEntity):
                 STATE_ON if await self._bridge.async_is_on() else STATE_OFF
             )
 
-        if self._attr_state == STATE_ON:
-            startup_tasks: list[Coroutine[Any, Any, None]] = []
+        if self._attr_state != STATE_ON:
+            return
 
-            if not self._app_list_event.is_set():
-                startup_tasks.append(self._async_startup_app_list())
+        startup_tasks: list[Coroutine[Any, Any, None]] = []
 
-            if not self._upnp_device:
-                startup_tasks.append(self._async_startup_upnp())
+        if not self._app_list_event.is_set():
+            startup_tasks.append(self._async_startup_app_list())
 
-            await asyncio.gather(*startup_tasks)
+        if not self._upnp_device:
+            startup_tasks.append(self._async_startup_upnp())
 
-            if service := self._get_upnp_service():
-                action = service.action("GetVolume")
-                get_volume = await action.async_call(InstanceID=0, Channel="Master")
-                LOGGER.debug("Upnp GetVolume on %s: %s", self._host, get_volume)
-                if (volume_level := get_volume.get("CurrentVolume")) is not None:
-                    self._attr_volume_level = volume_level / 100
+        await asyncio.gather(*startup_tasks)
 
-                action = service.action("GetMute")
-                get_mute = await action.async_call(InstanceID=0, Channel="Master")
-                LOGGER.debug("Upnp GetMute on %s: %s", self._host, get_mute)
-                if (is_muted := get_mute.get("CurrentMute")) is not None:
-                    self._attr_is_volume_muted = is_muted
+        if not (service := self._get_upnp_service()):
+            return
+
+        action = service.action("GetVolume")
+        get_volume = await action.async_call(InstanceID=0, Channel="Master")
+        LOGGER.debug("Upnp GetVolume on %s: %s", self._host, get_volume)
+        if (volume_level := get_volume.get("CurrentVolume")) is not None:
+            self._attr_volume_level = volume_level / 100
+
+        action = service.action("GetMute")
+        get_mute = await action.async_call(InstanceID=0, Channel="Master")
+        LOGGER.debug("Upnp GetMute on %s: %s", self._host, get_mute)
+        if (is_muted := get_mute.get("CurrentMute")) is not None:
+            self._attr_is_volume_muted = is_muted
 
     async def _async_startup_app_list(self) -> None:
         await self._bridge.async_request_app_list()
