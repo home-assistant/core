@@ -9,7 +9,7 @@ DISCOVERY_INFO = {"name": "kira", "device": "kira"}
 
 
 async def test_kira_sensor(hass: HomeAssistant):
-    """Test Kira's ability to send commands."""
+    """Tests the Kira Sensor platform."""
 
     DEVICES = []
 
