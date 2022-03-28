@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import contextlib
+from dataclasses import dataclass
 import itertools
 import logging
 from typing import Any
@@ -18,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.core import CoreState, Event, callback
+from homeassistant.core import CoreState, Event, State, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -27,14 +28,17 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.template import Template, result_as_boolean
 
+from . import convert_attribute_from_string, convert_attribute_to_string
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
     CONF_ATTRIBUTES,
     CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
+    CONF_RESTORE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +53,12 @@ TEMPLATE_ENTITY_AVAILABILITY_SCHEMA = vol.Schema(
 TEMPLATE_ENTITY_ICON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ICON): cv.template,
+    }
+)
+
+TEMPLATE_ENTITY_RESTORE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_RESTORE): cv.boolean,
     }
 )
 
@@ -393,8 +403,8 @@ class TemplateEntity(Entity):
         self._async_update = result_info.async_refresh
         result_info.async_refresh()
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
+    def _add_all_template_attributes(self) -> None:
+        """Add the additional template attributes."""
         if self._availability_template is not None:
             self.add_template_attribute(
                 "_attr_available",
@@ -419,6 +429,11 @@ class TemplateEntity(Entity):
         ):
             self.add_template_attribute("_attr_name", self._friendly_name_template)
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+
+        self._add_all_template_attributes()
+
         if self.hass.state == CoreState.running:
             await self._async_template_startup()
             return
@@ -430,3 +445,233 @@ class TemplateEntity(Entity):
     async def async_update(self) -> None:
         """Call for forced update."""
         self._async_update()
+
+
+class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
+    """Template Entity that restores data."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Template Restore Entity init."""
+        super().__init__(*args, **kwargs)
+        self._restore: bool = False
+        self._save_state: bool = True
+        self._additional_data: list[str] = []
+
+    def add_template_attribute(
+        self, attribute: str, template: Template, *args, **kwargs
+    ):
+        """Store attribute to allow restore and setup template."""
+
+        super().add_template_attribute(attribute, template, *args, **kwargs)
+        if not template.is_static:
+            self.add_additional_data(attribute)
+
+    @callback
+    def _handle_results(self, *args, **kwargs) -> None:
+        # Do not save state if handle result fails.
+        self._save_state = False
+        super()._handle_results(*args, **kwargs)
+        self._save_state = True
+
+    @property
+    def restore(self) -> bool:
+        """Retrieve restore."""
+        return self._restore or False
+
+    @restore.setter
+    def restore(self, restore: bool) -> None:
+        """Set restore."""
+        self._restore = restore
+
+    @property
+    def save_state(self) -> bool:
+        """Retrieve save state."""
+        return self._save_state
+
+    @property
+    def additional_data(self) -> list[str]:
+        """Return additional data list."""
+        return self._additional_data or []
+
+    def add_additional_data(self, attribute: str) -> None:
+        """Add attribute to additional data list."""
+        if not hasattr(self, "_additional_data"):
+            self._additional_data = []
+
+        self._additional_data.append(attribute)
+
+    async def restore_entity(
+        self,
+    ) -> tuple[State | None, dict[str, Any] | None]:
+        """Restore the entity."""
+
+        if not self.restore:
+            return None, None
+
+        if (last_sensor_state := await self.async_get_last_state()) is None:
+            _LOGGER.debug("No state found to restore for entity %s", self.entity_id)
+            return None, None
+
+        # Restore all attributes.
+        _LOGGER.debug("Restoring entity %s", self.entity_id)
+
+        # Restore any attributes.
+        if self._attribute_templates is not None:
+            for key in self._attribute_templates:
+                try:
+                    value = last_sensor_state.attributes[key]
+                except KeyError:
+                    _LOGGER.debug(
+                        "No value stored for attribute %s for entity %s",
+                        key,
+                        self.entity_id,
+                    )
+                    continue
+
+                self._attr_extra_state_attributes.update(
+                    {key: last_sensor_state.attributes[key]}
+                )
+                _LOGGER.debug(
+                    "Restored attribute %s for entity %s to value %s",
+                    key,
+                    self.entity_id,
+                    value,
+                )
+
+        # Restore extra data
+        if (last_sensor_data := await self.async_get_last_template_data()) is None:
+            _LOGGER.debug(
+                "No extra data found to restore for entity %s", self.entity_id
+            )
+            return last_sensor_state, None
+
+        for attribute in self.additional_data:
+            try:
+                value = last_sensor_data[attribute]
+            except KeyError:
+                _LOGGER.debug(
+                    "No value stored for additional attribute %s for entity %s",
+                    attribute,
+                    self.entity_id,
+                )
+                continue
+
+            try:
+                setattr(self, attribute, value)
+            except AttributeError:
+                _LOGGER.debug(
+                    "Additional attribute %s does not exist in entity %s, unable to restore",
+                    attribute,
+                    self.entity_id,
+                )
+                continue
+
+            _LOGGER.debug(
+                "Additional attribute %s restored to value %s for entity %s",
+                attribute,
+                value,
+                self.entity_id,
+            )
+
+        try:
+            self.async_write_ha_state()
+        except (TypeError, ValueError) as exc:
+            # Writing state resulted in an issue. Stop storing states for now.
+            self._save_state = False
+            _LOGGER.error(
+                "Restored state for entity %s results in exception: %s",
+                self.entity_id,
+                exc,
+            )
+
+        return (last_sensor_state, last_sensor_data)
+
+    @property
+    def extra_restore_state_data(self) -> TemplateExtraStoredData | None:
+        """Return sensor specific state data for persistent saving."""
+        return (
+            TemplateExtraStoredData(self, self.additional_data)
+            if self.restore
+            else TemplateExtraStoredData(self, [])
+        )
+
+    async def async_get_last_template_data(self) -> dict[str, Any] | None:
+        """Return the persistent saved data."""
+        if not self.restore:
+            # Return nothing if entity is not to be restored or
+            # not saving current state due to issue.
+            return None
+
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return TemplateExtraStoredData(self, self.additional_data).from_dict(
+            restored_last_extra_data.as_dict()
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+
+        self._add_all_template_attributes()
+
+        await self.restore_entity()
+
+        if self.hass.state == CoreState.running:
+            await self._async_template_startup()
+            return
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, self._async_template_startup
+        )
+
+
+@dataclass
+class TemplateExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    template_entity: TemplateRestoreEntity
+    additional_data: list[str]
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the sensor data."""
+        if not self.template_entity.save_state:
+            # Only store not to restore data
+            _LOGGER.debug(
+                "Storing of data disabled for entity %s",
+                self.template_entity.entity_id,
+            )
+            return {}
+
+        store_attributes: dict[str, Any] = {}
+        for attribute in self.additional_data:
+            try:
+                value = convert_attribute_to_string(
+                    getattr(self.template_entity, attribute)
+                )
+            except AttributeError:
+                continue
+
+            _LOGGER.info(
+                "Storing additional attribute %s with value %s for entity %s",
+                attribute,
+                value,
+                self.template_entity.entity_id,
+            )
+            store_attributes.update({attribute: value})
+
+        return store_attributes
+
+    def from_dict(self, restored: dict[str, Any]) -> dict[str, Any]:
+        """Initialize a stored sensor state from a dict."""
+        store_attributes: dict[str, Any] = {}
+        for attribute, value in restored.items():
+            value = convert_attribute_from_string(value)
+
+            _LOGGER.info(
+                "Retrieved additional attribute %s with value %s for entity %s",
+                attribute,
+                value,
+                self.template_entity.entity_id,
+            )
+            store_attributes.update({attribute: value})
+
+        return store_attributes

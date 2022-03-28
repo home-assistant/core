@@ -42,14 +42,17 @@ from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_OBJECT_ID,
+    CONF_RESTORE,
     CONF_TRIGGER,
 )
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA,
+    TEMPLATE_ENTITY_RESTORE_SCHEMA,
     TemplateEntity,
+    TemplateRestoreEntity,
     rewrite_common_legacy_to_modern_conf,
 )
-from .trigger_entity import TriggerEntity
+from .trigger_entity import TriggerEntity, TriggerRestoreEntity
 
 LEGACY_FIELDS = {
     CONF_FRIENDLY_NAME_TEMPLATE: CONF_NAME,
@@ -58,16 +61,20 @@ LEGACY_FIELDS = {
 }
 
 
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_NAME): cv.template,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    }
-).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+SENSOR_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_NAME): cv.template,
+            vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+            vol.Required(CONF_STATE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_RESTORE_SCHEMA.schema)
+)
 
 
 LEGACY_SENSOR_SCHEMA = vol.All(
@@ -147,13 +154,22 @@ def _async_create_template_tracking_entities(
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
 
-        sensors.append(
-            SensorTemplate(
-                hass,
-                entity_conf,
-                unique_id,
+        if entity_conf.get(CONF_RESTORE, False):
+            sensors.append(
+                SensorRestoreTemplate(
+                    hass,
+                    entity_conf,
+                    unique_id,
+                )
             )
-        )
+        else:
+            sensors.append(
+                SensorTemplate(
+                    hass,
+                    entity_conf,
+                    unique_id,
+                )
+            )
 
     async_add_entities(sensors)
 
@@ -176,7 +192,9 @@ async def async_setup_platform(
 
     if "coordinator" in discovery_info:
         async_add_entities(
-            TriggerSensorEntity(hass, discovery_info["coordinator"], config)
+            TriggerSensorRestoreEntity(hass, discovery_info["coordinator"], config)
+            if config.get(CONF_RESTORE, False)
+            else TriggerSensorEntity(hass, discovery_info["coordinator"], config)
             for config in discovery_info["entities"]
         )
         return
@@ -215,7 +233,6 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self.add_template_attribute(
             "_attr_native_value", self._template, None, self._update_state
         )
-
         await super().async_added_to_hass()
 
     @callback
@@ -235,6 +252,15 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self._attr_native_value = async_parse_date_datetime(
             result, self.entity_id, self.device_class
         )
+
+
+class SensorRestoreTemplate(SensorTemplate, TemplateRestoreEntity):
+    """Representation of a restorable Template Sensor."""
+
+    def __init__(self, *args, **kwargs):
+        """Sensor Restore Template init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True
 
 
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
@@ -274,3 +300,12 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
         self._rendered[CONF_STATE] = async_parse_date_datetime(
             state, self.entity_id, self.device_class
         )
+
+
+class TriggerSensorRestoreEntity(TriggerSensorEntity, TriggerRestoreEntity):
+    """Representation of a restorable Trigger Sensor."""
+
+    def __init__(self, *args, **kwargs):
+        """Trigger Sensor Restore init."""
+        super().__init__(*args, **kwargs)
+        self.restore = True

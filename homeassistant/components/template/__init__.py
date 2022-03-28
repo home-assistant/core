@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import date, datetime, timedelta
 import logging
 
 from homeassistant import config as conf_util
@@ -15,12 +16,14 @@ from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, cal
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     discovery,
+    restore_state,
     trigger as trigger_helper,
     update_coordinator,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_TRIGGER, DOMAIN, PLATFORMS
 
@@ -46,6 +49,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if conf is None:
             return
+
+        # Save persistent state so that upon reload it can be retrieved.
+        _LOGGER.debug("Saving %s states for reload", DOMAIN)
+        await restore_state.RestoreStateData.async_save_persistent_states(hass)
 
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
 
@@ -99,6 +106,48 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
 
     if coordinator_tasks:
         hass.data[DOMAIN] = await asyncio.gather(*coordinator_tasks)
+
+
+def convert_attribute_to_string(attribute):
+    """Convert attribute to string for storing as JSON."""
+
+    if isinstance(attribute, (date, datetime)):
+        attribute = {
+            "__type": str(type(attribute)),
+            "isoformat": attribute.isoformat(),
+        }
+    elif isinstance(attribute, timedelta):
+        attribute = {
+            "__type": str(type(attribute)),
+            "repr": {
+                "days": attribute.days,
+                "seconds": attribute.seconds,
+                "microseconds": attribute.microseconds,
+            },
+        }
+
+    return attribute
+
+
+def convert_attribute_from_string(attribute):
+    """Convert attribute that was stored as string back into class."""
+
+    try:
+        type_ = attribute["__type"]
+        if type_ == "<class 'datetime.datetime'>":
+            attribute = dt_util.parse_datetime(attribute["isoformat"])
+        elif type_ == "<class 'datetime.date'>":
+            attribute = dt_util.parse_date(attribute["isoformat"])
+        elif type_ == "<class 'datetime.timedelta'>":
+            attribute = timedelta(
+                days=attribute["repr"]["days"],
+                seconds=attribute["repr"]["seconds"],
+                microseconds=attribute["repr"]["microseconds"],
+            )
+    except (TypeError, KeyError):
+        pass
+
+    return attribute
 
 
 class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
