@@ -23,7 +23,6 @@ async def test_events_http_api(hass, hass_client):
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert events[0]["summary"] == "Future Event"
-    assert events[0]["title"] == "Future Event"
 
 
 async def test_calendars_http_api(hass, hass_client):

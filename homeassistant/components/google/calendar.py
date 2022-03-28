@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import copy
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import logging
 from typing import Any
 
@@ -10,9 +10,9 @@ from httplib2 import ServerNotFoundError
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
+    CalendarEvent,
     CalendarEventDevice,
     extract_offset,
-    get_date,
     is_offset_reached,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -22,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt
 
 from . import (
     CONF_CAL_ID,
@@ -117,7 +117,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         self._calendar_id = calendar_id
         self._search: str | None = data.get(CONF_SEARCH)
         self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
-        self._event: dict[str, Any] | None = None
+        self._event: CalendarEvent | None = None
         self._name: str = data[CONF_NAME]
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self._offset_reached = False
@@ -129,7 +129,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         return {"offset_reached": self._offset_reached}
 
     @property
-    def event(self) -> dict[str, Any] | None:
+    def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
@@ -146,7 +146,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[dict[str, Any]]:
+    ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         event_list: list[dict[str, Any]] = []
         page_token: str | None = None
@@ -166,7 +166,8 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
             event_list.extend(filter(self._event_filter, items))
             if not page_token:
                 break
-        return event_list
+
+        return [_get_calendar_event(event) for event in event_list]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
@@ -188,5 +189,29 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
             )
             self._event["summary"] = summary
             self._offset_reached = is_offset_reached(
-                get_date(self._event["start"]), offset
+                self._event.start_datetime_local, offset
             )
+        else:
+            self._event = None
+
+
+def _get_date_or_datetime(date_dict: dict[str, str]) -> datetime | date:
+    """Get the dateTime from date or dateTime as a local."""
+    if "date" in date_dict:
+        parsed_date = dt.parse_date(date_dict["date"])
+        assert parsed_date
+        return parsed_date
+    parsed_datetime = dt.parse_datetime(date_dict["dateTime"])
+    assert parsed_datetime
+    return parsed_datetime
+
+
+def _get_calendar_event(event: dict[str, Any]) -> CalendarEvent:
+    """Return a CalendarEvent from an API event."""
+    return CalendarEvent(
+        summary=event["summary"],
+        start=_get_date_or_datetime(event["start"]),
+        end=_get_date_or_datetime(event["end"]),
+        description=event.get("description"),
+        location=event.get("location"),
+    )
