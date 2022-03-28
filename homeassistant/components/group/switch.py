@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -153,14 +153,14 @@ class SwitchGroup(GroupEntity, SwitchEntity):
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the switch group state."""
-        all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        states: list[State] = list(filter(None, all_states))
-
-        # filtered_states are members currently in the state machine
-        filtered_states: list[str] = [x.state for x in all_states if x is not None]
+        states = [
+            state.state
+            for entity_id in self._entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
 
         valid_state = self.mode(
-            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in filtered_states
+            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
 
         if not valid_state:
@@ -168,8 +168,6 @@ class SwitchGroup(GroupEntity, SwitchEntity):
             self._attr_is_on = None
         else:
             # Set as ON if any / all member is ON
-            self._attr_is_on = self.mode(
-                list(map(lambda x: x == STATE_ON, filtered_states))
-            )
+            self._attr_is_on = self.mode(list(map(lambda x: x == STATE_ON, states)))
 
-        self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
+        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
