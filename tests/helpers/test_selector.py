@@ -406,12 +406,15 @@ def test_attribute_selector_schema(schema, valid_selections, invalid_selections)
     (
         (
             {},
-            ({"seconds": 10},),
+            (
+                {"seconds": 10},
+                {"days": 10},  # Days is allowed also if `enable_day` is not set
+            ),
             (None, {}),
         ),
         (
             {"enable_day": True},
-            ({"seconds": 10},),
+            ({"seconds": 10}, {"days": 10}),
             (None, {}),
         ),
     ),

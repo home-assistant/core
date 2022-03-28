@@ -127,7 +127,11 @@ class GroupConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
-        """Return config entry title."""
+        """Return config entry title.
+
+        The options parameter contains config entry options, which is the union of user
+        input from the config flow steps.
+        """
         return cast(str, options["name"]) if "name" in options else ""
 
     @callback

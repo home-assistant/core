@@ -403,6 +403,7 @@ FLOWS = {
     ],
     "helper": [
         "derivative",
+        "min_max",
         "tod"
     ]
 }
