@@ -132,7 +132,6 @@ FLOWS = {
         "google_travel_time",
         "gpslogger",
         "gree",
-        "group",
         "growatt_server",
         "guardian",
         "habitica",
@@ -338,7 +337,6 @@ FLOWS = {
         "tasmota",
         "tellduslive",
         "tesla_wall_connector",
-        "threshold",
         "tibber",
         "tile",
         "tolo",
@@ -401,9 +399,11 @@ FLOWS = {
     ],
     "helper": [
         "derivative",
+        "group",
         "integration",
         "min_max",
         "switch_as_x",
+        "threshold",
         "tod",
         "utility_meter"
     ]
