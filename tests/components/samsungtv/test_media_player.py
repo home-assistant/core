@@ -4,7 +4,11 @@ from datetime import datetime, timedelta
 import logging
 from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
 
-from async_upnp_client.exceptions import UpnpActionResponseError
+from async_upnp_client.exceptions import (
+    UpnpActionResponseError,
+    UpnpError,
+    UpnpResponseError,
+)
 import pytest
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
@@ -1392,7 +1396,7 @@ async def test_upnp_missing_service(
     assert "Upnp services are not available" in caplog.text
 
 
-@pytest.mark.usefixtures("remotews")
+@pytest.mark.usefixtures("remotews", "rest_api")
 async def test_upnp_shutdown(
     hass: HomeAssistant,
     dmr_device: Mock,
@@ -1411,3 +1415,57 @@ async def test_upnp_shutdown(
 
     dmr_device.async_unsubscribe_services.assert_called_once()
     upnp_notify_server.async_stop_server.assert_called_once()
+
+
+@pytest.mark.usefixtures("remotews", "rest_api", "upnp_notify_server")
+async def test_upnp_subscribe_events(hass: HomeAssistant, dmr_device: Mock) -> None:
+    """Test for Upnp event feedback."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.44
+    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
+
+    # DMR Devices gets updated, and raise event
+    dmr_device.volume_level = 0
+    dmr_device.is_volume_muted = True
+    dmr_device.raise_event(None, None)
+
+    # State gets updated without the need to wait for next update
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0
+    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
+
+
+@pytest.mark.usefixtures("remotews", "rest_api")
+async def test_upnp_subscribe_events_upnperror(
+    hass: HomeAssistant,
+    dmr_device: Mock,
+    upnp_notify_server: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test for failure to subscribe Upnp services."""
+    with patch.object(dmr_device, "async_subscribe_services", side_effect=UpnpError):
+        await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+
+    upnp_notify_server.async_stop_server.assert_called_once()
+    assert "Error while subscribing during device connect" in caplog.text
+
+
+@pytest.mark.usefixtures("remotews", "rest_api")
+async def test_upnp_subscribe_events_upnpresponseerror(
+    hass: HomeAssistant,
+    dmr_device: Mock,
+    upnp_notify_server: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test for failure to subscribe Upnp services."""
+    with patch.object(
+        dmr_device,
+        "async_subscribe_services",
+        side_effect=UpnpResponseError(status=501),
+    ):
+        await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+
+    upnp_notify_server.async_stop_server.assert_not_called()
+    assert "Device rejected subscription" in caplog.text

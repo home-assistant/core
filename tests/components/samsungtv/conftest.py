@@ -100,6 +100,13 @@ async def dmr_device_fixture(upnp_device: Mock) -> Mock:
         dmr_device: Mock = dmr_device_class.return_value
         dmr_device.volume_level = 0.44
         dmr_device.is_volume_muted = False
+        dmr_device.on_event = None
+
+        def _raise_event(service, state_variables):
+            if dmr_device.on_event:
+                dmr_device.on_event(service, state_variables)
+
+        dmr_device.raise_event = _raise_event
         yield dmr_device
 
 
