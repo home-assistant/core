@@ -8,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp, network
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
