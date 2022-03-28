@@ -31,7 +31,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
             {
                 "cycle": "monthly",
                 "name": "Electricity meter",
-                "offset": {"seconds": 0},
+                "offset": 0,
                 "source": input_sensor_entity_id,
                 "tariffs": "",
             },
@@ -46,7 +46,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "delta_values": False,
         "name": "Electricity meter",
         "net_consumption": False,
-        "offset": {"seconds": 0},
+        "offset": 0,
         "source": input_sensor_entity_id,
         "tariffs": "",
     }
@@ -59,7 +59,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "delta_values": False,
         "name": "Electricity meter",
         "net_consumption": False,
-        "offset": {"seconds": 0},
+        "offset": 0,
         "source": input_sensor_entity_id,
         "tariffs": "",
     }
@@ -91,7 +91,7 @@ async def test_options(hass: HomeAssistant) -> None:
             "delta_values": False,
             "name": "Electricity meter",
             "net_consumption": False,
-            "offset": {"seconds": 0},
+            "offset": 0,
             "source": input_sensor1_entity_id,
             "tariffs": "",
         },
@@ -117,7 +117,7 @@ async def test_options(hass: HomeAssistant) -> None:
         "delta_values": False,
         "name": "Electricity meter",
         "net_consumption": False,
-        "offset": {"seconds": 0},
+        "offset": 0,
         "source": input_sensor2_entity_id,
         "tariffs": "",
     }
@@ -127,7 +127,7 @@ async def test_options(hass: HomeAssistant) -> None:
         "delta_values": False,
         "name": "Electricity meter",
         "net_consumption": False,
-        "offset": {"seconds": 0},
+        "offset": 0,
         "source": input_sensor2_entity_id,
         "tariffs": "",
     }

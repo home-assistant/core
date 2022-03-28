@@ -1,7 +1,7 @@
 """Utility meter from sensors providing raw data."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 
@@ -25,11 +25,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    entity_registry as er,
-)
+from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -114,7 +110,7 @@ async def async_setup_entry(
 
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
-    meter_offset = cv.time_period_dict(config_entry.options[CONF_METER_OFFSET])
+    meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
     meter_type = config_entry.options[CONF_METER_TYPE]
     if meter_type == "none":
         meter_type = None

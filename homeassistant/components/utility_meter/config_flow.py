@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import timedelta
 from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.helpers import selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
     HelperFlowError,
@@ -59,9 +58,6 @@ def _validate_config(data: Any) -> Any:
     except vol.Invalid as exc:
         raise HelperFlowError("tariffs_not_unique") from exc
 
-    if cv.time_period_dict(data[CONF_METER_OFFSET]) > timedelta(days=28):
-        raise HelperFlowError("offset_max_28_days")
-
     return data
 
 
@@ -82,7 +78,16 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_METER_TYPE): selector.selector(
             {"select": {"options": METER_TYPES}}
         ),
-        vol.Required(CONF_METER_OFFSET): selector.selector({"duration": {}}),
+        vol.Required(CONF_METER_OFFSET, default=0): selector.selector(
+            {
+                "number": {
+                    "min": 0,
+                    "max": 28,
+                    "mode": "box",
+                    CONF_UNIT_OF_MEASUREMENT: "days",
+                }
+            }
+        ),
         vol.Optional(CONF_TARIFFS): selector.selector({"text": {}}),
         vol.Required(CONF_METER_NET_CONSUMPTION, default=False): selector.selector(
             {"boolean": {}}
