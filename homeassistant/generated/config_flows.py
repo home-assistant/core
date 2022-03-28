@@ -132,7 +132,6 @@ FLOWS = {
         "google_travel_time",
         "gpslogger",
         "gree",
-        "group",
         "growatt_server",
         "guardian",
         "habitica",
@@ -400,6 +399,7 @@ FLOWS = {
     ],
     "helper": [
         "derivative",
+        "group",
         "integration",
         "min_max",
         "switch_as_x",

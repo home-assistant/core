@@ -1,5 +1,6 @@
 {
   "domain": "group",
+  "integration_type": "helper",
   "name": "Group",
   "documentation": "https://www.home-assistant.io/integrations/group",
   "codeowners": [
