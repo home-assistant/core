@@ -277,6 +277,8 @@ class DurationSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema(
         {
+            # Enable day field in frontend. A selection with `days` set is allowed
+            # even if `enable_day` is not set
             vol.Optional("enable_day"): cv.boolean,
         }
     )
