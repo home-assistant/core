@@ -93,20 +93,19 @@ def _state_stateful_alarm_controller(
     select_state: Callable[[str], OverkizStateType]
 ) -> str:
     """Return the state of the device."""
-    state = cast(list, select_state(OverkizState.CORE_ACTIVE_ZONES))
+    if state := cast(list, select_state(OverkizState.CORE_ACTIVE_ZONES)):
+        if [
+            OverkizCommandParam.A,
+            OverkizCommandParam.B,
+            OverkizCommandParam.C,
+        ] in state:
+            return STATE_ALARM_ARMED_AWAY
 
-    if [
-        OverkizCommandParam.A,
-        OverkizCommandParam.B,
-        OverkizCommandParam.C,
-    ] in state:
-        return STATE_ALARM_ARMED_AWAY
+        if [OverkizCommandParam.A, OverkizCommandParam.B] in state:
+            return STATE_ALARM_ARMED_NIGHT
 
-    if [OverkizCommandParam.A, OverkizCommandParam.B] in state:
-        return STATE_ALARM_ARMED_NIGHT
-
-    if OverkizCommandParam.A in state:
-        return STATE_ALARM_ARMED_HOME
+        if OverkizCommandParam.A in state:
+            return STATE_ALARM_ARMED_HOME
 
     return STATE_ALARM_DISARMED
 
