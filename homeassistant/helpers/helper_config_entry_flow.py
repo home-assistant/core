@@ -14,7 +14,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import FlowResult, UnknownHandler
 
-from . import entity_registry as er
+from . import entity_registry as er, selector
 
 
 class HelperFlowError(Exception):
@@ -41,6 +41,20 @@ class HelperFlowFormStep:
     # options and user input from previous steps.
     # If next_step returns None, the flow is ended with RESULT_TYPE_CREATE_ENTRY.
     next_step: Callable[[dict[str, Any]], str | None] = lambda _: None
+
+    # Optional function to allow amending a form schema.
+    # The update_form_schema function is called before async_show_form is called. The
+    # update_form_schema function is passed the handler, which is either an instance of
+    # HelperConfigFlowHandler or HelperOptionsFlowHandler, the schema, and the union of
+    # config entry options and user input from previous steps.
+    update_form_schema: Callable[
+        [
+            HelperConfigFlowHandler | HelperOptionsFlowHandler,
+            vol.Schema,
+            dict[str, Any],
+        ],
+        vol.Schema,
+    ] = lambda _handler, schema, _options: schema
 
 
 @dataclass
@@ -133,7 +147,12 @@ class HelperCommonFlowHandler:
         options = dict(self._options)
         if user_input:
             options.update(user_input)
+
         if (data_schema := form_step.schema) and data_schema.schema:
+            data_schema = form_step.update_form_schema(
+                self._handler, data_schema, options
+            )
+
             # Make a copy of the schema with suggested values set to saved options
             schema = {}
             for key, val in data_schema.schema.items():
@@ -337,3 +356,26 @@ def wrapped_entity_config_entry_title(
     if state:
         return state.name or object_id
     return object_id
+
+
+@callback
+def exclude_own_entity(
+    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    schema: vol.Schema,
+    schema_key: str,
+) -> vol.Schema:
+    """Exclude own entities from an entity selector identified by schema_key."""
+    if not isinstance(handler, HelperOptionsFlowHandler):
+        return schema
+
+    entity_registry = er.async_get(handler.hass)
+    entities = er.async_entries_for_config_entry(
+        entity_registry,
+        handler._config_entry.entry_id,  # pylint: disable=protected-access
+    )
+
+    schema = dict(schema.schema)
+    selector_config = {"entity": dict(schema[schema_key].config)}
+    selector_config["entity"]["exclude_entities"] = [ent.entity_id for ent in entities]
+    schema[schema_key] = selector.selector(selector_config)
+    return vol.Schema(schema)

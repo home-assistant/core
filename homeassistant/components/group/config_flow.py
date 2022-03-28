@@ -13,6 +13,8 @@ from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
     HelperFlowFormStep,
     HelperFlowMenuStep,
+    HelperOptionsFlowHandler,
+    exclude_own_entity,
 )
 
 from . import DOMAIN
@@ -119,15 +121,36 @@ CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
 }
 
 
+def _exclude_self(
+    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    schema: vol.Schema,
+    options: dict[str, Any],
+) -> vol.Schema:
+    """Exclude own entities from the entity selector."""
+    return exclude_own_entity(handler, schema, CONF_ENTITIES)
+
+
 OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
     "init": HelperFlowFormStep(None, next_step=choose_options_step),
-    "binary_sensor": HelperFlowFormStep(BINARY_SENSOR_OPTIONS_SCHEMA),
-    "cover": HelperFlowFormStep(basic_group_options_schema("cover")),
-    "fan": HelperFlowFormStep(basic_group_options_schema("fan")),
-    "light": HelperFlowFormStep(LIGHT_OPTIONS_SCHEMA),
-    "lock": HelperFlowFormStep(basic_group_options_schema("lock")),
-    "media_player": HelperFlowFormStep(basic_group_options_schema("media_player")),
-    "switch": HelperFlowFormStep(SWITCH_OPTIONS_SCHEMA),
+    "binary_sensor": HelperFlowFormStep(
+        BINARY_SENSOR_OPTIONS_SCHEMA, update_form_schema=_exclude_self
+    ),
+    "cover": HelperFlowFormStep(
+        basic_group_options_schema("cover"), update_form_schema=_exclude_self
+    ),
+    "fan": HelperFlowFormStep(
+        basic_group_options_schema("fan"), update_form_schema=_exclude_self
+    ),
+    "light": HelperFlowFormStep(LIGHT_OPTIONS_SCHEMA, update_form_schema=_exclude_self),
+    "lock": HelperFlowFormStep(
+        basic_group_options_schema("lock"), update_form_schema=_exclude_self
+    ),
+    "media_player": HelperFlowFormStep(
+        basic_group_options_schema("media_player"), update_form_schema=_exclude_self
+    ),
+    "switch": HelperFlowFormStep(
+        SWITCH_OPTIONS_SCHEMA, update_form_schema=_exclude_self
+    ),
 }
 
 
