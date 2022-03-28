@@ -61,7 +61,7 @@ accuweather==0.3.0
 adax==0.2.0
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.4.0
+adb-shell[async]==0.4.2
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -222,7 +222,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.1.3
+aiowebostv==0.2.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -249,7 +249,7 @@ amberelectric==1.0.4
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.63
+androidtv[async]==0.0.66
 
 # homeassistant.components.apprise
 apprise==0.9.7
@@ -262,6 +262,7 @@ arcam-fmj==0.12.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
+# homeassistant.components.samsungtv
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
@@ -435,6 +436,9 @@ faadelays==0.0.7
 
 # homeassistant.components.feedreader
 feedparser==6.0.2
+
+# homeassistant.components.fibaro
+fiblary3==0.1.8
 
 # homeassistant.components.fivem
 fivem-api==0.1.2

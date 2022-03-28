@@ -183,14 +183,14 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         info, wlan_settings = await self.hass.async_add_executor_job(get_device_info)
         await self.hass.async_add_executor_job(logout)
 
+        user_input[CONF_MAC] = get_device_macs(info, wlan_settings)
+
         if not self.unique_id:
             if serial_number := info.get("SerialNumber"):
                 await self.async_set_unique_id(serial_number)
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(updates=user_input)
             else:
                 await self._async_handle_discovery_without_unique_id()
-
-        user_input[CONF_MAC] = get_device_macs(info, wlan_settings)
 
         title = (
             self.context.get("title_placeholders", {}).get(CONF_NAME)

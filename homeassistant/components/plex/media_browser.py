@@ -329,7 +329,7 @@ def library_section_payload(section):
         children_media_class = ITEM_TYPE_MEDIA_CLASS[section.TYPE]
     except KeyError as err:
         raise UnknownMediaType(f"Unknown type received: {section.TYPE}") from err
-    server_id = section._server.machineIdentifier
+    server_id = section._server.machineIdentifier  # pylint: disable=protected-access
     return BrowseMedia(
         title=section.title,
         media_class=MEDIA_CLASS_DIRECTORY,
@@ -362,7 +362,7 @@ def hub_payload(hub):
         media_content_id = f"{hub.librarySectionID}/{hub.hubIdentifier}"
     else:
         media_content_id = f"server/{hub.hubIdentifier}"
-    server_id = hub._server.machineIdentifier
+    server_id = hub._server.machineIdentifier  # pylint: disable=protected-access
     payload = {
         "title": hub.title,
         "media_class": MEDIA_CLASS_DIRECTORY,
@@ -376,7 +376,7 @@ def hub_payload(hub):
 
 def station_payload(station):
     """Create response payload for a music station."""
-    server_id = station._server.machineIdentifier
+    server_id = station._server.machineIdentifier  # pylint: disable=protected-access
     return BrowseMedia(
         title=station.title,
         media_class=ITEM_TYPE_MEDIA_CLASS[station.type],
