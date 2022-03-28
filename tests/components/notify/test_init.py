@@ -34,7 +34,6 @@ def mock_notify_platform(
     """Specialize the mock platform for notify."""
     loaded_platform = MockNotifyPlatform(async_get_service, get_service)
     mock_platform(hass, f"{integration}.notify", loaded_platform)
-    integration = hass.data[DATA_INTEGRATIONS][integration]
 
     return loaded_platform
 
