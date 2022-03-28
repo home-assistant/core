@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
-from homeassistant.components.recorder import CONF_DB_URL
+from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorEntity,
@@ -20,6 +20,8 @@ from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -64,9 +66,13 @@ async def async_setup_platform(
         "from your configuration.yaml file"
     )
 
+    default_db_url = DEFAULT_URL.format(
+        hass_config_path=hass.config.path(DEFAULT_DB_FILE)
+    )
+
     for query in config[CONF_QUERIES]:
         new_config = {
-            CONF_DB_URL: config.get(CONF_DB_URL),
+            CONF_DB_URL: config.get(CONF_DB_URL, default_db_url),
             CONF_NAME: query.get(CONF_NAME),
             CONF_QUERY: query.get(CONF_QUERY),
             CONF_UNIT_OF_MEASUREMENT: query.get(CONF_UNIT_OF_MEASUREMENT),
@@ -87,12 +93,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SQL sensor entry."""
 
-    db_url: str = entry.data[CONF_DB_URL]
-    name: str = entry.data[CONF_NAME]
-    query_str: str = entry.data[CONF_QUERY]
-    unit: str | None = entry.data.get(CONF_UNIT_OF_MEASUREMENT)
-    template: str | None = entry.data.get(CONF_VALUE_TEMPLATE)
-    column_name: str = entry.data[CONF_COLUMN_NAME]
+    db_url: str = entry.options[CONF_DB_URL]
+    name: str = entry.options[CONF_NAME]
+    query_str: str = entry.options[CONF_QUERY]
+    unit: str | None = entry.options.get(CONF_UNIT_OF_MEASUREMENT)
+    template: str | None = entry.options.get(CONF_VALUE_TEMPLATE)
+    column_name: str = entry.options[CONF_COLUMN_NAME]
 
     value_template: Template | None = None
     if template is not None:
@@ -138,6 +144,8 @@ async def async_setup_entry(
 class SQLSensor(SensorEntity):
     """Representation of an SQL sensor."""
 
+    _attr_icon = "mdi:database-search"
+
     def __init__(
         self,
         name: str,
@@ -157,6 +165,12 @@ class SQLSensor(SensorEntity):
         self.sessionmaker = sessmaker
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="SQL",
+            name=name,
+        )
 
     def update(self) -> None:
         """Retrieve sensor data from the query."""

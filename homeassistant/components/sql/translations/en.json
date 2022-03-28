@@ -11,9 +11,27 @@
         "step": {
             "user": {
                 "data": {
-                    "db_url": "Database url",
-                    "query": "Select query",
                     "column": "Column",
+                    "db_url": "Database URL",
+                    "query": "Select query",
+                    "unit_of_measurement": "Unit of Measure",
+                    "value_template": "Value Template"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "db_url_invalid": "Database url invalid",
+            "query_invalid": "Query invalid. Needs to start with Select",
+            "value_template_invalid": "Value template invalid"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "column": "Column",
+                    "db_url": "Database URL",
+                    "query": "Select query",
                     "unit_of_measurement": "Unit of Measure",
                     "value_template": "Value Template"
                 }

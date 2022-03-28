@@ -5,54 +5,73 @@ import logging
 from typing import Any
 
 import sqlalchemy
+from sqlalchemy.engine import Result
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import selector
 import homeassistant.helpers.template as template_helper
 
-from .const import CONF_COLUMN_NAME, CONF_QUERY, DB_URL_RE, DOMAIN
+from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def redact_credentials(data: str) -> str:
-    """Redact credentials from string data."""
-    return DB_URL_RE.sub("//****:****@", data)
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DB_URL): selector.selector({"text": {}}),
+        vol.Required(CONF_COLUMN_NAME): selector.selector({"text": {}}),
+        vol.Required(CONF_QUERY): selector.selector({"text": {}}),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.selector({"text": {}}),
+        vol.Optional(CONF_VALUE_TEMPLATE): selector.selector({"text": {}}),
+    }
+)
 
 
 def validate_sql_select(value: str) -> str | None:
     """Validate that value is a SQL SELECT query."""
     if not value.lstrip().lower().startswith("select"):
-        return None
+        raise ValueError("Incorrect Query")
     return value
 
 
 def validate_template(value: str | None) -> template_helper.Template | None:
     """Validate template syntax."""
     template_value = template_helper.Template(str(value))
-    try:
-        template_value.ensure_valid()
-    except TemplateError:
-        return None
+    template_value.ensure_valid()
     return template_value
 
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DB_URL): cv.string,
-        vol.Required(CONF_COLUMN_NAME): cv.string,
-        vol.Required(CONF_QUERY): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
-    }
-)
+def validate_query(db_url: str, query: str, column: str) -> bool:
+    """Validate SQL query."""
+    try:
+        engine = sqlalchemy.create_engine(db_url)
+        sessmaker = scoped_session(sessionmaker(bind=engine))
+    except SQLAlchemyError as error:
+        raise SQLAlchemyError from error
+
+    sess: scoped_session = sessmaker()
+
+    try:
+        result: Result = sess.execute(query)
+        for res in result.mappings():
+            data = res[column]
+            _LOGGER.debug("Return value from query: %s", data)
+    except SQLAlchemyError as error:
+        if sess:
+            sess.close()
+        raise ValueError(error) from error
+
+    if sess:
+        sess.close()
+
+    return True
 
 
 class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,34 +82,13 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     entry: config_entries.ConfigEntry
     hass: HomeAssistant
 
-    async def validate_db(self, db_in: str | None) -> str | None:
-        """Validate database from user input."""
-
-        if not (db_url := db_in):
-            db_url = DEFAULT_URL.format(
-                hass_config_path=self.hass.config.path(DEFAULT_DB_FILE)
-            )
-
-        sess = None
-        try:
-            engine = sqlalchemy.create_engine(db_url)
-            sessmaker = scoped_session(sessionmaker(bind=engine))
-
-            # Run a dummy query just to test the db_url
-            sess = sessmaker()
-            sess.execute("SELECT 1;")
-
-        except sqlalchemy.exc.SQLAlchemyError as err:
-            _LOGGER.error(
-                "Couldn't connect using %s DB_URL: %s",
-                redact_credentials(db_url),
-                redact_credentials(str(err)),
-            )
-            return None
-        finally:
-            if sess:
-                sess.close()
-        return db_url
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> SQLOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return SQLOptionsFlowHandler(config_entry)
 
     async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
         """Import a configuration from config.yaml."""
@@ -103,9 +101,13 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the user step."""
         errors = {}
+        db_url_default = DEFAULT_URL.format(
+            hass_config_path=self.hass.config.path(DEFAULT_DB_FILE)
+        )
 
         if user_input is not None:
-            db_in = user_input.get(CONF_DB_URL)
+
+            db_url = user_input.get(CONF_DB_URL, db_url_default)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             uom = user_input.get(CONF_UNIT_OF_MEASUREMENT)
@@ -113,14 +115,24 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             name = f"Select {column} SQL query"
 
-            db_url = await self.validate_db(db_in)
-            query_syntax = validate_sql_select(query)
-            template_syntax = validate_template(value_template)
+            try:
+                validate_sql_select(query)
+                await self.hass.async_add_executor_job(
+                    validate_query, db_url, query, column
+                )
+                validate_template(value_template)
+            except SQLAlchemyError:
+                errors["db_url"] = "db_url_invalid"
+            except ValueError:
+                errors["query"] = "query_invalid"
+            except TemplateError:
+                errors["value_template"] = "value_template_invalid"
 
-            if db_url and query_syntax and template_syntax:
+            if not errors:
                 return self.async_create_entry(
                     title=name,
-                    data={
+                    data={},
+                    options={
                         CONF_DB_URL: db_url,
                         CONF_QUERY: query,
                         CONF_COLUMN_NAME: column,
@@ -129,15 +141,85 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_NAME: name,
                     },
                 )
-            if not db_url:
-                errors["db_url"] = "db_url_invalid"
-            if not query_syntax:
-                errors["query"] = "query_invalid"
-            if not template_syntax:
-                errors["value_template"] = "value_template_invalid"
 
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
+            errors=errors,
+        )
+
+
+class SQLOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle SQL options."""
+
+    def __init__(self, entry: config_entries.ConfigEntry) -> None:
+        """Initialize SQL options flow."""
+        self.entry = entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage SQL options."""
+        errors = {}
+
+        if user_input is not None:
+            db_url = user_input[CONF_DB_URL]
+            query = user_input[CONF_QUERY]
+            column = user_input[CONF_COLUMN_NAME]
+            value_template = user_input.get(CONF_VALUE_TEMPLATE)
+
+            try:
+                validate_sql_select(query)
+                await self.hass.async_add_executor_job(
+                    validate_query, db_url, query, column
+                )
+                validate_template(value_template)
+            except SQLAlchemyError:
+                errors["db_url"] = "db_url_invalid"
+            except ValueError:
+                errors["query"] = "query_invalid"
+            except TemplateError:
+                errors["value_template"] = "value_template_invalid"
+            else:
+                return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_DB_URL,
+                        description={
+                            "suggested_value": self.entry.options[CONF_DB_URL]
+                        },
+                    ): selector.selector({"text": {}}),
+                    vol.Required(
+                        CONF_QUERY,
+                        description={"suggested_value": self.entry.options[CONF_QUERY]},
+                    ): selector.selector({"text": {}}),
+                    vol.Required(
+                        CONF_COLUMN_NAME,
+                        description={
+                            "suggested_value": self.entry.options[CONF_COLUMN_NAME]
+                        },
+                    ): selector.selector({"text": {}}),
+                    vol.Optional(
+                        CONF_UNIT_OF_MEASUREMENT,
+                        description={
+                            "suggested_value": self.entry.options.get(
+                                CONF_UNIT_OF_MEASUREMENT
+                            )
+                        },
+                    ): selector.selector({"text": {}}),
+                    vol.Optional(
+                        CONF_VALUE_TEMPLATE,
+                        description={
+                            "suggested_value": self.entry.options.get(
+                                CONF_VALUE_TEMPLATE
+                            )
+                        },
+                    ): selector.selector({"text": {}}),
+                }
+            ),
             errors=errors,
         )

@@ -1,4 +1,7 @@
 """Tests for the sql component."""
+from __future__ import annotations
+
+import os
 from typing import Any
 
 from homeassistant.components.recorder import CONF_DB_URL
@@ -7,19 +10,36 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_test_config_dir
+
+DB_URL = "sqlite://" + os.path.join(get_test_config_dir(), "home-assistant_v2.db")
 
 ENTRY_CONFIG = {
-    CONF_QUERY: "SELECT ROUND(page_count * page_size / 1024 / 1024, 1) as size FROM pragma_page_count(), pragma_page_size();",
+    CONF_DB_URL: "sqlite://",
+    CONF_QUERY: "SELECT 5 as value",
+    CONF_COLUMN_NAME: "value",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+ENTRY_CONFIG_INVALID_QUERY = {
+    CONF_DB_URL: "sqlite://",
+    CONF_QUERY: "UPDATE 5 as value",
     CONF_COLUMN_NAME: "size",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
 
-ENTRY_CONFIG_INVALID = {
-    CONF_DB_URL: "",
-    CONF_QUERY: "UPDATE ROUND(page_count * page_size / 1024 / 1024, 1) as size FROM pragma_page_count(), pragma_page_size();",
-    CONF_COLUMN_NAME: "size",
+ENTRY_CONFIG_INVALID_TEMPLATE = {
+    CONF_DB_URL: "sqlite://",
+    CONF_QUERY: "SELECT 5 as value",
+    CONF_COLUMN_NAME: "value",
     CONF_VALUE_TEMPLATE: "{% if %}",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+ENTRY_CONFIG_NO_RESULTS = {
+    CONF_DB_URL: "sqlite://",
+    CONF_QUERY: "SELECT kalle as value from no_table;",
+    CONF_COLUMN_NAME: "value",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
 
@@ -37,7 +57,8 @@ async def init_integration(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=source,
-        data=config,
+        data={},
+        options=config,
         entry_id=entry_id,
     )
 
