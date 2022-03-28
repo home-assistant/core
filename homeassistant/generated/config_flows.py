@@ -160,7 +160,6 @@ FLOWS = {
         "icloud",
         "ifttt",
         "insteon",
-        "integration",
         "intellifire",
         "ios",
         "iotawatt",
@@ -402,6 +401,7 @@ FLOWS = {
     ],
     "helper": [
         "derivative",
+        "integration",
         "min_max",
         "switch_as_x",
         "tod"
