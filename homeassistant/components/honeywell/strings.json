@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Honeywell Total Connect Comfort (US)",
         "description": "Please enter the credentials used to log into mytotalconnectcomfort.com.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -17,7 +16,6 @@
   "options": {
     "step": {
       "init": {
-        "title": "Honeywell Options",
         "description": "Additional Honeywell config options. Temperatures are set in Fahrenheit.",
         "data": {
           "away_cool_temperature": "Away cool temperature",
