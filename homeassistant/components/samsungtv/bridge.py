@@ -383,14 +383,15 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
+        if self._get_device_spec("PowerState") is not None:
+            LOGGER.debug("Checking if TV %s is on using device info", self.host)
+            # Ensure we get an updated value
+            info = await self.async_device_info()
+            return info is not None and info["device"]["PowerState"] == "on"
+
         LOGGER.debug("Checking if TV %s is on using websocket", self.host)
-        if (remote := await self._async_get_remote()) and remote.is_alive():
-            if self._get_device_spec("PowerState") is not None:
-                LOGGER.debug("Checking if TV %s is on using device info", self.host)
-                # Ensure we get an updated value
-                info = await self.async_device_info()
-                return info is not None and info["device"]["PowerState"] == "on"
-            return True
+        if remote := await self._async_get_remote():
+            return remote.is_alive()
         return False
 
     async def async_try_connect(self) -> str:
