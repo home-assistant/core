@@ -464,6 +464,11 @@ class XiaomiVibration(XiaomiBinarySensor):
         attrs.update(super().extra_state_attributes)
         return attrs
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
+
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)
@@ -498,6 +503,11 @@ class XiaomiButton(XiaomiBinarySensor):
         attrs = {ATTR_LAST_ACTION: self._last_action}
         attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
