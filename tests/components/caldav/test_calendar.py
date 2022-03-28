@@ -279,10 +279,12 @@ def mock_private_cal():
 def get_api_events(hass_client):
     """Fixture to return events for a specific calendar using the API."""
 
-    async def api_call(entity_id, start, end):
+    async def api_call(entity_id):
         client = await hass_client()
         response = await client.get(
-            f"/api/calendars/{entity_id}?start={start}&end={end}"
+            # The start/end times are arbitrary since they are ignored by `_mock_calendar`
+            # which just returns all events for the calendar.
+            f"/api/calendars/{entity_id}?start=2022-01-01&end=2022-01-01"
         )
         assert response.status == HTTPStatus.OK
         return await response.json()
@@ -914,12 +916,9 @@ async def test_get_events(hass, calendar, get_api_events):
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
 
-    events = await get_api_events(
-        "calendar.private",
-        "2015-11-27",
-        "2015-11-28",
-    )
+    events = await get_api_events("calendar.private")
     assert len(events) == 14
+    assert calendar.call
 
 
 async def test_get_events_custom_calendars(hass, calendar, get_api_events):
@@ -932,11 +931,7 @@ async def test_get_events_custom_calendars(hass, calendar, get_api_events):
     assert await async_setup_component(hass, "calendar", {"calendar": config})
     await hass.async_block_till_done()
 
-    events = await get_api_events(
-        "calendar.private_private",
-        "2015-11-27",
-        "2015-11-28",
-    )
+    events = await get_api_events("calendar.private_private")
     assert events == [
         {
             "description": "Surprisingly rainy",
