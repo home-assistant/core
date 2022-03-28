@@ -8,7 +8,7 @@
   "dhcp": [
     {"registered_devices": true},
     {
-      "hostname": "MOTION_*"
+      "hostname": "motion_*"
     }
   ],
   "codeowners": ["@starkillerOG"],
