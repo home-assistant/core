@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import dhcp
 from homeassistant.components.motion_blinds import const
 from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_API_KEY, CONF_HOST
@@ -335,6 +336,36 @@ async def test_config_flow_invalid_interface(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
     assert result["errors"] == {const.CONF_INTERFACE: "invalid_interface"}
+
+
+async def test_dhcp_flow(hass):
+    """Succesfull flow from DHCP discovery."""
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip=TEST_HOST,
+        hostname="MOTION_abcdef",
+        macaddress=TEST_MAC,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: TEST_API_KEY},
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == DEFAULT_GATEWAY_NAME
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_API_KEY: TEST_API_KEY,
+        const.CONF_INTERFACE: TEST_HOST_HA,
+    }
 
 
 async def test_options_flow(hass):
