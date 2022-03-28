@@ -1,11 +1,9 @@
 """DataUpdateCoordinator for the Trafikverket Weather integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
-import aiohttp
 from pytrafikverket.trafikverket_weather import TrafikverketWeather, WeatherStationInfo
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,6 +38,6 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[WeatherStationInfo]):
         """Fetch data from Trafikverket."""
         try:
             weatherdata = await self._weather_api.async_get_weather(self._station)
-        except (asyncio.TimeoutError, aiohttp.ClientError, ValueError) as error:
+        except ValueError as error:
             raise UpdateFailed from error
         return weatherdata
