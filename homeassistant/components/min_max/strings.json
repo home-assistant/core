@@ -3,7 +3,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "New min / max / mean / median sensor",
         "description": "Precision controls the number of decimal digits when the statistics characteristic is mean or median.",
         "data": {
           "entity_ids": "Input entities",

@@ -8,8 +8,7 @@
                     "round_digits": "Precision",
                     "type": "Statistic characteristic"
                 },
-                "description": "Precision controls the number of decimal digits when the statistics characteristic is mean or median.",
-                "title": "New min / max / mean / median sensor"
+                "description": "Precision controls the number of decimal digits when the statistics characteristic is mean or median."
             }
         }
     },
