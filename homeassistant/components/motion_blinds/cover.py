@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -266,11 +266,6 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             self._previous_positions = []
             self._requesting_position = False
 
-    @callback
-    def async_scheduled_update_request_callback(self, now):
-        """Request a state update from the blind at a scheduled point in time using async_scheduled_update_request."""
-        self.hass.loop.create_task(self.async_scheduled_update_request())
-
     def request_position_till_stop(self):
         """Request the position of the blind every UPDATE_INTERVAL_MOVING seconds until it stops moving."""
         self._previous_positions = []
@@ -280,7 +275,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self._requesting_position = True
         track_point_in_time(
             self.hass,
-            self.async_scheduled_update_request_callback,
+            self.async_scheduled_update_request,
             dt_util.utcnow() + timedelta(seconds=UPDATE_INTERVAL_MOVING),
         )
 
