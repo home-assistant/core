@@ -30,10 +30,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
 from .const import DOMAIN
+from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
 
@@ -247,10 +249,16 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
 
     entity_description: OverkizAlarmDescription
 
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self.entity_description.supported_features
+    def __init__(
+        self,
+        device_url: str,
+        coordinator: OverkizDataUpdateCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(device_url, coordinator, description)
+
+        self._attr_supported_features = self.entity_description.supported_features
 
     @property
     def state(self) -> str:
