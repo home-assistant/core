@@ -24,6 +24,22 @@ from .const import SAMPLE_DEVICE_INFO_WIFI
 
 
 @pytest.fixture(autouse=True)
+async def silent_ssdp_scanner(hass):
+    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+    with patch(
+        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "homeassistant.components.ssdp.Scanner.async_scan"
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def samsungtv_mock_get_source_ip(mock_get_source_ip):
+    """Mock network util's async_get_source_ip."""
+
+
+@pytest.fixture(autouse=True)
 def fake_host_fixture() -> None:
     """Patch gethostbyname."""
     with patch(
