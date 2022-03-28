@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIWidget
@@ -266,40 +266,40 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self.async_execute_command(
+        assert self.entity_description.alarm_disarm
+        await self.executor.async_execute_command(
             self.entity_description.alarm_disarm,
             self.entity_description.alarm_disarm_args,
         )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self.async_execute_command(
+        assert self.entity_description.alarm_arm_home
+        await self.executor.async_execute_command(
             self.entity_description.alarm_arm_home,
             self.entity_description.alarm_arm_home_args,
         )
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        await self.async_execute_command(
+        assert self.entity_description.alarm_arm_night
+        await self.executor.async_execute_command(
             self.entity_description.alarm_arm_night,
             self.entity_description.alarm_arm_night_args,
         )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self.async_execute_command(
+        assert self.entity_description.alarm_arm_away
+        await self.executor.async_execute_command(
             self.entity_description.alarm_arm_away,
             self.entity_description.alarm_arm_away_args,
         )
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
-        await self.async_execute_command(
+        assert self.entity_description.alarm_trigger
+        await self.executor.async_execute_command(
             self.entity_description.alarm_trigger,
             self.entity_description.alarm_trigger_args,
         )
-
-    async def async_execute_command(self, command_name: str | None, *args: Any) -> None:
-        """Check command name and send to the executor."""
-        assert command_name
-        await self.executor.async_execute_command(command_name, *args)
