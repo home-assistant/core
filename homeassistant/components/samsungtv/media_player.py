@@ -42,7 +42,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_component
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -221,6 +221,10 @@ class SamsungTVDevice(MediaPlayerEntity):
         if startup_tasks:
             await asyncio.gather(*startup_tasks)
 
+        self._update_from_upnp()
+
+    @callback
+    def _update_from_upnp(self) -> None:
         if (dmr_device := self._dmr_device) is None:
             return
 
@@ -301,9 +305,9 @@ class SamsungTVDevice(MediaPlayerEntity):
         self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
     ) -> None:
         """State variable(s) changed, let home-assistant know."""
-        force_refresh = False
+        self._update_from_upnp()
 
-        self.async_schedule_update_ha_state(force_refresh)
+        self.async_write_ha_state()
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
