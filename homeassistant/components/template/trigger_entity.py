@@ -213,7 +213,7 @@ class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
     @property
     def save_state(self) -> bool:
         """Retrieve save state."""
-        return self._save_state or True
+        return self._save_state if hasattr(self, "_save_state") else True
 
     @property
     def additional_data(self) -> list[str]:
