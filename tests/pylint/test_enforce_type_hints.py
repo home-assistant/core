@@ -137,6 +137,10 @@ def test_invalid_discovery_info(
             msg_id="hass-argument-type",
             node=discovery_info_node,
             args=(4, "DiscoveryInfoType | None"),
+            line=6,
+            col_offset=4,
+            end_line=6,
+            end_col_offset=41,
         ),
     ):
         type_hint_checker.visit_asyncfunctiondef(func_node)

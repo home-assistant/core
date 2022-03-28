@@ -6,17 +6,37 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from async_upnp_client.client import UpnpDevice
+from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
 from samsungctl import Remote
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVCommand
 from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
+from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
 
+from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
 import homeassistant.util.dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_WIFI
+
+
+@pytest.fixture(autouse=True)
+async def silent_ssdp_scanner(hass):
+    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+    with patch(
+        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "homeassistant.components.ssdp.Scanner.async_scan"
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def samsungtv_mock_get_source_ip(mock_get_source_ip):
+    """Mock network util's async_get_source_ip."""
 
 
 @pytest.fixture(autouse=True)
@@ -36,6 +56,28 @@ def app_list_delay_fixture() -> None:
         yield
 
 
+@pytest.fixture(name="upnp_factory", autouse=True)
+def upnp_factory_fixture() -> Mock:
+    """Patch UpnpFactory."""
+    with patch(
+        "homeassistant.components.samsungtv.media_player.UpnpFactory",
+        autospec=True,
+    ) as upnp_factory_class:
+        upnp_factory: Mock = upnp_factory_class.return_value
+        upnp_factory.async_create_device.side_effect = UpnpConnectionError
+        yield upnp_factory
+
+
+@pytest.fixture(name="upnp_device")
+async def upnp_device_fixture(upnp_factory: Mock) -> Mock:
+    """Patch async_upnp_client."""
+    upnp_device = Mock(UpnpDevice)
+    upnp_device.services = {}
+
+    with patch.object(upnp_factory, "async_create_device", side_effect=[upnp_device]):
+        yield upnp_device
+
+
 @pytest.fixture(name="remote")
 def remote_fixture() -> Mock:
     """Patch the samsungctl Remote."""
@@ -47,7 +89,7 @@ def remote_fixture() -> Mock:
         yield remote
 
 
-@pytest.fixture(name="rest_api", autouse=True)
+@pytest.fixture(name="rest_api")
 def rest_api_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVAsyncRest."""
     with patch(
@@ -58,6 +100,52 @@ def rest_api_fixture() -> Mock:
             SAMPLE_DEVICE_INFO_WIFI
         )
         yield rest_api_class.return_value
+
+
+@pytest.fixture(name="rest_api_non_ssl_only")
+def rest_api_fixture_non_ssl_only() -> Mock:
+    """Patch the samsungtvws SamsungTVAsyncRest non-ssl only."""
+
+    class MockSamsungTVAsyncRest:
+        """Mock for a MockSamsungTVAsyncRest."""
+
+        def __init__(self, host, session, port, timeout):
+            """Mock a MockSamsungTVAsyncRest."""
+            self.port = port
+            self.host = host
+
+        async def rest_device_info(self):
+            """Mock rest_device_info to fail for ssl and work for non-ssl."""
+            if self.port == WEBSOCKET_SSL_PORT:
+                raise ResponseError
+            return SAMPLE_DEVICE_INFO_WIFI
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
+        MockSamsungTVAsyncRest,
+    ):
+        yield
+
+
+@pytest.fixture(name="rest_api_failing")
+def rest_api_failure_fixture() -> Mock:
+    """Patch the samsungtvws SamsungTVAsyncRest."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
+        autospec=True,
+    ) as rest_api_class:
+        rest_api_class.return_value.rest_device_info.side_effect = ResponseError
+        yield
+
+
+@pytest.fixture(name="remoteencws_failing")
+def remoteencws_failing_fixture():
+    """Patch the samsungtvws SamsungTVEncryptedWSAsyncRemote."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+        side_effect=OSError,
+    ):
+        yield
 
 
 @pytest.fixture(name="remotews")

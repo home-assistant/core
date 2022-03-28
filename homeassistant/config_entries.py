@@ -1187,7 +1187,7 @@ async def _old_conf_migrator(old_config: dict[str, Any]) -> dict[str, Any]:
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
-    def __init_subclass__(cls, domain: str | None = None, **kwargs: Any) -> None:
+    def __init_subclass__(cls, *, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)
         if domain is not None:
@@ -1455,7 +1455,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     @callback
-    def async_create_entry(  # pylint: disable=arguments-differ
+    def async_create_entry(
         self,
         *,
         title: str,

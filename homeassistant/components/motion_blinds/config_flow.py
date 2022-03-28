@@ -138,7 +138,13 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mac_address = motion_gateway.mac
 
             await self.async_set_unique_id(mac_address)
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: self._host,
+                    CONF_API_KEY: key,
+                    CONF_INTERFACE: multicast_interface,
+                }
+            )
 
             return self.async_create_entry(
                 title=DEFAULT_GATEWAY_NAME,

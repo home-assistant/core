@@ -36,7 +36,7 @@ authorisation_response = json.loads(
 )
 
 
-async def test_wallbox_lock_class(hass: HomeAssistant):
+async def test_wallbox_lock_class(hass: HomeAssistant) -> None:
     """Test wallbox lock class."""
 
     await setup_integration(hass)
@@ -78,7 +78,7 @@ async def test_wallbox_lock_class(hass: HomeAssistant):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_wallbox_lock_class_connection_error(hass: HomeAssistant):
+async def test_wallbox_lock_class_connection_error(hass: HomeAssistant) -> None:
     """Test wallbox lock class connection error."""
 
     await setup_integration(hass)
@@ -117,7 +117,7 @@ async def test_wallbox_lock_class_connection_error(hass: HomeAssistant):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_wallbox_lock_class_authentication_error(hass: HomeAssistant):
+async def test_wallbox_lock_class_authentication_error(hass: HomeAssistant) -> None:
     """Test wallbox lock not loaded on authentication error."""
 
     await setup_integration_read_only(hass)

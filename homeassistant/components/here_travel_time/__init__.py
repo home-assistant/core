@@ -110,16 +110,14 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
                 departure=departure,
             )
 
-            _LOGGER.debug(
-                "Raw response is: %s", response.response  # pylint: disable=no-member
-            )
+            _LOGGER.debug("Raw response is: %s", response.response)
 
             attribution: str | None = None
-            if "sourceAttribution" in response.response:  # pylint: disable=no-member
+            if "sourceAttribution" in response.response:
                 attribution = build_hass_attribution(
                     response.response.get("sourceAttribution")
-                )  # pylint: disable=no-member
-            route: list = response.response["route"]  # pylint: disable=no-member
+                )
+            route: list = response.response["route"]
             summary: dict = route[0]["summary"]
             waypoint: list = route[0]["waypoint"]
             distance: float = summary["distance"]
