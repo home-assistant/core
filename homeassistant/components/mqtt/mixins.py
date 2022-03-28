@@ -572,9 +572,7 @@ class MqttDiscoveryUpdate(Entity):
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+            self.async_send_discovery_done()
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(
@@ -587,9 +585,18 @@ class MqttDiscoveryUpdate(Entity):
                 MQTT_DISCOVERY_UPDATED.format(discovery_hash),
                 discovery_callback,
             )
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+
+    @callback
+    def async_send_discovery_done(self) -> None:
+        """Acknowledge a discovery message has been handled."""
+        discovery_hash = (
+            self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
+        )
+        if not discovery_hash:
+            return
+        async_dispatcher_send(
+            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+        )
 
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
@@ -728,6 +735,7 @@ class MqttEntity(
         await super().async_added_to_hass()
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
+        self.async_send_discovery_done()
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
