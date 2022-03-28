@@ -80,7 +80,9 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
-        self.context.update({"title_placeholders": {"name": discovery_info.ip}})
+        self.context.update(
+            {"title_placeholders": {"name": f"{mac_address} ({discovery_info.ip})"}}
+        )
 
         self._host = discovery_info.ip
         return await self.async_step_connect()
