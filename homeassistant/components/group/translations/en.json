@@ -43,6 +43,14 @@
                 },
                 "title": "New Group"
             },
+            "switch": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "New Group"
+            },
             "user": {
                 "description": "Select group type",
                 "menu_options": {
@@ -50,7 +58,8 @@
                     "cover": "Cover group",
                     "fan": "Fan group",
                     "light": "Light group",
-                    "media_player": "Media player group"
+                    "media_player": "Media player group",
+                    "switch": "Switch group"
                 },
                 "title": "New Group"
             }
@@ -91,6 +100,14 @@
                     "entities": "Members",
                     "hide_members": "Hide members"
                 }
+            },
+            "switch": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
             }
         }
     },
