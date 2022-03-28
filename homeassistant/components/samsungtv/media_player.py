@@ -34,7 +34,14 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -48,7 +55,6 @@ from homeassistant.util import dt as dt_util
 from .bridge import SamsungTVBridge, SamsungTVWSBridge
 from .const import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_ON_ACTION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_NAME,
