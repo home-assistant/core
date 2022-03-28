@@ -166,6 +166,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
+        # Handled ignored case since _async_current_entries
+        # is called with include_ignore=False
+        self._abort_if_unique_id_configured()
         if not device.port:
             if discovered_device := await async_discover_device(self.hass, host):
                 self._discovered_device = discovered_device
