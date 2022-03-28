@@ -13,6 +13,7 @@ from aioairzone.const import (
     API_ZONE_ID,
     AZD_DEMAND,
     AZD_HUMIDITY,
+    AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
     AZD_NAME,
@@ -119,12 +120,8 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
             self.get_zone_value(AZD_TEMP_UNIT)
         ]
         self._attr_hvac_modes = [
-            HVAC_MODE_LIB_TO_HASS[mode]
-            for mode in self.get_zone_value(AZD_MODES)
-            or [self.get_zone_value(AZD_MODE)]
+            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_zone_value(AZD_MODES)
         ]
-        if HVAC_MODE_OFF not in self._attr_hvac_modes:
-            self._attr_hvac_modes.append(HVAC_MODE_OFF)
         self._async_update_attrs()
 
     async def _async_update_hvac_params(self, params) -> None:
@@ -147,7 +144,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         if hvac_mode == HVAC_MODE_OFF:
             params[API_ON] = 0
         else:
-            if self.get_zone_value(AZD_MODES):
+            if self.get_zone_value(AZD_MASTER):
                 mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
                 if mode != self.get_zone_value(AZD_MODE):
                     params[API_MODE] = mode
