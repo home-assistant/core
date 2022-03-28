@@ -146,7 +146,6 @@ def _state_alarm_panel_controller(
     select_state: Callable[[str], OverkizStateType]
 ) -> str:
     """Return the state of the device."""
-
     return MAP_ARM_TYPE[
         cast(str, select_state(OverkizState.VERISURE_ALARM_PANEL_MAIN_ARM_TYPE))
     ]
