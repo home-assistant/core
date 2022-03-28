@@ -13,13 +13,18 @@ set_mode:
       selector:
         select:
           options:
-            - 'color_flow'
-            - 'hsv'
-            - 'last'
-            - 'moonlight'
-            - 'normal'
-            - 'rgb'
-
+            - label: 'Color Flow'
+              value: 'color_flow'
+            - label: 'HSV'
+              value: 'hsv'
+            - label: 'Last'
+              value: 'last'
+            - label: 'Moonlight'
+              value: 'moonlight'
+            - label: 'Normal'
+              value: 'normal'
+            - label: 'RGB'
+              value: 'rgb'
 set_color_scene:
   name: Set color scene
   description: Changes the light to the specified RGB color and brightness. If the light is off, it will be turned on.
@@ -112,9 +117,12 @@ set_color_flow_scene:
       selector:
         select:
           options:
-            - 'off'
-            - 'recover'
-            - 'stay'
+            - label: 'Off'
+              value: 'off'
+            - label: 'Recover'
+              value: 'recover'
+            - label: 'Stay'
+              value: 'stay'
     transitions:
       name: Transitions
       description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
@@ -168,9 +176,12 @@ start_flow:
       selector:
         select:
           options:
-            - 'off'
-            - 'recover'
-            - 'stay'
+            - label: 'Off'
+              value: 'off'
+            - label: 'Recover'
+              value: 'recover'
+            - label: 'Stay'
+              value: 'stay'
     transitions:
       name: Transitions
       description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
