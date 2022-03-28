@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
+    HelperFlowFormStep,
     HelperFlowMenuStep,
-    HelperFlowStep,
 )
 
 from . import DOMAIN
@@ -49,7 +49,17 @@ BINARY_SENSOR_OPTIONS_SCHEMA = basic_group_options_schema("binary_sensor").exten
 
 LIGHT_OPTIONS_SCHEMA = basic_group_options_schema("light").extend(
     {
-        vol.Required(CONF_ALL, default=False): selector.selector({"boolean": {}}),
+        vol.Required(
+            CONF_ALL, default=False, description={"advanced": True}
+        ): selector.selector({"boolean": {}}),
+    }
+)
+
+SWITCH_OPTIONS_SCHEMA = basic_group_options_schema("switch").extend(
+    {
+        vol.Required(
+            CONF_ALL, default=False, description={"advanced": True}
+        ): selector.selector({"boolean": {}}),
     }
 )
 
@@ -57,12 +67,7 @@ BINARY_SENSOR_CONFIG_SCHEMA = vol.Schema(
     {vol.Required("name"): selector.selector({"text": {}})}
 ).extend(BINARY_SENSOR_OPTIONS_SCHEMA.schema)
 
-LIGHT_CONFIG_SCHEMA = vol.Schema(
-    {vol.Required("name"): selector.selector({"text": {}})}
-).extend(LIGHT_OPTIONS_SCHEMA.schema)
-
-
-GROUP_TYPES = ["binary_sensor", "cover", "fan", "light", "media_player"]
+GROUP_TYPES = ["binary_sensor", "cover", "fan", "light", "media_player", "switch"]
 
 
 @callback
@@ -82,41 +87,51 @@ def set_group_type(group_type: str) -> Callable[[dict[str, Any]], dict[str, Any]
     return _set_group_type
 
 
-CONFIG_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
+CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
     "user": HelperFlowMenuStep(GROUP_TYPES),
-    "binary_sensor": HelperFlowStep(
+    "binary_sensor": HelperFlowFormStep(
         BINARY_SENSOR_CONFIG_SCHEMA, set_group_type("binary_sensor")
     ),
-    "cover": HelperFlowStep(
+    "cover": HelperFlowFormStep(
         basic_group_config_schema("cover"), set_group_type("cover")
     ),
-    "fan": HelperFlowStep(basic_group_config_schema("fan"), set_group_type("fan")),
-    "light": HelperFlowStep(LIGHT_CONFIG_SCHEMA, set_group_type("light")),
-    "media_player": HelperFlowStep(
+    "fan": HelperFlowFormStep(basic_group_config_schema("fan"), set_group_type("fan")),
+    "light": HelperFlowFormStep(
+        basic_group_config_schema("light"), set_group_type("light")
+    ),
+    "media_player": HelperFlowFormStep(
         basic_group_config_schema("media_player"), set_group_type("media_player")
+    ),
+    "switch": HelperFlowFormStep(
+        basic_group_config_schema("switch"), set_group_type("switch")
     ),
 }
 
 
-OPTIONS_FLOW: dict[str, HelperFlowStep | HelperFlowMenuStep] = {
-    "init": HelperFlowStep(None, next_step=choose_options_step),
-    "binary_sensor": HelperFlowStep(BINARY_SENSOR_OPTIONS_SCHEMA),
-    "cover": HelperFlowStep(basic_group_options_schema("cover")),
-    "fan": HelperFlowStep(basic_group_options_schema("fan")),
-    "light": HelperFlowStep(LIGHT_OPTIONS_SCHEMA),
-    "media_player": HelperFlowStep(basic_group_options_schema("media_player")),
+OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
+    "init": HelperFlowFormStep(None, next_step=choose_options_step),
+    "binary_sensor": HelperFlowFormStep(BINARY_SENSOR_OPTIONS_SCHEMA),
+    "cover": HelperFlowFormStep(basic_group_options_schema("cover")),
+    "fan": HelperFlowFormStep(basic_group_options_schema("fan")),
+    "light": HelperFlowFormStep(LIGHT_OPTIONS_SCHEMA),
+    "media_player": HelperFlowFormStep(basic_group_options_schema("media_player")),
+    "switch": HelperFlowFormStep(SWITCH_OPTIONS_SCHEMA),
 }
 
 
 class GroupConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
-    """Handle a config or options flow for Switch Light."""
+    """Handle a config or options flow for groups."""
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
-        """Return config entry title."""
+        """Return config entry title.
+
+        The options parameter contains config entry options, which is the union of user
+        input from the config flow steps.
+        """
         return cast(str, options["name"]) if "name" in options else ""
 
     @callback

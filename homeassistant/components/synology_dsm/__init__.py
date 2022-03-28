@@ -98,14 +98,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SynologyDSMLoginPermissionDeniedException,
     ) as err:
         if err.args[0] and isinstance(err.args[0], dict):
-            # pylint: disable=no-member
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
             details = EXCEPTION_UNKNOWN
         raise ConfigEntryAuthFailed(f"reason: {details}") from err
     except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
         if err.args[0] and isinstance(err.args[0], dict):
-            # pylint: disable=no-member
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
             details = EXCEPTION_UNKNOWN

@@ -1,5 +1,6 @@
 {
   "domain": "integration",
+  "integration_type": "helper",
   "name": "Integration - Riemann sum integral",
   "documentation": "https://www.home-assistant.io/integrations/integration",
   "codeowners": [

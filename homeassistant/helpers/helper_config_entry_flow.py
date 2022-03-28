@@ -22,7 +22,7 @@ class HelperFlowError(Exception):
 
 
 @dataclass
-class HelperFlowStep:
+class HelperFlowFormStep:
     """Define a helper config or options flow step."""
 
     # Optional schema for requesting and validating user input. If schema validation
@@ -57,7 +57,7 @@ class HelperCommonFlowHandler:
     def __init__(
         self,
         handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
-        flow: dict[str, HelperFlowStep | HelperFlowMenuStep],
+        flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep],
         config_entry: config_entries.ConfigEntry | None,
     ) -> None:
         """Initialize a common handler."""
@@ -69,7 +69,7 @@ class HelperCommonFlowHandler:
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a step."""
-        if isinstance(self._flow[step_id], HelperFlowStep):
+        if isinstance(self._flow[step_id], HelperFlowFormStep):
             return await self._async_form_step(step_id, user_input)
         return await self._async_menu_step(step_id, user_input)
 
@@ -77,7 +77,24 @@ class HelperCommonFlowHandler:
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a form step."""
-        form_step: HelperFlowStep = cast(HelperFlowStep, self._flow[step_id])
+        form_step: HelperFlowFormStep = cast(HelperFlowFormStep, self._flow[step_id])
+
+        if (
+            user_input is not None
+            and (data_schema := form_step.schema)
+            and data_schema.schema
+            and not self._handler.show_advanced_options
+        ):
+            # Add advanced field default if not set
+            for key in data_schema.schema.keys():
+                if isinstance(key, (vol.Optional, vol.Required)):
+                    if (
+                        key.description
+                        and key.description.get("advanced")
+                        and key.default is not vol.UNDEFINED
+                        and key not in self._options
+                    ):
+                        user_input[str(key.schema)] = key.default()
 
         if user_input is not None and form_step.schema is not None:
             # Do extra validation of user input
@@ -109,7 +126,9 @@ class HelperCommonFlowHandler:
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show form for next step."""
-        form_step: HelperFlowStep = cast(HelperFlowStep, self._flow[next_step_id])
+        form_step: HelperFlowFormStep = cast(
+            HelperFlowFormStep, self._flow[next_step_id]
+        )
 
         options = dict(self._options)
         if user_input:
@@ -118,6 +137,16 @@ class HelperCommonFlowHandler:
             # Make a copy of the schema with suggested values set to saved options
             schema = {}
             for key, val in data_schema.schema.items():
+
+                if isinstance(key, vol.Marker):
+                    # Exclude advanced field
+                    if (
+                        key.description
+                        and key.description.get("advanced")
+                        and not self._handler.show_advanced_options
+                    ):
+                        continue
+
                 new_key = key
                 if key in options and isinstance(key, vol.Marker):
                     # Copy the marker to not modify the flow schema
@@ -147,12 +176,11 @@ class HelperCommonFlowHandler:
 class HelperConfigFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow for helper integrations."""
 
-    config_flow: dict[str, HelperFlowStep | HelperFlowMenuStep]
-    options_flow: dict[str, HelperFlowStep | HelperFlowMenuStep] | None = None
+    config_flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep]
+    options_flow: dict[str, HelperFlowFormStep | HelperFlowMenuStep] | None = None
 
     VERSION = 1
 
-    # pylint: disable-next=arguments-differ
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Initialize a subclass."""
         super().__init_subclass__(**kwargs)
@@ -202,7 +230,6 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
 
         return _async_step
 
-    # pylint: disable-next=no-self-use
     @abstractmethod
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:

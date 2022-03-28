@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -65,8 +66,10 @@ class HomeKitEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                self._accessory.signal_state_updated, self.async_write_ha_state
+            async_dispatcher_connect(
+                self.hass,
+                self._accessory.signal_state_updated,
+                self.async_write_ha_state,
             )
         )
 
