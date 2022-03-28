@@ -7,8 +7,12 @@ import pytest
 from homeassistant.components.media_player.const import DOMAIN, SUPPORT_TURN_ON
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
+    CONF_SSDP_MAIN_TV_AGENT_LOCATION,
+    CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DOMAIN as SAMSUNGTV_DOMAIN,
     METHOD_WEBSOCKET,
+    UPNP_SVC_MAIN_TV_AGENT,
+    UPNP_SVC_RENDERING_CONTROL,
 )
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.config_entries import ConfigEntryState
@@ -23,6 +27,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from . import (
+    MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
+    MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
+    MOCK_WS_ENTRY,
+)
+
+from tests.common import MockConfigEntry
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
 MOCK_CONFIG = {
@@ -156,3 +168,34 @@ async def test_setup_h_j_model(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert "H and J series use an encrypted protocol" in caplog.text
+
+
+@pytest.mark.usefixtures("remote", "remotews", "remoteencws_failing")
+async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
+    """Test setting up the entry fetches data from ssdp cache."""
+    entry = MockConfigEntry(domain="samsungtv", data=MOCK_WS_ENTRY)
+    entry.add_to_hass(hass)
+
+    async def _mock_async_get_discovery_info_by_st(hass: HomeAssistant, mock_st: str):
+        if mock_st == UPNP_SVC_RENDERING_CONTROL:
+            return [MOCK_SSDP_DATA_RENDERING_CONTROL_ST]
+        if mock_st == UPNP_SVC_MAIN_TV_AGENT:
+            return [MOCK_SSDP_DATA_MAIN_TV_AGENT_ST]
+        raise ValueError(f"Unknown st {mock_st}")
+
+    with patch(
+        "homeassistant.components.samsungtv.ssdp.async_get_discovery_info_by_st",
+        _mock_async_get_discovery_info_by_st,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    assert hass.states.get("media_player.any")
+    assert (
+        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] == "https://fake_host:12345/test"
+    )
+    assert (
+        entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
+        == "https://fake_host:12345/test"
+    )
