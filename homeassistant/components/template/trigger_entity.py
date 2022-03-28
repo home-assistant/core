@@ -364,9 +364,6 @@ class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
 
     async def async_get_last_rendered_data(self) -> dict[str, Any] | None:
         """Restore native_value and native_unit_of_measurement."""
-        if not self.restore:
-            return None
-
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
         return TriggerExtraStoredData(self, None).from_dict(

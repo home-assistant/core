@@ -556,16 +556,7 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
                 )
                 continue
 
-            try:
-                setattr(self, attribute, value)
-            except AttributeError:
-                _LOGGER.debug(
-                    "Additional attribute %s does not exist in entity %s, unable to restore",
-                    attribute,
-                    self.entity_id,
-                )
-                continue
-
+            setattr(self, attribute, value)
             _LOGGER.debug(
                 "Additional attribute %s restored to value %s for entity %s",
                 attribute,
@@ -597,10 +588,6 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
 
     async def async_get_last_template_data(self) -> dict[str, Any] | None:
         """Return the persistent saved data."""
-        if not self.restore:
-            # Return nothing if entity is not to be restored or
-            # not saving current state due to issue.
-            return None
 
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
