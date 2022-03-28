@@ -340,7 +340,6 @@ FLOWS = {
         "tasmota",
         "tellduslive",
         "tesla_wall_connector",
-        "threshold",
         "tibber",
         "tile",
         "tolo",
@@ -404,6 +403,7 @@ FLOWS = {
     "helper": [
         "derivative",
         "min_max",
+        "threshold",
         "tod"
     ]
 }
