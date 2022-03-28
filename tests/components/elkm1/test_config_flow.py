@@ -30,6 +30,27 @@ ELK_DISCOVERY_INFO_NON_STANDARD_PORT = asdict(ELK_DISCOVERY_NON_STANDARD_PORT)
 MODULE = "homeassistant.components.elkm1"
 
 
+async def test_discovery_ignored_entry(hass):
+    """Test we abort on ignored entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: f"elks://{MOCK_IP_ADDRESS}"},
+        unique_id="aa:bb:cc:dd:ee:ff",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=ELK_DISCOVERY_INFO,
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_form_user_with_secure_elk_no_discovery(hass):
     """Test we can setup a secure elk."""
 
