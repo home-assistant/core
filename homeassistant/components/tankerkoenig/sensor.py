@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -91,6 +91,8 @@ async def async_setup_platform(
 
 class FuelPriceSensor(CoordinatorEntity, SensorEntity):
     """Contains prices for fuel in a given station."""
+
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, fuel_type, station, coordinator, name, show_on_map):
         """Initialize the sensor."""
