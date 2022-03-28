@@ -25,8 +25,7 @@ from tests.common import MockConfigEntry
         ("fan", "on", "on", {}, {}, {}, {}),
         ("light", "on", "on", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
-        ("switch", "on", "on", {}, {}, {"all": False}, {}),
-        ("switch", "on", "on", {}, {"all": True}, {"all": True}, {}),
+        ("switch", "on", "on", {}, {}, {}, {}),
     ),
 )
 async def test_config_flow(
@@ -277,9 +276,13 @@ async def test_options(
         ("light", {"all": True}, {"all": True}, False),
         ("light", {"all": False}, {"all": False}, True),
         ("light", {"all": True}, {"all": False}, True),
+        ("switch", {"all": False}, {"all": False}, False),
+        ("switch", {"all": True}, {"all": True}, False),
+        ("switch", {"all": False}, {"all": False}, True),
+        ("switch", {"all": True}, {"all": False}, True),
     ),
 )
-async def test_light_all_options(
+async def test_all_options(
     hass: HomeAssistant, group_type, extra_options, extra_options_after, advanced
 ) -> None:
     """Test reconfiguring."""

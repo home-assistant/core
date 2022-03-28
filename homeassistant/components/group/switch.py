@@ -80,7 +80,7 @@ async def async_setup_entry(
                 config_entry.entry_id,
                 config_entry.title,
                 entities,
-                config_entry.options[CONF_ALL],
+                config_entry.options.get(CONF_ALL),
             )
         ]
     )
