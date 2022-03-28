@@ -328,7 +328,6 @@ FLOWS = {
         "subaru",
         "sun",
         "surepetcare",
-        "switch_as_x",
         "switchbot",
         "switcher_kis",
         "syncthing",
@@ -404,6 +403,7 @@ FLOWS = {
     "helper": [
         "derivative",
         "min_max",
+        "switch_as_x",
         "tod"
     ]
 }
