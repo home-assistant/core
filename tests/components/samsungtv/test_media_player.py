@@ -1417,7 +1417,7 @@ async def test_upnp_shutdown(
     upnp_notify_server.async_stop_server.assert_called_once()
 
 
-@pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.usefixtures("remotews", "rest_api", "upnp_notify_server")
 async def test_upnp_subscribe_events(hass: HomeAssistant, dmr_device: Mock) -> None:
     """Test for Upnp event feedback."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
