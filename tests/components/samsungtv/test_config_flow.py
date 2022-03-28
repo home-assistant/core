@@ -63,15 +63,13 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import (
-    MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
-    MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
-    MOCK_WS_ENTRY,
-    setup_samsungtv_entry,
-)
+from . import setup_samsungtv_entry
 from .const import (
     MOCK_CONFIG_ENCRYPTED_WS,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
+    MOCK_ENTRYDATA_WS,
+    MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
+    MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
     SAMPLE_DEVICE_INFO_FRAME,
 )
 
@@ -1844,7 +1842,7 @@ async def test_form_reauth_legacy(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remotews", "rest_api")
 async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
     """Test reauthenticate websocket."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_WS)
     entry.add_to_hass(hass)
     assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
 
@@ -1871,7 +1869,7 @@ async def test_form_reauth_websocket_cannot_connect(
     hass: HomeAssistant, remotews: Mock
 ) -> None:
     """Test reauthenticate websocket when we cannot connect on the first attempt."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_WS)
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1903,7 +1901,7 @@ async def test_form_reauth_websocket_cannot_connect(
 
 async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
     """Test reauthenticate websocket when the device is not supported."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_WS)
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -2072,7 +2070,7 @@ async def test_update_incorrect_udn_matching_mac_from_dhcp(
     """Test that DHCP updates the wrong udn from ssdp via mac match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_WS_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_ENTRYDATA_WS, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
         source=config_entries.SOURCE_SSDP,
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
@@ -2106,7 +2104,7 @@ async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
     """Test that DHCP does not update the wrong udn from ssdp via host match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_WS_ENTRY, CONF_MAC: "aa:bb:ss:ss:dd:pp"},
+        data={**MOCK_ENTRYDATA_WS, CONF_MAC: "aa:bb:ss:ss:dd:pp"},
         source=config_entries.SOURCE_SSDP,
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )

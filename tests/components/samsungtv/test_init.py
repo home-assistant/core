@@ -28,10 +28,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import (
+from .const import (
+    MOCK_ENTRYDATA_WS,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
-    MOCK_WS_ENTRY,
 )
 
 from tests.common import MockConfigEntry
@@ -173,7 +173,7 @@ async def test_setup_h_j_model(
 @pytest.mark.usefixtures("remote", "remotews", "remoteencws_failing")
 async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
     """Test setting up the entry fetches data from ssdp cache."""
-    entry = MockConfigEntry(domain="samsungtv", data=MOCK_WS_ENTRY)
+    entry = MockConfigEntry(domain="samsungtv", data=MOCK_ENTRYDATA_WS)
     entry.add_to_hass(hass)
 
     async def _mock_async_get_discovery_info_by_st(hass: HomeAssistant, mock_st: str):
