@@ -42,10 +42,7 @@ from homeassistant.components.samsungtv.const import (
     METHOD_WEBSOCKET,
     TIMEOUT_WEBSOCKET,
 )
-from homeassistant.components.samsungtv.media_player import (
-    SUPPORT_SAMSUNGTV,
-    UPNP_SVC_RENDERING_CONTROL,
-)
+from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -80,11 +77,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import (
-    async_wait_config_entry_reload,
-    setup_samsungtv_entry,
-    upnp_get_action_mock,
-)
+from . import async_wait_config_entry_reload, setup_samsungtv_entry
 from .const import (
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_FRAME,
@@ -1331,27 +1324,17 @@ async def test_websocket_unsupported_remote_control(
 
 @pytest.mark.usefixtures("remotews", "rest_api")
 async def test_volume_control_upnp(
-    hass: HomeAssistant, upnp_device: Mock, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, dmr_device: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for Upnp volume control."""
-    upnp_get_volume = upnp_get_action_mock(
-        upnp_device, UPNP_SVC_RENDERING_CONTROL, "GetVolume"
-    )
-    upnp_get_volume.async_call.return_value = {"CurrentVolume": 44}
-
-    upnp_get_mute = upnp_get_action_mock(
-        upnp_device, UPNP_SVC_RENDERING_CONTROL, "GetMute"
-    )
-    upnp_get_mute.async_call.return_value = {"CurrentMute": False}
+    dmr_device.volume_level.__get__ = Mock(return_value=0.44)
+    dmr_device.is_volume_muted.__get__ = Mock(return_value=False)
 
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
-    upnp_get_volume.async_call.assert_called_once()
-    upnp_get_mute.async_call.assert_called_once()
+    dmr_device.volume_level.assert_called_once()
+    dmr_device.is_volume_muted.assert_called_once()
 
     # Upnp action succeeds
-    upnp_set_volume = upnp_get_action_mock(
-        upnp_device, UPNP_SVC_RENDERING_CONTROL, "SetVolume"
-    )
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_SET,
@@ -1361,7 +1344,7 @@ async def test_volume_control_upnp(
     assert "Unable to set volume level on" not in caplog.text
 
     # Upnp action failed
-    upnp_set_volume.async_call.side_effect = UpnpActionResponseError(
+    dmr_device.async_set_volume_level.side_effect = UpnpActionResponseError(
         status=500, error_code=501, error_desc="Action Failed"
     )
     assert await hass.services.async_call(
@@ -1390,7 +1373,7 @@ async def test_upnp_not_available(
     assert "Upnp services are not available" in caplog.text
 
 
-@pytest.mark.usefixtures("remotews", "upnp_device", "rest_api")
+@pytest.mark.usefixtures("remotews", "upnp_factory", "rest_api")
 async def test_upnp_missing_service(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1404,4 +1387,4 @@ async def test_upnp_missing_service(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
         True,
     )
-    assert f"Upnp service {UPNP_SVC_RENDERING_CONTROL} is not available" in caplog.text
+    assert "Upnp services are not available" in caplog.text

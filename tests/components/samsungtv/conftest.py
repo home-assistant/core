@@ -78,6 +78,17 @@ async def upnp_device_fixture(upnp_factory: Mock) -> Mock:
         yield upnp_device
 
 
+@pytest.fixture(name="dmr_device")
+async def dmr_device_fixture(upnp_device: Mock) -> Mock:
+    """Patch async_upnp_client."""
+    with patch(
+        "homeassistant.components.samsungtv.media_player.DmrDevice",
+        autospec=True,
+    ) as dmr_device_class:
+        dmr_device: Mock = dmr_device_class.return_value
+        yield dmr_device
+
+
 @pytest.fixture(name="remote")
 def remote_fixture() -> Mock:
     """Patch the samsungctl Remote."""
