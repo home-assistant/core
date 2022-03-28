@@ -731,11 +731,9 @@ async def test_ssdp_encrypted_websocket_not_supported(
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-async def test_ssdp_websocket_cannot_connect(
-    hass: HomeAssistant, rest_api: Mock
-) -> None:
+@pytest.mark.usefixtures("rest_api_failing")
+async def test_ssdp_websocket_cannot_connect(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery and we cannot connect."""
-    rest_api.rest_device_info.return_value = None
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
@@ -901,10 +899,9 @@ async def test_import_legacy(hass: HomeAssistant) -> None:
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
-@pytest.mark.usefixtures("remote", "remotews")
-async def test_import_legacy_without_name(hass: HomeAssistant, rest_api: Mock) -> None:
+@pytest.mark.usefixtures("remote", "remotews", "rest_api_failing")
+async def test_import_legacy_without_name(hass: HomeAssistant) -> None:
     """Test importing from yaml without a name."""
-    rest_api.rest_device_info.return_value = None
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
         side_effect=WebSocketProtocolError("Boom"),
@@ -1110,10 +1107,9 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) ->
     assert result["reason"] == "not_supported"
 
 
-@pytest.mark.usefixtures("remote", "remotews", "remoteencws")
-async def test_zeroconf_no_device_info(hass: HomeAssistant, rest_api: Mock) -> None:
+@pytest.mark.usefixtures("remote", "remotews", "remoteencws", "rest_api_failing")
+async def test_zeroconf_no_device_info(hass: HomeAssistant) -> None:
     """Test starting a flow from zeroconf where device_info returns None."""
-    rest_api.rest_device_info.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
