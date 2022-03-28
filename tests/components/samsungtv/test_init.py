@@ -1,5 +1,4 @@
 """Tests for the Samsung TV Integration."""
-from copy import deepcopy
 from unittest.mock import Mock, patch
 
 import pytest
@@ -28,10 +27,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import (
+from .const import (
+    MOCK_ENTRYDATA_WS,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
-    MOCK_WS_ENTRY,
+    SAMPLE_DEVICE_INFO_UE48JU6400,
 )
 
 from tests.common import MockConfigEntry
@@ -68,12 +68,7 @@ REMOTE_CALL = {
 }
 
 
-@pytest.fixture(name="autouse_rest_api", autouse=True)
-def autouse_rest_api(rest_api) -> Mock:
-    """Enable auto use of the rest api fixture for these tests."""
-
-
-@pytest.mark.usefixtures("remotews", "remoteencws_failing")
+@pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test Samsung TV integration is setup."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
@@ -115,7 +110,7 @@ async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant) 
     assert config_entries_domain[0].state == ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("remotews", "remoteencws_failing")
+@pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
 async def test_setup_from_yaml_without_port_device_online(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is online."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
@@ -144,7 +139,7 @@ async def test_setup_duplicate_config(
     assert "duplicate host entries found" in caplog.text
 
 
-@pytest.mark.usefixtures("remote", "remotews", "remoteencws_failing")
+@pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
 async def test_setup_duplicate_entries(hass: HomeAssistant) -> None:
     """Test duplicate setup of platform."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
@@ -160,9 +155,7 @@ async def test_setup_h_j_model(
     hass: HomeAssistant, rest_api: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test Samsung TV integration is setup."""
-    device_info = deepcopy(rest_api.rest_device_info.return_value)
-    device_info["device"]["modelName"] = "UE48JU6400"
-    rest_api.rest_device_info.return_value = device_info
+    rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_UE48JU6400
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
@@ -170,10 +163,10 @@ async def test_setup_h_j_model(
     assert "H and J series use an encrypted protocol" in caplog.text
 
 
-@pytest.mark.usefixtures("remote", "remotews", "remoteencws_failing")
+@pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
 async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
     """Test setting up the entry fetches data from ssdp cache."""
-    entry = MockConfigEntry(domain="samsungtv", data=MOCK_WS_ENTRY)
+    entry = MockConfigEntry(domain="samsungtv", data=MOCK_ENTRYDATA_WS)
     entry.add_to_hass(hass)
 
     async def _mock_async_get_discovery_info_by_st(hass: HomeAssistant, mock_st: str):
@@ -193,7 +186,8 @@ async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
 
     assert hass.states.get("media_player.any")
     assert (
-        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] == "https://fake_host:12345/test"
+        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
+        == "https://fake_host:12345/tv_agent"
     )
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
