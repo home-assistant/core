@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Coroutine
 import contextlib
 from datetime import datetime, timedelta
-from typing import Any, NamedTuple
+from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 from async_upnp_client.client import UpnpDevice
@@ -100,14 +100,6 @@ async def async_setup_entry(
     async_add_entities([SamsungTVDevice(bridge, entry, on_script)], True)
 
 
-class _EventListenAddr(NamedTuple):
-    """Unique identifier for an event listener."""
-
-    host: str | None  # Specific local IP(v6) address for listening on
-    port: int  # Listening port, 0 means use an ephemeral port
-    callback_url: str | None
-
-
 class SamsungTVDevice(MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
@@ -195,6 +187,10 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle removal."""
+        await self._async_shutdown_dmr()
+
     async def async_update(self) -> None:
         """Update state of device."""
         if self._auth_failed or self.hass.is_stopping:
@@ -268,6 +264,15 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
             await self._upnp_server.async_start_server()
             self._dmr_device = DmrDevice(upnp_device, self._upnp_server.event_handler)
+
+    async def _async_shutdown_dmr(self) -> None:
+        """Handle removal."""
+        if (dmr_device := self._dmr_device) is not None:
+            self._dmr_device = None
+            await dmr_device.async_unsubscribe_services()
+
+        if (upnp_server := self._upnp_server) is not None:
+            await upnp_server.async_stop_server()
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
