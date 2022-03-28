@@ -85,7 +85,7 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
 
 
 @pytest.fixture
-def mock_default_intergrations():
+def mock_default_integrations():
     """Mock the default integrations set up during onboarding."""
     with patch(
         "homeassistant.components.rpi_power.config_flow.new_under_voltage"
@@ -374,7 +374,7 @@ async def test_onboarding_integration_requires_auth(
 
 
 async def test_onboarding_core_sets_up_met(
-    hass, hass_storage, hass_client, mock_default_intergrations
+    hass, hass_storage, hass_client, mock_default_integrations
 ):
     """Test finishing the core step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
@@ -410,7 +410,7 @@ async def test_onboarding_core_sets_up_radio_browser(
 
 
 async def test_onboarding_core_sets_up_rpi_power(
-    hass, hass_storage, hass_client, aioclient_mock, rpi, mock_default_intergrations
+    hass, hass_storage, hass_client, aioclient_mock, rpi, mock_default_integrations
 ):
     """Test that the core step sets up rpi_power on RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
@@ -431,7 +431,7 @@ async def test_onboarding_core_sets_up_rpi_power(
 
 
 async def test_onboarding_core_no_rpi_power(
-    hass, hass_storage, hass_client, aioclient_mock, no_rpi, mock_default_intergrations
+    hass, hass_storage, hass_client, aioclient_mock, no_rpi, mock_default_integrations
 ):
     """Test that the core step do not set up rpi_power on non RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
