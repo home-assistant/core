@@ -3,6 +3,7 @@
     "step": {
       "user": {
         "title": "New Derivative sensor",
+        "description": "Create a sensor that estimates the derivative of a sensor.",
         "data": {
           "name": "Name",
           "round": "Precision",
