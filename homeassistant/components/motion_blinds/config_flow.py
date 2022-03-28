@@ -83,7 +83,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         short_mac = mac_address[-6:].upper()
         self.context["title_placeholders"] = {
             "short_mac": short_mac,
-            "ip_adress": discovery_info.ip,
+            "ip_address": discovery_info.ip,
         }
 
         self._host = discovery_info.ip
