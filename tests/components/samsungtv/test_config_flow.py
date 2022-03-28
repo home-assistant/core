@@ -654,7 +654,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_main_tv_ssdp_loc
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert (
         result["data"][CONF_SSDP_MAIN_TV_AGENT_LOCATION]
-        == "https://fake_host:12345/test"
+        == "https://fake_host:12345/tv_agent"
     )
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
@@ -1556,7 +1556,8 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
     assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     # Main TV Agent ST, ssdp location should change
     assert (
-        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] == "https://fake_host:12345/test"
+        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
+        == "https://fake_host:12345/tv_agent"
     )
     # Rendering control should not be affected
     assert (
@@ -1635,7 +1636,8 @@ async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
     assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     # Correct ST for MainTV, ssdp location should be added
     assert (
-        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] == "https://fake_host:12345/test"
+        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
+        == "https://fake_host:12345/tv_agent"
     )
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 

@@ -193,7 +193,8 @@ async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
 
     assert hass.states.get("media_player.any")
     assert (
-        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] == "https://fake_host:12345/test"
+        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
+        == "https://fake_host:12345/tv_agent"
     )
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]

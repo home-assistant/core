@@ -58,7 +58,7 @@ MOCK_SSDP_DATA_RENDERING_CONTROL_ST = ssdp.SsdpServiceInfo(
 MOCK_SSDP_DATA_MAIN_TV_AGENT_ST = ssdp.SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="urn:samsung.com:service:MainTVAgent2:1",
-    ssdp_location="https://fake_host:12345/test",
+    ssdp_location="https://fake_host:12345/tv_agent",
     upnp={
         ATTR_UPNP_FRIENDLY_NAME: "[TV] fake_name",
         ATTR_UPNP_MANUFACTURER: "Samsung fake_manufacturer",
