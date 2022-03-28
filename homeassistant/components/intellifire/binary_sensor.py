@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from intellifire4py import IntellifirePollData
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -62,16 +63,16 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_pilot_flame",
         name="Pilot Flame Error",
-        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_pilot_flame,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_flame",
         name="Flame Error",
-        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_flame,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_fan_delay",
@@ -79,20 +80,21 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
         icon="mdi:fan-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_fan_delay,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_maintenance",
         name="Maintenance Error",
-        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_maintenance,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_disabled",
         name="Disabled Error",
-        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_disabled,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_fan",
@@ -100,41 +102,49 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
         icon="mdi:fan-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_fan,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_lights",
         name="Lights Error",
-        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_lights,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_accessory",
         name="Accessory Error",
-        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_accessory,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_soft_lock_out",
         name="Soft Lock Out Error",
-        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_soft_lock_out,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_ecm_offline",
         name="ECM Offline Error",
-        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_ecm_offline,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_offline",
         name="Offline Error",
-        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_offline,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="has_errors",
+        name="Error(s)",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.errors != [],
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
 )
 
