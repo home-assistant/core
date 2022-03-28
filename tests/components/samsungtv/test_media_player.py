@@ -1392,7 +1392,7 @@ async def test_upnp_missing_service(
     assert "Upnp services are not available" in caplog.text
 
 
-@pytest.mark.usefixtures("remotews")
+@pytest.mark.usefixtures("remotews", "rest_api")
 async def test_upnp_shutdown(
     hass: HomeAssistant,
     dmr_device: Mock,
