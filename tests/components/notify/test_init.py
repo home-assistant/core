@@ -10,7 +10,6 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.loader import DATA_INTEGRATIONS
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockPlatform, mock_platform
