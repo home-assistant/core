@@ -100,6 +100,7 @@ def gen_data_entry_schema(
     integration: Integration,
     flow_title: int,
     require_step_title: bool,
+    mandatory_description: str | None = None,
 ):
     """Generate a data entry schema."""
     step_title_class = vol.Required if require_step_title else vol.Optional
@@ -138,7 +139,24 @@ def gen_data_entry_schema(
 
         return value
 
-    return vol.All(vol.Schema(schema), data_description_validator)
+    validators = [vol.Schema(schema), data_description_validator]
+
+    if mandatory_description is not None:
+
+        def validate_description_set(value):
+            """Validate description is set."""
+            steps = value["step"]
+            if mandatory_description not in steps:
+                raise vol.Invalid(f"{mandatory_description} needs to be defined")
+
+            if "description" not in steps[mandatory_description]:
+                raise vol.Invalid(f"Step {mandatory_description} needs a description")
+
+            return value
+
+        validators.append(validate_description_set)
+
+    return vol.All(*validators)
 
 
 def gen_strings_schema(config: Config, integration: Integration):
@@ -151,6 +169,9 @@ def gen_strings_schema(config: Config, integration: Integration):
                 integration=integration,
                 flow_title=REMOVED,
                 require_step_title=False,
+                mandatory_description=(
+                    "user" if integration.integration_type == "helper" else None
+                ),
             ),
             vol.Optional("options"): gen_data_entry_schema(
                 config=config,
