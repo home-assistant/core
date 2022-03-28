@@ -392,7 +392,7 @@ async def test_onboarding_core_sets_up_met(
 
 
 async def test_onboarding_core_sets_up_radio_browser(
-    hass, hass_storage, hass_client, mock_default_intergrations
+    hass, hass_storage, hass_client, mock_default_integrations
 ):
     """Test finishing the core step set up the radio browser."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
