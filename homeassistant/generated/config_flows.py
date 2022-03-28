@@ -160,7 +160,6 @@ FLOWS = {
         "icloud",
         "ifttt",
         "insteon",
-        "integration",
         "intellifire",
         "ios",
         "iotawatt",
@@ -328,7 +327,6 @@ FLOWS = {
         "subaru",
         "sun",
         "surepetcare",
-        "switch_as_x",
         "switchbot",
         "switcher_kis",
         "syncthing",
@@ -403,7 +401,9 @@ FLOWS = {
     ],
     "helper": [
         "derivative",
+        "integration",
         "min_max",
+        "switch_as_x",
         "tod",
         "utility_meter"
     ]
