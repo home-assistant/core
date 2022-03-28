@@ -164,7 +164,7 @@ async def test_multiple_config_entries(registry):
     assert len(registry.devices) == 1
     assert entry.id == entry2.id
     assert entry.id == entry3.id
-    assert entry2.config_entries == {"123", "456"}
+    assert entry2.config_entries == ["123", "456"]
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -223,7 +223,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.hw_version == "hw_version"
     assert entry.entry_type is device_registry.DeviceEntryType.SERVICE
     assert entry.disabled_by is device_registry.DeviceEntryDisabler.USER
-    assert isinstance(entry.config_entries, set)
+    assert isinstance(entry.config_entries, list)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
 
@@ -235,7 +235,7 @@ async def test_loading_from_storage(hass, hass_storage):
         model="model",
     )
     assert entry.id == "bcdefghijklmn"
-    assert isinstance(entry.config_entries, set)
+    assert isinstance(entry.config_entries, list)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
 
@@ -508,13 +508,13 @@ async def test_removing_config_entries(hass, registry, update_events):
     assert len(registry.devices) == 2
     assert entry.id == entry2.id
     assert entry.id != entry3.id
-    assert entry2.config_entries == {"123", "456"}
+    assert entry2.config_entries == ["123", "456"]
 
     registry.async_clear_config_entry("123")
     entry = registry.async_get_device({("bridgeid", "0123")})
     entry3_removed = registry.async_get_device({("bridgeid", "4567")})
 
-    assert entry.config_entries == {"456"}
+    assert entry.config_entries == ["456"]
     assert entry3_removed is None
 
     await hass.async_block_till_done()
@@ -525,13 +525,13 @@ async def test_removing_config_entries(hass, registry, update_events):
     assert "changes" not in update_events[0]
     assert update_events[1]["action"] == "update"
     assert update_events[1]["device_id"] == entry2.id
-    assert update_events[1]["changes"] == {"config_entries": {"123"}}
+    assert update_events[1]["changes"] == {"config_entries": ["123"]}
     assert update_events[2]["action"] == "create"
     assert update_events[2]["device_id"] == entry3.id
     assert "changes" not in update_events[2]
     assert update_events[3]["action"] == "update"
     assert update_events[3]["device_id"] == entry.id
-    assert update_events[3]["changes"] == {"config_entries": {"456", "123"}}
+    assert update_events[3]["changes"] == {"config_entries": ["123", "456"]}
     assert update_events[4]["action"] == "remove"
     assert update_events[4]["device_id"] == entry3.id
     assert "changes" not in update_events[4]
@@ -565,7 +565,7 @@ async def test_deleted_device_removing_config_entries(hass, registry, update_eve
     assert len(registry.deleted_devices) == 0
     assert entry.id == entry2.id
     assert entry.id != entry3.id
-    assert entry2.config_entries == {"123", "456"}
+    assert entry2.config_entries == ["123", "456"]
 
     registry.async_remove_device(entry.id)
     registry.async_remove_device(entry3.id)
@@ -580,7 +580,7 @@ async def test_deleted_device_removing_config_entries(hass, registry, update_eve
     assert "changes" not in update_events[0]
     assert update_events[1]["action"] == "update"
     assert update_events[1]["device_id"] == entry2.id
-    assert update_events[1]["changes"] == {"config_entries": {"123"}}
+    assert update_events[1]["changes"] == {"config_entries": ["123"]}
     assert update_events[2]["action"] == "create"
     assert update_events[2]["device_id"] == entry3.id
     assert "changes" not in update_events[2]["device_id"]
@@ -1000,7 +1000,7 @@ async def test_update_remove_config_entries(hass, registry, update_events):
     assert len(registry.devices) == 2
     assert entry.id == entry2.id
     assert entry.id != entry3.id
-    assert entry2.config_entries == {"123", "456"}
+    assert entry2.config_entries == ["123", "456"]
 
     updated_entry = registry.async_update_device(
         entry2.id, remove_config_entry_id="123"
@@ -1009,7 +1009,7 @@ async def test_update_remove_config_entries(hass, registry, update_events):
         entry3.id, remove_config_entry_id="123"
     )
 
-    assert updated_entry.config_entries == {"456"}
+    assert updated_entry.config_entries == ["456"]
     assert removed_entry is None
 
     removed_entry = registry.async_get_device({("bridgeid", "4567")})
@@ -1024,13 +1024,13 @@ async def test_update_remove_config_entries(hass, registry, update_events):
     assert "changes" not in update_events[0]
     assert update_events[1]["action"] == "update"
     assert update_events[1]["device_id"] == entry2.id
-    assert update_events[1]["changes"] == {"config_entries": {"123"}}
+    assert update_events[1]["changes"] == {"config_entries": ["123"]}
     assert update_events[2]["action"] == "create"
     assert update_events[2]["device_id"] == entry3.id
     assert "changes" not in update_events[2]
     assert update_events[3]["action"] == "update"
     assert update_events[3]["device_id"] == entry.id
-    assert update_events[3]["changes"] == {"config_entries": {"456", "123"}}
+    assert update_events[3]["changes"] == {"config_entries": ["123", "456"]}
     assert update_events[4]["action"] == "remove"
     assert update_events[4]["device_id"] == entry3.id
     assert "changes" not in update_events[4]
@@ -1279,7 +1279,7 @@ async def test_restore_device(hass, registry, update_events):
     assert len(registry.devices) == 2
     assert len(registry.deleted_devices) == 0
 
-    assert isinstance(entry3.config_entries, set)
+    assert isinstance(entry3.config_entries, list)
     assert isinstance(entry3.connections, set)
     assert isinstance(entry3.identifiers, set)
 
@@ -1390,7 +1390,7 @@ async def test_restore_shared_device(hass, registry, update_events):
     assert len(registry.devices) == 1
     assert len(registry.deleted_devices) == 0
 
-    assert isinstance(entry2.config_entries, set)
+    assert isinstance(entry2.config_entries, list)
     assert isinstance(entry2.connections, set)
     assert isinstance(entry2.identifiers, set)
 
@@ -1408,7 +1408,7 @@ async def test_restore_shared_device(hass, registry, update_events):
     assert len(registry.devices) == 1
     assert len(registry.deleted_devices) == 0
 
-    assert isinstance(entry3.config_entries, set)
+    assert isinstance(entry3.config_entries, list)
     assert isinstance(entry3.connections, set)
     assert isinstance(entry3.identifiers, set)
 
@@ -1424,7 +1424,7 @@ async def test_restore_shared_device(hass, registry, update_events):
     assert len(registry.devices) == 1
     assert len(registry.deleted_devices) == 0
 
-    assert isinstance(entry4.config_entries, set)
+    assert isinstance(entry4.config_entries, list)
     assert isinstance(entry4.connections, set)
     assert isinstance(entry4.identifiers, set)
 
@@ -1437,7 +1437,7 @@ async def test_restore_shared_device(hass, registry, update_events):
     assert update_events[1]["action"] == "update"
     assert update_events[1]["device_id"] == entry.id
     assert update_events[1]["changes"] == {
-        "config_entries": {"123"},
+        "config_entries": ["123"],
         "identifiers": {("entry_123", "0123")},
     }
     assert update_events[2]["action"] == "remove"
@@ -1455,7 +1455,7 @@ async def test_restore_shared_device(hass, registry, update_events):
     assert update_events[6]["action"] == "update"
     assert update_events[6]["device_id"] == entry.id
     assert update_events[6]["changes"] == {
-        "config_entries": {"234"},
+        "config_entries": ["234"],
         "identifiers": {("entry_234", "2345")},
     }
 
