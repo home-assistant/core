@@ -84,7 +84,7 @@ async def test_climacell_migration_logic(
         original_name="ClimaCell - Hourly",
         suggested_object_id="climacell_hourly",
         device_id=old_device.id,
-        disabled_by=er.DISABLED_USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     old_entity_nowcast = ent_reg.async_get_or_create(
         "weather",
@@ -140,7 +140,7 @@ async def test_climacell_migration_logic(
     assert new_entity_hourly.original_name == "ClimaCell - Hourly"
     assert new_entity_hourly.device_id != old_device.id
     assert new_entity_hourly.unique_id == f"{_get_unique_id(hass, new_data)}_hourly"
-    assert new_entity_hourly.disabled_by == er.DISABLED_USER
+    assert new_entity_hourly.disabled_by == er.RegistryEntryDisabler.USER
 
     new_entity_nowcast = ent_reg.async_get(old_entity_nowcast.entity_id)
     assert new_entity_nowcast.platform == DOMAIN
