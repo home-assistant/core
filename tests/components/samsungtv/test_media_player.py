@@ -1390,3 +1390,24 @@ async def test_upnp_missing_service(
         True,
     )
     assert "Upnp services are not available" in caplog.text
+
+
+@pytest.mark.usefixtures("remotews")
+async def test_upnp_shutdown(
+    hass: HomeAssistant,
+    dmr_device: Mock,
+    upnp_notify_server: Mock,
+) -> None:
+    """Ensure that Upnp cleanup takes effect."""
+    entry = await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+
+    assert await entry.async_unload(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNAVAILABLE
+
+    dmr_device.async_unsubscribe_services.assert_called_once()
+    upnp_notify_server.async_stop_server.assert_called_once()
