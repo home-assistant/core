@@ -5,12 +5,14 @@ import asyncio
 from collections.abc import Coroutine
 import contextlib
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, NamedTuple
 
-from async_upnp_client.aiohttp import AiohttpSessionRequester
-from async_upnp_client.client import UpnpDevice, UpnpService
+from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
+from async_upnp_client.client import UpnpDevice
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import UpnpActionResponseError, UpnpConnectionError
+from async_upnp_client.profiles.dlna import DmrDevice
+from async_upnp_client.utils import async_get_local_ip
 import voluptuous as vol
 from wakeonlan import send_magic_packet
 
@@ -54,7 +56,6 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
-    UPNP_SVC_RENDERING_CONTROL,
 )
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -99,6 +100,14 @@ async def async_setup_entry(
     async_add_entities([SamsungTVDevice(bridge, entry, on_script)], True)
 
 
+class _EventListenAddr(NamedTuple):
+    """Unique identifier for an event listener."""
+
+    host: str | None  # Specific local IP(v6) address for listening on
+    port: int  # Listening port, 0 means use an ephemeral port
+    callback_url: str | None
+
+
 class SamsungTVDevice(MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
@@ -114,7 +123,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._config_entry = config_entry
         self._host: str | None = config_entry.data[CONF_HOST]
         self._mac: str | None = config_entry.data.get(CONF_MAC)
-        self._ssdp_rendering_control_location = config_entry.data.get(
+        self._ssdp_rendering_control_location: str | None = config_entry.data.get(
             CONF_SSDP_RENDERING_CONTROL_LOCATION
         )
         self._on_script = on_script
@@ -157,7 +166,8 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._bridge.register_reauth_callback(self.access_denied)
         self._bridge.register_app_list_callback(self._app_list_callback)
 
-        self._upnp_device: UpnpDevice | None = None
+        self._dmr_device: DmrDevice | None = None
+        self._upnp_server: AiohttpNotifyServer | None = None
 
     def _update_sources(self) -> None:
         self._attr_source_list = list(SOURCES)
@@ -204,24 +214,18 @@ class SamsungTVDevice(MediaPlayerEntity):
         if not self._app_list_event.is_set():
             startup_tasks.append(self._async_startup_app_list())
 
-        if not self._upnp_device and self._ssdp_rendering_control_location:
-            startup_tasks.append(self._async_startup_upnp())
+        if not self._dmr_device and self._ssdp_rendering_control_location:
+            startup_tasks.append(self._async_startup_dmr())
 
         if startup_tasks:
             await asyncio.gather(*startup_tasks)
 
-        if not (service := self._get_upnp_service()):
+        if (dmr_device := self._dmr_device) is None:
             return
 
-        get_volume, get_mute = await asyncio.gather(
-            service.action("GetVolume").async_call(InstanceID=0, Channel="Master"),
-            service.action("GetMute").async_call(InstanceID=0, Channel="Master"),
-        )
-        LOGGER.debug("Upnp GetVolume on %s: %s", self._host, get_volume)
-        if (volume_level := get_volume.get("CurrentVolume")) is not None:
-            self._attr_volume_level = volume_level / 100
-        LOGGER.debug("Upnp GetMute on %s: %s", self._host, get_mute)
-        if (is_muted := get_mute.get("CurrentMute")) is not None:
+        if (volume_level := dmr_device.volume_level) is not None:
+            self._attr_volume_level = volume_level
+        if (is_muted := dmr_device.is_volume_muted) is not None:
             self._attr_is_volume_muted = is_muted
 
     async def _async_startup_app_list(self) -> None:
@@ -239,33 +243,31 @@ class SamsungTVDevice(MediaPlayerEntity):
                 "Failed to load app list from %s: %s", self._host, err.__repr__()
             )
 
-    async def _async_startup_upnp(self) -> None:
+    async def _async_startup_dmr(self) -> None:
         assert self._ssdp_rendering_control_location is not None
-        if self._upnp_device is None:
+        if self._dmr_device is None:
             session = async_get_clientsession(self.hass)
             upnp_requester = AiohttpSessionRequester(session)
             upnp_factory = UpnpFactory(upnp_requester)
+            upnp_device: UpnpDevice | None = None
             with contextlib.suppress(UpnpConnectionError):
-                self._upnp_device = await upnp_factory.async_create_device(
+                upnp_device = await upnp_factory.async_create_device(
                     self._ssdp_rendering_control_location
                 )
-
-    def _get_upnp_service(self, log: bool = False) -> UpnpService | None:
-        if self._upnp_device is None:
-            if log:
-                LOGGER.info("Upnp services are not available on %s", self._host)
-            return None
-
-        if service := self._upnp_device.services.get(UPNP_SVC_RENDERING_CONTROL):
-            return service
-
-        if log:
-            LOGGER.info(
-                "Upnp service %s is not available on %s",
-                UPNP_SVC_RENDERING_CONTROL,
-                self._host,
+            if not upnp_device:
+                return
+            _, event_ip = await async_get_local_ip(
+                self._ssdp_rendering_control_location, self.hass.loop
             )
-        return None
+            source = (event_ip or "0.0.0.0", 0)
+            self._upnp_server = AiohttpNotifyServer(
+                requester=upnp_requester,
+                source=source,
+                callback_url=None,
+                loop=self.hass.loop,
+            )
+            await self._upnp_server.async_start_server()
+            self._dmr_device = DmrDevice(upnp_device, self._upnp_server.event_handler)
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
@@ -308,12 +310,11 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
-        if not (service := self._get_upnp_service(log=True)):
+        if (dmr_device := self._dmr_device) is None:
+            LOGGER.info("Upnp services are not available on %s", self._host)
             return
         try:
-            await service.action("SetVolume").async_call(
-                InstanceID=0, Channel="Master", DesiredVolume=int(volume * 100)
-            )
+            await dmr_device.async_set_volume_level(volume)
         except UpnpActionResponseError as err:
             LOGGER.warning(
                 "Unable to set volume level on %s: %s", self._host, err.__repr__()
