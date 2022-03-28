@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "{short_mac} ({ip_adress})",
     "step": {
       "user": {
         "title": "Motion Blinds",
