@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from forecast_solar import ForecastSolar
+from forecast_solar import Estimate, ForecastSolar
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if api_key is not None:
         update_interval = timedelta(minutes=30)
 
-    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+    coordinator: DataUpdateCoordinator[Estimate] = DataUpdateCoordinator(
         hass,
         logging.getLogger(__name__),
         name=DOMAIN,

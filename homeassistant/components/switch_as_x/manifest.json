@@ -1,5 +1,6 @@
 {
   "domain": "switch_as_x",
+  "integration_type": "helper",
   "name": "Switch as X",
   "documentation": "https://www.home-assistant.io/integrations/switch_as_x",
   "codeowners": [

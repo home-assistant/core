@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -17,12 +17,13 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import FIBARO_DEVICES, FibaroDevice
+from .const import DOMAIN
 
 PRESET_RESUME = "resume"
 PRESET_MOIST = "moist"
@@ -98,18 +99,17 @@ HA_OPMODES_HVAC = {
 }
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
-    if discovery_info is None:
-        return
-
-    add_entities(
-        [FibaroThermostat(device) for device in hass.data[FIBARO_DEVICES]["climate"]],
+    async_add_entities(
+        [
+            FibaroThermostat(device)
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["climate"]
+        ],
         True,
     )
 
@@ -125,7 +125,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         self._op_mode_device = None
         self._fan_mode_device = None
         self._support_flags = 0
-        self.entity_id = f"climate.{self.ha_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         self._hvac_support = []
         self._preset_support = []
         self._fan_support = []

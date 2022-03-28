@@ -10,7 +10,11 @@
                     "unit_prefix": "Metric prefix",
                     "unit_time": "Time unit"
                 },
-                "description": "Precision controls the number of decimal digits in the output.\nIf the time window is not 0, the sensor's value is a time weighted moving average of derivatives within the window.\nThe derivative will be scaled according to the selected metric prefix and time unit of the derivative.",
+                "data_description": {
+                    "round": "Controls the number of decimal digits in the output.",
+                    "time_window": "If set, the sensor's value is a time weighted moving average of derivatives within this window.",
+                    "unit_prefix": "The derivative will be scaled according to the selected metric prefix and time unit of the derivative."
+                },
                 "title": "New Derivative sensor"
             }
         }
@@ -26,7 +30,11 @@
                     "unit_prefix": "Metric prefix",
                     "unit_time": "Time unit"
                 },
-                "description": "Precision controls the number of decimal digits in the output.\nIf the time window is not 0, the sensor's value is a time weighted moving average of derivatives within the window.\nThe derivative will be scaled according to the selected metric prefix and time unit of the derivative."
+                "data_description": {
+                    "round": "Controls the number of decimal digits in the output.",
+                    "time_window": "If set, the sensor's value is a time weighted moving average of derivatives within this window.",
+                    "unit_prefix": "The derivative will be scaled according to the selected metric prefix and time unit of the derivative.."
+                }
             }
         }
     }

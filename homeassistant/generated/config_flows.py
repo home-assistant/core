@@ -97,6 +97,8 @@ FLOWS = {
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
+        "fibaro",
+        "filesize",
         "fireservicerota",
         "fivem",
         "fjaraskupan",
@@ -130,7 +132,6 @@ FLOWS = {
         "google_travel_time",
         "gpslogger",
         "gree",
-        "group",
         "growatt_server",
         "guardian",
         "habitica",
@@ -158,7 +159,6 @@ FLOWS = {
         "icloud",
         "ifttt",
         "insteon",
-        "integration",
         "intellifire",
         "ios",
         "iotawatt",
@@ -326,7 +326,6 @@ FLOWS = {
         "subaru",
         "sun",
         "surepetcare",
-        "switch_as_x",
         "switchbot",
         "switcher_kis",
         "syncthing",
@@ -338,7 +337,6 @@ FLOWS = {
         "tasmota",
         "tellduslive",
         "tesla_wall_connector",
-        "threshold",
         "tibber",
         "tile",
         "tolo",
@@ -400,6 +398,12 @@ FLOWS = {
         "zwave_me"
     ],
     "helper": [
-        "derivative"
+        "derivative",
+        "group",
+        "integration",
+        "min_max",
+        "switch_as_x",
+        "threshold",
+        "tod"
     ]
 }

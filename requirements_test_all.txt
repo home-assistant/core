@@ -61,7 +61,7 @@ accuweather==0.3.0
 adax==0.2.0
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.4.0
+adb-shell[async]==0.4.2
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -147,7 +147,7 @@ aiohomekit==0.7.16
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.3.0
+aiohue==4.4.1
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -222,7 +222,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.1.3
+aiowebostv==0.2.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -246,7 +246,7 @@ amberelectric==1.0.4
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.63
+androidtv[async]==0.0.66
 
 # homeassistant.components.apprise
 apprise==0.9.7
@@ -259,13 +259,14 @@ arcam-fmj==0.12.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
+# homeassistant.components.samsungtv
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
 async-upnp-client==0.27.0
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.2.0
+asyncsleepiq==1.2.1
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -298,7 +299,7 @@ bimmer_connected==0.8.11
 blebox_uniapi==1.3.3
 
 # homeassistant.components.blink
-blinkpy==0.18.0
+blinkpy==0.19.0
 
 # homeassistant.components.bond
 bond-api==0.1.16
@@ -432,6 +433,9 @@ faadelays==0.0.7
 
 # homeassistant.components.feedreader
 feedparser==6.0.2
+
+# homeassistant.components.fibaro
+fiblary3==0.1.8
 
 # homeassistant.components.fivem
 fivem-api==0.1.2
@@ -677,7 +681,7 @@ minio==5.0.10
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.1
+motionblinds==0.6.2
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -735,7 +739,7 @@ numpy==1.21.4
 oauth2client==4.1.3
 
 # homeassistant.components.profiler
-objgraph==3.4.1
+objgraph==3.5.0
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -850,7 +854,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.6
+py-synologydsm-api==1.0.7
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -899,7 +903,7 @@ pyatmo==6.2.4
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.14
+pyaussiebb==0.0.15
 
 # homeassistant.components.balboa
 pybalboa==0.13
@@ -1130,7 +1134,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.3.9
+pyoverkiz==1.3.12
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1169,7 +1173,7 @@ pyrituals==0.0.6
 pyruckus==0.12
 
 # homeassistant.components.sensibo
-pysensibo==1.0.8
+pysensibo==1.0.9
 
 # homeassistant.components.serial
 # homeassistant.components.zha

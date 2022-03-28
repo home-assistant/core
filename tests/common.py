@@ -55,6 +55,7 @@ from homeassistant.helpers import (
     restore_state,
     storage,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -1208,7 +1209,7 @@ def async_mock_signal(hass, signal):
         """Mock service call."""
         calls.append(args)
 
-    hass.helpers.dispatcher.async_dispatcher_connect(signal, mock_signal_handler)
+    async_dispatcher_connect(hass, signal, mock_signal_handler)
 
     return calls
 
