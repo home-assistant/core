@@ -175,8 +175,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         """Set the preset mode of device."""
         if preset_mode not in self.preset_modes:
             raise ValueError(
-                    f"{preset_mode} is not one of the valid preset modes: "
-                    f"{self.preset_modes}"
+                f"{preset_mode} is not one of the valid preset modes: "
+                f"{self.preset_modes}"
             )
 
         if not self.smartfan.is_on:
