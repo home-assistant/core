@@ -339,7 +339,7 @@ async def test_config_flow_invalid_interface(hass):
 
 
 async def test_dhcp_flow(hass):
-    """Succesfull flow from DHCP discovery."""
+    """Successful flow from DHCP discovery."""
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
