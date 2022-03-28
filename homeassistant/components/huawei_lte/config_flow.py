@@ -50,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Huawei LTE config flow."""
 
-    VERSION = 4
+    VERSION = 3
 
     @staticmethod
     @callback

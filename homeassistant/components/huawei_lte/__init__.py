@@ -555,18 +555,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         data[CONF_MAC] = []
         hass.config_entries.async_update_entry(config_entry, data=data)
         _LOGGER.info("Migrated config entry to version %d", config_entry.version)
-    if config_entry.version == 3:
-        config_entry.version = 4
-        data = {
-            k: v for k, v in config_entry.data.items() if not k.endswith("_from_yaml")
-        }
-        options = {
-            k: v
-            for k, v in config_entry.options.items()
-            if not k.endswith("_from_yaml")
-        }
-        hass.config_entries.async_update_entry(config_entry, data=data, options=options)
-        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+    # There can be no longer needed *_from_yaml data and options things left behind
+    # from pre-2022.4ish; they can be removed while at it when/if we eventually bump and
+    # migrate to version > 3 for some other reason.
     return True
 
 
