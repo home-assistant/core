@@ -34,11 +34,12 @@
     {
       "hostname": "tizen*"
     },
-    {"macaddress": "8CC8CD*"},
-    {"macaddress": "606BBD*"},
-    {"macaddress": "F47B5E*"},
     {"macaddress": "4844F7*"},
-    {"macaddress": "8CEA48*"}
+    {"macaddress": "606BBD*"},
+    {"macaddress": "641CB0*"},
+    {"macaddress": "8CC8CD*"},
+    {"macaddress": "8CEA48*"},
+    {"macaddress": "F47B5E*"}
   ],
   "codeowners": [
     "@chemelli74",
