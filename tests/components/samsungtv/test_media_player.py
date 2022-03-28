@@ -1322,17 +1322,16 @@ async def test_websocket_unsupported_remote_control(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.usefixtures("remotews", "rest_api", "upnp_notify_server")
 async def test_volume_control_upnp(
     hass: HomeAssistant, dmr_device: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for Upnp volume control."""
-    dmr_device.volume_level.__get__ = Mock(return_value=0.44)
-    dmr_device.is_volume_muted.__get__ = Mock(return_value=False)
-
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
-    dmr_device.volume_level.assert_called_once()
-    dmr_device.is_volume_muted.assert_called_once()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.44
+    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
 
     # Upnp action succeeds
     assert await hass.services.async_call(
@@ -1341,9 +1340,11 @@ async def test_volume_control_upnp(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
         True,
     )
+    dmr_device.async_set_volume_level.assert_called_once_with(0.5)
     assert "Unable to set volume level on" not in caplog.text
 
     # Upnp action failed
+    dmr_device.async_set_volume_level.reset_mock()
     dmr_device.async_set_volume_level.side_effect = UpnpActionResponseError(
         status=500, error_code=501, error_desc="Action Failed"
     )
@@ -1353,6 +1354,7 @@ async def test_volume_control_upnp(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
         True,
     )
+    dmr_device.async_set_volume_level.assert_called_once_with(0.6)
     assert "Unable to set volume level on" in caplog.text
 
 
@@ -1373,7 +1375,7 @@ async def test_upnp_not_available(
     assert "Upnp services are not available" in caplog.text
 
 
-@pytest.mark.usefixtures("remotews", "upnp_factory", "rest_api")
+@pytest.mark.usefixtures("remotews", "rest_api", "upnp_factory")
 async def test_upnp_missing_service(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
