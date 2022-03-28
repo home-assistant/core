@@ -53,6 +53,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
@@ -83,6 +84,14 @@ CONFIG_ANDROIDTV_PYTHON_ADB = {
         CONF_PORT: DEFAULT_PORT,
         CONF_DEVICE_CLASS: "androidtv",
         CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
+    }
+}
+
+# Android TV device with Python ADB implementation imported from YAML
+CONFIG_ANDROIDTV_PYTHON_ADB_YAML = {
+    DOMAIN: {
+        CONF_NAME: "ADB yaml import",
+        **CONFIG_ANDROIDTV_PYTHON_ADB[DOMAIN],
     }
 }
 
@@ -127,7 +136,10 @@ def _setup(config):
         patch_key = "server"
 
     host = config[DOMAIN][CONF_HOST]
-    if config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
+    # CONF_NAME available for configuration imported from YAML
+    if conf_name := config[DOMAIN].get(CONF_NAME):
+        entity_id = slugify(conf_name)
+    elif config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
         entity_id = slugify(f"Android TV {host}")
     else:
         entity_id = slugify(f"Fire TV {host}")
@@ -147,6 +159,7 @@ def _setup(config):
     "config",
     [
         CONFIG_ANDROIDTV_PYTHON_ADB,
+        CONFIG_ANDROIDTV_PYTHON_ADB_YAML,
         CONFIG_FIRETV_PYTHON_ADB,
         CONFIG_ANDROIDTV_ADB_SERVER,
         CONFIG_FIRETV_ADB_SERVER,

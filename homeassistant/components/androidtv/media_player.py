@@ -129,7 +129,7 @@ async def async_setup_entry(
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
     device_type = "Android TV" if device_class == DEVICE_ANDROIDTV else "Fire TV"
-    # CONF_NAME may be present in entry.data from previous YAML import
+    # CONF_NAME may be present in entry.data for configuration imported from YAML
     device_name = entry.data.get(CONF_NAME) or f"{device_type} {entry.data[CONF_HOST]}"
 
     device_args = [
