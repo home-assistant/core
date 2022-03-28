@@ -6,7 +6,6 @@ from hole.exceptions import HoleError
 
 from homeassistant.components import pi_hole, switch
 from homeassistant.components.pi_hole.const import (
-    CONF_LOCATION,
     CONF_STATISTICS_ONLY,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -19,6 +18,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_API_KEY,
     CONF_HOST,
+    CONF_LOCATION,
     CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
