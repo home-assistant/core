@@ -2,15 +2,20 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Coroutine, Sequence
 import contextlib
 from datetime import datetime, timedelta
 from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
-from async_upnp_client.client import UpnpDevice
+from async_upnp_client.client import UpnpDevice, UpnpService, UpnpStateVariable
 from async_upnp_client.client_factory import UpnpFactory
-from async_upnp_client.exceptions import UpnpActionResponseError, UpnpConnectionError
+from async_upnp_client.exceptions import (
+    UpnpActionResponseError,
+    UpnpConnectionError,
+    UpnpError,
+    UpnpResponseError,
+)
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.utils import async_get_local_ip
 import voluptuous as vol
@@ -265,14 +270,40 @@ class SamsungTVDevice(MediaPlayerEntity):
             await self._upnp_server.async_start_server()
             self._dmr_device = DmrDevice(upnp_device, self._upnp_server.event_handler)
 
+            try:
+                self._dmr_device.on_event = self._on_upnp_event
+                await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
+            except UpnpResponseError as err:
+                # Device rejected subscription request. This is OK, variables
+                # will be polled instead.
+                LOGGER.debug("Device rejected subscription: %r", err)
+            except UpnpError as err:
+                # Don't leave the device half-constructed
+                self._dmr_device.on_event = None
+                self._dmr_device = None
+                await self._upnp_server.async_stop_server()
+                self._upnp_server = None
+                LOGGER.debug("Error while subscribing during device connect: %r", err)
+                raise
+
     async def _async_shutdown_dmr(self) -> None:
         """Handle removal."""
         if (dmr_device := self._dmr_device) is not None:
             self._dmr_device = None
+            dmr_device.on_event = None
             await dmr_device.async_unsubscribe_services()
 
         if (upnp_server := self._upnp_server) is not None:
+            self._upnp_server = None
             await upnp_server.async_stop_server()
+
+    def _on_upnp_event(
+        self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
+    ) -> None:
+        """State variable(s) changed, let home-assistant know."""
+        force_refresh = False
+
+        self.async_schedule_update_ha_state(force_refresh)
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
