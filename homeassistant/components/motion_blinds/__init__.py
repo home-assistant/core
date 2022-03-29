@@ -1,5 +1,6 @@
 """The motion_blinds component."""
 from datetime import timedelta
+import asyncio
 import logging
 from socket import timeout
 from typing import TYPE_CHECKING
@@ -20,6 +21,7 @@ from .const import (
     DEFAULT_INTERFACE,
     DEFAULT_WAIT_FOR_PUSH,
     DOMAIN,
+    KEY_API_LOCK,
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
@@ -57,6 +59,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         )
 
         self._gateway = coordinator_info[KEY_GATEWAY]
+        self._api_lock = coordinator_info[KEY_API_LOCK]
         self._wait_for_push = coordinator_info[CONF_WAIT_FOR_PUSH]
 
     def update_gateway(self):
@@ -88,7 +91,8 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch the latest data from the gateway and blinds."""
-        data = await self.hass.async_add_executor_job(self.update_gateway)
+        async with self._api_lock:
+            data = await self.hass.async_add_executor_job(self.update_gateway)
 
         all_available = all(device[ATTR_AVAILABLE] for device in data.values())
         if all_available:
@@ -130,8 +134,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await connect_gateway_class.async_connect_gateway(host, key):
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
+    api_lock = asyncio.Lock()
     coordinator_info = {
         KEY_GATEWAY: motion_gateway,
+        KEY_API_LOCK: api_lock,
         CONF_WAIT_FOR_PUSH: wait_for_push,
     }
 
@@ -155,6 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_GATEWAY: motion_gateway,
+        KEY_API_LOCK: api_lock,
         KEY_COORDINATOR: coordinator,
         KEY_VERSION: version,
     }

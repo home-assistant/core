@@ -29,6 +29,7 @@ from .const import (
     ATTR_AVAILABLE,
     ATTR_WIDTH,
     DOMAIN,
+    KEY_API_LOCK,
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_VERSION,
@@ -84,6 +85,7 @@ async def async_setup_entry(
     """Set up the Motion Blind from a config entry."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
+    api_lock = hass.data[DOMAIN][config_entry.entry_id][KEY_API_LOCK]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     sw_version = hass.data[DOMAIN][config_entry.entry_id][KEY_VERSION]
 
@@ -94,7 +96,7 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     POSITION_DEVICE_MAP[blind.type],
-                    config_entry,
+                    api_lock,
                     sw_version,
                 )
             )
@@ -105,7 +107,7 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TILT_DEVICE_MAP[blind.type],
-                    config_entry,
+                    api_lock,
                     sw_version,
                 )
             )
@@ -116,7 +118,7 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    config_entry,
+                    api_lock,
                     sw_version,
                     "Top",
                 )
@@ -126,7 +128,7 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    config_entry,
+                    api_lock,
                     sw_version,
                     "Bottom",
                 )
@@ -136,7 +138,7 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    config_entry,
+                    api_lock,
                     sw_version,
                     "Combined",
                 )
@@ -152,7 +154,7 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     POSITION_DEVICE_MAP[BlindType.RollerBlind],
-                    config_entry,
+                    api_lock,
                     sw_version,
                 )
             )
@@ -170,12 +172,12 @@ async def async_setup_entry(
 class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     """Representation of a Motion Blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, config_entry, sw_version):
+    def __init__(self, coordinator, blind, device_class, api_lock, sw_version):
         """Initialize the blind."""
         super().__init__(coordinator)
 
         self._blind = blind
-        self._config_entry = config_entry
+        self._api_lock = api_lock
         self._requesting_position = False
         self._previous_positions = []
 
@@ -249,7 +251,9 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         if len(self._previous_positions) > 2:
             del self._previous_positions[: len(self._previous_positions) - 2]
 
-        await self.hass.async_add_executor_job(self._blind.Update_trigger)
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._blind.Update_trigger)
+
         self.async_write_ha_state()
 
         if len(self._previous_positions) < 2 or not all(
@@ -286,29 +290,34 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self._blind.Open()
+        async with self._api_lock:
+            self._blind.Open()
         self.request_position_till_stop()
 
     def close_cover(self, **kwargs):
         """Close cover."""
-        self._blind.Close()
+        async with self._api_lock:
+            self._blind.Close()
         self.request_position_till_stop()
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        self._blind.Set_position(100 - position)
+        async with self._api_lock:
+            self._blind.Set_position(100 - position)
         self.request_position_till_stop()
 
     def set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
-        self._blind.Set_position(100 - position)
+        async with self._api_lock:
+            self._blind.Set_position(100 - position)
         self.request_position_till_stop()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._blind.Stop()
+        async with self._api_lock:
+            self._blind.Stop()
 
 
 class MotionTiltDevice(MotionPositionDevice):
@@ -327,30 +336,34 @@ class MotionTiltDevice(MotionPositionDevice):
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        self._blind.Set_angle(180)
+        async with self._api_lock:
+            self._blind.Set_angle(180)
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        self._blind.Set_angle(0)
+        async with self._api_lock:
+            self._blind.Set_angle(0)
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         angle = kwargs[ATTR_TILT_POSITION] * 180 / 100
-        self._blind.Set_angle(angle)
+        async with self._api_lock:
+            self._blind.Set_angle(angle)
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
-        self._blind.Stop()
+        async with self._api_lock:
+            self._blind.Stop()
 
 
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
     def __init__(
-        self, coordinator, blind, device_class, config_entry, sw_version, motor
+        self, coordinator, blind, device_class, api_lock, sw_version, motor
     ):
         """Initialize the blind."""
-        super().__init__(coordinator, blind, device_class, config_entry, sw_version)
+        super().__init__(coordinator, blind, device_class, api_lock, sw_version)
         self._motor = motor
         self._motor_key = motor[0]
         self._attr_name = f"{blind.blind_type}-{motor}-{blind.mac[12:]}"
@@ -396,18 +409,21 @@ class MotionTDBUDevice(MotionPositionDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self._blind.Open(motor=self._motor_key)
+        async with self._api_lock:
+            self._blind.Open(motor=self._motor_key)
         self.request_position_till_stop()
 
     def close_cover(self, **kwargs):
         """Close cover."""
-        self._blind.Close(motor=self._motor_key)
+        async with self._api_lock:
+            self._blind.Close(motor=self._motor_key)
         self.request_position_till_stop()
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific scaled position."""
         position = kwargs[ATTR_POSITION]
-        self._blind.Set_scaled_position(100 - position, motor=self._motor_key)
+        async with self._api_lock:
+            self._blind.Set_scaled_position(100 - position, motor=self._motor_key)
         self.request_position_till_stop()
 
     def set_absolute_position(self, **kwargs):
@@ -415,12 +431,14 @@ class MotionTDBUDevice(MotionPositionDevice):
         position = kwargs[ATTR_ABSOLUTE_POSITION]
         target_width = kwargs.get(ATTR_WIDTH, None)
 
-        self._blind.Set_position(
-            100 - position, motor=self._motor_key, width=target_width
-        )
+        async with self._api_lock:
+            self._blind.Set_position(
+                100 - position, motor=self._motor_key, width=target_width
+            )
 
         self.request_position_till_stop()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._blind.Stop(motor=self._motor_key)
+        async with self._api_lock:
+            self._blind.Stop(motor=self._motor_key)
