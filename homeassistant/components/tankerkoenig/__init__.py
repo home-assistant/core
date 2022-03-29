@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -126,9 +126,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, [Platform.SENSOR]
     )
     if unload_ok:
-        entry_data: TankerkoenigData = hass.data[DOMAIN][entry.unique_id]
-        assert entry_data.undo_update_listener is not None
-        entry_data.undo_update_listener()
         hass.data[DOMAIN].pop(entry.unique_id)
 
     return unload_ok
@@ -147,7 +144,6 @@ class TankerkoenigData:
         self._api_key = entry.data[CONF_API_KEY]
         self._selected_stations = entry.data[CONF_STATIONS]
         self._hass = hass
-        self.undo_update_listener: CALLBACK_TYPE | None = None
         self.stations: dict[str, dict] = {}
         self.fuel_types = entry.data[CONF_FUEL_TYPES]
         self.show_on_map = entry.options[CONF_SHOW_ON_MAP]
