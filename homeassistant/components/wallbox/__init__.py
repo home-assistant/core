@@ -39,10 +39,23 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.LOCK]
 UPDATE_INTERVAL = 30
 
+# Translation of StatusId based on Wallbox portal code
 CHARGER_STATUS: dict[int, str] = {
+    0: "Disconnected",
+    14: "Error",
+    15: "Error",
+    161: "Ready",
+    162: "Ready",
+    163: "Disconnected",
     164: "Waiting",
+    165: "Locked",
+    166: "Updating",
+    177: "Scheduled",
+    178: "Paused",
+    179: "Scheduled",
     180: "Waiting for car demand",
     181: "Waiting for car demand",
+    182: "Paused",
     183: "Waiting in queue by Power Sharing",
     184: "Waiting in queue by Power Sharing",
     185: "Waiting in queue by Power Boost",
@@ -53,21 +66,9 @@ CHARGER_STATUS: dict[int, str] = {
     193: "Charging",
     194: "Charging",
     195: "Charging",
-    161: "Ready",
-    162: "Ready",
-    178: "Paused",
-    182: "Paused",
-    177: "Scheduled",
-    179: "Scheduled",
     196: "Discharging",
-    14: "Error",
-    15: "Error",
-    0: "Disconnected",
-    163: "Disconnected",
     209: "Locked",
     210: "Locked",
-    165: "Locked",
-    166: "Updating",
 }
 
 
