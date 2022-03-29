@@ -106,7 +106,7 @@ CONFIG_SCHEMA = vol.Schema(
             cv.deprecated("config_file"),
             # deprecated since 2021.2
             cv.deprecated("fire_event"),
-            cv.deprecated("fire_event_filter", replacement_key="event_filter"),
+            cv.deprecated("fire_event_filter"),
             vol.Schema(
                 {
                     **EventSchema.SCHEMA,
@@ -213,7 +213,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     # `conf` is None when reloading the integration or no `knx` key in configuration.yaml
-    if (conf := hass.data.get(DATA_KNX_CONFIG)) is None:
+    if (config := hass.data.get(DATA_KNX_CONFIG)) is None:
         _conf = await async_integration_yaml_config(hass, DOMAIN)
         if not _conf or DOMAIN not in _conf:
             _LOGGER.warning(
@@ -222,18 +222,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "for KNX entity configuration documentation"
             )
             # generate defaults
-            conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
+            config = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
         else:
-            conf = _conf[DOMAIN]
-    config = {**conf, **entry.data}
-
+            config = _conf[DOMAIN]
     try:
         knx_module = KNXModule(hass, config, entry)
         await knx_module.start()
     except XKNXException as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data[DATA_KNX_CONFIG] = conf
+    hass.data[DATA_KNX_CONFIG] = config
     hass.data[DOMAIN] = knx_module
 
     if CONF_KNX_EXPOSE in config:
@@ -357,12 +355,12 @@ class KNXModule:
     def init_xknx(self) -> None:
         """Initialize XKNX object."""
         self.xknx = XKNX(
-            own_address=self.config[CONF_KNX_INDIVIDUAL_ADDRESS],
-            rate_limit=self.config[CONF_KNX_RATE_LIMIT],
-            multicast_group=self.config[CONF_KNX_MCAST_GRP],
-            multicast_port=self.config[CONF_KNX_MCAST_PORT],
+            own_address=self.entry.data[CONF_KNX_INDIVIDUAL_ADDRESS],
+            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
+            multicast_group=self.entry.data[CONF_KNX_MCAST_GRP],
+            multicast_port=self.entry.data[CONF_KNX_MCAST_PORT],
             connection_config=self.connection_config(),
-            state_updater=self.config[CONF_KNX_STATE_UPDATER],
+            state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
         )
 
     async def start(self) -> None:
@@ -375,29 +373,29 @@ class KNXModule:
 
     def connection_config(self) -> ConnectionConfig:
         """Return the connection_config."""
-        _conn_type: str = self.config[CONF_KNX_CONNECTION_TYPE]
+        _conn_type: str = self.entry.data[CONF_KNX_CONNECTION_TYPE]
         if _conn_type == CONF_KNX_ROUTING:
             return ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
-                local_ip=self.config.get(CONF_KNX_LOCAL_IP),
+                local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
                 auto_reconnect=True,
                 threaded=True,
             )
         if _conn_type == CONF_KNX_TUNNELING:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING,
-                gateway_ip=self.config[CONF_HOST],
-                gateway_port=self.config[CONF_PORT],
-                local_ip=self.config.get(CONF_KNX_LOCAL_IP),
-                route_back=self.config.get(CONF_KNX_ROUTE_BACK, False),
+                gateway_ip=self.entry.data[CONF_HOST],
+                gateway_port=self.entry.data[CONF_PORT],
+                local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
+                route_back=self.entry.data.get(CONF_KNX_ROUTE_BACK, False),
                 auto_reconnect=True,
                 threaded=True,
             )
         if _conn_type == CONF_KNX_TUNNELING_TCP:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP,
-                gateway_ip=self.config[CONF_HOST],
-                gateway_port=self.config[CONF_PORT],
+                gateway_ip=self.entry.data[CONF_HOST],
+                gateway_port=self.entry.data[CONF_PORT],
                 auto_reconnect=True,
                 threaded=True,
             )
