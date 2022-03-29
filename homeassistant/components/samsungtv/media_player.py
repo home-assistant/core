@@ -225,6 +225,9 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     @callback
     def _update_from_upnp(self) -> bool:
+        # Upnp events can affect other attributes that we currently do not track
+        # We want to avoid checking every attribute in 'async_write_ha_state' as we
+        # currently only care about two attributes
         if (dmr_device := self._dmr_device) is None:
             return False
 
