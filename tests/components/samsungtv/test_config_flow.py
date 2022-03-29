@@ -22,7 +22,6 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
@@ -51,6 +50,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,

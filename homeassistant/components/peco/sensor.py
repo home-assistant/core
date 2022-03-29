@@ -1,9 +1,13 @@
 """Sensor component for PECO outage counter."""
-import asyncio
-from datetime import timedelta
-from typing import Final, cast
+from __future__ import annotations
 
-from peco import BadJSONError, HttpError
+import asyncio
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import timedelta
+from typing import Final
+
+from peco import BadJSONError, HttpError, OutageResults
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -23,16 +27,44 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import CONF_COUNTY, DOMAIN, LOGGER, SCAN_INTERVAL
 
+
+@dataclass
+class PECOSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[OutageResults], int]
+
+
+@dataclass
+class PECOSensorEntityDescription(
+    SensorEntityDescription, PECOSensorEntityDescriptionMixin
+):
+    """Description for PECO sensor."""
+
+
 PARALLEL_UPDATES: Final = 0
-SENSOR_LIST = (
-    SensorEntityDescription(key="customers_out", name="Customers Out"),
-    SensorEntityDescription(
+SENSOR_LIST: tuple[PECOSensorEntityDescription, ...] = (
+    PECOSensorEntityDescription(
+        key="customers_out",
+        name="Customers Out",
+        value_fn=lambda data: int(data.customers_out),
+    ),
+    PECOSensorEntityDescription(
         key="percent_customers_out",
         name="Percent Customers Out",
         native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda data: int(data.percent_customers_out),
     ),
-    SensorEntityDescription(key="outage_count", name="Outage Count"),
-    SensorEntityDescription(key="customers_served", name="Customers Served"),
+    PECOSensorEntityDescription(
+        key="outage_count",
+        name="Outage Count",
+        value_fn=lambda data: int(data.outage_count),
+    ),
+    PECOSensorEntityDescription(
+        key="customers_served",
+        name="Customers Served",
+        value_fn=lambda data: int(data.customers_served),
+    ),
 )
 
 
@@ -46,16 +78,13 @@ async def async_setup_entry(
     websession = async_get_clientsession(hass)
     county: str = config_entry.data[CONF_COUNTY]
 
-    async def async_update_data() -> dict[str, float]:
+    async def async_update_data() -> OutageResults:
         """Fetch data from API."""
         try:
-            data = (
-                cast(dict[str, float], await api.get_outage_totals(websession))
+            data: OutageResults = (
+                await api.get_outage_totals(websession)
                 if county == "TOTAL"
-                else cast(
-                    dict[str, float],
-                    await api.get_outage_count(county, websession),
-                )
+                else await api.get_outage_count(county, websession)
             )
         except HttpError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
@@ -63,11 +92,6 @@ async def async_setup_entry(
             raise UpdateFailed(f"Error parsing data: {err}") from err
         except asyncio.TimeoutError as err:
             raise UpdateFailed(f"Timeout fetching data: {err}") from err
-        if data["percent_customers_out"] < 5:
-            percent_out = round(
-                data["customers_out"] / data["customers_served"] * 100, 3
-            )
-            data["percent_customers_out"] = percent_out
         return data
 
     coordinator = DataUpdateCoordinator(
@@ -87,19 +111,18 @@ async def async_setup_entry(
     return
 
 
-class PecoSensor(
-    CoordinatorEntity[DataUpdateCoordinator[dict[str, float]]], SensorEntity
-):
+class PecoSensor(CoordinatorEntity[DataUpdateCoordinator[OutageResults]], SensorEntity):
     """PECO outage counter sensor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon: str = "mdi:power-plug-off"
+    entity_description: PECOSensorEntityDescription
 
     def __init__(
         self,
-        description: SensorEntityDescription,
+        description: PECOSensorEntityDescription,
         county: str,
-        coordinator: DataUpdateCoordinator[dict[str, float]],
+        coordinator: DataUpdateCoordinator[OutageResults],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -108,6 +131,6 @@ class PecoSensor(
         self.entity_description = description
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> int:
         """Return the value of the sensor."""
-        return self.coordinator.data[self.entity_description.key]
+        return self.entity_description.value_fn(self.coordinator.data)

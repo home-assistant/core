@@ -8,7 +8,7 @@
         "error": {
             "discovery_error": "Failed to discover a Motion Gateway"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {
