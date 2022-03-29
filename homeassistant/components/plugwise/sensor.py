@@ -302,7 +302,7 @@ async def migrate_sensor_entity(
     coordinator: PlugwiseDataUpdateCoordinator,
     device_id: str,
     device: dict,
-):
+) -> None:
     """Migrate Sensors if needed."""
     ent_reg = entity_registry.async_get(hass)
 

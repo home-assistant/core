@@ -91,7 +91,7 @@ async def test_migrate_unique_id_temperature(
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
-):
+) -> None:
     """Test migration of unique_id."""
     mock_config_entry.add_to_hass(hass)
 
@@ -132,7 +132,7 @@ async def test_migrate_unique_id_relay(
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
-):
+) -> None:
     """Test migration of unique_id."""
     mock_config_entry.add_to_hass(hass)
 
