@@ -9,6 +9,7 @@ from pyoverkiz.const import SUPPORTED_SERVERS
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
+    TooManyAttemptsBannedException,
     TooManyRequestsException,
 )
 from pyoverkiz.models import obfuscate_id
@@ -51,7 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         async with OverkizClient(
             username=username, password=password, server=server, session=session
         ) as client:
-            await client.login()
+            await client.login(register_event_listener=False)
 
             # Set first gateway id as unique id
             if gateways := await client.get_gateways():
@@ -78,6 +79,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
+            except TooManyAttemptsBannedException:
+                errors["base"] = "too_many_attempts"
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 LOGGER.exception(exception)
