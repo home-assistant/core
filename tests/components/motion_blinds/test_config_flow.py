@@ -76,6 +76,9 @@ def motion_blinds_connect_fixture(mock_get_source_ip):
         "homeassistant.components.motion_blinds.gateway.MotionGateway.Update",
         return_value=True,
     ), patch(
+        "homeassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
+        return_value=True,
+    ), patch(
         "homeassistant.components.motion_blinds.gateway.MotionGateway.device_list",
         TEST_DEVICE_LIST,
     ), patch(
@@ -85,13 +88,13 @@ def motion_blinds_connect_fixture(mock_get_source_ip):
         "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_1,
     ), patch(
-        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Start_listen",
+        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
         return_value=True,
     ), patch(
-        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Stop_listen",
+        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
         return_value=True,
     ), patch(
-        "homeassistant.components.motion_blinds.config_flow.network.async_get_adapters",
+        "homeassistant.components.motion_blinds.gateway.network.async_get_adapters",
         return_value=TEST_INTERFACES,
     ), patch(
         "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
@@ -128,7 +131,7 @@ async def test_config_flow_manual_host_success(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: TEST_HOST_HA,
+        const.CONF_INTERFACE: TEST_HOST_ANY,
     }
 
 
@@ -151,17 +154,21 @@ async def test_config_flow_discovery_1_success(hass):
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_API_KEY: TEST_API_KEY},
-    )
+    with patch(
+        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
+        side_effect=socket.gaierror,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: TEST_API_KEY},
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: TEST_HOST_HA,
+        const.CONF_INTERFACE: TEST_HOST_ANY,
     }
 
 
@@ -201,17 +208,21 @@ async def test_config_flow_discovery_2_success(hass):
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_API_KEY: TEST_API_KEY},
-    )
+    with patch(
+        "homeassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
+        side_effect=socket.timeout,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: TEST_API_KEY},
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST2,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: TEST_HOST_HA,
+        const.CONF_INTERFACE: TEST_HOST_ANY,
     }
 
 
@@ -271,39 +282,6 @@ async def test_config_flow_discovery_fail(hass):
     assert result["errors"] == {"base": "discovery_error"}
 
 
-async def test_config_flow_interface(hass):
-    """Successful flow manually initialized by the user with interface specified."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: TEST_HOST},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "connect"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_API_KEY: TEST_API_KEY, const.CONF_INTERFACE: TEST_HOST_HA},
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_GATEWAY_NAME
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: TEST_HOST_HA,
-    }
-
-
 async def test_config_flow_invalid_interface(hass):
     """Failed flow manually initialized by the user with invalid interface."""
     result = await hass.config_entries.flow.async_init(
@@ -324,17 +302,21 @@ async def test_config_flow_invalid_interface(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Start_listen",
+        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
         side_effect=socket.gaierror,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_KEY: TEST_API_KEY, const.CONF_INTERFACE: TEST_HOST_HA},
+            {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "connect"
-    assert result["errors"] == {const.CONF_INTERFACE: "invalid_interface"}
+    assert result["type"] == "create_entry"
+    assert result["title"] == DEFAULT_GATEWAY_NAME
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_API_KEY: TEST_API_KEY,
+        const.CONF_INTERFACE: TEST_HOST_ANY,
+    }
 
 
 async def test_options_flow(hass):
@@ -402,7 +384,7 @@ async def test_change_connection_settings(hass):
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_API_KEY: TEST_API_KEY2, const.CONF_INTERFACE: TEST_HOST_ANY},
+        {CONF_API_KEY: TEST_API_KEY2},
     )
 
     assert result["type"] == "abort"
