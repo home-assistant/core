@@ -100,6 +100,7 @@ class MqttScene(
 
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
+        self.async_send_discovery_done()
 
     def _init_entity_id(self):
         """Set entity_id from object_id if defined in config."""
