@@ -295,6 +295,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Open)
         self._opening = True
+        self._closing = False
         await self.async_request_position_till_stop()
 
     async def async_close_cover(self, **kwargs):
@@ -302,6 +303,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Close)
         self._closing = True
+        self._opening = False
         await self.async_request_position_till_stop()
 
     async def async_set_cover_position(self, **kwargs):
@@ -313,8 +315,10 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             )
         if position > self._blind.position:
             self._closing = True
+            self._opening = False
         else:
             self._opening = True
+            self._closing = False
         await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
@@ -326,14 +330,18 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             )
         if position > self._blind.position:
             self._closing = True
+            self._opening = False
         else:
             self._opening = True
+            self._closing = False
         await self.async_request_position_till_stop()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
+        self._opening = False
+        self._closing = False
 
 
 class MotionTiltDevice(MotionPositionDevice):
@@ -370,6 +378,8 @@ class MotionTiltDevice(MotionPositionDevice):
         """Stop the cover."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
+        self._opening = False
+        self._closing = False
 
 
 class MotionTDBUDevice(MotionPositionDevice):
@@ -426,6 +436,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Open, self._motor_key)
         self._opening = True
+        self._closing = False
         await self.async_request_position_till_stop()
 
     async def async_close_cover(self, **kwargs):
@@ -433,6 +444,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Close, self._motor_key)
         self._closing = True
+        self._opening = False
         await self.async_request_position_till_stop()
 
     async def async_set_cover_position(self, **kwargs):
@@ -444,8 +456,10 @@ class MotionTDBUDevice(MotionPositionDevice):
             )
         if position > self._blind.scaled_position[self._motor_key]:
             self._closing = True
+            self._opening = False
         else:
             self._opening = True
+            self._closing = False
         await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
@@ -459,11 +473,15 @@ class MotionTDBUDevice(MotionPositionDevice):
             )
         if position > self._blind.position[self._motor_key]:
             self._closing = True
+            self._opening = False
         else:
             self._opening = True
+            self._closing = False
         await self.async_request_position_till_stop()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop, self._motor_key)
+        self._opening = False
+        self._closing = False
