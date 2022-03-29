@@ -23,8 +23,7 @@
                     "name": "Region name",
                     "radius": "Search radius",
                     "stations": "Additional fuel stations"
-                },
-                "title": "Tankerkoenig"
+                }
             }
         }
     },

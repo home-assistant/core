@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Tankerkoenig",
         "data": {
           "name": "Region name",
           "api_key": "[%key:common::config_flow::data::api_key%]",
