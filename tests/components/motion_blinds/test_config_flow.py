@@ -346,7 +346,7 @@ async def test_dhcp_flow(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: TEST_HOST_HA,
+        const.CONF_INTERFACE: TEST_HOST_ANY,
     }
 
 
