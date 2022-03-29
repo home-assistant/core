@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
+    CONF_MODEL,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -106,7 +107,6 @@ CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
