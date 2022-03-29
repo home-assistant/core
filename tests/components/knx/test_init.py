@@ -1,17 +1,29 @@
 """Test KNX init."""
 import pytest
 from xknx import XKNX
-from xknx.io import ConnectionConfig, ConnectionType
+from xknx.io import (
+    DEFAULT_MCAST_GRP,
+    DEFAULT_MCAST_PORT,
+    ConnectionConfig,
+    ConnectionType,
+)
 
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
+    CONF_KNX_DEFAULT_RATE_LIMIT,
+    CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_LOCAL_IP,
+    CONF_KNX_MCAST_GRP,
+    CONF_KNX_MCAST_PORT,
+    CONF_KNX_RATE_LIMIT,
+    CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
+    CONF_KNX_STATE_UPDATER,
     CONF_KNX_TUNNELING,
     DOMAIN as KNX_DOMAIN,
 )
-from homeassistant.components.knx.schema import ConnectionSchema
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -25,15 +37,24 @@ from tests.common import MockConfigEntry
     [
         (
             {
-                CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
+                CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
+                CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
+                CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
             },
             ConnectionConfig(threaded=True),
         ),
         (
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.1",
+                CONF_KNX_LOCAL_IP: "192.168.1.1",
+                CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
+                CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
+                CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
             },
             ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
@@ -46,8 +67,13 @@ from tests.common import MockConfigEntry
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
                 CONF_HOST: "192.168.0.2",
                 CONF_PORT: 3675,
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
+                CONF_KNX_ROUTE_BACK: False,
+                CONF_KNX_LOCAL_IP: "192.168.1.112",
+                CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
+                CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
+                CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
             },
             ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING,

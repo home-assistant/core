@@ -30,11 +30,26 @@ KNX_ADDRESS: Final = "address"
 CONF_INVERT: Final = "invert"
 CONF_KNX_EXPOSE: Final = "expose"
 CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
+
+##
+# Connection constants
+##
 CONF_KNX_CONNECTION_TYPE: Final = "connection_type"
 CONF_KNX_AUTOMATIC: Final = "automatic"
 CONF_KNX_ROUTING: Final = "routing"
 CONF_KNX_TUNNELING: Final = "tunneling"
 CONF_KNX_TUNNELING_TCP: Final = "tunneling_tcp"
+CONF_KNX_LOCAL_IP = "local_ip"
+CONF_KNX_MCAST_GRP = "multicast_group"
+CONF_KNX_MCAST_PORT = "multicast_port"
+
+CONF_KNX_RATE_LIMIT = "rate_limit"
+CONF_KNX_ROUTE_BACK = "route_back"
+CONF_KNX_STATE_UPDATER = "state_updater"
+CONF_KNX_DEFAULT_STATE_UPDATER = True
+CONF_KNX_DEFAULT_RATE_LIMIT = 20
+
+
 CONF_PAYLOAD: Final = "payload"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
 CONF_RESET_AFTER: Final = "reset_after"
