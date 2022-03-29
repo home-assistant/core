@@ -224,14 +224,25 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._update_from_upnp()
 
     @callback
-    def _update_from_upnp(self) -> None:
+    def _update_from_upnp(self) -> bool:
         if (dmr_device := self._dmr_device) is None:
-            return
+            return False
 
-        if (volume_level := dmr_device.volume_level) is not None:
+        has_updates = False
+
+        if (
+            volume_level := dmr_device.volume_level
+        ) is not None and self._attr_volume_level != volume_level:
             self._attr_volume_level = volume_level
-        if (is_muted := dmr_device.is_volume_muted) is not None:
+            has_updates = True
+
+        if (
+            is_muted := dmr_device.is_volume_muted
+        ) is not None and self._attr_is_volume_muted != is_muted:
             self._attr_is_volume_muted = is_muted
+            has_updates = True
+
+        return has_updates
 
     async def _async_startup_app_list(self) -> None:
         await self._bridge.async_request_app_list()
@@ -305,9 +316,8 @@ class SamsungTVDevice(MediaPlayerEntity):
         self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
     ) -> None:
         """State variable(s) changed, let home-assistant know."""
-        self._update_from_upnp()
-
-        self.async_write_ha_state()
+        if self._update_from_upnp():
+            self.async_write_ha_state()
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
