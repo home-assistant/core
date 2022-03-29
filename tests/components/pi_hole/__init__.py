@@ -3,10 +3,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hole.exceptions import HoleError
 
-from homeassistant.components.pi_hole.const import CONF_LOCATION, CONF_STATISTICS_ONLY
+from homeassistant.components.pi_hole.const import CONF_STATISTICS_ONLY
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
+    CONF_LOCATION,
     CONF_NAME,
     CONF_PORT,
     CONF_SSL,

@@ -60,6 +60,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry
@@ -170,7 +171,7 @@ async def test_reconnect(hass, caplog, config):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -182,7 +183,7 @@ async def test_reconnect(hass, caplog, config):
         patch_key
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         for _ in range(5):
-            await hass.helpers.entity_component.async_update_entity(entity_id)
+            await async_update_entity(hass, entity_id)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.state == STATE_UNAVAILABLE
@@ -195,7 +196,7 @@ async def test_reconnect(hass, caplog, config):
     with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
         SHELL_RESPONSE_STANDBY
     )[patch_key], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
 
         state = hass.states.get(entity_id)
         assert state is not None
@@ -238,7 +239,7 @@ async def test_adb_shell_returns_none(hass, config):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state != STATE_UNAVAILABLE
@@ -246,7 +247,7 @@ async def test_adb_shell_returns_none(hass, config):
     with patchers.patch_shell(None)[patch_key], patchers.patch_shell(error=True)[
         patch_key
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_UNAVAILABLE
@@ -267,7 +268,7 @@ async def test_setup_with_adbkey(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -301,7 +302,7 @@ async def test_sources(hass, config0):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -325,7 +326,7 @@ async def test_sources(hass, config0):
         )
 
     with patch_update:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_PLAYING
@@ -351,7 +352,7 @@ async def test_sources(hass, config0):
         )
 
     with patch_update:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_PLAYING
@@ -380,7 +381,7 @@ async def _test_exclude_sources(hass, config0, expected_sources):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -416,7 +417,7 @@ async def _test_exclude_sources(hass, config0, expected_sources):
         )
 
     with patch_update:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_PLAYING
@@ -461,7 +462,7 @@ async def _test_select_source(hass, config0, source, expected_arg, method_patch)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -688,7 +689,7 @@ async def test_setup_fail(hass, config):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is None
 
@@ -851,7 +852,7 @@ async def test_update_lock_not_acquired(hass):
         await hass.async_block_till_done()
 
     with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -860,13 +861,13 @@ async def test_update_lock_not_acquired(hass):
         "androidtv.androidtv.androidtv_async.AndroidTVAsync.update",
         side_effect=LockNotAcquiredException,
     ), patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
 
     with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_STANDBY
@@ -1003,7 +1004,7 @@ async def test_get_image(hass, hass_ws_client):
         await hass.async_block_till_done()
 
     with patchers.patch_shell("11")[patch_key]:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
 
     client = await hass_ws_client(hass)
 
@@ -1208,20 +1209,20 @@ async def test_exception(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
 
         # When an unforeseen exception occurs, we close the ADB connection and raise the exception
         with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION, pytest.raises(Exception):
-            await hass.helpers.entity_component.async_update_entity(entity_id)
+            await async_update_entity(hass, entity_id)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.state == STATE_UNAVAILABLE
 
         # On the next update, HA will reconnect to the device
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
