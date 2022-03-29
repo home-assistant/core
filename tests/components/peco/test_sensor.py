@@ -1,6 +1,7 @@
 """Test the PECO Outage Counter sensors."""
 from unittest.mock import patch
 
+from peco import OutageResults
 import pytest
 
 from homeassistant.components.peco.const import DOMAIN
@@ -8,8 +9,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-from peco import OutageResults
 
 MOCK_ENTRY_DATA = {"county": "TOTAL"}
 COUNTY_ENTRY_DATA = {"county": "BUCKS"}

@@ -5,7 +5,7 @@ import asyncio
 from datetime import timedelta
 from typing import Final
 
-from peco import BadJSONError, HttpError, PecoOutageApi, OutageResults
+from peco import BadJSONError, HttpError, OutageResults, PecoOutageApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
