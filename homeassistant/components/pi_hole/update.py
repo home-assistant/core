@@ -97,14 +97,16 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
     @property
     def current_version(self) -> str | None:
         """Version currently in use."""
-        assert isinstance(self.api.versions, dict)
-        return self.entity_description.current_version(self.api.versions)
+        if isinstance(self.api.versions, dict):
+            return self.entity_description.current_version(self.api.versions)
+        return None
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        assert isinstance(self.api.versions, dict)
-        return self.entity_description.latest_version(self.api.versions)
+        if isinstance(self.api.versions, dict):
+            return self.entity_description.latest_version(self.api.versions)
+        return None
 
     @property
     def release_url(self) -> str | None:
