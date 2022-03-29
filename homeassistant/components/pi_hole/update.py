@@ -25,12 +25,14 @@ class PiHoleUpdateEntityDescription(UpdateEntityDescription):
     current_version: Callable[[dict], str | None] = lambda api: None
     latest_version: Callable[[dict], str | None] = lambda api: None
     release_base_url: str | None = None
+    title: str | None = None
 
 
 UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
     PiHoleUpdateEntityDescription(
         key="core_update_available",
         name="Core Update Available",
+        title="Pi-hole Core",
         entity_category=EntityCategory.DIAGNOSTIC,
         current_version=lambda versions: versions.get("core_current"),
         latest_version=lambda versions: versions.get("core_latest"),
@@ -39,6 +41,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
     PiHoleUpdateEntityDescription(
         key="web_update_available",
         name="Web Update Available",
+        title="Pi-hole Web interface",
         entity_category=EntityCategory.DIAGNOSTIC,
         current_version=lambda versions: versions.get("web_current"),
         latest_version=lambda versions: versions.get("web_latest"),
@@ -47,6 +50,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
     PiHoleUpdateEntityDescription(
         key="ftl_update_available",
         name="FTL Update Available",
+        title="Pi-hole FTL DNS",
         entity_category=EntityCategory.DIAGNOSTIC,
         current_version=lambda versions: versions.get("FTL_current"),
         latest_version=lambda versions: versions.get("FTL_latest"),
@@ -93,6 +97,7 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
 
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{self._server_unique_id}/{description.name}"
+        self._attr_title = description.title
 
     @property
     def current_version(self) -> str | None:
