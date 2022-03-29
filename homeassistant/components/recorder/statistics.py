@@ -190,7 +190,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[STATISTICS_META_BAKERY] = baked.bakery()
     hass.data[STATISTICS_SHORT_TERM_BAKERY] = baked.bakery()
 
-    def entity_id_changed(event: Event) -> None:
+    def _entity_id_changed(event: Event) -> None:
         """Handle entity_id changed."""
         old_entity_id = event.data["old_entity_id"]
         entity_id = event.data["entity_id"]
@@ -199,6 +199,9 @@ def async_setup(hass: HomeAssistant) -> None:
                 (StatisticsMeta.statistic_id == old_entity_id)
                 & (StatisticsMeta.source == DOMAIN)
             ).update({StatisticsMeta.statistic_id: entity_id})
+
+    async def _async_entity_id_changed(event: Event) -> None:
+        await hass.data[DATA_INSTANCE].async_add_executor_job(_entity_id_changed, event)
 
     @callback
     def entity_registry_changed_filter(event: Event) -> bool:
@@ -211,7 +214,7 @@ def async_setup(hass: HomeAssistant) -> None:
     if hass.is_running:
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_id_changed,
+            _async_entity_id_changed,
             event_filter=entity_registry_changed_filter,
         )
 
@@ -753,7 +756,7 @@ def list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-) -> list[dict | None]:
+) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
     Queries the database for existing statistic_ids, as well as integrations with
@@ -777,6 +780,8 @@ def list_statistic_ids(
 
         result = {
             meta["statistic_id"]: {
+                "has_mean": meta["has_mean"],
+                "has_sum": meta["has_sum"],
                 "name": meta["name"],
                 "source": meta["source"],
                 "unit_of_measurement": meta["unit_of_measurement"],
@@ -805,6 +810,8 @@ def list_statistic_ids(
     return [
         {
             "statistic_id": _id,
+            "has_mean": info["has_mean"],
+            "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
             "unit_of_measurement": info["unit_of_measurement"],
@@ -1247,19 +1254,19 @@ def _filter_unique_constraint_integrity_error(
         if not isinstance(err, StatementError):
             return False
 
+        assert instance.engine is not None
+        dialect_name = instance.engine.dialect.name
+
         ignore = False
-        if (
-            instance.engine.dialect.name == "sqlite"
-            and "UNIQUE constraint failed" in str(err)
-        ):
+        if dialect_name == "sqlite" and "UNIQUE constraint failed" in str(err):
             ignore = True
         if (
-            instance.engine.dialect.name == "postgresql"
+            dialect_name == "postgresql"
             and hasattr(err.orig, "pgcode")
             and err.orig.pgcode == "23505"
         ):
             ignore = True
-        if instance.engine.dialect.name == "mysql" and hasattr(err.orig, "args"):
+        if dialect_name == "mysql" and hasattr(err.orig, "args"):
             with contextlib.suppress(TypeError):
                 if err.orig.args[0] == 1062:
                     ignore = True

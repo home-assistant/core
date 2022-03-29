@@ -36,6 +36,8 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert light_1.attributes["min_mireds"] == 153
     assert light_1.attributes["max_mireds"] == 500
     assert light_1.attributes["dynamics"] == "dynamic_palette"
+    assert light_1.attributes["effect_list"] == ["None", "candle", "fire"]
+    assert light_1.attributes["effect"] == "None"
 
     # test light which supports color temperature only
     light_2 = hass.states.get("light.hue_light_with_color_temperature_only")
@@ -49,6 +51,7 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert light_2.attributes["min_mireds"] == 153
     assert light_2.attributes["max_mireds"] == 454
     assert light_2.attributes["dynamics"] == "none"
+    assert light_2.attributes["effect_list"] == ["None", "candle", "sunrise"]
 
     # test light which supports color only
     light_3 = hass.states.get("light.hue_light_with_color_only")
@@ -163,6 +166,39 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     )
     assert len(mock_bridge_v2.mock_requests) == 6
     assert mock_bridge_v2.mock_requests[5]["json"]["color_temperature"]["mirek"] == 500
+
+    # test enable effect
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "candle"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 7
+    assert mock_bridge_v2.mock_requests[6]["json"]["effects"]["effect"] == "candle"
+
+    # test disable effect
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "None"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 8
+    assert mock_bridge_v2.mock_requests[7]["json"]["effects"]["effect"] == "no_effect"
+
+    # test timed effect
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "sunrise", "transition": 6},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 9
+    assert (
+        mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["effect"] == "sunrise"
+    )
+    assert mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["duration"] == 6000
 
 
 async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_data):
