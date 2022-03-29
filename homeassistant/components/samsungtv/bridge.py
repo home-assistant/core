@@ -75,6 +75,7 @@ ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
 REST_EXCEPTIONS = (HttpApiError, AsyncioTimeoutError, ResponseError)
 
 _TRemote = TypeVar("_TRemote", SamsungTVWSAsyncRemote, SamsungTVEncryptedWSAsyncRemote)
+_TCommand = TypeVar("_TCommand", SamsungTVCommand, SamsungTVEncryptedCommand)
 
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
@@ -361,7 +362,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Could not establish connection")
 
 
-class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_TRemote]):
+class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_TRemote, _TCommand]):
     """The Bridge for WebSocket TVs (v1/v2)."""
 
     def __init__(
@@ -382,6 +383,27 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_TRemote]):
         if remote := await self._async_get_remote():
             return remote.is_alive()  # type: ignore[no-any-return]
         return False
+
+    async def _async_send_commands(self, commands: list[_TCommand]) -> None:
+        """Send the commands using websocket protocol."""
+        try:
+            # recreate connection if connection was dead
+            retry_count = 1
+            for _ in range(retry_count + 1):
+                try:
+                    if remote := await self._async_get_remote():
+                        await remote.send_commands(commands)
+                    break
+                except (
+                    BrokenPipeError,
+                    WebSocketException,
+                ):
+                    # BrokenPipe can occur when the commands is sent to fast
+                    # WebSocketException can occur when timed out
+                    self._remote = None
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
+            pass
 
     async def _async_get_remote(self) -> _TRemote | None:
         """Create or return a remote control instance."""
@@ -409,7 +431,9 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_TRemote]):
             LOGGER.debug("Error closing connection to %s: %s", self.host, err)
 
 
-class SamsungTVWSBridge(SamsungTVWSBaseBridge[SamsungTVWSAsyncRemote]):
+class SamsungTVWSBridge(
+    SamsungTVWSBaseBridge[SamsungTVWSAsyncRemote, SamsungTVCommand]
+):
     """The Bridge for WebSocket TVs (v2)."""
 
     def __init__(
@@ -526,27 +550,6 @@ class SamsungTVWSBridge(SamsungTVWSBaseBridge[SamsungTVWSAsyncRemote]):
         """Send a list of keys using websocket protocol."""
         await self._async_send_commands([SendRemoteKey.click(key) for key in keys])
 
-    async def _async_send_commands(self, commands: list[SamsungTVCommand]) -> None:
-        """Send the commands using websocket protocol."""
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    if remote := await self._async_get_remote():
-                        await remote.send_commands(commands)
-                    break
-                except (
-                    BrokenPipeError,
-                    WebSocketException,
-                ):
-                    # BrokenPipe can occur when the commands is sent to fast
-                    # WebSocketException can occur when timed out
-                    self._remote = None
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            pass
-
     async def _async_get_remote_under_lock(self) -> SamsungTVWSAsyncRemote | None:
         """Create or return a remote control instance."""
         if self._remote is None or not self._remote.is_alive():
@@ -641,7 +644,9 @@ class SamsungTVWSBridge(SamsungTVWSBaseBridge[SamsungTVWSAsyncRemote]):
             await self._async_send_commands([SendRemoteKey.click("KEY_POWER")])
 
 
-class SamsungTVEncryptedBridge(SamsungTVWSBaseBridge[SamsungTVEncryptedWSAsyncRemote]):
+class SamsungTVEncryptedBridge(
+    SamsungTVWSBaseBridge[SamsungTVEncryptedWSAsyncRemote, SamsungTVEncryptedCommand]
+):
     """The Bridge for Encrypted WebSocket TVs (v1 - J/H models)."""
 
     def __init__(
@@ -731,29 +736,6 @@ class SamsungTVEncryptedBridge(SamsungTVWSBaseBridge[SamsungTVEncryptedWSAsyncRe
         await self._async_send_commands(
             [SendEncryptedRemoteKey.click(key) for key in keys]
         )
-
-    async def _async_send_commands(
-        self, commands: list[SamsungTVEncryptedCommand]
-    ) -> None:
-        """Send the commands using websocket protocol."""
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    if remote := await self._async_get_remote():
-                        await remote.send_commands(commands)
-                    break
-                except (
-                    BrokenPipeError,
-                    WebSocketException,
-                ):
-                    # BrokenPipe can occur when the commands is sent to fast
-                    # WebSocketException can occur when timed out
-                    self._remote = None
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            pass
 
     async def _async_get_remote_under_lock(
         self,
