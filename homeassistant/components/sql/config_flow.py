@@ -54,7 +54,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
         engine = sqlalchemy.create_engine(db_url)
         sessmaker = scoped_session(sessionmaker(bind=engine))
     except SQLAlchemyError as error:
-        raise SQLAlchemyError from error
+        raise error
 
     sess: scoped_session = sessmaker()
 

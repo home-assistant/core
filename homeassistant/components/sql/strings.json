@@ -4,15 +4,15 @@
             "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
         },
         "error": {
-            "db_url_invalid": "Database url invalid",
-            "query_invalid": "Query invalid. Needs to start with Select",
-            "value_template_invalid": "Value template invalid"
+            "db_url_invalid": "Database URL invalid",
+            "query_invalid": "SQL Query invalid",
+            "value_template_invalid": "Value Template invalid"
         },
         "step": {
             "user": {
                 "data": {
                     "db_url": "Database URL",
-                    "query": "Select query",
+                    "query": "Select Query",
                     "column": "Column",
                     "unit_of_measurement": "Unit of Measure",
                     "value_template": "Value Template"
@@ -25,7 +25,7 @@
             "init": {
                 "data": {
                     "db_url": "Database URL",
-                    "query": "Select query",
+                    "query": "Select Query",
                     "column": "Column",
                     "unit_of_measurement": "Unit of Measure",
                     "value_template": "Value Template"
@@ -33,9 +33,9 @@
             }
         },
         "error": {
-            "db_url_invalid": "Database url invalid",
-            "query_invalid": "Query invalid. Needs to start with Select",
-            "value_template_invalid": "Value template invalid"
+            "db_url_invalid": "Database URL invalid",
+            "query_invalid": "SQL Query invalid",
+            "value_template_invalid": "Value Template invalid"
         }
     }
 }
