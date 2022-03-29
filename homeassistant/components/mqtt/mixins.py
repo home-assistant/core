@@ -5,7 +5,7 @@ from abc import abstractmethod
 from collections.abc import Callable
 import json
 import logging
-from typing import Any, Protocol
+from typing import Any, Protocol, final
 
 import voluptuous as vol
 
@@ -730,12 +730,20 @@ class MqttEntity(
             self.hass, self, self._config, self._entity_id_format
         )
 
+    @final
     async def async_added_to_hass(self):
-        """Subscribe mqtt events."""
+        """Subscribe to MQTT events."""
         await super().async_added_to_hass()
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
+        await self.mqtt_async_added_to_hass()
         self.async_send_discovery_done()
+
+    async def mqtt_async_added_to_hass(self):
+        """Call before the discovery message is acknowledged.
+
+        To be extended by subclasses.
+        """
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
