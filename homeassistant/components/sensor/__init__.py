@@ -295,8 +295,9 @@ class SensorEntity(Entity):
     # Temporary private attribute to track if deprecation has been logged.
     __datetime_as_string_deprecation_logged = False
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the sensor entity is added to hass."""
+        await super().async_internal_added_to_hass()
         if not self.registry_entry:
             return
         self.async_registry_entry_updated()
