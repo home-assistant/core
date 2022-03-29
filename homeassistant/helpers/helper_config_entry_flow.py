@@ -27,7 +27,10 @@ class HelperFlowFormStep:
 
     # Optional schema for requesting and validating user input. If schema validation
     # fails, the step will be retried. If the schema is None, no user input is requested.
-    schema: vol.Schema | None
+    schema: vol.Schema | Callable[
+        [HelperConfigFlowHandler | HelperOptionsFlowHandler, dict[str, Any]],
+        vol.Schema | None,
+    ] | None
 
     # Optional function to validate user input.
     # The validate_user_input function is called if the schema validates successfully.
@@ -87,6 +90,15 @@ class HelperCommonFlowHandler:
             return await self._async_form_step(step_id, user_input)
         return await self._async_menu_step(step_id, user_input)
 
+    def _get_schema(
+        self, form_step: HelperFlowFormStep, options: dict[str, Any]
+    ) -> vol.Schema | None:
+        if form_step.schema is None:
+            return None
+        if isinstance(form_step.schema, vol.Schema):
+            return form_step.schema
+        return form_step.schema(self._handler, options)
+
     async def _async_form_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -95,7 +107,7 @@ class HelperCommonFlowHandler:
 
         if (
             user_input is not None
-            and (data_schema := form_step.schema)
+            and (data_schema := self._get_schema(form_step, self._options))
             and data_schema.schema
             and not self._handler.show_advanced_options
         ):
@@ -148,11 +160,9 @@ class HelperCommonFlowHandler:
         if user_input:
             options.update(user_input)
 
-        if (data_schema := form_step.schema) and data_schema.schema:
-            data_schema = form_step.update_form_schema(
-                self._handler, data_schema, options
-            )
-
+        if (
+            data_schema := self._get_schema(form_step, self._options)
+        ) and data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
             schema = {}
             for key, val in data_schema.schema.items():
@@ -359,23 +369,19 @@ def wrapped_entity_config_entry_title(
 
 
 @callback
-def exclude_own_entity(
+def exclude_own_entities(
     handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
-    schema: vol.Schema,
-    schema_key: str,
+    config: dict[str, Any],
 ) -> vol.Schema:
-    """Exclude own entities from an entity selector identified by schema_key."""
+    """Return an entity selector which excludes own entities."""
     if not isinstance(handler, HelperOptionsFlowHandler):
-        return schema
+        return selector.selector({"entity": config})
 
     entity_registry = er.async_get(handler.hass)
     entities = er.async_entries_for_config_entry(
         entity_registry,
         handler._config_entry.entry_id,  # pylint: disable=protected-access
     )
+    entity_ids = [ent.entity_id for ent in entities]
 
-    schema = dict(schema.schema)
-    selector_config = {"entity": dict(schema[schema_key].config)}
-    selector_config["entity"]["exclude_entities"] = [ent.entity_id for ent in entities]
-    schema[schema_key] = selector.selector(selector_config)
-    return vol.Schema(schema)
+    return selector.selector({"entity": {**config, "exclude_entities": entity_ids}})

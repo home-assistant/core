@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from functools import partial
 from typing import Any, cast
 
 import voluptuous as vol
@@ -14,7 +15,7 @@ from homeassistant.helpers.helper_config_entry_flow import (
     HelperFlowFormStep,
     HelperFlowMenuStep,
     HelperOptionsFlowHandler,
-    exclude_own_entity,
+    exclude_own_entities,
 )
 
 from . import DOMAIN
@@ -22,12 +23,16 @@ from .binary_sensor import CONF_ALL
 from .const import CONF_HIDE_MEMBERS
 
 
-def basic_group_options_schema(domain: str) -> vol.Schema:
+def basic_group_options_schema(
+    domain: str,
+    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    options: dict[str, Any],
+) -> vol.Schema:
     """Generate options schema."""
     return vol.Schema(
         {
-            vol.Required(CONF_ENTITIES): selector.selector(
-                {"entity": {"domain": domain, "multiple": True}}
+            vol.Required(CONF_ENTITIES): exclude_own_entities(
+                handler, {"domain": domain, "multiple": True}
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
                 {"boolean": {}}
@@ -38,36 +43,52 @@ def basic_group_options_schema(domain: str) -> vol.Schema:
 
 def basic_group_config_schema(domain: str) -> vol.Schema:
     """Generate config schema."""
-    return vol.Schema({vol.Required("name"): selector.selector({"text": {}})}).extend(
-        basic_group_options_schema(domain).schema
+    return vol.Schema(
+        {
+            vol.Required("name"): selector.selector({"text": {}}),
+            vol.Required(CONF_ENTITIES): selector.selector(
+                {"entity": {"domain": domain, "multiple": True}}
+            ),
+            vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
+                {"boolean": {}}
+            ),
+        }
     )
 
 
-BINARY_SENSOR_OPTIONS_SCHEMA = basic_group_options_schema("binary_sensor").extend(
+def binary_sensor_options_schema(
+    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    options: dict[str, Any],
+) -> vol.Schema:
+    """Generate options schema."""
+    return basic_group_options_schema("binary_sensor", handler, options).extend(
+        {
+            vol.Required(CONF_ALL, default=False): selector.selector({"boolean": {}}),
+        }
+    )
+
+
+BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
     {
         vol.Required(CONF_ALL, default=False): selector.selector({"boolean": {}}),
     }
 )
 
-LIGHT_OPTIONS_SCHEMA = basic_group_options_schema("light").extend(
-    {
-        vol.Required(
-            CONF_ALL, default=False, description={"advanced": True}
-        ): selector.selector({"boolean": {}}),
-    }
-)
 
-SWITCH_OPTIONS_SCHEMA = basic_group_options_schema("switch").extend(
-    {
-        vol.Required(
-            CONF_ALL, default=False, description={"advanced": True}
-        ): selector.selector({"boolean": {}}),
-    }
-)
+def light_switch_options_schema(
+    domain: str,
+    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    options: dict[str, Any],
+) -> vol.Schema:
+    """Generate options schema."""
+    return basic_group_options_schema(domain, handler, options).extend(
+        {
+            vol.Required(
+                CONF_ALL, default=False, description={"advanced": True}
+            ): selector.selector({"boolean": {}}),
+        }
+    )
 
-BINARY_SENSOR_CONFIG_SCHEMA = vol.Schema(
-    {vol.Required("name"): selector.selector({"text": {}})}
-).extend(BINARY_SENSOR_OPTIONS_SCHEMA.schema)
 
 GROUP_TYPES = [
     "binary_sensor",
@@ -121,36 +142,17 @@ CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
 }
 
 
-def _exclude_self(
-    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
-    schema: vol.Schema,
-    options: dict[str, Any],
-) -> vol.Schema:
-    """Exclude own entities from the entity selector."""
-    return exclude_own_entity(handler, schema, CONF_ENTITIES)
-
-
 OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
     "init": HelperFlowFormStep(None, next_step=choose_options_step),
-    "binary_sensor": HelperFlowFormStep(
-        BINARY_SENSOR_OPTIONS_SCHEMA, update_form_schema=_exclude_self
-    ),
-    "cover": HelperFlowFormStep(
-        basic_group_options_schema("cover"), update_form_schema=_exclude_self
-    ),
-    "fan": HelperFlowFormStep(
-        basic_group_options_schema("fan"), update_form_schema=_exclude_self
-    ),
-    "light": HelperFlowFormStep(LIGHT_OPTIONS_SCHEMA, update_form_schema=_exclude_self),
-    "lock": HelperFlowFormStep(
-        basic_group_options_schema("lock"), update_form_schema=_exclude_self
-    ),
+    "binary_sensor": HelperFlowFormStep(binary_sensor_options_schema),
+    "cover": HelperFlowFormStep(partial(basic_group_options_schema, "cover")),
+    "fan": HelperFlowFormStep(partial(basic_group_options_schema, "fan")),
+    "light": HelperFlowFormStep(partial(light_switch_options_schema, "light")),
+    "lock": HelperFlowFormStep(partial(basic_group_options_schema, "lock")),
     "media_player": HelperFlowFormStep(
-        basic_group_options_schema("media_player"), update_form_schema=_exclude_self
+        partial(basic_group_options_schema, "media_player")
     ),
-    "switch": HelperFlowFormStep(
-        SWITCH_OPTIONS_SCHEMA, update_form_schema=_exclude_self
-    ),
+    "switch": HelperFlowFormStep(partial(light_switch_options_schema, "switch")),
 }
 
 
