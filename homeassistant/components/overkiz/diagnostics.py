@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN
+from .const import CONF_HUB, DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
@@ -22,6 +22,7 @@ async def async_get_config_entry_diagnostics(
 
     data = {
         "setup": await client.get_diagnostic_data(),
+        "server": entry.data[CONF_HUB],
         "execution_history": [
             repr(execution) for execution in await client.get_execution_history()
         ],
@@ -47,6 +48,7 @@ async def async_get_device_diagnostics(
             "model": device.model,
         },
         "setup": await client.get_diagnostic_data(),
+        "server": entry.data[CONF_HUB],
         "execution_history": [
             repr(execution)
             for execution in await client.get_execution_history()
