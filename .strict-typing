@@ -164,11 +164,14 @@ homeassistant.components.pure_energie.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
+homeassistant.components.recorder.models
 homeassistant.components.recorder.history
+homeassistant.components.recorder.pool
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
 homeassistant.components.recorder.statistics
 homeassistant.components.recorder.util
+homeassistant.components.recorder.websocket_api
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.ridwell.*
