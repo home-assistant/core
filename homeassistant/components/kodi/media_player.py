@@ -306,6 +306,7 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties = {}
         self._media_position_updated_at = None
         self._media_position = None
+        self._connect_error = False
 
     def _reset_state(self, players=None):
         self._players = players
@@ -314,6 +315,7 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties = {}
         self._media_position_updated_at = None
         self._media_position = None
+        self._connect_error = False
 
     @property
     def _kodi_is_off(self):
@@ -420,6 +422,7 @@ class KodiEntity(MediaPlayerEntity):
 
     async def _on_ws_connected(self):
         """Call after ws is connected."""
+        self._connect_error = False
         self._register_ws_callbacks()
 
         version = (await self._kodi.get_application_properties(["version"]))["version"]
@@ -436,14 +439,18 @@ class KodiEntity(MediaPlayerEntity):
             await self._connection.connect()
             await self._on_ws_connected()
         except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
-            _LOGGER.debug("Unable to connect to Kodi via websocket", exc_info=True)
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error("Unable to connect to Kodi via websocket", exc_info=True)
             await self._clear_connection(False)
 
     async def _ping(self):
         try:
             await self._kodi.ping()
         except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
-            _LOGGER.debug("Unable to ping Kodi via websocket", exc_info=True)
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error("Unable to ping Kodi via websocket", exc_info=True)
             await self._clear_connection()
 
     async def _async_connect_websocket_if_disconnected(self, *_):
