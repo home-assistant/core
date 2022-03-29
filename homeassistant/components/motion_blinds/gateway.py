@@ -2,7 +2,11 @@
 import logging
 import socket
 
-from motionblinds import MotionGateway, AsyncMotionMulticast
+from motionblinds import AsyncMotionMulticast, MotionGateway
+
+from homeassistant.components import network
+
+from .const import DEFAULT_INTERFACE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -10,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 class ConnectMotionGateway:
     """Class to async connect to a Motion Gateway."""
 
-    def __init__(self, hass, multicast = None, interface = None):
+    def __init__(self, hass, multicast=None, interface=None):
         """Initialize the entity."""
         self._hass = hass
         self._multicast = multicast
@@ -52,7 +56,7 @@ class ConnectMotionGateway:
         return True
 
     def check_interface(self):
-        """check if the current interface supports multicast."""
+        """Check if the current interface supports multicast."""
         try:
             return self.gateway_device.Check_gateway_multicast()
         except socket.timeout:
@@ -64,7 +68,7 @@ class ConnectMotionGateway:
         enabled_interfaces = []
         default_interface = DEFAULT_INTERFACE
 
-        adapters = await network.async_get_adapters(self.hass)
+        adapters = await network.async_get_adapters(self._hass)
         for adapter in adapters:
             if ipv4s := adapter["ipv4"]:
                 ip4 = ipv4s[0]["address"]
@@ -89,29 +93,38 @@ class ConnectMotionGateway:
         """Connect to the Motion Gateway."""
         self._interfaces = await self.async_get_interfaces()
         for interface in self._interfaces:
-            _LOGGER.debug("Checking Motion Blinds interface '%s' with host %s", interface, host)
+            _LOGGER.debug(
+                "Checking Motion Blinds interface '%s' with host %s", interface, host
+            )
             # initialize multicast listener
             check_multicast = AsyncMotionMulticast(interface=interface)
             try:
                 await check_multicast.Start_listen()
-            except gaierror:
+            except socket.gaierror:
                 continue
 
             # trigger test multicast
-            self.gateway_device = MotionGateway(
+            self._gateway_device = MotionGateway(
                 ip=host, key=key, multicast=check_multicast
             )
             result = await self._hass.async_add_executor_job(self.check_interface)
 
             # close multicast listener again
             try:
-                await check_multicast.Stop_listen()
-            except gaierror:
+                check_multicast.Stop_listen()
+            except socket.gaierror:
                 continue
 
             if result:
                 # succesfully received multicast
+                _LOGGER.debug(
+                    "Succes using Motion Blinds interface '%s' with host %s", interface, host
+                )
                 return interface
 
-        _LOGGER.error("Could not find working interface for Motion Blinds host %s, using interface '%s'", host, self._interface)
+        _LOGGER.error(
+            "Could not find working interface for Motion Blinds host %s, using interface '%s'",
+            host,
+            self._interface,
+        )
         return self._interface

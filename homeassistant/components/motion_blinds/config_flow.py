@@ -1,11 +1,8 @@
 """Config flow to configure Motion Blinds using their WLAN API."""
-from socket import gaierror
-
-from motionblinds import AsyncMotionMulticast, MotionDiscovery
+from motionblinds import MotionDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import network
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 
@@ -121,8 +118,12 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             motion_gateway = connect_gateway_class.gateway_device
 
             # check socket interface
-            check_multicast_class = ConnectMotionGateway(hass, interface=DEFAULT_INTERFACE)
-            multicast_interface = await check_multicast_class.async_check_interface(self._host, key)
+            check_multicast_class = ConnectMotionGateway(
+                self.hass, interface=DEFAULT_INTERFACE
+            )
+            multicast_interface = await check_multicast_class.async_check_interface(
+                self._host, key
+            )
 
             mac_address = motion_gateway.mac
 
