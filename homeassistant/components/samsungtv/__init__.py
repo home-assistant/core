@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_METHOD,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
@@ -31,7 +32,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
-    CONF_MODEL,
     CONF_ON_ACTION,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
