@@ -376,6 +376,13 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_TRemote]):
         self._remote: _TRemote | None = None
         self._remote_lock = asyncio.Lock()
 
+    async def async_is_on(self) -> bool:
+        """Tells if the TV is on."""
+        LOGGER.debug("Checking if TV %s is on using websocket", self.host)
+        if remote := await self._async_get_remote():
+            return remote.is_alive()  # type: ignore[no-any-return]
+        return False
+
     async def _async_get_remote(self) -> _TRemote | None:
         """Create or return a remote control instance."""
         if (remote := self._remote) and remote.is_alive():
@@ -434,10 +441,7 @@ class SamsungTVWSBridge(SamsungTVWSBaseBridge[SamsungTVWSAsyncRemote]):
             info = await self.async_device_info()
             return info is not None and info["device"]["PowerState"] == "on"
 
-        LOGGER.debug("Checking if TV %s is on using websocket", self.host)
-        if remote := await self._async_get_remote():
-            return remote.is_alive()
-        return False
+        return await super().async_is_on()
 
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
@@ -662,13 +666,6 @@ class SamsungTVEncryptedBridge(SamsungTVWSBaseBridge[SamsungTVEncryptedWSAsyncRe
 
         self._rest_api_port: int | None = None
         self._device_info: dict[str, Any] | None = None
-
-    async def async_is_on(self) -> bool:
-        """Tells if the TV is on."""
-        LOGGER.debug("Checking if TV %s is on using websocket", self.host)
-        if remote := await self._async_get_remote():
-            return remote.is_alive()
-        return False
 
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
