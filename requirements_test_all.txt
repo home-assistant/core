@@ -777,7 +777,7 @@ panasonic_viera==0.3.6
 pdunehd==1.3.2
 
 # homeassistant.components.peco
-peco==0.0.21
+peco==0.0.25
 
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
@@ -1560,7 +1560,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.19.2
+xknx==0.20.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

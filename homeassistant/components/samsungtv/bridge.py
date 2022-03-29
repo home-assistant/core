@@ -528,7 +528,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 LOGGER.info(
                     "Failed to get remote for %s, re-authentication required: %s",
                     self.host,
-                    err,
+                    repr(err),
                 )
                 self._notify_reauth_callback()
                 self._remote = None
@@ -536,7 +536,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 LOGGER.info(
                     "Failed to get remote for %s: %s",
                     self.host,
-                    err,
+                    repr(err),
                 )
                 self._remote = None
             except ConnectionFailure as err:
@@ -544,11 +544,11 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     "Unexpected ConnectionFailure trying to get remote for %s, "
                     "please report this issue: %s",
                     self.host,
-                    err,
+                    repr(err),
                 )
                 self._remote = None
             except (WebSocketException, AsyncioTimeoutError, OSError) as err:
-                LOGGER.debug("Failed to get remote for %s: %s", self.host, err)
+                LOGGER.debug("Failed to get remote for %s: %s", self.host, repr(err))
                 self._remote = None
             else:
                 LOGGER.debug("Created SamsungTVWSBridge for %s", self.host)
@@ -768,7 +768,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
             try:
                 await self._remote.start_listening()
             except (WebSocketException, AsyncioTimeoutError, OSError) as err:
-                LOGGER.debug("Failed to get remote for %s: %s", self.host, err)
+                LOGGER.debug("Failed to get remote for %s: %s", self.host, repr(err))
                 self._remote = None
             else:
                 LOGGER.debug("Created SamsungTVEncryptedBridge for %s", self.host)
