@@ -384,8 +384,12 @@ class SamsungTVWSBridge(SamsungTVBridge):
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
         # On some TVs, opening a websocket turns on the TV
-        # so first check "PowerState" if device_info has it
+        # so first check existing websocket connection
+        # then fallback to "PowerState" if device_info has it
         # then fallback to default, trying to open a websocket
+        if (remote := self._remote) and remote.is_alive():
+            LOGGER.debug("Checked that TV %s is on using existing websocket", self.host)
+            return True
         if self._get_device_spec("PowerState") is not None:
             LOGGER.debug("Checking if TV %s is on using device info", self.host)
             # Ensure we get an updated value
