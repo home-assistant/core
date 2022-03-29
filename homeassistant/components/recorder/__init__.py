@@ -276,9 +276,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     hass.data[DOMAIN] = {}
     hass.data[EXCLUDE_ATTRIBUTES] = {}
-
-    await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
-
     conf = config[DOMAIN]
     entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
