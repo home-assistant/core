@@ -20,7 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     setup_ok = await hass.async_add_executor_job(tankerkoenig.setup)
     if not setup_ok:
         _LOGGER.error("Could not setup integration")
-        return False
+        raise ConfigEntryNotReady
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
