@@ -97,7 +97,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for station in stations:
                 self._stations[
                     station["id"]
-                ] = f"{station['place']} {station['street']} {station['houseNumber']} - {station['brand']} ({station['dist']}km)"
+                ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
 
         else:
             return self._show_form_user(user_input, errors={CONF_RADIUS: "no_stations"})

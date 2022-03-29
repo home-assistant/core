@@ -110,7 +110,7 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._city} {self._street} {self._house_number} {self._brand} {FUEL_TYPES[self._fuel_type]}"
+        return f"{self._brand} {self._street} {self._house_number} {FUEL_TYPES[self._fuel_type]}"
 
     @property
     def icon(self):
@@ -138,7 +138,7 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
         """Return device info."""
         return DeviceInfo(
             identifiers={(ATTR_ID, self._station_id)},
-            name=f"{self._city} {self._street} {self._house_number} {self._brand}",
+            name=f"{self._brand} {self._street} {self._house_number}",
             model=self._brand,
             configuration_url="https://www.tankerkoenig.de",
         )
