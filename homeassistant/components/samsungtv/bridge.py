@@ -374,6 +374,22 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_TRemote]):
         """Initialize Bridge."""
         super().__init__(hass, method, host, port)
         self._remote: _TRemote | None = None
+        self._remote_lock = asyncio.Lock()
+
+    async def _async_get_remote(self) -> _TRemote | None:
+        """Create or return a remote control instance."""
+        if (remote := self._remote) and remote.is_alive():
+            # If we have one then try to use it
+            return remote  # type: ignore[no-any-return]
+
+        async with self._remote_lock:
+            # If we don't have one make sure we do it under the lock
+            # so we don't make two do due a race to get the remote
+            return await self._async_get_remote_under_lock()
+
+    @abstractmethod
+    async def _async_get_remote_under_lock(self) -> _TRemote | None:
+        """Create or return a remote control instance."""
 
     async def async_close_remote(self) -> None:
         """Close remote object."""
@@ -403,7 +419,6 @@ class SamsungTVWSBridge(SamsungTVWSBaseBridge[SamsungTVWSAsyncRemote]):
             self.token = entry_data.get(CONF_TOKEN)
         self._rest_api: SamsungTVAsyncRest | None = None
         self._device_info: dict[str, Any] | None = None
-        self._remote_lock = asyncio.Lock()
 
     def _get_device_spec(self, key: str) -> Any | None:
         """Check if a flag exists in latest device info."""
@@ -528,17 +543,6 @@ class SamsungTVWSBridge(SamsungTVWSBaseBridge[SamsungTVWSAsyncRemote]):
             # Different reasons, e.g. hostname not resolveable
             pass
 
-    async def _async_get_remote(self) -> SamsungTVWSAsyncRemote | None:
-        """Create or return a remote control instance."""
-        if (remote := self._remote) and remote.is_alive():
-            # If we have one then try to use it
-            return remote
-
-        async with self._remote_lock:
-            # If we don't have one make sure we do it under the lock
-            # so we don't make two do due a race to get the remote
-            return await self._async_get_remote_under_lock()
-
     async def _async_get_remote_under_lock(self) -> SamsungTVWSAsyncRemote | None:
         """Create or return a remote control instance."""
         if self._remote is None or not self._remote.is_alive():
@@ -658,7 +662,6 @@ class SamsungTVEncryptedBridge(SamsungTVWSBaseBridge[SamsungTVEncryptedWSAsyncRe
 
         self._rest_api_port: int | None = None
         self._device_info: dict[str, Any] | None = None
-        self._remote_lock = asyncio.Lock()
 
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
@@ -754,17 +757,6 @@ class SamsungTVEncryptedBridge(SamsungTVWSBaseBridge[SamsungTVEncryptedWSAsyncRe
         except OSError:
             # Different reasons, e.g. hostname not resolveable
             pass
-
-    async def _async_get_remote(self) -> SamsungTVEncryptedWSAsyncRemote | None:
-        """Create or return a remote control instance."""
-        if (remote := self._remote) and remote.is_alive():
-            # If we have one then try to use it
-            return remote
-
-        async with self._remote_lock:
-            # If we don't have one make sure we do it under the lock
-            # so we don't make two do due a race to get the remote
-            return await self._async_get_remote_under_lock()
 
     async def _async_get_remote_under_lock(
         self,
