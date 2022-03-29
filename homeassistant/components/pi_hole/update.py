@@ -24,6 +24,7 @@ class PiHoleUpdateEntityDescription(UpdateEntityDescription):
 
     current_version: Callable[[dict], str | None] = lambda api: None
     latest_version: Callable[[dict], str | None] = lambda api: None
+    release_base_url: str | None = None
 
 
 UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
@@ -33,6 +34,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         current_version=lambda versions: versions.get("core_current"),
         latest_version=lambda versions: versions.get("core_latest"),
+        release_base_url="https://github.com/pi-hole/pi-hole/releases/tag",
     ),
     PiHoleUpdateEntityDescription(
         key="web_update_available",
@@ -40,6 +42,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         current_version=lambda versions: versions.get("web_current"),
         latest_version=lambda versions: versions.get("web_latest"),
+        release_base_url="https://github.com/pi-hole/AdminLTE/releases/tag",
     ),
     PiHoleUpdateEntityDescription(
         key="ftl_update_available",
@@ -47,6 +50,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         current_version=lambda versions: versions.get("FTL_current"),
         latest_version=lambda versions: versions.get("FTL_latest"),
+        release_base_url="https://github.com/pi-hole/FTL/releases/tag",
     ),
 )
 
@@ -101,3 +105,10 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
         """Latest version available for install."""
         assert isinstance(self.api.versions, dict)
         return self.entity_description.latest_version(self.api.versions)
+
+    @property
+    def release_url(self) -> str | None:
+        """URL to the full release notes of the latest version available."""
+        if self.latest_version:
+            return f"{self.entity_description.release_base_url}/{self.latest_version}"
+        return None
