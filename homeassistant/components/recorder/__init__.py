@@ -96,6 +96,7 @@ _LOGGER = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
+EXCLUDE_ATTRIBUTES = f"{DOMAIN}_exclude_attributes"
 
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
@@ -274,6 +275,10 @@ def run_information_with_session(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     hass.data[DOMAIN] = {}
+    hass.data[EXCLUDE_ATTRIBUTES] = {}
+
+    await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
+
     conf = config[DOMAIN]
     entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
@@ -317,6 +322,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def _process_recorder_platform(hass, domain, platform):
     """Process a recorder platform."""
     hass.data[DOMAIN][domain] = platform
+    if hasattr(platform, "exclude_attributes"):
+        hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
 
 
 @callback
@@ -605,6 +612,9 @@ class Recorder(threading.Thread):
         self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
+        self._exclude_attributes_by_domain: dict[str, set[str]] = hass.data[
+            EXCLUDE_ATTRIBUTES
+        ]
 
         self.enabled = True
 
@@ -1038,7 +1048,9 @@ class Recorder(threading.Thread):
         if event.event_type == EVENT_STATE_CHANGED:
             try:
                 dbstate = States.from_event(event)
-                shared_attrs = StateAttributes.shared_attrs_from_event(event)
+                shared_attrs = StateAttributes.shared_attrs_from_event(
+                    event, self._exclude_attributes_by_domain
+                )
             except (TypeError, ValueError) as ex:
                 _LOGGER.warning(
                     "State is not JSON serializable: %s: %s",
