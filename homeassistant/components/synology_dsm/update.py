@@ -52,6 +52,7 @@ class SynoDSMUpdateEntity(SynologyDSMBaseEntity, UpdateEntity):
     """Mixin for update entity specific attributes."""
 
     entity_description: SynologyDSMUpdateEntityEntityDescription
+    _attr_title = "Synology DSM"
 
     @property
     def current_version(self) -> str | None:
