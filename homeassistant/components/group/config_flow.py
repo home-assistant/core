@@ -55,11 +55,19 @@ LIGHT_OPTIONS_SCHEMA = basic_group_options_schema("light").extend(
     }
 )
 
+SWITCH_OPTIONS_SCHEMA = basic_group_options_schema("switch").extend(
+    {
+        vol.Required(
+            CONF_ALL, default=False, description={"advanced": True}
+        ): selector.selector({"boolean": {}}),
+    }
+)
+
 BINARY_SENSOR_CONFIG_SCHEMA = vol.Schema(
     {vol.Required("name"): selector.selector({"text": {}})}
 ).extend(BINARY_SENSOR_OPTIONS_SCHEMA.schema)
 
-GROUP_TYPES = ["binary_sensor", "cover", "fan", "light", "media_player"]
+GROUP_TYPES = ["binary_sensor", "cover", "fan", "light", "media_player", "switch"]
 
 
 @callback
@@ -94,6 +102,9 @@ CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
     "media_player": HelperFlowFormStep(
         basic_group_config_schema("media_player"), set_group_type("media_player")
     ),
+    "switch": HelperFlowFormStep(
+        basic_group_config_schema("switch"), set_group_type("switch")
+    ),
 }
 
 
@@ -104,18 +115,23 @@ OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
     "fan": HelperFlowFormStep(basic_group_options_schema("fan")),
     "light": HelperFlowFormStep(LIGHT_OPTIONS_SCHEMA),
     "media_player": HelperFlowFormStep(basic_group_options_schema("media_player")),
+    "switch": HelperFlowFormStep(SWITCH_OPTIONS_SCHEMA),
 }
 
 
 class GroupConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
-    """Handle a config or options flow for Switch Light."""
+    """Handle a config or options flow for groups."""
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
-        """Return config entry title."""
+        """Return config entry title.
+
+        The options parameter contains config entry options, which is the union of user
+        input from the config flow steps.
+        """
         return cast(str, options["name"]) if "name" in options else ""
 
     @callback

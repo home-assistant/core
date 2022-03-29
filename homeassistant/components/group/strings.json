@@ -10,7 +10,8 @@
           "cover": "Cover group",
           "fan": "Fan group",
           "light": "Light group",
-          "media_player": "Media player group"
+          "media_player": "Media player group",
+          "switch": "Switch group"
         }
       },
       "binary_sensor": {
@@ -54,6 +55,14 @@
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
+      },
+      "switch": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
+        }
       }
     }
   },
@@ -89,6 +98,14 @@
       },
       "media_player": {
         "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        }
+      },
+      "switch": {
+        "description": "[%key:component::group::config::step::binary_sensor::description%]",
+        "data": {
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }

@@ -1,5 +1,6 @@
 """A pool for sqlite connections."""
 import threading
+from typing import Any
 
 from sqlalchemy.pool import NullPool, SingletonThreadPool
 
@@ -10,14 +11,16 @@ from .const import DB_WORKER_PREFIX
 POOL_SIZE = 5
 
 
-class RecorderPool(SingletonThreadPool, NullPool):
+class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
     """A hybrid of NullPool and SingletonThreadPool.
 
     When called from the creating thread or db executor acts like SingletonThreadPool
     When called from any other thread, acts like NullPool
     """
 
-    def __init__(self, *args, **kw):  # pylint: disable=super-init-not-called
+    def __init__(  # pylint: disable=super-init-not-called
+        self, *args: Any, **kw: Any
+    ) -> None:
         """Create the pool."""
         kw["pool_size"] = POOL_SIZE
         SingletonThreadPool.__init__(self, *args, **kw)
@@ -30,22 +33,24 @@ class RecorderPool(SingletonThreadPool, NullPool):
             thread_name == "Recorder" or thread_name.startswith(DB_WORKER_PREFIX)
         )
 
-    def _do_return_conn(self, conn):
+    # Any can be switched out for ConnectionPoolEntry in the next version of sqlalchemy
+    def _do_return_conn(self, conn: Any) -> Any:
         if self.recorder_or_dbworker:
             return super()._do_return_conn(conn)
         conn.close()
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Close the connection."""
         if self.recorder_or_dbworker and self._conn and (conn := self._conn.current()):
             conn.close()
 
-    def dispose(self):
+    def dispose(self) -> None:
         """Dispose of the connection."""
         if self.recorder_or_dbworker:
-            return super().dispose()
+            super().dispose()
 
-    def _do_get(self):
+    # Any can be switched out for ConnectionPoolEntry in the next version of sqlalchemy
+    def _do_get(self) -> Any:
         if self.recorder_or_dbworker:
             return super()._do_get()
         report(
