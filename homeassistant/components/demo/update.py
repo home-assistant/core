@@ -156,12 +156,7 @@ class DemoUpdate(UpdateEntity):
 
     def release_notes(self) -> str | None:
         """Return the release notes."""
-        return f"""
-        Long release notes.
-
-        **With** markdown support!
-
-        ***
-
-        {self.release_summary}
-        """
+        return (
+            "Long release notes.\n\n**With** "
+            f"markdown support!\n\n***\n\n{self.release_summary}"
+        )
