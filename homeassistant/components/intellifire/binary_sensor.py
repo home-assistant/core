@@ -139,13 +139,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
         value_fn=lambda data: data.error_offline,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-    IntellifireBinarySensorEntityDescription(
-        key="has_errors",
-        name="Error(s)",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.errors != [],
-        device_class=BinarySensorDeviceClass.PROBLEM,
-    ),
 )
 
 
