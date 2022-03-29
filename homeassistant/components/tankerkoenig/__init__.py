@@ -110,9 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Could not setup integration")
         return False
 
-    tankerkoenig.undo_update_listener = entry.add_update_listener(
-        _async_update_listener
-    )
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = tankerkoenig

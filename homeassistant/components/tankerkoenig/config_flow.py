@@ -48,7 +48,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import YAML configuration."""
         await self.async_set_unique_id(
-            f"{DOMAIN}_{config[CONF_LOCATION][CONF_LATITUDE]}_{config[CONF_LOCATION][CONF_LONGITUDE]}"
+            f"{config[CONF_LOCATION][CONF_LATITUDE]}_{config[CONF_LOCATION][CONF_LONGITUDE]}"
         )
         self._abort_if_unique_id_configured()
 
@@ -84,7 +84,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_form_user()
 
         await self.async_set_unique_id(
-            f"{DOMAIN}_{user_input[CONF_LOCATION][CONF_LATITUDE]}_{user_input[CONF_LOCATION][CONF_LONGITUDE]}"
+            f"{user_input[CONF_LOCATION][CONF_LATITUDE]}_{user_input[CONF_LOCATION][CONF_LONGITUDE]}"
         )
         self._abort_if_unique_id_configured()
 
@@ -113,9 +113,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(
                 step_id="select_station",
-                description_placeholders={
-                    "stations_count": len(list(self._stations.keys()))
-                },
+                description_placeholders={"stations_count": len(self._stations)},
                 data_schema=vol.Schema(
                     {vol.Required(CONF_STATIONS): cv.multi_select(self._stations)}
                 ),
@@ -145,9 +143,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): cv.string,
                     vol.Required(
                         CONF_FUEL_TYPES,
-                        default=user_input.get(
-                            CONF_FUEL_TYPES, list(FUEL_TYPES.keys())
-                        ),
+                        default=user_input.get(CONF_FUEL_TYPES, list(FUEL_TYPES)),
                     ): cv.multi_select(FUEL_TYPES),
                     vol.Required(
                         CONF_LOCATION,

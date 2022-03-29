@@ -137,7 +137,7 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo | None:
         """Return device info."""
         return DeviceInfo(
-            connections={(ATTR_ID, self._station_id)},
+            identifiers={(ATTR_ID, self._station_id)},
             name=f"{self._city} {self._street} {self._house_number} {self._brand}",
             model=self._brand,
             configuration_url="https://www.tankerkoenig.de",

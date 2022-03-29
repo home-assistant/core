@@ -123,7 +123,7 @@ async def test_user_already_configured(hass: HomeAssistant):
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={**MOCK_USER_DATA, **MOCK_STATIONS_DATA},
-        unique_id=f"{DOMAIN}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LATITUDE]}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LONGITUDE]}",
+        unique_id=f"{MOCK_USER_DATA[CONF_LOCATION][CONF_LATITUDE]}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LONGITUDE]}",
     )
     mock_config.add_to_hass(hass)
 
