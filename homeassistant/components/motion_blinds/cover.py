@@ -20,7 +20,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -261,11 +261,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             for prev_position in self._previous_positions
         ):
             # keep updating the position @UPDATE_INTERVAL_MOVING until the position does not change.
-            async_track_point_in_time(
-                self.hass,
-                self.async_scheduled_update_request,
-                dt_util.utcnow() + timedelta(seconds=UPDATE_INTERVAL_MOVING),
-            )
+            async_call_later(self.hass, UPDATE_INTERVAL_MOVING, self.async_scheduled_update_request)
         else:
             self._previous_positions = []
             self._requesting_position = False
@@ -277,11 +273,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             return
 
         self._requesting_position = True
-        async_track_point_in_time(
-            self.hass,
-            self.async_scheduled_update_request,
-            dt_util.utcnow() + timedelta(seconds=UPDATE_INTERVAL_MOVING),
-        )
+        async_call_later(self.hass, UPDATE_INTERVAL_MOVING, self.async_scheduled_update_request)
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
