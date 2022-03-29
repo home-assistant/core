@@ -114,26 +114,15 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             key = user_input[CONF_API_KEY]
-            multicast_interface = user_input[CONF_INTERFACE]
 
-            # check socket interface
-            if multicast_interface != DEFAULT_INTERFACE:
-                motion_multicast = AsyncMotionMulticast(interface=multicast_interface)
-                try:
-                    await motion_multicast.Start_listen()
-                    motion_multicast.Stop_listen()
-                except gaierror:
-                    errors[CONF_INTERFACE] = "invalid_interface"
-                    return self.async_show_form(
-                        step_id="connect",
-                        data_schema=self._config_settings,
-                        errors=errors,
-                    )
-
-            connect_gateway_class = ConnectMotionGateway(self.hass, multicast=None)
+            connect_gateway_class = ConnectMotionGateway(self.hass)
             if not await connect_gateway_class.async_connect_gateway(self._host, key):
                 return self.async_abort(reason="connection_error")
             motion_gateway = connect_gateway_class.gateway_device
+
+            # check socket interface
+            check_multicast_class = ConnectMotionGateway(hass, interface=DEFAULT_INTERFACE)
+            multicast_interface = await check_multicast_class.async_check_interface(self._host, key)
 
             mac_address = motion_gateway.mac
 
@@ -155,38 +144,12 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        (interfaces, default_interface) = await self.async_get_interfaces()
-
         self._config_settings = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): vol.All(str, vol.Length(min=16, max=16)),
-                vol.Optional(CONF_INTERFACE, default=default_interface): vol.In(
-                    interfaces
-                ),
             }
         )
 
         return self.async_show_form(
             step_id="connect", data_schema=self._config_settings, errors=errors
         )
-
-    async def async_get_interfaces(self):
-        """Get list of interface to use."""
-        interfaces = [DEFAULT_INTERFACE, "0.0.0.0"]
-        enabled_interfaces = []
-        default_interface = DEFAULT_INTERFACE
-
-        adapters = await network.async_get_adapters(self.hass)
-        for adapter in adapters:
-            if ipv4s := adapter["ipv4"]:
-                ip4 = ipv4s[0]["address"]
-                interfaces.append(ip4)
-                if adapter["enabled"]:
-                    enabled_interfaces.append(ip4)
-                    if adapter["default"]:
-                        default_interface = ip4
-
-        if len(enabled_interfaces) == 1:
-            default_interface = enabled_interfaces[0]
-
-        return (interfaces, default_interface)
