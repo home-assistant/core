@@ -27,7 +27,6 @@ from .const import (
     ATTR_AVAILABLE,
     ATTR_WIDTH,
     DOMAIN,
-    KEY_API_LOCK,
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_VERSION,
@@ -83,7 +82,6 @@ async def async_setup_entry(
     """Set up the Motion Blind from a config entry."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
-    api_lock = hass.data[DOMAIN][config_entry.entry_id][KEY_API_LOCK]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     sw_version = hass.data[DOMAIN][config_entry.entry_id][KEY_VERSION]
 

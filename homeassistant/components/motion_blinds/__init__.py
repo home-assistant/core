@@ -1,5 +1,6 @@
 """The motion_blinds component."""
 import asyncio
+from datetime import timedelta
 import logging
 from socket import timeout
 from typing import TYPE_CHECKING
@@ -59,7 +60,6 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 
         self.api_lock = coordinator_info[KEY_API_LOCK]
         self._gateway = coordinator_info[KEY_GATEWAY]
-        self._api_lock = coordinator_info[KEY_API_LOCK]
         self._wait_for_push = coordinator_info[CONF_WAIT_FOR_PUSH]
 
     def update_gateway(self):
@@ -161,7 +161,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_GATEWAY: motion_gateway,
-        KEY_API_LOCK: api_lock,
         KEY_COORDINATOR: coordinator,
         KEY_VERSION: version,
     }
