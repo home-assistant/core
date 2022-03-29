@@ -299,14 +299,18 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_position, 100 - position)
+            await self.hass.async_add_executor_job(
+                self._blind.Set_position, 100 - position
+            )
         await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
         async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_position, 100 - position)
+            await self.hass.async_add_executor_job(
+                self._blind.Set_position, 100 - position
+            )
         await self.async_request_position_till_stop()
 
     async def async_stop_cover(self, **kwargs):
@@ -354,9 +358,7 @@ class MotionTiltDevice(MotionPositionDevice):
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
-    def __init__(
-        self, coordinator, blind, device_class, api_lock, sw_version, motor
-    ):
+    def __init__(self, coordinator, blind, device_class, api_lock, sw_version, motor):
         """Initialize the blind."""
         super().__init__(coordinator, blind, device_class, api_lock, sw_version)
         self._motor = motor
@@ -418,7 +420,9 @@ class MotionTDBUDevice(MotionPositionDevice):
         """Move the cover to a specific scaled position."""
         position = kwargs[ATTR_POSITION]
         async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_scaled_position, 100 - position, self._motor_key)
+            await self.hass.async_add_executor_job(
+                self._blind.Set_scaled_position, 100 - position, self._motor_key
+            )
         await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
@@ -427,7 +431,9 @@ class MotionTDBUDevice(MotionPositionDevice):
         target_width = kwargs.get(ATTR_WIDTH, None)
 
         async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_position, 100 - position, self._motor_key, target_width)
+            await self.hass.async_add_executor_job(
+                self._blind.Set_position, 100 - position, self._motor_key, target_width
+            )
 
         await self.async_request_position_till_stop()
 
