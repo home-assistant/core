@@ -6,7 +6,7 @@ import asyncio
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 from collections.abc import Callable, Iterable, Mapping
 import contextlib
-from typing import Any, cast
+from typing import Any, Generic, TypeVar, cast
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -73,6 +73,8 @@ ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400"}
 ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
 
 REST_EXCEPTIONS = (HttpApiError, AsyncioTimeoutError, ResponseError)
+
+_TRemote = TypeVar("_TRemote", SamsungTVWSAsyncRemote, SamsungTVEncryptedWSAsyncRemote)
 
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
@@ -359,8 +361,33 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Could not establish connection")
 
 
-class SamsungTVWSBridge(SamsungTVBridge):
-    """The Bridge for WebSocket TVs."""
+class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_TRemote]):
+    """The Bridge for WebSocket TVs (v1/v2)."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        method: str,
+        host: str,
+        port: int | None = None,
+    ) -> None:
+        """Initialize Bridge."""
+        super().__init__(hass, method, host, port)
+        self._remote: _TRemote | None = None
+
+    async def async_close_remote(self) -> None:
+        """Close remote object."""
+        try:
+            if self._remote is not None:
+                # Close the current remote connection
+                await self._remote.close()
+            self._remote = None
+        except OSError as err:
+            LOGGER.debug("Error closing connection to %s: %s", self.host, err)
+
+
+class SamsungTVWSBridge(SamsungTVWSBaseBridge[SamsungTVWSAsyncRemote]):
+    """The Bridge for WebSocket TVs (v2)."""
 
     def __init__(
         self,
@@ -376,7 +403,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
             self.token = entry_data.get(CONF_TOKEN)
         self._rest_api: SamsungTVAsyncRest | None = None
         self._device_info: dict[str, Any] | None = None
-        self._remote: SamsungTVWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
 
     def _get_device_spec(self, key: str) -> Any | None:
@@ -606,19 +632,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
         else:
             await self._async_send_commands([SendRemoteKey.click("KEY_POWER")])
 
-    async def async_close_remote(self) -> None:
-        """Close remote object."""
-        try:
-            if self._remote is not None:
-                # Close the current remote connection
-                await self._remote.close()
-            self._remote = None
-        except OSError as err:
-            LOGGER.debug("Error closing connection to %s: %s", self.host, err)
 
-
-class SamsungTVEncryptedBridge(SamsungTVBridge):
-    """The Bridge for Encrypted WebSocket TVs (J/H models)."""
+class SamsungTVEncryptedBridge(SamsungTVWSBaseBridge[SamsungTVEncryptedWSAsyncRemote]):
+    """The Bridge for Encrypted WebSocket TVs (v1 - J/H models)."""
 
     def __init__(
         self,
@@ -642,7 +658,6 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
 
         self._rest_api_port: int | None = None
         self._device_info: dict[str, Any] | None = None
-        self._remote: SamsungTVEncryptedWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
 
     async def async_is_on(self) -> bool:
@@ -794,13 +809,3 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
             power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWEROFF"))
             power_off_commands.append(SendEncryptedRemoteKey.click("KEY_POWER"))
         await self._async_send_commands(power_off_commands)
-
-    async def async_close_remote(self) -> None:
-        """Close remote object."""
-        try:
-            if self._remote is not None:
-                # Close the current remote connection
-                await self._remote.close()
-            self._remote = None
-        except OSError as err:
-            LOGGER.debug("Error closing connection to %s: %s", self.host, err)
