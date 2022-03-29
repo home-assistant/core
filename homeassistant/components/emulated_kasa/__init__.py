@@ -5,7 +5,6 @@ from sense_energy import PlugInstance, SenseLink
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W
 from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
@@ -105,8 +104,6 @@ async def validate_configs(hass, entity_configs):
                 entity_config[CONF_POWER] = power_val
         elif state.domain == SENSOR_DOMAIN:
             pass
-        elif ATTR_CURRENT_POWER_W in state.attributes:
-            pass
         else:
             _LOGGER.debug("No power value defined for: %s", entity_id)
 
@@ -132,8 +129,6 @@ def get_plug_devices(hass, entity_configs):
                     power = float(hass.states.get(power_val).state)
                 elif isinstance(power_val, Template):
                     power = float(power_val.async_render())
-            elif ATTR_CURRENT_POWER_W in state.attributes:
-                power = float(state.attributes[ATTR_CURRENT_POWER_W])
             elif state.domain == SENSOR_DOMAIN:
                 power = float(state.state)
         else:

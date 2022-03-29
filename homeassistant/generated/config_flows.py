@@ -121,6 +121,7 @@ FLOWS = {
         "fronius",
         "garages_amsterdam",
         "gdacs",
+        "generic",
         "geofency",
         "geonetnz_quakes",
         "geonetnz_volcano",
@@ -406,7 +407,8 @@ FLOWS = {
         "min_max",
         "switch_as_x",
         "threshold",
-        "tod"
+        "tod",
+        "utility_meter"
     ]
 }
 

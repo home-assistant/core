@@ -161,6 +161,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
 
+        self.context["title_placeholders"] = {
+            "gateway_id": self._config_entry.unique_id
+        }
+
         self._default_user = self._config_entry.data[CONF_USERNAME]
         self._default_hub = self._config_entry.data[CONF_HUB]
 
