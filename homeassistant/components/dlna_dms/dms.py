@@ -70,10 +70,11 @@ class DlnaDmsData:
     async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
         """Create a DMS device connection from a config entry."""
         assert config_entry.unique_id
-        source_id = config_entry.data[CONF_SOURCE_ID]
-        assert source_id not in self.sources
         device = DmsDeviceSource(self.hass, config_entry)
         self.devices[config_entry.unique_id] = device
+        # source_id must be unique, which generate_source_id should guarantee.
+        # Ensure this is the case, for debugging purposes.
+        assert device.source_id not in self.sources
         self.sources[device.source_id] = device
         await device.async_added_to_hass()
         return True
