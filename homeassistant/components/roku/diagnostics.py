@@ -24,5 +24,5 @@ async def async_get_config_entry_diagnostics(
             "unique_id": config_entry.unique_id,
         },
         "data": coordinator.data.as_dict(),
-        "dns": coordinator.roku.get_dns_info(),
+        "dns": coordinator.roku.get_dns_state(),
     }
