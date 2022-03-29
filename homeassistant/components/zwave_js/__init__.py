@@ -13,6 +13,7 @@ from zwave_js_server.model.notification import (
     EntryControlNotification,
     NotificationNotification,
     PowerLevelNotification,
+    MultilevelSwitchNotification,
 )
 from zwave_js_server.model.value import Value, ValueNotification
 
@@ -400,7 +401,8 @@ async def async_setup_entry(  # noqa: C901
     def async_on_notification(
         notification: EntryControlNotification
         | NotificationNotification
-        | PowerLevelNotification,
+        | PowerLevelNotification
+        | MultilevelSwitchNotification,
     ) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
@@ -441,6 +443,14 @@ async def async_setup_entry(  # noqa: C901
                     ATTR_TEST_NODE_ID: notification.test_node_id,
                     ATTR_STATUS: notification.status,
                     ATTR_ACKNOWLEDGED_FRAMES: notification.acknowledged_frames,
+                }
+            )
+        elif isinstance(notification, MultilevelSwitchNotification):
+            event_data.update(
+                {
+                    ATTR_COMMAND_CLASS_NAME: "Multi Level Switch",
+                    ATTR_TYPE: notification.event_type,
+                    ATTR_PARAMETERS: notification.direction,
                 }
             )
         else:
