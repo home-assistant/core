@@ -96,7 +96,7 @@ _LOGGER = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
-EXCLUDE_ATTRIBUTES = f"{DOMAIN}_exclude_attributes"
+EXCLUDE_ATTRIBUTES = f"{DOMAIN}_exclude_attributes_by_domain"
 
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
@@ -275,7 +275,8 @@ def run_information_with_session(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     hass.data[DOMAIN] = {}
-    hass.data[EXCLUDE_ATTRIBUTES] = {}
+    exclude_attributes_by_domain: dict[str, set[str]] = {}
+    hass.data[EXCLUDE_ATTRIBUTES] = exclude_attributes_by_domain
     conf = config[DOMAIN]
     entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
@@ -303,6 +304,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         db_retry_wait=db_retry_wait,
         entity_filter=entity_filter,
         exclude_t=exclude_t,
+        exclude_attributes_by_domain=exclude_attributes_by_domain,
     )
     instance.async_initialize()
     instance.async_register()
@@ -569,6 +571,7 @@ class Recorder(threading.Thread):
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
         exclude_t: list[str],
+        exclude_attributes_by_domain: dict[str, set[str]],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -609,9 +612,7 @@ class Recorder(threading.Thread):
         self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
-        self._exclude_attributes_by_domain: dict[str, set[str]] = hass.data[
-            EXCLUDE_ATTRIBUTES
-        ]
+        self._exclude_attributes_by_domain = exclude_attributes_by_domain
 
         self.enabled = True
 
