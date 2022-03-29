@@ -168,6 +168,6 @@ class SwitchGroup(GroupEntity, SwitchEntity):
             self._attr_is_on = None
         else:
             # Set as ON if any / all member is ON
-            self._attr_is_on = self.mode(list(map(lambda x: x == STATE_ON, states)))
+            self._attr_is_on = self.mode(state == STATE_ON for state in states)
 
         self._attr_available = any(state != STATE_UNAVAILABLE for state in states)

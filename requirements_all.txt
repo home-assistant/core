@@ -110,7 +110,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.1.0
+aioairzone==0.2.1
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -1180,7 +1180,7 @@ panasonic_viera==0.3.6
 pdunehd==1.3.2
 
 # homeassistant.components.peco
-peco==0.0.21
+peco==0.0.25
 
 # homeassistant.components.pencom
 pencompy==0.0.3
@@ -2120,7 +2120,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.10.3
+sense_energy==0.10.4
 
 # homeassistant.components.sentry
 sentry-sdk==1.5.8
@@ -2431,7 +2431,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.19.2
+xknx==0.20.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
