@@ -1,5 +1,4 @@
 """Support for Motion Blinds using their WLAN API."""
-from datetime import timedelta
 import logging
 
 from motionblinds import DEVICE_TYPES_WIFI, BlindType
@@ -22,7 +21,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_ABSOLUTE_POSITION,
