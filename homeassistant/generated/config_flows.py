@@ -348,6 +348,7 @@ FLOWS = {
         "traccar",
         "tractive",
         "tradfri",
+        "trafikverket_train",
         "trafikverket_weatherstation",
         "transmission",
         "tuya",
