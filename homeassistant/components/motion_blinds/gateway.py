@@ -116,9 +116,11 @@ class ConnectMotionGateway:
                 continue
 
             if result:
-                # succesfully received multicast
+                # successfully received multicast
                 _LOGGER.debug(
-                    "Succes using Motion Blinds interface '%s' with host %s", interface, host
+                    "Success using Motion Blinds interface '%s' with host %s",
+                    interface,
+                    host,
                 )
                 return interface
 
