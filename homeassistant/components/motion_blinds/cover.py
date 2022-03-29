@@ -261,7 +261,9 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             for prev_position in self._previous_positions
         ):
             # keep updating the position @UPDATE_INTERVAL_MOVING until the position does not change.
-            async_call_later(self.hass, UPDATE_INTERVAL_MOVING, self.async_scheduled_update_request)
+            async_call_later(
+                self.hass, UPDATE_INTERVAL_MOVING, self.async_scheduled_update_request
+            )
         else:
             self._previous_positions = []
             self._requesting_position = False
@@ -273,7 +275,9 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             return
 
         self._requesting_position = True
-        async_call_later(self.hass, UPDATE_INTERVAL_MOVING, self.async_scheduled_update_request)
+        async_call_later(
+            self.hass, UPDATE_INTERVAL_MOVING, self.async_scheduled_update_request
+        )
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
