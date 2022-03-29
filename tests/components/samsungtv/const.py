@@ -2,11 +2,7 @@
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
 
 from homeassistant.components import ssdp
-from homeassistant.components.samsungtv.const import (
-    CONF_MODEL,
-    CONF_SESSION_ID,
-    METHOD_WEBSOCKET,
-)
+from homeassistant.components.samsungtv.const import CONF_SESSION_ID, METHOD_WEBSOCKET
 from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
@@ -18,6 +14,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
