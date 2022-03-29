@@ -232,8 +232,7 @@ def run_information(hass, point_in_time: datetime | None = None) -> RecorderRuns
 
     There is also the run that covers point_in_time.
     """
-    run_info = run_information_from_instance(hass, point_in_time)
-    if run_info:
+    if run_info := run_information_from_instance(hass, point_in_time):
         return run_info
 
     with session_scope(hass=hass) as session:
@@ -1028,8 +1027,7 @@ class Recorder(threading.Thread):
 
         try:
             if event.event_type == EVENT_STATE_CHANGED:
-                dbevent = Events.from_event(event, event_data="{}")
-                dbevent.event_data = None
+                dbevent = Events.from_event(event, event_data=None)
             else:
                 dbevent = Events.from_event(event)
         except (TypeError, ValueError):
