@@ -5,7 +5,9 @@
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "file_not_found": "The specified knxkeys file was not found in the path config/.storage/knx/",
+            "invalid_signature": "The password to decrypt the knxkeys file is wrong."
         },
         "step": {
             "manual_tunnel": {
@@ -14,7 +16,6 @@
                     "individual_address": "Individual address for the connection",
                     "local_ip": "Local IP of Home Assistant (leave empty for automatic detection)",
                     "port": "Port",
-                    "route_back": "Route Back / NAT Mode",
                     "tunneling_type": "KNX Tunneling Type"
                 },
                 "description": "Please enter the connection information of your tunneling device."
@@ -27,6 +28,20 @@
                     "multicast_port": "The multicast port used for routing"
                 },
                 "description": "Please configure the routing options."
+            },
+            "secure_knxkeys": {
+                "data": {
+                    "knxkeys_filename": "The full name of your knxkeys file",
+                    "knxkeys_password": "The password to decrypt the knxkeys file."
+                },
+                "description": "Please enter the information for your knxkeys file."
+            },
+            "secure_tunneling": {
+                "description": "Select how you want to configure IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Configure a knxkeys file containing IP secure information",
+                    "secure_manual": "Configure IP secure manually"
+                }
             },
             "tunnel": {
                 "data": {
@@ -58,9 +73,7 @@
             "tunnel": {
                 "data": {
                     "host": "Host",
-                    "local_ip": "Local IP (leave empty if unsure)",
                     "port": "Port",
-                    "route_back": "Route Back / NAT Mode",
                     "tunneling_type": "KNX Tunneling Type"
                 }
             }

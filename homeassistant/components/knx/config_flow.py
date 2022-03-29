@@ -5,14 +5,17 @@ from typing import Any, Final
 
 import voluptuous as vol
 from xknx import XKNX
+from xknx.exceptions.exception import InvalidSignature
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
+from xknx.secure.keyring import load_key_ring
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -22,6 +25,8 @@ from .const import (
     CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_INITIAL_CONNECTION_TYPES,
+    CONF_KNX_KNXKEY_FILENAME,
+    CONF_KNX_KNXKEY_PASSWORD,
     CONF_KNX_LOCAL_IP,
     CONF_KNX_MCAST_GRP,
     CONF_KNX_MCAST_PORT,
@@ -31,14 +36,17 @@ from .const import (
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
+    CONF_KNX_TUNNELING_TCP_SECURE,
+    CONST_KNXKEYS_STORAGE_KEY,
     DOMAIN,
+    KNXConfigEntryData,
 )
 
 CONF_KNX_GATEWAY: Final = "gateway"
 CONF_MAX_RATE_LIMIT: Final = 60
 CONF_DEFAULT_LOCAL_IP: Final = "0.0.0.0"
 
-DEFAULT_ENTRY_DATA: Final = {
+DEFAULT_ENTRY_DATA: KNXConfigEntryData = {
     CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
     CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
@@ -48,6 +56,7 @@ DEFAULT_ENTRY_DATA: Final = {
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
 CONF_KNX_LABEL_TUNNELING_TCP: Final = "TCP"
+CONF_KNX_LABEL_TUNNELING_TCP_SECURE: Final = "TCP with IP Secure"
 CONF_KNX_LABEL_TUNNELING_UDP: Final = "UDP"
 CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK: Final = "UDP with route back / NAT mode"
 
@@ -59,6 +68,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     _found_tunnels: list[GatewayDescriptor]
     _selected_tunnel: GatewayDescriptor | None
+    _tunneling_config: KNXConfigEntryData | None
 
     @staticmethod
     @callback
@@ -73,6 +83,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._found_tunnels = []
         self._selected_tunnel = None
+        self._tunneling_config = None
         return await self.async_step_type()
 
     async def async_step_type(self, user_input: dict | None = None) -> FlowResult:
@@ -80,9 +91,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
             if connection_type == CONF_KNX_AUTOMATIC:
+                entry_data: KNXConfigEntryData = {
+                    **DEFAULT_ENTRY_DATA,
+                    CONF_KNX_CONNECTION_TYPE: user_input[CONF_KNX_CONNECTION_TYPE],
+                }
                 return self.async_create_entry(
                     title=CONF_KNX_AUTOMATIC.capitalize(),
-                    data={**DEFAULT_ENTRY_DATA, **user_input},
+                    data=entry_data,
                 )
 
             if connection_type == CONF_KNX_ROUTING:
@@ -95,7 +110,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors: dict = {}
         supported_connection_types = CONF_KNX_INITIAL_CONNECTION_TYPES.copy()
-        fields = {}
         gateways = await scan_for_gateways()
 
         if gateways:
@@ -142,31 +156,40 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Manually configure tunnel connection parameters. Fields default to preselected gateway if one was found."""
         if user_input is not None:
             connection_type = user_input[CONF_KNX_TUNNELING_TYPE]
+
+            entry_data: KNXConfigEntryData = {
+                **DEFAULT_ENTRY_DATA,
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_KNX_INDIVIDUAL_ADDRESS: user_input[CONF_KNX_INDIVIDUAL_ADDRESS],
+                CONF_KNX_ROUTE_BACK: (
+                    connection_type == CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
+                ),
+                CONF_KNX_LOCAL_IP: user_input.get(CONF_KNX_LOCAL_IP),
+                CONF_KNX_CONNECTION_TYPE: (
+                    CONF_KNX_TUNNELING_TCP
+                    if connection_type == CONF_KNX_LABEL_TUNNELING_TCP
+                    else CONF_KNX_TUNNELING
+                ),
+            }
+
+            if connection_type == CONF_KNX_LABEL_TUNNELING_TCP_SECURE:
+                self._tunneling_config = entry_data
+                return self.async_show_menu(
+                    step_id="secure_tunneling",
+                    menu_options=["secure_knxkeys", "secure_manual"],
+                )
+
             return self.async_create_entry(
                 title=f"{CONF_KNX_TUNNELING.capitalize()} @ {user_input[CONF_HOST]}",
-                data={
-                    **DEFAULT_ENTRY_DATA,
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: user_input[CONF_PORT],
-                    CONF_KNX_INDIVIDUAL_ADDRESS: user_input[
-                        CONF_KNX_INDIVIDUAL_ADDRESS
-                    ],
-                    CONF_KNX_ROUTE_BACK: (
-                        connection_type == CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
-                    ),
-                    CONF_KNX_LOCAL_IP: user_input.get(CONF_KNX_LOCAL_IP),
-                    CONF_KNX_CONNECTION_TYPE: (
-                        CONF_KNX_TUNNELING_TCP
-                        if connection_type == CONF_KNX_LABEL_TUNNELING_TCP
-                        else CONF_KNX_TUNNELING
-                    ),
-                },
+                data=entry_data,
             )
 
         errors: dict = {}
         connection_methods: list[str] = [
             CONF_KNX_LABEL_TUNNELING_TCP,
             CONF_KNX_LABEL_TUNNELING_UDP,
+            CONF_KNX_LABEL_TUNNELING_TCP_SECURE,
             CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK,
         ]
         ip_address = ""
@@ -191,6 +214,47 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
+        )
+
+    async def async_step_secure_knxkeys(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Configure secure knxkeys used to authenticate."""
+        errors = {}
+
+        if user_input is not None:
+            try:
+                load_key_ring(
+                    self.hass.config.path(
+                        STORAGE_DIR,
+                        CONST_KNXKEYS_STORAGE_KEY
+                        + user_input[CONF_KNX_KNXKEY_FILENAME],
+                    ),
+                    user_input[CONF_KNX_KNXKEY_PASSWORD],
+                )
+                entry_data: KNXConfigEntryData = {
+                    **self._tunneling_config,
+                    CONF_KNX_KNXKEY_FILENAME: user_input[CONF_KNX_KNXKEY_FILENAME],
+                    CONF_KNX_KNXKEY_PASSWORD: user_input[CONF_KNX_KNXKEY_PASSWORD],
+                    CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
+                }
+
+                return self.async_create_entry(
+                    title=f"Secure {CONF_KNX_TUNNELING.capitalize()} @ {user_input[CONF_HOST]}",
+                    data=entry_data,
+                )
+            except InvalidSignature:
+                errors["base"] = "invalid_signature"
+            except FileNotFoundError:
+                errors["base"] = "file_not_found"
+
+        fields = {
+            vol.Required(CONF_KNX_KNXKEY_FILENAME): str,
+            vol.Required(CONF_KNX_KNXKEY_PASSWORD): str,
+        }
+
+        return self.async_show_form(
+            step_id="secure_knxkeys", data_schema=vol.Schema(fields), errors=errors
         )
 
     async def async_step_routing(self, user_input: dict | None = None) -> FlowResult:

@@ -1,6 +1,7 @@
 """Constants for the KNX integration."""
+from dataclasses import dataclass
 from enum import Enum
-from typing import Final
+from typing import Final, TypedDict
 
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
@@ -39,15 +40,27 @@ CONF_KNX_AUTOMATIC: Final = "automatic"
 CONF_KNX_ROUTING: Final = "routing"
 CONF_KNX_TUNNELING: Final = "tunneling"
 CONF_KNX_TUNNELING_TCP: Final = "tunneling_tcp"
-CONF_KNX_LOCAL_IP = "local_ip"
-CONF_KNX_MCAST_GRP = "multicast_group"
-CONF_KNX_MCAST_PORT = "multicast_port"
+CONF_KNX_TUNNELING_TCP_SECURE: Final = "tunneling_tcp_secure"
+CONF_KNX_LOCAL_IP: Final = "local_ip"
+CONF_KNX_MCAST_GRP: Final = "multicast_group"
+CONF_KNX_MCAST_PORT: Final = "multicast_port"
 
-CONF_KNX_RATE_LIMIT = "rate_limit"
-CONF_KNX_ROUTE_BACK = "route_back"
-CONF_KNX_STATE_UPDATER = "state_updater"
-CONF_KNX_DEFAULT_STATE_UPDATER = True
-CONF_KNX_DEFAULT_RATE_LIMIT = 20
+CONF_KNX_RATE_LIMIT: Final = "rate_limit"
+CONF_KNX_ROUTE_BACK: Final = "route_back"
+CONF_KNX_STATE_UPDATER: Final = "state_updater"
+CONF_KNX_DEFAULT_STATE_UPDATER: Final = True
+CONF_KNX_DEFAULT_RATE_LIMIT: Final = 20
+
+##
+# Secure constants
+##
+CONST_KNXKEYS_STORAGE_KEY: Final = "knx/"
+CONF_KNX_KNXKEY_FILENAME: Final = "knxkeys_filename"
+CONF_KNX_KNXKEY_PASSWORD: Final = "knxkeys_password"
+
+CONF_KNX_SECURE_USER_ID: Final = "user_id"
+CONF_KNX_SECURE_USER_PASSWORD: Final = "user_password"
+CONF_KNX_SECURE_DEVICE_AUTHENTICATION: Final = "device_authentication"
 
 
 CONF_PAYLOAD: Final = "payload"
@@ -65,6 +78,28 @@ DATA_HASS_CONFIG: Final = "knx_hass_config"
 
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
+
+
+@dataclass
+class KNXConfigEntryData(TypedDict, total=False):
+    """Config entry for the KNX integration."""
+
+    connection_type: str
+    individual_address: str
+    local_ip: str
+    multicast_group: str
+    multicast_port: int
+    route_back: bool
+    state_updater: bool
+    rate_limit: int
+    host: str
+    port: int
+
+    user_id: int
+    user_password: str
+    device_authentication: str
+    knxkeys_filename: str
+    knxkeys_password: str
 
 
 class ColorTempModes(Enum):
