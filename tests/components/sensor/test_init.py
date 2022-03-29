@@ -369,7 +369,55 @@ async def test_custom_unit(
     native_value,
     custom_value,
 ):
-    """Test temperature conversion."""
+    """Test custom unit."""
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=str(native_value),
+        native_unit_of_measurement=native_unit,
+        device_class=SensorDeviceClass.PRESSURE,
+        unique_id="very_unique",
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(custom_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+
+
+@pytest.mark.parametrize(
+    "native_unit,custom_unit,state_unit,native_value,custom_value",
+    [
+        # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
+        (PRESSURE_HPA, PRESSURE_INHG, PRESSURE_INHG, 1000.0, 29.53),
+        (PRESSURE_KPA, PRESSURE_HPA, PRESSURE_HPA, 1.234, 12.34),
+        (PRESSURE_HPA, PRESSURE_MMHG, PRESSURE_MMHG, 1000, 750),
+        # Not a supported pressure unit
+        (PRESSURE_HPA, "peer_pressure", PRESSURE_HPA, 1000, 1000),
+    ],
+)
+async def test_custom_unit_change(
+    hass,
+    enable_custom_integrations,
+    native_unit,
+    custom_unit,
+    state_unit,
+    native_value,
+    custom_value,
+):
+    """Test custom unit changes are picked up."""
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -390,7 +438,7 @@ async def test_custom_unit(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
 
     entity_registry.async_update_entity_options(
-        "sensor.test", "sensor", {"unit": custom_unit}
+        "sensor.test", "sensor", {"unit_of_measurement": custom_unit}
     )
     await hass.async_block_till_done()
 
@@ -399,7 +447,7 @@ async def test_custom_unit(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
     entity_registry.async_update_entity_options(
-        "sensor.test", "sensor", {"unit": native_unit}
+        "sensor.test", "sensor", {"unit_of_measurement": native_unit}
     )
     await hass.async_block_till_done()
 

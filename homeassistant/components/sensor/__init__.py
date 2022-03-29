@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
+    CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
@@ -294,6 +295,12 @@ class SensorEntity(Entity):
     # Temporary private attribute to track if deprecation has been logged.
     __datetime_as_string_deprecation_logged = False
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        if not self.registry_entry:
+            return
+        self.async_registry_entry_updated()
+
     @property
     def device_class(self) -> SensorDeviceClass | str | None:
         """Return the class of this entity."""
@@ -461,7 +468,7 @@ class SensorEntity(Entity):
 
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
-                value_f = float(value)  # type: ignore
+                value_f = float(value)  # type: ignore[arg-type]
                 value_f_new = UNIT_CONVERSIONS[self.device_class](
                     value_f,
                     native_unit_of_measurement,
@@ -521,7 +528,7 @@ class SensorEntity(Entity):
         assert self.registry_entry
         if (
             (sensor_options := self.registry_entry.options.get(DOMAIN))
-            and (custom_unit := sensor_options.get("unit"))
+            and (custom_unit := sensor_options.get(CONF_UNIT_OF_MEASUREMENT))
             and (device_class := self.device_class) in UNIT_CONVERSIONS
             and self.native_unit_of_measurement in VALID_UNITS[device_class]
             and custom_unit in VALID_UNITS[device_class]
