@@ -27,7 +27,6 @@ from .const import (
     ATTR_AVAILABLE,
     ATTR_WIDTH,
     DOMAIN,
-    KEY_API_LOCK,
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_VERSION,
@@ -83,7 +82,6 @@ async def async_setup_entry(
     """Set up the Motion Blind from a config entry."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
-    api_lock = hass.data[DOMAIN][config_entry.entry_id][KEY_API_LOCK]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     sw_version = hass.data[DOMAIN][config_entry.entry_id][KEY_VERSION]
 
@@ -94,7 +92,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     POSITION_DEVICE_MAP[blind.type],
-                    api_lock,
                     sw_version,
                 )
             )
@@ -105,7 +102,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TILT_DEVICE_MAP[blind.type],
-                    api_lock,
                     sw_version,
                 )
             )
@@ -116,7 +112,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    api_lock,
                     sw_version,
                     "Top",
                 )
@@ -126,7 +121,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    api_lock,
                     sw_version,
                     "Bottom",
                 )
@@ -136,7 +130,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    api_lock,
                     sw_version,
                     "Combined",
                 )
@@ -152,7 +145,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     POSITION_DEVICE_MAP[BlindType.RollerBlind],
-                    api_lock,
                     sw_version,
                 )
             )
@@ -170,12 +162,12 @@ async def async_setup_entry(
 class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     """Representation of a Motion Blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, api_lock, sw_version):
+    def __init__(self, coordinator, blind, device_class, sw_version):
         """Initialize the blind."""
         super().__init__(coordinator)
 
         self._blind = blind
-        self._api_lock = api_lock
+        self._api_lock = coordinator.api_lock
         self._requesting_position = False
         self._previous_positions = []
 
@@ -352,9 +344,9 @@ class MotionTiltDevice(MotionPositionDevice):
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, api_lock, sw_version, motor):
+    def __init__(self, coordinator, blind, device_class, sw_version, motor):
         """Initialize the blind."""
-        super().__init__(coordinator, blind, device_class, api_lock, sw_version)
+        super().__init__(coordinator, blind, device_class, sw_version)
         self._motor = motor
         self._motor_key = motor[0]
         self._attr_name = f"{blind.blind_type}-{motor}-{blind.mac[12:]}"
