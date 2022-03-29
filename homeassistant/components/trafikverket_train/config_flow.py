@@ -71,8 +71,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             api_key = user_input[CONF_API_KEY]
 
-            assert self.entry, "Entry not loaded"
-
+            assert self.entry is not None
             try:
                 await self.validate_input(
                     api_key, self.entry.data[CONF_FROM], self.entry.data[CONF_TO]
@@ -87,26 +86,15 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "cannot_connect"
             else:
-                assert self.entry is not None
-
-                train_from: str = self.entry.data[CONF_FROM]
-                train_to: str = self.entry.data[CONF_TO]
-                train_time: str = self.entry.data.get(CONF_TIME, "")
-
-                unique_id = create_unique_id(
-                    train_from, train_to, train_time, self.entry.data[CONF_WEEKDAY]
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        **self.entry.data,
+                        CONF_API_KEY: api_key,
+                    },
                 )
-
-                if unique_id == self.entry.unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        self.entry,
-                        data={
-                            **self.entry.data,
-                            CONF_API_KEY: api_key,
-                        },
-                    )
-                    await self.hass.config_entries.async_reload(self.entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
