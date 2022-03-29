@@ -131,7 +131,7 @@ authlib<1.0
 
 # Required for compatibility with typer, used by pyunifiprotect integration
 # https://github.com/tiangolo/typer/pull/375
-click<=8.0.4"
+click<=8.0.4
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
