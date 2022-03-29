@@ -164,8 +164,12 @@ homeassistant.components.pure_energie.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
-homeassistant.components.recorder.models
+homeassistant.components.recorder
+homeassistant.components.recorder.const
+homeassistant.components.recorder.backup
+homeassistant.components.recorder.executor
 homeassistant.components.recorder.history
+homeassistant.components.recorder.models
 homeassistant.components.recorder.pool
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
