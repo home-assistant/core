@@ -1,7 +1,6 @@
 """Tankerkoenig sensor integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
@@ -16,14 +15,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TankerkoenigData
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, FUEL_TYPES, NAME
+from . import TankerkoenigDataUpdateCoordinator
+from .const import DOMAIN, FUEL_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,30 +40,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the tankerkoenig sensors."""
 
-    tankerkoenig: TankerkoenigData = hass.data[DOMAIN][entry.unique_id]
-
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        try:
-            return await tankerkoenig.fetch_data()
-        except LookupError as err:
-            raise UpdateFailed("Failed to fetch data") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=NAME,
-        update_method=async_update_data,
-        update_interval=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
-    )
+    coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id]
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    stations = tankerkoenig.stations.values()
+    stations = coordinator.stations.values()
     entities = []
     for station in stations:
-        for fuel in tankerkoenig.fuel_types:
+        for fuel in coordinator.fuel_types:
             if fuel not in station:
                 _LOGGER.warning(
                     "Station %s does not offer %s fuel", station["id"], fuel
@@ -78,7 +58,7 @@ async def async_setup_entry(
                 fuel,
                 station,
                 coordinator,
-                tankerkoenig.show_on_map,
+                coordinator.show_on_map,
             )
             entities.append(sensor)
     _LOGGER.debug("Added sensors %s", entities)

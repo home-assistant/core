@@ -1,10 +1,12 @@
 """Ask tankerkoenig.de for petrol price information."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from math import ceil
 
 import pytankerkoenig
+from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -20,9 +22,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_FUEL_TYPES,
@@ -72,6 +75,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [Platform.SENSOR]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set the tankerkoenig component up."""
@@ -103,28 +108,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set a tankerkoenig configuration entry up."""
-    tankerkoenig = TankerkoenigData(hass, entry)
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][
+        entry.unique_id
+    ] = coordinator = TankerkoenigDataUpdateCoordinator(
+        hass,
+        entry,
+        _LOGGER,
+        name=entry.unique_id or DOMAIN,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
 
-    setup_ok = await hass.async_add_executor_job(tankerkoenig.setup)
+    try:
+        setup_ok = await hass.async_add_executor_job(coordinator.setup)
+    except RequestException as err:
+        raise ConfigEntryNotReady from err
     if not setup_ok:
         _LOGGER.error("Could not setup integration")
-        raise ConfigEntryNotReady
+        return False
+
+    await coordinator.async_config_entry_first_refresh()
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.unique_id] = tankerkoenig
-
-    hass.config_entries.async_setup_platforms(entry, [Platform.SENSOR])
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Tankerkoenig config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, [Platform.SENSOR]
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.unique_id)
 
@@ -136,11 +150,26 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class TankerkoenigData:
+class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
     """Get the latest data from the API."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        logger: logging.Logger,
+        name: str,
+        update_interval: int,
+    ) -> None:
         """Initialize the data object."""
+
+        super().__init__(
+            hass=hass,
+            logger=logger,
+            name=name,
+            update_interval=timedelta(minutes=update_interval),
+        )
+
         self._api_key = entry.data[CONF_API_KEY]
         self._selected_stations = entry.data[CONF_STATIONS]
         self._hass = hass
@@ -152,24 +181,22 @@ class TankerkoenigData:
         """Set up the tankerkoenig API."""
         for station_id in self._selected_stations:
             try:
-                additional_station_data = pytankerkoenig.getStationData(
-                    self._api_key, station_id
-                )
+                station_data = pytankerkoenig.getStationData(self._api_key, station_id)
             except pytankerkoenig.customException as err:
-                additional_station_data = {
+                station_data = {
                     "ok": False,
                     "message": err,
                     "exception": True,
                 }
 
-            if not additional_station_data["ok"]:
+            if not station_data["ok"]:
                 _LOGGER.error(
                     "Error when adding station %s:\n %s",
                     station_id,
-                    additional_station_data["message"],
+                    station_data["message"],
                 )
                 return False
-            self.add_station(additional_station_data["station"])
+            self.add_station(station_data["station"])
         if len(self.stations) > 10:
             _LOGGER.warning(
                 "Found more than 10 stations to check. "
@@ -178,7 +205,7 @@ class TankerkoenigData:
             )
         return True
 
-    async def fetch_data(self):
+    async def _async_update_data(self):
         """Get the latest data from tankerkoenig.de."""
         _LOGGER.debug("Fetching new data from tankerkoenig.de")
         station_ids = list(self.stations)
@@ -199,10 +226,10 @@ class TankerkoenigData:
                 _LOGGER.error(
                     "Error fetching data from tankerkoenig.de: %s", data["message"]
                 )
-                raise TankerkoenigError(data["message"])
+                raise UpdateFailed(data["message"])
             if "prices" not in data:
                 _LOGGER.error("Did not receive price information from tankerkoenig.de")
-                raise TankerkoenigError("No prices in data")
+                raise UpdateFailed("No prices in data")
             prices.update(data["prices"])
         return prices
 
@@ -217,7 +244,3 @@ class TankerkoenigData:
 
         self.stations[station_id] = station
         _LOGGER.debug("add_station called for station: %s", station)
-
-
-class TankerkoenigError(HomeAssistantError):
-    """An error occurred while contacting tankerkoenig.de."""
