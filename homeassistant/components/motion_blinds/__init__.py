@@ -1,7 +1,5 @@
 """The motion_blinds component."""
 import asyncio
-from datetime import timedelta
-import asyncio
 import logging
 from socket import timeout
 from typing import TYPE_CHECKING
