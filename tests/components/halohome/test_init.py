@@ -21,7 +21,7 @@ class _MockConnection(LocationConnection):
     async def set_brightness(self, device_id: int, brightness: int) -> bool:
         return True
 
-    async def set_color_temp(self, device_id: int, brightness: int) -> bool:
+    async def set_color_temp(self, device_id: int, color: int) -> bool:
         return True
 
 

@@ -3,9 +3,9 @@
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    COLOR_MODE_COLOR_TEMP,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_ON,
+    ColorMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -25,7 +25,7 @@ async def test_default_states(hass: HomeAssistant):
     assert state.attributes["friendly_name"] == ENTITY_NAME_LIGHT_1
     assert state.attributes["min_mireds"] == 200
     assert state.attributes["max_mireds"] == 370
-    assert state.attributes["supported_color_modes"] == [COLOR_MODE_COLOR_TEMP]
+    assert state.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
 
 
 async def test_turn_on(hass: HomeAssistant):

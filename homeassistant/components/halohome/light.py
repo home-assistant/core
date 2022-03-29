@@ -4,18 +4,19 @@ import halohome
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    COLOR_MODE_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the HALO Home light platform from a config entry."""
     connection = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(HaloLight(device) for device in connection.devices)
@@ -27,8 +28,8 @@ class HaloLight(LightEntity):
     _attr_assumed_state = True
     _attr_max_mireds = 1000000 // 2700
     _attr_min_mireds = 1000000 // 5000
-    _attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP}
-    _attr_color_mode = COLOR_MODE_COLOR_TEMP
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _attr_color_mode = ColorMode.COLOR_TEMP
 
     def __init__(self, device: halohome.Device) -> None:
         """Create a new HaloLight object."""
