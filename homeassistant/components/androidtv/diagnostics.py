@@ -66,12 +66,6 @@ async def async_get_config_entry_diagnostics(
             state_dict.pop("entity_id", None)
             # The context doesn't provide useful information in this case.
             state_dict.pop("context", None)
-            # Redact the `entity_picture` attribute as it contains a token.
-            if "entity_picture" in state_dict["attributes"]:
-                state_dict["attributes"] = {
-                    **state_dict["attributes"],
-                    "entity_picture": REDACTED,
-                }
 
         entity_dict = async_redact_data(
             {
