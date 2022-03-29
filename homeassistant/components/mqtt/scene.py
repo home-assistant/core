@@ -100,7 +100,6 @@ class MqttScene(
 
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        self.async_send_discovery_done()
 
     def _init_entity_id(self):
         """Set entity_id from object_id if defined in config."""
@@ -111,6 +110,7 @@ class MqttScene(
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
         await super().async_added_to_hass()
+        self.async_send_discovery_done()
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
