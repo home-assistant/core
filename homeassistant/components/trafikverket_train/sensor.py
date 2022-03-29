@@ -27,6 +27,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_utc, get_time_zone, parse_time
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, CONF_TRAINS, DOMAIN
+from .util import create_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,14 +187,8 @@ class TrainSensor(SensorEntity):
             name=name,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        timestr = "" if self._time is None else str(self._time)
-        return (
-            f"{self._from_station.casefold().replace(' ', '')}-{self._to_station.casefold().replace(' ', '')}"
-            f"-{timestr.casefold().replace(' ', '')}-{self._weekday}"
+        self._attr_unique_id = create_unique_id(
+            from_station, to_station, departuretime, weekday
         )
 
     async def async_update(self) -> None:

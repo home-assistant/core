@@ -61,6 +61,9 @@ async def test_form(hass: HomeAssistant) -> None:
         "weekday": ["mon", "fri"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    assert result2["result"].unique_id == "{}-{}-{}-{}".format(
+        "stockholmc", "uppsalac", "10:00", "['mon', 'fri']"
+    )
 
 
 async def test_import_flow_success(hass: HomeAssistant) -> None:

@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
+from .util import create_unique_id
 
 ERROR_INVALID_AUTH = "Source: Security, message: Invalid authentication"
 ERROR_INVALID_STATION = "Could not find a station with the specified name"
@@ -92,9 +93,8 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 train_to: str = self.entry.data[CONF_TO]
                 train_time: str = self.entry.data.get(CONF_TIME, "")
 
-                unique_id = (
-                    f"{train_from.casefold().replace(' ', '')}-{train_to.casefold().replace(' ', '')}"
-                    f"-{train_time.casefold().replace(' ', '')}-{self.entry.data[CONF_WEEKDAY]}"
+                unique_id = create_unique_id(
+                    train_from, train_to, train_time, self.entry.data[CONF_WEEKDAY]
                 )
 
                 if unique_id == self.entry.unique_id:
@@ -152,10 +152,8 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if bool(dt_util.parse_time(train_time) is None):
                         errors["base"] = "invalid_time"
                 if not errors:
-                    timestr = "" if train_time is None else train_time
-                    unique_id = (
-                        f"{train_from.casefold().replace(' ', '')}-{train_to.casefold().replace(' ', '')}"
-                        f"-{timestr.casefold().replace(' ', '')}-{train_days}"
+                    unique_id = create_unique_id(
+                        train_from, train_to, train_time, train_days
                     )
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
