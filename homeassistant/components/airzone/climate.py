@@ -119,9 +119,6 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
             self.get_zone_value(AZD_TEMP_UNIT)
         ]
-        self._attr_hvac_modes = [
-            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_zone_value(AZD_MODES)
-        ]
         self._async_update_attrs()
 
     async def _async_update_hvac_params(self, params) -> None:
@@ -184,4 +181,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         else:
             self._attr_hvac_action = CURRENT_HVAC_OFF
             self._attr_hvac_mode = HVAC_MODE_OFF
+        self._attr_hvac_modes = [
+            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_zone_value(AZD_MODES)
+        ]
         self._attr_target_temperature = self.get_zone_value(AZD_TEMP_SET)
