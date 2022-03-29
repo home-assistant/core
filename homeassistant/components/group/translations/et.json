@@ -1,10 +1,20 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "K\u00f5ik olemid",
+                    "entities": "Liikmed",
+                    "name": "Nimi"
+                },
+                "description": "Kui \"k\u00f5ik olemid\" on lubatud,on r\u00fchma olek sees ainult siis kui k\u00f5ik liikmed on sisse l\u00fclitatud. Kui \"k\u00f5ik olemid\" on keelatud, on r\u00fchma olek sees kui m\u00f5ni liige on sisse l\u00fclitatud.",
+                "title": "Uus r\u00fchm"
+            },
             "cover": {
                 "data": {
-                    "entities": "R\u00fchma liikmed",
-                    "name": "R\u00fchma nimi"
+                    "entities": "Liikmed",
+                    "name": "Nimi",
+                    "title": "Uus r\u00fchm"
                 },
                 "description": "R\u00fchmasuvandite valimine"
             },
@@ -16,8 +26,9 @@
             },
             "fan": {
                 "data": {
-                    "entities": "R\u00fchma liikmed",
-                    "name": "R\u00fchma nimi"
+                    "entities": "Liikmed",
+                    "name": "Nimi",
+                    "title": "Uus r\u00fchm"
                 },
                 "description": "R\u00fchmasuvandite valimine"
             },
@@ -35,8 +46,9 @@
             },
             "light": {
                 "data": {
-                    "entities": "R\u00fchma liikmed",
-                    "name": "R\u00fchma nimi"
+                    "entities": "Liikmed",
+                    "name": "Nimi",
+                    "title": "Uus r\u00fchm"
                 },
                 "description": "R\u00fchmasuvandite valimine"
             },
@@ -48,8 +60,9 @@
             },
             "media_player": {
                 "data": {
-                    "entities": "R\u00fchma liikmed",
-                    "name": "R\u00fchma nimi"
+                    "entities": "Liikmed",
+                    "name": "Nimi",
+                    "title": "Uus r\u00fchm"
                 },
                 "description": "R\u00fchmasuvandite valimine"
             },
@@ -58,6 +71,42 @@
                     "entities": "R\u00fchma liikmed"
                 },
                 "description": "R\u00fchmasuvandite valimine"
+            },
+            "user": {
+                "data": {
+                    "group_type": "R\u00fchma t\u00fc\u00fcp"
+                },
+                "title": "Uus r\u00fchm"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "K\u00f5ik olemid",
+                    "entities": "Liikmed"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Liikmed"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Liikmed"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Liikmed"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Liikmed"
+                }
             }
         }
     },

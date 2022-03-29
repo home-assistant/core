@@ -3,8 +3,10 @@ import re
 from unittest.mock import Mock
 from uuid import uuid4
 
-from homeassistant.components.alexa import config, smart_home
+from homeassistant.components.alexa import config, smart_home, smart_home_http
+from homeassistant.components.alexa.const import CONF_ENDPOINT, CONF_FILTER, CONF_LOCALE
 from homeassistant.core import Context, callback
+from homeassistant.helpers import entityfilter
 
 from tests.common import async_mock_service
 
@@ -13,7 +15,7 @@ TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
 TEST_LOCALE = "en-US"
 
 
-class MockConfig(config.AbstractConfig):
+class MockConfig(smart_home_http.AlexaConfig):
     """Mock Alexa config."""
 
     entity_config = {
@@ -26,7 +28,14 @@ class MockConfig(config.AbstractConfig):
 
     def __init__(self, hass):
         """Mock Alexa config."""
-        super().__init__(hass)
+        super().__init__(
+            hass,
+            {
+                CONF_ENDPOINT: TEST_URL,
+                CONF_FILTER: entityfilter.FILTER_SCHEMA({}),
+                CONF_LOCALE: TEST_LOCALE,
+            },
+        )
         self._store = Mock(spec_set=config.AlexaConfigStore)
 
     @property
@@ -34,24 +43,10 @@ class MockConfig(config.AbstractConfig):
         """Return if config supports auth."""
         return True
 
-    @property
-    def endpoint(self):
-        """Endpoint for report state."""
-        return TEST_URL
-
-    @property
-    def locale(self):
-        """Return config locale."""
-        return TEST_LOCALE
-
     @callback
     def user_identifier(self):
         """Return an identifier for the user that represents this config."""
         return "mock-user-id"
-
-    def should_expose(self, entity_id):
-        """If an entity should be exposed."""
-        return True
 
     @callback
     def async_invalidate_access_token(self):
@@ -65,9 +60,9 @@ class MockConfig(config.AbstractConfig):
         """Accept a grant."""
 
 
-def get_default_config():
+def get_default_config(hass):
     """Return a MockConfig instance."""
-    return MockConfig(None)
+    return MockConfig(hass)
 
 
 def get_new_request(namespace, name, endpoint=None):
@@ -117,7 +112,7 @@ async def assert_request_calls_service(
     calls = async_mock_service(hass, domain, service_name)
 
     msg = await smart_home.async_handle_message(
-        hass, get_default_config(), request, context
+        hass, get_default_config(hass), request, context
     )
     await hass.async_block_till_done()
 
@@ -142,7 +137,7 @@ async def assert_request_fails(
     domain, service_name = service_not_called.split(".")
     call = async_mock_service(hass, domain, service_name)
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert not call
@@ -201,7 +196,7 @@ async def reported_properties(hass, endpoint, return_full_response=False):
     assertions about the properties.
     """
     request = get_new_request("Alexa", "ReportState", endpoint)
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
     if return_full_response:
         return msg

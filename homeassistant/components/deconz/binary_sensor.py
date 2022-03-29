@@ -70,7 +70,7 @@ ENTITY_DESCRIPTIONS = {
     Alarm: [
         DeconzBinarySensorDescription(
             key="alarm",
-            value_fn=lambda device: device.alarm,
+            value_fn=lambda device: device.alarm,  # type: ignore[no-any-return]
             suffix="",
             update_key="alarm",
             device_class=BinarySensorDeviceClass.SAFETY,
@@ -79,7 +79,7 @@ ENTITY_DESCRIPTIONS = {
     CarbonMonoxide: [
         DeconzBinarySensorDescription(
             key="carbon_monoxide",
-            value_fn=lambda device: device.carbon_monoxide,
+            value_fn=lambda device: device.carbon_monoxide,  # type: ignore[no-any-return]
             suffix="",
             update_key="carbonmonoxide",
             device_class=BinarySensorDeviceClass.CO,
@@ -88,14 +88,14 @@ ENTITY_DESCRIPTIONS = {
     Fire: [
         DeconzBinarySensorDescription(
             key="fire",
-            value_fn=lambda device: device.fire,
+            value_fn=lambda device: device.fire,  # type: ignore[no-any-return]
             suffix="",
             update_key="fire",
             device_class=BinarySensorDeviceClass.SMOKE,
         ),
         DeconzBinarySensorDescription(
             key="in_test_mode",
-            value_fn=lambda device: device.in_test_mode,
+            value_fn=lambda device: device.in_test_mode,  # type: ignore[no-any-return]
             suffix="Test Mode",
             update_key="test",
             device_class=BinarySensorDeviceClass.SMOKE,
@@ -105,7 +105,7 @@ ENTITY_DESCRIPTIONS = {
     GenericFlag: [
         DeconzBinarySensorDescription(
             key="flag",
-            value_fn=lambda device: device.flag,
+            value_fn=lambda device: device.flag,  # type: ignore[no-any-return]
             suffix="",
             update_key="flag",
         )
@@ -113,7 +113,7 @@ ENTITY_DESCRIPTIONS = {
     OpenClose: [
         DeconzBinarySensorDescription(
             key="open",
-            value_fn=lambda device: device.open,
+            value_fn=lambda device: device.open,  # type: ignore[no-any-return]
             suffix="",
             update_key="open",
             device_class=BinarySensorDeviceClass.OPENING,
@@ -122,7 +122,7 @@ ENTITY_DESCRIPTIONS = {
     Presence: [
         DeconzBinarySensorDescription(
             key="presence",
-            value_fn=lambda device: device.presence,
+            value_fn=lambda device: device.presence,  # type: ignore[no-any-return]
             suffix="",
             update_key="presence",
             device_class=BinarySensorDeviceClass.MOTION,
@@ -131,7 +131,7 @@ ENTITY_DESCRIPTIONS = {
     Vibration: [
         DeconzBinarySensorDescription(
             key="vibration",
-            value_fn=lambda device: device.vibration,
+            value_fn=lambda device: device.vibration,  # type: ignore[no-any-return]
             suffix="",
             update_key="vibration",
             device_class=BinarySensorDeviceClass.VIBRATION,
@@ -140,7 +140,7 @@ ENTITY_DESCRIPTIONS = {
     Water: [
         DeconzBinarySensorDescription(
             key="water",
-            value_fn=lambda device: device.water,
+            value_fn=lambda device: device.water,  # type: ignore[no-any-return]
             suffix="",
             update_key="water",
             device_class=BinarySensorDeviceClass.MOISTURE,
@@ -151,7 +151,7 @@ ENTITY_DESCRIPTIONS = {
 BINARY_SENSOR_DESCRIPTIONS = [
     DeconzBinarySensorDescription(
         key="tampered",
-        value_fn=lambda device: device.tampered,
+        value_fn=lambda device: device.tampered,  # type: ignore[no-any-return]
         suffix="Tampered",
         update_key="tampered",
         device_class=BinarySensorDeviceClass.TAMPER,
@@ -159,7 +159,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
     ),
     DeconzBinarySensorDescription(
         key="low_battery",
-        value_fn=lambda device: device.low_battery,
+        value_fn=lambda device: device.low_battery,  # type: ignore[no-any-return]
         suffix="Low Battery",
         update_key="lowbattery",
         device_class=BinarySensorDeviceClass.BATTERY,
@@ -266,10 +266,10 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, bool | float | int | list | None]:
         """Return the state attributes of the sensor."""
-        if self.entity_description.key not in PROVIDES_EXTRA_ATTRIBUTES:
-            return
-
         attr: dict[str, bool | float | int | list | None] = {}
+
+        if self.entity_description.key not in PROVIDES_EXTRA_ATTRIBUTES:
+            return attr
 
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on

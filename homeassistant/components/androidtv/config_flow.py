@@ -8,7 +8,7 @@ from androidtv import state_detection_rules_validator
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
@@ -20,7 +20,6 @@ from .const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
-    CONF_MIGRATION_OPTIONS,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
@@ -71,10 +70,6 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-
-    def __init__(self):
-        """Initialize AndroidTV config flow."""
-        self._import_options = None
 
     @callback
     def _show_setup_form(self, user_input=None, error=None):
@@ -169,25 +164,12 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME) or host,
+                    title=host,
                     data=user_input,
-                    options=self._import_options,
                 )
 
         user_input = user_input or {}
         return self._show_setup_form(user_input, error)
-
-    async def async_step_import(self, import_config=None):
-        """Import a config entry."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
-                _LOGGER.warning(
-                    "Host [%s] already configured. This yaml configuration has already been imported. Please remove it",
-                    import_config[CONF_HOST],
-                )
-                return self.async_abort(reason="already_configured")
-        self._import_options = import_config.pop(CONF_MIGRATION_OPTIONS, None)
-        return await self.async_step_user(import_config)
 
     @staticmethod
     @callback

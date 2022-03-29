@@ -1,10 +1,20 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Alle enheter",
+                    "entities": "Medlemmer",
+                    "name": "Navn"
+                },
+                "description": "Hvis \"alle enheter\" er aktivert, er gruppens tilstand p\u00e5 bare hvis alle medlemmene er p\u00e5. Hvis \"alle enheter\" er deaktivert, er gruppens tilstand p\u00e5 hvis et medlem er p\u00e5.",
+                "title": "Ny gruppe"
+            },
             "cover": {
                 "data": {
-                    "entities": "Gruppemedlemmer",
-                    "name": "Gruppenavn"
+                    "entities": "Medlemmer",
+                    "name": "Navn",
+                    "title": "Ny gruppe"
                 },
                 "description": "Velg gruppealternativer"
             },
@@ -16,8 +26,9 @@
             },
             "fan": {
                 "data": {
-                    "entities": "Gruppemedlemmer",
-                    "name": "Gruppenavn"
+                    "entities": "Medlemmer",
+                    "name": "Navn",
+                    "title": "Ny gruppe"
                 },
                 "description": "Velg gruppealternativer"
             },
@@ -35,8 +46,9 @@
             },
             "light": {
                 "data": {
-                    "entities": "Gruppemedlemmer",
-                    "name": "Gruppenavn"
+                    "entities": "Medlemmer",
+                    "name": "Navn",
+                    "title": "Ny gruppe"
                 },
                 "description": "Velg gruppealternativer"
             },
@@ -48,8 +60,9 @@
             },
             "media_player": {
                 "data": {
-                    "entities": "Gruppemedlemmer",
-                    "name": "Gruppenavn"
+                    "entities": "Medlemmer",
+                    "name": "Navn",
+                    "title": "Ny gruppe"
                 },
                 "description": "Velg gruppealternativer"
             },
@@ -58,6 +71,42 @@
                     "entities": "Gruppemedlemmer"
                 },
                 "description": "Velg gruppealternativer"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Gruppetype"
+                },
+                "title": "Ny gruppe"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "Alle enheter",
+                    "entities": "Medlemmer"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Medlemmer"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Medlemmer"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Medlemmer"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Medlemmer"
+                }
             }
         }
     },

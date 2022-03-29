@@ -139,7 +139,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class HWEnergySensor(CoordinatorEntity, SensorEntity):
+class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorEntity):
     """Representation of a HomeWizard Sensor."""
 
     coordinator: HWEnergyDeviceUpdateCoordinator

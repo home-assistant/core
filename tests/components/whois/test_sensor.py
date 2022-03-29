@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 @pytest.mark.freeze_time("2022-01-01 12:00:00", tz_offset=0)
 async def test_whois_sensors(
     hass: HomeAssistant,
-    enable_all_entities: AsyncMock,
+    entity_registry_enabled_by_default: AsyncMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Whois sensors."""
@@ -146,7 +146,7 @@ async def test_whois_sensors(
 @pytest.mark.freeze_time("2022-01-01 12:00:00", tz_offset=0)
 async def test_whois_sensors_missing_some_attrs(
     hass: HomeAssistant,
-    enable_all_entities: AsyncMock,
+    entity_registry_enabled_by_default: AsyncMock,
     init_integration_missing_some_attrs: MockConfigEntry,
 ) -> None:
     """Test the Whois sensors with owner and reseller missing."""
@@ -213,7 +213,7 @@ async def test_disabled_by_default_sensors(
 async def test_no_data(
     hass: HomeAssistant,
     mock_whois: MagicMock,
-    enable_all_entities: AsyncMock,
+    entity_registry_enabled_by_default: AsyncMock,
     init_integration: MockConfigEntry,
     entity_id: str,
 ) -> None:
