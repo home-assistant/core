@@ -243,7 +243,11 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
     async def async_added_to_hass(self) -> None:
         """Wait for start so origin and destination entities can be resolved."""
         await super().async_added_to_hass()
-        async_at_start(self.hass, lambda hass: self.async_update())
+
+        async def _update_at_start(_):
+            await self.async_update()
+
+        async_at_start(self.hass, _update_at_start)
 
     @property
     def native_value(self) -> str | None:
@@ -279,7 +283,8 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
     @property
     def attribution(self) -> str | None:
         """Return the attribution."""
-        return self.coordinator.data.get(ATTR_ATTRIBUTION)
+        if self.coordinator.data is not None:
+            return self.coordinator.data.get(ATTR_ATTRIBUTION)
 
     @property
     def icon(self) -> str:
