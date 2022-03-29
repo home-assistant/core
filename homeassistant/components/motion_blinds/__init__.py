@@ -91,7 +91,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch the latest data from the gateway and blinds."""
-        async with self._api_lock:
+        async with self.api_lock:
             data = await self.hass.async_add_executor_job(self.update_gateway)
 
         all_available = all(device[ATTR_AVAILABLE] for device in data.values())
