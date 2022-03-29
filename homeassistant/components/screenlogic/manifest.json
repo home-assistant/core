@@ -8,7 +8,7 @@
   "dhcp": [
     {"registered_devices": true},
     {
-      "hostname": "pentair: *",
+      "hostname": "pentair*",
       "macaddress": "00C033*"
     }
   ],
