@@ -12,11 +12,12 @@ from homeassistant.components.select.const import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
-from homeassistant.core import Event, callback, split_entity_id
+from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -26,15 +27,32 @@ from .const import (
     CONF_METER,
     CONF_TARIFFS,
     DATA_LEGACY_COMPONENT,
-    DOMAIN,
-    SERVICE_RESET,
     SERVICE_SELECT_NEXT_TARIFF,
     SERVICE_SELECT_TARIFF,
-    SIGNAL_RESET_METER,
     TARIFF_ICON,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Utility Meter config entry."""
+    name = config_entry.title
+
+    # Remove when frontend list selector is available
+    if not config_entry.options.get(CONF_TARIFFS):
+        tariffs = []
+    else:
+        tariffs = config_entry.options[CONF_TARIFFS].split(",")
+
+    legacy_add_entities = None
+    unique_id = config_entry.entry_id
+    tariff_select = TariffSelect(name, tariffs, legacy_add_entities, unique_id)
+    async_add_entities([tariff_select])
 
 
 async def async_setup_platform(hass, conf, async_add_entities, discovery_info=None):
@@ -46,33 +64,9 @@ async def async_setup_platform(hass, conf, async_add_entities, discovery_info=No
                 discovery_info[CONF_METER],
                 discovery_info[CONF_TARIFFS],
                 legacy_component.async_add_entities,
+                None,
             )
         ]
-    )
-
-    async def async_reset_meters(service_call):
-        """Reset all sensors of a meter."""
-        entity_id = service_call.data["entity_id"]
-
-        domain = split_entity_id(entity_id)[0]
-        if domain == DOMAIN:
-            for entity in legacy_component.entities:
-                if entity_id == entity.entity_id:
-                    _LOGGER.debug(
-                        "forward reset meter from %s to %s",
-                        entity_id,
-                        entity.tracked_entity_id,
-                    )
-                    entity_id = entity.tracked_entity_id
-
-        _LOGGER.debug("reset meter %s", entity_id)
-        async_dispatcher_send(hass, SIGNAL_RESET_METER, entity_id)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_RESET,
-        async_reset_meters,
-        vol.Schema({ATTR_ENTITY_ID: cv.entity_id}),
     )
 
     legacy_component.async_register_entity_service(
@@ -89,9 +83,10 @@ async def async_setup_platform(hass, conf, async_add_entities, discovery_info=No
 class TariffSelect(SelectEntity, RestoreEntity):
     """Representation of a Tariff selector."""
 
-    def __init__(self, name, tariffs, add_legacy_entities):
+    def __init__(self, name, tariffs, add_legacy_entities, unique_id):
         """Initialize a tariff selector."""
         self._attr_name = name
+        self._attr_unique_id = unique_id
         self._current_tariff = None
         self._tariffs = tariffs
         self._attr_icon = TARIFF_ICON
@@ -112,7 +107,8 @@ class TariffSelect(SelectEntity, RestoreEntity):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
 
-        await self._add_legacy_entities([LegacyTariffSelect(self.entity_id)])
+        if self._add_legacy_entities:
+            await self._add_legacy_entities([LegacyTariffSelect(self.entity_id)])
 
         state = await self.async_get_last_state()
         if not state or state.state not in self._tariffs:

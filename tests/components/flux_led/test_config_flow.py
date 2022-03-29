@@ -12,7 +12,6 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
     CONF_MINOR_VERSION,
-    CONF_MODEL,
     CONF_MODEL_DESCRIPTION,
     CONF_MODEL_INFO,
     CONF_MODEL_NUM,
@@ -23,7 +22,7 @@ from homeassistant.components.flux_led.const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
-from homeassistant.const import CONF_DEVICE, CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 

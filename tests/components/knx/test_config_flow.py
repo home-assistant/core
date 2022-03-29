@@ -2,12 +2,10 @@
 from unittest.mock import patch
 
 import pytest
-from xknx import XKNX
 from xknx.io import DEFAULT_MCAST_GRP
 from xknx.io.gateway_scanner import GatewayDescriptor
 
 from homeassistant import config_entries
-from homeassistant.components.knx import ConnectionSchema
 from homeassistant.components.knx.config_flow import (
     CONF_DEFAULT_LOCAL_IP,
     CONF_KNX_GATEWAY,
@@ -22,7 +20,13 @@ from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
     CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_LOCAL_IP,
+    CONF_KNX_MCAST_GRP,
+    CONF_KNX_MCAST_PORT,
+    CONF_KNX_RATE_LIMIT,
+    CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
+    CONF_KNX_STATE_UPDATER,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     DOMAIN,
@@ -89,8 +93,8 @@ async def test_routing_setup(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_MCAST_PORT: 3675,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "1.1.110",
             },
         )
@@ -100,9 +104,9 @@ async def test_routing_setup(hass: HomeAssistant) -> None:
         assert result3["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-            ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+            CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+            CONF_KNX_MCAST_PORT: 3675,
+            CONF_KNX_LOCAL_IP: None,
             CONF_KNX_INDIVIDUAL_ADDRESS: "1.1.110",
         }
 
@@ -141,10 +145,10 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_MCAST_PORT: 3675,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "1.1.110",
-                ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
+                CONF_KNX_LOCAL_IP: "192.168.1.112",
             },
         )
         await hass.async_block_till_done()
@@ -153,9 +157,9 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
         assert result3["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-            ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
+            CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+            CONF_KNX_MCAST_PORT: 3675,
+            CONF_KNX_LOCAL_IP: "192.168.1.112",
             CONF_KNX_INDIVIDUAL_ADDRESS: "1.1.110",
         }
 
@@ -177,8 +181,8 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_KNX_ROUTE_BACK: False,
+                CONF_KNX_LOCAL_IP: None,
             },
         ),
         (
@@ -193,8 +197,8 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_KNX_ROUTE_BACK: False,
+                CONF_KNX_LOCAL_IP: None,
             },
         ),
         (
@@ -209,8 +213,8 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: True,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_KNX_ROUTE_BACK: True,
+                CONF_KNX_LOCAL_IP: None,
             },
         ),
     ],
@@ -291,7 +295,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
                 CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
                 CONF_HOST: "192.168.0.2",
                 CONF_PORT: 3675,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
+                CONF_KNX_LOCAL_IP: "192.168.1.112",
             },
         )
         await hass.async_block_till_done()
@@ -303,8 +307,8 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
             CONF_HOST: "192.168.0.2",
             CONF_PORT: 3675,
             CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-            ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
-            ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
+            CONF_KNX_ROUTE_BACK: False,
+            CONF_KNX_LOCAL_IP: "192.168.1.112",
         }
 
         assert len(mock_setup_entry.mock_calls) == 1
@@ -361,8 +365,8 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
             CONF_HOST: "192.168.0.1",
             CONF_PORT: 3675,
             CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-            ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
-            ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+            CONF_KNX_ROUTE_BACK: False,
+            CONF_KNX_LOCAL_IP: None,
         }
 
         assert len(mock_setup_entry.mock_calls) == 1
@@ -422,191 +426,6 @@ async def test_form_with_automatic_connection_handling(hass: HomeAssistant) -> N
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-##
-# Import Tests
-##
-async def test_import_config_tunneling(hass: HomeAssistant) -> None:
-    """Test tunneling import from config.yaml."""
-    config = {
-        CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
-        ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_STATE_UPDATER: True,  # has a default in the original config
-        CONF_KNX_TUNNELING: {
-            CONF_HOST: "192.168.1.1",
-            CONF_PORT: 3675,
-            ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
-            ConnectionSchema.CONF_KNX_ROUTE_BACK: True,
-        },
-    }
-
-    with patch(
-        "homeassistant.components.knx.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Tunneling @ 192.168.1.1"
-        assert result["data"] == {
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
-            CONF_HOST: "192.168.1.1",
-            CONF_PORT: 3675,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-            ConnectionSchema.CONF_KNX_ROUTE_BACK: True,
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
-            ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
-            ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-            ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-        }
-
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_config_routing(hass: HomeAssistant) -> None:
-    """Test routing import from config.yaml."""
-    config = {
-        CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_STATE_UPDATER: True,  # has a default in the original config
-        CONF_KNX_ROUTING: {},  # is required when using routing
-    }
-
-    with patch(
-        "homeassistant.components.knx.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONF_KNX_ROUTING.capitalize()
-        assert result["data"] == {
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-            ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
-            ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
-        }
-
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_config_automatic(hass: HomeAssistant) -> None:
-    """Test automatic import from config.yaml."""
-    config = {
-        CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_STATE_UPDATER: True,  # has a default in the original config
-    }
-
-    with patch(
-        "homeassistant.components.knx.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONF_KNX_AUTOMATIC.capitalize()
-        assert result["data"] == {
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-            ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
-            ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
-        }
-
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_rate_limit_out_of_range(hass: HomeAssistant) -> None:
-    """Test automatic import from config.yaml."""
-    config = {
-        CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_RATE_LIMIT: 80,
-        ConnectionSchema.CONF_KNX_STATE_UPDATER: True,  # has a default in the original config
-    }
-
-    with patch(
-        "homeassistant.components.knx.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONF_KNX_AUTOMATIC.capitalize()
-        assert result["data"] == {
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-            ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
-            ConnectionSchema.CONF_KNX_RATE_LIMIT: 60,
-        }
-
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_options(hass: HomeAssistant) -> None:
-    """Test import from config.yaml with options."""
-    config = {
-        CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,  # has a default in the original config
-        ConnectionSchema.CONF_KNX_STATE_UPDATER: False,
-        ConnectionSchema.CONF_KNX_RATE_LIMIT: 30,
-    }
-
-    with patch(
-        "homeassistant.components.knx.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONF_KNX_AUTOMATIC.capitalize()
-        assert result["data"] == {
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-            ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: False,
-            ConnectionSchema.CONF_KNX_RATE_LIMIT: 30,
-        }
-
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_abort_if_entry_exists_already(hass: HomeAssistant) -> None:
-    """Test routing import from config.yaml."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
-
-
 async def test_options_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -629,8 +448,8 @@ async def test_options_flow(
             user_input={
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
             },
         )
 
@@ -642,11 +461,11 @@ async def test_options_flow(
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
             CONF_HOST: "",
-            ConnectionSchema.CONF_KNX_LOCAL_IP: None,
-            ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
+            CONF_KNX_LOCAL_IP: None,
+            CONF_KNX_MCAST_PORT: 3675,
+            CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+            CONF_KNX_RATE_LIMIT: 20,
+            CONF_KNX_STATE_UPDATER: True,
         }
 
 
@@ -662,14 +481,14 @@ async def test_options_flow(
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
-                ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_RATE_LIMIT: 20,
+                CONF_KNX_STATE_UPDATER: True,
+                CONF_KNX_LOCAL_IP: None,
                 CONF_HOST: "192.168.1.1",
                 CONF_PORT: 3675,
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: True,
+                CONF_KNX_ROUTE_BACK: True,
             },
         ),
         (
@@ -681,14 +500,14 @@ async def test_options_flow(
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
-                ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_RATE_LIMIT: 20,
+                CONF_KNX_STATE_UPDATER: True,
+                CONF_KNX_LOCAL_IP: None,
                 CONF_HOST: "192.168.1.1",
                 CONF_PORT: 3675,
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
+                CONF_KNX_ROUTE_BACK: False,
             },
         ),
         (
@@ -700,14 +519,14 @@ async def test_options_flow(
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
-                ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_RATE_LIMIT: 20,
+                CONF_KNX_STATE_UPDATER: True,
+                CONF_KNX_LOCAL_IP: None,
                 CONF_HOST: "192.168.1.1",
                 CONF_PORT: 3675,
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
+                CONF_KNX_ROUTE_BACK: False,
             },
         ),
     ],
@@ -737,8 +556,8 @@ async def test_tunneling_options_flow(
             user_input={
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
             },
         )
 
@@ -765,42 +584,42 @@ async def test_tunneling_options_flow(
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                ConnectionSchema.CONF_KNX_RATE_LIMIT: 25,
-                ConnectionSchema.CONF_KNX_STATE_UPDATER: False,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
+                CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_RATE_LIMIT: 25,
+                CONF_KNX_STATE_UPDATER: False,
+                CONF_KNX_LOCAL_IP: "192.168.1.112",
             },
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
                 CONF_HOST: "",
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                ConnectionSchema.CONF_KNX_RATE_LIMIT: 25,
-                ConnectionSchema.CONF_KNX_STATE_UPDATER: False,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
+                CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_RATE_LIMIT: 25,
+                CONF_KNX_STATE_UPDATER: False,
+                CONF_KNX_LOCAL_IP: "192.168.1.112",
             },
         ),
         (
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                ConnectionSchema.CONF_KNX_RATE_LIMIT: 25,
-                ConnectionSchema.CONF_KNX_STATE_UPDATER: False,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: CONF_DEFAULT_LOCAL_IP,
+                CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_RATE_LIMIT: 25,
+                CONF_KNX_STATE_UPDATER: False,
+                CONF_KNX_LOCAL_IP: CONF_DEFAULT_LOCAL_IP,
             },
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
                 CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
                 CONF_HOST: "",
-                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                ConnectionSchema.CONF_KNX_RATE_LIMIT: 25,
-                ConnectionSchema.CONF_KNX_STATE_UPDATER: False,
-                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                CONF_KNX_RATE_LIMIT: 25,
+                CONF_KNX_STATE_UPDATER: False,
+                CONF_KNX_LOCAL_IP: None,
             },
         ),
     ],
@@ -843,21 +662,21 @@ async def test_advanced_options(
         (
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
+                CONF_KNX_ROUTE_BACK: False,
             },
             CONF_KNX_LABEL_TUNNELING_UDP,
         ),
         (
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: True,
+                CONF_KNX_ROUTE_BACK: True,
             },
             CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK,
         ),
         (
             {
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
+                CONF_KNX_ROUTE_BACK: False,
             },
             CONF_KNX_LABEL_TUNNELING_TCP,
         ),
