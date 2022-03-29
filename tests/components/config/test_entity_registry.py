@@ -293,7 +293,7 @@ async def test_update_entity(hass, client):
     # UPDATE ENTITY OPTION
     await client.send_json(
         {
-            "id": 9,
+            "id": 10,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "options_domain": "sensor",
@@ -313,6 +313,7 @@ async def test_update_entity(hass, client):
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
+            "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "name": "after update",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
