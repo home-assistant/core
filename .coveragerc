@@ -861,6 +861,7 @@ omit =
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
     homeassistant/components/overkiz/__init__.py
+    homeassistant/components/overkiz/alarm_control_panel.py
     homeassistant/components/overkiz/binary_sensor.py
     homeassistant/components/overkiz/button.py
     homeassistant/components/overkiz/climate.py
@@ -1272,6 +1273,7 @@ omit =
     homeassistant/components/tradfri/switch.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
+    homeassistant/components/trafikverket_weatherstation/coordinator.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
     homeassistant/components/transmission/sensor.py
     homeassistant/components/transmission/switch.py

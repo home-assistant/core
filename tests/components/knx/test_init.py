@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
                 CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             },
-            ConnectionConfig(),
+            ConnectionConfig(threaded=True),
         ),
         (
             {
@@ -36,7 +36,9 @@ from tests.common import MockConfigEntry
                 ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.1",
             },
             ConnectionConfig(
-                connection_type=ConnectionType.ROUTING, local_ip="192.168.1.1"
+                connection_type=ConnectionType.ROUTING,
+                local_ip="192.168.1.1",
+                threaded=True,
             ),
         ),
         (
@@ -54,6 +56,7 @@ from tests.common import MockConfigEntry
                 gateway_port=3675,
                 local_ip="192.168.1.112",
                 auto_reconnect=True,
+                threaded=True,
             ),
         ),
     ],
