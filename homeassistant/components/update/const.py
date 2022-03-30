@@ -14,6 +14,7 @@ class UpdateEntityFeature(IntEnum):
     SPECIFIC_VERSION = 2
     PROGRESS = 4
     BACKUP = 8
+    RELEASE_NOTES = 16
 
 
 SERVICE_INSTALL: Final = "install"

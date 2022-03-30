@@ -154,6 +154,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Oldest Recording",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         ufp_value="stats.video.recording_start",
     ),
     ProtectSensorEntityDescription(

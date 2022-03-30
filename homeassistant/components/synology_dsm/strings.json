@@ -3,7 +3,6 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "title": "Synology DSM",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -20,7 +19,6 @@
         }
       },
       "link": {
-        "title": "Synology DSM",
         "description": "Do you want to setup {name} ({host})?",
         "data": {
           "ssl": "[%key:common::config_flow::data::ssl%]",

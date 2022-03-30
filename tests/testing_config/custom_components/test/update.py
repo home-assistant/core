@@ -62,6 +62,10 @@ class MockUpdateEntity(MockEntity, UpdateEntity):
             self._values["current_version"] = self.latest_version
             _LOGGER.info("Installed latest update")
 
+    def release_notes(self) -> str | None:
+        """Return the release notes of the latest version."""
+        return "Release notes"
+
 
 def init(empty=False):
     """Initialize the platform with entities."""
@@ -123,6 +127,13 @@ def init(empty=False):
                 unique_id="no_install",
                 current_version="1.0.0",
                 latest_version="1.0.1",
+            ),
+            MockUpdateEntity(
+                name="Update with release notes",
+                unique_id="with_release_notes",
+                current_version="1.0.0",
+                latest_version="1.0.1",
+                supported_features=UpdateEntityFeature.RELEASE_NOTES,
             ),
         ]
     )

@@ -11,6 +11,7 @@ from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -22,7 +23,6 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_link_local
 
 from .const import (
-    CONF_MODEL,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
