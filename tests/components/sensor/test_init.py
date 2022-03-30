@@ -350,19 +350,64 @@ async def test_restore_sensor_restore_state(
 
 
 @pytest.mark.parametrize(
-    "native_unit,custom_unit,state_unit,native_value,custom_value",
+    "device_class,native_unit,custom_unit,state_unit,native_value,custom_value",
     [
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
-        (PRESSURE_HPA, PRESSURE_INHG, PRESSURE_INHG, 1000.0, 29.53),
-        (PRESSURE_KPA, PRESSURE_HPA, PRESSURE_HPA, 1.234, 12.34),
-        (PRESSURE_HPA, PRESSURE_MMHG, PRESSURE_MMHG, 1000, 750),
+        (
+            SensorDeviceClass.PRESSURE,
+            PRESSURE_HPA,
+            PRESSURE_INHG,
+            PRESSURE_INHG,
+            1000.0,
+            29.53,
+        ),
+        (
+            SensorDeviceClass.PRESSURE,
+            PRESSURE_KPA,
+            PRESSURE_HPA,
+            PRESSURE_HPA,
+            1.234,
+            12.34,
+        ),
+        (
+            SensorDeviceClass.PRESSURE,
+            PRESSURE_HPA,
+            PRESSURE_MMHG,
+            PRESSURE_MMHG,
+            1000,
+            750,
+        ),
         # Not a supported pressure unit
-        (PRESSURE_HPA, "peer_pressure", PRESSURE_HPA, 1000, 1000),
+        (
+            SensorDeviceClass.PRESSURE,
+            PRESSURE_HPA,
+            "peer_pressure",
+            PRESSURE_HPA,
+            1000,
+            1000,
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE,
+            TEMP_CELSIUS,
+            TEMP_FAHRENHEIT,
+            TEMP_FAHRENHEIT,
+            37.5,
+            99.5,
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE,
+            TEMP_FAHRENHEIT,
+            TEMP_CELSIUS,
+            TEMP_CELSIUS,
+            100,
+            38.0,
+        ),
     ],
 )
 async def test_custom_unit(
     hass,
     enable_custom_integrations,
+    device_class,
     native_unit,
     custom_unit,
     state_unit,
@@ -384,7 +429,7 @@ async def test_custom_unit(
         name="Test",
         native_value=str(native_value),
         native_unit_of_measurement=native_unit,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=device_class,
         unique_id="very_unique",
     )
 
