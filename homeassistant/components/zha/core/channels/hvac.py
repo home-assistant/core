@@ -90,7 +90,7 @@ class ThermostatChannel(ZigbeeChannel):
     """Thermostat channel."""
 
     REPORT_CONFIG = (
-        {"attr": "local_temp", "config": REPORT_CONFIG_CLIMATE},
+        {"attr": "local_temperature", "config": REPORT_CONFIG_CLIMATE},
         {"attr": "occupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
         {"attr": "occupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
         {"attr": "unoccupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
@@ -107,7 +107,7 @@ class ThermostatChannel(ZigbeeChannel):
         "abs_max_heat_setpoint_limit": True,
         "abs_min_cool_setpoint_limit": True,
         "abs_max_cool_setpoint_limit": True,
-        "ctrl_seqe_of_oper": False,
+        "ctrl_sequence_of_oper": False,
         "max_cool_setpoint_limit": True,
         "max_heat_setpoint_limit": True,
         "min_cool_setpoint_limit": True,
@@ -135,9 +135,9 @@ class ThermostatChannel(ZigbeeChannel):
         return self.cluster.get("abs_min_heat_setpoint_limit", 700)
 
     @property
-    def ctrl_seqe_of_oper(self) -> int:
+    def ctrl_sequence_of_oper(self) -> int:
         """Control Sequence of operations attribute."""
-        return self.cluster.get("ctrl_seqe_of_oper", 0xFF)
+        return self.cluster.get("ctrl_sequence_of_oper", 0xFF)
 
     @property
     def max_cool_setpoint_limit(self) -> int:
@@ -172,9 +172,9 @@ class ThermostatChannel(ZigbeeChannel):
         return sp_limit
 
     @property
-    def local_temp(self) -> int | None:
+    def local_temperature(self) -> int | None:
         """Thermostat temperature."""
-        return self.cluster.get("local_temp")
+        return self.cluster.get("local_temperature")
 
     @property
     def occupancy(self) -> int | None:

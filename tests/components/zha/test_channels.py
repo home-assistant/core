@@ -130,7 +130,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
             0x0201,
             1,
             {
-                "local_temp",
+                "local_temperature",
                 "occupied_cooling_setpoint",
                 "occupied_heating_setpoint",
                 "unoccupied_cooling_setpoint",
