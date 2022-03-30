@@ -73,6 +73,7 @@ FLOWS = {
         "dexcom",
         "dialogflow",
         "directv",
+        "discord",
         "dlna_dmr",
         "dlna_dms",
         "dnsip",
