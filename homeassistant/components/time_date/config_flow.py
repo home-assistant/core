@@ -7,7 +7,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
     HelperFlowFormStep,
@@ -67,7 +66,3 @@ class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
         unique_id = options[CONF_DISPLAY_OPTION]
         self.async_set_unique_id_cb(unique_id)
         self._abort_if_unique_id_configured()
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle import from configuration.yaml."""
-        return await self.async_step_user(user_input)

@@ -7,7 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -16,11 +16,12 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_DISPLAY_OPTION, DOMAIN, OPTION_TYPES
+from .const import CONF_DISPLAY_OPTION, OPTION_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 TIME_STR_FORMAT = "%H:%M"
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -38,16 +39,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up Time & Date sensors."""
-    for option in config[CONF_DISPLAY_OPTIONS]:
-        if not option:
-            continue
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={CONF_DISPLAY_OPTION: option},
-            )
-        )
+    async_add_entities(
+        [
+            TimeDateSensor(hass, variable, None)
+            for variable in config[CONF_DISPLAY_OPTIONS]
+        ]
+    )
 
 
 async def async_setup_entry(
