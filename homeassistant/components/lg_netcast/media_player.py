@@ -47,9 +47,6 @@ DEFAULT_NAME = "LG TV Remote"
 
 CONF_ON_ACTION = "turn_on_action"
 
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 SUPPORT_LGTV = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_STEP
@@ -122,7 +119,6 @@ class LgTVDevice(MediaPlayerEntity):
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data from the LG TV."""
 
