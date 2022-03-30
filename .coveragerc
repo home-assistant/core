@@ -217,6 +217,7 @@ omit =
     homeassistant/components/digital_ocean/*
     homeassistant/components/digitalloggers/switch.py
     homeassistant/components/discogs/sensor.py
+    homeassistant/components/discord/__init__.py
     homeassistant/components/discord/notify.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
@@ -1378,6 +1379,9 @@ omit =
     homeassistant/components/volumio/browse_media.py
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
+    homeassistant/components/vulcan/__init__.py
+    homeassistant/components/vulcan/calendar.py
+    homeassistant/components/vulcan/fetch_data.py
     homeassistant/components/w800rf32/*
     homeassistant/components/waqi/sensor.py
     homeassistant/components/waterfurnace/*

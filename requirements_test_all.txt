@@ -91,7 +91,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.2.1
+aioairzone==0.2.3
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -714,6 +714,9 @@ nettigo-air-monitor==1.2.1
 # homeassistant.components.nexia
 nexia==0.9.13
 
+# homeassistant.components.discord
+nextcord==2.0.0a8
+
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
 
@@ -813,7 +816,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.16.8
+plugwise==0.16.9
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1253,7 +1256,7 @@ python-songpal==0.14.1
 python-tado==0.12.0
 
 # homeassistant.components.awair
-python_awair==0.2.1
+python_awair==0.2.3
 
 # homeassistant.components.tile
 pytile==2022.02.0
@@ -1437,7 +1440,7 @@ stookalert==0.1.4
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.4.2
+subarulink==0.5.0
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
@@ -1514,7 +1517,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.11.0
 
 # homeassistant.components.rdw
-vehicle==0.3.1
+vehicle==0.4.0
 
 # homeassistant.components.velbus
 velbus-aio==2022.2.4
@@ -1527,6 +1530,9 @@ vilfo-api-client==0.3.2
 
 # homeassistant.components.verisure
 vsure==1.7.3
+
+# homeassistant.components.vulcan
+vulcan-api==2.0.3
 
 # homeassistant.components.vultr
 vultr==0.1.2

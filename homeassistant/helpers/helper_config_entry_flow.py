@@ -14,7 +14,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import FlowResult, UnknownHandler
 
-from . import entity_registry as er
+from . import entity_registry as er, selector
 
 
 class HelperFlowError(Exception):
@@ -27,7 +27,10 @@ class HelperFlowFormStep:
 
     # Optional schema for requesting and validating user input. If schema validation
     # fails, the step will be retried. If the schema is None, no user input is requested.
-    schema: vol.Schema | None
+    schema: vol.Schema | Callable[
+        [HelperConfigFlowHandler | HelperOptionsFlowHandler, dict[str, Any]],
+        vol.Schema | None,
+    ] | None
 
     # Optional function to validate user input.
     # The validate_user_input function is called if the schema validates successfully.
@@ -41,6 +44,20 @@ class HelperFlowFormStep:
     # options and user input from previous steps.
     # If next_step returns None, the flow is ended with RESULT_TYPE_CREATE_ENTRY.
     next_step: Callable[[dict[str, Any]], str | None] = lambda _: None
+
+    # Optional function to allow amending a form schema.
+    # The update_form_schema function is called before async_show_form is called. The
+    # update_form_schema function is passed the handler, which is either an instance of
+    # HelperConfigFlowHandler or HelperOptionsFlowHandler, the schema, and the union of
+    # config entry options and user input from previous steps.
+    update_form_schema: Callable[
+        [
+            HelperConfigFlowHandler | HelperOptionsFlowHandler,
+            vol.Schema,
+            dict[str, Any],
+        ],
+        vol.Schema,
+    ] = lambda _handler, schema, _options: schema
 
 
 @dataclass
@@ -73,6 +90,15 @@ class HelperCommonFlowHandler:
             return await self._async_form_step(step_id, user_input)
         return await self._async_menu_step(step_id, user_input)
 
+    def _get_schema(
+        self, form_step: HelperFlowFormStep, options: dict[str, Any]
+    ) -> vol.Schema | None:
+        if form_step.schema is None:
+            return None
+        if isinstance(form_step.schema, vol.Schema):
+            return form_step.schema
+        return form_step.schema(self._handler, options)
+
     async def _async_form_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -81,7 +107,7 @@ class HelperCommonFlowHandler:
 
         if (
             user_input is not None
-            and (data_schema := form_step.schema)
+            and (data_schema := self._get_schema(form_step, self._options))
             and data_schema.schema
             and not self._handler.show_advanced_options
         ):
@@ -133,7 +159,10 @@ class HelperCommonFlowHandler:
         options = dict(self._options)
         if user_input:
             options.update(user_input)
-        if (data_schema := form_step.schema) and data_schema.schema:
+
+        if (
+            data_schema := self._get_schema(form_step, self._options)
+        ) and data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
             schema = {}
             for key, val in data_schema.schema.items():
@@ -282,7 +311,7 @@ class HelperOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> None:
         """Initialize options flow."""
         self._common_handler = HelperCommonFlowHandler(self, options_flow, config_entry)
-        self._config_entry = config_entry
+        self.config_entry = config_entry
         self._async_options_flow_finished = async_options_flow_finished
 
         for step in options_flow:
@@ -337,3 +366,21 @@ def wrapped_entity_config_entry_title(
     if state:
         return state.name or object_id
     return object_id
+
+
+@callback
+def entity_selector_without_own_entities(
+    handler: HelperOptionsFlowHandler,
+    entity_selector_config: dict[str, Any],
+) -> vol.Schema:
+    """Return an entity selector which excludes own entities."""
+    entity_registry = er.async_get(handler.hass)
+    entities = er.async_entries_for_config_entry(
+        entity_registry,
+        handler.config_entry.entry_id,  # pylint: disable=protected-access
+    )
+    entity_ids = [ent.entity_id for ent in entities]
+
+    return selector.selector(
+        {"entity": {**entity_selector_config, "exclude_entities": entity_ids}}
+    )

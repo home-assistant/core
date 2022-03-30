@@ -235,6 +235,8 @@ build.json @home-assistant/supervisor
 /tests/components/diagnostics/ @home-assistant/core
 /homeassistant/components/digital_ocean/ @fabaff
 /homeassistant/components/discogs/ @thibmaek
+/homeassistant/components/discord/ @tkdrob
+/tests/components/discord/ @tkdrob
 /homeassistant/components/discovery/ @home-assistant/core
 /tests/components/discovery/ @home-assistant/core
 /homeassistant/components/dlna_dmr/ @StevenLooman @chishm
@@ -1119,6 +1121,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvooncall/ @molobrakos @decompil3d
+/homeassistant/components/vulcan/ @Antoni-Czaplicki
+/tests/components/vulcan/ @Antoni-Czaplicki
 /homeassistant/components/wake_on_lan/ @ntilley905
 /tests/components/wake_on_lan/ @ntilley905
 /homeassistant/components/wallbox/ @hesselonline

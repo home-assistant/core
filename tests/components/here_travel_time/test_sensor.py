@@ -1,9 +1,14 @@
 """The test for the HERE Travel Time sensor platform."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from herepy.here_enum import RouteMode
 from herepy.routing_api import InvalidCredentialsError, NoRouteFoundError
 import pytest
 
+from homeassistant.components.here_travel_time.const import (
+    ROUTE_MODE_FASTEST,
+    TRAFFIC_MODE_ENABLED,
+)
 from homeassistant.components.here_travel_time.sensor import (
     ATTR_ATTRIBUTION,
     ATTR_DESTINATION,
@@ -151,20 +156,13 @@ async def test_sensor(
         )
 
 
-async def test_entity_ids(hass, valid_response):
-    """Test that origin/destination supplied by a zone works."""
+async def test_entity_ids(hass, valid_response: MagicMock):
+    """Test that origin/destination supplied by entities works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
         zone_config = {
             "zone": [
-                {
-                    "name": "Destination",
-                    "latitude": CAR_DESTINATION_LATITUDE,
-                    "longitude": CAR_DESTINATION_LONGITUDE,
-                    "radius": 250,
-                    "passive": False,
-                },
                 {
                     "name": "Origin",
                     "latitude": CAR_ORIGIN_LATITUDE,
@@ -174,17 +172,25 @@ async def test_entity_ids(hass, valid_response):
                 },
             ]
         }
+        assert await async_setup_component(hass, "zone", zone_config)
+        hass.states.async_set(
+            "device_tracker.test",
+            "not_home",
+            {
+                "latitude": float(CAR_DESTINATION_LATITUDE),
+                "longitude": float(CAR_DESTINATION_LONGITUDE),
+            },
+        )
         config = {
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
                 "origin_entity_id": "zone.origin",
-                "destination_entity_id": "zone.destination",
+                "destination_entity_id": "device_tracker.test",
                 "api_key": API_KEY,
                 "mode": TRAVEL_MODE_TRUCK,
             }
         }
-        assert await async_setup_component(hass, "zone", zone_config)
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
@@ -193,6 +199,19 @@ async def test_entity_ids(hass, valid_response):
 
         sensor = hass.states.get("sensor.test")
         assert sensor.attributes.get(ATTR_DISTANCE) == 23.903
+
+        valid_response.assert_called_with(
+            [CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE],
+            [CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE],
+            True,
+            [
+                RouteMode[ROUTE_MODE_FASTEST],
+                RouteMode[TRAVEL_MODE_TRUCK],
+                RouteMode[TRAFFIC_MODE_ENABLED],
+            ],
+            arrival=None,
+            departure="now",
+        )
 
 
 async def test_route_not_found(hass, caplog):

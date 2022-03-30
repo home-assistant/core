@@ -435,6 +435,11 @@ jobs:
           . venv/bin/activate
           pre-commit run --hook-stage manual check-json --all-files
 
+      - name: Run prettier
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual prettier --all-files
+
       - name: Register check executables problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"

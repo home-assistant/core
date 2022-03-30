@@ -224,6 +224,9 @@ async def test_options(
     assert result["step_id"] == group_type
     assert get_suggested(result["data_schema"].schema, "entities") == members1
     assert "name" not in result["data_schema"].schema
+    assert result["data_schema"].schema["entities"].config["exclude_entities"] == [
+        f"{group_type}.bed_room"
+    ]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
