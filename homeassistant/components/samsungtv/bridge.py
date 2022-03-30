@@ -465,7 +465,7 @@ class SamsungTVWSBridge(
         if self._get_device_spec("PowerState") is not None:
             LOGGER.debug("Checking if TV %s is on using device info", self.host)
             # Ensure we get an updated value
-            info = await self.async_device_info()
+            info = await self.async_device_info(force=True)
             return info is not None and info["device"]["PowerState"] == "on"
 
         return await super().async_is_on()
@@ -522,7 +522,7 @@ class SamsungTVWSBridge(
 
         return RESULT_CANNOT_CONNECT
 
-    async def async_device_info(self) -> dict[str, Any] | None:
+    async def async_device_info(self, force: bool = False) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
         if self._rest_api is None:
             assert self.port
@@ -539,7 +539,7 @@ class SamsungTVWSBridge(
             self._device_info = device_info
             return device_info
 
-        return None
+        return None if force else self._device_info
 
     async def async_launch_app(self, app_id: str) -> None:
         """Send the launch_app command using websocket protocol."""
@@ -721,18 +721,18 @@ class SamsungTVEncryptedBridge(
             rest_api = SamsungTVAsyncRest(
                 host=self.host,
                 session=async_get_clientsession(self.hass),
-                port=self.port,
+                port=rest_api_port,
                 timeout=TIMEOUT_WEBSOCKET,
             )
 
-        with contextlib.suppress(*REST_EXCEPTIONS):
-            device_info: dict[str, Any] = await rest_api.rest_device_info()
-            LOGGER.debug("Device info on %s is: %s", self.host, device_info)
-            self._device_info = device_info
-            self._rest_api_port = rest_api_port
-            return device_info
+            with contextlib.suppress(*REST_EXCEPTIONS):
+                device_info: dict[str, Any] = await rest_api.rest_device_info()
+                LOGGER.debug("Device info on %s is: %s", self.host, device_info)
+                self._device_info = device_info
+                self._rest_api_port = rest_api_port
+                return device_info
 
-        return None
+        return self._device_info
 
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using websocket protocol."""
