@@ -16,8 +16,6 @@ async def test_diagnostics(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test diagnostics."""
-    print("HOI")
-    print(await get_diagnostics_for_config_entry(hass, hass_client, init_integration))
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
     ) == {
