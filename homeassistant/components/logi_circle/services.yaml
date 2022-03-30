@@ -18,8 +18,8 @@ set_config:
       selector:
         select:
           options:
-            - 'LED'
-            - 'RECORDING_MODE'
+            - "LED"
+            - "RECORDING_MODE"
     value:
       name: Value
       description: "Operation value."

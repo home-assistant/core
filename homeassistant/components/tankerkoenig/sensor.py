@@ -3,23 +3,22 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CURRENCY_EURO,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, NAME
+from . import TankerkoenigDataUpdateCoordinator
+from .const import DOMAIN, FUEL_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,41 +35,20 @@ ATTRIBUTION = "Data provided by https://creativecommons.tankerkoenig.de"
 ICON = "mdi:gas-station"
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the tankerkoenig sensors."""
 
-    if discovery_info is None:
-        return
-
-    tankerkoenig = hass.data[DOMAIN]
-
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        try:
-            return await tankerkoenig.fetch_data()
-        except LookupError as err:
-            raise UpdateFailed("Failed to fetch data") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=NAME,
-        update_method=async_update_data,
-        update_interval=tankerkoenig.update_interval,
-    )
+    coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id]
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    stations = discovery_info.values()
+    stations = coordinator.stations.values()
     entities = []
     for station in stations:
-        for fuel in tankerkoenig.fuel_types:
+        for fuel in coordinator.fuel_types:
             if fuel not in station:
                 _LOGGER.warning(
                     "Station %s does not offer %s fuel", station["id"], fuel
@@ -80,8 +58,7 @@ async def async_setup_platform(
                 fuel,
                 station,
                 coordinator,
-                f"{NAME}_{station['name']}_{fuel}",
-                tankerkoenig.show_on_map,
+                coordinator.show_on_map,
             )
             entities.append(sensor)
     _LOGGER.debug("Added sensors %s", entities)
@@ -92,26 +69,28 @@ async def async_setup_platform(
 class FuelPriceSensor(CoordinatorEntity, SensorEntity):
     """Contains prices for fuel in a given station."""
 
-    def __init__(self, fuel_type, station, coordinator, name, show_on_map):
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
+    def __init__(self, fuel_type, station, coordinator, show_on_map):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._station = station
         self._station_id = station["id"]
         self._fuel_type = fuel_type
-        self._name = name
         self._latitude = station["lat"]
         self._longitude = station["lng"]
         self._city = station["place"]
         self._house_number = station["houseNumber"]
         self._postcode = station["postCode"]
         self._street = station["street"]
+        self._brand = self._station["brand"]
         self._price = station[fuel_type]
         self._show_on_map = show_on_map
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return f"{self._brand} {self._street} {self._house_number} {FUEL_TYPES[self._fuel_type]}"
 
     @property
     def icon(self):
@@ -133,6 +112,16 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._station_id}_{self._fuel_type}"
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return device info."""
+        return DeviceInfo(
+            identifiers={(ATTR_ID, self._station_id)},
+            name=f"{self._brand} {self._street} {self._house_number}",
+            model=self._brand,
+            configuration_url="https://www.tankerkoenig.de",
+        )
 
     @property
     def extra_state_attributes(self):

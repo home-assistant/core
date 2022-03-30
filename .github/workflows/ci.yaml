@@ -11,11 +11,11 @@ on:
   workflow_dispatch:
     inputs:
       full:
-        description: 'Full run (regardless of changes)'
+        description: "Full run (regardless of changes)"
         default: false
         type: boolean
       lint-only:
-        description: 'Skip pytest'
+        description: "Skip pytest"
         default: false
         type: boolean
 

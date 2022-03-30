@@ -175,26 +175,3 @@ class NetioSwitch(SwitchEntity):
     def update(self):
         """Update the state."""
         self.netio.update()
-
-    @property
-    def extra_state_attributes(self):
-        """Return optional state attributes."""
-        return {
-            ATTR_TOTAL_CONSUMPTION_KWH: self.cumulated_consumption_kwh,
-            ATTR_START_DATE: self.start_date.split("|")[0],
-        }
-
-    @property
-    def current_power_w(self):
-        """Return actual power."""
-        return self.netio.consumptions[int(self.outlet) - 1]
-
-    @property
-    def cumulated_consumption_kwh(self):
-        """Return the total enerygy consumption since start_date."""
-        return self.netio.cumulated_consumptions[int(self.outlet) - 1]
-
-    @property
-    def start_date(self):
-        """Point in time when the energy accumulation started."""
-        return self.netio.start_dates[int(self.outlet) - 1]

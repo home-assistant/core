@@ -9,6 +9,7 @@ from typing import Any, Final, final
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
+from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -82,7 +83,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_INSTALL,
         {
             vol.Optional(ATTR_VERSION): cv.string,
-            vol.Optional(ATTR_BACKUP): cv.boolean,
+            vol.Optional(ATTR_BACKUP, default=False): cv.boolean,
         },
         async_install,
         [UpdateEntityFeature.INSTALL],
@@ -93,6 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {},
         UpdateEntity.async_skip.__name__,
     )
+    websocket_api.async_register_command(hass, websocket_release_notes)
 
     return True
 
@@ -128,7 +130,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
 
     # If backup is requested, but not supported by the entity.
     if (
-        backup := service_call.data.get(ATTR_BACKUP)
+        backup := service_call.data[ATTR_BACKUP]
     ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
         raise HomeAssistantError(f"Backup is not supported for {entity.name}")
 
@@ -245,10 +247,7 @@ class UpdateEntity(RestoreEntity):
         self.async_write_ha_state()
 
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update.
 
@@ -260,12 +259,7 @@ class UpdateEntity(RestoreEntity):
         """
         await self.hass.async_add_executor_job(self.install, version, backup)
 
-    def install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
-    ) -> None:
+    def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update.
 
         Version can be specified to install a specific version. When `None`, the
@@ -273,6 +267,22 @@ class UpdateEntity(RestoreEntity):
 
         The backup parameter indicates a backup should be taken before
         installing the update.
+        """
+        raise NotImplementedError()
+
+    async def async_release_notes(self) -> str | None:
+        """Return full release notes.
+
+        This is suitable for a long changelog that does not fit in the release_summary property.
+        The returned string can contain markdown.
+        """
+        return await self.hass.async_add_executor_job(self.release_notes)
+
+    def release_notes(self) -> str | None:
+        """Return full release notes.
+
+        This is suitable for a long changelog that does not fit in the release_summary property.
+        The returned string can contain markdown.
         """
         raise NotImplementedError()
 
@@ -323,9 +333,7 @@ class UpdateEntity(RestoreEntity):
 
     @final
     async def async_install_with_progress(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
+        self, version: str | None, backup: bool
     ) -> None:
         """Install update and handle progress if needed.
 
@@ -353,3 +361,40 @@ class UpdateEntity(RestoreEntity):
         state = await self.async_get_last_state()
         if state is not None and state.attributes.get(ATTR_SKIPPED_VERSION) is not None:
             self.__skipped_version = state.attributes[ATTR_SKIPPED_VERSION]
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "update/release_notes",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
+@websocket_api.async_response
+async def websocket_release_notes(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Get the full release notes for a entity."""
+    component = hass.data[DOMAIN]
+    entity: UpdateEntity | None = component.get_entity(msg["entity_id"])
+
+    if entity is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    if not entity.supported_features & UpdateEntityFeature.RELEASE_NOTES:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_SUPPORTED,
+            "Entity does not support release notes",
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        await entity.async_release_notes(),
+    )

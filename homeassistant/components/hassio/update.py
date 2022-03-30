@@ -88,38 +88,64 @@ async def async_setup_entry(
 class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     """Update entity to handle updates for the Supervisor add-ons."""
 
-    _attr_supported_features = UpdateEntityFeature.INSTALL | UpdateEntityFeature.BACKUP
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.BACKUP
+        | UpdateEntityFeature.RELEASE_NOTES
+    )
+
+    @property
+    def _addon_data(self) -> dict:
+        """Return the add-on data."""
+        return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug]
 
     @property
     def title(self) -> str | None:
         """Return the title of the update."""
-        return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_NAME]
+        return self._addon_data[ATTR_NAME]
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][
-            ATTR_VERSION_LATEST
-        ]
+        return self._addon_data[ATTR_VERSION_LATEST]
 
     @property
     def current_version(self) -> str | None:
         """Version currently in use."""
-        return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_VERSION]
+        return self._addon_data[ATTR_VERSION]
 
     @property
     def release_summary(self) -> str | None:
         """Release summary for the add-on."""
-        return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_CHANGELOG]
+        return self._strip_release_notes()
 
     @property
     def entity_picture(self) -> str | None:
         """Return the icon of the add-on if any."""
         if not self.available:
             return None
-        if self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][ATTR_ICON]:
+        if self._addon_data[ATTR_ICON]:
             return f"/api/hassio/addons/{self._addon_slug}/icon"
         return None
+
+    def _strip_release_notes(self) -> str | None:
+        """Strip the release notes to contain the needed sections."""
+        if (notes := self._addon_data[ATTR_CHANGELOG]) is None:
+            return None
+
+        if f"# {self.latest_version}" in notes and f"# {self.current_version}" in notes:
+            # Split the release notes to only what is between the versions if we can
+            new_notes = notes.split(f"# {self.current_version}")[0]
+            if f"# {self.latest_version}" in new_notes:
+                # Make sure the latest version is still there.
+                # This can be False if the order of the release notes are not correct
+                # In that case we just return the whole release notes
+                return new_notes
+        return notes
+
+    async def async_release_notes(self) -> str | None:
+        """Return the release notes for the update."""
+        return self._strip_release_notes()
 
     async def async_install(
         self,
@@ -170,10 +196,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
         )
 
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         try:
@@ -214,10 +237,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
         return "https://brands.home-assistant.io/hassio/icon.png"
 
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         try:
@@ -262,10 +282,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         return f"https://{'rc' if version.beta else 'www'}.home-assistant.io/latest-release-notes/"
 
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         try:
