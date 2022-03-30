@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Configure Gammu state machine."""
     hass.data.setdefault(DOMAIN, {})
-    if not (sms_config := config.get(DOMAIN, {})):  # pylint: disable=superfluous-parens
+    if not (sms_config := config.get(DOMAIN)):  # pylint: disable=superfluous-parens
         return True
 
     hass.async_create_task(
