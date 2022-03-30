@@ -1,5 +1,4 @@
 """Constants for the KNX integration."""
-from dataclasses import dataclass
 from enum import Enum
 from typing import Final, TypedDict
 
@@ -54,7 +53,7 @@ CONF_KNX_DEFAULT_RATE_LIMIT: Final = 20
 ##
 # Secure constants
 ##
-CONST_KNXKEYS_STORAGE_KEY: Final = "knx/"
+CONST_KNX_STORAGE_KEY: Final = "knx/"
 CONF_KNX_KNXKEY_FILENAME: Final = "knxkeys_filename"
 CONF_KNX_KNXKEY_PASSWORD: Final = "knxkeys_password"
 
@@ -80,7 +79,6 @@ ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
 
 
-@dataclass
 class KNXConfigEntryData(TypedDict, total=False):
     """Config entry for the KNX integration."""
 

@@ -8,15 +8,15 @@ from xknx import XKNX
 from xknx.exceptions.exception import InvalidSignature
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
-from xknx.secure.keyring import load_key_ring
+from xknx.secure import load_key_ring
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_KNX_AUTOMATIC,
@@ -33,11 +33,14 @@ from .const import (
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
+    CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
+    CONF_KNX_SECURE_USER_ID,
+    CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
-    CONST_KNXKEYS_STORAGE_KEY,
+    CONST_KNX_STORAGE_KEY,
     DOMAIN,
     KNXConfigEntryData,
 )
@@ -92,7 +95,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
             if connection_type == CONF_KNX_AUTOMATIC:
                 entry_data: KNXConfigEntryData = {
-                    **DEFAULT_ENTRY_DATA,
+                    **DEFAULT_ENTRY_DATA,  # type: ignore[misc]
                     CONF_KNX_CONNECTION_TYPE: user_input[CONF_KNX_CONNECTION_TYPE],
                 }
                 return self.async_create_entry(
@@ -158,7 +161,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             connection_type = user_input[CONF_KNX_TUNNELING_TYPE]
 
             entry_data: KNXConfigEntryData = {
-                **DEFAULT_ENTRY_DATA,
+                **DEFAULT_ENTRY_DATA,  # type: ignore[misc]
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
                 CONF_KNX_INDIVIDUAL_ADDRESS: user_input[CONF_KNX_INDIVIDUAL_ADDRESS],
@@ -216,6 +219,40 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
         )
 
+    async def async_step_secure_manual(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Configure ip secure manually."""
+        errors: dict = {}
+
+        if user_input is not None:
+            entry_data: KNXConfigEntryData = {
+                **self._tunneling_config,  # type: ignore[misc]
+                CONF_KNX_SECURE_USER_ID: user_input[CONF_KNX_SECURE_USER_ID],
+                CONF_KNX_SECURE_USER_PASSWORD: user_input[
+                    CONF_KNX_SECURE_USER_PASSWORD
+                ],
+                CONF_KNX_SECURE_DEVICE_AUTHENTICATION: user_input[
+                    CONF_KNX_SECURE_DEVICE_AUTHENTICATION
+                ],
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
+            }
+
+            return self.async_create_entry(
+                title=f"Secure {CONF_KNX_TUNNELING.capitalize()} @ {self._tunneling_config[CONF_HOST]}",
+                data=entry_data,
+            )
+
+        fields = {
+            vol.Required(CONF_KNX_SECURE_USER_ID): int,
+            vol.Required(CONF_KNX_SECURE_USER_PASSWORD): str,
+            vol.Required(CONF_KNX_SECURE_DEVICE_AUTHENTICATION): str,
+        }
+
+        return self.async_show_form(
+            step_id="secure_manual", data_schema=vol.Schema(fields), errors=errors
+        )
+
     async def async_step_secure_knxkeys(
         self, user_input: dict | None = None
     ) -> FlowResult:
@@ -224,23 +261,25 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
+                storage_key: str = (
+                    CONST_KNX_STORAGE_KEY + user_input[CONF_KNX_KNXKEY_FILENAME]
+                )
                 load_key_ring(
                     self.hass.config.path(
                         STORAGE_DIR,
-                        CONST_KNXKEYS_STORAGE_KEY
-                        + user_input[CONF_KNX_KNXKEY_FILENAME],
+                        storage_key,
                     ),
                     user_input[CONF_KNX_KNXKEY_PASSWORD],
                 )
                 entry_data: KNXConfigEntryData = {
-                    **self._tunneling_config,
-                    CONF_KNX_KNXKEY_FILENAME: user_input[CONF_KNX_KNXKEY_FILENAME],
+                    **self._tunneling_config,  # type: ignore[misc]
+                    CONF_KNX_KNXKEY_FILENAME: storage_key,
                     CONF_KNX_KNXKEY_PASSWORD: user_input[CONF_KNX_KNXKEY_PASSWORD],
                     CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
                 }
 
                 return self.async_create_entry(
-                    title=f"Secure {CONF_KNX_TUNNELING.capitalize()} @ {user_input[CONF_HOST]}",
+                    title=f"Secure {CONF_KNX_TUNNELING.capitalize()} @ {self._tunneling_config[CONF_HOST]}",
                     data=entry_data,
                 )
             except InvalidSignature:

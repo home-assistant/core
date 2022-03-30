@@ -43,6 +43,14 @@
                     "secure_manual": "Configure IP secure manually"
                 }
             },
+            "secure_manual": {
+                "description": "Please enter the IP secure information.",
+                "data": {
+                  "user_id": "User ID",
+                  "user_password": "User password",
+                  "device_authentication": "Device authentication password"
+                }
+              },
             "tunnel": {
                 "data": {
                     "gateway": "KNX Tunnel Connection"

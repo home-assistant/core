@@ -34,7 +34,15 @@
         "description": "Please enter the information for your knxkeys file.",
         "data": {
           "knxkeys_filename": "The full name of your knxkeys file",
-          "knxkeys_password": "The password to decrypt the knxkeys file."
+          "knxkeys_password": "The password to decrypt the knxkeys file"
+        }
+      },
+      "secure_manual": {
+        "description": "Please enter the IP secure information.",
+        "data": {
+          "user_id": "User ID",
+          "user_password": "User password",
+          "device_authentication": "Device authentication password"
         }
       },
       "routing": {
