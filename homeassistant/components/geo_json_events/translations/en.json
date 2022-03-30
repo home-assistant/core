@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "radius": "Radius",
+                    "scan_interval": "Update Interval (seconds)",
+                    "url": "URL"
+                },
+                "title": "Fill in your GeoJSON feed details."
+            }
+        }
+    }
+}

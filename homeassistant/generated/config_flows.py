@@ -145,6 +145,7 @@ FLOWS = {
         "generic",
         "geocaching",
         "geofency",
+        "geo_json_events",
         "geonetnz_quakes",
         "geonetnz_volcano",
         "gios",
