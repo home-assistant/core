@@ -696,7 +696,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
             rest_api = SamsungTVAsyncRest(
                 host=self.host,
                 session=async_get_clientsession(self.hass),
-                port=self.port,
+                port=rest_api_port,
                 timeout=TIMEOUT_WEBSOCKET,
             )
 
