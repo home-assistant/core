@@ -140,8 +140,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle ZeroConf discovery."""
-
-        # abort if we already have exactly this bridge id/host
         properties = discovery_info.properties
         gateway_id = properties["gateway_pin"]
 
