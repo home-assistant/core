@@ -370,3 +370,98 @@ async def test_update_core_with_error(hass, aioclient_mock):
             {"entity_id": "update.home_assistant_core_update"},
             blocking=True,
         )
+
+
+async def test_release_notes_between_versions(hass, aioclient_mock, hass_ws_client):
+    """Test release notes between versions."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.get_addons_changelogs",
+        return_value={"test": "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"},
+    ):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.test_update",
+        }
+    )
+    result = await client.receive_json()
+    assert "Old updates" not in result["result"]
+    assert "New updates" in result["result"]
+
+
+async def test_release_notes_full(hass, aioclient_mock, hass_ws_client):
+    """Test release notes no match."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.get_addons_changelogs",
+        return_value={"test": "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"},
+    ):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.test_update",
+        }
+    )
+    result = await client.receive_json()
+    assert "Old updates" in result["result"]
+    assert "New updates" in result["result"]
+
+
+async def test_not_release_notes(hass, aioclient_mock, hass_ws_client):
+    """Test handling where there are no release notes."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.get_addons_changelogs",
+        return_value={"test": None},
+    ):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.test_update",
+        }
+    )
+    result = await client.receive_json()
+    assert result["result"] is None
