@@ -1,84 +1,84 @@
 {
-  "config": {
-    "step": {
-      "manual": {
-        "title": "Onkyo & Pioneer Network Receivers",
-        "description": "No receivers discovered, please set the IP manually",
-        "data": {
-          "host": "[%key:common::config_flow::data::ip%]"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "discovery_error": "No Onkyo or Pioneer network receivers discovered",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "host": "IP Address"
+                },
+                "description": "No receivers discovered, please set the IP manually",
+                "title": "Onkyo & Pioneer Network Receivers"
+            },
+            "select": {
+                "data": {
+                    "select_receiver": "Select receiver to set up"
+                },
+                "description": "Run the setup again to connect to additional receivers",
+                "title": "Multiple network receivers discovered"
+            }
         }
-      },
-      "select": {
-        "title": "Multiple network receivers discovered",
-        "description": "Run the setup again to connect to additional receivers",
-        "data": {
-          "select_receiver": "Select receiver to set up"
-        }
-      }
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "discovery_error": "No Onkyo or Pioneer network receivers discovered",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Onkyo & Pioneer Network Receivers",
-        "description": "Optional receiver settings",
-        "data": {
-          "max_volume": "Max volume. Older receivers use 80, newer 200",
-          "enabled_sources": "Select which sources to enable/disable"
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enabled_sources": "Select which sources to enable/disable",
+                    "max_volume": "Max volume. Older receivers use 80, newer 200"
+                },
+                "description": "Optional receiver settings",
+                "title": "Onkyo & Pioneer Network Receivers"
+            },
+            "source_names": {
+                "data": {
+                    "aiplay": "Airplay custon name",
+                    "am": "AM custon name",
+                    "bluetooth": "Bluetooth custon name",
+                    "cd": "CD, TV/CD custon name",
+                    "coaxial": "COAXIAL custon name",
+                    "dab": "DAB  custon name",
+                    "dvd": "DVD, BD/DVD custon name",
+                    "fm": "FM custon name",
+                    "hdmi-5": "HDMI 5 custon name",
+                    "hdmi-6": "HDMI 6 custon name",
+                    "hdmi-7": "HDMI 7 custon name",
+                    "internet-radio": "INTERNET RADIO, iRadio Favorite custon name",
+                    "line": "LINE custon name",
+                    "line2": "LINE2 custon name",
+                    "multi-ch": "MULTI CH custon name",
+                    "music-server": "MUSIC SERVER, P4S, DLNA custon name",
+                    "network": "NETWORK, NET custon name",
+                    "optical": "OPTICAL custon name",
+                    "phono": "PHONO custon name",
+                    "sirius": "SIRIUS custon name",
+                    "strm-box": "STRM BOX custon name",
+                    "tape-1": "TAPE(1), TV/TAPE custon name",
+                    "tape2": "TAPE2 custon name",
+                    "tuner": "TUNER custon name",
+                    "tv": "TV custon name",
+                    "universal-port": "Universal PORT custon name",
+                    "usb": "USB(toggle) custon name",
+                    "usb-dac-in": "USB DAC In custon name",
+                    "video1": "VIDEO1, VCR/DVR, STB/DVR custon name",
+                    "video2": "VIDEO2, CBL/SAT custon name",
+                    "video3": "VIDEO3, GAME/TV, GAME, GAME1 custon name",
+                    "video4": "VIDEO4, AUX1(AUX) custon name",
+                    "video5": "VIDEO5, AUX2, GAME2 custon name",
+                    "video6": "VIDEO6, PC custon name",
+                    "video7": "VIDEO7 custon name",
+                    "xm": "XM custon name"
+                },
+                "description": "Set custom names for receiver sources",
+                "title": "Onkyo & Pioneer Network Receivers"
+            }
         }
-      },
-      "source_names": {
-        "title": "Onkyo & Pioneer Network Receivers",
-        "description": "Set custom names for receiver sources",
-        "data": {
-          "aiplay": "Airplay custon name",
-          "am": "AM custon name",
-          "bluetooth": "Bluetooth custon name",
-          "cd": "CD, TV/CD custon name",
-          "coaxial": "COAXIAL custon name",
-          "dab": "DAB  custon name",
-          "dvd": "DVD, BD/DVD custon name",
-          "fm": "FM custon name",
-          "hdmi-5": "HDMI 5 custon name",
-          "hdmi-6": "HDMI 6 custon name",
-          "hdmi-7": "HDMI 7 custon name",
-          "internet-radio": "INTERNET RADIO, iRadio Favorite custon name",
-          "line": "LINE custon name",
-          "line2": "LINE2 custon name",
-          "multi-ch": "MULTI CH custon name",
-          "music-server": "MUSIC SERVER, P4S, DLNA custon name",
-          "network": "NETWORK, NET custon name",
-          "optical": "OPTICAL custon name",
-          "phono": "PHONO custon name",
-          "sirius": "SIRIUS custon name",
-          "strm-box": "STRM BOX custon name",
-          "tape-1": "TAPE(1), TV/TAPE custon name",
-          "tape2": "TAPE2 custon name",
-          "tuner": "TUNER custon name",
-          "tv": "TV custon name",
-          "universal-port": "Universal PORT custon name",
-          "usb": "USB(toggle) custon name",
-          "usb-dac-in": "USB DAC In custon name",
-          "video1": "VIDEO1, VCR/DVR, STB/DVR custon name",
-          "video2": "VIDEO2, CBL/SAT custon name",
-          "video3": "VIDEO3, GAME/TV, GAME, GAME1 custon name",
-          "video4": "VIDEO4, AUX1(AUX) custon name",
-          "video5": "VIDEO5, AUX2, GAME2 custon name",
-          "video6": "VIDEO6, PC custon name",
-          "video7": "VIDEO7 custon name",
-          "xm": "XM custon name"
-        }
-      }
     }
-  }
 }
