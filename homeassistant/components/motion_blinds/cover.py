@@ -244,6 +244,13 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             return None
         return self._moving == STATE_CLOSING
 
+    def _set_moving_state(self, new_position, old_position):
+        """Set the moving status for a postion move."""
+        if new_position > old_position:
+            self._moving = STATE_CLOSING
+        else:
+            self._moving = STATE_OPENING
+
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes and register signal handler."""
         self._blind.Register_callback(self.unique_id, self.schedule_update_ha_state)
@@ -312,24 +319,12 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             await self.hass.async_add_executor_job(
                 self._blind.Set_position, 100 - position
             )
-        if position > self._blind.position:
-            self._moving = STATE_CLOSING
-        else:
-            self._moving = STATE_OPENING
+        self._set_moving_state(position, self._blind.position)
         await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
-        position = kwargs[ATTR_ABSOLUTE_POSITION]
-        async with self._api_lock:
-            await self.hass.async_add_executor_job(
-                self._blind.Set_position, 100 - position
-            )
-        if position > self._blind.position:
-            self._moving = STATE_CLOSING
-        else:
-            self._moving = STATE_OPENING
-        await self.async_request_position_till_stop()
+        await async_set_cover_position(**kwargs)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -445,10 +440,7 @@ class MotionTDBUDevice(MotionPositionDevice):
             await self.hass.async_add_executor_job(
                 self._blind.Set_scaled_position, 100 - position, self._motor_key
             )
-        if position > self._blind.scaled_position[self._motor_key]:
-            self._moving = STATE_CLOSING
-        else:
-            self._moving = STATE_OPENING
+        self._set_moving_state(position, self._blind.scaled_position[self._motor_key])
         await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
@@ -460,10 +452,7 @@ class MotionTDBUDevice(MotionPositionDevice):
             await self.hass.async_add_executor_job(
                 self._blind.Set_position, 100 - position, self._motor_key, target_width
             )
-        if position > self._blind.position[self._motor_key]:
-            self._moving = STATE_CLOSING
-        else:
-            self._moving = STATE_OPENING
+        self._set_moving_state(position, self._blind.position[self._motor_key])
         await self.async_request_position_till_stop()
 
     async def async_stop_cover(self, **kwargs):
