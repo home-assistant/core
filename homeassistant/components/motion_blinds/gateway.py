@@ -57,7 +57,7 @@ class ConnectMotionGateway:
 
     def check_interface(self):
         """Check if the current interface supports multicast."""
-        try:
+        with contextlib.suppress(socket.timeout):
             return self.gateway_device.Check_gateway_multicast()
         except socket.timeout:
             return False
