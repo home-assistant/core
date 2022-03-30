@@ -17,7 +17,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from .mixins import (
-    CONF_ENABLED_BY_DEFAULT,
     CONF_OBJECT_ID,
     MQTT_AVAILABILITY_SCHEMA,
     MqttEntity,
@@ -39,7 +38,6 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_OBJECT_ID): cv.string,
-        vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
     }
 ).extend(MQTT_AVAILABILITY_SCHEMA.schema)
 

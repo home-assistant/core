@@ -811,7 +811,8 @@ class MqttEntity(
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._config[CONF_ENABLED_BY_DEFAULT]
+        # Return True as default value for MQTT scene as scenes cannot be disabled
+        return self._config.get(CONF_ENABLED_BY_DEFAULT, True)
 
     @property
     def entity_category(self) -> EntityCategory | str | None:
