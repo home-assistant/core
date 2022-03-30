@@ -11,7 +11,7 @@
           "radius": "Search radius"
         }
       },
-      "select_station":{
+      "select_station": {
         "title": "Select stations to add",
         "description": "found {stations_count} stations in radius",
         "data": {
