@@ -16,6 +16,7 @@
       "model": "Generic heater",
       "name": "OpenTherm",
       "vendor": "Techneco",
+      "maximum_boiler_temperature": 60.0,
       "compressor_state": true,
       "binary_sensors": {
         "dhw_state": false,
