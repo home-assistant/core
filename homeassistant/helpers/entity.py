@@ -827,6 +827,13 @@ class Entity(ABC):
         To be extended by integrations.
         """
 
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated.
+
+        To be extended by integrations.
+        """
+
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
 
@@ -888,6 +895,7 @@ class Entity(ABC):
 
         assert old is not None
         if self.registry_entry.entity_id == old.entity_id:
+            self.async_registry_entry_updated()
             self.async_write_ha_state()
             return
 

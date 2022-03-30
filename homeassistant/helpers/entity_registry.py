@@ -618,11 +618,11 @@ class EntityRegistry:
     @callback
     def async_update_entity_options(
         self, entity_id: str, domain: str, options: dict[str, Any]
-    ) -> None:
+    ) -> RegistryEntry:
         """Update entity options."""
         old = self.entities[entity_id]
         new_options: Mapping[str, Mapping[str, Any]] = {**old.options, domain: options}
-        self.entities[entity_id] = attr.evolve(old, options=new_options)
+        new = self.entities[entity_id] = attr.evolve(old, options=new_options)
 
         self.async_schedule_save()
 
@@ -633,6 +633,8 @@ class EntityRegistry:
         }
 
         self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, data)
+
+        return new
 
     async def async_load(self) -> None:
         """Load the entity registry."""

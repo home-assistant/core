@@ -4,11 +4,12 @@ from __future__ import annotations
 import asyncio
 import collections
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import zigpy.endpoint
 import zigpy.exceptions
 import zigpy.group
+from zigpy.types.named import EUI64
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_entries_for_device
@@ -21,7 +22,14 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-GroupMember = collections.namedtuple("GroupMember", "ieee endpoint_id")
+
+class GroupMember(NamedTuple):
+    """Describes a group member."""
+
+    ieee: EUI64
+    endpoint_id: int
+
+
 GroupEntityReference = collections.namedtuple(
     "GroupEntityReference", "name original_name entity_id"
 )
