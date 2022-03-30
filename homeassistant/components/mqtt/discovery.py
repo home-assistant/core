@@ -7,11 +7,10 @@ import logging
 import re
 import time
 
-from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, Platform
+from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -86,6 +85,8 @@ def set_discovery_hash(hass, discovery_hash):
 
 class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
+
+    discovery_data: dict
 
 
 async def async_start(  # noqa: C901
