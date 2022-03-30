@@ -9,7 +9,7 @@
             "updated_instance": "Istanza deCONZ aggiornata con nuovo indirizzo host"
         },
         "error": {
-            "no_key": "Impossibile ottenere una API key"
+            "no_key": "Impossibile ottenere una chiave API"
         },
         "flow_title": "{host}",
         "step": {

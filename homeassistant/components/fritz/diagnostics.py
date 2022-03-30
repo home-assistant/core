@@ -22,9 +22,13 @@ async def async_get_config_entry_diagnostics(
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "device_info": {
             "model": avm_wrapper.model,
+            "unique_id": avm_wrapper.unique_id.replace(
+                avm_wrapper.unique_id[6:11], "XX:XX"
+            ),
             "current_firmware": avm_wrapper.current_firmware,
             "latest_firmware": avm_wrapper.latest_firmware,
             "update_available": avm_wrapper.update_available,
+            "connection_type": avm_wrapper.device_conn_type,
             "is_router": avm_wrapper.device_is_router,
             "mesh_role": avm_wrapper.mesh_role,
             "last_update success": avm_wrapper.last_update_success,

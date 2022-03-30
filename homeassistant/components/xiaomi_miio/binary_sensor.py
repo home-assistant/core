@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,10 +20,11 @@ from . import VacuumCoordinatorDataAttributes
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
-    CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_A1,
+    MODEL_AIRFRESH_T2017,
     MODEL_FAN_ZA5,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
@@ -36,6 +38,7 @@ from .device import XiaomiCoordinatedMiioEntity
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_NO_WATER = "no_water"
+ATTR_PTC_STATUS = "ptc_status"
 ATTR_POWERSUPPLY_ATTACHED = "powersupply_attached"
 ATTR_WATER_TANK_DETACHED = "water_tank_detached"
 ATTR_MOP_ATTACHED = "is_water_box_carriage_attached"
@@ -67,6 +70,12 @@ BINARY_SENSOR_TYPES = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     XiaomiMiioBinarySensorDescription(
+        key=ATTR_PTC_STATUS,
+        name="Auxiliary Heat Status",
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XiaomiMiioBinarySensorDescription(
         key=ATTR_POWERSUPPLY_ATTACHED,
         name="Power Supply",
         device_class=BinarySensorDeviceClass.PLUG,
@@ -74,6 +83,7 @@ BINARY_SENSOR_TYPES = (
     ),
 )
 
+AIRFRESH_A1_BINARY_SENSORS = (ATTR_PTC_STATUS,)
 FAN_ZA5_BINARY_SENSORS = (ATTR_POWERSUPPLY_ATTACHED,)
 
 VACUUM_SENSORS = {
@@ -171,7 +181,9 @@ async def async_setup_entry(
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         model = config_entry.data[CONF_MODEL]
         sensors = []
-        if model in MODEL_FAN_ZA5:
+        if model in MODEL_AIRFRESH_A1 or model in MODEL_AIRFRESH_T2017:
+            sensors = AIRFRESH_A1_BINARY_SENSORS
+        elif model in MODEL_FAN_ZA5:
             sensors = FAN_ZA5_BINARY_SENSORS
         elif model in MODELS_HUMIDIFIER_MIIO:
             sensors = HUMIDIFIER_MIIO_BINARY_SENSORS

@@ -8,15 +8,13 @@ from tapsaff import TapsAff
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_LOCATION, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_LOCATION = "location"
 
 DEFAULT_NAME = "Taps Aff"
 

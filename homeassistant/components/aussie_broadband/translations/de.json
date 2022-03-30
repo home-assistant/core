@@ -18,6 +18,13 @@
                 "description": "Passwort f\u00fcr {username} aktualisieren",
                 "title": "Integration erneut authentifizieren"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Passwort f\u00fcr {username} aktualisieren",
+                "title": "Integration erneut authentifizieren"
+            },
             "service": {
                 "data": {
                     "services": "Dienste"

@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import switch
-from homeassistant.components.mqtt.switch import MQTT_SWITCH_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
@@ -36,6 +35,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -291,7 +291,7 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
 async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG, MQTT_SWITCH_ATTRIBUTES_BLOCKED
+        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG, {}
     )
 
 
@@ -555,6 +555,13 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     domain = switch.DOMAIN
     config = DEFAULT_CONFIG[domain]
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = switch.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
 @pytest.mark.parametrize(

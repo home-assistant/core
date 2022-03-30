@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Generator, Iterable
 import contextlib
+from datetime import timedelta
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
@@ -65,10 +66,10 @@ async def async_setup_component(
     if domain in hass.config.components:
         return True
 
-    setup_tasks = hass.data.setdefault(DATA_SETUP, {})
+    setup_tasks: dict[str, asyncio.Task[bool]] = hass.data.setdefault(DATA_SETUP, {})
 
     if domain in setup_tasks:
-        return await setup_tasks[domain]  # type: ignore
+        return await setup_tasks[domain]
 
     task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config)
@@ -148,10 +149,17 @@ async def _async_setup_component(
 
     This method is a coroutine.
     """
+    integration: loader.Integration | None = None
 
-    def log_error(msg: str, link: str | None = None) -> None:
+    def log_error(msg: str) -> None:
         """Log helper."""
-        _LOGGER.error("Setup failed for %s: %s", domain, msg)
+        if integration is None:
+            custom = ""
+            link = None
+        else:
+            custom = "" if integration.is_built_in else "custom integration "
+            link = integration.documentation
+        _LOGGER.error("Setup failed for %s%s: %s", custom, domain, msg)
         async_notify_setup_error(hass, domain, link)
 
     try:
@@ -173,7 +181,7 @@ async def _async_setup_component(
     try:
         await async_process_deps_reqs(hass, config, integration)
     except HomeAssistantError as err:
-        log_error(str(err), integration.documentation)
+        log_error(str(err))
         return False
 
     # Some integrations fail on import because they call functions incorrectly.
@@ -181,7 +189,7 @@ async def _async_setup_component(
     try:
         component = integration.get_component()
     except ImportError as err:
-        log_error(f"Unable to import component: {err}", integration.documentation)
+        log_error(f"Unable to import component: {err}")
         return False
 
     processed_config = await conf_util.async_process_component_config(
@@ -189,7 +197,7 @@ async def _async_setup_component(
     )
 
     if processed_config is None:
-        log_error("Invalid config.", integration.documentation)
+        log_error("Invalid config.")
         return False
 
     start = timer()
@@ -286,6 +294,7 @@ async def async_prepare_setup_platform(
 
     def log_error(msg: str) -> None:
         """Log helper."""
+
         _LOGGER.error("Unable to prepare setup for platform %s: %s", platform_path, msg)
         async_notify_setup_error(hass, platform_path)
 
@@ -436,7 +445,7 @@ def async_start_setup(
     """Keep track of when setup starts and finishes."""
     setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
     started = dt_util.utcnow()
-    unique_components = {}
+    unique_components: dict[str, str] = {}
     for domain in components:
         unique = ensure_unique_string(domain, setup_started)
         unique_components[unique] = domain
@@ -444,7 +453,7 @@ def async_start_setup(
 
     yield
 
-    setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
+    setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
     time_taken = dt_util.utcnow() - started
     for unique, domain in unique_components.items():
         del setup_started[unique]

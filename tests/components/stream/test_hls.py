@@ -1,6 +1,7 @@
 """The tests for hls streams."""
 from datetime import timedelta
 from http import HTTPStatus
+import logging
 from unittest.mock import patch
 from urllib.parse import urlparse
 
@@ -176,6 +177,14 @@ async def test_hls_stream(
     fail_response = await hls_client.get()
     assert fail_response.status == HTTPStatus.NOT_FOUND
 
+    assert stream.get_diagnostics() == {
+        "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "keepalive": False,
+        "start_worker": 1,
+        "video_codec": "h264",
+        "worker_error": 1,
+    }
+
 
 async def test_stream_timeout(
     hass, hass_client, setup_component, stream_worker_sync, h264_video
@@ -252,8 +261,8 @@ async def test_stream_timeout_after_stop(
     await hass.async_block_till_done()
 
 
-async def test_stream_keepalive(hass, setup_component):
-    """Test hls stream retries the stream when keepalive=True."""
+async def test_stream_retries(hass, setup_component, should_retry):
+    """Test hls stream is retried on failure."""
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
     stream = create_stream(hass, source, {})
@@ -271,9 +280,11 @@ async def test_stream_keepalive(hass, setup_component):
     cur_time = 0
 
     def time_side_effect():
+        logging.info("time side effect")
         nonlocal cur_time
         if cur_time >= 80:
-            stream.keepalive = False  # Thread should exit and be joinable.
+            logging.info("changing return value")
+            should_retry.return_value = False  # Thread should exit and be joinable.
         cur_time += 40
         return cur_time
 
@@ -284,8 +295,8 @@ async def test_stream_keepalive(hass, setup_component):
     ):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         mock_time.time.side_effect = time_side_effect
-        # Request stream
-        stream.keepalive = True
+        # Request stream. Enable retries which are disabled by default in tests.
+        should_retry.return_value = True
         stream.start()
         stream._thread.join()
         stream._thread = None

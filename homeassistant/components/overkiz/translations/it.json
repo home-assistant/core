@@ -12,6 +12,7 @@
             "too_many_requests": "Troppe richieste, riprova pi\u00f9 tardi.",
             "unknown": "Errore imprevisto"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

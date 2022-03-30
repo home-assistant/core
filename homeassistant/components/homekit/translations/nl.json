@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Domeinen om op te nemen"
                 },
-                "description": "Kies de domeinen die moeten worden opgenomen. Alle ondersteunde entiteiten in het domein zullen worden opgenomen. Voor elke tv-mediaspeler, camera, activiteiten gebaseerde afstandsbediening en slot wordt een afzonderlijke HomeKit-instantie in accessoiremodus aangemaakt.",
+                "description": "Kies de domeinen die moeten worden opgenomen. Alle ondersteunde entiteiten in het domein zullen worden opgenomen, behalve de gecategoriseerde entiteiten. Voor elke tv-mediaspeler, camera, activiteiten gebaseerde afstandsbediening en slot wordt een afzonderlijke HomeKit-instantie in accessoiremodus aangemaakt.",
                 "title": "Selecteer domeinen die u wilt opnemen"
             }
         }

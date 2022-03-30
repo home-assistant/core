@@ -134,6 +134,10 @@
             "off": "Nem t\u00f6lt\u0151dik",
             "on": "T\u00f6lt\u0151dik"
         },
+        "carbon_monoxide": {
+            "off": "Norm\u00e1l",
+            "on": "\u00c9szlelve"
+        },
         "co": {
             "off": "Tiszta",
             "on": "\u00c9rz\u00e9kelve"

@@ -120,7 +120,7 @@ class Data:
     @property
     def users(self) -> list[dict[str, str]]:
         """Return users."""
-        return self._data["users"]  # type: ignore
+        return self._data["users"]  # type: ignore[index,no-any-return]
 
     def validate_login(self, username: str, password: str) -> None:
         """Validate a username and password.

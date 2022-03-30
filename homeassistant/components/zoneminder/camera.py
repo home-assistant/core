@@ -3,13 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.mjpeg.camera import (
-    CONF_MJPEG_URL,
-    CONF_STILL_IMAGE_URL,
-    MjpegCamera,
-    filter_urllib3_logging,
-)
-from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
+from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -44,13 +38,12 @@ class ZoneMinderCamera(MjpegCamera):
 
     def __init__(self, monitor, verify_ssl):
         """Initialize as a subclass of MjpegCamera."""
-        device_info = {
-            CONF_NAME: monitor.name,
-            CONF_MJPEG_URL: monitor.mjpeg_image_url,
-            CONF_STILL_IMAGE_URL: monitor.still_image_url,
-            CONF_VERIFY_SSL: verify_ssl,
-        }
-        super().__init__(device_info)
+        super().__init__(
+            name=monitor.name,
+            mjpeg_url=monitor.mjpeg_image_url,
+            still_image_url=monitor.still_image_url,
+            verify_ssl=verify_ssl,
+        )
         self._is_recording = None
         self._is_available = None
         self._monitor = monitor

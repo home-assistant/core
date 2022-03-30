@@ -167,6 +167,18 @@
       "name": "QVC",
       "type": "air-digital",
       "user-hidden": "false"
+    },
+    {
+      "number": "14.3",
+      "name": "getTV",
+      "type": "air-digital",
+      "user-hidden": "false"
+    },
+    {
+      "number": "99.1",
+      "name": "",
+      "type": "air-digital",
+      "user-hidden": "false"
     }
   ],
   "media": {

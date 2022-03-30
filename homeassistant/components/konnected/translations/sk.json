@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options_binary": {
+                "data": {
+                    "name": "N\u00e1zov (volite\u013en\u00fd)"
+                }
+            },
+            "options_digital": {
+                "data": {
+                    "name": "N\u00e1zov (volite\u013en\u00fd)"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "N\u00e1zov (volite\u013en\u00fd)"
+                }
+            }
+        }
+    }
+}

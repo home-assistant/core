@@ -115,5 +115,4 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={CONF_NAME: self._title},
-            data_schema=vol.Schema({}),
         )

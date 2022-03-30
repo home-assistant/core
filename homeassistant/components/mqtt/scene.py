@@ -12,18 +12,17 @@ from homeassistant.const import CONF_ICON, CONF_NAME, CONF_PAYLOAD_ON, CONF_UNIQ
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN
+from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from .mixins import (
     CONF_OBJECT_ID,
     MQTT_AVAILABILITY_SCHEMA,
     MqttAvailability,
     MqttDiscoveryUpdate,
     async_setup_entry_helper,
+    async_setup_platform_helper,
     init_entity_id_from_config,
 )
 
@@ -52,8 +51,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT scene through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, scene.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
@@ -110,6 +110,7 @@ class MqttScene(
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
         await super().async_added_to_hass()
+        self.async_send_discovery_done()
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""

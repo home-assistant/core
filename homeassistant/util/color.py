@@ -472,7 +472,10 @@ def color_rgbww_to_rgb(
     except ZeroDivisionError:
         ct_ratio = 0.5
     color_temp_mired = min_mireds + ct_ratio * mired_range
-    color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+    if color_temp_mired:
+        color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+    else:
+        color_temp_kelvin = 0
     w_r, w_g, w_b = color_temperature_to_rgb(color_temp_kelvin)
     white_level = max(cw, ww) / 255
 

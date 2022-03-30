@@ -14,11 +14,13 @@ DOMAIN = "homewizard"
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 # Platform config.
-CONF_SERIAL = "serial"
+CONF_API_ENABLED = "api_enabled"
+CONF_DATA = "data"
+CONF_DEVICE = "device"
+CONF_PATH = "path"
 CONF_PRODUCT_NAME = "product_name"
 CONF_PRODUCT_TYPE = "product_type"
-CONF_DEVICE = "device"
-CONF_DATA = "data"
+CONF_SERIAL = "serial"
 
 UPDATE_INTERVAL = timedelta(seconds=5)
 

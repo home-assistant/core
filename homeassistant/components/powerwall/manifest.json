@@ -3,7 +3,7 @@
   "name": "Tesla Powerwall",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/powerwall",
-  "requirements": ["tesla-powerwall==0.3.15"],
+  "requirements": ["tesla-powerwall==0.3.17"],
   "codeowners": ["@bdraco", "@jrester"],
   "dhcp": [
     {

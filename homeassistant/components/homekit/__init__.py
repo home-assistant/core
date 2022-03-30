@@ -667,8 +667,8 @@ class HomeKit:
             if ent_reg_ent := ent_reg.async_get(entity_id):
                 if (
                     ent_reg_ent.entity_category is not None
-                    and not self._filter.explicitly_included(entity_id)
-                ):
+                    or ent_reg_ent.hidden_by is not None
+                ) and not self._filter.explicitly_included(entity_id):
                     continue
 
                 await self._async_set_device_info_attributes(

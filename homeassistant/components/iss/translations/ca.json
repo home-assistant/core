@@ -9,7 +9,16 @@
                 "data": {
                     "show_on_map": "Mostrar al mapa?"
                 },
-                "description": "Vols configurar Estaci\u00f3 Espacial Internacional?"
+                "description": "Vols configurar Estaci\u00f3 Espacial Internacional (ISS)?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostra al mapa"
+                }
             }
         }
     }

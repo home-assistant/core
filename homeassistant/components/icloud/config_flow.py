@@ -288,8 +288,8 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         self._with_family,
                     )
                     return await self.async_step_verification_code(None, errors)
-                except PyiCloudFailedLoginException as error:
-                    _LOGGER.error("Error logging into iCloud service: %s", error)
+                except PyiCloudFailedLoginException as error_login:
+                    _LOGGER.error("Error logging into iCloud service: %s", error_login)
                     self.api = None
                     errors = {CONF_PASSWORD: "invalid_auth"}
                     return self._show_setup_form(user_input, errors, "user")

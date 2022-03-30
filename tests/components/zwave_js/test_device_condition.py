@@ -52,7 +52,7 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "type": "config_parameter",
             "device_id": device.id,
             "value_id": value_id,
-            "subtype": f"{value_id} ({name})",
+            "subtype": f"{config_value.property_} ({name})",
         },
         {
             "condition": "device",
@@ -215,17 +215,6 @@ async def test_node_status_state(
     assert len(calls) == 4
     assert calls[3].data["some"] == "dead - event - test_event4"
 
-    event = Event(
-        "unknown",
-        data={
-            "source": "node",
-            "event": "unknown",
-            "nodeId": lock_schlage_be469.node_id,
-        },
-    )
-    lock_schlage_be469.receive_event(event)
-    await hass.async_block_till_done()
-
 
 async def test_config_parameter_state(
     hass, client, lock_schlage_be469, integration, calls
@@ -250,7 +239,7 @@ async def test_config_parameter_state(
                             "device_id": device.id,
                             "type": "config_parameter",
                             "value_id": f"{lock_schlage_be469.node_id}-112-0-3",
-                            "subtype": f"{lock_schlage_be469.node_id}-112-0-3 (Beeper)",
+                            "subtype": "3 (Beeper)",
                             "value": 255,
                         }
                     ],
@@ -270,7 +259,7 @@ async def test_config_parameter_state(
                             "device_id": device.id,
                             "type": "config_parameter",
                             "value_id": f"{lock_schlage_be469.node_id}-112-0-6",
-                            "subtype": f"{lock_schlage_be469.node_id}-112-0-6 (User Slot Status)",
+                            "subtype": "6 (User Slot Status)",
                             "value": 1,
                         }
                     ],
@@ -483,7 +472,7 @@ async def test_get_condition_capabilities_config_parameter(
             "device_id": device.id,
             "type": "config_parameter",
             "value_id": f"{node.node_id}-112-0-1",
-            "subtype": f"{node.node_id}-112-0-1 (Temperature Reporting Threshold)",
+            "subtype": "1 (Temperature Reporting Threshold)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -514,7 +503,7 @@ async def test_get_condition_capabilities_config_parameter(
             "device_id": device.id,
             "type": "config_parameter",
             "value_id": f"{node.node_id}-112-0-10",
-            "subtype": f"{node.node_id}-112-0-10 (Temperature Reporting Filter)",
+            "subtype": "10 (Temperature Reporting Filter)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -540,7 +529,7 @@ async def test_get_condition_capabilities_config_parameter(
             "device_id": device.id,
             "type": "config_parameter",
             "value_id": f"{node.node_id}-112-0-2",
-            "subtype": f"{node.node_id}-112-0-2 (HVAC Settings)",
+            "subtype": "2 (HVAC Settings)",
         },
     )
     assert not capabilities

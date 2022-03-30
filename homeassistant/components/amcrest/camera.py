@@ -35,6 +35,7 @@ from .const import (
     DATA_AMCREST,
     DEVICES,
     DOMAIN,
+    RESOLUTION_TO_STREAM,
     SERVICE_UPDATE,
     SNAPSHOT_TIMEOUT,
 )
@@ -515,8 +516,8 @@ class AmcrestCam(Camera):
         max_tries = 3
         for tries in range(max_tries, 0, -1):
             try:
-                await getattr(self, f"_set_{func}")(value)
-                new_value = await getattr(self, f"_get_{func}")()
+                await getattr(self, f"_async_set_{func}")(value)
+                new_value = await getattr(self, f"_async_get_{func}")()
                 if new_value != value:
                     raise AmcrestCommandFailed
             except (AmcrestError, AmcrestCommandFailed) as error:
@@ -533,13 +534,14 @@ class AmcrestCam(Camera):
                 return
 
     async def _async_get_video(self) -> bool:
-        stream = {0: "Main", 1: "Extra"}
         return await self._api.async_is_video_enabled(
-            channel=0, stream=stream[self._resolution]
+            channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
         )
 
     async def _async_set_video(self, enable: bool) -> None:
-        await self._api.async_set_video_enabled(enable, channel=0)
+        await self._api.async_set_video_enabled(
+            enable, channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+        )
 
     async def _async_enable_video(self, enable: bool) -> None:
         """Enable or disable camera video stream."""
@@ -548,7 +550,7 @@ class AmcrestCam(Camera):
         # recording on if video stream is being turned off.
         if self.is_recording and not enable:
             await self._async_enable_recording(False)
-        await self._async_change_setting(enable, "video", "is_streaming")
+        await self._async_change_setting(enable, "video", "_attr_is_streaming")
         if self._control_light:
             await self._async_change_light()
 
@@ -585,10 +587,14 @@ class AmcrestCam(Camera):
         )
 
     async def _async_get_audio(self) -> bool:
-        return await self._api.async_audio_enabled
+        return await self._api.async_is_audio_enabled(
+            channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+        )
 
     async def _async_set_audio(self, enable: bool) -> None:
-        await self._api.async_set_audio_enabled(enable)
+        await self._api.async_set_audio_enabled(
+            enable, channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+        )
 
     async def _async_enable_audio(self, enable: bool) -> None:
         """Enable or disable audio stream."""

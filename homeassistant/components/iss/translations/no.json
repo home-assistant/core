@@ -9,7 +9,16 @@
                 "data": {
                     "show_on_map": "Vis p\u00e5 kart?"
                 },
-                "description": "Vil du konfigurere den internasjonale romstasjonen?"
+                "description": "Vil du konfigurere den internasjonale romstasjonen (ISS)?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Vis p\u00e5 kart"
+                }
             }
         }
     }

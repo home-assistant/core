@@ -1,4 +1,131 @@
 {
+    "config": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on.",
+                "title": "New Group"
+            },
+            "cover": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "New Group"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "New Group"
+            },
+            "light": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "New Group"
+            },
+            "lock": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "New Group"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "New Group"
+            },
+            "switch": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "New Group"
+            },
+            "user": {
+                "description": "Select group type",
+                "menu_options": {
+                    "binary_sensor": "Binary sensor group",
+                    "cover": "Cover group",
+                    "fan": "Fan group",
+                    "light": "Light group",
+                    "lock": "Lock group",
+                    "media_player": "Media player group",
+                    "switch": "Switch group"
+                },
+                "title": "New Group"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
+            },
+            "cover": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
+            "fan": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
+            "light": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
+            },
+            "lock": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
+            "switch": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Closed",
