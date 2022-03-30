@@ -61,8 +61,8 @@ set_alarm_detection_sensibility:
   fields:
     level:
       name: Sensitivity Level
-      description: 'Sensibility level (1-6) for type 0 (Normal camera)
-      or (1-100) for type 3 (PIR sensor camera).'
+      description: "Sensibility level (1-6) for type 0 (Normal camera)
+        or (1-100) for type 3 (PIR sensor camera)."
       required: true
       example: 3
       default: 3
