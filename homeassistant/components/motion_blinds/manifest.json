@@ -6,7 +6,7 @@
   "requirements": ["motionblinds==0.6.2"],
   "dependencies": ["network"],
   "dhcp": [
-    {"registered_devices": true},
+    { "registered_devices": true },
     {
       "hostname": "motion_*"
     }
