@@ -230,7 +230,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @callback
 def _async_update_config_entry_if_from_yaml(
-    hass: HomeAssistant, entries_by_name: dict[str, ConfigEntry], conf: dict
+    hass: HomeAssistant, entries_by_name: dict[str, ConfigEntry], conf: ConfigType
 ) -> bool:
     """Update a config entry with the latest yaml.
 
@@ -465,6 +465,8 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
 class HomeKit:
     """Class to handle all actions between HomeKit and Home Assistant."""
 
+    driver: HomeDriver
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -475,9 +477,9 @@ class HomeKit:
         exclude_accessory_mode: bool,
         entity_config: dict,
         homekit_mode: str,
-        advertise_ip: str | None = None,
-        entry_id: str | None = None,
-        entry_title: str | None = None,
+        advertise_ip: str | None,
+        entry_id: str,
+        entry_title: str,
         devices: Iterable[str] | None = None,
     ) -> None:
         """Initialize a HomeKit object."""
@@ -500,7 +502,6 @@ class HomeKit:
         self.status = STATUS_READY
 
         self.bridge: HomeBridge | None = None
-        self.driver: HomeDriver | None = None
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: UUID) -> None:
         """Set up bridge and accessory driver."""
@@ -537,7 +538,6 @@ class HomeKit:
         self, entity_ids: Iterable[str]
     ) -> None:
         """Reset accessories in accessory mode."""
-        assert self.driver is not None
         acc = cast(HomeAccessory, self.driver.accessory)
         if acc.entity_id not in entity_ids:
             return
@@ -612,7 +612,6 @@ class HomeKit:
             )
 
         assert self.aid_storage is not None
-        assert self.driver is not None
         assert self.bridge is not None
         aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
         conf = self._config.get(state.entity_id, {}).copy()
