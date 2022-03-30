@@ -36,10 +36,24 @@ def fakeimgbytes_svg():
     )
 
 
+@pytest.fixture(scope="package")
+def fakeimgbytes_gif():
+    """Fake image in RAM for testing."""
+    buf = BytesIO()  # fake image in ram for testing.
+    Image.new("RGB", (1, 1)).save(buf, format="gif")
+    yield bytes(buf.getbuffer())
+
+
 @pytest.fixture
 def fakeimg_png(fakeimgbytes_png):
     """Set up respx to respond to test url with fake image bytes."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+
+
+@pytest.fixture
+def fakeimg_gif(fakeimgbytes_gif):
+    """Set up respx to respond to test url with fake image bytes."""
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_gif)
 
 
 @pytest.fixture(scope="package")
