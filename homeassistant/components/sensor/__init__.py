@@ -447,8 +447,8 @@ class SensorEntity(Entity):
 
         if (
             value is not None
-            and self.device_class in UNIT_CONVERSIONS
             and native_unit_of_measurement != unit_of_measurement
+            and self.device_class in UNIT_CONVERSIONS
         ):
             assert unit_of_measurement
             assert native_unit_of_measurement
@@ -483,8 +483,8 @@ class SensorEntity(Entity):
         if (
             value is not None
             and self.device_class != DEVICE_CLASS_TEMPERATURE
-            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
             and native_unit_of_measurement != units.temperature_unit
+            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
         ):
             if not self._temperature_conversion_reported:
                 self._temperature_conversion_reported = True
