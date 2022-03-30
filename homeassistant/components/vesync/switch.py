@@ -9,8 +9,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncBaseEntity, VeSyncDevice
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_SWITCHES
+from .common import VeSyncBaseEntity, VeSyncDevice, is_humidifier
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,10 +42,10 @@ def _setup_entities(devices, async_add_entities):
         if DEV_TYPE_TO_HA.get(dev.device_type) == "outlet":
             entities.append(VeSyncSwitchHA(dev))
         elif DEV_TYPE_TO_HA.get(dev.device_type) == "switch":
-            dev_list.append(VeSyncLightSwitch(dev))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) == "humidifier":
-            dev_list.append(VeSyncHumidifierDisplayHA(dev))
-            dev_list.append(VeSyncHumidifierAutomaticStopHA(dev))
+            entities.append(VeSyncLightSwitch(dev))
+        elif is_humidifier(dev.device_type):
+            entities.append(VeSyncHumidifierDisplayHA(dev))
+            entities.append(VeSyncHumidifierAutomaticStopHA(dev))
         else:
             _LOGGER.warning(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
