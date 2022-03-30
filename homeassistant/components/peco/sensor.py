@@ -1,13 +1,11 @@
 """Sensor component for PECO outage counter."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 from typing import Final
 
-from peco import BadJSONError, HttpError, OutageResults
+from peco import OutageResults
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -17,15 +15,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
-from .const import CONF_COUNTY, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import CONF_COUNTY, DOMAIN
 
 
 @dataclass
@@ -74,35 +70,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    api = hass.data[DOMAIN][config_entry.entry_id]
-    websession = async_get_clientsession(hass)
     county: str = config_entry.data[CONF_COUNTY]
-
-    async def async_update_data() -> OutageResults:
-        """Fetch data from API."""
-        try:
-            data: OutageResults = (
-                await api.get_outage_totals(websession)
-                if county == "TOTAL"
-                else await api.get_outage_count(county, websession)
-            )
-        except HttpError as err:
-            raise UpdateFailed(f"Error fetching data: {err}") from err
-        except BadJSONError as err:
-            raise UpdateFailed(f"Error parsing data: {err}") from err
-        except asyncio.TimeoutError as err:
-            raise UpdateFailed(f"Timeout fetching data: {err}") from err
-        return data
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name="PECO Outage Count",
-        update_method=async_update_data,
-        update_interval=timedelta(minutes=SCAN_INTERVAL),
-    )
-
-    await coordinator.async_config_entry_first_refresh()
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         [PecoSensor(sensor, county, coordinator) for sensor in SENSOR_LIST],
