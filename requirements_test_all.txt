@@ -570,7 +570,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220322.0
+home-assistant-frontend==20220329.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -858,7 +858,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.7
+py-synologydsm-api==1.0.8
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2

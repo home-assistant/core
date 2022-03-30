@@ -1048,6 +1048,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/tractive/ @Danielhiversen @zhulik @bieniu
 /tests/components/tractive/ @Danielhiversen @zhulik @bieniu
 /homeassistant/components/trafikverket_train/ @endor-force @gjohansson-ST
+/tests/components/trafikverket_train/ @endor-force @gjohansson-ST
 /homeassistant/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
 /tests/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
 /homeassistant/components/transmission/ @engrbm87 @JPHutchins

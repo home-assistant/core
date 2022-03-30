@@ -402,7 +402,6 @@ omit =
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/const.py
     homeassistant/components/fritz/device_tracker.py
-    homeassistant/components/fritz/sensor.py
     homeassistant/components/fritz/services.py
     homeassistant/components/fritz/switch.py
     homeassistant/components/fritzbox_callmonitor/__init__.py
@@ -1182,6 +1181,7 @@ omit =
     homeassistant/components/synology_dsm/sensor.py
     homeassistant/components/synology_dsm/service.py
     homeassistant/components/synology_dsm/switch.py
+    homeassistant/components/synology_dsm/update.py
     homeassistant/components/synology_srm/device_tracker.py
     homeassistant/components/syslog/notify.py
     homeassistant/components/system_bridge/__init__.py
@@ -1274,6 +1274,7 @@ omit =
     homeassistant/components/tradfri/light.py
     homeassistant/components/tradfri/sensor.py
     homeassistant/components/tradfri/switch.py
+    homeassistant/components/trafikverket_train/__init__.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
     homeassistant/components/trafikverket_weatherstation/coordinator.py
