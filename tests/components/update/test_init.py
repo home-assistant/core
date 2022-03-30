@@ -1,6 +1,8 @@
 """The tests for the Update component."""
+from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
+from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant.components.update import (
@@ -587,3 +589,83 @@ async def test_restore_state(
     assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_SKIPPED_VERSION] == "1.0.1"
+
+
+async def test_release_notes(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> None:
+    """Test getting the release notes over the websocket connection."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.update_with_release_notes",
+        }
+    )
+    result = await client.receive_json()
+    assert result["result"] == "Release notes"
+
+
+async def test_release_notes_entity_not_found(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> None:
+    """Test getting the release notes for not found entity."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.entity_not_found",
+        }
+    )
+    result = await client.receive_json()
+    assert result["error"]["code"] == "not_found"
+    assert result["error"]["message"] == "Entity not found"
+
+
+async def test_release_notes_entity_does_not_support_release_notes(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> None:
+    """Test getting the release notes for entity that does not support release notes."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.update_available",
+        }
+    )
+    result = await client.receive_json()
+    assert result["error"]["code"] == "not_supported"
+    assert result["error"]["message"] == "Entity does not support release notes"
