@@ -366,9 +366,7 @@ async def test_update_off_ws_with_power_state(
     # Second update uses device_info(ON)
     rest_api.rest_device_info.reset_mock()
     next_update = mock_now + timedelta(minutes=2)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update), patch.object(
-        remotews, "is_alive", return_value=False
-    ):
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
@@ -381,9 +379,7 @@ async def test_update_off_ws_with_power_state(
     rest_api.rest_device_info.reset_mock()
     device_info["device"]["PowerState"] = "off"
     next_update = mock_now + timedelta(minutes=3)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update), patch.object(
-        remotews, "is_alive", return_value=False
-    ):
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
