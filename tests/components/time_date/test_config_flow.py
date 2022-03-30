@@ -35,7 +35,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Time & Date"
+    assert result["title"] == "Date & Time"
     assert result["data"] == {}
     assert result["options"] == {"display_option": "date_time"}
     assert len(mock_setup_entry.mock_calls) == 1
