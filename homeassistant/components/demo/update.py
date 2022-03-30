@@ -71,6 +71,7 @@ async def async_setup_platform(
                 latest_version="1.94.2",
                 support_progress=True,
                 release_summary="Added support for effects",
+                support_release_notes=True,
                 release_url="https://www.example.com/release/1.93.3",
                 device_class=UpdateDeviceClass.FIRMWARE,
             ),
@@ -109,6 +110,7 @@ class DemoUpdate(UpdateEntity):
         release_url: str | None = None,
         support_progress: bool = False,
         support_install: bool = True,
+        support_release_notes: bool = False,
         device_class: UpdateDeviceClass | None = None,
     ) -> None:
         """Initialize the Demo select entity."""
@@ -133,6 +135,9 @@ class DemoUpdate(UpdateEntity):
         if support_progress:
             self._attr_supported_features |= UpdateEntityFeature.PROGRESS
 
+        if support_release_notes:
+            self._attr_supported_features |= UpdateEntityFeature.RELEASE_NOTES
+
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -148,3 +153,10 @@ class DemoUpdate(UpdateEntity):
             version if version is not None else self.latest_version
         )
         self.async_write_ha_state()
+
+    def release_notes(self) -> str | None:
+        """Return the release notes."""
+        return (
+            "Long release notes.\n\n**With** "
+            f"markdown support!\n\n***\n\n{self.release_summary}"
+        )
