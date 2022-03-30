@@ -19,8 +19,8 @@ def setup_platform(
     """Set up the Demo Calendar platform."""
     add_entities(
         [
-            DemoGoogleCalendar(hass, calendar_data_future(), "Calendar 1"),
-            DemoGoogleCalendar(hass, calendar_data_current(), "Calendar 2"),
+            DemoGoogleCalendar(calendar_data_future(), "Calendar 1"),
+            DemoGoogleCalendar(calendar_data_current(), "Calendar 2"),
         ]
     )
 
@@ -48,7 +48,7 @@ def calendar_data_current() -> CalendarEvent:
 class DemoGoogleCalendar(CalendarEntity):
     """Representation of a Demo Calendar element."""
 
-    def __init__(self, hass: HomeAssistant, event: CalendarEvent, name: str) -> None:
+    def __init__(self, event: CalendarEvent, name: str) -> None:
         """Initialize demo calendar."""
         self._event = event
         self._name = name
