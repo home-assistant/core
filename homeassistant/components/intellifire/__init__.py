@@ -25,8 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     ift_control = IntellifireControlAsync(
         fireplace_ip=entry.data[CONF_HOST],
-        # use_http=(not entry.data[CONF_SSL]),
-        # verify_ssl=entry.data[CONF_VERIFY_SSL],
     )
     try:
         await ift_control.login(

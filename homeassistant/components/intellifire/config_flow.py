@@ -84,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate username/password against api."""
         ift_control = IntellifireControlAsync(fireplace_ip=host)
 
-        LOGGER.info("Attempting login with: %s %s", username, password)
+        LOGGER.debug("Attempting login to iftapi with: %s", username)
         # This can throw an error which will be handled above
         try:
             await ift_control.login(username=username, password=password)
@@ -95,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data = {CONF_HOST: host, CONF_PASSWORD: password, CONF_USERNAME: username}
 
         # Update or Create
-        existing_entry = await self.async_set_unique_id(DOMAIN)
+        existing_entry = await self.async_set_unique_id(serial)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
