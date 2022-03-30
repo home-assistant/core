@@ -531,7 +531,7 @@ def _async_find_next_available_port(start_port: int, exclude_ports: set) -> int:
             if port == MAX_PORT:
                 raise
             continue
-    assert False  # unreachable
+    raise RuntimeError("unreachable")
 
 
 def pid_is_alive(pid: int) -> bool:
