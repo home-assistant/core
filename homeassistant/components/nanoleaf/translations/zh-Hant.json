@@ -24,5 +24,13 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "\u5411\u4e0b\u6ed1",
+            "swipe_left": "\u5411\u5de6\u6ed1",
+            "swipe_right": "\u5411\u53f3\u6ed1",
+            "swipe_up": "\u5411\u4e0a\u6ed1"
+        }
     }
 }

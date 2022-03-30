@@ -59,7 +59,6 @@ async def async_setup_entry(
 class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
-    coordinator: SwitchbotDataUpdateCoordinator
     _attr_device_class = CoverDeviceClass.CURTAIN
     _attr_supported_features = (
         SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION

@@ -56,10 +56,6 @@ class LocalSource(MediaSource):
         if item.domain != DOMAIN:
             raise Unresolvable("Unknown domain.")
 
-        if not item.identifier:
-            # Empty source_dir_id and location
-            return "", ""
-
         source_dir_id, _, location = item.identifier.partition("/")
         if source_dir_id not in self.hass.config.media_dirs:
             raise Unresolvable("Unknown source directory.")
@@ -74,36 +70,39 @@ class LocalSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         source_dir_id, location = self.async_parse_identifier(item)
-        if source_dir_id == "" or source_dir_id not in self.hass.config.media_dirs:
-            raise Unresolvable("Unknown source directory.")
-
-        mime_type, _ = mimetypes.guess_type(
-            str(self.async_full_path(source_dir_id, location))
-        )
+        path = self.async_full_path(source_dir_id, location)
+        mime_type, _ = mimetypes.guess_type(str(path))
         assert isinstance(mime_type, str)
         return PlayMedia(f"/media/{item.identifier}", mime_type)
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
-        try:
-            source_dir_id, location = self.async_parse_identifier(item)
-        except Unresolvable as err:
-            raise BrowseError(str(err)) from err
+        if item.identifier:
+            try:
+                source_dir_id, location = self.async_parse_identifier(item)
+            except Unresolvable as err:
+                raise BrowseError(str(err)) from err
+
+        else:
+            source_dir_id, location = None, ""
 
         result = await self.hass.async_add_executor_job(
             self._browse_media, source_dir_id, location
         )
+
         return result
 
-    def _browse_media(self, source_dir_id: str, location: str) -> BrowseMediaSource:
+    def _browse_media(
+        self, source_dir_id: str | None, location: str
+    ) -> BrowseMediaSource:
         """Browse media."""
 
         # If only one media dir is configured, use that as the local media root
-        if source_dir_id == "" and len(self.hass.config.media_dirs) == 1:
+        if source_dir_id is None and len(self.hass.config.media_dirs) == 1:
             source_dir_id = list(self.hass.config.media_dirs)[0]
 
         # Multiple folder, root is requested
-        if source_dir_id == "":
+        if source_dir_id is None:
             if location:
                 raise BrowseError("Folder not found.")
 

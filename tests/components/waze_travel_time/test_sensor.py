@@ -3,7 +3,16 @@
 from WazeRouteCalculator import WRCError
 import pytest
 
-from homeassistant.components.waze_travel_time.const import DOMAIN
+from homeassistant.components.waze_travel_time.const import (
+    CONF_AVOID_FERRIES,
+    CONF_AVOID_SUBSCRIPTION_ROADS,
+    CONF_AVOID_TOLL_ROADS,
+    CONF_REALTIME,
+    CONF_UNITS,
+    CONF_VEHICLE_TYPE,
+    DOMAIN,
+)
+from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL
 
 from .const import MOCK_CONFIG
 
@@ -11,11 +20,12 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_config")
-async def mock_config_fixture(hass, data):
+async def mock_config_fixture(hass, data, options):
     """Mock a Waze Travel Time config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=data,
+        options=options,
         entry_id="test",
     )
     config_entry.add_to_hass(hass)
@@ -40,8 +50,8 @@ def mock_update_keyerror_fixture(mock_wrc):
 
 
 @pytest.mark.parametrize(
-    "data",
-    [MOCK_CONFIG],
+    "data,options",
+    [(MOCK_CONFIG, {})],
 )
 @pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_sensor(hass):
@@ -66,6 +76,28 @@ async def test_sensor(hass):
         == "min"
     )
     assert hass.states.get("sensor.waze_travel_time").attributes["icon"] == "mdi:car"
+
+
+@pytest.mark.parametrize(
+    "data,options",
+    [
+        (
+            MOCK_CONFIG,
+            {
+                CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+                CONF_REALTIME: True,
+                CONF_VEHICLE_TYPE: "car",
+                CONF_AVOID_TOLL_ROADS: True,
+                CONF_AVOID_SUBSCRIPTION_ROADS: True,
+                CONF_AVOID_FERRIES: True,
+            },
+        )
+    ],
+)
+@pytest.mark.usefixtures("mock_update", "mock_config")
+async def test_imperial(hass):
+    """Test that the imperial option works."""
+    assert hass.states.get("sensor.waze_travel_time").attributes["distance"] == 186.4113
 
 
 @pytest.mark.usefixtures("mock_update_wrcerror")

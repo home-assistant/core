@@ -58,7 +58,7 @@ class FirmataLight(FirmataPinEntity, LightEntity):
 
     def __init__(
         self,
-        api: type[FirmataBoardPin],
+        api: FirmataBoardPin,
         config_entry: ConfigEntry,
         name: str,
         pin: FirmataPinType,

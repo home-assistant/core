@@ -3,8 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.cpuspeed.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -60,26 +59,6 @@ async def test_already_configured(
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert len(mock_cpuinfo_config_flow.mock_calls) == 0
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_cpuinfo_config_flow: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_NAME: "Frenck's CPU"},
-    )
-
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result.get("title") == "Frenck's CPU"
-    assert result.get("data") == {}
-
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_cpuinfo_config_flow.mock_calls) == 1
 
 
 async def test_not_compatible(

@@ -1,4 +1,6 @@
 """Test the Waze Travel Time config flow."""
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,
@@ -21,7 +23,8 @@ from .const import MOCK_CONFIG
 from tests.common import MockConfigEntry
 
 
-async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
+@pytest.mark.usefixtures("validate_config_entry")
+async def test_minimum_fields(hass):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -45,9 +48,8 @@ async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
     }
 
 
-async def test_options(hass, validate_config_entry, mock_update):
+async def test_options(hass):
     """Test options flow."""
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
@@ -99,7 +101,8 @@ async def test_options(hass, validate_config_entry, mock_update):
     }
 
 
-async def test_import(hass, validate_config_entry, mock_update):
+@pytest.mark.usefixtures("validate_config_entry")
+async def test_import(hass):
     """Test import for config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -139,30 +142,8 @@ async def test_import(hass, validate_config_entry, mock_update):
     }
 
 
-async def _setup_dupe_import(hass, mock_update):
-    """Set up dupe import."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-            CONF_AVOID_FERRIES: True,
-            CONF_AVOID_SUBSCRIPTION_ROADS: True,
-            CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: "exclude",
-            CONF_INCL_FILTER: "include",
-            CONF_REALTIME: False,
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-            CONF_VEHICLE_TYPE: "taxi",
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    await hass.async_block_till_done()
-
-
-async def test_dupe(hass, validate_config_entry, bypass_setup):
+@pytest.mark.usefixtures("validate_config_entry")
+async def test_dupe(hass):
     """Test setting up the same entry data twice is OK."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -194,7 +175,8 @@ async def test_dupe(hass, validate_config_entry, bypass_setup):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
-async def test_invalid_config_entry(hass, invalidate_config_entry):
+@pytest.mark.usefixtures("invalidate_config_entry")
+async def test_invalid_config_entry(hass):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

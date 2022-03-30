@@ -1,18 +1,23 @@
 """Fixtures for DLNA DMS tests."""
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Iterable
-from typing import Final
+from collections.abc import AsyncIterable, Iterable
+from typing import Final, cast
 from unittest.mock import Mock, create_autospec, patch, seal
 
-from async_upnp_client import UpnpDevice, UpnpService
+from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.utils import absolute_url
 import pytest
 
-from homeassistant.components.dlna_dms.const import DOMAIN
-from homeassistant.components.dlna_dms.dms import DlnaDmsData, get_domain_data
+from homeassistant.components.dlna_dms.const import (
+    CONF_SOURCE_ID,
+    CONFIG_VERSION,
+    DOMAIN,
+)
+from homeassistant.components.dlna_dms.dms import DlnaDmsData
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -29,6 +34,12 @@ LOCAL_IP: Final = "192.88.99.1"
 EVENT_CALLBACK_URL: Final = "http://192.88.99.1/notify"
 
 NEW_DEVICE_LOCATION: Final = "http://192.88.99.7" + "/dmr_description.xml"
+
+
+@pytest.fixture
+async def setup_media_source(hass) -> None:
+    """Set up media source."""
+    assert await async_setup_component(hass, "media_source", {})
 
 
 @pytest.fixture
@@ -69,21 +80,13 @@ def upnp_factory_mock() -> Iterable[Mock]:
         yield upnp_factory_instance
 
 
-@pytest.fixture
-async def domain_data_mock(
-    hass: HomeAssistant, aioclient_mock, upnp_factory_mock
-) -> AsyncGenerator[DlnaDmsData, None]:
-    """Mock some global data used by this component.
-
-    This includes network clients and library object factories. Mocking it
-    prevents network use.
-
-    Yields the actual domain data, for ease of access
-    """
+@pytest.fixture(autouse=True, scope="module")
+def aiohttp_session_requester_mock() -> Iterable[Mock]:
+    """Mock the AiohttpSessionRequester to prevent network use."""
     with patch(
         "homeassistant.components.dlna_dms.dms.AiohttpSessionRequester", autospec=True
-    ):
-        yield get_domain_data(hass)
+    ) as requester_mock:
+        yield requester_mock
 
 
 @pytest.fixture
@@ -92,9 +95,11 @@ def config_entry_mock() -> MockConfigEntry:
     mock_entry = MockConfigEntry(
         unique_id=MOCK_DEVICE_USN,
         domain=DOMAIN,
+        version=CONFIG_VERSION,
         data={
             CONF_URL: MOCK_DEVICE_LOCATION,
             CONF_DEVICE_ID: MOCK_DEVICE_USN,
+            CONF_SOURCE_ID: MOCK_SOURCE_ID,
         },
         title=MOCK_DEVICE_NAME,
     )
@@ -129,3 +134,40 @@ def ssdp_scanner_mock() -> Iterable[Mock]:
         reg_callback = mock_scanner.return_value.async_register_callback
         reg_callback.return_value = Mock(return_value=None)
         yield mock_scanner.return_value
+
+
+@pytest.fixture
+async def device_source_mock(
+    hass: HomeAssistant,
+    config_entry_mock: MockConfigEntry,
+    ssdp_scanner_mock: Mock,
+    dms_device_mock: Mock,
+) -> AsyncIterable[None]:
+    """Fixture to set up a DmsDeviceSource in a connected state and cleanup at completion."""
+    config_entry_mock.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_mock.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the DmsDeviceSource has registered all needed listeners
+    assert len(config_entry_mock.update_listeners) == 0
+    assert ssdp_scanner_mock.async_register_callback.await_count == 2
+    assert ssdp_scanner_mock.async_register_callback.return_value.call_count == 0
+
+    # Run the test
+    yield None
+
+    # Unload config entry to clean up
+    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
+        "require_restart": False
+    }
+
+    # Check DmsDeviceSource has cleaned up its resources
+    assert not config_entry_mock.update_listeners
+    assert (
+        ssdp_scanner_mock.async_register_callback.await_count
+        == ssdp_scanner_mock.async_register_callback.return_value.call_count
+    )
+
+    domain_data = cast(DlnaDmsData, hass.data[DOMAIN])
+    assert MOCK_DEVICE_USN not in domain_data.devices
+    assert MOCK_SOURCE_ID not in domain_data.sources

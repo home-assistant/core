@@ -177,7 +177,10 @@ class MQTTTagScanner:
             if not tag_id:  # No output from template, ignore
                 return
 
-            await self.hass.components.tag.async_scan_tag(tag_id, self.device_id)
+            # Importing tag via hass.components in case it is overridden
+            # in a custom_components (custom_components.tag)
+            tag = self.hass.components.tag
+            await tag.async_scan_tag(tag_id, self.device_id)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,

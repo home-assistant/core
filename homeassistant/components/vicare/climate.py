@@ -24,7 +24,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -310,6 +315,11 @@ class ViCareClimate(ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
+        return PRECISION_TENTHS
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Set target temperature step to wholes."""
         return PRECISION_WHOLE
 
     def set_temperature(self, **kwargs):

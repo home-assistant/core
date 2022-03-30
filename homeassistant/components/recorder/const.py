@@ -1,5 +1,11 @@
 """Recorder constants."""
 
+from functools import partial
+import json
+from typing import Final
+
+from homeassistant.helpers.json import JSONEncoder
+
 DATA_INSTANCE = "recorder_instance"
 SQLITE_URL_PREFIX = "sqlite://"
 DOMAIN = "recorder"
@@ -15,3 +21,7 @@ MAX_QUEUE_BACKLOG = 30000
 # We can increase this back to 1000 once most
 # have upgraded their sqlite version
 MAX_ROWS_TO_PURGE = 998
+
+DB_WORKER_PREFIX = "DbWorker"
+
+JSON_DUMP: Final = partial(json.dumps, cls=JSONEncoder, separators=(",", ":"))

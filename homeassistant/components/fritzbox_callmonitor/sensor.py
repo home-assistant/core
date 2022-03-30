@@ -55,6 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=3)
 
+# Deprecated in Home Assistant 2022.3
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -75,6 +76,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the platform into a config entry."""
+    _LOGGER.warning(
+        "Configuration of the AVM FRITZ!Box Call Monitor sensor platform in YAML "
+        "is deprecated and will be removed in Home Assistant 2022.5; "
+        "Your existing configuration has been imported into the UI automatically "
+        "and can be safely removed from your configuration.yaml file"
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config

@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import logging
 import os.path
+from typing import Any, cast
 
 import nextcord
+from nextcord.abc import Messageable
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -13,42 +15,58 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_API_TOKEN, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EMBED = "embed"
 ATTR_EMBED_AUTHOR = "author"
+ATTR_EMBED_COLOR = "color"
+ATTR_EMBED_DESCRIPTION = "description"
 ATTR_EMBED_FIELDS = "fields"
 ATTR_EMBED_FOOTER = "footer"
+ATTR_EMBED_TITLE = "title"
 ATTR_EMBED_THUMBNAIL = "thumbnail"
+ATTR_EMBED_URL = "url"
 ATTR_IMAGES = "images"
 
+# Deprecated in Home Assistant 2022.4
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
 
 
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> DiscordNotificationService | None:
     """Get the Discord notification service."""
-    token = config[CONF_TOKEN]
-    return DiscordNotificationService(hass, token)
+    if discovery_info is None:
+        return None
+    return DiscordNotificationService(hass, discovery_info[CONF_API_TOKEN])
 
 
 class DiscordNotificationService(BaseNotificationService):
     """Implement the notification service for Discord."""
 
-    def __init__(self, hass, token):
+    def __init__(self, hass: HomeAssistant, token: str) -> None:
         """Initialize the service."""
         self.token = token
         self.hass = hass
 
-    def file_exists(self, filename):
+    def file_exists(self, filename: str) -> bool:
         """Check if a file exists on disk and is in authorized path."""
         if not self.hass.config.is_allowed_path(filename):
+            _LOGGER.warning("Path not allowed: %s", filename)
             return False
-        return os.path.isfile(filename)
+        if not os.path.isfile(filename):
+            _LOGGER.warning("Not a file: %s", filename)
+            return False
+        return True
 
-    async def async_send_message(self, message, **kwargs):
+    async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Login to Discord, send message to channel(s) and log out."""
         nextcord.VoiceClient.warn_nacl = False
         discord_bot = nextcord.Client()
@@ -64,10 +82,16 @@ class DiscordNotificationService(BaseNotificationService):
         embeds: list[nextcord.Embed] = []
         if ATTR_EMBED in data:
             embedding = data[ATTR_EMBED]
+            title = embedding.get(ATTR_EMBED_TITLE) or nextcord.Embed.Empty
+            description = embedding.get(ATTR_EMBED_DESCRIPTION) or nextcord.Embed.Empty
+            color = embedding.get(ATTR_EMBED_COLOR) or nextcord.Embed.Empty
+            url = embedding.get(ATTR_EMBED_URL) or nextcord.Embed.Empty
             fields = embedding.get(ATTR_EMBED_FIELDS) or []
 
             if embedding:
-                embed = nextcord.Embed(**embedding)
+                embed = nextcord.Embed(
+                    title=title, description=description, color=color, url=url
+                )
                 for field in fields:
                     embed.add_field(**field)
                 if ATTR_EMBED_FOOTER in embedding:
@@ -88,24 +112,24 @@ class DiscordNotificationService(BaseNotificationService):
 
                 if image_exists:
                     images.append(image)
-                else:
-                    _LOGGER.warning("Image not found: %s", image)
 
         await discord_bot.login(self.token)
 
         try:
             for channelid in kwargs[ATTR_TARGET]:
                 channelid = int(channelid)
+                # Must create new instances of File for each channel.
+                files = [nextcord.File(image) for image in images] if images else []
                 try:
-                    channel = await discord_bot.fetch_channel(channelid)
+                    channel = cast(
+                        Messageable, await discord_bot.fetch_channel(channelid)
+                    )
                 except nextcord.NotFound:
                     try:
                         channel = await discord_bot.fetch_user(channelid)
                     except nextcord.NotFound:
                         _LOGGER.warning("Channel not found for ID: %s", channelid)
                         continue
-                # Must create new instances of File for each channel.
-                files = [nextcord.File(image) for image in images] if images else []
                 await channel.send(message, files=files, embeds=embeds)
         except (nextcord.HTTPException, nextcord.NotFound) as error:
             _LOGGER.warning("Communication error: %s", error)

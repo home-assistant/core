@@ -134,6 +134,9 @@
             "off": "No est\u00e1 cargando",
             "on": "Cargando"
         },
+        "carbon_monoxide": {
+            "on": "Detectado"
+        },
         "co": {
             "off": "No detectado",
             "on": "Detectado"

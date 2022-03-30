@@ -51,7 +51,7 @@ DEFAULT_URL = "ws://localhost:3000"
 TITLE = "Z-Wave JS"
 
 ADDON_SETUP_TIMEOUT = 5
-ADDON_SETUP_TIMEOUT_ROUNDS = 4
+ADDON_SETUP_TIMEOUT_ROUNDS = 40
 CONF_EMULATE_HARDWARE = "emulate_hardware"
 CONF_LOG_LEVEL = "log_level"
 SERVER_VERSION_TIMEOUT = 10
@@ -385,7 +385,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="usb_confirm",
                 description_placeholders={CONF_NAME: self._title},
-                data_schema=vol.Schema({}),
             )
 
         self._usb_discovery = True

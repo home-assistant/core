@@ -78,10 +78,8 @@ async def async_setup_entry(
     async_add_entities(cameras, True)
 
 
-class CanaryCamera(CoordinatorEntity, Camera):
+class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
     """An implementation of a Canary security camera."""
-
-    coordinator: CanaryDataUpdateCoordinator
 
     def __init__(
         self,

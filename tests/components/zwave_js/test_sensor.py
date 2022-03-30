@@ -15,8 +15,10 @@ from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
     DOMAIN,
+    SERVICE_REFRESH_VALUE,
     SERVICE_RESET_METER,
 )
+from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -154,7 +156,9 @@ async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration)
     assert entity_entry.disabled
 
 
-async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integration):
+async def test_node_status_sensor(
+    hass, client, controller_node, lock_id_lock_as_id150, integration
+):
     """Test node status sensor is created and gets updated on node state changes."""
     NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150
@@ -200,6 +204,18 @@ async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integrati
     await client.disconnect()
     assert hass.states.get(NODE_STATUS_ENTITY).state != STATE_UNAVAILABLE
 
+    # Assert a node status sensor entity is not created for the controller
+    node = client.driver.controller.nodes[1]
+    assert node.is_controller_node
+    assert (
+        ent_reg.async_get_entity_id(
+            DOMAIN,
+            "sensor",
+            f"{get_valueless_base_unique_id(client, node)}.node_status",
+        )
+        is None
+    )
+
 
 async def test_node_status_sensor_not_ready(
     hass,
@@ -207,6 +223,7 @@ async def test_node_status_sensor_not_ready(
     lock_id_lock_as_id150_not_ready,
     lock_id_lock_as_id150_state,
     integration,
+    caplog,
 ):
     """Test node status sensor is created and available if node is not ready."""
     NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
@@ -233,6 +250,17 @@ async def test_node_status_sensor_not_ready(
     assert node.ready
     assert hass.states.get(NODE_STATUS_ENTITY)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {
+            ATTR_ENTITY_ID: NODE_STATUS_ENTITY,
+        },
+        blocking=True,
+    )
+
+    assert "There is no value to refresh for this entity" in caplog.text
 
 
 async def test_reset_meter(

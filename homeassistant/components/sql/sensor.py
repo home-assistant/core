@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
+import decimal
 import logging
 import re
 
@@ -158,7 +159,7 @@ class SQLSensor(SensorEntity):
             _LOGGER.debug("result = %s", res.items())
             data = res[self._column_name]
             for key, value in res.items():
-                if isinstance(value, float):
+                if isinstance(value, decimal.Decimal):
                     value = float(value)
                 if isinstance(value, date):
                     value = value.isoformat()
@@ -171,7 +172,7 @@ class SQLSensor(SensorEntity):
         else:
             self._attr_native_value = data
 
-        if not data:
+        if data is None:
             _LOGGER.warning("%s returned no results", self._query)
 
         sess.close()
