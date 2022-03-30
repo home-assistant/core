@@ -33,17 +33,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Context,
-    Event,
-    HomeAssistant,
-    callback,
-    split_entity_id,
-)
+from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
@@ -641,24 +632,6 @@ class Entity(ABC):
         # Overwrite properties that have been set in the config file.
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
-
-        # Convert temperature if we detect one
-        try:
-            unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-            units = self.hass.config.units
-            domain = split_entity_id(self.entity_id)[0]
-            if (
-                unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
-                and unit_of_measure != units.temperature_unit
-                and domain != "sensor"
-            ):
-                prec = len(state) - state.index(".") - 1 if "." in state else 0
-                temp = units.temperature(float(state), unit_of_measure)
-                state = str(round(temp) if prec == 0 else round(temp, prec))
-                attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-        except ValueError:
-            # Could not convert state to float
-            pass
 
         if (
             self._context_set is not None
