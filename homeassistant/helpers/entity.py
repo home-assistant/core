@@ -36,7 +36,14 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    Event,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
@@ -639,9 +646,11 @@ class Entity(ABC):
         try:
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
             units = self.hass.config.units
+            domain = split_entity_id(self.entity_id)[0]
             if (
                 unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
                 and unit_of_measure != units.temperature_unit
+                and domain != "sensor"
             ):
                 prec = len(state) - state.index(".") - 1 if "." in state else 0
                 temp = units.temperature(float(state), unit_of_measure)
