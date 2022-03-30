@@ -126,7 +126,7 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             if await self.controller.request_auth_code(selected_method):
                 return await self.async_step_two_factor_validate()
-            raise SubaruException("2FA request failed")
+            return self.async_abort(reason="two_factor_request_failed")
 
         data_schema = vol.Schema(
             {

@@ -179,15 +179,15 @@ async def test_two_factor_request_fail(hass, two_factor_start_form):
         return_value=False,
     ) as mock_two_factor_request, patch(
         MOCK_API_2FA_CONTACTS, new_callable=PropertyMock
-    ) as mock_contacts, pytest.raises(
-        SubaruException
-    ):
+    ) as mock_contacts:
         mock_contacts.return_value = MOCK_2FA_CONTACTS
-        await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             two_factor_start_form["flow_id"],
             user_input={config_flow.CONF_CONTACT_METHOD: "email@addr.com"},
         )
     assert len(mock_two_factor_request.mock_calls) == 1
+    assert result["type"] == "abort"
+    assert result["reason"] == "two_factor_request_failed"
 
 
 async def test_two_factor_verify_success(hass, two_factor_verify_form):
