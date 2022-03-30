@@ -74,18 +74,7 @@
           "label": "Sound Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          133,
-          89,
-          128,
-          121,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -109,18 +98,7 @@
           "label": "Sound Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          133,
-          89,
-          128,
-          121,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -144,18 +122,7 @@
           "label": "Sound Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          133,
-          89,
-          128,
-          121,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -179,18 +146,7 @@
           "label": "Sound Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          133,
-          89,
-          128,
-          121,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -214,18 +170,7 @@
           "label": "Sound Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          133,
-          89,
-          128,
-          121,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -249,18 +194,7 @@
           "label": "Sound Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          133,
-          89,
-          128,
-          121,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -284,18 +218,7 @@
           "label": "Sound Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          133,
-          89,
-          128,
-          121,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -319,18 +242,7 @@
           "label": "Sound Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          133,
-          89,
-          128,
-          121,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -354,18 +266,7 @@
           "label": "Sound Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          133,
-          89,
-          128,
-          121,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -3760,18 +3661,7 @@
       "label": "Sound Switch"
     },
     "mandatorySupportedCCs": [
-      32,
-      133,
-      89,
-      128,
-      121,
-      114,
-      115,
-      159,
-      108,
-      85,
-      134,
-      94
+      32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
     ],
     "mandatoryControlledCCs": []
   },

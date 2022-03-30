@@ -91,7 +91,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.2.1
+aioairzone==0.2.3
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -713,6 +713,9 @@ nettigo-air-monitor==1.2.1
 
 # homeassistant.components.nexia
 nexia==0.9.13
+
+# homeassistant.components.discord
+nextcord==2.0.0a8
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1437,7 +1440,7 @@ stookalert==0.1.4
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.4.2
+subarulink==0.5.0
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
