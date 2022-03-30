@@ -63,19 +63,31 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
         integrations = {}
         type_filter = request.query["type"]
 
+        async def load_integration(hass: HomeAssistant, domain: str):
+            """Load integration."""
+            try:
+                return await loader.async_get_integration(hass, domain)
+            except loader.IntegrationNotFound:
+                pass
+
         # Fetch all the integrations so we can check their type
         for integration in await asyncio.gather(
             *(
-                loader.async_get_integration(hass, domain)
+                load_integration(hass, domain)
                 for domain in {entry.domain for entry in entries}
             )
         ):
-            integrations[integration.domain] = integration
+            if integration:
+                integrations[integration.domain] = integration
 
         entries = [
             entry
             for entry in entries
-            if integrations[entry.domain].integration_type == type_filter
+            if (type_filter != "helper" and entry.domain not in integrations)
+            or (
+                entry.domain in integrations
+                and integrations[entry.domain].integration_type == type_filter
+            )
         ]
 
         return self.json([entry_json(entry) for entry in entries])
