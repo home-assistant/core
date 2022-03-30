@@ -114,7 +114,7 @@ def get_image_type(image):
     if fmt is None:
         # if imghdr can't figure it out, could be svg.
         with contextlib.suppress(UnicodeDecodeError):
-            if image.decode("utf-8").startswith("<svg"):
+            if image.decode("utf-8").lstrip().startswith("<svg"):
                 return "svg+xml"
     return fmt
 
