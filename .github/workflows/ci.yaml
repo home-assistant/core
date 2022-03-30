@@ -11,11 +11,11 @@ on:
   workflow_dispatch:
     inputs:
       full:
-        description: 'Full run (regardless of changes)'
+        description: "Full run (regardless of changes)"
         default: false
         type: boolean
       lint-only:
-        description: 'Skip pytest'
+        description: "Skip pytest"
         default: false
         type: boolean
 
@@ -434,6 +434,11 @@ jobs:
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual check-json --all-files
+
+      - name: Run prettier
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual prettier --all-files
 
       - name: Register check executables problem matcher
         run: |

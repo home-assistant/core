@@ -27,4 +27,4 @@ heat_set:
         number:
           min: -100
           max: 100
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"

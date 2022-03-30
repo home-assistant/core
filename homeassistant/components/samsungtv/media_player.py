@@ -325,7 +325,8 @@ class SamsungTVDevice(MediaPlayerEntity):
         self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
     ) -> None:
         """State variable(s) changed, let home-assistant know."""
-        if self._update_from_upnp():
+        # Ensure the entity has been added to hass to avoid race condition
+        if self._update_from_upnp() and self.entity_id:
             self.async_write_ha_state()
 
     async def _async_launch_app(self, app_id: str) -> None:
