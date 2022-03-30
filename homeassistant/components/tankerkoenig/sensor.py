@@ -42,9 +42,6 @@ async def async_setup_entry(
 
     coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id]
 
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
-
     stations = coordinator.stations.values()
     entities = []
     for station in stations:
