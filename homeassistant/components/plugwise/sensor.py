@@ -278,7 +278,7 @@ async def async_setup_entry(
 
     entities: list[PlugwiseSensorEntity] = []
     for device_id, device in coordinator.data.devices.items():
-        await migrate_sensor_entity(hass, coordinator, device_id, device)
+        migrate_sensor_entity(hass, coordinator, device_id, device)
         for description in SENSORS:
             if (
                 "sensors" not in device
@@ -297,7 +297,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-async def migrate_sensor_entity(
+def migrate_sensor_entity(
     hass: HomeAssistant,
     coordinator: PlugwiseDataUpdateCoordinator,
     device_id: str,
