@@ -50,7 +50,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers import entity_component
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -326,9 +325,9 @@ class SamsungTVDevice(MediaPlayerEntity):
         self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
     ) -> None:
         """State variable(s) changed, let home-assistant know."""
-        if self._update_from_upnp():
-            with contextlib.suppress(NoEntitySpecifiedError):
-                self.async_write_ha_state()
+        # Ensure the entity has been added to hass to avoid race condition
+        if self._update_from_upnp() and self.entity_id:
+            self.async_write_ha_state()
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
