@@ -2224,7 +2224,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.4.2
+subarulink==0.5.0
 
 # homeassistant.components.ecovacs
 sucks==0.9.4
