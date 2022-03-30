@@ -9,4 +9,3 @@ sensor:
     resource: "http://localhost"
     method: GET
     name: rollout
-
