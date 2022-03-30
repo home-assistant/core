@@ -6,9 +6,11 @@ from datetime import timedelta
 import logging
 from typing import Any, Final, final
 
+from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
+from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -93,6 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {},
         UpdateEntity.async_skip.__name__,
     )
+    websocket_api.async_register_command(hass, websocket_release_notes)
 
     return True
 
@@ -268,6 +271,22 @@ class UpdateEntity(RestoreEntity):
         """
         raise NotImplementedError()
 
+    async def async_release_notes(self) -> str | None:
+        """Return full release notes.
+
+        This is suitable for a long changelog that does not fit in the release_summary property.
+        The returned string can contain markdown.
+        """
+        return await self.hass.async_add_executor_job(self.release_notes)
+
+    def release_notes(self) -> str | None:
+        """Return full release notes.
+
+        This is suitable for a long changelog that does not fit in the release_summary property.
+        The returned string can contain markdown.
+        """
+        raise NotImplementedError()
+
     @property
     @final
     def state(self) -> str | None:
@@ -277,9 +296,15 @@ class UpdateEntity(RestoreEntity):
         ) is None:
             return None
 
-        if latest_version not in (current_version, self.__skipped_version):
-            return STATE_ON
-        return STATE_OFF
+        if latest_version == self.__skipped_version:
+            return STATE_OFF
+
+        try:
+            newer = AwesomeVersion(latest_version) > current_version
+            return STATE_ON if newer else STATE_OFF
+        except AwesomeVersionCompareException:
+            # Can't compare versions, fallback to exact match
+            return STATE_OFF if latest_version == current_version else STATE_ON
 
     @final
     @property
@@ -343,3 +368,40 @@ class UpdateEntity(RestoreEntity):
         state = await self.async_get_last_state()
         if state is not None and state.attributes.get(ATTR_SKIPPED_VERSION) is not None:
             self.__skipped_version = state.attributes[ATTR_SKIPPED_VERSION]
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "update/release_notes",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
+@websocket_api.async_response
+async def websocket_release_notes(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Get the full release notes for a entity."""
+    component = hass.data[DOMAIN]
+    entity: UpdateEntity | None = component.get_entity(msg["entity_id"])
+
+    if entity is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    if not entity.supported_features & UpdateEntityFeature.RELEASE_NOTES:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_SUPPORTED,
+            "Entity does not support release notes",
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        await entity.async_release_notes(),
+    )

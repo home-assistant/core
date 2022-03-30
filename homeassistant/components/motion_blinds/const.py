@@ -13,6 +13,7 @@ DEFAULT_WAIT_FOR_PUSH = False
 DEFAULT_INTERFACE = "any"
 
 KEY_GATEWAY = "gateway"
+KEY_API_LOCK = "api_lock"
 KEY_COORDINATOR = "coordinator"
 KEY_MULTICAST_LISTENER = "multicast_listener"
 KEY_VERSION = "version"

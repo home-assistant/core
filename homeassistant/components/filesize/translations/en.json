@@ -14,5 +14,6 @@
       "abort": {
         "already_configured": "Filepath is already configured"
       }
-    }
+    },
+    "title": "Filesize"
   }

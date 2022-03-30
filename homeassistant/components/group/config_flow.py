@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from functools import partial
 from typing import Any, cast
 
 import voluptuous as vol
@@ -13,6 +14,8 @@ from homeassistant.helpers.helper_config_entry_flow import (
     HelperConfigFlowHandler,
     HelperFlowFormStep,
     HelperFlowMenuStep,
+    HelperOptionsFlowHandler,
+    entity_selector_without_own_entities,
 )
 
 from . import DOMAIN
@@ -20,12 +23,17 @@ from .binary_sensor import CONF_ALL
 from .const import CONF_HIDE_MEMBERS
 
 
-def basic_group_options_schema(domain: str) -> vol.Schema:
+def basic_group_options_schema(
+    domain: str,
+    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    options: dict[str, Any],
+) -> vol.Schema:
     """Generate options schema."""
+    handler = cast(HelperOptionsFlowHandler, handler)
     return vol.Schema(
         {
-            vol.Required(CONF_ENTITIES): selector.selector(
-                {"entity": {"domain": domain, "multiple": True}}
+            vol.Required(CONF_ENTITIES): entity_selector_without_own_entities(
+                handler, {"domain": domain, "multiple": True}
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
                 {"boolean": {}}
@@ -36,30 +44,62 @@ def basic_group_options_schema(domain: str) -> vol.Schema:
 
 def basic_group_config_schema(domain: str) -> vol.Schema:
     """Generate config schema."""
-    return vol.Schema({vol.Required("name"): selector.selector({"text": {}})}).extend(
-        basic_group_options_schema(domain).schema
+    return vol.Schema(
+        {
+            vol.Required("name"): selector.selector({"text": {}}),
+            vol.Required(CONF_ENTITIES): selector.selector(
+                {"entity": {"domain": domain, "multiple": True}}
+            ),
+            vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
+                {"boolean": {}}
+            ),
+        }
     )
 
 
-BINARY_SENSOR_OPTIONS_SCHEMA = basic_group_options_schema("binary_sensor").extend(
+def binary_sensor_options_schema(
+    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    options: dict[str, Any],
+) -> vol.Schema:
+    """Generate options schema."""
+    return basic_group_options_schema("binary_sensor", handler, options).extend(
+        {
+            vol.Required(CONF_ALL, default=False): selector.selector({"boolean": {}}),
+        }
+    )
+
+
+BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
     {
         vol.Required(CONF_ALL, default=False): selector.selector({"boolean": {}}),
     }
 )
 
-LIGHT_OPTIONS_SCHEMA = basic_group_options_schema("light").extend(
-    {
-        vol.Required(
-            CONF_ALL, default=False, description={"advanced": True}
-        ): selector.selector({"boolean": {}}),
-    }
-)
 
-BINARY_SENSOR_CONFIG_SCHEMA = vol.Schema(
-    {vol.Required("name"): selector.selector({"text": {}})}
-).extend(BINARY_SENSOR_OPTIONS_SCHEMA.schema)
+def light_switch_options_schema(
+    domain: str,
+    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    options: dict[str, Any],
+) -> vol.Schema:
+    """Generate options schema."""
+    return basic_group_options_schema(domain, handler, options).extend(
+        {
+            vol.Required(
+                CONF_ALL, default=False, description={"advanced": True}
+            ): selector.selector({"boolean": {}}),
+        }
+    )
 
-GROUP_TYPES = ["binary_sensor", "cover", "fan", "light", "media_player"]
+
+GROUP_TYPES = [
+    "binary_sensor",
+    "cover",
+    "fan",
+    "light",
+    "lock",
+    "media_player",
+    "switch",
+]
 
 
 @callback
@@ -91,31 +131,45 @@ CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
     "light": HelperFlowFormStep(
         basic_group_config_schema("light"), set_group_type("light")
     ),
+    "lock": HelperFlowFormStep(
+        basic_group_config_schema("lock"), set_group_type("lock")
+    ),
     "media_player": HelperFlowFormStep(
         basic_group_config_schema("media_player"), set_group_type("media_player")
+    ),
+    "switch": HelperFlowFormStep(
+        basic_group_config_schema("switch"), set_group_type("switch")
     ),
 }
 
 
 OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
     "init": HelperFlowFormStep(None, next_step=choose_options_step),
-    "binary_sensor": HelperFlowFormStep(BINARY_SENSOR_OPTIONS_SCHEMA),
-    "cover": HelperFlowFormStep(basic_group_options_schema("cover")),
-    "fan": HelperFlowFormStep(basic_group_options_schema("fan")),
-    "light": HelperFlowFormStep(LIGHT_OPTIONS_SCHEMA),
-    "media_player": HelperFlowFormStep(basic_group_options_schema("media_player")),
+    "binary_sensor": HelperFlowFormStep(binary_sensor_options_schema),
+    "cover": HelperFlowFormStep(partial(basic_group_options_schema, "cover")),
+    "fan": HelperFlowFormStep(partial(basic_group_options_schema, "fan")),
+    "light": HelperFlowFormStep(partial(light_switch_options_schema, "light")),
+    "lock": HelperFlowFormStep(partial(basic_group_options_schema, "lock")),
+    "media_player": HelperFlowFormStep(
+        partial(basic_group_options_schema, "media_player")
+    ),
+    "switch": HelperFlowFormStep(partial(light_switch_options_schema, "switch")),
 }
 
 
 class GroupConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
-    """Handle a config or options flow for Switch Light."""
+    """Handle a config or options flow for groups."""
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
-        """Return config entry title."""
+        """Return config entry title.
+
+        The options parameter contains config entry options, which is the union of user
+        input from the config flow steps.
+        """
         return cast(str, options["name"]) if "name" in options else ""
 
     @callback

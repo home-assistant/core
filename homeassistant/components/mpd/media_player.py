@@ -227,8 +227,14 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
-        # Time does not exist for streams
-        return self._currentsong.get("time")
+        if currentsong_time := self._currentsong.get("time"):
+            return currentsong_time
+
+        time_from_status = self._status.get("time")
+        if isinstance(time_from_status, str) and ":" in time_from_status:
+            return time_from_status.split(":")[1]
+
+        return None
 
     @property
     def media_position(self):
@@ -265,7 +271,10 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self._currentsong.get("artist")
+        artists = self._currentsong.get("artist")
+        if isinstance(artists, list):
+            return ", ".join(artists)
+        return artists
 
     @property
     def media_album_name(self):

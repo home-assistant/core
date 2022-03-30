@@ -3,11 +3,9 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "title": "Plex Media Server",
         "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server."
       },
       "user_advanced": {
-        "title": "Plex Media Server",
         "data": {
           "setup_method": "Setup method"
         }

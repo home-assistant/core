@@ -66,10 +66,7 @@
       "UserType": "superuser",
       "FirstName": "Foo",
       "LastName": "Bar",
-      "identifiers": [
-        "email:foo@bar.com",
-        "phone:+177777777777"
-      ],
+      "identifiers": ["email:foo@bar.com", "phone:+177777777777"],
       "imageInfo": {
         "original": {
           "width": 948,
