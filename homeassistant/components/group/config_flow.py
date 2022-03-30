@@ -10,11 +10,11 @@ import voluptuous as vol
 from homeassistant.const import CONF_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowFormStep,
-    HelperFlowMenuStep,
-    HelperOptionsFlowHandler,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+    SchemaFlowMenuStep,
+    SchemaOptionsFlowHandler,
     entity_selector_without_own_entities,
 )
 
@@ -25,11 +25,11 @@ from .const import CONF_HIDE_MEMBERS
 
 def basic_group_options_schema(
     domain: str,
-    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
     options: dict[str, Any],
 ) -> vol.Schema:
     """Generate options schema."""
-    handler = cast(HelperOptionsFlowHandler, handler)
+    handler = cast(SchemaOptionsFlowHandler, handler)
     return vol.Schema(
         {
             vol.Required(CONF_ENTITIES): entity_selector_without_own_entities(
@@ -58,7 +58,7 @@ def basic_group_config_schema(domain: str) -> vol.Schema:
 
 
 def binary_sensor_options_schema(
-    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
     options: dict[str, Any],
 ) -> vol.Schema:
     """Generate options schema."""
@@ -78,7 +78,7 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
 
 def light_switch_options_schema(
     domain: str,
-    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+    handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
     options: dict[str, Any],
 ) -> vol.Schema:
     """Generate options schema."""
@@ -119,45 +119,45 @@ def set_group_type(group_type: str) -> Callable[[dict[str, Any]], dict[str, Any]
     return _set_group_type
 
 
-CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "user": HelperFlowMenuStep(GROUP_TYPES),
-    "binary_sensor": HelperFlowFormStep(
+CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "user": SchemaFlowMenuStep(GROUP_TYPES),
+    "binary_sensor": SchemaFlowFormStep(
         BINARY_SENSOR_CONFIG_SCHEMA, set_group_type("binary_sensor")
     ),
-    "cover": HelperFlowFormStep(
+    "cover": SchemaFlowFormStep(
         basic_group_config_schema("cover"), set_group_type("cover")
     ),
-    "fan": HelperFlowFormStep(basic_group_config_schema("fan"), set_group_type("fan")),
-    "light": HelperFlowFormStep(
+    "fan": SchemaFlowFormStep(basic_group_config_schema("fan"), set_group_type("fan")),
+    "light": SchemaFlowFormStep(
         basic_group_config_schema("light"), set_group_type("light")
     ),
-    "lock": HelperFlowFormStep(
+    "lock": SchemaFlowFormStep(
         basic_group_config_schema("lock"), set_group_type("lock")
     ),
-    "media_player": HelperFlowFormStep(
+    "media_player": SchemaFlowFormStep(
         basic_group_config_schema("media_player"), set_group_type("media_player")
     ),
-    "switch": HelperFlowFormStep(
+    "switch": SchemaFlowFormStep(
         basic_group_config_schema("switch"), set_group_type("switch")
     ),
 }
 
 
-OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "init": HelperFlowFormStep(None, next_step=choose_options_step),
-    "binary_sensor": HelperFlowFormStep(binary_sensor_options_schema),
-    "cover": HelperFlowFormStep(partial(basic_group_options_schema, "cover")),
-    "fan": HelperFlowFormStep(partial(basic_group_options_schema, "fan")),
-    "light": HelperFlowFormStep(partial(light_switch_options_schema, "light")),
-    "lock": HelperFlowFormStep(partial(basic_group_options_schema, "lock")),
-    "media_player": HelperFlowFormStep(
+OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "init": SchemaFlowFormStep(None, next_step=choose_options_step),
+    "binary_sensor": SchemaFlowFormStep(binary_sensor_options_schema),
+    "cover": SchemaFlowFormStep(partial(basic_group_options_schema, "cover")),
+    "fan": SchemaFlowFormStep(partial(basic_group_options_schema, "fan")),
+    "light": SchemaFlowFormStep(partial(light_switch_options_schema, "light")),
+    "lock": SchemaFlowFormStep(partial(basic_group_options_schema, "lock")),
+    "media_player": SchemaFlowFormStep(
         partial(basic_group_options_schema, "media_player")
     ),
-    "switch": HelperFlowFormStep(partial(light_switch_options_schema, "switch")),
+    "switch": SchemaFlowFormStep(partial(light_switch_options_schema, "switch")),
 }
 
 
-class GroupConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for groups."""
 
     config_flow = CONFIG_FLOW
