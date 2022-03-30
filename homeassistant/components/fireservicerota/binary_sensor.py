@@ -1,21 +1,29 @@
 """Binary Sensor platform for FireServiceRota integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
+from . import FireServiceRotaClient
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up FireServiceRota binary sensor based on a config entry."""
 
-    client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
+    client: FireServiceRotaClient = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][
+        DATA_CLIENT
+    ]
 
     coordinator: DataUpdateCoordinator = hass.data[FIRESERVICEROTA_DOMAIN][
         entry.entry_id
@@ -27,13 +35,18 @@ async def async_setup_entry(
 class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of an FireServiceRota sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, client, entry):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        client: FireServiceRotaClient,
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self._client = client
         self._unique_id = f"{entry.unique_id}_Duty"
 
-        self._state = None
+        self._state: bool | None = None
 
     @property
     def name(self) -> str:
@@ -54,7 +67,7 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self._unique_id
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
 
         self._state = self._client.on_duty
@@ -62,9 +75,9 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return available attributes for binary sensor."""
-        attr = {}
+        attr: dict[str, Any] = {}
         if not self.coordinator.data:
             return attr
 

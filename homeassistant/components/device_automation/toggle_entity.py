@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_PLATFORM,
+    CONF_STATE,
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
@@ -138,9 +139,9 @@ def async_condition_from_config(
     else:
         stat = "off"
     state_config = {
-        condition.CONF_CONDITION: "state",
-        condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        condition.CONF_STATE: stat,
+        CONF_CONDITION: "state",
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_STATE: stat,
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]

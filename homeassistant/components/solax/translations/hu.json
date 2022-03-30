@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP c\u00edm",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

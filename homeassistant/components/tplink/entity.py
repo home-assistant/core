@@ -1,8 +1,8 @@
 """Common code for tplink."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
-from typing import TypeVar
+from collections.abc import Awaitable, Callable, Coroutine
+from typing import Any, TypeVar
 
 from kasa import SmartDevice
 from typing_extensions import Concatenate, ParamSpec
@@ -20,7 +20,7 @@ _P = ParamSpec("_P")
 
 def async_refresh_after(
     func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Awaitable[None]]:  # type: ignore[misc]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
     """Define a wrapper to refresh after."""
 
     async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
@@ -30,10 +30,8 @@ def async_refresh_after(
     return _async_wrap
 
 
-class CoordinatedTPLinkEntity(CoordinatorEntity):
+class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
     """Common base class for all coordinated tplink entities."""
-
-    coordinator: TPLinkDataUpdateCoordinator
 
     def __init__(
         self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
@@ -54,6 +52,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
             model=self.device.model,
             name=self.device.alias,
             sw_version=self.device.hw_info["sw_ver"],
+            hw_version=self.device.hw_info["hw_ver"],
         )
 
     @property

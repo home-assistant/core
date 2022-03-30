@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.unique_id] = device
 
-    platforms = [Platform.CAMERA]
+    platforms = [Platform.BUTTON, Platform.CAMERA]
 
     if device.capabilities.events:
         platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]

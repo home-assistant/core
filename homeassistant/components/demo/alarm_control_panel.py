@@ -33,7 +33,7 @@ async def async_setup_platform(
         [
             ManualAlarm(
                 hass,
-                "Alarm",
+                "Security",
                 "1234",
                 None,
                 True,

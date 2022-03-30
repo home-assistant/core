@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "api_not_enabled": "API pole lubatud. Luba API HomeWizard Energy rakenduse seadete all",
+            "device_not_supported": "Seda seadet ei toetata",
+            "invalid_discovery_parameters": "Leiti toetuseta API versioon",
+            "unknown_error": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Kas seadistada {product_type} ( {serial} ) aadressil {ip_address} ?",
+                "title": "Kinnita"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP aadress"
+                },
+                "description": "Sisesta HomeWizard Energy seadme IP-aadress, et siduda see Home Assistantiga.",
+                "title": "Seadme h\u00e4\u00e4lestamine"
+            }
+        }
+    }
+}

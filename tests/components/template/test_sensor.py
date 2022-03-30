@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
@@ -407,7 +408,7 @@ async def test_invalid_attribute_template(hass, caplog, start_ha, caplog_setup_t
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
+    await async_update_entity(hass, "sensor.invalid_template")
     assert "TemplateError" in caplog_setup_text
     assert "test_attribute" in caplog.text
 
@@ -506,15 +507,11 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get("sensor.invalid_friendly_name").state == "hello"
     assert hass.states.get("sensor.invalid_attribute").state == "hello"
 
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_state")
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_icon")
-    await hass.helpers.entity_component.async_update_entity(
-        "sensor.invalid_entity_picture"
-    )
-    await hass.helpers.entity_component.async_update_entity(
-        "sensor.invalid_friendly_name"
-    )
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_attribute")
+    await async_update_entity(hass, "sensor.invalid_state")
+    await async_update_entity(hass, "sensor.invalid_icon")
+    await async_update_entity(hass, "sensor.invalid_entity_picture")
+    await async_update_entity(hass, "sensor.invalid_friendly_name")
+    await async_update_entity(hass, "sensor.invalid_attribute")
 
     assert hass.states.get("sensor.invalid_state").state == "2"
     assert hass.states.get("sensor.invalid_icon").state == "hello"
@@ -1124,7 +1121,8 @@ async def test_trigger_entity_device_class_parsing_works(hass):
 
     await hass.async_block_till_done()
 
-    now = dt_util.now()
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
 
     with patch("homeassistant.util.dt.now", return_value=now):
         hass.bus.async_fire("test_event")
@@ -1184,7 +1182,8 @@ async def test_trigger_entity_device_class_errors_works(hass):
 
 async def test_entity_device_class_parsing_works(hass):
     """Test entity device class parsing works."""
-    now = dt_util.now()
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
 
     with patch("homeassistant.util.dt.now", return_value=now):
         assert await async_setup_component(

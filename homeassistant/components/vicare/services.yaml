@@ -13,10 +13,10 @@ set_vicare_mode:
       selector:
         select:
           options:
-            - 'dhw'
-            - 'dhwAndHeating'
-            - 'dhwAndHeatingCooling'
-            - 'forcedNormal'
-            - 'forcedReduced'
-            - 'heating'
-            - 'standby'
+            - "dhw"
+            - "dhwAndHeating"
+            - "dhwAndHeatingCooling"
+            - "forcedNormal"
+            - "forcedReduced"
+            - "heating"
+            - "standby"

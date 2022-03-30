@@ -61,6 +61,7 @@
                     "debug": "Enable debugging",
                     "device": "Select device to configure",
                     "event_code": "Enter event code to add",
+                    "protocols": "Protocols",
                     "remove_device": "Select device to delete"
                 },
                 "title": "Rfxtrx Options"

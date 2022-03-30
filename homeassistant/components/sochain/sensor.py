@@ -1,4 +1,5 @@
 """Support for watching multiple cryptocurrencies."""
+# pylint: disable=import-error
 from __future__ import annotations
 
 from datetime import timedelta

@@ -35,21 +35,25 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
+from . import MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
+    CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    DOMAIN,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +67,6 @@ CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
 CONF_PAYLOAD_ARM_VACATION = "payload_arm_vacation"
 CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
 CONF_PAYLOAD_TRIGGER = "payload_trigger"
-CONF_COMMAND_TEMPLATE = "command_template"
 
 MQTT_ALARM_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -124,8 +127,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT alarm control panel through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, alarm.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
@@ -173,7 +177,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -198,7 +202,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._state = payload
             self.async_write_ha_state()
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -210,6 +214,10 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                 }
             },
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def state(self):
@@ -324,8 +332,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         """Publish via mqtt."""
         variables = {"action": action, "code": code}
         payload = self._command_template(None, variables=variables)
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
             self._config[CONF_QOS],

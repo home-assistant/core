@@ -23,9 +23,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.components.fritzbox.const import (
     ATTR_STATE_BATTERY_LOW,
-    ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_HOLIDAY_MODE,
-    ATTR_STATE_LOCKED,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
     DOMAIN as FB_DOMAIN,
@@ -70,9 +68,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_COMFORT]
     assert state.attributes[ATTR_STATE_BATTERY_LOW] is True
-    assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"
     assert state.attributes[ATTR_STATE_HOLIDAY_MODE] == "fake_holiday"
-    assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
     assert state.attributes[ATTR_STATE_SUMMER_MODE] == "fake_summer"
     assert state.attributes[ATTR_STATE_WINDOW_OPEN] == "fake_window"
     assert state.attributes[ATTR_TEMPERATURE] == 19.5
@@ -201,7 +197,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock):
 
 
 async def test_automatic_offset(hass: HomeAssistant, fritz: Mock):
-    """Test when automtaic offset is configured on fritz!box device."""
+    """Test when automatic offset is configured on fritz!box device."""
     device = FritzDeviceClimateMock()
     device.temperature = 18
     device.actual_temperature = 19
@@ -226,15 +222,15 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock):
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert fritz().update_devices.call_count == 1
-    assert fritz().login.call_count == 1
+    assert fritz().update_devices.call_count == 2
+    assert fritz().login.call_count == 2
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert fritz().update_devices.call_count == 2
-    assert fritz().login.call_count == 2
+    assert fritz().update_devices.call_count == 4
+    assert fritz().login.call_count == 4
 
 
 async def test_set_temperature_temperature(hass: HomeAssistant, fritz: Mock):

@@ -28,7 +28,7 @@ async def test_tailscale_binary_sensors(
     assert entry.unique_id == "123456_update_available"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frencks-iPhone Client"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Client"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.UPDATE
     assert ATTR_ICON not in state.attributes
 
@@ -43,7 +43,7 @@ async def test_tailscale_binary_sensors(
     assert state.state == STATE_OFF
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Frencks-iPhone Supports Hairpinning"
+        == "frencks-iphone Supports Hairpinning"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -55,7 +55,7 @@ async def test_tailscale_binary_sensors(
     assert entry.unique_id == "123456_client_supports_ipv6"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frencks-iPhone Supports IPv6"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Supports IPv6"
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
@@ -66,7 +66,7 @@ async def test_tailscale_binary_sensors(
     assert entry.unique_id == "123456_client_supports_pcp"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frencks-iPhone Supports PCP"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Supports PCP"
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
@@ -77,7 +77,7 @@ async def test_tailscale_binary_sensors(
     assert entry.unique_id == "123456_client_supports_pmp"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frencks-iPhone Supports NAT-PMP"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Supports NAT-PMP"
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
@@ -88,7 +88,7 @@ async def test_tailscale_binary_sensors(
     assert entry.unique_id == "123456_client_supports_udp"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frencks-iPhone Supports UDP"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Supports UDP"
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
@@ -99,7 +99,7 @@ async def test_tailscale_binary_sensors(
     assert entry.unique_id == "123456_client_supports_upnp"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frencks-iPhone Supports UPnP"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Supports UPnP"
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
@@ -109,7 +109,7 @@ async def test_tailscale_binary_sensors(
     assert device_entry.identifiers == {(DOMAIN, "123456")}
     assert device_entry.manufacturer == "Tailscale Inc."
     assert device_entry.model == "iOS"
-    assert device_entry.name == "Frencks-iPhone"
+    assert device_entry.name == "frencks-iphone"
     assert device_entry.entry_type == dr.DeviceEntryType.SERVICE
     assert device_entry.sw_version == "1.12.3-td91ea7286-ge1bbbd90c"
     assert (

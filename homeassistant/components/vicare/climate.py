@@ -19,11 +19,17 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -33,7 +39,6 @@ from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
     VICARE_API,
-    VICARE_CIRCUITS,
     VICARE_DEVICE_CONFIG,
     VICARE_NAME,
 )
@@ -88,18 +93,23 @@ HA_TO_VICARE_HVAC_HEATING = {
 VICARE_TO_HA_PRESET_HEATING = {
     VICARE_PROGRAM_COMFORT: PRESET_COMFORT,
     VICARE_PROGRAM_ECO: PRESET_ECO,
+    VICARE_PROGRAM_NORMAL: PRESET_NONE,
 }
 
 HA_TO_VICARE_PRESET_HEATING = {
     PRESET_COMFORT: VICARE_PROGRAM_COMFORT,
     PRESET_ECO: VICARE_PROGRAM_ECO,
+    PRESET_NONE: VICARE_PROGRAM_NORMAL,
 }
 
 
-def _build_entity(name, vicare_api, circuit, device_config, heating_type):
-    """Create a ViCare climate entity."""
-    _LOGGER.debug("Found device %s", name)
-    return ViCareClimate(name, vicare_api, device_config, circuit, heating_type)
+def _get_circuits(vicare_api):
+    """Return the list of circuits."""
+    try:
+        return vicare_api.circuits
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.info("No circuits found")
+        return []
 
 
 async def async_setup_entry(
@@ -109,22 +119,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ViCare climate platform."""
     name = VICARE_NAME
-
     entities = []
+    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    circuits = await hass.async_add_executor_job(_get_circuits, api)
 
-    for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
+    for circuit in circuits:
         suffix = ""
-        if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]) > 1:
+        if len(circuits) > 1:
             suffix = f" {circuit.id}"
-        entity = _build_entity(
+
+        entity = ViCareClimate(
             f"{name} Heating{suffix}",
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_API],
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            api,
             circuit,
+            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             config_entry.data[CONF_HEATING_TYPE],
         )
-        if entity is not None:
-            entities.append(entity)
+        entities.append(entity)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -168,6 +179,7 @@ class ViCareClimate(ClimateEntity):
             "name": self._device_config.getModel(),
             "manufacturer": "Viessmann",
             "model": (DOMAIN, self._device_config.getModel()),
+            "configuration_url": "https://developer.viessmann.com/",
         }
 
     def update(self):
@@ -303,6 +315,11 @@ class ViCareClimate(ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
+        return PRECISION_TENTHS
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Set target temperature step to wholes."""
         return PRECISION_WHOLE
 
     def set_temperature(self, **kwargs):
@@ -319,7 +336,7 @@ class ViCareClimate(ClimateEntity):
     @property
     def preset_modes(self):
         """Return the available preset mode."""
-        return list(VICARE_TO_HA_PRESET_HEATING)
+        return list(HA_TO_VICARE_PRESET_HEATING)
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode and deactivate any existing programs."""
@@ -330,8 +347,12 @@ class ViCareClimate(ClimateEntity):
             )
 
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
-        self._circuit.deactivateProgram(self._current_program)
-        self._circuit.activateProgram(vicare_program)
+        if self._current_program != VICARE_PROGRAM_NORMAL:
+            # We can't deactivate "normal"
+            self._circuit.deactivateProgram(self._current_program)
+        if vicare_program != VICARE_PROGRAM_NORMAL:
+            # And we can't explicitly activate normal, either
+            self._circuit.activateProgram(vicare_program)
 
     @property
     def extra_state_attributes(self):

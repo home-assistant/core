@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_host": "Nome host o indirizzo IP non valido"
+        },
+        "flow_title": "{name} - {model} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vuoi configurare {name} - {model} ({host})?"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Digita un indirizzo IP."
+            },
+            "user": {
+                "data": {
+                    "device": "Dispositivo"
+                },
+                "description": "Seleziona un dispositivo o scegli 'Indirizzo IP' per inserire manualmente un indirizzo IP."
+            }
+        }
+    }
+}

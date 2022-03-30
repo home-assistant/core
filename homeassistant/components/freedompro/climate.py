@@ -120,7 +120,7 @@ class Device(CoordinatorEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs):
-        """Async function to set temperarture to climate."""
+        """Async function to set temperature to climate."""
         payload = {}
         if ATTR_HVAC_MODE in kwargs:
             if kwargs[ATTR_HVAC_MODE] not in SUPPORTED_HVAC_MODES:

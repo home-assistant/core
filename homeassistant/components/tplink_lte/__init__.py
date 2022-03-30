@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RECIPIENT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, discovery
@@ -99,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for notify_conf in conf.get(CONF_NOTIFY, []):
             hass.async_create_task(
                 discovery.async_load_platform(
-                    hass, "notify", DOMAIN, notify_conf, config
+                    hass, Platform.NOTIFY, DOMAIN, notify_conf, config
                 )
             )
 

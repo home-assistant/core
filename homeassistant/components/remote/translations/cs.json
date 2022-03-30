@@ -10,6 +10,7 @@
             "is_on": "{entity_name} je zapnuto"
         },
         "trigger_type": {
+            "toggled": "{entity_name} zapnuto nebo vypnuto",
             "turned_off": "{entity_name} vypnuto",
             "turned_on": "{entity_name} zapnuto"
         }

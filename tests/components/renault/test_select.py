@@ -4,7 +4,11 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import schemas
 
-from homeassistant.components.select.const import ATTR_OPTION, SERVICE_SELECT_OPTION
+from homeassistant.components.select.const import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -145,7 +149,7 @@ async def test_select_charge_mode(hass: HomeAssistant, config_entry: ConfigEntry
         ),
     ) as mock_action:
         await hass.services.async_call(
-            Platform.SELECT, SERVICE_SELECT_OPTION, service_data=data, blocking=True
+            SELECT_DOMAIN, SERVICE_SELECT_OPTION, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ("always",)

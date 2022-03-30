@@ -1,11 +1,16 @@
 """Support for interacting with Vultr subscriptions."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ATTR_ALLOWED_BANDWIDTH,
@@ -36,7 +41,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Vultr subscription switch."""
     vultr = hass.data[DATA_VULTR]
 
@@ -45,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if subscription not in vultr.data:
         _LOGGER.error("Subscription %s not found", subscription)
-        return False
+        return
 
     add_entities([VultrSwitch(vultr, subscription, name)], True)
 

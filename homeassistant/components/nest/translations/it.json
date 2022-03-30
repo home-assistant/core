@@ -34,7 +34,7 @@
                     "flow_impl": "Provider"
                 },
                 "description": "Scegli il metodo di autenticazione",
-                "title": "Fornitore di autenticazione"
+                "title": "Provider di autenticazione"
             },
             "link": {
                 "data": {

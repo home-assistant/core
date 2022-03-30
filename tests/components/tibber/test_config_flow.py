@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from tests.common import MockConfigEntry, async_init_recorder_component
+from tests.common import async_init_recorder_component
 
 
 @pytest.fixture(name="tibber_setup", autouse=True)
@@ -55,16 +55,9 @@ async def test_create_entry(hass):
     assert result["data"] == test_data
 
 
-async def test_flow_entry_already_exists(hass):
+async def test_flow_entry_already_exists(hass, config_entry):
     """Test user input for config_entry that already exists."""
     await async_init_recorder_component(hass)
-
-    first_entry = MockConfigEntry(
-        domain="tibber",
-        data={CONF_ACCESS_TOKEN: "valid"},
-        unique_id="tibber",
-    )
-    first_entry.add_to_hass(hass)
 
     test_data = {
         CONF_ACCESS_TOKEN: "valid",

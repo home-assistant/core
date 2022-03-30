@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Lykilor\u00f0",
+                    "port": "G\u00e1tt",
+                    "username": "Notandanafn"
+                }
+            },
+            "user": {
+                "data": {
+                    "port": "G\u00e1tt"
+                }
+            }
+        }
+    }
+}

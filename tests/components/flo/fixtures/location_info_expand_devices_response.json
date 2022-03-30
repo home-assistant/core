@@ -233,9 +233,7 @@
   "userRoles": [
     {
       "userId": "12345abcde",
-      "roles": [
-        "owner"
-      ]
+      "roles": ["owner"]
     }
   ],
   "address": "123 Main Street",
@@ -260,9 +258,7 @@
   "waterShutoffKnown": "unsure",
   "indoorAmenities": [],
   "outdoorAmenities": [],
-  "plumbingAppliances": [
-    "exp_tank"
-  ],
+  "plumbingAppliances": ["exp_tank"],
   "notifications": {
     "pending": {
       "infoCount": 0,

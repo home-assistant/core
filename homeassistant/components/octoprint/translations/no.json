@@ -21,7 +21,8 @@
                     "path": "Bane til program",
                     "port": "Port",
                     "ssl": "Bruk SSL",
-                    "username": "Brukernavn"
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 }
             }
         }

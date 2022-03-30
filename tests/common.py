@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import collections
 from collections import OrderedDict
+from collections.abc import Awaitable, Collection
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
@@ -16,7 +17,7 @@ import threading
 import time
 from time import monotonic
 import types
-from typing import Any, Awaitable, Collection
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
@@ -43,7 +44,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, State
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -54,6 +55,7 @@ from homeassistant.helpers import (
     restore_state,
     storage,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -281,7 +283,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
-    hass.config.time_zone = "US/Pacific"
+    hass.config.set_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
@@ -582,6 +584,7 @@ class MockModule:
         async_migrate_entry=None,
         async_remove_entry=None,
         partial_manifest=None,
+        async_remove_config_entry_device=None,
     ):
         """Initialize the mock module."""
         self.__name__ = f"homeassistant.components.{domain}"
@@ -622,6 +625,9 @@ class MockModule:
 
         if async_remove_entry is not None:
             self.async_remove_entry = async_remove_entry
+
+        if async_remove_config_entry_device is not None:
+            self.async_remove_config_entry_device = async_remove_config_entry_device
 
     def mock_manifest(self):
         """Generate a mock manifest to represent this module."""
@@ -930,11 +936,39 @@ def mock_restore_cache(hass, states):
     last_states = {}
     for state in states:
         restored_state = state.as_dict()
-        restored_state["attributes"] = json.loads(
-            json.dumps(restored_state["attributes"], cls=JSONEncoder)
+        restored_state = {
+            **restored_state,
+            "attributes": json.loads(
+                json.dumps(restored_state["attributes"], cls=JSONEncoder)
+            ),
+        }
+        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+            {"state": restored_state, "last_seen": now}
         )
-        last_states[state.entity_id] = restore_state.StoredState(
-            State.from_dict(restored_state), now
+    data.last_states = last_states
+    _LOGGER.debug("Restore cache: %s", data.last_states)
+    assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
+
+    hass.data[key] = data
+
+
+def mock_restore_cache_with_extra_data(hass, states):
+    """Mock the DATA_RESTORE_CACHE."""
+    key = restore_state.DATA_RESTORE_STATE_TASK
+    data = restore_state.RestoreStateData(hass)
+    now = date_util.utcnow()
+
+    last_states = {}
+    for state, extra_data in states:
+        restored_state = state.as_dict()
+        restored_state = {
+            **restored_state,
+            "attributes": json.loads(
+                json.dumps(restored_state["attributes"], cls=JSONEncoder)
+            ),
+        }
+        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+            {"state": restored_state, "extra_data": extra_data, "last_seen": now}
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)
@@ -1060,8 +1094,9 @@ def mock_storage(data=None):
 
     def mock_write_data(store, path, data_to_write):
         """Mock version of write data."""
-        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
         # To ensure that the data can be serialized
+        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
+        raise_contains_mocks(data_to_write)
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
     async def mock_remove(store):
@@ -1174,7 +1209,7 @@ def async_mock_signal(hass, signal):
         """Mock service call."""
         calls.append(args)
 
-    hass.helpers.dispatcher.async_dispatcher_connect(signal, mock_signal_handler)
+    async_dispatcher_connect(hass, signal, mock_signal_handler)
 
     return calls
 
@@ -1245,3 +1280,17 @@ def assert_lists_same(a, b):
     assert collections.Counter([hashdict(i) for i in a]) == collections.Counter(
         [hashdict(i) for i in b]
     )
+
+
+def raise_contains_mocks(val):
+    """Raise for mocks."""
+    if isinstance(val, Mock):
+        raise ValueError
+
+    if isinstance(val, dict):
+        for dict_value in val.values():
+            raise_contains_mocks(dict_value)
+
+    if isinstance(val, list):
+        for dict_value in val:
+            raise_contains_mocks(dict_value)

@@ -12,6 +12,7 @@ from azure.kusto.ingest import (
     QueuedIngestClient,
     StreamDescriptor,
 )
+from loguru import logger
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +82,8 @@ class AzureDataExplorerClient:
 
     def ingest_data(self, adx_events: str) -> None:
         """Send data to Axure Data Explorer."""
+
+        logger.error(adx_events)
 
         bytes_stream = io.StringIO(adx_events)
         stream_descriptor = StreamDescriptor(bytes_stream)

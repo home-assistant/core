@@ -1,4 +1,5 @@
 """Support for monitoring a Sense energy sensor."""
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -104,7 +105,7 @@ async def async_setup_entry(
         SENSE_DISCOVERED_DEVICES_DATA
     ]
 
-    devices = [
+    entities: list[SensorEntity] = [
         SenseEnergyDevice(sense_devices_data, device, sense_monitor_id)
         for device in sense_devices
         if device["tags"]["DeviceListAllowed"] == "true"
@@ -115,7 +116,7 @@ async def async_setup_entry(
         sensor_type = ACTIVE_SENSOR_TYPE.sensor_type
 
         unique_id = f"{sense_monitor_id}-active-{variant_id}"
-        devices.append(
+        entities.append(
             SenseActiveSensor(
                 data,
                 name,
@@ -128,7 +129,7 @@ async def async_setup_entry(
         )
 
     for i in range(len(data.active_voltage)):
-        devices.append(SenseVoltageSensor(data, i, sense_monitor_id))
+        entities.append(SenseVoltageSensor(data, i, sense_monitor_id))
 
     for type_id, typ in TRENDS_SENSOR_TYPES.items():
         for variant_id, variant_name in TREND_SENSOR_VARIANTS:
@@ -136,7 +137,7 @@ async def async_setup_entry(
             sensor_type = typ.sensor_type
 
             unique_id = f"{sense_monitor_id}-{type_id}-{variant_id}"
-            devices.append(
+            entities.append(
                 SenseTrendsSensor(
                     data,
                     name,
@@ -149,7 +150,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class SenseActiveSensor(SensorEntity):
@@ -296,6 +297,11 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return round(self._data.get_trend(self._sensor_type, self._variant_id), 1)
+
+    @property
+    def last_reset(self):
+        """Return the time when the sensor was last reset, if any."""
+        return self._data.trend_start(self._sensor_type)
 
 
 class SenseEnergyDevice(SensorEntity):

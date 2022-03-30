@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/twitter",
   "requirements": ["TwitterAPI==2.7.5"],
   "codeowners": [],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["TwitterAPI"]
 }

@@ -1,7 +1,7 @@
 """Track both clients and devices using UniFi Network."""
 from datetime import timedelta
 
-from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
+from aiounifi.api import SOURCE_DATA
 from aiounifi.events import (
     ACCESS_POINT_UPGRADED,
     GATEWAY_UPGRADED,
@@ -151,19 +151,14 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         super().__init__(client, controller)
 
         self.heartbeat_check = False
-        self._is_connected = False
         self._controller_connection_state_changed = False
-        self._only_listen_to_event_source = False
 
-        if client.last_seen:
-            self._is_connected = (
-                self.is_wired == client.is_wired
-                and dt_util.utcnow()
-                - dt_util.utc_from_timestamp(float(client.last_seen))
-                < controller.option_detection_time
-            )
-
-        self.schedule_update = self._is_connected
+        self._last_seen = client.last_seen or 0
+        self.schedule_update = self._is_connected = (
+            self.is_wired == client.is_wired
+            and dt_util.utcnow() - dt_util.utc_from_timestamp(float(self._last_seen))
+            < controller.option_detection_time
+        )
 
     async def async_added_to_hass(self) -> None:
         """Watch object when added."""
@@ -196,30 +191,16 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
             if self.controller.available:
                 self.schedule_update = True
-                self._only_listen_to_event_source = False
 
             else:
                 self.controller.async_heartbeat(self.unique_id)
-
-        elif self.client.last_updated == SOURCE_EVENT:
-            self._only_listen_to_event_source = True
-            if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
-                not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
-            ):
-                self._is_connected = True
-                self.schedule_update = False
-                self.controller.async_heartbeat(self.unique_id)
-                self.heartbeat_check = False
-
-            # Ignore extra scheduled update from wired bug
-            elif not self.heartbeat_check:
-                self.schedule_update = True
+                super().async_update_callback()
 
         elif (
-            not self._only_listen_to_event_source
-            and self.client.last_updated == SOURCE_DATA
+            self.client.last_updated == SOURCE_DATA
             and self.is_wired == self.client.is_wired
         ):
+            self._last_seen = self.client.last_seen
             self._is_connected = True
             self.schedule_update = True
 
@@ -230,7 +211,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             )
             self.heartbeat_check = True
 
-        super().async_update_callback()
+            super().async_update_callback()
 
     @callback
     def _make_disconnected(self, *_):

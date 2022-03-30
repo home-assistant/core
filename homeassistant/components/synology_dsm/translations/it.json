@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minuti tra una scansione e l'altra",
+                    "snap_profile_type": "Livello di qualit\u00e0 delle istantanee della fotocamera (0:alto 1:medio 2:basso)",
                     "timeout": "Timeout (in secondi)"
                 }
             }

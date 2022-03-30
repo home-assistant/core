@@ -1,5 +1,5 @@
 """Common fixtures for testing greeneye_monitor."""
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -20,7 +20,7 @@ def assert_sensor_state(
     hass: HomeAssistant,
     entity_id: str,
     expected_state: str,
-    attributes: Dict[str, Any] = {},
+    attributes: dict[str, Any] = {},
 ) -> None:
     """Assert that the given entity has the expected state and at least the provided attributes."""
     state = hass.states.get(entity_id)

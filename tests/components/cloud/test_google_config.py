@@ -9,7 +9,7 @@ from homeassistant.components.cloud.google_config import CloudGoogleConfig
 from homeassistant.components.google_assistant import helpers as ga_helpers
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, State
-from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed, mock_registry
@@ -141,7 +141,7 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     ):
         # Created entity
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "create", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
@@ -150,7 +150,7 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
         # Removed entity
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "remove", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
@@ -159,7 +159,7 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
         # Entity registry updated with relevant changes
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {
                 "action": "update",
                 "entity_id": "light.kitchen",
@@ -172,7 +172,7 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
         # Entity registry updated with non-relevant changes
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "update", "entity_id": "light.kitchen", "changes": ["icon"]},
         )
         await hass.async_block_till_done()
@@ -182,7 +182,7 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
         # When hass is not started yet we wait till started
         hass.state = CoreState.starting
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "create", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
@@ -243,6 +243,20 @@ async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
         suggested_object_id="system_light",
         entity_category="system",
     )
+    entity_entry4 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_hidden_integration_id",
+        suggested_object_id="hidden_integration_light",
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
+    entity_entry5 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_hidden_user_id",
+        suggested_object_id="hidden_user_light",
+        hidden_by=er.RegistryEntryHider.USER,
+    )
 
     entity_conf = {"should_expose": False}
     await cloud_prefs.async_update(
@@ -254,25 +268,33 @@ async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
     state_config = State(entity_entry1.entity_id, "on")
     state_diagnostic = State(entity_entry2.entity_id, "on")
     state_system = State(entity_entry3.entity_id, "on")
+    state_hidden_integration = State(entity_entry4.entity_id, "on")
+    state_hidden_user = State(entity_entry5.entity_id, "on")
 
     assert not mock_conf.should_expose(state)
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)
     assert not mock_conf.should_expose(state_system)
+    assert not mock_conf.should_expose(state_hidden_integration)
+    assert not mock_conf.should_expose(state_hidden_user)
 
     entity_conf["should_expose"] = True
     assert mock_conf.should_expose(state)
-    # config and diagnostic entities should not be exposed
+    # categorized and hidden entities should not be exposed
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)
     assert not mock_conf.should_expose(state_system)
+    assert not mock_conf.should_expose(state_hidden_integration)
+    assert not mock_conf.should_expose(state_hidden_user)
 
     entity_conf["should_expose"] = None
     assert mock_conf.should_expose(state)
-    # config and diagnostic entities should not be exposed
+    # categorized and hidden entities should not be exposed
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)
     assert not mock_conf.should_expose(state_system)
+    assert not mock_conf.should_expose(state_hidden_integration)
+    assert not mock_conf.should_expose(state_hidden_user)
 
     await cloud_prefs.async_update(
         google_default_expose=["sensor"],

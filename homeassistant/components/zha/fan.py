@@ -56,7 +56,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Zigbee Home Automation fan from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.FAN]
 
@@ -91,9 +91,7 @@ class BaseFan(FanEntity):
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
-    async def async_turn_on(
-        self, speed=None, percentage=None, preset_mode=None, **kwargs
-    ) -> None:
+    async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs) -> None:
         """Turn the entity on."""
         if percentage is None:
             percentage = DEFAULT_ON_PERCENTAGE

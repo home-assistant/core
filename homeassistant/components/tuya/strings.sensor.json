@@ -10,6 +10,12 @@
       "reserve_3": "Reserve 3",
       "standby": "Standby",
       "warm": "Heat preservation"
+    },
+    "tuya__air_quality": {
+      "great": "Great",
+      "mild": "Mild",
+      "good": "Good",
+      "severe": "Severe"
     }
   }
 }

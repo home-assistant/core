@@ -162,7 +162,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
     async def async_set_color_temp(self, value: float):
         """Set the color temperature of the device."""
         kelvin = color_util.color_temperature_mired_to_kelvin(value)
-        kelvin = max(min(kelvin, 30000.0), 1.0)
+        kelvin = max(min(kelvin, 30000), 1)
         await self._device.set_color_temperature(kelvin, set_status=True)
 
     async def async_set_level(self, brightness: int, transition: int):

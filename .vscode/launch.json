@@ -41,6 +41,21 @@
           "remoteRoot": "/usr/src/homeassistant"
         }
       ]
+    },
+    {
+      // Debug by attaching to remote Home Asistant server using Remote Python Debugger.
+      // See https://www.home-assistant.io/integrations/debugpy/
+      "name": "Home Assistant: Attach Prod",
+      "type": "python",
+      "request": "attach",
+      "port": 5678,
+      "host": "192.168.1.102",
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/usr/src/homeassistant"
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,13 @@
+{
+    "state": {
+        "overkiz__memorized_simple_volume": {
+            "highest": "Hoogst",
+            "standard": "Standaard"
+        },
+        "overkiz__open_closed_pedestrian": {
+            "closed": "Gesloten",
+            "open": "Open",
+            "pedestrian": "Voetganger"
+        }
+    }
+}

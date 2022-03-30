@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import lru_cache
+from functools import cache
 import logging
 import os
 import socket
@@ -43,7 +43,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -51,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = "arg"
 
-if sys.maxsize > 2 ** 32:
+if sys.maxsize > 2**32:
     CPU_ICON = "mdi:cpu-64-bit"
 else:
     CPU_ICON = "mdi:cpu-32-bit"
@@ -324,7 +324,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: Any | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the system monitor sensors."""
     entities = []
@@ -473,22 +473,22 @@ def _update(  # noqa: C901
     if type_ == "disk_use_percent":
         state = _disk_usage(data.argument).percent
     elif type_ == "disk_use":
-        state = round(_disk_usage(data.argument).used / 1024 ** 3, 1)
+        state = round(_disk_usage(data.argument).used / 1024**3, 1)
     elif type_ == "disk_free":
-        state = round(_disk_usage(data.argument).free / 1024 ** 3, 1)
+        state = round(_disk_usage(data.argument).free / 1024**3, 1)
     elif type_ == "memory_use_percent":
         state = _virtual_memory().percent
     elif type_ == "memory_use":
         virtual_memory = _virtual_memory()
-        state = round((virtual_memory.total - virtual_memory.available) / 1024 ** 2, 1)
+        state = round((virtual_memory.total - virtual_memory.available) / 1024**2, 1)
     elif type_ == "memory_free":
-        state = round(_virtual_memory().available / 1024 ** 2, 1)
+        state = round(_virtual_memory().available / 1024**2, 1)
     elif type_ == "swap_use_percent":
         state = _swap_memory().percent
     elif type_ == "swap_use":
-        state = round(_swap_memory().used / 1024 ** 2, 1)
+        state = round(_swap_memory().used / 1024**2, 1)
     elif type_ == "swap_free":
-        state = round(_swap_memory().free / 1024 ** 2, 1)
+        state = round(_swap_memory().free / 1024**2, 1)
     elif type_ == "processor_use":
         state = round(psutil.cpu_percent(interval=None))
     elif type_ == "processor_temperature":
@@ -510,7 +510,7 @@ def _update(  # noqa: C901
         counters = _net_io_counters()
         if data.argument in counters:
             counter = counters[data.argument][IO_COUNTER[type_]]
-            state = round(counter / 1024 ** 2, 1)
+            state = round(counter / 1024**2, 1)
         else:
             state = None
     elif type_ in ("packets_out", "packets_in"):
@@ -527,7 +527,7 @@ def _update(  # noqa: C901
             if data.value and data.value < counter:
                 state = round(
                     (counter - data.value)
-                    / 1000 ** 2
+                    / 1000**2
                     / (now - (data.update_time or now)).total_seconds(),
                     3,
                 )
@@ -561,34 +561,32 @@ def _update(  # noqa: C901
     return state, value, update_time
 
 
-# When we drop python 3.8 support these can be switched to
-# @cache https://docs.python.org/3.9/library/functools.html#functools.cache
-@lru_cache(maxsize=None)
+@cache
 def _disk_usage(path: str) -> Any:
     return psutil.disk_usage(path)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _swap_memory() -> Any:
     return psutil.swap_memory()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _virtual_memory() -> Any:
     return psutil.virtual_memory()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _net_io_counters() -> Any:
     return psutil.net_io_counters(pernic=True)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _net_if_addrs() -> Any:
     return psutil.net_if_addrs()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _getloadavg() -> tuple[float, float, float]:
     return os.getloadavg()
 

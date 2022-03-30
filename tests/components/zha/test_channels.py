@@ -101,6 +101,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
     [
         (0x0000, 0, {}),
         (0x0001, 1, {"battery_voltage", "battery_percentage_remaining"}),
+        (0x0002, 1, {"current_temperature"}),
         (0x0003, 0, {}),
         (0x0004, 0, {}),
         (0x0005, 1, {}),
@@ -203,6 +204,7 @@ async def test_in_channel_config(
     [
         (0x0000, 0),
         (0x0001, 1),
+        (0x0002, 1),
         (0x0003, 0),
         (0x0004, 0),
         (0x0005, 1),

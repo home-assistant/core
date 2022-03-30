@@ -5,7 +5,7 @@ from pyopnsense import diagnostics
 from pyopnsense.exceptions import APIException
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -75,5 +75,5 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         CONF_TRACKER_INTERFACE: tracker_interfaces,
     }
 
-    load_platform(hass, "device_tracker", DOMAIN, tracker_interfaces, config)
+    load_platform(hass, Platform.DEVICE_TRACKER, DOMAIN, tracker_interfaces, config)
     return True

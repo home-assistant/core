@@ -26,7 +26,7 @@ SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
 SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
 SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
 SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
-UNDEFINED_TEMPATURE = -40
+UNDEFINED_TEMPERATURE = -40
 
 ELK_SET_COUNTER_SERVICE_SCHEMA = {
     vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
@@ -161,7 +161,7 @@ class ElkKeypad(ElkSensor):
 
     def _element_changed(self, element, changeset):
         self._state = temperature_to_state(
-            self._element.temperature, UNDEFINED_TEMPATURE
+            self._element.temperature, UNDEFINED_TEMPERATURE
         )
 
 
@@ -273,7 +273,7 @@ class ElkZone(ElkSensor):
     def _element_changed(self, element, changeset):
         if self._element.definition == ZoneType.TEMPERATURE.value:
             self._state = temperature_to_state(
-                self._element.temperature, UNDEFINED_TEMPATURE
+                self._element.temperature, UNDEFINED_TEMPERATURE
             )
         elif self._element.definition == ZoneType.ANALOG_ZONE.value:
             self._state = self._element.voltage

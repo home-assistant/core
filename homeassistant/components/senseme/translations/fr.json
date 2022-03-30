@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_host": "Nom d'h\u00f4te ou adresse IP non valide"
+        },
+        "flow_title": "{name} - {model} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Voulez-vous configurer {name} - {model} ({host})\u00a0?"
+            },
+            "manual": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "description": "Saisissez une adresse IP."
+            },
+            "user": {
+                "data": {
+                    "device": "Appareil"
+                },
+                "description": "S\u00e9lectionnez un appareil ou choisissez \u00ab\u00a0Adresse IP\u00a0\u00bb pour saisir manuellement une adresse IP."
+            }
+        }
+    }
+}

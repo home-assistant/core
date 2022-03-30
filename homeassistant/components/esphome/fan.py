@@ -92,7 +92,6 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
@@ -117,7 +116,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         )
 
     @esphome_state_property
-    def is_on(self) -> bool | None:  # type: ignore[override]
+    def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return self._state.state
 

@@ -1,6 +1,7 @@
 """Philips Hue scene platform tests for V2 bridge/api."""
 
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
@@ -20,8 +21,8 @@ async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
     # test (dynamic) scene for a hue zone
     test_entity = hass.states.get("scene.test_zone_dynamic_test_scene")
     assert test_entity is not None
-    assert test_entity.name == "Test Zone - Dynamic Test Scene"
-    assert test_entity.state == "scening"
+    assert test_entity.name == "Test Zone Dynamic Test Scene"
+    assert test_entity.state == STATE_UNKNOWN
     assert test_entity.attributes["group_name"] == "Test Zone"
     assert test_entity.attributes["group_type"] == "zone"
     assert test_entity.attributes["name"] == "Dynamic Test Scene"
@@ -32,8 +33,8 @@ async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
     # test (regular) scene for a hue room
     test_entity = hass.states.get("scene.test_room_regular_test_scene")
     assert test_entity is not None
-    assert test_entity.name == "Test Room - Regular Test Scene"
-    assert test_entity.state == "scening"
+    assert test_entity.name == "Test Room Regular Test Scene"
+    assert test_entity.state == STATE_UNKNOWN
     assert test_entity.attributes["group_name"] == "Test Room"
     assert test_entity.attributes["group_type"] == "room"
     assert test_entity.attributes["name"] == "Regular Test Scene"
@@ -41,7 +42,7 @@ async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_entity.attributes["brightness"] == 100.0
     assert test_entity.attributes["is_dynamic"] is False
 
-    # scene entities should not have a device assigned
+    # scene entities should have be assigned to the room/zone device/service
     ent_reg = er.async_get(hass)
     for entity_id in (
         "scene.test_zone_dynamic_test_scene",
@@ -49,7 +50,7 @@ async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
     ):
         entity_entry = ent_reg.async_get(entity_id)
         assert entity_entry
-        assert entity_entry.device_id is None
+        assert entity_entry.device_id is not None
 
 
 async def test_scene_turn_on_service(hass, mock_bridge_v2, v2_resources_test_data):
@@ -142,8 +143,8 @@ async def test_scene_updates(hass, mock_bridge_v2, v2_resources_test_data):
     # the entity should now be available
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
-    assert test_entity.state == "scening"
-    assert test_entity.name == "Test Room - Mocked Scene"
+    assert test_entity.state == STATE_UNKNOWN
+    assert test_entity.name == "Test Room Mocked Scene"
     assert test_entity.attributes["brightness"] == 65.0
 
     # test update
@@ -155,7 +156,7 @@ async def test_scene_updates(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_entity is not None
     assert test_entity.attributes["brightness"] == 35.0
 
-    # test entity name changes on group name change
+    # # test entity name changes on group name change
     mock_bridge_v2.api.emit_event(
         "update",
         {
@@ -166,9 +167,9 @@ async def test_scene_updates(hass, mock_bridge_v2, v2_resources_test_data):
     )
     await hass.async_block_till_done()
     test_entity = hass.states.get(test_entity_id)
-    assert test_entity.name == "Test Room 2 - Mocked Scene"
+    assert test_entity.name == "Test Room 2 Mocked Scene"
 
-    # test delete
+    # # test delete
     mock_bridge_v2.api.emit_event("delete", updated_resource)
     await hass.async_block_till_done()
     await hass.async_block_till_done()

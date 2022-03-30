@@ -1,0 +1,335 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "perms": ["pw"]
+          },
+          {
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "VOCOlinc",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 4,
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "VP3",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 5,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "VOCOlinc-VP3-123456",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 6,
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "EU0121203xxxxx07",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 7,
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.101.2",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 8,
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.0.3",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 9,
+            "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+            "format": "string",
+            "value": "3.0;17A126",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 10,
+            "type": "220",
+            "format": "data",
+            "value": "wLrKXjM2g90=",
+            "perms": ["pr", "hd"],
+            "ev": false,
+            "maxDataLen": 8
+          }
+        ]
+      },
+      {
+        "iid": 16,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 18,
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.1.0",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ]
+      },
+      {
+        "iid": 48,
+        "type": "00000047-0000-1000-8000-0026BB765291",
+        "primary": true,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 50,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Outlet",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 51,
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 83,
+            "type": "A30DFE96-271A-42A5-88BA-00E3FF5488AD",
+            "format": "data",
+            "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "maxDataLen": 256
+          },
+          {
+            "iid": 53,
+            "type": "E2E80928-E08A-472F-8AE9-70BA72E132F2",
+            "format": "int",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 1,
+            "maxValue": 3600,
+            "minStep": 1
+          },
+          {
+            "iid": 54,
+            "type": "D4669376-C36E-4C43-ACA4-ED07686EAB19",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 0
+          },
+          {
+            "iid": 97,
+            "type": "FC093458-18F0-4B1D-8360-BB68A3FCC9C5",
+            "format": "int",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 2147483647,
+            "minStep": 1
+          },
+          {
+            "iid": 98,
+            "type": "865AD00B-A016-416E-8918-CF8E7EC788C4",
+            "format": "int",
+            "value": 2552,
+            "perms": ["pr"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 2147483647,
+            "minStep": 1
+          },
+          {
+            "iid": 99,
+            "type": "2D5D1654-63EE-4314-9CF1-651F266D3BBE",
+            "format": "data",
+            "value": "AQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "maxDataLen": 128
+          },
+          {
+            "iid": 100,
+            "type": "6E46AD30-6FC2-426F-9A86-C2A834DD8F29",
+            "format": "data",
+            "value": "AQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "maxDataLen": 128
+          },
+          {
+            "iid": 101,
+            "type": "56F805A5-4B30-47D0-9908-E609B4CF18E3",
+            "format": "data",
+            "value": "AQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "maxDataLen": 128
+          },
+          {
+            "iid": 102,
+            "type": "A121FC5E-67DB-41EC-BF4F-5A431F0DA9CB",
+            "format": "data",
+            "value": "AQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "maxDataLen": 64
+          },
+          {
+            "iid": 103,
+            "type": "BC75E7A0-7DD8-4CBB-9DE8-93E70A04916D",
+            "format": "data",
+            "value": "AQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "maxDataLen": 64
+          },
+          {
+            "iid": 89,
+            "type": "43CE176B-2933-4034-98A7-AD215BEEBF2F",
+            "format": "data",
+            "value": "AAAAAAAAAAAAAA==",
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "description": "\"CountDown\"",
+            "maxDataLen": 256
+          }
+        ]
+      },
+      {
+        "iid": 64,
+        "type": "3138B537-E830-4F52-90A7-D6FDB000BF97",
+        "primary": false,
+        "hidden": true,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 65,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "FW Update",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 66,
+            "type": "4C203E30-EB25-466D-9980-C6C2E14BF6AA",
+            "format": "string",
+            "perms": ["pw", "hd"],
+            "description": "\"FW update\"",
+            "maxLen": 128
+          },
+          {
+            "iid": 67,
+            "type": "49DDDE07-C3FA-499E-8055-58E154E04F34",
+            "format": "int",
+            "value": null,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 80,
+        "type": "C635EF5C-5BBC-4F96-B7DA-6669069A4B32",
+        "primary": false,
+        "hidden": true,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 82,
+            "type": "8137182C-6904-4FB9-ADCC-61CECA85CE48",
+            "format": "uint8",
+            "value": 27,
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 81,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Rssi Report",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ]
+      },
+      {
+        "iid": 84,
+        "type": "961BBB65-A1E3-4F34-BD31-86552706FE40",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 85,
+            "type": "38396B8E-161B-4A77-AF3F-C4DAC0BE9B74",
+            "format": "int",
+            "value": 999,
+            "perms": ["pr", "pw"],
+            "ev": false,
+            "minValue": -1200,
+            "maxValue": 1400,
+            "minStep": 1
+          },
+          {
+            "iid": 86,
+            "type": "71216CD3-209E-40CC-BEA0-71A2A9458E13",
+            "format": "int",
+            "perms": ["pw"],
+            "minValue": 0,
+            "maxValue": 2147483647,
+            "minStep": 1
+          },
+          {
+            "iid": 87,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "sync time",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ]
+      }
+    ]
+  }
+]

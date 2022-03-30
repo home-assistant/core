@@ -8,6 +8,7 @@ from py17track import Client as SeventeenTrackClient
 from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -149,8 +150,9 @@ class SeventeenTrackSummarySensor(SensorEntity):
                 }
             )
 
-        if package_data:
-            self._attr_extra_state_attributes[ATTR_PACKAGES] = package_data
+        self._attr_extra_state_attributes[ATTR_PACKAGES] = (
+            package_data if package_data else None
+        )
 
         self._state = self._data.summary.get(self._status)
 
@@ -254,8 +256,8 @@ class SeventeenTrackPackageSensor(SensorEntity):
         title = NOTIFICATION_DELIVERED_TITLE.format(identification)
         notification_id = NOTIFICATION_DELIVERED_TITLE.format(self._tracking_number)
 
-        self.hass.components.persistent_notification.create(
-            message, title=title, notification_id=notification_id
+        persistent_notification.create(
+            self.hass, message, title=title, notification_id=notification_id
         )
 
 

@@ -80,22 +80,28 @@ class KNXCover(KnxEntity, CoverEntity):
             )
         )
         self._unsubscribe_auto_updater: Callable[[], None] | None = None
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS) or (
-            CoverDeviceClass.BLIND if self._device.supports_angle else None
-        )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+        _supports_tilt = False
         self._attr_supported_features = (
             SUPPORT_CLOSE | SUPPORT_OPEN | SUPPORT_SET_POSITION
         )
-        if self._device.supports_stop:
-            self._attr_supported_features |= SUPPORT_STOP | SUPPORT_STOP_TILT
-        if self._device.supports_angle:
-            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
         if self._device.step.writable:
+            _supports_tilt = True
             self._attr_supported_features |= (
                 SUPPORT_CLOSE_TILT | SUPPORT_OPEN_TILT | SUPPORT_STOP_TILT
             )
+        if self._device.supports_angle:
+            _supports_tilt = True
+            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
+        if self._device.supports_stop:
+            self._attr_supported_features |= SUPPORT_STOP
+            if _supports_tilt:
+                self._attr_supported_features |= SUPPORT_STOP_TILT
+
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS) or (
+            CoverDeviceClass.BLIND if _supports_tilt else None
+        )
         self._attr_unique_id = (
             f"{self._device.updown.group_address}_"
             f"{self._device.position_target.group_address}"

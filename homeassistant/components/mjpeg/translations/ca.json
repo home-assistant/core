@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mjpeg_url": "URL MJPEG",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "still_image_url": "URL d'imatge fixa",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "mjpeg_url": "URL MJPEG",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "still_image_url": "URL d'imatge fixa",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
+                }
+            }
+        }
+    }
+}

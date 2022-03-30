@@ -27,16 +27,16 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
 
-ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
-ATTR_CURRENT_POWER_W = "current_power_w"
-
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -90,19 +90,6 @@ class HomematicipLight(HomematicipGenericEntity, LightEntity):
 
 class HomematicipLightMeasuring(HomematicipLight):
     """Representation of the HomematicIP measuring light."""
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the light."""
-        state_attr = super().extra_state_attributes
-
-        current_power_w = self._device.currentPowerConsumption
-        if current_power_w > 0.05:
-            state_attr[ATTR_CURRENT_POWER_W] = round(current_power_w, 2)
-
-        state_attr[ATTR_TODAY_ENERGY_KWH] = round(self._device.energyCounter, 2)
-
-        return state_attr
 
 
 class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):

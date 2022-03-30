@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/blackbird",
   "requirements": ["pyblackbird==0.5"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pyblackbird"]
 }

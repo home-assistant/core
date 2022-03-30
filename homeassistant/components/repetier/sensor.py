@@ -1,18 +1,27 @@
 """Support for monitoring Repetier Server Sensors."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
 import time
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL, RepetierSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the available Repetier Server sensors."""
     if discovery_info is None:
         return
@@ -27,8 +36,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         "job_start": RepetierJobStartSensor,
     }
 
+    sensors_info: list[dict] = discovery_info["sensors"]
     entities = []
-    for info in discovery_info:
+    for info in sensors_info:
         printer_name = info["printer_name"]
         api = hass.data[REPETIER_API][printer_name]
         printer_id = info["printer_id"]

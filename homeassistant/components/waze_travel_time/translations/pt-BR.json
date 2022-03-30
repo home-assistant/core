@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Localiza\u00e7\u00e3o j\u00e1 est\u00e1 configurada"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Destino",
+                    "name": "Nome",
+                    "origin": "Origem",
+                    "region": "Regi\u00e3o"
+                },
+                "description": "Para Origem e Destino, insira o endere\u00e7o ou as coordenadas GPS do local (as coordenadas GPS devem ser separadas por uma v\u00edrgula). Voc\u00ea tamb\u00e9m pode inserir um ID de entidade que forne\u00e7a essas informa\u00e7\u00f5es em seu estado, um ID de entidade com atributos de latitude e longitude ou um nome amig\u00e1vel de zona."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "Evitar balsas?",
+                    "avoid_subscription_roads": "Evitar estradas que precisam de uma vinheta/assinatura?",
+                    "avoid_toll_roads": "Evitar estradas com ped\u00e1gio?",
+                    "excl_filter": "SEM Substring na descri\u00e7\u00e3o da rota selecionada",
+                    "incl_filter": "Substring na descri\u00e7\u00e3o da rota selecionada",
+                    "realtime": "Tempo de viagem em tempo real?",
+                    "units": "Unidades",
+                    "vehicle_type": "Tipo de Ve\u00edculo"
+                },
+                "description": "As entradas `substring` permitir\u00e3o que voc\u00ea force a integra\u00e7\u00e3o a usar uma rota espec\u00edfica ou evite uma rota espec\u00edfica em seu c\u00e1lculo de viagem no tempo."
+            }
+        }
+    },
+    "title": "Tempo de viagem do Waze"
+}

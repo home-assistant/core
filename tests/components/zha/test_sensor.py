@@ -241,6 +241,12 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
     assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.0
 
 
+async def async_test_device_temperature(hass, cluster, entity_id):
+    """Test temperature sensor."""
+    await send_attributes_report(hass, cluster, {0: 2900})
+    assert_state(hass, entity_id, "29.0", TEMP_CELSIUS)
+
+
 @pytest.mark.parametrize(
     "cluster_id, entity_suffix, test_func, report_count, read_plug, unsupported_attrs",
     (
@@ -348,6 +354,14 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
                 "battery_voltage": 29,
                 "battery_quantity": 3,
             },
+            None,
+        ),
+        (
+            general.DeviceTemperature.cluster_id,
+            "device_temperature",
+            async_test_device_temperature,
+            1,
+            None,
             None,
         ),
     ),
