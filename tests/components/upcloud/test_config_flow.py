@@ -105,3 +105,31 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["data"][CONF_SCAN_INTERVAL] == int(
         FIXTURE_USER_INPUT_OPTIONS[CONF_SCAN_INTERVAL]
     )
+
+
+async def test_already_configured(hass, requests_mock):
+    """Test duplicate entry aborts and updates data."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_USER_INPUT[CONF_USERNAME],
+        data=FIXTURE_USER_INPUT,
+        options=FIXTURE_USER_INPUT_OPTIONS,
+    )
+    config_entry.add_to_hass(hass)
+
+    new_user_input = FIXTURE_USER_INPUT.copy()
+    new_user_input[CONF_PASSWORD] += "_changed"
+
+    requests_mock.request(ANY, "/1.3/account", text='{"account":{"username":"user"}}')
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=new_user_input
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    stored_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    assert stored_entry
+    assert stored_entry.data[CONF_USERNAME] == new_user_input[CONF_USERNAME]
+    assert stored_entry.data[CONF_PASSWORD] == new_user_input[CONF_PASSWORD]
