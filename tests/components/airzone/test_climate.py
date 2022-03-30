@@ -121,7 +121,7 @@ async def test_airzone_create_climates(hass):
 
 
 async def test_airzone_climate_set_hvac_mode(hass):
-    """Test setting the target temperature."""
+    """Test setting the HVAC mode."""
 
     await async_init_integration(hass)
 
@@ -179,6 +179,43 @@ async def test_airzone_climate_set_hvac_mode(hass):
         assert state.state == HVAC_MODE_OFF
 
 
+async def test_airzone_climate_set_hvac_slave_error(hass):
+    """Test setting the HVAC mode for a slave zone."""
+
+    HVAC_MOCK = {
+        API_DATA: [
+            {
+                API_SYSTEM_ID: 1,
+                API_ZONE_ID: 5,
+                API_ON: 1,
+            }
+        ]
+    }
+
+    await async_init_integration(hass)
+
+    with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.http_request",
+        return_value=HVAC_MOCK,
+    ):
+        try:
+            await hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_HVAC_MODE,
+                {
+                    ATTR_ENTITY_ID: "climate.dorm_2",
+                    ATTR_HVAC_MODE: HVAC_MODE_COOL,
+                },
+                blocking=True,
+            )
+            assert False
+        except HomeAssistantError:
+            assert True
+
+        state = hass.states.get("climate.dorm_2")
+        assert state.state == HVAC_MODE_OFF
+
+
 async def test_airzone_climate_set_temp(hass):
     """Test setting the target temperature."""
 
@@ -231,8 +268,9 @@ async def test_airzone_climate_set_temp_error(hass):
                 },
                 blocking=True,
             )
+            assert False
         except HomeAssistantError:
-            pass
+            assert True
 
         state = hass.states.get("climate.dorm_2")
         assert state.attributes.get(ATTR_TEMPERATURE) == 19.5
