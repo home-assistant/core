@@ -311,7 +311,7 @@ class HelperOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> None:
         """Initialize options flow."""
         self._common_handler = HelperCommonFlowHandler(self, options_flow, config_entry)
-        self._config_entry = config_entry
+        self.config_entry = config_entry
         self._async_options_flow_finished = async_options_flow_finished
 
         for step in options_flow:
@@ -369,19 +369,18 @@ def wrapped_entity_config_entry_title(
 
 
 @callback
-def exclude_own_entities(
-    handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
-    config: dict[str, Any],
+def entity_selector_without_own_entities(
+    handler: HelperOptionsFlowHandler,
+    entity_selector_config: dict[str, Any],
 ) -> vol.Schema:
     """Return an entity selector which excludes own entities."""
-    if not isinstance(handler, HelperOptionsFlowHandler):
-        return selector.selector({"entity": config})
-
     entity_registry = er.async_get(handler.hass)
     entities = er.async_entries_for_config_entry(
         entity_registry,
-        handler._config_entry.entry_id,  # pylint: disable=protected-access
+        handler.config_entry.entry_id,  # pylint: disable=protected-access
     )
     entity_ids = [ent.entity_id for ent in entities]
 
-    return selector.selector({"entity": {**config, "exclude_entities": entity_ids}})
+    return selector.selector(
+        {"entity": {**entity_selector_config, "exclude_entities": entity_ids}}
+    )

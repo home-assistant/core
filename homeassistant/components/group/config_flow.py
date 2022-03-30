@@ -15,7 +15,7 @@ from homeassistant.helpers.helper_config_entry_flow import (
     HelperFlowFormStep,
     HelperFlowMenuStep,
     HelperOptionsFlowHandler,
-    exclude_own_entities,
+    entity_selector_without_own_entities,
 )
 
 from . import DOMAIN
@@ -29,9 +29,10 @@ def basic_group_options_schema(
     options: dict[str, Any],
 ) -> vol.Schema:
     """Generate options schema."""
+    handler = cast(HelperOptionsFlowHandler, handler)
     return vol.Schema(
         {
-            vol.Required(CONF_ENTITIES): exclude_own_entities(
+            vol.Required(CONF_ENTITIES): entity_selector_without_own_entities(
                 handler, {"domain": domain, "multiple": True}
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
