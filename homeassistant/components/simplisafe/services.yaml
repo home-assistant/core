@@ -82,20 +82,20 @@ set_system_properties:
       selector:
         select:
           options:
-            - 'low'
-            - 'medium'
-            - 'high'
-            - 'off'
+            - "low"
+            - "medium"
+            - "high"
+            - "off"
     chime_volume:
       name: Chime volume
       description: The volume level of the door chime
       selector:
         select:
           options:
-            - 'low'
-            - 'medium'
-            - 'high'
-            - 'off'
+            - "low"
+            - "medium"
+            - "high"
+            - "off"
     entry_delay_away:
       name: Entry delay away
       description: How long to delay when entering while "away"
@@ -139,7 +139,7 @@ set_system_properties:
       selector:
         select:
           options:
-            - 'low'
-            - 'medium'
-            - 'high'
-            - 'off'
+            - "low"
+            - "medium"
+            - "high"
+            - "off"
