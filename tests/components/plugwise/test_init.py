@@ -75,12 +75,12 @@ async def test_config_entry_not_ready(
             {
                 "domain": SENSOR_DOMAIN,
                 "platform": DOMAIN,
-                "unique_id": f"{HEATER_ID}_outdoor_temperature",
-                "suggested_object_id": f"{HEATER_ID}_outdoor_temperature",
+                "unique_id": f"{HEATER_ID}-outdoor_temperature",
+                "suggested_object_id": f"{HEATER_ID}-outdoor_temperature",
                 "disabled_by": None,
             },
-            f"{HEATER_ID}_outdoor_temperature",
-            f"{HEATER_ID}_outdoor_air_temperature",
+            f"{HEATER_ID}-outdoor_temperature",
+            f"{HEATER_ID}-outdoor_air_temperature",
         ),
     ],
 )
