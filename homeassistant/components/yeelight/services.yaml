@@ -13,12 +13,12 @@ set_mode:
       selector:
         select:
           options:
-            - 'color_flow'
-            - 'hsv'
-            - 'last'
-            - 'moonlight'
-            - 'normal'
-            - 'rgb'
+            - "color_flow"
+            - "hsv"
+            - "last"
+            - "moonlight"
+            - "normal"
+            - "rgb"
 
 set_color_scene:
   name: Set color scene
@@ -108,13 +108,13 @@ set_color_flow_scene:
     action:
       name: Action
       description: The action to take after the flow stops.
-      default: 'recover'
+      default: "recover"
       selector:
         select:
           options:
-            - 'off'
-            - 'recover'
-            - 'stay'
+            - "off"
+            - "recover"
+            - "stay"
     transitions:
       name: Transitions
       description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
@@ -164,13 +164,13 @@ start_flow:
     action:
       name: Action
       description: The action to take after the flow stops.
-      default: 'recover'
+      default: "recover"
       selector:
         select:
           options:
-            - 'off'
-            - 'recover'
-            - 'stay'
+            - "off"
+            - "recover"
+            - "stay"
     transitions:
       name: Transitions
       description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
