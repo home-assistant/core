@@ -196,7 +196,7 @@ class GoogleCalendarEntity(CalendarEntity):
 
 
 def _get_date_or_datetime(date_dict: dict[str, str]) -> datetime | date:
-    """Get the dateTime from date or dateTime as a local."""
+    """Convert a google calendar API response to a datetime or date object."""
     if "date" in date_dict:
         parsed_date = dt.parse_date(date_dict["date"])
         assert parsed_date
