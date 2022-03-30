@@ -335,6 +335,7 @@ FLOWS = {
         "system_bridge",
         "tado",
         "tailscale",
+        "tankerkoenig",
         "tasmota",
         "tellduslive",
         "tesla_wall_connector",
