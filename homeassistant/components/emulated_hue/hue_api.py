@@ -26,14 +26,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     SUPPORT_SET_POSITION,
 )
-from homeassistant.components.fan import (
-    ATTR_SPEED,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
-)
+from homeassistant.components.fan import ATTR_PERCENTAGE, SUPPORT_SET_SPEED
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
@@ -540,14 +533,7 @@ class HueOneLightChangeView(HomeAssistantView):
         ):
             domain = entity.domain
             # Convert 0-100 to a fan speed
-            if (brightness := parsed[STATE_BRIGHTNESS]) == 0:
-                data[ATTR_SPEED] = SPEED_OFF
-            elif 0 < brightness <= 33.3:
-                data[ATTR_SPEED] = SPEED_LOW
-            elif 33.3 < brightness <= 66.6:
-                data[ATTR_SPEED] = SPEED_MEDIUM
-            elif 66.6 < brightness <= 100:
-                data[ATTR_SPEED] = SPEED_HIGH
+            data[ATTR_PERCENTAGE] = parsed[STATE_BRIGHTNESS]
 
         # Map the off command to on
         if entity.domain in config.off_maps_to_on_domains:
@@ -679,15 +665,9 @@ def get_entity_state(config, entity):
             # Convert 0.0-1.0 to 0-254
             data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
         elif entity.domain == fan.DOMAIN:
-            speed = entity.attributes.get(ATTR_SPEED, 0)
-            # Convert 0.0-1.0 to 0-254
-            data[STATE_BRIGHTNESS] = 0
-            if speed == SPEED_LOW:
-                data[STATE_BRIGHTNESS] = 85
-            elif speed == SPEED_MEDIUM:
-                data[STATE_BRIGHTNESS] = 170
-            elif speed == SPEED_HIGH:
-                data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX
+            percentage = entity.attributes.get(ATTR_PERCENTAGE) or 0
+            # Convert 0-100 to 0-254
+            data[STATE_BRIGHTNESS] = round(percentage * HUE_API_STATE_BRI_MAX / 100)
         elif entity.domain == cover.DOMAIN:
             level = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
             data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)

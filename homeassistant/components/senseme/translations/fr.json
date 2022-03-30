@@ -5,13 +5,13 @@
             "cannot_connect": "\u00c9chec de connexion"
         },
         "error": {
-            "cannot_connect": "Impossible de se connecter",
-            "invalid_host": "Adresse IP ou nom d'h\u00f4te invalide"
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_host": "Nom d'h\u00f4te ou adresse IP non valide"
         },
         "flow_title": "{name} - {model} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "Voulez-vous configurer {name} - {model} ( {host} )\u00a0?"
+                "description": "Voulez-vous configurer {name} - {model} ({host})\u00a0?"
             },
             "manual": {
                 "data": {
@@ -23,7 +23,7 @@
                 "data": {
                     "device": "Appareil"
                 },
-                "description": "S\u00e9lectionnez un appareil ou choisissez \u00ab Adresse IP \u00bb pour entrer manuellement une adresse IP."
+                "description": "S\u00e9lectionnez un appareil ou choisissez \u00ab\u00a0Adresse IP\u00a0\u00bb pour saisir manuellement une adresse IP."
             }
         }
     }

@@ -1,10 +1,6 @@
 """Constants for the Z-Wave JS integration."""
 import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-
 CONF_ADDON_DEVICE = "device"
 CONF_ADDON_EMULATE_HARDWARE = "emulate_hardware"
 CONF_ADDON_LOG_LEVEL = "log_level"
@@ -117,26 +113,3 @@ ENTITY_DESC_KEY_TEMPERATURE = "temperature"
 ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
-
-# Schema Constants
-
-# Validates that a bitmask is provided in hex form and converts it to decimal
-# int equivalent since that's what the library uses
-BITMASK_SCHEMA = vol.All(
-    cv.string,
-    vol.Lower,
-    vol.Match(
-        r"^(0x)?[0-9a-f]+$",
-        msg="Must provide an integer (e.g. 255) or a bitmask in hex form (e.g. 0xff)",
-    ),
-    lambda value: int(value, 16),
-)
-
-VALUE_SCHEMA = vol.Any(
-    bool,
-    vol.Coerce(int),
-    vol.Coerce(float),
-    BITMASK_SCHEMA,
-    cv.string,
-    dict,
-)

@@ -20,9 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_EMBED = "embed"
 ATTR_EMBED_AUTHOR = "author"
+ATTR_EMBED_COLOR = "color"
+ATTR_EMBED_DESCRIPTION = "description"
 ATTR_EMBED_FIELDS = "fields"
 ATTR_EMBED_FOOTER = "footer"
+ATTR_EMBED_TITLE = "title"
 ATTR_EMBED_THUMBNAIL = "thumbnail"
+ATTR_EMBED_URL = "url"
 ATTR_IMAGES = "images"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
@@ -45,8 +49,12 @@ class DiscordNotificationService(BaseNotificationService):
     def file_exists(self, filename):
         """Check if a file exists on disk and is in authorized path."""
         if not self.hass.config.is_allowed_path(filename):
+            _LOGGER.warning("Path not allowed: %s", filename)
             return False
-        return os.path.isfile(filename)
+        if not os.path.isfile(filename):
+            _LOGGER.warning("Not a file: %s", filename)
+            return False
+        return True
 
     async def async_send_message(self, message, **kwargs):
         """Login to Discord, send message to channel(s) and log out."""
@@ -64,10 +72,16 @@ class DiscordNotificationService(BaseNotificationService):
         embeds: list[nextcord.Embed] = []
         if ATTR_EMBED in data:
             embedding = data[ATTR_EMBED]
+            title = embedding.get(ATTR_EMBED_TITLE) or nextcord.Embed.Empty
+            description = embedding.get(ATTR_EMBED_DESCRIPTION) or nextcord.Embed.Empty
+            color = embedding.get(ATTR_EMBED_COLOR) or nextcord.Embed.Empty
+            url = embedding.get(ATTR_EMBED_URL) or nextcord.Embed.Empty
             fields = embedding.get(ATTR_EMBED_FIELDS) or []
 
             if embedding:
-                embed = nextcord.Embed(**embedding)
+                embed = nextcord.Embed(
+                    title=title, description=description, color=color, url=url
+                )
                 for field in fields:
                     embed.add_field(**field)
                 if ATTR_EMBED_FOOTER in embedding:
@@ -88,8 +102,6 @@ class DiscordNotificationService(BaseNotificationService):
 
                 if image_exists:
                     images.append(image)
-                else:
-                    _LOGGER.warning("Image not found: %s", image)
 
         await discord_bot.login(self.token)
 

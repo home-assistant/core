@@ -13,13 +13,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template, update_coordinator
+from homeassistant.helpers import template
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 
 
-class TriggerEntity(update_coordinator.CoordinatorEntity):
+class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
     """Template entity based on trigger data."""
 
     domain: str

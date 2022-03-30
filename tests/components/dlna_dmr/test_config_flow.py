@@ -4,7 +4,8 @@ from __future__ import annotations
 import dataclasses
 from unittest.mock import Mock
 
-from async_upnp_client import UpnpDevice, UpnpError
+from async_upnp_client.client import UpnpDevice
+from async_upnp_client.exceptions import UpnpError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow

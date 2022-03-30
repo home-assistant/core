@@ -43,7 +43,7 @@ async def async_setup_entry(
         async_add_entities(entities, False)
 
 
-class AemetWeather(CoordinatorEntity, WeatherEntity):
+class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
     """Implementation of an AEMET OpenData sensor."""
 
     _attr_attribution = ATTRIBUTION

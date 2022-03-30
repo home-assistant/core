@@ -194,7 +194,6 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, "percentage-state-topic", "rEset_percentage")
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
-    assert state.attributes.get(fan.ATTR_SPEED) is None
 
     async_fire_mqtt_message(hass, "state-topic", "None")
     state = hass.states.get("fan.test")
@@ -599,9 +598,8 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "low")
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -799,13 +797,11 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock, c
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "low")
 
-    await common.async_set_preset_mode(hass, "fan.test", "auto")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "auto")
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -938,13 +934,11 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "low")
 
-    await common.async_set_preset_mode(hass, "fan.test", "medium")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "medium")
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1035,9 +1029,8 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_preset_mode(hass, "fan.test", "medium")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "medium")
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1131,6 +1124,10 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
 
     with pytest.raises(NotValidPresetModeError):
         await common.async_turn_on(hass, "fan.test", preset_mode="auto")
+    assert mqtt_mock.async_publish.call_count == 1
+    # We can turn on, but the invalid preset mode will raise
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_on(hass, "fan.test", preset_mode="whoosh")
     assert mqtt_mock.async_publish.call_count == 2
@@ -1259,13 +1256,11 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     with pytest.raises(MultipleInvalid):
         await common.async_set_percentage(hass, "fan.test", 101)
 
-    await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "low")
 
-    await common.async_set_preset_mode(hass, "fan.test", "medium")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "medium")
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1285,9 +1280,8 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_preset_mode(hass, "fan.test", "freaking-high")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "freaking-high")
 
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")

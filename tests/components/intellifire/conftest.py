@@ -14,6 +14,28 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup
 
 
+@pytest.fixture()
+def mock_fireplace_finder_none() -> Generator[None, MagicMock, None]:
+    """Mock fireplace finder."""
+    mock_found_fireplaces = Mock()
+    mock_found_fireplaces.ips = []
+    with patch(
+        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace"
+    ):
+        yield mock_found_fireplaces
+
+
+@pytest.fixture()
+def mock_fireplace_finder_single() -> Generator[None, MagicMock, None]:
+    """Mock fireplace finder."""
+    mock_found_fireplaces = Mock()
+    mock_found_fireplaces.ips = ["192.168.1.69"]
+    with patch(
+        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace"
+    ):
+        yield mock_found_fireplaces
+
+
 @pytest.fixture
 def mock_intellifire_config_flow() -> Generator[None, MagicMock, None]:
     """Return a mocked IntelliFire client."""

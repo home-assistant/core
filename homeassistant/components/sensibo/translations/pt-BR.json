@@ -14,7 +14,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_key": "Chave de API"
+                    "api_key": "Chave da API"
                 }
             },
             "user": {

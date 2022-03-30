@@ -319,6 +319,10 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 
 def try_connection(hass, broker, port, username, password, protocol="3.1"):
     """Test if we can connect to an MQTT broker."""
+    # We don't import on the top because some integrations
+    # should be able to optionally rely on MQTT.
+    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+
     # Get the config from configuration.yaml
     yaml_config = hass.data.get(DATA_MQTT_CONFIG, {})
     entry_config = {
@@ -334,7 +338,7 @@ def try_connection(hass, broker, port, username, password, protocol="3.1"):
 
     def on_connect(client_, userdata, flags, result_code):
         """Handle connection result."""
-        result.put(result_code == MqttClientSetup.mqtt.CONNACK_ACCEPTED)
+        result.put(result_code == mqtt.CONNACK_ACCEPTED)
 
     client.on_connect = on_connect
 

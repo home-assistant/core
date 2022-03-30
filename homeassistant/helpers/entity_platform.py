@@ -478,7 +478,7 @@ class EntityPlatform:
                     "via_device",
                 ):
                     if key in device_info:
-                        processed_dev_info[key] = device_info[key]  # type: ignore[misc]
+                        processed_dev_info[key] = device_info[key]  # type: ignore[literal-required]
 
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:

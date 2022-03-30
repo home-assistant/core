@@ -99,7 +99,7 @@ jobs:
           pip: "Cython;numpy"
           skip-binary: aiohttp
           constraints: "homeassistant/package_constraints.txt"
-          requirements-diff: 'requirements_diff.txt'
+          requirements-diff: "requirements_diff.txt"
           requirements: "requirements.txt"
 
   integrations:
@@ -148,7 +148,6 @@ jobs:
             sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
             sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
-            sed -i "s|# homeassistant-pyozw|homeassistant-pyozw|g" ${requirement_file}
           done
 
       - name: Build wheels
@@ -164,5 +163,5 @@ jobs:
           pip: "Cython;numpy;scikit-build"
           skip-binary: aiohttp,grpcio
           constraints: "homeassistant/package_constraints.txt"
-          requirements-diff: 'requirements_diff.txt'
+          requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txt"

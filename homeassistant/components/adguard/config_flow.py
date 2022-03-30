@@ -27,7 +27,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _hassio_discovery = None
+    _hassio_discovery: dict[str, Any] | None = None
 
     async def _show_setup_form(
         self, errors: dict[str, str] | None = None

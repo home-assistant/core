@@ -22,6 +22,7 @@ class Info:
     authentication: str = attr.ib(default=None)
     discoverable: str = attr.ib(default=None)
     oauth2: str = attr.ib(default=None)
+    helper: str = attr.ib(default=None)
 
     files_added: set[Path] = attr.ib(factory=set)
     tests_added: set[Path] = attr.ib(factory=set)
@@ -50,7 +51,7 @@ class Info:
         """Update the integration manifest."""
         print(f"Updating {self.domain} manifest: {kwargs}")
         self.manifest_path.write_text(
-            json.dumps({**self.manifest(), **kwargs}, indent=2 + "\n")
+            json.dumps({**self.manifest(), **kwargs}, indent=2) + "\n"
         )
 
     @property
