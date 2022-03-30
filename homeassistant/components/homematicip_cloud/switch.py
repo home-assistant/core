@@ -166,15 +166,3 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
 
 class HomematicipSwitchMeasuring(HomematicipSwitch):
     """Representation of the HomematicIP measuring switch."""
-
-    @property
-    def current_power_w(self) -> float:
-        """Return the current power usage in W."""
-        return self._device.currentPowerConsumption
-
-    @property
-    def today_energy_kwh(self) -> int:
-        """Return the today total energy usage in kWh."""
-        if self._device.energyCounter is None:
-            return 0
-        return round(self._device.energyCounter)

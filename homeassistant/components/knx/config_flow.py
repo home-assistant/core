@@ -18,25 +18,32 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
+    CONF_KNX_DEFAULT_RATE_LIMIT,
+    CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_INITIAL_CONNECTION_TYPES,
+    CONF_KNX_LOCAL_IP,
+    CONF_KNX_MCAST_GRP,
+    CONF_KNX_MCAST_PORT,
+    CONF_KNX_RATE_LIMIT,
+    CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
+    CONF_KNX_STATE_UPDATER,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     DOMAIN,
 )
-from .schema import ConnectionSchema
 
 CONF_KNX_GATEWAY: Final = "gateway"
 CONF_MAX_RATE_LIMIT: Final = 60
 CONF_DEFAULT_LOCAL_IP: Final = "0.0.0.0"
 
 DEFAULT_ENTRY_DATA: Final = {
-    ConnectionSchema.CONF_KNX_STATE_UPDATER: ConnectionSchema.CONF_KNX_DEFAULT_STATE_UPDATER,
-    ConnectionSchema.CONF_KNX_RATE_LIMIT: ConnectionSchema.CONF_KNX_DEFAULT_RATE_LIMIT,
+    CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
+    CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
     CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
-    ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-    ConnectionSchema.CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
+    CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+    CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
 }
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
@@ -144,12 +151,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_KNX_INDIVIDUAL_ADDRESS: user_input[
                         CONF_KNX_INDIVIDUAL_ADDRESS
                     ],
-                    ConnectionSchema.CONF_KNX_ROUTE_BACK: (
+                    CONF_KNX_ROUTE_BACK: (
                         connection_type == CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
                     ),
-                    ConnectionSchema.CONF_KNX_LOCAL_IP: user_input.get(
-                        ConnectionSchema.CONF_KNX_LOCAL_IP
-                    ),
+                    CONF_KNX_LOCAL_IP: user_input.get(CONF_KNX_LOCAL_IP),
                     CONF_KNX_CONNECTION_TYPE: (
                         CONF_KNX_TUNNELING_TCP
                         if connection_type == CONF_KNX_LABEL_TUNNELING_TCP
@@ -182,7 +187,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         if self.show_advanced_options:
-            fields[vol.Optional(ConnectionSchema.CONF_KNX_LOCAL_IP)] = str
+            fields[vol.Optional(CONF_KNX_LOCAL_IP)] = str
 
         return self.async_show_form(
             step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
@@ -195,18 +200,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 title=CONF_KNX_ROUTING.capitalize(),
                 data={
                     **DEFAULT_ENTRY_DATA,
-                    ConnectionSchema.CONF_KNX_MCAST_GRP: user_input[
-                        ConnectionSchema.CONF_KNX_MCAST_GRP
-                    ],
-                    ConnectionSchema.CONF_KNX_MCAST_PORT: user_input[
-                        ConnectionSchema.CONF_KNX_MCAST_PORT
-                    ],
+                    CONF_KNX_MCAST_GRP: user_input[CONF_KNX_MCAST_GRP],
+                    CONF_KNX_MCAST_PORT: user_input[CONF_KNX_MCAST_PORT],
                     CONF_KNX_INDIVIDUAL_ADDRESS: user_input[
                         CONF_KNX_INDIVIDUAL_ADDRESS
                     ],
-                    ConnectionSchema.CONF_KNX_LOCAL_IP: user_input.get(
-                        ConnectionSchema.CONF_KNX_LOCAL_IP
-                    ),
+                    CONF_KNX_LOCAL_IP: user_input.get(CONF_KNX_LOCAL_IP),
                     CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
                 },
             )
@@ -216,81 +215,15 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(
                 CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
             ): str,
-            vol.Required(
-                ConnectionSchema.CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP
-            ): str,
-            vol.Required(
-                ConnectionSchema.CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT
-            ): cv.port,
+            vol.Required(CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): str,
+            vol.Required(CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
         }
 
         if self.show_advanced_options:
-            fields[vol.Optional(ConnectionSchema.CONF_KNX_LOCAL_IP)] = str
+            fields[vol.Optional(CONF_KNX_LOCAL_IP)] = str
 
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
-        )
-
-    async def async_step_import(self, config: dict | None = None) -> FlowResult:
-        """Import a config entry.
-
-        Performs a one time import of the YAML configuration and creates a config entry based on it
-        if not already done before.
-        """
-        if self._async_current_entries() or not config:
-            return self.async_abort(reason="single_instance_allowed")
-
-        data = {
-            ConnectionSchema.CONF_KNX_RATE_LIMIT: min(
-                config[ConnectionSchema.CONF_KNX_RATE_LIMIT], CONF_MAX_RATE_LIMIT
-            ),
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: config[
-                ConnectionSchema.CONF_KNX_STATE_UPDATER
-            ],
-            ConnectionSchema.CONF_KNX_MCAST_GRP: config[
-                ConnectionSchema.CONF_KNX_MCAST_GRP
-            ],
-            ConnectionSchema.CONF_KNX_MCAST_PORT: config[
-                ConnectionSchema.CONF_KNX_MCAST_PORT
-            ],
-            CONF_KNX_INDIVIDUAL_ADDRESS: config[CONF_KNX_INDIVIDUAL_ADDRESS],
-        }
-
-        if CONF_KNX_TUNNELING in config:
-            return self.async_create_entry(
-                title=f"{CONF_KNX_TUNNELING.capitalize()} @ {config[CONF_KNX_TUNNELING][CONF_HOST]}",
-                data={
-                    **DEFAULT_ENTRY_DATA,
-                    CONF_HOST: config[CONF_KNX_TUNNELING][CONF_HOST],
-                    CONF_PORT: config[CONF_KNX_TUNNELING][CONF_PORT],
-                    ConnectionSchema.CONF_KNX_LOCAL_IP: config[CONF_KNX_TUNNELING].get(
-                        ConnectionSchema.CONF_KNX_LOCAL_IP
-                    ),
-                    ConnectionSchema.CONF_KNX_ROUTE_BACK: config[CONF_KNX_TUNNELING][
-                        ConnectionSchema.CONF_KNX_ROUTE_BACK
-                    ],
-                    CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
-                    **data,
-                },
-            )
-
-        if CONF_KNX_ROUTING in config:
-            return self.async_create_entry(
-                title=CONF_KNX_ROUTING.capitalize(),
-                data={
-                    **DEFAULT_ENTRY_DATA,
-                    CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
-                    **data,
-                },
-            )
-
-        return self.async_create_entry(
-            title=CONF_KNX_AUTOMATIC.capitalize(),
-            data={
-                **DEFAULT_ENTRY_DATA,
-                CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
-                **data,
-            },
         )
 
 
@@ -334,47 +267,44 @@ class KNXOptionsFlowHandler(OptionsFlow):
                 default=self.current_config[CONF_KNX_INDIVIDUAL_ADDRESS],
             ): str,
             vol.Required(
-                ConnectionSchema.CONF_KNX_MCAST_GRP,
-                default=self.current_config.get(
-                    ConnectionSchema.CONF_KNX_MCAST_GRP, DEFAULT_MCAST_GRP
-                ),
+                CONF_KNX_MCAST_GRP,
+                default=self.current_config.get(CONF_KNX_MCAST_GRP, DEFAULT_MCAST_GRP),
             ): str,
             vol.Required(
-                ConnectionSchema.CONF_KNX_MCAST_PORT,
+                CONF_KNX_MCAST_PORT,
                 default=self.current_config.get(
-                    ConnectionSchema.CONF_KNX_MCAST_PORT, DEFAULT_MCAST_PORT
+                    CONF_KNX_MCAST_PORT, DEFAULT_MCAST_PORT
                 ),
             ): cv.port,
         }
 
         if self.show_advanced_options:
             local_ip = (
-                self.current_config.get(ConnectionSchema.CONF_KNX_LOCAL_IP)
-                if self.current_config.get(ConnectionSchema.CONF_KNX_LOCAL_IP)
-                is not None
+                self.current_config.get(CONF_KNX_LOCAL_IP)
+                if self.current_config.get(CONF_KNX_LOCAL_IP) is not None
                 else CONF_DEFAULT_LOCAL_IP
             )
             data_schema[
                 vol.Required(
-                    ConnectionSchema.CONF_KNX_LOCAL_IP,
+                    CONF_KNX_LOCAL_IP,
                     default=local_ip,
                 )
             ] = str
             data_schema[
                 vol.Required(
-                    ConnectionSchema.CONF_KNX_STATE_UPDATER,
+                    CONF_KNX_STATE_UPDATER,
                     default=self.current_config.get(
-                        ConnectionSchema.CONF_KNX_STATE_UPDATER,
-                        ConnectionSchema.CONF_KNX_DEFAULT_STATE_UPDATER,
+                        CONF_KNX_STATE_UPDATER,
+                        CONF_KNX_DEFAULT_STATE_UPDATER,
                     ),
                 )
             ] = bool
             data_schema[
                 vol.Required(
-                    ConnectionSchema.CONF_KNX_RATE_LIMIT,
+                    CONF_KNX_RATE_LIMIT,
                     default=self.current_config.get(
-                        ConnectionSchema.CONF_KNX_RATE_LIMIT,
-                        ConnectionSchema.CONF_KNX_DEFAULT_RATE_LIMIT,
+                        CONF_KNX_RATE_LIMIT,
+                        CONF_KNX_DEFAULT_RATE_LIMIT,
                     ),
                 )
             ] = vol.All(vol.Coerce(int), vol.Range(min=1, max=CONF_MAX_RATE_LIMIT))
@@ -421,11 +351,8 @@ class KNXOptionsFlowHandler(OptionsFlow):
         entry_data = {
             **DEFAULT_ENTRY_DATA,
             **self.general_settings,
-            ConnectionSchema.CONF_KNX_LOCAL_IP: self.general_settings.get(
-                ConnectionSchema.CONF_KNX_LOCAL_IP
-            )
-            if self.general_settings.get(ConnectionSchema.CONF_KNX_LOCAL_IP)
-            != CONF_DEFAULT_LOCAL_IP
+            CONF_KNX_LOCAL_IP: self.general_settings.get(CONF_KNX_LOCAL_IP)
+            if self.general_settings.get(CONF_KNX_LOCAL_IP) != CONF_DEFAULT_LOCAL_IP
             else None,
             CONF_HOST: self.current_config.get(CONF_HOST, ""),
         }
@@ -436,7 +363,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
                 **entry_data,
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: (
+                CONF_KNX_ROUTE_BACK: (
                     connection_type == CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
                 ),
                 CONF_KNX_CONNECTION_TYPE: (
@@ -466,7 +393,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
 def get_knx_tunneling_type(config_entry_data: dict) -> str:
     """Obtain the knx tunneling type based on the data in the config entry data."""
     connection_type = config_entry_data[CONF_KNX_CONNECTION_TYPE]
-    route_back = config_entry_data.get(ConnectionSchema.CONF_KNX_ROUTE_BACK, False)
+    route_back = config_entry_data.get(CONF_KNX_ROUTE_BACK, False)
     if route_back and connection_type == CONF_KNX_TUNNELING:
         return CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
     if connection_type == CONF_KNX_TUNNELING_TCP:

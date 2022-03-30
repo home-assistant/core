@@ -618,6 +618,8 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     )
     mqtt_component_mock.conf = hass.data["mqtt"].conf  # For diagnostics
     mqtt_component_mock._mqttc = mqtt_client_mock
+    # connected set to True to get a more realistics behavior when subscribing
+    hass.data["mqtt"].connected = True
 
     hass.data["mqtt"] = mqtt_component_mock
     component = hass.data["mqtt"]

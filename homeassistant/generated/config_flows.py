@@ -335,6 +335,7 @@ FLOWS = {
         "system_bridge",
         "tado",
         "tailscale",
+        "tankerkoenig",
         "tasmota",
         "tellduslive",
         "tesla_wall_connector",
@@ -348,6 +349,7 @@ FLOWS = {
         "traccar",
         "tractive",
         "tradfri",
+        "trafikverket_train",
         "trafikverket_weatherstation",
         "transmission",
         "tuya",
@@ -405,6 +407,7 @@ FLOWS = {
         "min_max",
         "switch_as_x",
         "threshold",
-        "tod"
+        "tod",
+        "utility_meter"
     ]
 }
