@@ -28,8 +28,6 @@ from .mixins import (
 DEFAULT_NAME = "MQTT Scene"
 DEFAULT_RETAIN = False
 
-DEFAULT_PAYLOAD_ON = "ON"
-
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
