@@ -238,6 +238,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
             }
 
+            assert self._tunneling_config
             return self.async_create_entry(
                 title=f"Secure {CONF_KNX_TUNNELING.capitalize()} @ {self._tunneling_config[CONF_HOST]}",
                 data=entry_data,
@@ -278,6 +279,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
                 }
 
+                assert self._tunneling_config
                 return self.async_create_entry(
                     title=f"Secure {CONF_KNX_TUNNELING.capitalize()} @ {self._tunneling_config[CONF_HOST]}",
                     data=entry_data,
