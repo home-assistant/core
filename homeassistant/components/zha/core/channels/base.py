@@ -427,11 +427,11 @@ class ZigbeeChannel(LogMixin):
 
     get_attributes = partialmethod(_get_attributes, False)
 
-    def log(self, level, msg, *args):
+    def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
         args = (self._ch_pool.nwk, self._id) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
 
     def __getattr__(self, name):
         """Get attribute or a decorated cluster command."""
@@ -485,11 +485,11 @@ class ZDOChannel(LogMixin):
         """Configure channel."""
         self._status = ChannelStatus.CONFIGURED
 
-    def log(self, level, msg, *args):
+    def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:ZDO](%s): {msg}"
         args = (self._zha_device.nwk, self._zha_device.model) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
 
 
 class ClientChannel(ZigbeeChannel):
