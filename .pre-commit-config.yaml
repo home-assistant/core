@@ -68,7 +68,6 @@ repos:
     rev: v2.6.1
     hooks:
       - id: prettier
-        stages: [manual]
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.3.5
     hooks:
