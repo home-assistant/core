@@ -1,7 +1,7 @@
 """Support for Motion Blinds using their WLAN API."""
+from enum import IntEnum
 import logging
 
-from enum import IntEnum
 from motionblinds import DEVICE_TYPES_WIFI, BlindType
 import voluptuous as vol
 
