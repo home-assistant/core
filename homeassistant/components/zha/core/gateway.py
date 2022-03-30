@@ -11,9 +11,10 @@ import logging
 import os
 import time
 import traceback
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any, NamedTuple, Union
 
 from serial import SerialException
+from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE
 import zigpy.device
 import zigpy.endpoint
@@ -26,10 +27,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import (
     CONNECTION_ZIGBEE,
+    DeviceRegistry,
     async_get_registry as get_dev_reg,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_registry import (
+    EntityRegistry,
     async_entries_for_device,
     async_get_registry as get_ent_reg,
 )
@@ -93,15 +97,22 @@ if TYPE_CHECKING:
     from logging import Filter, LogRecord
 
     from ..entity import ZhaEntity
+    from .channels.base import ZigbeeChannel
+    from .store import ZhaStorage
 
     _LogFilterType = Union[Filter, Callable[[LogRecord], int]]
 
 _LOGGER = logging.getLogger(__name__)
 
-EntityReference = collections.namedtuple(
-    "EntityReference",
-    "reference_id zha_device cluster_channels device_info remove_future",
-)
+
+class EntityReference(NamedTuple):
+    """Describes an entity reference."""
+
+    reference_id: str
+    zha_device: ZHADevice
+    cluster_channels: dict[str, ZigbeeChannel]
+    device_info: DeviceInfo
+    remove_future: asyncio.Future[Any]
 
 
 class DevicePairingStatus(Enum):
@@ -116,6 +127,13 @@ class DevicePairingStatus(Enum):
 class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
 
+    # -- Set in async_initialize --
+    zha_storage: ZhaStorage
+    ha_device_registry: DeviceRegistry
+    ha_entity_registry: EntityRegistry
+    application_controller: ControllerApplication
+    radio_description: str
+
     def __init__(
         self, hass: HomeAssistant, config: ConfigType, config_entry: ConfigEntry
     ) -> None:
@@ -128,11 +146,6 @@ class ZHAGateway:
         self._device_registry: collections.defaultdict[
             EUI64, list[EntityReference]
         ] = collections.defaultdict(list)
-        self.zha_storage = None
-        self.ha_device_registry = None
-        self.ha_entity_registry = None
-        self.application_controller = None
-        self.radio_description = None
         self._log_levels: dict[str, dict[str, int]] = {
             DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
@@ -356,7 +369,7 @@ class ZHAGateway:
         self, device: ZHADevice, entity_refs: list[EntityReference] | None
     ) -> None:
         if entity_refs is not None:
-            remove_tasks = []
+            remove_tasks: list[asyncio.Future[Any]] = []
             for entity_ref in entity_refs:
                 remove_tasks.append(entity_ref.remove_future)
             if remove_tasks:
@@ -407,13 +420,14 @@ class ZHAGateway:
         ):
             if entity_id == entity_reference.reference_id:
                 return entity_reference
+        return None
 
     def remove_entity_reference(self, entity: ZhaEntity) -> None:
         """Remove entity reference for given entity_id if found."""
         if entity.zha_device.ieee in self.device_registry:
             entity_refs = self.device_registry.get(entity.zha_device.ieee)
             self.device_registry[entity.zha_device.ieee] = [
-                e for e in entity_refs if e.reference_id != entity.entity_id
+                e for e in entity_refs if e.reference_id != entity.entity_id  # type: ignore[union-attr]
             ]
 
     def _cleanup_group_entity_registry_entries(
@@ -464,12 +478,12 @@ class ZHAGateway:
 
     def register_entity_reference(
         self,
-        ieee,
-        reference_id,
-        zha_device,
-        cluster_channels,
-        device_info,
-        remove_future,
+        ieee: EUI64,
+        reference_id: str,
+        zha_device: ZHADevice,
+        cluster_channels: dict[str, ZigbeeChannel],
+        device_info: DeviceInfo,
+        remove_future: asyncio.Future[Any],
     ):
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(

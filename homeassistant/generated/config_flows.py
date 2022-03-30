@@ -5,7 +5,6 @@ To update, run python3 -m script.hassfest
 
 # fmt: off
 
-
 FLOWS = {
     "integration": [
         "abode",
@@ -99,6 +98,8 @@ FLOWS = {
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
+        "fibaro",
+        "filesize",
         "fireservicerota",
         "fivem",
         "fjaraskupan",
@@ -119,6 +120,7 @@ FLOWS = {
         "fronius",
         "garages_amsterdam",
         "gdacs",
+        "generic",
         "geofency",
         "geonetnz_quakes",
         "geonetnz_volcano",
@@ -132,7 +134,6 @@ FLOWS = {
         "google_travel_time",
         "gpslogger",
         "gree",
-        "group",
         "growatt_server",
         "guardian",
         "habitica",
@@ -160,7 +161,6 @@ FLOWS = {
         "icloud",
         "ifttt",
         "insteon",
-        "integration",
         "intellifire",
         "ios",
         "iotawatt",
@@ -328,7 +328,6 @@ FLOWS = {
         "subaru",
         "sun",
         "surepetcare",
-        "switch_as_x",
         "switchbot",
         "switcher_kis",
         "syncthing",
@@ -340,7 +339,6 @@ FLOWS = {
         "tasmota",
         "tellduslive",
         "tesla_wall_connector",
-        "threshold",
         "tibber",
         "tile",
         "tolo",
@@ -351,6 +349,7 @@ FLOWS = {
         "traccar",
         "tractive",
         "tradfri",
+        "trafikverket_train",
         "trafikverket_weatherstation",
         "transmission",
         "tuya",
@@ -403,7 +402,12 @@ FLOWS = {
     ],
     "helper": [
         "derivative",
-        "tod"
+        "group",
+        "integration",
+        "min_max",
+        "switch_as_x",
+        "threshold",
+        "tod",
+        "utility_meter"
     ]
 }
-

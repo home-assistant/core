@@ -1,5 +1,6 @@
 {
   "domain": "threshold",
+  "integration_type": "helper",
   "name": "Threshold",
   "documentation": "https://www.home-assistant.io/integrations/threshold",
   "codeowners": ["@fabaff"],
