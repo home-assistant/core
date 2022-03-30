@@ -912,7 +912,6 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             and source["domain"] == "group"
         ):
             # Collect state will be called in here since it's wrapped
-            print(entity_id)
             group_entities = entity.attributes.get(ATTR_ENTITY_ID)
             if group_entities:
                 search += group_entities
