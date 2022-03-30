@@ -6,10 +6,8 @@ from homeassistant.components.azure_data_explorer.const import (
     CONF_APP_REG_ID,
     CONF_APP_REG_SECRET,
     CONF_AUTHORITY_ID,
-    CONF_MAX_DELAY,
     CONF_SEND_INTERVAL,
     CONF_USE_FREE,
-    DATA_FILTER,
 )
 
 AZURE_DATA_EXPLORER_PATH = "homeassistant.components.azure_data_explorer"
@@ -36,8 +34,34 @@ BASE_CONFIG_FULL = {
     CONF_AUTHORITY_ID: "test-auth-id",
     CONF_USE_FREE: False,
     CONF_SEND_INTERVAL: 5,
-    CONF_MAX_DELAY: 10,
-    DATA_FILTER: {"azure_data_explorer": ""},
+}
+
+BASE_CONFIG_IMPORT = {
+    CONF_USE_FREE: False,
+    CONF_SEND_INTERVAL: 5,
+}
+
+
+BASE_CONFIG_FREE = {
+    CONF_ADX_CLUSTER_INGEST_URI: "https://cluster.region.kusto.windows.net",
+    CONF_ADX_DATABASE_NAME: "test-database-name",
+    CONF_ADX_TABLE_NAME: "test-table-name",
+    CONF_APP_REG_ID: "test-app-reg-id",
+    CONF_APP_REG_SECRET: "test-app-reg-secret",
+    CONF_AUTHORITY_ID: "test-auth-id",
+    CONF_USE_FREE: True,
+    CONF_SEND_INTERVAL: 5,
+}
+
+IMPORT_CONFIG = {
+    CONF_ADX_CLUSTER_INGEST_URI: "https://cluster.region.kusto.windows.net",
+    CONF_ADX_DATABASE_NAME: "test-database-name",
+    CONF_ADX_TABLE_NAME: "test-table-name",
+    CONF_APP_REG_ID: "test-app-reg-id",
+    CONF_APP_REG_SECRET: "test-app-reg-secret",
+    CONF_AUTHORITY_ID: "test-auth-id",
+    CONF_USE_FREE: False,
+    CONF_SEND_INTERVAL: 5,
 }
 
 

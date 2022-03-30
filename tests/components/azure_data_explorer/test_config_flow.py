@@ -2,11 +2,9 @@
 import logging
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
-from numpy import equal
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.azure_data_explorer.config_flow import ConfigFlow
 from homeassistant.components.azure_data_explorer.const import DOMAIN, STEP_USER
 
 from .const import BASE_CONFIG, BASE_CONFIG_FULL, UPDATE_OPTIONS
@@ -46,18 +44,11 @@ async def test_form(
     mock_setup_entry.assert_called_once()
 
 
-@pytest.mark.parametrize(
-    "side_effect, error_message",
-    [("base", "invalid_auth"), ("base", "cannot_connect"), ("base", "unknown")],
-    ids=["invalid_auth", "cannot_connect", "unknown"],
-)
-async def test_connection_error(
+async def test_connection_error_KustoServiceError(
     hass,
-    mock_validate_input,
-    side_effect,
-    error_message,
+    mock_execute_query,
 ):
-    """Test we handle connection errors."""
+    """Test we handle connection KustoServiceError."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -66,18 +57,80 @@ async def test_connection_error(
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    mock_validate_input.side_effect = {side_effect: error_message}
+    mock_execute_query.side_effect = KustoServiceError("test")
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         BASE_CONFIG.copy(),
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == side_effect
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_flow(hass, entry):
+async def test_connection_error_KustoAuthenticationError(
+    hass,
+    mock_execute_query,
+):
+    """Test we handle connection KustoAuthenticationError."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=None,
+    )
+    assert result["type"] == "form"
+    assert result["errors"] is None
+
+    mock_execute_query.side_effect = KustoAuthenticationError("test", Exception)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        BASE_CONFIG.copy(),
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_connection_error_Exception(
+    hass,
+    mock_execute_query,
+):
+    """Test we handle connection KustoAuthenticationError."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=None,
+    )
+    assert result["type"] == "form"
+    assert result["errors"] is None
+
+    mock_execute_query.side_effect = Exception
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        BASE_CONFIG.copy(),
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_single_instance(hass):
+    """Test uniqueness of username."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=BASE_CONFIG_FULL,
+        title="test-instance",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=BASE_CONFIG_FULL,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_options_flow(hass, entry_managed):
     """Test options flow."""
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(entry_managed.entry_id)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
@@ -89,55 +142,3 @@ async def test_options_flow(hass, entry):
     assert updated["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert updated["data"] == UPDATE_OPTIONS
     await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(
-    "source",
-    [config_entries.SOURCE_USER],
-    ids=["user"],
-)
-async def test_single_instance(hass, source):
-    """Test uniqueness of username."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=BASE_CONFIG_FULL,
-        title="test-instance",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": source},
-        data=BASE_CONFIG.copy(),
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
-async def test_validate_input(
-    hass,
-    mock_test_connection,
-):
-    """Test we get the form."""
-    config_flow = ConfigFlow()
-
-    result = await config_flow.validate_input(hass, BASE_CONFIG_FULL)
-
-    assert result is None
-
-    mock_test_connection.side_effect = KustoServiceError("msg")
-    result = await config_flow.validate_input(hass, BASE_CONFIG_FULL)
-
-    assert equal(result, {"base": "cannot_connect"})
-
-    mock_test_connection.side_effect = KustoAuthenticationError(
-        authentication_method="AM", exception=Exception
-    )
-    result = await config_flow.validate_input(hass, BASE_CONFIG_FULL)
-
-    assert equal(result, {"base": "invalid_auth"})
-
-    mock_test_connection.side_effect = Exception
-    result = await config_flow.validate_input(hass, BASE_CONFIG_FULL)
-
-    assert equal(result, {"base": "unknown"})
