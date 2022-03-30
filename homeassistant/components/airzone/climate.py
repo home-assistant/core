@@ -144,10 +144,14 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         if hvac_mode == HVAC_MODE_OFF:
             params[API_ON] = 0
         else:
-            if self.get_zone_value(AZD_MASTER):
-                mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
-                if mode != self.get_zone_value(AZD_MODE):
+            mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
+            if mode != self.get_zone_value(AZD_MODE):
+                if self.get_zone_value(AZD_MASTER):
                     params[API_MODE] = mode
+                else:
+                    raise HomeAssistantError(
+                        f"Mode can't be changed on slave zone {self.name}"
+                    )
             params[API_ON] = 1
         _LOGGER.debug("Set hvac_mode=%s params=%s", hvac_mode, params)
         await self._async_update_hvac_params(params)
