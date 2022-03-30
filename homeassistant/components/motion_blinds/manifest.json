@@ -9,6 +9,9 @@
     { "registered_devices": true },
     {
       "hostname": "motion_*"
+    },
+    {
+      "hostname": "brel_*"
     }
   ],
   "codeowners": ["@starkillerOG"],
