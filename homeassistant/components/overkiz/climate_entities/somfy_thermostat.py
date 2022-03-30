@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyoverkiz.enums import OverkizState
+from pyoverkiz.enums import OverkizCommand, OverkizState
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -22,16 +22,8 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
-COMMAND_EXIT_DEROGATION = "exitDerogation"
-COMMAND_REFRESH_STATE = "refreshState"
-COMMAND_SET_DEROGATION = "setDerogation"
-COMMAND_SET_MODE_TEMPERATURE = "setModeTemperature"
-
 PRESET_FREEZE = "freeze"
 PRESET_NIGHT = "night"
-
-ST_HEATING_MODE_STATE = "somfythermostat:HeatingModeState"
-ST_DEROGATION_HEATING_MODE_STATE = "somfythermostat:DerogationHeatingModeState"
 
 STATE_DEROGATION_FURTHER_NOTICE = "further_notice"
 STATE_DEROGATION_ACTIVE = "active"
@@ -104,10 +96,20 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         """Return the current preset mode, e.g., home, away, temp."""
         if self.hvac_mode == HVAC_MODE_AUTO:
             return OVERKIZ_TO_PRESET_MODES[
-                cast(str, self.executor.select_state(ST_HEATING_MODE_STATE))
+                cast(
+                    str,
+                    self.executor.select_state(
+                        OverkizState.SOMFY_THERMOSTAT_HEATING_MODE
+                    ),
+                )
             ]
         return OVERKIZ_TO_PRESET_MODES[
-            cast(str, self.executor.select_state(ST_DEROGATION_HEATING_MODE_STATE))
+            cast(
+                str,
+                self.executor.select_state(
+                    OverkizState.SOMFY_THERMOSTAT_DEROGATION_HEATING_MODE
+                ),
+            )
         ]
 
     @property
@@ -137,18 +139,18 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         temperature = kwargs[ATTR_TEMPERATURE]
 
         await self.executor.async_execute_command(
-            COMMAND_SET_DEROGATION, temperature, STATE_DEROGATION_FURTHER_NOTICE
+            OverkizCommand.SET_DEROGATION, temperature, STATE_DEROGATION_FURTHER_NOTICE
         )
         await self.executor.async_execute_command(
-            COMMAND_SET_MODE_TEMPERATURE, STATE_PRESET_MANUAL, temperature
+            OverkizCommand.SET_MODE_TEMPERATURE, STATE_PRESET_MANUAL, temperature
         )
-        await self.executor.async_execute_command(COMMAND_REFRESH_STATE)
+        await self.executor.async_execute_command(OverkizCommand.REFRESH_STATE)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
-            await self.executor.async_execute_command(COMMAND_EXIT_DEROGATION)
-            await self.executor.async_execute_command(COMMAND_REFRESH_STATE)
+            await self.executor.async_execute_command(OverkizCommand.EXIT_DEROGATION)
+            await self.executor.async_execute_command(OverkizCommand.REFRESH_STATE)
         else:
             await self.async_set_preset_mode(PRESET_NONE)
 
@@ -156,19 +158,19 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         """Set new preset mode."""
         if preset_mode in [PRESET_FREEZE, PRESET_NIGHT, PRESET_AWAY, PRESET_HOME]:
             await self.executor.async_execute_command(
-                COMMAND_SET_DEROGATION,
+                OverkizCommand.SET_DEROGATION,
                 PRESET_MODES_TO_OVERKIZ[preset_mode],
                 STATE_DEROGATION_FURTHER_NOTICE,
             )
         elif preset_mode == PRESET_NONE:
             await self.executor.async_execute_command(
-                COMMAND_SET_DEROGATION,
+                OverkizCommand.SET_DEROGATION,
                 self.target_temperature,
                 STATE_DEROGATION_FURTHER_NOTICE,
             )
             await self.executor.async_execute_command(
-                COMMAND_SET_MODE_TEMPERATURE,
+                OverkizCommand.SET_MODE_TEMPERATURE,
                 STATE_PRESET_MANUAL,
                 self.target_temperature,
             )
-        await self.executor.async_execute_command(COMMAND_REFRESH_STATE)
+        await self.executor.async_execute_command(OverkizCommand.REFRESH_STATE)
