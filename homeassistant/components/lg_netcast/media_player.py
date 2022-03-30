@@ -1,13 +1,12 @@
 """Support for LG TV running on NetCast 3 or 4."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from pylgnetcast import LgNetCastClient, LgNetCastError
 from requests import RequestException
 import voluptuous as vol
 
-from homeassistant import util
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerDeviceClass,
