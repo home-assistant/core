@@ -1003,13 +1003,14 @@ build.json @home-assistant/supervisor
 /homeassistant/components/syslog/ @fabaff
 /homeassistant/components/system_bridge/ @timmo001
 /tests/components/system_bridge/ @timmo001
-/homeassistant/components/tado/ @michaelarnauts
-/tests/components/tado/ @michaelarnauts
+/homeassistant/components/tado/ @michaelarnauts @north3221
+/tests/components/tado/ @michaelarnauts @north3221
 /homeassistant/components/tag/ @balloob @dmulcahey
 /tests/components/tag/ @balloob @dmulcahey
 /homeassistant/components/tailscale/ @frenck
 /tests/components/tailscale/ @frenck
-/homeassistant/components/tankerkoenig/ @guillempages
+/homeassistant/components/tankerkoenig/ @guillempages @mib1185
+/tests/components/tankerkoenig/ @guillempages @mib1185
 /homeassistant/components/tapsaff/ @bazwilliams
 /homeassistant/components/tasmota/ @emontnemery
 /tests/components/tasmota/ @emontnemery

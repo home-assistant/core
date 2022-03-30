@@ -3,13 +3,14 @@
   "config": {
     "step": {
       "user": {
-        "title": "New Group",
-        "description": "Select group type",
+        "title": "Add Group",
+        "description": "Groups allow you to create a new entity that represents multiple entities of the same type.",
         "menu_options": {
           "binary_sensor": "Binary sensor group",
           "cover": "Cover group",
           "fan": "Fan group",
           "light": "Light group",
+          "lock": "Lock group",
           "media_player": "Media player group",
           "switch": "Switch group"
         }
@@ -41,6 +42,14 @@
         }
       },
       "light": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
+        }
+      },
+      "lock": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
@@ -92,6 +101,12 @@
         "description": "[%key:component::group::config::step::binary_sensor::description%]",
         "data": {
           "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        }
+      },
+      "lock": {
+        "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }

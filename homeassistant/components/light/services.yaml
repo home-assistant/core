@@ -225,8 +225,7 @@ turn_on:
           unit_of_measurement: K
     brightness:
       name: Brightness value
-      description:
-        Number indicating brightness, where 0 turns the light
+      description: Number indicating brightness, where 0 turns the light
         off, 1 is the minimum brightness and 255 is the maximum brightness
         supported by the light.
       advanced: true
@@ -236,8 +235,7 @@ turn_on:
           max: 255
     brightness_pct:
       name: Brightness
-      description:
-        Number indicating percentage of full brightness, where 0
+      description: Number indicating percentage of full brightness, where 0
         turns the light off, 1 is the minimum brightness and 100 is the maximum
         brightness supported by the light.
       selector:
@@ -553,8 +551,7 @@ toggle:
           max: 255
     brightness_pct:
       name: Brightness
-      description:
-        Number indicating percentage of full brightness, where 0
+      description: Number indicating percentage of full brightness, where 0
         turns the light off, 1 is the minimum brightness and 100 is the maximum
         brightness supported by the light.
       selector:
