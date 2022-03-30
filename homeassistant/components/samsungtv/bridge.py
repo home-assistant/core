@@ -705,6 +705,7 @@ class SamsungTVEncryptedBridge(SamsungTVBridge):
                 LOGGER.debug("Device info on %s is: %s", self.host, device_info)
                 self._device_info = device_info
                 self._rest_api_port = rest_api_port
+                return device_info
 
         return self._device_info
 

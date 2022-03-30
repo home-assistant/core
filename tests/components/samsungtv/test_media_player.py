@@ -397,7 +397,7 @@ async def test_update_off_encryptedws(
     """Testing update tv off."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
-    assert rest_api.rest_device_info.call_count == 2
+    rest_api.rest_device_info.assert_called_once()
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
@@ -412,7 +412,7 @@ async def test_update_off_encryptedws(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
-    assert rest_api.rest_device_info.call_count == 2
+    rest_api.rest_device_info.assert_called_once()
 
 
 @pytest.mark.usefixtures("remote")
