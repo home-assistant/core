@@ -226,6 +226,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict = {}
 
         if user_input is not None:
+            assert self._tunneling_config
             entry_data: KNXConfigEntryData = {
                 **self._tunneling_config,  # type: ignore[misc]
                 CONF_KNX_SECURE_USER_ID: user_input[CONF_KNX_SECURE_USER_ID],
@@ -238,7 +239,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
             }
 
-            assert self._tunneling_config
             return self.async_create_entry(
                 title=f"Secure {CONF_KNX_TUNNELING.capitalize()} @ {self._tunneling_config[CONF_HOST]}",
                 data=entry_data,
@@ -262,6 +262,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
+                assert self._tunneling_config
                 storage_key: str = (
                     CONST_KNX_STORAGE_KEY + user_input[CONF_KNX_KNXKEY_FILENAME]
                 )
@@ -279,7 +280,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
                 }
 
-                assert self._tunneling_config
                 return self.async_create_entry(
                     title=f"Secure {CONF_KNX_TUNNELING.capitalize()} @ {self._tunneling_config[CONF_HOST]}",
                     data=entry_data,
