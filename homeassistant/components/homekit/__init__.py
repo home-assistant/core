@@ -465,6 +465,8 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
 class HomeKit:
     """Class to handle all actions between HomeKit and Home Assistant."""
 
+    driver: HomeDriver
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -497,7 +499,6 @@ class HomeKit:
         self.status = STATUS_READY
 
         self.bridge: HomeBridge | None = None
-        self.driver: HomeDriver | None = None
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: UUID) -> None:
         """Set up bridge and accessory driver."""
@@ -533,7 +534,6 @@ class HomeKit:
         self, entity_ids: Iterable[str]
     ) -> None:
         """Reset accessories in accessory mode."""
-        assert self.driver is not None
         acc = cast(HomeAccessory, self.driver.accessory)
         if acc.entity_id not in entity_ids:
             return
@@ -587,7 +587,6 @@ class HomeKit:
 
     async def async_config_changed(self) -> None:
         """Call config changed which writes out the new config to disk."""
-        assert self.driver is not None
         await self.hass.async_add_executor_job(self.driver.config_changed)
 
     def add_bridge_accessory(self, state: State) -> HomeAccessory | None:
@@ -608,7 +607,6 @@ class HomeKit:
             )
 
         assert self.aid_storage is not None
-        assert self.driver is not None
         assert self.bridge is not None
         aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
         conf = self._config.get(state.entity_id, {}).copy()
@@ -725,7 +723,6 @@ class HomeKit:
             return
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
-        assert self.driver is not None
         await self.driver.async_start()
         async with self.hass.data[DOMAIN][PERSIST_LOCK]:
             await self.hass.async_add_executor_job(self.driver.persist)
@@ -738,7 +735,6 @@ class HomeKit:
     @callback
     def _async_show_setup_message(self) -> None:
         """Show the pairing setup message."""
-        assert self.driver is not None
         async_show_setup_message(
             self.hass,
             self._entry_id,
@@ -750,7 +746,6 @@ class HomeKit:
     @callback
     def async_unpair(self) -> None:
         """Remove all pairings for an accessory so it can be repaired."""
-        assert self.driver is not None
         state = self.driver.state
         for client_uuid in list(state.paired_clients):
             # We need to check again since removing a single client
@@ -822,7 +817,6 @@ class HomeKit:
         self, entity_states: list[State]
     ) -> HomeAccessory | None:
         """Create a single HomeKit accessory (accessory mode)."""
-        assert self.driver is not None
         if not entity_states:
             _LOGGER.error(
                 "HomeKit %s cannot startup: entity not available: %s",
@@ -845,7 +839,6 @@ class HomeKit:
         self, entity_states: Iterable[State]
     ) -> HomeAccessory:
         """Create a HomeKit bridge with accessories. (bridge mode)."""
-        assert self.driver is not None
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         for state in entity_states:
             self.add_bridge_accessory(state)
@@ -882,7 +875,6 @@ class HomeKit:
 
         if acc is None:
             return False
-        assert self.driver is not None
         # No need to load/persist as we do it in setup
         self.driver.accessory = acc
         return True
@@ -893,7 +885,6 @@ class HomeKit:
             return
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
-        assert self.driver is not None
         await self.driver.async_stop()
 
     @callback
