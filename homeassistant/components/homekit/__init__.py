@@ -475,15 +475,12 @@ class HomeKit:
         exclude_accessory_mode: bool,
         entity_config: dict,
         homekit_mode: str,
-        advertise_ip: str | None = None,
-        entry_id: str | None = None,
-        entry_title: str | None = None,
+        advertise_ip: str | None,
+        entry_id: str,
+        entry_title: str,
         devices: Iterable[str] | None = None,
     ) -> None:
         """Initialize a HomeKit object."""
-        assert entry_title is not None
-        assert entry_id is not None
-
         self.hass = hass
         self._name = name
         self._port = port
@@ -504,7 +501,6 @@ class HomeKit:
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: UUID) -> None:
         """Set up bridge and accessory driver."""
-        assert self._entry_id is not None
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 
         self.driver = HomeDriver(
