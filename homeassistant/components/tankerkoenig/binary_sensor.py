@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the tankerkoenig sensors."""
+    """Set up the tankerkoenig binary sensors."""
 
     coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id]
 
@@ -73,7 +73,7 @@ class StationOpenBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
+        """Return true if the station is open."""
         data = self.coordinator.data[self._station_id]
         if data is not None and "status" in data:
             return True
