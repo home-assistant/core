@@ -1256,7 +1256,7 @@ python-songpal==0.14.1
 python-tado==0.12.0
 
 # homeassistant.components.awair
-python_awair==0.2.1
+python_awair==0.2.3
 
 # homeassistant.components.tile
 pytile==2022.02.0
