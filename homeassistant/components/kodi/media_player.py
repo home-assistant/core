@@ -278,14 +278,20 @@ def cmd(func):
         """Wrap all command methods."""
         try:
             await func(obj, *args, **kwargs)
-        except jsonrpc_base.jsonrpc.TransportError as exc:
+        except (
+            jsonrpc_base.jsonrpc.TransportError,
+            jsonrpc_base.jsonrpc.ProtocolError,
+        ) as exc:
             # If Kodi is off, we expect calls to fail.
             if obj.state == STATE_OFF:
-                log_function = _LOGGER.info
+                log_function = _LOGGER.debug
             else:
                 log_function = _LOGGER.error
             log_function(
-                "Error calling %s on entity %s: %r", func.__name__, obj.entity_id, exc
+                "Error calling %s on entity %s: %r",
+                func.__name__,
+                obj.entity_id,
+                exc,
             )
 
     return wrapper

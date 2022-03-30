@@ -5,7 +5,7 @@ import asyncio
 
 import aiohttp
 import async_timeout
-from sharkiqpy import SharkIqAuthError, get_ayla_api
+from sharkiq import SharkIqAuthError, get_ayla_api
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
