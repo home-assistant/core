@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncBaseEntity
+from .common import VeSyncBaseEntity, is_humidifier
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ def _setup_entities(devices, async_add_entities):
         if DEV_TYPE_TO_HA.get(dev.device_type) == "outlet":
             entities.append(VeSyncPowerSensor(dev))
             entities.append(VeSyncEnergySensor(dev))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) == "humidifier":
+        elif is_humidifier(dev.device_type):
             entities.append(VeSyncHumiditySensor(dev))
         else:
             _LOGGER.warning(

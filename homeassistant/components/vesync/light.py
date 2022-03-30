@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncDevice
+from .common import VeSyncDevice, is_humidifier
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_LIGHTS
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ def _setup_entities(devices, async_add_entities):
             entities.append(VeSyncDimmableLightHA(dev))
         elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
             entities.append(VeSyncTunableWhiteLightHA(dev))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) == "humidifier":
+        elif is_humidifier(dev.device_type):
             entities.append(VeSyncHumidifierNightLightHA(dev))
         else:
             _LOGGER.debug(

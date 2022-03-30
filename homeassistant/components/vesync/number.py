@@ -8,8 +8,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncBaseEntity
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_NUMBERS
+from .common import VeSyncBaseEntity, is_humidifier
+from .const import DOMAIN, VS_DISCOVERY, VS_NUMBERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     entities = []
     for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) == "humidifier":
+        if is_humidifier(dev.device_type):
             entities.append(VeSyncHumidifierMistLevelHA(dev))
         else:
             _LOGGER.debug(
@@ -66,10 +66,6 @@ class VeSyncHumidifierNumberEntity(VeSyncBaseEntity, NumberEntity):
 class VeSyncHumidifierMistLevelHA(VeSyncHumidifierNumberEntity):
     """Representation of the mist level of a VeSync humidifier."""
 
-    _attr_max_value = 9
-    _attr_min_value = 1
-    _attr_step = 1
-
     @property
     def unique_id(self):
         """Return the ID of this device."""
@@ -84,6 +80,16 @@ class VeSyncHumidifierMistLevelHA(VeSyncHumidifierNumberEntity):
     def value(self):
         """Return the mist level."""
         return self.device.details["mist_virtual_level"]
+
+    @property
+    def min_value(self) -> float:
+        """Return the minimum mist level."""
+        return self.device.config_dict["mist_levels"][0]
+
+    @property
+    def max_value(self) -> float:
+        """Return the maximum mist level."""
+        return self.device.config_dict["mist_levels"][-1]
 
     def set_value(self, value):
         """Set the mist level."""
