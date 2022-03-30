@@ -887,6 +887,9 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     """Expand out any groups into entity states."""
+    # circular import.
+    from . import entity as entity_helper  # pylint: disable=import-outside-toplevel
+
     search = list(args)
     found = {}
     while search:
@@ -904,8 +907,12 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
-        if entity_id.startswith(_GROUP_DOMAIN_PREFIX):
+        if entity_id.startswith(_GROUP_DOMAIN_PREFIX) or (
+            (source := entity_helper.entity_sources(hass).get(entity_id))
+            and source["domain"] == "group"
+        ):
             # Collect state will be called in here since it's wrapped
+            print(entity_id)
             group_entities = entity.attributes.get(ATTR_ENTITY_ID)
             if group_entities:
                 search += group_entities

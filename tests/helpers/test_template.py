@@ -2079,6 +2079,32 @@ async def test_expand(hass):
     )
     assert info.rate_limit is None
 
+    # With group entities
+    hass.states.async_set("light.first", "on")
+    hass.states.async_set("light.second", "off")
+
+    assert await async_setup_component(
+        hass,
+        "light",
+        {
+            "light": {
+                "platform": "group",
+                "name": "Grouped",
+                "entities": ["light.first", "light.second"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    info = render_to_info(
+        hass, "{{ expand('light.grouped') | map(attribute='entity_id') | join(', ') }}"
+    )
+    assert_result_info(
+        info,
+        "light.first, light.second",
+        ["light.grouped", "light.first", "light.second"],
+    )
+
 
 async def test_device_entities(hass):
     """Test device_entities function."""
