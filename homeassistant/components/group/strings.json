@@ -3,8 +3,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "New Group",
-        "description": "Select group type",
+        "title": "Add Group",
+        "description": "Groups allow you to create a new entity that represents multiple entities of the same type.",
         "menu_options": {
           "binary_sensor": "Binary sensor group",
           "cover": "Cover group",
