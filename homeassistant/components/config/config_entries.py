@@ -18,7 +18,7 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
 )
-from homeassistant.loader import async_get_config_flows
+from homeassistant.loader import Integration, async_get_config_flows
 
 
 async def async_setup(hass):
@@ -63,12 +63,14 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
         integrations = {}
         type_filter = request.query["type"]
 
-        async def load_integration(hass: HomeAssistant, domain: str):
+        async def load_integration(
+            hass: HomeAssistant, domain: str
+        ) -> Integration | None:
             """Load integration."""
             try:
                 return await loader.async_get_integration(hass, domain)
             except loader.IntegrationNotFound:
-                pass
+                return None
 
         # Fetch all the integrations so we can check their type
         for integration in await asyncio.gather(
