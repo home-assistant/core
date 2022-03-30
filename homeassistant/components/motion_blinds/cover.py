@@ -11,10 +11,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_CLOSING,
-    STATE_OPENING,
-)
+from homeassistant.const import STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
@@ -245,7 +242,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         return self._moving == STATE_CLOSING
 
     def _set_moving_state(self, new_position, old_position):
-        """Set the moving status for a postion move."""
+        """Set the moving status for a position move."""
         if new_position > old_position:
             self._moving = STATE_CLOSING
         else:
@@ -324,7 +321,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
-        await async_set_cover_position(**kwargs)
+        await self.async_set_cover_position(**kwargs)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
