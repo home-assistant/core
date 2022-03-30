@@ -18,11 +18,17 @@ from . import (
     NAME,
     _create_mocked_tv,
     _patch_config_flow_tv,
-    mock_response,
 )
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+def _patch_test_port(success: bool = True):
+    """Patch test port."""
+    return patch(
+        "homeassistant.components.nfandroidtv.config_flow.test_port",
+        return_value=success,
+    )
 
 
 async def test_flow_user(hass: HomeAssistant) -> None:
@@ -150,12 +156,9 @@ async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_discovery_fire_tv(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_dhcp_discovery_fire_tv(hass: HomeAssistant) -> None:
     """Test we can process the Fire TV discovery from dhcp."""
-    await mock_response(aioclient_mock)
-    with _patch_config_flow_tv(await _create_mocked_tv()):
+    with _patch_config_flow_tv(await _create_mocked_tv()), _patch_test_port():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -186,9 +189,9 @@ async def test_dhcp_discovery_fire_tv(
 
 async def test_dhcp_discovery_fire_tv_not_valid(hass: HomeAssistant) -> None:
     """Test we can process the Fire TV discovery from dhcp with invalid device."""
-    with _patch_config_flow_tv(await _create_mocked_tv()), patch(
-        "aiohttp.ClientSession.get"
-    ) as tvmock:
+    with _patch_config_flow_tv(await _create_mocked_tv()) as tvmock, _patch_test_port(
+        False
+    ):
         error = MagicMock()
         error.errno = ""
         error.strerror = ""
@@ -202,12 +205,9 @@ async def test_dhcp_discovery_fire_tv_not_valid(hass: HomeAssistant) -> None:
         assert result["reason"] == "not_valid_device"
 
 
-async def test_dhcp_discovery_fire_tv_cannot_connect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_dhcp_discovery_fire_tv_cannot_connect(hass: HomeAssistant) -> None:
     """Test Fire TV discovery connect error."""
-    await mock_response(aioclient_mock)
-    with _patch_config_flow_tv(await _create_mocked_tv()) as tvmock:
+    with _patch_config_flow_tv(await _create_mocked_tv()) as tvmock, _patch_test_port():
         tvmock.side_effect = ConnectError
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -278,12 +278,9 @@ async def test_dhcp_discovery_android_tv_cannot_connect(hass: HomeAssistant) -> 
         assert result["errors"] == {"base": "check_device"}
 
 
-async def test_dhcp_discovery_failed(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_dhcp_discovery_failed(hass: HomeAssistant) -> None:
     """Test failed setup from dhcp."""
-    await mock_response(aioclient_mock)
-    with _patch_config_flow_tv(await _create_mocked_tv()) as tvmock:
+    with _patch_config_flow_tv(await _create_mocked_tv()) as tvmock, _patch_test_port():
         tvmock.side_effect = ConnectError
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -292,7 +289,7 @@ async def test_dhcp_discovery_failed(
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    with _patch_config_flow_tv(await _create_mocked_tv()) as tvmock:
+    with _patch_config_flow_tv(await _create_mocked_tv()) as tvmock, _patch_test_port():
         tvmock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

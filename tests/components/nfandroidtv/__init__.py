@@ -6,8 +6,6 @@ from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.device_registry import format_mac
 
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 HOST = "1.2.3.4"
 NAME = "Android TV / Fire TV"
 
@@ -42,14 +40,4 @@ def _patch_config_flow_tv(mocked_tv):
     return patch(
         "homeassistant.components.nfandroidtv.config_flow.Notifications",
         return_value=mocked_tv,
-    )
-
-
-async def mock_response(
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Mock response from Android TV."""
-    aioclient_mock.get(
-        "http://1.1.1.1:8009",
-        text="Error 400, Bad Request.",
     )
