@@ -2,10 +2,6 @@
 from homematicip.base.enums import RGBColorState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.light import (
-    ATTR_CURRENT_POWER_W,
-    ATTR_TODAY_ENERGY_KWH,
-)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_NAME,
@@ -233,8 +229,6 @@ async def test_hmip_light_measuring(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "currentPowerConsumption", 50)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
-    assert ha_state.attributes[ATTR_CURRENT_POWER_W] == 50
-    assert ha_state.attributes[ATTR_TODAY_ENERGY_KWH] == 6.33
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": entity_id}, blocking=True

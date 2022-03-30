@@ -19,6 +19,7 @@ from homeassistant.components.image_processing import (
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
+    CONF_MODEL,
     CONF_NAME,
     CONF_SOURCE,
     EVENT_HOMEASSISTANT_START,
@@ -49,7 +50,6 @@ CONF_GRAPH = "graph"
 CONF_LABELS = "labels"
 CONF_LABEL_OFFSET = "label_offset"
 CONF_LEFT = "left"
-CONF_MODEL = "model"
 CONF_MODEL_DIR = "model_dir"
 CONF_RIGHT = "right"
 CONF_TOP = "top"

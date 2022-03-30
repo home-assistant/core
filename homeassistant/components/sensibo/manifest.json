@@ -9,8 +9,6 @@
   "homekit": {
     "models": ["Sensibo"]
   },
-  "dhcp": [
-    {"hostname":"sensibo*"}
-  ],
+  "dhcp": [{ "hostname": "sensibo*" }],
   "loggers": ["pysensibo"]
 }

@@ -110,7 +110,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.1.0
+aioairzone==0.2.3
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -347,6 +347,7 @@ auroranoaa==0.0.2
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
 
+# homeassistant.components.generic
 # homeassistant.components.stream
 av==9.0.0
 
@@ -810,7 +811,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220322.0
+home-assistant-frontend==20220329.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1075,7 +1076,7 @@ niluclient==0.1.2
 noaa-coops==0.1.8
 
 # homeassistant.components.nfandroidtv
-notifications-android-tv==0.1.3
+notifications-android-tv==0.1.5
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
@@ -1179,7 +1180,7 @@ panasonic_viera==0.3.6
 pdunehd==1.3.2
 
 # homeassistant.components.peco
-peco==0.0.21
+peco==0.0.25
 
 # homeassistant.components.pencom
 pencompy==0.0.3
@@ -1284,7 +1285,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.7
+py-synologydsm-api==1.0.8
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -1699,7 +1700,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.3.12
+pyoverkiz==1.3.13
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1921,9 +1922,6 @@ python-ripple-api==0.0.3
 # homeassistant.components.smarttub
 python-smarttub==0.0.30
 
-# homeassistant.components.sochain
-python-sochain-api==0.0.2
-
 # homeassistant.components.songpal
 python-songpal==0.14.1
 
@@ -2119,7 +2117,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.10.3
+sense_energy==0.10.4
 
 # homeassistant.components.sentry
 sentry-sdk==1.5.8
@@ -2226,7 +2224,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.4.2
+subarulink==0.5.0
 
 # homeassistant.components.ecovacs
 sucks==0.9.4
@@ -2430,7 +2428,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.19.2
+xknx==0.20.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

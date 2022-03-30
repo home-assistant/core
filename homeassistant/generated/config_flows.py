@@ -73,6 +73,7 @@ FLOWS = {
         "dexcom",
         "dialogflow",
         "directv",
+        "discord",
         "dlna_dmr",
         "dlna_dms",
         "dnsip",
@@ -119,6 +120,7 @@ FLOWS = {
         "fronius",
         "garages_amsterdam",
         "gdacs",
+        "generic",
         "geofency",
         "geonetnz_quakes",
         "geonetnz_volcano",
@@ -334,6 +336,7 @@ FLOWS = {
         "system_bridge",
         "tado",
         "tailscale",
+        "tankerkoenig",
         "tasmota",
         "tellduslive",
         "tesla_wall_connector",
@@ -347,6 +350,7 @@ FLOWS = {
         "traccar",
         "tractive",
         "tradfri",
+        "trafikverket_train",
         "trafikverket_weatherstation",
         "transmission",
         "tuya",
@@ -404,6 +408,7 @@ FLOWS = {
         "min_max",
         "switch_as_x",
         "threshold",
-        "tod"
+        "tod",
+        "utility_meter"
     ]
 }
