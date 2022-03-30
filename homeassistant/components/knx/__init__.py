@@ -36,9 +36,9 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from ...helpers.storage import STORAGE_DIR
 from .const import (
     CONF_KNX_CONNECTION_TYPE,
     CONF_KNX_EXPOSE,
