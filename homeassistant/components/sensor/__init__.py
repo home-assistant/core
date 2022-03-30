@@ -479,13 +479,13 @@ class SensorEntity(Entity):
                 # Round to the wanted precision
                 value = round(value_f_new) if prec == 0 else round(value_f_new, prec)
 
-        units = self.hass.config.units
-        if (
+        elif (
             value is not None
             and self.device_class != DEVICE_CLASS_TEMPERATURE
-            and native_unit_of_measurement != units.temperature_unit
+            and native_unit_of_measurement != self.hass.config.units.temperature_unit
             and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
         ):
+            units = self.hass.config.units
             if not self._temperature_conversion_reported:
                 self._temperature_conversion_reported = True
                 report_issue = self._suggest_report_issue()

@@ -99,7 +99,7 @@ def websocket_update_entity(hass, connection, msg):
     registry = er.async_get(hass)
 
     entity_id = msg["entity_id"]
-    if entity_id not in registry.entities:
+    if not (entity_entry := registry.async_get(entity_id)):
         connection.send_message(
             websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
         )
@@ -125,10 +125,9 @@ def websocket_update_entity(hass, connection, msg):
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device
-        entity = registry.entities[entity_id]
-        if entity.device_id:
+        if entity_entry.device_id:
             device_registry = dr.async_get(hass)
-            device = device_registry.async_get(entity.device_id)
+            device = device_registry.async_get(entity_entry.device_id)
             if device.disabled:
                 connection.send_message(
                     websocket_api.error_message(
@@ -139,7 +138,7 @@ def websocket_update_entity(hass, connection, msg):
 
     try:
         if changes:
-            registry.async_update_entity(entity_id, **changes)
+            entity_entry = registry.async_update_entity(entity_id, **changes)
     except ValueError as err:
         connection.send_message(
             websocket_api.error_message(msg["id"], "invalid_info", str(err))
@@ -151,7 +150,7 @@ def websocket_update_entity(hass, connection, msg):
 
     try:
         if "options_domain" in msg:
-            registry.async_update_entity_options(
+            entity_entry = registry.async_update_entity_options(
                 entity_id, msg["options_domain"], msg["options"]
             )
     except ValueError as err:
@@ -160,11 +159,10 @@ def websocket_update_entity(hass, connection, msg):
         )
         return
 
-    entry = registry.async_get(entity_id)
-    result = {"entity_entry": _entry_ext_dict(entry)}
+    result = {"entity_entry": _entry_ext_dict(entity_entry)}
     if "disabled_by" in changes and changes["disabled_by"] is None:
         # Enabling an entity requires a config entry reload, or HA restart
-        config_entry = hass.config_entries.async_get_entry(entry.config_entry_id)
+        config_entry = hass.config_entries.async_get_entry(entity_entry.config_entry_id)
         if config_entry and not config_entry.supports_unload:
             result["require_restart"] = True
         else:
