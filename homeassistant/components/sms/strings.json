@@ -5,7 +5,7 @@
         "title": "Connect to the modem",
         "data": {
           "device": "Device",
-          "baud_speed": "Baud Speed (0 for auto)"
+          "baud_speed": "Baud Speed"
         }
       }
     },
