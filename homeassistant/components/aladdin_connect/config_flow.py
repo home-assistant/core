@@ -29,12 +29,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-
     acc = AladdinConnectClient(data["username"], data["password"])
     try:
         login = await hass.async_add_executor_job(acc.login)
     except (TypeError, KeyError, NameError, ValueError) as ex:
-        _LOGGER.error("Could not connect %s", ex)
         raise CannotConnect from ex
     else:
         if not login:

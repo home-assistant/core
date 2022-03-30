@@ -1,6 +1,5 @@
 [run]
 source = homeassistant
-
 omit =
     homeassistant/__main__.py
     homeassistant/helpers/signal.py
@@ -42,6 +41,7 @@ omit =
     homeassistant/components/airtouch4/const.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
+    homeassistant/components/aladdin_connect/model.py
     homeassistant/components/aladdin_connect/__init__.py
     homeassistant/components/aladdin_connect/cover.py
     homeassistant/components/aladdin_connect/const.py
