@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Final, final
 
+from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -295,9 +296,15 @@ class UpdateEntity(RestoreEntity):
         ) is None:
             return None
 
-        if latest_version not in (current_version, self.__skipped_version):
-            return STATE_ON
-        return STATE_OFF
+        if latest_version == self.__skipped_version:
+            return STATE_OFF
+
+        try:
+            newer = AwesomeVersion(latest_version) > current_version
+            return STATE_ON if newer else STATE_OFF
+        except AwesomeVersionCompareException:
+            # Can't compare versions, fallback to exact match
+            return STATE_OFF if latest_version == current_version else STATE_ON
 
     @final
     @property
