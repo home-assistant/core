@@ -16,6 +16,8 @@ async def test_diagnostics(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test diagnostics."""
+    print("HOI")
+    print(await get_diagnostics_for_config_entry(hass, hass_client, init_integration))
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
     ) == {
@@ -148,6 +150,8 @@ async def test_diagnostics(
                 "name": "Adam",
                 "vendor": "Plugwise B.V.",
                 "zigbee_mac_address": "ABCD012345670101",
+                "regulation_mode": "heating",
+                "regulation_modes": [],
                 "binary_sensors": {"plugwise_notification": True},
                 "sensors": {"outdoor_temperature": 7.81},
             },
