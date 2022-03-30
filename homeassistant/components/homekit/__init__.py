@@ -230,7 +230,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @callback
 def _async_update_config_entry_if_from_yaml(
-    hass: HomeAssistant, entries_by_name: dict[str, ConfigEntry], conf: dict
+    hass: HomeAssistant, entries_by_name: dict[str, ConfigEntry], conf: ConfigType
 ) -> bool:
     """Update a config entry with the latest yaml.
 
