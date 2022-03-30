@@ -27,7 +27,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import get_hub
 from .base_platform import BaseStructPlatform
 from .const import (
-    ATTR_FORCE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
@@ -107,13 +106,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         target_temperature = (
             float(kwargs[ATTR_TEMPERATURE]) - self._offset
         ) / self._scale
-        if ATTR_FORCE in kwargs:
-            use_single = False
-        else:
-            use_single = self._data_type in (
-                DataType.INT16,
-                DataType.UINT16,
-            )
         if self._data_type in (
             DataType.INT16,
             DataType.INT32,
@@ -130,7 +122,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         ]
         registers = self._swap_registers(raw_regs)
 
-        if use_single:
+        if self._data_type in (
+            DataType.INT16,
+            DataType.UINT16,
+        ):
             result = await self._hub.async_pymodbus_call(
                 self._slave,
                 self._target_temperature_register,
