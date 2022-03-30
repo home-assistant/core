@@ -17,6 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from .mixins import (
+    CONF_ENABLED_BY_DEFAULT,
     CONF_OBJECT_ID,
     MQTT_AVAILABILITY_SCHEMA,
     MqttEntity,
@@ -38,6 +39,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_OBJECT_ID): cv.string,
+        # CONF_ENABLED_BY_DEFAULT is not added by default because we are not using the common schema here
+        vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
     }
 ).extend(MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -101,21 +104,6 @@ class MqttScene(
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
-
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._config[CONF_NAME]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._config.get(CONF_ICON)
 
     async def async_activate(self, **kwargs):
         """Activate the scene.
