@@ -27,7 +27,7 @@ from tests.components.recorder.common import async_wait_recording_done_without_i
 
 
 async def test_exclude_attributes(hass):
-    """Test camera registered attributes to be excluded."""
+    """Test sun attributes to be excluded."""
     await async_init_recorder_component(hass)
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
