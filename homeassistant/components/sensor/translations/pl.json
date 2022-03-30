@@ -8,7 +8,7 @@
             "is_current": "obecne nat\u0119\u017cenie pr\u0105du {entity_name}",
             "is_energy": "obecna energia {entity_name}",
             "is_frequency": "Obecna cz\u0119stotliwo\u015b\u0107 {entity_name}",
-            "is_gas": "obecny poziom gazu {entity_name}",
+            "is_gas": "Obecny poziom gazu {entity_name}",
             "is_humidity": "obecna wilgotno\u015b\u0107 {entity_name}",
             "is_illuminance": "obecne nat\u0119\u017cenie o\u015bwietlenia {entity_name}",
             "is_nitrogen_dioxide": "obecny poziom st\u0119\u017cenia dwutlenku azotu {entity_name}",

@@ -22,8 +22,8 @@ from tests.common import MockConfigEntry
 
 # Typing helpers
 PlatformSetup = Callable[[], Awaitable[None]]
-T = TypeVar("T")
-YieldFixture = Generator[T, None, None]
+_T = TypeVar("_T")
+YieldFixture = Generator[_T, None, None]
 
 PROJECT_ID = "some-project-id"
 CLIENT_ID = "some-client-id"
@@ -99,6 +99,24 @@ TEST_CONFIG_HYBRID = NestTestConfig(
         "auth_implementation": "nest",
         "token": create_token_entry(),
         "subscriber_id": SUBSCRIBER_ID,
+    },
+)
+
+TEST_CONFIG_LEGACY = NestTestConfig(
+    config={
+        "nest": {
+            "client_id": "some-client-id",
+            "client_secret": "some-client-secret",
+        },
+    },
+    config_entry_data={
+        "auth_implementation": "local",
+        "tokens": {
+            "expires_at": time.time() + 86400,
+            "access_token": {
+                "token": "some-token",
+            },
+        },
     },
 )
 

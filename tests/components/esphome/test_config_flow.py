@@ -218,6 +218,7 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -252,6 +253,7 @@ async def test_discovery_already_configured_hostname(hass, mock_client):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -279,6 +281,7 @@ async def test_discovery_already_configured_ip(hass, mock_client):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -310,6 +313,7 @@ async def test_discovery_already_configured_name(hass, mock_client):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.184",
+        addresses=["192.168.43.184"],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -331,6 +335,7 @@ async def test_discovery_duplicate_data(hass, mock_client):
     """Test discovery aborts if same mDNS packet arrives."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -364,6 +369,7 @@ async def test_discovery_updates_unique_id(hass, mock_client):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,

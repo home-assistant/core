@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Domeny do uwzgl\u0119dnienia"
                 },
-                "description": "Wybierz domeny do uwzgl\u0119dnienia. Wszystkie wspierane encje w danej domenie b\u0119d\u0105 uwzgl\u0119dnione. W trybie akcesorium, oddzielna instancja HomeKit zostanie utworzona dla ka\u017cdego tv media playera, pilota na bazie aktywno\u015bci, zamka oraz kamery.",
+                "description": "Wybierz domeny do uwzgl\u0119dnienia. Wszystkie wspierane encje w danej domenie b\u0119d\u0105 uwzgl\u0119dnione z wyj\u0105tkiem skategoryzowanych encji. W trybie akcesorium, oddzielna instancja HomeKit zostanie utworzona dla ka\u017cdego tv media playera, pilota na bazie aktywno\u015bci, zamka oraz kamery.",
                 "title": "Wybierz uwzgl\u0119dniane domeny"
             }
         }
@@ -42,6 +42,9 @@
                 "title": "Konfiguracja kamery"
             },
             "exclude": {
+                "data": {
+                    "entities": "Encje"
+                },
                 "description": "Wszystkie encje \"{domains}\" zostan\u0105 uwzgl\u0119dnione z wyj\u0105tkiem encji wykluczonych oraz encji skategoryzowanych.",
                 "title": "Wybierz encje do wykluczenia"
             },
@@ -62,12 +65,13 @@
             },
             "init": {
                 "data": {
+                    "domains": "Domeny do uwzgl\u0119dnienia",
                     "include_domains": "Domeny do uwzgl\u0119dnienia",
-                    "include_exclude_mode": "Tryb w\u0142\u0105czania",
-                    "mode": "Tryb"
+                    "include_exclude_mode": "Tryb dodawania",
+                    "mode": "Tryb HomeKit"
                 },
                 "description": "HomeKit mo\u017ce by\u0107 skonfigurowany, by pokaza\u0142 mostek lub pojedyncze akcesorium. W trybie \"Akcesorium\", tylko pojedyncza encja mo\u017ce by\u0107 u\u017cyta. Tryb ten jest wymagany w przypadku odtwarzaczy multimedialnych z klas\u0105 urz\u0105dzenia TV, by dzia\u0142a\u0142 prawid\u0142owo. Encje w \"uwzgl\u0119dnionych domenach\" b\u0119d\u0105 widoczne w HomeKit. B\u0119dziesz m\u00f3g\u0142 wybra\u0107, kt\u00f3re encje maj\u0105 zosta\u0107 uwzgl\u0119dnione lub wykluczone z tej listy na nast\u0119pnym ekranie.",
-                "title": "Domeny do uwzgl\u0119dnienia."
+                "title": "Wybierz tryb i domeny."
             },
             "yaml": {
                 "description": "Ten wpis jest kontrolowany przez YAML",

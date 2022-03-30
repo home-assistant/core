@@ -7,11 +7,17 @@
             "cannot_connect": "Falha ao conectar",
             "unknown": "Erro inesperado"
         },
+        "flow_title": "{name} ( {host} )",
         "step": {
+            "link": {
+                "description": "Deseja configurar {name} ( {host} )?",
+                "title": "Conecte-se ao PowerView Hub"
+            },
             "user": {
                 "data": {
                     "host": "Endere\u00e7o IP"
-                }
+                },
+                "title": "Conecte-se ao PowerView Hub"
             }
         }
     }

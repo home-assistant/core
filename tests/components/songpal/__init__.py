@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from songpal import SongpalException
+from songpal.containers import Sysinfo
 
 from homeassistant.components.songpal.const import CONF_ENDPOINT
 from homeassistant.const import CONF_NAME
@@ -12,6 +13,7 @@ HOST = "0.0.0.0"
 ENDPOINT = f"http://{HOST}:10000/sony"
 MODEL = "model"
 MAC = "mac"
+WIRELESS_MAC = "wmac"
 SW_VERSION = "sw_ver"
 
 CONF_DATA = {
@@ -20,7 +22,7 @@ CONF_DATA = {
 }
 
 
-def _create_mocked_device(throw_exception=False):
+def _create_mocked_device(throw_exception=False, wired_mac=MAC, wireless_mac=None):
     mocked_device = MagicMock()
 
     type(mocked_device).get_supported_methods = AsyncMock(
@@ -35,9 +37,18 @@ def _create_mocked_device(throw_exception=False):
         return_value=interface_info
     )
 
-    sys_info = MagicMock()
-    sys_info.macAddr = MAC
-    sys_info.version = SW_VERSION
+    sys_info = Sysinfo(
+        bdAddr=None,
+        macAddr=wired_mac,
+        wirelessMacAddr=wireless_mac,
+        bssid=None,
+        ssid=None,
+        bleID=None,
+        serialNumber=None,
+        generation=None,
+        model=None,
+        version=SW_VERSION,
+    )
     type(mocked_device).get_system_info = AsyncMock(return_value=sys_info)
 
     volume1 = MagicMock()

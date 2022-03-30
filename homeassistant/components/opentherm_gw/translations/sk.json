@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "N\u00e1zov"
+                }
+            }
+        }
+    }
+}

@@ -104,7 +104,6 @@ async def async_setup_entry(
 class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
-    coordinator: SwitchbotDataUpdateCoordinator
     _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(

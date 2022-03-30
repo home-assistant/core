@@ -15,7 +15,8 @@
                     "pin": "C\u00f3digo PIN",
                     "ssl": "Usar um certificado SSL",
                     "username": "Usu\u00e1rio"
-                }
+                },
+                "title": "Conecte-se ao termostato Venstar"
             }
         }
     }

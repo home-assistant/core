@@ -16,8 +16,20 @@
             },
             "user": {
                 "data": {
-                    "password": "Senha"
-                }
+                    "password": "Senha",
+                    "username": "Email"
+                },
+                "title": "Configurar bloco"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Mostrar blocos inativos"
+                },
+                "title": "Configurar bloco"
             }
         }
     }

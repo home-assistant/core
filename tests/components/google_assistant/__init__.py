@@ -383,8 +383,8 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
-        "id": "alarm_control_panel.alarm",
-        "name": {"name": "Alarm"},
+        "id": "alarm_control_panel.security",
+        "name": {"name": "Security"},
         "traits": ["action.devices.traits.ArmDisarm"],
         "type": "action.devices.types.SECURITYSYSTEM",
         "willReportState": False,

@@ -7,6 +7,14 @@
         "error": {
             "cannot_connect": "Falha ao conectar",
             "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device": "Dispositivo"
+                },
+                "title": "Conectado ao modem"
+            }
         }
     }
 }

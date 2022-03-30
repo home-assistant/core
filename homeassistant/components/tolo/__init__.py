@@ -28,6 +28,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.FAN,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
 ]
@@ -91,10 +92,8 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
         return ToloSaunaData(status, settings)
 
 
-class ToloSaunaCoordinatorEntity(CoordinatorEntity):
+class ToloSaunaCoordinatorEntity(CoordinatorEntity[ToloSaunaUpdateCoordinator]):
     """CoordinatorEntity for TOLO Sauna."""
-
-    coordinator: ToloSaunaUpdateCoordinator
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry

@@ -127,6 +127,15 @@ class HassIO:
         """
         return self.send_command(f"/addons/{addon}/stats", method="get")
 
+    def get_addon_changelog(self, addon):
+        """Return changelog for an Add-on.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(
+            f"/addons/{addon}/changelog", method="get", return_text=True
+        )
+
     @api_data
     def get_store(self):
         """Return data from the store.
@@ -212,7 +221,14 @@ class HassIO:
             "/supervisor/options", payload={"diagnostics": diagnostics}
         )
 
-    async def send_command(self, command, method="post", payload=None, timeout=10):
+    async def send_command(
+        self,
+        command,
+        method="post",
+        payload=None,
+        timeout=10,
+        return_text=False,
+    ):
         """Send API command to Hass.io.
 
         This method is a coroutine.
@@ -230,8 +246,10 @@ class HassIO:
                 _LOGGER.error("%s return code %d", command, request.status)
                 raise HassioAPIError()
 
-            answer = await request.json()
-            return answer
+            if return_text:
+                return await request.text(encoding="utf-8")
+
+            return await request.json()
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on %s request", command)

@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_GPS_ACCURACY,
+    ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_ICON,
@@ -21,7 +21,10 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
+    STATE_HOME,
+    STATE_NOT_HOME,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.helpers import (
@@ -125,7 +128,7 @@ def async_active_zone(
             continue
 
         within_zone = zone_dist - radius < zone.attributes[ATTR_RADIUS]
-        closer_zone = closest is None or zone_dist < min_dist  # type: ignore
+        closer_zone = closest is None or zone_dist < min_dist  # type: ignore[unreachable]
         smaller_zone = (
             zone_dist == min_dist
             and zone.attributes[ATTR_RADIUS]
@@ -321,11 +324,6 @@ class Zone(entity.Entity):
         return self._config.get(CONF_ICON)
 
     @property
-    def extra_state_attributes(self) -> dict | None:
-        """Return the state attributes of the zone."""
-        return self._attrs
-
-    @property
     def should_poll(self) -> bool:
         """Zone does not poll."""
         return False
@@ -340,20 +338,9 @@ class Zone(entity.Entity):
 
     @callback
     def _person_state_change_listener(self, evt: Event) -> None:
-        person_entity_id = evt.data["entity_id"]
+        person_entity_id = evt.data[ATTR_ENTITY_ID]
         cur_count = len(self._persons_in_zone)
-        if (
-            (state := evt.data["new_state"])
-            and (latitude := state.attributes.get(ATTR_LATITUDE)) is not None
-            and (longitude := state.attributes.get(ATTR_LONGITUDE)) is not None
-            and (accuracy := state.attributes.get(ATTR_GPS_ACCURACY)) is not None
-            and (
-                zone_state := async_active_zone(
-                    self.hass, latitude, longitude, accuracy
-                )
-            )
-            and zone_state.entity_id == self.entity_id
-        ):
+        if self._state_is_in_zone(evt.data.get("new_state")):
             self._persons_in_zone.add(person_entity_id)
         elif person_entity_id in self._persons_in_zone:
             self._persons_in_zone.remove(person_entity_id)
@@ -367,16 +354,7 @@ class Zone(entity.Entity):
         person_domain = "person"  # avoid circular import
         persons = self.hass.states.async_entity_ids(person_domain)
         for person in persons:
-            state = self.hass.states.get(person)
-            if (
-                state is None
-                or (latitude := state.attributes.get(ATTR_LATITUDE)) is None
-                or (longitude := state.attributes.get(ATTR_LONGITUDE)) is None
-                or (accuracy := state.attributes.get(ATTR_GPS_ACCURACY)) is None
-            ):
-                continue
-            zone_state = async_active_zone(self.hass, latitude, longitude, accuracy)
-            if zone_state is not None and zone_state.entity_id == self.entity_id:
+            if self._state_is_in_zone(self.hass.states.get(person)):
                 self._persons_in_zone.add(person)
 
         self.async_on_remove(
@@ -390,10 +368,27 @@ class Zone(entity.Entity):
     @callback
     def _generate_attrs(self) -> None:
         """Generate new attrs based on config."""
-        self._attrs = {
+        self._attr_extra_state_attributes = {
             ATTR_LATITUDE: self._config[CONF_LATITUDE],
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],
             ATTR_PASSIVE: self._config[CONF_PASSIVE],
             ATTR_EDITABLE: self.editable,
         }
+
+    @callback
+    def _state_is_in_zone(self, state: State | None) -> bool:
+        """Return if given state is in zone."""
+        return (
+            state is not None
+            and state.state
+            not in (
+                STATE_NOT_HOME,
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            )
+            and (
+                state.state.casefold() == self.name.casefold()
+                or (state.state == STATE_HOME and self.entity_id == ENTITY_ID_HOME)
+            )
+        )

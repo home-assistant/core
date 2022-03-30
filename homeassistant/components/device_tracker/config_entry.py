@@ -16,12 +16,21 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
 
-from .const import ATTR_HOST_NAME, ATTR_IP, ATTR_MAC, ATTR_SOURCE_TYPE, DOMAIN, LOGGER
+from .const import (
+    ATTR_HOST_NAME,
+    ATTR_IP,
+    ATTR_MAC,
+    ATTR_SOURCE_TYPE,
+    CONNECTED_DEVICE_REGISTERED,
+    DOMAIN,
+    LOGGER,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -65,8 +74,32 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
+def _async_connected_device_registered(
+    hass: HomeAssistant, mac: str, ip_address: str | None, hostname: str | None
+) -> None:
+    """Register a newly seen connected device.
+
+    This is currently used by the dhcp integration
+    to listen for newly registered connected devices
+    for discovery.
+    """
+    async_dispatcher_send(
+        hass,
+        CONNECTED_DEVICE_REGISTERED,
+        {
+            ATTR_IP: ip_address,
+            ATTR_MAC: mac,
+            ATTR_HOST_NAME: hostname,
+        },
+    )
+
+
+@callback
 def _async_register_mac(
-    hass: HomeAssistant, domain: str, mac: str, unique_id: str
+    hass: HomeAssistant,
+    domain: str,
+    mac: str,
+    unique_id: str,
 ) -> None:
     """Register a mac address with a unique ID."""
     data_key = "device_tracker_mac"
@@ -108,20 +141,27 @@ def _async_register_mac(
             return
 
         ent_reg = er.async_get(hass)
-        entity_id = ent_reg.async_get_entity_id(DOMAIN, *unique_id)
 
-        if entity_id is None:
+        if (entity_id := ent_reg.async_get_entity_id(DOMAIN, *unique_id)) is None:
             return
 
-        entity_entry = ent_reg.async_get(entity_id)
-
-        if entity_entry is None:
+        if (entity_entry := ent_reg.async_get(entity_id)) is None:
             return
 
         # Make sure entity has a config entry and was disabled by the
-        # default disable logic in the integration.
+        # default disable logic in the integration and new entities
+        # are allowed to be added.
         if (
             entity_entry.config_entry_id is None
+            or (
+                (
+                    config_entry := hass.config_entries.async_get_entry(
+                        entity_entry.config_entry_id
+                    )
+                )
+                is not None
+                and config_entry.pref_disable_new_entities
+            )
             or entity_entry.disabled_by != er.RegistryEntryDisabler.INTEGRATION
         ):
             return
@@ -297,8 +337,18 @@ class ScannerEntity(BaseTrackerEntity):
         super().add_to_platform_start(hass, platform, parallel_updates)
         if self.mac_address and self.unique_id:
             _async_register_mac(
-                hass, platform.platform_name, self.mac_address, self.unique_id
+                hass,
+                platform.platform_name,
+                self.mac_address,
+                self.unique_id,
             )
+            if self.is_connected:
+                _async_connected_device_registered(
+                    hass,
+                    self.mac_address,
+                    self.ip_address,
+                    self.hostname,
+                )
 
     @callback
     def find_device_entry(self) -> dr.DeviceEntry | None:

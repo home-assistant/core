@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest import mock
 
 from aiohomekit.exceptions import AccessoryDisconnectedError, EncryptionError
+from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakePairing
 import pytest
 
@@ -72,26 +73,29 @@ async def test_recover_from_failure(hass, utcnow, failure_cls):
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
+    pairing.testing.events_enabled = False
+
     helper = Helper(
         hass, "light.koogeek_ls1_20833f", pairing, accessories[0], config_entry
     )
 
     # Set light state on fake device to off
-    helper.characteristics[LIGHT_ON].set_value(False)
+    state = await helper.async_update(
+        ServicesTypes.LIGHTBULB, {CharacteristicsTypes.ON: False}
+    )
 
     # Test that entity starts off in a known state
-    state = await helper.poll_and_get_state()
     assert state.state == "off"
-
-    # Set light state on fake device to on
-    helper.characteristics[LIGHT_ON].set_value(True)
 
     # Test that entity remains in the same state if there is a network error
     next_update = dt_util.utcnow() + timedelta(seconds=60)
     with mock.patch.object(FakePairing, "get_characteristics") as get_char:
         get_char.side_effect = failure_cls("Disconnected")
 
-        state = await helper.poll_and_get_state()
+        # Set light state on fake device to on
+        state = await helper.async_update(
+            ServicesTypes.LIGHTBULB, {CharacteristicsTypes.ON: True}
+        )
         assert state.state == "off"
 
         chars = get_char.call_args[0][0]
@@ -102,5 +106,7 @@ async def test_recover_from_failure(hass, utcnow, failure_cls):
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.LIGHTBULB, {CharacteristicsTypes.ON: True}
+    )
     assert state.state == "on"

@@ -92,3 +92,16 @@ async def test_prevent_flooding(caplog):
     assert what not in caplog.text
     assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
+
+
+async def test_report_missing_integration_frame(caplog):
+    """Test reporting when no integration is detected."""
+
+    what = "teststring"
+    with patch(
+        "homeassistant.helpers.frame.get_integration_frame",
+        side_effect=frame.MissingIntegrationFrame,
+    ):
+        frame.report(what, error_if_core=False)
+        assert what in caplog.text
+        assert caplog.text.count(what) == 1

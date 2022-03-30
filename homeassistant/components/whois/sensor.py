@@ -6,44 +6,25 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import cast
 
-import voluptuous as vol
 from whois import Domain
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DOMAIN, TIME_DAYS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import (
-    ATTR_EXPIRES,
-    ATTR_NAME_SERVERS,
-    ATTR_REGISTRAR,
-    ATTR_UPDATED,
-    DEFAULT_NAME,
-    DOMAIN,
-    LOGGER,
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_DOMAIN): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
 
 
 @dataclass
@@ -87,7 +68,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.admin if domain.admin else None,
+        value_fn=lambda domain: getattr(domain, "admin", None),
     ),
     WhoisSensorEntityDescription(
         key="creation_date",
@@ -123,7 +104,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.owner if domain.owner else None,
+        value_fn=lambda domain: getattr(domain, "owner", None),
     ),
     WhoisSensorEntityDescription(
         key="registrant",
@@ -131,7 +112,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.registrant if domain.registrant else None,
+        value_fn=lambda domain: getattr(domain, "registrant", None),
     ),
     WhoisSensorEntityDescription(
         key="registrar",
@@ -147,31 +128,9 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.reseller if domain.reseller else None,
+        value_fn=lambda domain: getattr(domain, "reseller", None),
     ),
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the WHOIS sensor."""
-    LOGGER.warning(
-        "Configuration of the Whois platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2022.4; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_DOMAIN: config[CONF_DOMAIN], CONF_NAME: config[CONF_NAME]},
-        )
-    )
 
 
 async def async_setup_entry(
@@ -190,7 +149,6 @@ async def async_setup_entry(
             )
             for description in SENSORS
         ],
-        update_before_add=True,
     )
 
 
@@ -234,17 +192,20 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
         if self.coordinator.data is None:
             return None
 
-        attrs = {
-            ATTR_EXPIRES: self.coordinator.data.expiration_date.isoformat(),
-        }
+        attrs = {}
+        if expiration_date := self.coordinator.data.expiration_date:
+            attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
-        if self.coordinator.data.name_servers:
-            attrs[ATTR_NAME_SERVERS] = " ".join(self.coordinator.data.name_servers)
+        if name_servers := self.coordinator.data.name_servers:
+            attrs[ATTR_NAME_SERVERS] = " ".join(name_servers)
 
-        if self.coordinator.data.last_updated:
-            attrs[ATTR_UPDATED] = self.coordinator.data.last_updated.isoformat()
+        if last_updated := self.coordinator.data.last_updated:
+            attrs[ATTR_UPDATED] = last_updated.isoformat()
 
-        if self.coordinator.data.registrar:
-            attrs[ATTR_REGISTRAR] = self.coordinator.data.registrar
+        if registrar := self.coordinator.data.registrar:
+            attrs[ATTR_REGISTRAR] = registrar
+
+        if not attrs:
+            return None
 
         return attrs

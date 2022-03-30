@@ -4,8 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-import logging
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from aioshelly.block_device import Block
 import async_timeout
@@ -34,6 +33,7 @@ from .const import (
     BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
+    LOGGER,
     REST,
     RPC,
     RPC_POLL,
@@ -44,8 +44,6 @@ from .utils import (
     get_rpc_entity_name,
     get_rpc_key_instances,
 )
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 
 async def async_setup_entry_attribute_entities(
@@ -183,7 +181,9 @@ async def async_setup_entry_rpc(
 
         for key in key_instances:
             # Filter non-existing sensors
-            if description.sub_key not in wrapper.device.status[key]:
+            if description.sub_key not in wrapper.device.status[
+                key
+            ] and not description.supported(wrapper.device.status[key]):
                 continue
 
             # Filter and remove entities that according to settings should not create an entity
@@ -266,6 +266,7 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     removal_condition: Callable[[dict, str], bool] | None = None
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
     use_polling_wrapper: bool = False
+    supported: Callable = lambda _: False
 
 
 @dataclass
@@ -310,12 +311,12 @@ class ShellyBlockEntity(entity.Entity):
 
     async def set_state(self, **kwargs: Any) -> Any:
         """Set block state (HTTP request)."""
-        _LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
+        LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 return await self.block.set_state(**kwargs)
         except (asyncio.TimeoutError, OSError) as err:
-            _LOGGER.error(
+            LOGGER.error(
                 "Setting state for entity %s failed, state: %s, error: %s",
                 self.name,
                 kwargs,
@@ -348,6 +349,11 @@ class ShellyRpcEntity(entity.Entity):
         """Available."""
         return self.wrapper.device.connected
 
+    @property
+    def status(self) -> dict:
+        """Device status by entity key."""
+        return cast(dict, self.wrapper.device.status[self.key])
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
         self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
@@ -363,7 +369,7 @@ class ShellyRpcEntity(entity.Entity):
 
     async def call_rpc(self, method: str, params: Any) -> Any:
         """Call RPC method."""
-        _LOGGER.debug(
+        LOGGER.debug(
             "Call RPC for entity %s, method: %s, params: %s",
             self.name,
             method,
@@ -373,7 +379,7 @@ class ShellyRpcEntity(entity.Entity):
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 return await self.wrapper.device.call_rpc(method, params)
         except asyncio.TimeoutError as err:
-            _LOGGER.error(
+            LOGGER.error(
                 "Call RPC for entity %s failed, method: %s, params: %s, error: %s",
                 self.name,
                 method,
@@ -505,7 +511,9 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         """Value of sensor."""
         if callable(self.entity_description.value):
             self._last_value = self.entity_description.value(
-                self.wrapper.device.status[self.key][self.entity_description.sub_key],
+                self.wrapper.device.status[self.key].get(
+                    self.entity_description.sub_key
+                ),
                 self._last_value,
             )
         else:
@@ -615,6 +623,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
                 self.block = block
                 self.entity_description = description
 
-                _LOGGER.debug("Entity %s attached to block", self.name)
+                LOGGER.debug("Entity %s attached to block", self.name)
                 super()._update_callback()
                 return

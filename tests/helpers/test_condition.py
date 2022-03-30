@@ -28,8 +28,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_mock_service
 
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
-
 
 @pytest.fixture
 def calls(hass):
@@ -44,11 +42,6 @@ def setup_comp(hass):
     hass.loop.run_until_complete(
         async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
     )
-
-
-def teardown():
-    """Restore."""
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
 
 def assert_element(trace_element, expected_element, path):
@@ -1810,54 +1803,51 @@ async def test_extract_entities():
 
 async def test_extract_devices():
     """Test extracting devices."""
-    assert (
-        condition.async_extract_devices(
-            {
-                "condition": "and",
-                "conditions": [
-                    {"condition": "device", "device_id": "abcd", "domain": "light"},
-                    {"condition": "device", "device_id": "qwer", "domain": "switch"},
-                    {
-                        "condition": "state",
-                        "entity_id": "sensor.not_a_device",
-                        "state": "100",
-                    },
-                    {
-                        "condition": "not",
-                        "conditions": [
-                            {
-                                "condition": "device",
-                                "device_id": "abcd_not",
-                                "domain": "light",
-                            },
-                            {
-                                "condition": "device",
-                                "device_id": "qwer_not",
-                                "domain": "switch",
-                            },
-                        ],
-                    },
-                    {
-                        "condition": "or",
-                        "conditions": [
-                            {
-                                "condition": "device",
-                                "device_id": "abcd_or",
-                                "domain": "light",
-                            },
-                            {
-                                "condition": "device",
-                                "device_id": "qwer_or",
-                                "domain": "switch",
-                            },
-                        ],
-                    },
-                    Template("{{ is_state('light.example', 'on') }}"),
-                ],
-            }
-        )
-        == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
-    )
+    assert condition.async_extract_devices(
+        {
+            "condition": "and",
+            "conditions": [
+                {"condition": "device", "device_id": "abcd", "domain": "light"},
+                {"condition": "device", "device_id": "qwer", "domain": "switch"},
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.not_a_device",
+                    "state": "100",
+                },
+                {
+                    "condition": "not",
+                    "conditions": [
+                        {
+                            "condition": "device",
+                            "device_id": "abcd_not",
+                            "domain": "light",
+                        },
+                        {
+                            "condition": "device",
+                            "device_id": "qwer_not",
+                            "domain": "switch",
+                        },
+                    ],
+                },
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "device",
+                            "device_id": "abcd_or",
+                            "domain": "light",
+                        },
+                        {
+                            "condition": "device",
+                            "device_id": "qwer_or",
+                            "domain": "switch",
+                        },
+                    ],
+                },
+                Template("{{ is_state('light.example', 'on') }}"),
+            ],
+        }
+    ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
 
 
 async def test_condition_template_error(hass):
@@ -2659,8 +2649,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client,
     at 7 AM and sunset at 3AM during summer
     After sunrise is true from sunrise until midnight, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2736,8 +2725,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, 
     at 7 AM and sunset at 3AM during summer
     Before sunrise is true from midnight until sunrise, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2813,8 +2801,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, 
     at 7 AM and sunset at 3AM during summer
     Before sunset is true from midnight until sunset, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2890,8 +2877,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, c
     at 7 AM and sunset at 3AM during summer
     After sunset is true from sunset until midnight, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2977,7 +2963,7 @@ async def test_platform_async_validate_condition_config(hass):
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
     platform = AsyncMock()
     with patch(
-        "homeassistant.helpers.condition.async_get_device_automation_platform",
+        "homeassistant.components.device_automation.condition.async_get_device_automation_platform",
         return_value=platform,
     ):
         platform.async_validate_condition_config.return_value = config

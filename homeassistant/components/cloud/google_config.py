@@ -124,7 +124,10 @@ class CloudGoogleConfig(AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category is not None
+            auxiliary_entity = (
+                registry_entry.entity_category is not None
+                or registry_entry.hidden_by is not None
+            )
         else:
             auxiliary_entity = False
 
@@ -181,7 +184,11 @@ class CloudGoogleConfig(AbstractConfig):
                 self.async_disable_local_sdk()
             return
 
-        if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
+        if (
+            self.enabled
+            and GOOGLE_DOMAIN not in self.hass.config.components
+            and self.hass.is_running
+        ):
             await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
         if self.should_report_state != self.is_reporting_state:

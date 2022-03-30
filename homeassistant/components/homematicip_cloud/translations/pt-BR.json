@@ -22,7 +22,7 @@
             },
             "link": {
                 "description": "Pressione o bot\u00e3o azul no ponto de acesso e o bot\u00e3o enviar para registrar o HomematicIP com o Home Assistant.\n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)",
-                "title": "Accesspoint link"
+                "title": "Link ponto de acesso"
             }
         }
     }

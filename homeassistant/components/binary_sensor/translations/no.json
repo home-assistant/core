@@ -134,6 +134,10 @@
             "off": "Lader ikke",
             "on": "Lader"
         },
+        "carbon_monoxide": {
+            "off": "Klart",
+            "on": "Oppdaget"
+        },
         "co": {
             "off": "Klart",
             "on": "Oppdaget"

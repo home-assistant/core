@@ -4,13 +4,15 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, TypeVar
 
-T = TypeVar("T", bound="StrEnum")
+_StrEnumT = TypeVar("_StrEnumT", bound="StrEnum")
 
 
 class StrEnum(str, Enum):
     """Partial backport of Python 3.11's StrEnum for our basic use cases."""
 
-    def __new__(cls: type[T], value: str, *args: Any, **kwargs: Any) -> T:
+    def __new__(
+        cls: type[_StrEnumT], value: str, *args: Any, **kwargs: Any
+    ) -> _StrEnumT:
         """Create a new StrEnum instance."""
         if not isinstance(value, str):
             raise TypeError(f"{value!r} is not a string")
@@ -21,7 +23,7 @@ class StrEnum(str, Enum):
         return str(self.value)
 
     @staticmethod
-    def _generate_next_value_(  # pylint: disable=arguments-differ # https://github.com/PyCQA/pylint/issues/5371
+    def _generate_next_value_(
         name: str, start: int, count: int, last_values: list[Any]
     ) -> Any:
         """

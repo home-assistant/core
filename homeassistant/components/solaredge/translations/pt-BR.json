@@ -5,7 +5,9 @@
         },
         "error": {
             "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
-            "invalid_api_key": "Chave de API inv\u00e1lida"
+            "could_not_connect": "N\u00e3o foi poss\u00edvel conectar-se \u00e0 API do solaredge",
+            "invalid_api_key": "Chave de API inv\u00e1lida",
+            "site_not_active": "O site n\u00e3o est\u00e1 ativo"
         },
         "step": {
             "user": {

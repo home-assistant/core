@@ -9,9 +9,11 @@
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "server_in_maintenance": "Server is down for maintenance",
+            "too_many_attempts": "Too many attempts with an invalid token, temporarily banned",
             "too_many_requests": "Too many requests, try again later",
             "unknown": "Unexpected error"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

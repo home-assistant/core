@@ -2,7 +2,7 @@
   "domain": "blink",
   "name": "Blink",
   "documentation": "https://www.home-assistant.io/integrations/blink",
-  "requirements": ["blinkpy==0.18.0"],
+  "requirements": ["blinkpy==0.19.0"],
   "codeowners": ["@fronzbot"],
   "dhcp": [
     {
@@ -12,7 +12,11 @@
     {
       "hostname": "blink*",
       "macaddress": "00037F*"
-    }    
+    },
+    {
+      "hostname": "blink*",
+      "macaddress": "20A171*"
+    }
   ],
   "config_flow": true,
   "iot_class": "cloud_polling",

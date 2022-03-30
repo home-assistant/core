@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from pytradfri import Gateway, PytradfriError, RequestError
+from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -15,9 +15,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -57,12 +58,18 @@ LISTENERS = "tradfri_listeners"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_HOST): cv.string,
-                vol.Optional(
-                    CONF_ALLOW_TRADFRI_GROUPS, default=DEFAULT_ALLOW_TRADFRI_GROUPS
-                ): cv.boolean,
-            }
+            vol.All(
+                cv.deprecated(CONF_HOST),
+                cv.deprecated(
+                    CONF_ALLOW_TRADFRI_GROUPS,
+                ),
+                {
+                    vol.Optional(CONF_HOST): cv.string,
+                    vol.Optional(
+                        CONF_ALLOW_TRADFRI_GROUPS, default=DEFAULT_ALLOW_TRADFRI_GROUPS
+                    ): cv.boolean,
+                },
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -120,6 +127,7 @@ async def async_setup_entry(
 
     api = factory.request
     gateway = Gateway()
+    groups: list[Group] = []
 
     try:
         gateway_info = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
@@ -127,10 +135,21 @@ async def async_setup_entry(
             gateway.get_devices(), timeout=TIMEOUT_API
         )
         devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)
-        groups_commands: Command = await api(gateway.get_groups(), timeout=TIMEOUT_API)
-        groups: list[Group] = await api(groups_commands, timeout=TIMEOUT_API)
 
-    except PytradfriError as exc:
+        if entry.data[CONF_IMPORT_GROUPS]:
+            # Note: we should update this page when deprecating:
+            # https://www.home-assistant.io/integrations/tradfri/
+            _LOGGER.warning(
+                "Importing of Tradfri groups has been deprecated due to stability issues "
+                "and will be removed in Home Assistant core 2022.4"
+            )
+            # No need to load groups if the user hasn't requested it
+            groups_commands: Command = await api(
+                gateway.get_groups(), timeout=TIMEOUT_API
+            )
+            groups = await api(groups_commands, timeout=TIMEOUT_API)
+
+    except RequestError as exc:
         await factory.shutdown()
         raise ConfigEntryNotReady from exc
 
@@ -145,6 +164,8 @@ async def async_setup_entry(
         model=ATTR_TRADFRI_GATEWAY_MODEL,
         sw_version=gateway_info.firmware_version,
     )
+
+    remove_stale_devices(hass, entry, devices)
 
     # Setup the device coordinators
     coordinator_data = {
@@ -213,3 +234,45 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             listener()
 
     return unload_ok
+
+
+@callback
+def remove_stale_devices(
+    hass: HomeAssistant, config_entry: ConfigEntry, devices: list[Device]
+) -> None:
+    """Remove stale devices from device registry."""
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    all_device_ids = {device.id for device in devices}
+
+    for device_entry in device_entries:
+        device_id: str | None = None
+        gateway_id: str | None = None
+
+        for identifier in device_entry.identifiers:
+            if identifier[0] != DOMAIN:
+                continue
+
+            _id = identifier[1]
+
+            # Identify gateway device.
+            if _id == config_entry.data[CONF_GATEWAY_ID]:
+                gateway_id = _id
+                break
+
+            device_id = _id
+            break
+
+        if gateway_id is not None:
+            # Do not remove gateway device entry.
+            continue
+
+        if device_id is None or device_id not in all_device_ids:
+            # If device_id is None an invalid device entry was found for this config entry.
+            # If the device_id is not in existing device ids it's a stale device entry.
+            # Remove config entry from this device entry in either case.
+            device_registry.async_update_device(
+                device_entry.id, remove_config_entry_id=config_entry.entry_id
+            )

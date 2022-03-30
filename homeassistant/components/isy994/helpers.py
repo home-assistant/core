@@ -1,7 +1,8 @@
 """Sorting helpers for ISY994 device classifications."""
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, cast
 
 from pyisy.constants import (
     ISY_VALUE_UNKNOWN,
@@ -21,6 +22,7 @@ from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get_registry
 
@@ -53,12 +55,15 @@ from .const import (
     UOM_ISYV4_DEGREES,
 )
 
+if TYPE_CHECKING:
+    from .entity import ISYEntity
+
 BINARY_SENSOR_UOMS = ["2", "78"]
 BINARY_SENSOR_ISY_STATES = ["on", "off"]
 
 
 def _check_for_node_def(
-    hass_isy_data: dict, node: Group | Node, single_platform: str = None
+    hass_isy_data: dict, node: Group | Node, single_platform: Platform | None = None
 ) -> bool:
     """Check if the node matches the node_def_id for any platforms.
 
@@ -81,7 +86,7 @@ def _check_for_node_def(
 
 
 def _check_for_insteon_type(
-    hass_isy_data: dict, node: Group | Node, single_platform: str = None
+    hass_isy_data: dict, node: Group | Node, single_platform: Platform | None = None
 ) -> bool:
     """Check if the node matches the Insteon type for any platforms.
 
@@ -146,7 +151,7 @@ def _check_for_insteon_type(
 
 
 def _check_for_zwave_cat(
-    hass_isy_data: dict, node: Group | Node, single_platform: str = None
+    hass_isy_data: dict, node: Group | Node, single_platform: Platform | None = None
 ) -> bool:
     """Check if the node matches the ISY Z-Wave Category for any platforms.
 
@@ -176,8 +181,8 @@ def _check_for_zwave_cat(
 def _check_for_uom_id(
     hass_isy_data: dict,
     node: Group | Node,
-    single_platform: str = None,
-    uom_list: list = None,
+    single_platform: Platform | None = None,
+    uom_list: list[str] | None = None,
 ) -> bool:
     """Check if a node's uom matches any of the platforms uom filter.
 
@@ -211,8 +216,8 @@ def _check_for_uom_id(
 def _check_for_states_in_uom(
     hass_isy_data: dict,
     node: Group | Node,
-    single_platform: str = None,
-    states_list: list = None,
+    single_platform: Platform | None = None,
+    states_list: list[str] | None = None,
 ) -> bool:
     """Check if a list of uoms matches two possible filters.
 
@@ -247,9 +252,11 @@ def _check_for_states_in_uom(
 
 def _is_sensor_a_binary_sensor(hass_isy_data: dict, node: Group | Node) -> bool:
     """Determine if the given sensor node should be a binary_sensor."""
-    if _check_for_node_def(hass_isy_data, node, single_platform=BINARY_SENSOR):
+    if _check_for_node_def(hass_isy_data, node, single_platform=Platform.BINARY_SENSOR):
         return True
-    if _check_for_insteon_type(hass_isy_data, node, single_platform=BINARY_SENSOR):
+    if _check_for_insteon_type(
+        hass_isy_data, node, single_platform=Platform.BINARY_SENSOR
+    ):
         return True
 
     # For the next two checks, we're providing our own set of uoms that
@@ -257,13 +264,16 @@ def _is_sensor_a_binary_sensor(hass_isy_data: dict, node: Group | Node) -> bool:
     # checks in the context of already knowing that this is definitely a
     # sensor device.
     if _check_for_uom_id(
-        hass_isy_data, node, single_platform=BINARY_SENSOR, uom_list=BINARY_SENSOR_UOMS
+        hass_isy_data,
+        node,
+        single_platform=Platform.BINARY_SENSOR,
+        uom_list=BINARY_SENSOR_UOMS,
     ):
         return True
     if _check_for_states_in_uom(
         hass_isy_data,
         node,
-        single_platform=BINARY_SENSOR,
+        single_platform=Platform.BINARY_SENSOR,
         states_list=BINARY_SENSOR_ISY_STATES,
     ):
         return True
@@ -275,7 +285,7 @@ def _categorize_nodes(
     hass_isy_data: dict, nodes: Nodes, ignore_identifier: str, sensor_identifier: str
 ) -> None:
     """Sort the nodes to their proper platforms."""
-    for (path, node) in nodes:
+    for path, node in nodes:
         ignored = ignore_identifier in path or ignore_identifier in node.name
         if ignored:
             # Don't import this node as a device at all
@@ -365,43 +375,45 @@ def _categorize_variables(
 
 
 async def migrate_old_unique_ids(
-    hass: HomeAssistant, platform: str, devices: list[Any] | None
+    hass: HomeAssistant, platform: str, entities: Sequence[ISYEntity]
 ) -> None:
     """Migrate to new controller-specific unique ids."""
     registry = await async_get_registry(hass)
 
-    for device in devices:
+    for entity in entities:
+        if entity.old_unique_id is None or entity.unique_id is None:
+            continue
         old_entity_id = registry.async_get_entity_id(
-            platform, DOMAIN, device.old_unique_id
+            platform, DOMAIN, entity.old_unique_id
         )
         if old_entity_id is not None:
             _LOGGER.debug(
                 "Migrating unique_id from [%s] to [%s]",
-                device.old_unique_id,
-                device.unique_id,
+                entity.old_unique_id,
+                entity.unique_id,
             )
-            registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
+            registry.async_update_entity(old_entity_id, new_unique_id=entity.unique_id)
 
         old_entity_id_2 = registry.async_get_entity_id(
-            platform, DOMAIN, device.unique_id.replace(":", "")
+            platform, DOMAIN, entity.unique_id.replace(":", "")
         )
         if old_entity_id_2 is not None:
             _LOGGER.debug(
                 "Migrating unique_id from [%s] to [%s]",
-                device.unique_id.replace(":", ""),
-                device.unique_id,
+                entity.unique_id.replace(":", ""),
+                entity.unique_id,
             )
             registry.async_update_entity(
-                old_entity_id_2, new_unique_id=device.unique_id
+                old_entity_id_2, new_unique_id=entity.unique_id
             )
 
 
 def convert_isy_value_to_hass(
     value: int | float | None,
-    uom: str,
+    uom: str | None,
     precision: int | str,
     fallback_precision: int | None = None,
-) -> float | int:
+) -> float | int | None:
     """Fix ISY Reported Values.
 
     ISY provides float values as an integer and precision component.
@@ -416,7 +428,7 @@ def convert_isy_value_to_hass(
     if uom in (UOM_DOUBLE_TEMP, UOM_ISYV4_DEGREES):
         return round(float(value) / 2.0, 1)
     if precision not in ("0", 0):
-        return round(float(value) / 10 ** int(precision), int(precision))
+        return cast(float, round(float(value) / 10 ** int(precision), int(precision)))
     if fallback_precision:
         return round(float(value), fallback_precision)
     return value

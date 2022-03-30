@@ -138,6 +138,11 @@ async def async_setup_entry(
 
     devices = bridge.get_devices()
     bridge_device = devices[BRIDGE_DEVICE_ID]
+    if not config_entry.unique_id:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=hex(bridge_device["serial"])[2:].zfill(8)
+        )
+
     buttons = bridge.buttons
     _async_register_bridge_device(hass, entry_id, bridge_device)
     button_devices = _async_register_button_devices(
@@ -216,9 +221,7 @@ def _async_subscribe_pico_remote_events(
 
     @callback
     def _async_button_event(button_id, event_type):
-        device = button_devices_by_id.get(button_id)
-
-        if not device:
+        if not (device := button_devices_by_id.get(button_id)):
             return
 
         if event_type == BUTTON_STATUS_PRESSED:
@@ -227,7 +230,7 @@ def _async_subscribe_pico_remote_events(
             action = ACTION_RELEASE
 
         type_ = device["type"]
-        name = device["name"]
+        area, name = device["name"].split("_", 1)
         button_number = device["button_number"]
         # The original implementation used LIP instead of LEAP
         # so we need to convert the button number to maintain compat
@@ -252,7 +255,7 @@ def _async_subscribe_pico_remote_events(
                 ATTR_BUTTON_NUMBER: lip_button_number,
                 ATTR_LEAP_BUTTON_NUMBER: button_number,
                 ATTR_DEVICE_NAME: name,
-                ATTR_AREA_NAME: name.split("_")[0],
+                ATTR_AREA_NAME: area,
                 ATTR_ACTION: action,
             },
         )

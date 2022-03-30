@@ -137,7 +137,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
                 [
                     {
                         "code": self._speed.dpcode,
-                        "value": int(self._speed.remap_value_from(percentage, 0, 100)),
+                        "value": int(self._speed.remap_value_from(percentage, 1, 100)),
                     }
                 ]
             )
@@ -161,7 +161,6 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     def turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs: Any,
@@ -178,7 +177,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             commands.append(
                 {
                     "code": self._speed.dpcode,
-                    "value": int(self._speed.remap_value_from(percentage, 0, 100)),
+                    "value": int(self._speed.remap_value_from(percentage, 1, 100)),
                 }
             )
             return
@@ -248,7 +247,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if self._speed is not None:
             if (value := self.device.status.get(self._speed.dpcode)) is None:
                 return None
-            return int(self._speed.remap_value_to(value, 0, 100))
+            return int(self._speed.remap_value_to(value, 1, 100))
 
         if self._speeds is not None:
             if (value := self.device.status.get(self._speeds.dpcode)) is None:

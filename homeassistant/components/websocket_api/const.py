@@ -53,4 +53,6 @@ SIGNAL_WEBSOCKET_DISCONNECTED: Final = "websocket_disconnected"
 # Data used to store the current connection list
 DATA_CONNECTIONS: Final = f"{DOMAIN}.connections"
 
-JSON_DUMP: Final = partial(json.dumps, cls=JSONEncoder, allow_nan=False)
+JSON_DUMP: Final = partial(
+    json.dumps, cls=JSONEncoder, allow_nan=False, separators=(",", ":")
+)

@@ -47,30 +47,29 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
     )
     entity = helpers.GoogleEntity(hass, config, hass.states.get("light.ceiling_lights"))
 
-    serialized = await entity.sync_serialize(None)
+    serialized = entity.sync_serialize(None, "mock-uuid")
     assert "otherDeviceIds" not in serialized
     assert "customData" not in serialized
 
     config.async_enable_local_sdk()
 
-    with patch("homeassistant.helpers.instance_id.async_get", return_value="abcdef"):
-        serialized = await entity.sync_serialize("mock-user-id")
-        assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
-        assert serialized["customData"] == {
-            "httpPort": 1234,
-            "httpSSL": False,
-            "proxyDeviceId": "mock-user-id",
-            "webhookId": "mock-webhook-id",
-            "baseUrl": "https://hostname:1234",
-            "uuid": "abcdef",
-        }
+    serialized = entity.sync_serialize("mock-user-id", "abcdef")
+    assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
+    assert serialized["customData"] == {
+        "httpPort": 1234,
+        "httpSSL": False,
+        "proxyDeviceId": "mock-user-id",
+        "webhookId": "mock-webhook-id",
+        "baseUrl": "https://hostname:1234",
+        "uuid": "abcdef",
+    }
 
     for device_type in NOT_EXPOSE_LOCAL:
         with patch(
             "homeassistant.components.google_assistant.helpers.get_google_type",
             return_value=device_type,
         ):
-            serialized = await entity.sync_serialize(None)
+            serialized = entity.sync_serialize(None, "mock-uuid")
             assert "otherDeviceIds" not in serialized
             assert "customData" not in serialized
 
@@ -94,7 +93,9 @@ async def test_config_local_sdk(hass, hass_client):
 
     client = await hass_client()
 
+    assert config.is_local_connected is False
     config.async_enable_local_sdk()
+    assert config.is_local_connected is False
 
     resp = await client.post(
         "/api/webhook/mock-webhook-id",
@@ -122,6 +123,14 @@ async def test_config_local_sdk(hass, hass_client):
             "requestId": "mock-req-id",
         },
     )
+
+    assert config.is_local_connected is True
+    with patch(
+        "homeassistant.components.google_assistant.helpers.utcnow",
+        return_value=dt.utcnow() + timedelta(seconds=90),
+    ):
+        assert config.is_local_connected is False
+
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result["requestId"] == "mock-req-id"

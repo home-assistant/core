@@ -1,4 +1,19 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "name": "Nombre del Grupo"
+                },
+                "description": "Seleccionar opciones de grupo"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Miembros del grupo"
+                }
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Cerrado",

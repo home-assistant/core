@@ -267,7 +267,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             and existing_entry.data[CONF_HOST] != parsed_url.hostname
             and not fqdn_with_ssl_verification
         ):
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Update host from '%s' to '%s' for NAS '%s' via SSDP discovery",
                 existing_entry.data[CONF_HOST],
                 parsed_url.hostname,

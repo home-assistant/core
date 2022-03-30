@@ -211,7 +211,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=DISCOVERY_30303,
         )
         await hass.async_block_till_done()
@@ -249,7 +249,7 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
     with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=DISCOVERY_30303,
         )
         await hass.async_block_till_done()
@@ -339,7 +339,7 @@ async def test_discovered_by_dhcp_discovery_finds_non_steamist_device(
     "source, data",
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
-        (config_entries.SOURCE_DISCOVERY, DISCOVERY_30303),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, DISCOVERY_30303),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
@@ -371,7 +371,7 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     "source, data",
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
-        (config_entries.SOURCE_DISCOVERY, DISCOVERY_30303),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, DISCOVERY_30303),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_existing_unique_id_does_not_reload(

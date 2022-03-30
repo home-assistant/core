@@ -36,8 +36,7 @@ async def async_setup_entry(
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN][entry.entry_id]
-    devices = hive.session.deviceList.get("alarm_control_panel")
-    if devices:
+    if devices := hive.session.deviceList.get("alarm_control_panel"):
         async_add_entities(
             [HiveAlarmControlPanelEntity(hive, dev) for dev in devices], True
         )

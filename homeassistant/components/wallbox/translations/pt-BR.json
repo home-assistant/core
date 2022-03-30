@@ -20,9 +20,11 @@
             "user": {
                 "data": {
                     "password": "Senha",
+                    "station": "N\u00famero de s\u00e9rie da esta\u00e7\u00e3o",
                     "username": "Usu\u00e1rio"
                 }
             }
         }
-    }
+    },
+    "title": "Wallbox"
 }

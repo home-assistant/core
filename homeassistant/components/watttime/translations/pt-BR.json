@@ -27,6 +27,7 @@
                 "data": {
                     "password": "Senha"
                 },
+                "description": "Por favor, digite novamente a senha para {username} :",
                 "title": "Reautenticar Integra\u00e7\u00e3o"
             },
             "user": {
@@ -35,6 +36,16 @@
                     "username": "Usu\u00e1rio"
                 },
                 "description": "Insira seu nome de usu\u00e1rio e senha:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostrar localiza\u00e7\u00e3o monitorada no mapa"
+                },
+                "title": "Configurar WattTime"
             }
         }
     }

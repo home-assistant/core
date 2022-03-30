@@ -46,7 +46,7 @@ class DemoRemote(RemoteEntity):
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_is_on = state
         self._attr_icon = icon
-        self._last_command_sent = None
+        self._last_command_sent: str | None = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
