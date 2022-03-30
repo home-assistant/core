@@ -52,8 +52,11 @@ async def test_airzone_create_climates(hass):
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 21.2
     assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_OFF
     assert state.attributes.get(ATTR_HVAC_MODES) == [
-        HVAC_MODE_HEAT,
         HVAC_MODE_OFF,
+        HVAC_MODE_FAN_ONLY,
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_DRY,
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
@@ -66,8 +69,11 @@ async def test_airzone_create_climates(hass):
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 20.8
     assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_IDLE
     assert state.attributes.get(ATTR_HVAC_MODES) == [
-        HVAC_MODE_HEAT,
         HVAC_MODE_OFF,
+        HVAC_MODE_FAN_ONLY,
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_DRY,
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
@@ -80,8 +86,11 @@ async def test_airzone_create_climates(hass):
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 20.5
     assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_OFF
     assert state.attributes.get(ATTR_HVAC_MODES) == [
-        HVAC_MODE_HEAT,
         HVAC_MODE_OFF,
+        HVAC_MODE_FAN_ONLY,
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_DRY,
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
@@ -94,8 +103,11 @@ async def test_airzone_create_climates(hass):
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 21.1
     assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_HEAT
     assert state.attributes.get(ATTR_HVAC_MODES) == [
-        HVAC_MODE_HEAT,
         HVAC_MODE_OFF,
+        HVAC_MODE_FAN_ONLY,
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_DRY,
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
