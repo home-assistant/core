@@ -10,8 +10,8 @@ from httplib2 import ServerNotFoundError
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
+    CalendarEntity,
     CalendarEvent,
-    CalendarEventDevice,
     extract_offset,
     is_offset_reached,
 )
@@ -94,7 +94,7 @@ def _async_setup_entities(
         entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, data[CONF_DEVICE_ID], hass=hass
         )
-        entity = GoogleCalendarEventDevice(
+        entity = GoogleCalendarEntity(
             calendar_service, disc_info[CONF_CAL_ID], data, entity_id
         )
         entities.append(entity)
@@ -102,7 +102,7 @@ def _async_setup_entities(
     async_add_entities(entities, True)
 
 
-class GoogleCalendarEventDevice(CalendarEventDevice):
+class GoogleCalendarEntity(CalendarEntity):
     """A calendar event device."""
 
     def __init__(

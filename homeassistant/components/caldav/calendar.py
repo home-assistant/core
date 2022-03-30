@@ -12,8 +12,8 @@ import voluptuous as vol
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    CalendarEntity,
     CalendarEvent,
-    CalendarEventDevice,
     extract_offset,
     is_offset_reached,
 )
@@ -104,7 +104,7 @@ def setup_platform(
             device_id = f"{cust_calendar[CONF_CALENDAR]} {cust_calendar[CONF_NAME]}"
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
-                WebDavCalendarEventDevice(
+                WebDavCalendarEntity(
                     name, calendar, entity_id, days, True, cust_calendar[CONF_SEARCH]
                 )
             )
@@ -115,13 +115,13 @@ def setup_platform(
             device_id = calendar.name
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
-                WebDavCalendarEventDevice(name, calendar, entity_id, days)
+                WebDavCalendarEntity(name, calendar, entity_id, days)
             )
 
     add_entities(calendar_devices, True)
 
 
-class WebDavCalendarEventDevice(CalendarEventDevice):
+class WebDavCalendarEntity(CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
     def __init__(self, name, calendar, entity_id, days, all_day=False, search=None):

@@ -7,7 +7,7 @@ import logging
 from todoist.api import TodoistAPI
 import voluptuous as vol
 
-from homeassistant.components.calendar import PLATFORM_SCHEMA, CalendarEventDevice
+from homeassistant.components.calendar import PLATFORM_SCHEMA, CalendarEntity
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -136,7 +136,7 @@ def setup_platform(
         # Project is an object, not a dict!
         # Because of that, we convert what we need to a dict.
         project_data = {CONF_NAME: project[NAME], CONF_ID: project[ID]}
-        project_devices.append(TodoistProjectDevice(hass, project_data, labels, api))
+        project_devices.append(TodoistProjectEntity(hass, project_data, labels, api))
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project[NAME].lower()] = project[ID]
 
@@ -166,7 +166,7 @@ def setup_platform(
 
         # Create the custom project and add it to the devices array.
         project_devices.append(
-            TodoistProjectDevice(
+            TodoistProjectEntity(
                 hass,
                 project,
                 labels,
@@ -271,7 +271,7 @@ def _parse_due_date(data: DueDate, timezone_offset: int) -> datetime | None:
     return dt.as_utc(nowtime)
 
 
-class TodoistProjectDevice(CalendarEventDevice):
+class TodoistProjectEntity(CalendarEntity):
     """A device for getting the next Task from a Todoist Project."""
 
     def __init__(
@@ -284,7 +284,7 @@ class TodoistProjectDevice(CalendarEventDevice):
         whitelisted_labels=None,
         whitelisted_projects=None,
     ):
-        """Create the Todoist Calendar Event Device."""
+        """Create the Todoist Calendar Entity."""
         self.data = TodoistProjectData(
             data,
             labels,
@@ -336,7 +336,7 @@ class TodoistProjectDevice(CalendarEventDevice):
 
 class TodoistProjectData:
     """
-    Class used by the Task Device service object to hold all Todoist Tasks.
+    Class used by the Task Entity service object to hold all Todoist Tasks.
 
     This is analogous to the GoogleCalendarData found in the Google Calendar
     component.

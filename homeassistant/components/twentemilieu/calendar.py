@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from homeassistant.components.calendar import CalendarEvent, CalendarEventDevice
+from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities([TwenteMilieuCalendar(coordinator, entry)])
 
 
-class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEventDevice):
+class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
     """Defines a Twente Milieu calendar."""
 
     _attr_name = "Twente Milieu"

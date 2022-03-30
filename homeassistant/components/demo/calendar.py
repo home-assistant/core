@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import datetime
 
-from homeassistant.components.calendar import CalendarEvent, CalendarEventDevice
+from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -45,7 +45,7 @@ def calendar_data_current() -> CalendarEvent:
     )
 
 
-class DemoGoogleCalendar(CalendarEventDevice):
+class DemoGoogleCalendar(CalendarEntity):
     """Representation of a Demo Calendar element."""
 
     def __init__(self, hass: HomeAssistant, event: CalendarEvent, name: str) -> None:

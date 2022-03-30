@@ -135,7 +135,7 @@ def is_offset_reached(
     return start + offset_time <= dt.now(start.tzinfo)
 
 
-class CalendarEventDevice(Entity):
+class CalendarEntity(Entity):
     """Base class for calendar event entities."""
 
     @property
@@ -199,7 +199,7 @@ class CalendarEventView(http.HomeAssistantView):
         end = request.query.get("end")
         if start is None or end is None or entity is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
-        assert isinstance(entity, CalendarEventDevice)
+        assert isinstance(entity, CalendarEntity)
         try:
             start_date = dt.parse_datetime(start)
             end_date = dt.parse_datetime(end)
