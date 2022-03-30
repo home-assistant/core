@@ -2,8 +2,10 @@
   "config": {
     "step": {
       "user": {
+        "title": "Date & Time",
+        "description": "Add an entity with the current date and/or the time.",
         "data": {
-          "display_option": "Type of sensor"
+          "display_option": "Format"
         }
       }
     }

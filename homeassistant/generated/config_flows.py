@@ -342,7 +342,6 @@ FLOWS = {
         "tesla_wall_connector",
         "tibber",
         "tile",
-        "time_date",
         "tolo",
         "tomorrowio",
         "toon",
@@ -410,6 +409,7 @@ FLOWS = {
         "min_max",
         "switch_as_x",
         "threshold",
+        "time_date",
         "tod",
         "utility_meter"
     ]

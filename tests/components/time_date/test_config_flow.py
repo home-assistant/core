@@ -43,7 +43,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
     assert config_entry.options == {"display_option": "date_time"}
-    assert config_entry.title == "Time & Date"
+    assert config_entry.title == "Date & Time"
 
 
 @pytest.mark.parametrize("platform", ("sensor",))
