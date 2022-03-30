@@ -129,7 +129,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         return None
 
     def _strip_release_notes(self) -> str | None:
-        """Strip release notes from the changelog."""
+        """Strip the release notes to contain the needed sections."""
         if (notes := self._addon_data[ATTR_CHANGELOG]) is None:
             return None
 
