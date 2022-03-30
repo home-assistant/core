@@ -63,19 +63,7 @@
           "label": "Tunable Color Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          38,
-          133,
-          89,
-          51,
-          90,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 38, 133, 89, 51, 90, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -99,19 +87,7 @@
           "label": "Tunable Color Switch"
         },
         "mandatorySupportedCCs": [
-          32,
-          38,
-          133,
-          89,
-          51,
-          90,
-          114,
-          115,
-          159,
-          108,
-          85,
-          134,
-          94
+          32, 38, 133, 89, 51, 90, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
       }
@@ -2607,19 +2583,7 @@
       "label": "Tunable Color Switch"
     },
     "mandatorySupportedCCs": [
-      32,
-      38,
-      133,
-      89,
-      51,
-      90,
-      114,
-      115,
-      159,
-      108,
-      85,
-      134,
-      94
+      32, 38, 133, 89, 51, 90, 114, 115, 159, 108, 85, 134, 94
     ],
     "mandatoryControlledCCs": []
   },
