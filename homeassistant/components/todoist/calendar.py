@@ -1,18 +1,21 @@
 """Support for Todoist task management (https://todoist.com)."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 import logging
 
 from todoist.api import TodoistAPI
 import voluptuous as vol
 
-from homeassistant.components.calendar import PLATFORM_SCHEMA, CalendarEntity
+from homeassistant.components.calendar import (
+    PLATFORM_SCHEMA,
+    CalendarEntity,
+    CalendarEvent,
+)
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
@@ -28,7 +31,6 @@ from .const import (
     CONF_PROJECT_LABEL_WHITELIST,
     CONF_PROJECT_WHITELIST,
     CONTENT,
-    DATETIME,
     DESCRIPTION,
     DOMAIN,
     DUE,
@@ -102,7 +104,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SCAN_INTERVAL = timedelta(minutes=15)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 def setup_platform(
@@ -176,7 +178,6 @@ def setup_platform(
                 project_id_filter,
             )
         )
-
     add_entities(project_devices)
 
     def handle_new_task(call: ServiceCall) -> None:
@@ -297,9 +298,9 @@ class TodoistProjectEntity(CalendarEntity):
         self._name = data[CONF_NAME]
 
     @property
-    def event(self):
+    def event(self) -> CalendarEvent:
         """Return the next upcoming event."""
-        return self.data.event
+        return self.data.calendar_event
 
     @property
     def name(self):
@@ -314,7 +315,12 @@ class TodoistProjectEntity(CalendarEntity):
             task[SUMMARY] for task in self.data.all_project_tasks
         ]
 
-    async def async_get_events(self, hass, start_date, end_date):
+    async def async_get_events(
+        self,
+        hass: HomeAssistant,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         return await self.data.async_get_events(hass, start_date, end_date)
 
@@ -408,6 +414,22 @@ class TodoistProjectData:
             self._project_id_whitelist = whitelisted_projects
         else:
             self._project_id_whitelist = []
+
+    @property
+    def calendar_event(self) -> CalendarEvent | None:
+        """Return the next upcoming calendar event."""
+        if not self.event:
+            return None
+        if not self.event.get(END) or self.event.get(ALL_DAY):
+            start = self.event[START].date()
+            return CalendarEvent(
+                summary=self.event[SUMMARY],
+                start=start,
+                end=start + timedelta(days=1),
+            )
+        return CalendarEvent(
+            summary=self.event[SUMMARY], start=self.event[START], end=self.event[END]
+        )
 
     def create_todoist_task(self, data):
         """
@@ -566,7 +588,7 @@ class TodoistProjectData:
             if task["due"] is None:
                 continue
             # @NOTE: _parse_due_date always returns the date in UTC time.
-            due_date = _parse_due_date(
+            due_date: datetime | None = _parse_due_date(
                 task["due"], self._api.state["user"]["tz_info"]["hours"]
             )
             if not due_date:
@@ -580,20 +602,16 @@ class TodoistProjectData:
             )
 
             if start_date < due_date < end_date:
+                due_date_value: datetime | date = due_date
                 if due_date == midnight:
                     # If the due date has no time data, return just the date so that it
                     # will render correctly as an all day event on a calendar.
-                    due_date_value = due_date.strftime("%Y-%m-%d")
-                else:
-                    due_date_value = due_date.isoformat()
-                event = {
-                    "uid": task["id"],
-                    "title": task["content"],
-                    "start": due_date_value,
-                    "end": due_date_value,
-                    "allDay": True,
-                    "summary": task["content"],
-                }
+                    due_date_value = due_date.date()
+                event = CalendarEvent(
+                    summary=task["content"],
+                    start=due_date_value,
+                    end=due_date_value,
+                )
                 events.append(event)
         return events
 
@@ -644,22 +662,10 @@ class TodoistProjectData:
             project_tasks.remove(best_task)
             self.all_project_tasks.append(best_task)
 
-        self.event = self.all_project_tasks[0]
-
-        # Convert datetime to a string again
-        if self.event is not None:
-            if self.event[START] is not None:
-                self.event[START] = {
-                    DATETIME: self.event[START].strftime(DATE_STR_FORMAT)
-                }
-            if self.event[END] is not None:
-                self.event[END] = {DATETIME: self.event[END].strftime(DATE_STR_FORMAT)}
-            else:
-                # Home Assistant gets cranky if a calendar event never ends
-                # Let's set our "due date" to tomorrow
-                self.event[END] = {
-                    DATETIME: (datetime.utcnow() + timedelta(days=1)).strftime(
-                        DATE_STR_FORMAT
-                    )
-                }
+        event = self.all_project_tasks[0]
+        if event is None or event[START] is None:
+            _LOGGER.debug("No valid event or event start for %s", self._name)
+            self.event = None
+            return
+        self.event = event
         _LOGGER.debug("Updated %s", self._name)
