@@ -832,8 +832,8 @@ async def test_temperature_conversion(hass, caplog):
     assert state is not None
     assert state.state == "38"
     assert (
-        "Entity hello.world (<class 'homeassistant.helpers.entity.Entity'>) does not "
-        "convert temperatures, this will be unsupported in Home Assistant Core 2022.7. "
+        "Entity hello.world (<class 'homeassistant.helpers.entity.Entity'>) relies on automatic "
+        "temperature conversion, this will be unsupported in Home Assistant Core 2022.7. "
         "Please create a bug report" in caplog.text
     )
 
