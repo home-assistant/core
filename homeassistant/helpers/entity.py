@@ -52,7 +52,6 @@ from . import entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
-from .frame import report
 from .typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
@@ -228,29 +227,6 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-def convert_to_entity_category(
-    value: EntityCategory | str | None, raise_report: bool = True
-) -> EntityCategory | None:
-    """Force incoming entity_category to be an enum."""
-
-    if value is None:
-        return value
-
-    if not isinstance(value, EntityCategory):
-        if raise_report:
-            report(
-                "uses %s (%s) for entity category. This is deprecated and will "
-                "stop working in Home Assistant 2022.4, it should be updated to use "
-                "EntityCategory instead" % (type(value).__name__, value),
-                error_if_core=False,
-            )
-        try:
-            return EntityCategory(value)
-        except ValueError:
-            return None
-    return value
-
-
 @dataclass
 class EntityDescription:
     """A class that describes Home Assistant entities."""
@@ -259,10 +235,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    # Type string is deprecated as of 2021.12, use EntityCategory
-    entity_category: EntityCategory | Literal[
-        "config", "diagnostic", "system"
-    ] | None = None
+    entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -491,9 +464,8 @@ class Entity(ABC):
         """Return the attribution."""
         return self._attr_attribution
 
-    # Type str is deprecated as of 2021.12, use EntityCategory
     @property
-    def entity_category(self) -> EntityCategory | str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
             return self._attr_entity_category
