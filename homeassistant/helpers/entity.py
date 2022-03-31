@@ -664,7 +664,7 @@ class Entity(ABC):
                     self._temperature_reported = True
                     report_issue = self._suggest_report_issue()
                     _LOGGER.warning(
-                        "Entity %s (%s) does not convert temperatures, this will "
+                        "Entity %s (%s) relies on automatic temperature conversion, this will "
                         "be unsupported in Home Assistant Core 2022.7. Please %s",
                         self.entity_id,
                         type(self),
