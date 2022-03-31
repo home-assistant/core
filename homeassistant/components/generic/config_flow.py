@@ -57,7 +57,7 @@ DEFAULT_DATA = {
     CONF_VERIFY_SSL: True,
 }
 
-SUPPORTED_IMAGE_TYPES = ["png", "jpeg", "gif", "svg+xml"]
+SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml"}
 
 
 def build_schema(
