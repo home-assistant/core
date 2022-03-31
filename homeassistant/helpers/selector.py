@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
@@ -13,6 +14,33 @@ from homeassistant.util import decorator
 from . import config_validation as cv
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
+
+
+class SelectorType(StrEnum):
+    """Enum to represent all selector types."""
+
+    ACTION = "action"
+    ADDON = "addon"
+    AREA = "area"
+    ATTRIBUTE = "attribute"
+    BOOLEAN = "boolean"
+    COLOR_RGB = "color_rgb"
+    COLOR_TEMP = "color_temp"
+    DATE = "date"
+    DATETIME = "datetime"
+    DEVICE = "device"
+    DURATION = "duration"
+    ENTITY = "entity"
+    ICON = "icon"
+    LOCATION = "location"
+    MEDIA = "media"
+    NUMBER = "number"
+    OBJECT = "object"
+    SELECT = "select"
+    TARGET = "target"
+    TEXT = "text"
+    THEME = "theme"
+    TIME = "time"
 
 
 def _get_selector_class(config: Any) -> type[Selector]:
@@ -31,16 +59,16 @@ def _get_selector_class(config: Any) -> type[Selector]:
     return selector_class
 
 
-def selector(config: Any) -> Selector:
+def selector(selector_type: SelectorType, config: Any) -> Selector:
     """Instantiate a selector."""
-    selector_class = _get_selector_class(config)
-    selector_type = list(config)[0]
+    if (selector_class := SELECTORS.get(selector_type)) is None:
+        raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
-    # Selectors can be empty
-    if config[selector_type] is None:
-        return selector_class({selector_type: {}})
+    # selector config can be empty
+    if config is None:
+        config = {}
 
-    return selector_class(config)
+    return selector_class({selector_type: config})
 
 
 def validate_selector(config: Any) -> dict:
@@ -84,6 +112,15 @@ SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     }
 )
 
+
+class SingleEntitySelectorDict(TypedDict, total=False):
+    """Class to represent a single entity selector dict."""
+
+    integration: str
+    domain: str
+    device_class: str
+
+
 SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration linked to it with a config entry
@@ -98,11 +135,24 @@ SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@SELECTORS.register("action")
+class SingleDeviceSelectorDict(TypedDict, total=False):
+    """Class to represent a single device selector dict."""
+
+    integration: str
+    manufacturer: str
+    model: str
+    entity: SingleEntitySelectorDict
+
+
+class ActionSelectorDict(TypedDict):
+    """Class to represent an action selector dict."""
+
+
+@SELECTORS.register(SelectorType.ACTION)
 class ActionSelector(Selector):
     """Selector of an action sequence (script syntax)."""
 
-    selector_type = "action"
+    selector_type = SelectorType.ACTION
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -111,11 +161,18 @@ class ActionSelector(Selector):
         return data
 
 
-@SELECTORS.register("addon")
+class AddonSelectorDict(TypedDict, total=False):
+    """Class to represent an addon selector dict."""
+
+    name: str
+    slug: str
+
+
+@SELECTORS.register(SelectorType.ADDON)
 class AddonSelector(Selector):
     """Selector of a add-on."""
 
-    selector_type = "addon"
+    selector_type = SelectorType.ADDON
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -130,11 +187,19 @@ class AddonSelector(Selector):
         return addon
 
 
-@SELECTORS.register("area")
+class AreaSelectorDict(TypedDict, total=False):
+    """Class to represent an area selector dict."""
+
+    entity: SingleEntitySelectorDict
+    device: SingleDeviceSelectorDict
+    multiple: bool
+
+
+@SELECTORS.register(SelectorType.AREA)
 class AreaSelector(Selector):
     """Selector of a single or list of areas."""
 
-    selector_type = "area"
+    selector_type = SelectorType.AREA
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -154,11 +219,17 @@ class AreaSelector(Selector):
         return [vol.Schema(str)(val) for val in data]
 
 
-@SELECTORS.register("attribute")
+class AttributeSelectorDict(TypedDict):
+    """Class to represent an attribute selector dict."""
+
+    entity_id: str
+
+
+@SELECTORS.register(SelectorType.ATTRIBUTE)
 class AttributeSelector(Selector):
     """Selector for an entity attribute."""
 
-    selector_type = "attribute"
+    selector_type = SelectorType.ATTRIBUTE
 
     CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
 
@@ -168,11 +239,15 @@ class AttributeSelector(Selector):
         return attribute
 
 
-@SELECTORS.register("boolean")
+class BooleanSelectorDict(TypedDict):
+    """Class to represent a boolean selector dict."""
+
+
+@SELECTORS.register(SelectorType.BOOLEAN)
 class BooleanSelector(Selector):
     """Selector of a boolean value."""
 
-    selector_type = "boolean"
+    selector_type = SelectorType.BOOLEAN
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -182,11 +257,15 @@ class BooleanSelector(Selector):
         return value
 
 
-@SELECTORS.register("color_rgb")
+class ColorRGBSelectorDict(TypedDict):
+    """Class to represent a color RGB selector dict."""
+
+
+@SELECTORS.register(SelectorType.COLOR_RGB)
 class ColorRGBSelector(Selector):
     """Selector of an RGB color value."""
 
-    selector_type = "color_rgb"
+    selector_type = SelectorType.COLOR_RGB
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -196,11 +275,18 @@ class ColorRGBSelector(Selector):
         return value
 
 
-@SELECTORS.register("color_temp")
+class ColorTempSelectorDict(TypedDict, total=False):
+    """Class to represent a color temp selector dict."""
+
+    max_mireds: int
+    min_mireds: int
+
+
+@SELECTORS.register(SelectorType.COLOR_TEMP)
 class ColorTempSelector(Selector):
     """Selector of an color temperature."""
 
-    selector_type = "color_temp"
+    selector_type = SelectorType.COLOR_TEMP
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -221,11 +307,15 @@ class ColorTempSelector(Selector):
         return value
 
 
-@SELECTORS.register("date")
+class DateSelectorDict(TypedDict):
+    """Class to represent a date selector dict."""
+
+
+@SELECTORS.register(SelectorType.DATE)
 class DateSelector(Selector):
     """Selector of a date."""
 
-    selector_type = "date"
+    selector_type = SelectorType.DATE
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -235,11 +325,15 @@ class DateSelector(Selector):
         return data
 
 
-@SELECTORS.register("datetime")
+class DateTimeSelectorDict(TypedDict):
+    """Class to represent a date time selector dict."""
+
+
+@SELECTORS.register(SelectorType.DATETIME)
 class DateTimeSelector(Selector):
     """Selector of a datetime."""
 
-    selector_type = "datetime"
+    selector_type = SelectorType.DATETIME
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -249,11 +343,21 @@ class DateTimeSelector(Selector):
         return data
 
 
-@SELECTORS.register("device")
+class DeviceSelectorDict(TypedDict, total=False):
+    """Class to represent a device selector dict."""
+
+    integration: str
+    manufacturer: str
+    model: str
+    entity: SingleEntitySelectorDict
+    multiple: bool
+
+
+@SELECTORS.register(SelectorType.DEVICE)
 class DeviceSelector(Selector):
     """Selector of a single or list of devices."""
 
-    selector_type = "device"
+    selector_type = SelectorType.DEVICE
 
     CONFIG_SCHEMA = SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA.extend(
         {vol.Optional("multiple", default=False): cv.boolean}
@@ -269,11 +373,17 @@ class DeviceSelector(Selector):
         return [vol.Schema(str)(val) for val in data]
 
 
-@SELECTORS.register("duration")
+class DurationSelectorDict(TypedDict, total=False):
+    """Class to represent a duration selector dict."""
+
+    enable_day: bool
+
+
+@SELECTORS.register(SelectorType.DURATION)
 class DurationSelector(Selector):
     """Selector for a duration."""
 
-    selector_type = "duration"
+    selector_type = SelectorType.DURATION
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -289,11 +399,19 @@ class DurationSelector(Selector):
         return cast(dict[str, float], data)
 
 
-@SELECTORS.register("entity")
+class EntitySelectorDict(SingleEntitySelectorDict, total=False):
+    """Class to represent an entity selector dict."""
+
+    exclude_entities: list[str]
+    include_entities: list[str]
+    multiple: bool
+
+
+@SELECTORS.register(SelectorType.ENTITY)
 class EntitySelector(Selector):
     """Selector of a single or list of entities."""
 
-    selector_type = "entity"
+    selector_type = SelectorType.ENTITY
 
     CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
         {
@@ -333,11 +451,17 @@ class EntitySelector(Selector):
         return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
-@SELECTORS.register("icon")
+class IconSelectorDict(TypedDict, total=False):
+    """Class to represent an icon selector dict."""
+
+    placeholder: str
+
+
+@SELECTORS.register(SelectorType.ICON)
 class IconSelector(Selector):
     """Selector for an icon."""
 
-    selector_type = "icon"
+    selector_type = SelectorType.ICON
 
     CONFIG_SCHEMA = vol.Schema(
         {vol.Optional("placeholder"): str}
@@ -350,11 +474,18 @@ class IconSelector(Selector):
         return icon
 
 
-@SELECTORS.register("location")
+class LocationSelectorDict(TypedDict, total=False):
+    """Class to represent a location selector dict."""
+
+    radius: bool
+    icon: str
+
+
+@SELECTORS.register(SelectorType.LOCATION)
 class LocationSelector(Selector):
     """Selector for a location."""
 
-    selector_type = "location"
+    selector_type = SelectorType.LOCATION
 
     CONFIG_SCHEMA = vol.Schema(
         {vol.Optional("radius"): bool, vol.Optional("icon"): str}
@@ -373,11 +504,15 @@ class LocationSelector(Selector):
         return location
 
 
-@SELECTORS.register("media")
+class MediaSelectorDict(TypedDict):
+    """Class to represent a media selector dict."""
+
+
+@SELECTORS.register(SelectorType.MEDIA)
 class MediaSelector(Selector):
     """Selector for media."""
 
-    selector_type = "media"
+    selector_type = SelectorType.MEDIA
 
     CONFIG_SCHEMA = vol.Schema({})
     DATA_SCHEMA = vol.Schema(
@@ -398,6 +533,23 @@ class MediaSelector(Selector):
         return media
 
 
+class NumberSelectorDict(TypedDict, total=False):
+    """Class to represent a number selector dict."""
+
+    min: float
+    max: float
+    step: float
+    unit_of_measurement: str
+    mode: NumberSelectorMode
+
+
+class NumberSelectorMode(StrEnum):
+    """Possible modes for a number selector."""
+
+    BOX = "box"
+    SLIDER = "slider"
+
+
 def has_min_max_if_slider(data: Any) -> Any:
     """Validate configuration."""
     if data["mode"] == "box":
@@ -409,11 +561,11 @@ def has_min_max_if_slider(data: Any) -> Any:
     return data
 
 
-@SELECTORS.register("number")
+@SELECTORS.register(SelectorType.NUMBER)
 class NumberSelector(Selector):
     """Selector of a numeric value."""
 
-    selector_type = "number"
+    selector_type = SelectorType.NUMBER
 
     CONFIG_SCHEMA = vol.All(
         vol.Schema(
@@ -426,7 +578,9 @@ class NumberSelector(Selector):
                     vol.Coerce(float), vol.Range(min=1e-3)
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE, default="slider"): vol.In(["box", "slider"]),
+                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.Coerce(
+                    NumberSelectorMode
+                ),
             }
         ),
         has_min_max_if_slider,
@@ -445,11 +599,15 @@ class NumberSelector(Selector):
         return value
 
 
-@SELECTORS.register("object")
+class ObjectSelectorDict(TypedDict):
+    """Class to represent an object selector dict."""
+
+
+@SELECTORS.register(SelectorType.OBJECT)
 class ObjectSelector(Selector):
     """Selector for an arbitrary object."""
 
-    selector_type = "object"
+    selector_type = SelectorType.OBJECT
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -469,18 +627,41 @@ select_option = vol.All(
 )
 
 
-@SELECTORS.register("select")
-class SelectSelector(Selector):
-    """Selector for an single or multi-choice input select."""
+class SelectSelectorMode(StrEnum):
+    """Possible modes for a number selector."""
 
-    selector_type = "select"
+    LIST = "list"
+    DROPDOWN = "dropdown"
+
+
+class SelectSelectorDict(TypedDict, total=False):
+    """Class to represent a select selector dict."""
+
+    options: list[SelectOptionDict] | list[str]  # required
+    multiple: bool
+    custom_value: bool
+    mode: SelectSelectorMode
+
+
+class SelectOptionDict(TypedDict):
+    """Class to represent a select option dict."""
+
+    value: str
+    label: str
+
+
+@SELECTORS.register(SelectorType.SELECT)
+class SelectSelector(Selector):
+    """Selector for an single-choice input select."""
+
+    selector_type = SelectorType.SELECT
 
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Required("options"): vol.All(vol.Any([str], [select_option])),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("custom_value", default=False): cv.boolean,
-            vol.Optional("mode"): vol.In(("list", "dropdown")),
+            vol.Optional("mode"): vol.Coerce(SelectSelectorMode),
         }
     )
 
@@ -504,51 +685,21 @@ class SelectSelector(Selector):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
-@SELECTORS.register("text")
-class StringSelector(Selector):
-    """Selector for a multi-line text string."""
+class TargetSelectorDict(TypedDict, total=False):
+    """Class to represent a target selector dict."""
 
-    selector_type = "text"
-
-    STRING_TYPES = [
-        "number",
-        "text",
-        "search",
-        "tel",
-        "url",
-        "email",
-        "password",
-        "date",
-        "month",
-        "week",
-        "time",
-        "datetime-local",
-        "color",
-    ]
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            vol.Optional("multiline", default=False): bool,
-            vol.Optional("suffix"): str,
-            # The "type" controls the input field in the browser, the resulting
-            # data can be any string so we don't validate it.
-            vol.Optional("type"): vol.In(STRING_TYPES),
-        }
-    )
-
-    def __call__(self, data: Any) -> str:
-        """Validate the passed selection."""
-        text: str = vol.Schema(str)(data)
-        return text
+    entity: SingleEntitySelectorDict
+    device: SingleDeviceSelectorDict
 
 
-@SELECTORS.register("target")
+@SELECTORS.register(SelectorType.TARGET)
 class TargetSelector(Selector):
     """Selector of a target value (area ID, device ID, entity ID etc).
 
     Value should follow cv.TARGET_SERVICE_FIELDS format.
     """
 
-    selector_type = "target"
+    selector_type = SelectorType.TARGET
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -565,11 +716,63 @@ class TargetSelector(Selector):
         return target
 
 
-@SELECTORS.register("theme")
+class TextSelectorDict(TypedDict, total=False):
+    """Class to represent a text selector dict."""
+
+    multiline: bool
+    suffix: str
+    type: TextSelectorType
+
+
+class TextSelectorType(StrEnum):
+    """Enum for text selector types."""
+
+    COLOR = "color"
+    DATE = "date"
+    DATETIME_LOCAL = "datetime-local"
+    EMAIL = "email"
+    MONTH = "month"
+    NUMBER = "number"
+    PASSWORD = "password"
+    SEARCH = "search"
+    TEL = "tel"
+    TEXT = "text"
+    TIME = "time"
+    URL = "url"
+    WEEK = "week"
+
+
+@SELECTORS.register(SelectorType.TEXT)
+class StringSelector(Selector):
+    """Selector for a multi-line text string."""
+
+    selector_type = SelectorType.TEXT
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiline", default=False): bool,
+            vol.Optional("suffix"): str,
+            # The "type" controls the input field in the browser, the resulting
+            # data can be any string so we don't validate it.
+            vol.Optional("type"): vol.Coerce(TextSelectorType),
+        }
+    )
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        text: str = vol.Schema(str)(data)
+        return text
+
+
+class ThemeSelectorDict(TypedDict):
+    """Class to represent a theme selector dict."""
+
+
+@SELECTORS.register(SelectorType.THEME)
 class ThemeSelector(Selector):
     """Selector for an theme."""
 
-    selector_type = "theme"
+    selector_type = SelectorType.THEME
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -579,11 +782,15 @@ class ThemeSelector(Selector):
         return theme
 
 
-@SELECTORS.register("time")
+class TimeSelectorDict(TypedDict):
+    """Class to represent a time selector dict."""
+
+
+@SELECTORS.register(SelectorType.TIME)
 class TimeSelector(Selector):
     """Selector of a time value."""
 
-    selector_type = "time"
+    selector_type = SelectorType.TIME
 
     CONFIG_SCHEMA = vol.Schema({})
 
