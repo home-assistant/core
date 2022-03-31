@@ -496,6 +496,7 @@ async def websocket_node_metadata(
         "wakeup": node.device_config.metadata.wakeup,
         "reset": node.device_config.metadata.reset,
         "device_database_url": node.device_database_url,
+        "comments": node.device_config.metadata.comments,
     }
     connection.send_result(
         msg[ID],
