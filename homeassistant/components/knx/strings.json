@@ -19,13 +19,11 @@
           "tunneling_type": "KNX Tunneling Type",
           "port": "[%key:common::config_flow::data::port%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "individual_address": "Individual address",
           "local_ip": "Local IP of Home Assistant"
         },
         "data_description": {
           "port": "Port of the KNX/IP tunneling device.",
           "host": "IP address of the KNX/IP tunneling device.",
-          "individual_address": "KNX address to be used by default, e.g. `1.0.250`. Used when the tunneling device does not assign an individual address for the connection.",
           "local_ip": "Leave blank to use auto-discovery."
         }
       },

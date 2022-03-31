@@ -168,7 +168,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 **DEFAULT_ENTRY_DATA,  # type: ignore[misc]
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
-                CONF_KNX_INDIVIDUAL_ADDRESS: user_input[CONF_KNX_INDIVIDUAL_ADDRESS],
                 CONF_KNX_ROUTE_BACK: (
                     connection_type == CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
                 ),
@@ -211,9 +210,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_KNX_TUNNELING_TYPE): vol.In(connection_methods),
             vol.Required(CONF_HOST, default=ip_address): _IP_SELECTOR,
             vol.Required(CONF_PORT, default=port): _PORT_SELECTOR,
-            vol.Required(
-                CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
-            ): _IA_SELECTOR,
         }
 
         if self.show_advanced_options:
