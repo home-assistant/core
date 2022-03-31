@@ -388,7 +388,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
         (
             {"options": [], "custom_value": True, "multiple": True},
             (["red"], ["green", "blue"], []),
-            (0, None, ["red"]),
+            (0, None, "red"),
         ),
     ),
 )
@@ -402,7 +402,6 @@ def test_select_selector_schema(schema, valid_selections, invalid_selections):
     (
         {},  # Must have options
         {"options": {"hello": "World"}},  # Options must be a list
-        {"options": []},  # Must have at least option
         # Options must be strings or value / label pairs
         {"options": [{"hello": "World"}]},
         # Options must all be of the same type

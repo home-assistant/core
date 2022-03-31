@@ -477,9 +477,7 @@ class SelectSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Required("options"): vol.All(
-                vol.Any([str], [select_option])
-            ),
+            vol.Required("options"): vol.All(vol.Any([str], [select_option])),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("custom_value", default=False): cv.boolean,
             vol.Optional("mode"): vol.In(("list", "dropdown")),
@@ -488,10 +486,12 @@ class SelectSelector(Selector):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        if isinstance(self.config["options"][0], str):
-            options = self.config["options"]
-        else:
-            options = [option["value"] for option in self.config["options"]]
+        options = []
+        if self.config["options"]:
+            if isinstance(self.config["options"][0], str):
+                options = self.config["options"]
+            else:
+                options = [option["value"] for option in self.config["options"]]
 
         parent_schema = vol.In(options)
         if self.config["custom_value"]:
