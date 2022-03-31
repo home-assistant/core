@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectorError, ClientResponseError
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
@@ -10,7 +10,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
-from .util import CONFIG, HVAC_MOCK
+from .util import CONFIG, HVAC_MOCK, HVAC_SYSTEMS_MOCK
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -24,16 +24,25 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant):
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
-    ) as mock_hvac:
+    ) as mock_hvac, patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+        return_value=HVAC_SYSTEMS_MOCK,
+    ) as mock_hvac_systems, patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+        side_effect=ClientResponseError(MagicMock(), MagicMock()),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        mock_hvac.assert_called_once()
+        assert mock_hvac.call_count == 2
+        assert mock_hvac_systems.call_count == 2
         mock_hvac.reset_mock()
+        mock_hvac_systems.reset_mock()
 
         mock_hvac.side_effect = ClientConnectorError(MagicMock(), MagicMock())
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         mock_hvac.assert_called_once()
+        mock_hvac_systems.call_count == 0
 
         state = hass.states.get("sensor.despacho_temperature")
         assert state.state == STATE_UNAVAILABLE

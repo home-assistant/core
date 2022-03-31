@@ -5,9 +5,12 @@ from typing import Any
 
 from aioairzone.common import ConnectionOptions
 from aioairzone.const import (
+    AZD_FIRMWARE,
     AZD_ID,
+    AZD_MODEL,
     AZD_NAME,
     AZD_SYSTEM,
+    AZD_SYSTEMS,
     AZD_THERMOSTAT_FW,
     AZD_THERMOSTAT_MODEL,
     AZD_ZONES,
@@ -25,6 +28,38 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
+
+
+class AirzoneSystemEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
+    """Define an Airzone Zone entity."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        entry: ConfigEntry,
+        system_data: dict[str, Any],
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.system_id = system_data[AZD_ID]
+
+        self._attr_device_info: DeviceInfo = {
+            "identifiers": {(DOMAIN, f"{entry.entry_id}_{self.system_id}")},
+            "manufacturer": MANUFACTURER,
+            "model": self.get_system_value(AZD_MODEL),
+            "name": f"Airzone System {self.system_id}",
+            "sw_version": self.get_system_value(AZD_FIRMWARE),
+        }
+
+    def get_system_value(self, key):
+        """Return system value by key."""
+        value = None
+        if self.system_id in self.coordinator.data[AZD_SYSTEMS]:
+            system = self.coordinator.data[AZD_SYSTEMS][self.system_id]
+            if key in system:
+                value = system[key]
+        return value
 
 
 class AirzoneZoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
@@ -70,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
+    await airzone.validate_airzone()
 
     coordinator = AirzoneUpdateCoordinator(hass, airzone)
     await coordinator.async_config_entry_first_refresh()

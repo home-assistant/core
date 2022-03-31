@@ -1,6 +1,6 @@
 """Tests for the Airzone integration."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from aioairzone.const import (
     API_AIR_DEMAND,
@@ -18,13 +18,17 @@ from aioairzone.const import (
     API_MODES,
     API_NAME,
     API_ON,
+    API_POWER,
     API_ROOM_TEMP,
     API_SET_POINT,
+    API_SYSTEM_FIRMWARE,
     API_SYSTEM_ID,
+    API_SYSTEM_TYPE,
     API_SYSTEMS,
     API_UNITS,
     API_ZONE_ID,
 )
+from aiohttp import ClientResponseError
 
 from homeassistant.components.airzone import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -147,6 +151,17 @@ HVAC_MOCK = {
     ]
 }
 
+HVAC_SYSTEMS_MOCK = {
+    API_SYSTEMS: [
+        {
+            API_SYSTEM_ID: 1,
+            API_POWER: 1,
+            API_SYSTEM_FIRMWARE: "3.31",
+            API_SYSTEM_TYPE: 1,
+        }
+    ]
+}
+
 
 async def async_init_integration(
     hass: HomeAssistant,
@@ -159,6 +174,12 @@ async def async_init_integration(
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+        return_value=HVAC_SYSTEMS_MOCK,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+        side_effect=ClientResponseError(MagicMock(), MagicMock()),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

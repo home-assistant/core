@@ -10,6 +10,14 @@ async def test_airzone_create_binary_sensors(hass):
 
     await async_init_integration(hass)
 
+    # Systems
+    state = hass.states.get("binary_sensor.system_1_power")
+    assert state.state == STATE_ON
+
+    state = hass.states.get("binary_sensor.system_1_problem")
+    assert state.state == STATE_OFF
+
+    # Zones
     state = hass.states.get("binary_sensor.despacho_air_demand")
     assert state.state == STATE_OFF
 

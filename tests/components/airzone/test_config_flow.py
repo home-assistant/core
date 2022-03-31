@@ -9,7 +9,7 @@ from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .util import CONFIG, HVAC_MOCK
+from .util import CONFIG, HVAC_MOCK, HVAC_SYSTEMS_MOCK
 
 from tests.common import MockConfigEntry
 
@@ -25,7 +25,7 @@ async def test_form(hass):
         return_value=HVAC_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
-        side_effect=ClientResponseError(MagicMock(), MagicMock()),
+        return_value=HVAC_SYSTEMS_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         side_effect=ClientResponseError(MagicMock(), MagicMock()),
