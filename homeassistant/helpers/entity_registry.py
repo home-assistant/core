@@ -44,7 +44,6 @@ from homeassistant.util.yaml import load_yaml
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from .frame import report
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -90,14 +89,6 @@ class RegistryEntryHider(StrEnum):
 
     INTEGRATION = "integration"
     USER = "user"
-
-
-# DISABLED_* are deprecated, to be removed in 2022.3
-DISABLED_CONFIG_ENTRY = RegistryEntryDisabler.CONFIG_ENTRY.value
-DISABLED_DEVICE = RegistryEntryDisabler.DEVICE.value
-DISABLED_HASS = RegistryEntryDisabler.HASS.value
-DISABLED_INTEGRATION = RegistryEntryDisabler.INTEGRATION.value
-DISABLED_USER = RegistryEntryDisabler.USER.value
 
 
 def _convert_to_entity_category(
@@ -389,17 +380,10 @@ class EntityRegistry:
             domain, suggested_object_id or f"{platform}_{unique_id}", known_object_ids
         )
 
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, RegistryEntryDisabler
-        ):
-            report(  # type: ignore[unreachable]
-                "uses str for entity registry disabled_by. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "RegistryEntryDisabler instead",
-                error_if_core=False,
-            )
-            disabled_by = RegistryEntryDisabler(disabled_by)
-        elif (
+        if disabled_by and not isinstance(disabled_by, RegistryEntryDisabler):
+            raise ValueError("disabled_by must be a RegistryEntryDisabler value")
+
+        if (
             disabled_by is None
             and config_entry
             and config_entry.pref_disable_new_entities
@@ -537,16 +521,12 @@ class EntityRegistry:
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, RegistryEntryDisabler
+        if (
+            disabled_by
+            and disabled_by is not UNDEFINED
+            and not isinstance(disabled_by, RegistryEntryDisabler)
         ):
-            report(  # type: ignore[unreachable]
-                "uses str for entity registry disabled_by. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "RegistryEntryDisabler instead",
-                error_if_core=False,
-            )
-            disabled_by = RegistryEntryDisabler(disabled_by)
+            raise ValueError("disabled_by must be a RegistryEntryDisabler value")
 
         for attr_name, value in (
             ("area_id", area_id),
