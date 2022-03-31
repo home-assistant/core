@@ -627,6 +627,13 @@ select_option = vol.All(
 )
 
 
+class SelectOptionDict(TypedDict):
+    """Class to represent a select option dict."""
+
+    value: str
+    label: str
+
+
 class SelectSelectorMode(StrEnum):
     """Possible modes for a number selector."""
 
@@ -641,13 +648,6 @@ class SelectSelectorDict(TypedDict, total=False):
     multiple: bool
     custom_value: bool
     mode: SelectSelectorMode
-
-
-class SelectOptionDict(TypedDict):
-    """Class to represent a select option dict."""
-
-    value: str
-    label: str
 
 
 @SELECTORS.register(SelectorType.SELECT)
