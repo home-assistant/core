@@ -210,6 +210,12 @@ def log_config_state_fixture():
     }
 
 
+@pytest.fixture(name="config_entry_diagnostics", scope="session")
+def config_entry_diagnostics_fixture():
+    """Load the config entry diagnostics fixture data."""
+    return json.loads(load_fixture("zwave_js/config_entry_diagnostics.json"))
+
+
 @pytest.fixture(name="multisensor_6_state", scope="session")
 def multisensor_6_state_fixture():
     """Load the multisensor 6 node state fixture data."""
@@ -507,6 +513,12 @@ def zp3111_state_fixture():
 def light_express_controls_ezmultipli_state_fixture():
     """Load the Express Controls EZMultiPli node state fixture data."""
     return json.loads(load_fixture("zwave_js/express_controls_ezmultipli_state.json"))
+
+
+@pytest.fixture(name="lock_home_connect_620_state", scope="session")
+def lock_home_connect_620_state_fixture():
+    """Load the Home Connect 620 lock node state fixture data."""
+    return json.loads(load_fixture("zwave_js/lock_home_connect_620_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -1023,5 +1035,13 @@ def zp3111_fixture(client, zp3111_state):
 def express_controls_ezmultipli_fixture(client, express_controls_ezmultipli_state):
     """Mock a Express Controls EZMultiPli node."""
     node = Node(client, copy.deepcopy(express_controls_ezmultipli_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_home_connect_620")
+def lock_home_connect_620_fixture(client, lock_home_connect_620_state):
+    """Mock a Home Connect 620 lock node."""
+    node = Node(client, copy.deepcopy(lock_home_connect_620_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

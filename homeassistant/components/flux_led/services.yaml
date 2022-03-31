@@ -27,8 +27,8 @@ set_custom_effect:
           unit_of_measurement: "%"
     transition:
       description: Effect transition.
-      example: 'jump'
-      default: 'gradual'
+      example: "jump"
+      default: "gradual"
       required: false
       selector:
         select:
@@ -66,8 +66,8 @@ set_zones:
           unit_of_measurement: "%"
     effect:
       description: Effect
-      example: 'running_water'
-      default: 'static'
+      example: "running_water"
+      default: "static"
       required: false
       selector:
         select:

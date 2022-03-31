@@ -3,14 +3,14 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "title": "Denon AVR Network Receivers",
-        "description": "Connect to your receiver, if the IP address is not set, auto-discovery is used",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "host": "Leave blank to use auto-discovery"
         }
       },
       "confirm": {
-        "title": "Denon AVR Network Receivers",
         "description": "Please confirm adding the receiver"
       },
       "select": {
@@ -35,7 +35,6 @@
   "options": {
     "step": {
       "init": {
-        "title": "Denon AVR Network Receivers",
         "description": "Specify optional settings",
         "data": {
           "show_all_sources": "Show all sources",

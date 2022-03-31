@@ -16,16 +16,12 @@
   "locationRoles": [
     {
       "locationId": "mmnnoopp",
-      "roles": [
-        "owner"
-      ]
+      "roles": ["owner"]
     }
   ],
   "accountRole": {
     "accountId": "aabbccdd",
-    "roles": [
-      "owner"
-    ]
+    "roles": ["owner"]
   },
   "account": {
     "id": "aabbccdd"

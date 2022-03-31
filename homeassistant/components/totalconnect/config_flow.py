@@ -4,11 +4,9 @@ from total_connect_client.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_LOCATION, CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_USERCODES, DOMAIN
-
-CONF_LOCATION = "location"
 
 PASSWORD_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
