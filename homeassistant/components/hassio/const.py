@@ -48,6 +48,7 @@ ATTR_MEMORY_PERCENT = "memory_percent"
 ATTR_SLUG = "slug"
 ATTR_STATE = "state"
 ATTR_STARTED = "started"
+ATTR_AUTO_UPDATE = "auto_update"
 ATTR_URL = "url"
 ATTR_REPOSITORY = "repository"
 

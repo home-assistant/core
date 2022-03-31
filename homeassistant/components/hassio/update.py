@@ -24,6 +24,7 @@ from . import (
     async_update_supervisor,
 )
 from .const import (
+    ATTR_AUTO_UPDATE,
     ATTR_CHANGELOG,
     ATTR_VERSION,
     ATTR_VERSION_LATEST,
@@ -88,11 +89,19 @@ async def async_setup_entry(
 class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     """Update entity to handle updates for the Supervisor add-ons."""
 
-    _attr_supported_features = (
-        UpdateEntityFeature.INSTALL
-        | UpdateEntityFeature.BACKUP
-        | UpdateEntityFeature.RELEASE_NOTES
-    )
+    @property
+    def supported_features(self):
+        """Return the supported features."""
+        features = (
+            UpdateEntityFeature.RELEASE_NOTES
+            | UpdateEntityFeature.INSTALL
+            | UpdateEntityFeature.BACKUP
+        )
+
+        if self.available and self._addon_data.get(ATTR_AUTO_UPDATE):
+            features |= UpdateEntityFeature.AUTO_UPDATE
+
+        return features
 
     @property
     def _addon_data(self) -> dict:
@@ -210,7 +219,9 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
 class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
     """Update entity to handle updates for the Home Assistant Supervisor."""
 
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_supported_features = (
+        UpdateEntityFeature.AUTO_UPDATE | UpdateEntityFeature.INSTALL
+    )
     _attr_title = "Home Assistant Supervisor"
 
     @property
