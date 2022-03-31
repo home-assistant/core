@@ -1217,17 +1217,20 @@ def test_entity_registry_items():
     assert entities.get_entry(entry2.id) is None
 
 
-async def test_deprecated_disabled_by_str(hass, registry, caplog):
-    """Test deprecated str use of disabled_by converts to enum and logs a warning."""
-    entry = registry.async_get_or_create(
-        domain="light.kitchen",
-        platform="hue",
-        unique_id="5678",
-        disabled_by=er.RegistryEntryDisabler.USER.value,
-    )
+async def test_disabled_by_str_not_allowed(hass):
+    """Test we need to pass entity category type."""
+    reg = er.async_get(hass)
 
-    assert entry.disabled_by is er.RegistryEntryDisabler.USER
-    assert " str for entity registry disabled_by. This is deprecated " in caplog.text
+    with pytest.raises(ValueError):
+        reg.async_get_or_create(
+            "light", "hue", "1234", disabled_by=er.RegistryEntryDisabler.USER.value
+        )
+
+    entity_id = reg.async_get_or_create("light", "hue", "1234").entity_id
+    with pytest.raises(ValueError):
+        reg.async_update_entity(
+            entity_id, disabled_by=er.RegistryEntryDisabler.USER.value
+        )
 
 
 async def test_deprecated_entity_category_str(hass, registry, caplog):
