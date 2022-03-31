@@ -1,22 +1,14 @@
 """The Meater Temperature Probe integration."""
-from datetime import timedelta
 from enum import Enum
-import logging
-
-import async_timeout
-from meater import AuthenticationError, TooManyRequestsError
 
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -26,26 +18,19 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the entry."""
-    # assuming API object stored here by __init__.py
-    api = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        "coordinator"
+    ]
 
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
-                devices = await api.get_all_devices()
-        except AuthenticationError as err:
-            raise UpdateFailed("The API call wasn't authenticated") from err
-        except TooManyRequestsError as err:
-            raise UpdateFailed(
-                "Too many requests have been made to the API, rate limiting is in place"
-            ) from err
-        except Exception as err:  # pylint: disable=broad-except
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+    @callback
+    def async_update_data():
+        """Handle updated data from the API endpoint."""
+        if not coordinator.last_update_success:
+            return
 
         # Populate the entities
+        devices = coordinator.data
+
         entities = []
 
         for dev in devices:
@@ -66,24 +51,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         return devices
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        # Name of the data. For logging purposes.
-        name="meater_api",
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=30),
-    )
-
-    def null_callback():
-        return
-
-    # Add a subscriber to the coordinator that doesn't actually do anything, just so that it still updates when all probes are switched off
-    coordinator.async_add_listener(null_callback)
-
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
+    # Add a subscriber to the coordinator to discover new temperature probes
+    coordinator.async_add_listener(async_update_data)
 
 
 class MeaterProbeTemperature(CoordinatorEntity):
