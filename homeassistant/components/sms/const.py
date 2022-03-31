@@ -6,7 +6,7 @@ SMS_STATE_UNREAD = "UnRead"
 CONF_BAUD_SPEED = "baud_speed"
 DEFAULT_BAUD_SPEED = "0"
 DEFAULT_BAUD_SPEEDS = [
-    {"value": "0", "label": "Auto"},
+    {"value": DEFAULT_BAUD_SPEED, "label": "Auto"},
     {"value": "50", "label": "50"},
     {"value": "75", "label": "75"},
     {"value": "110", "label": "110"},
