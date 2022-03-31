@@ -42,12 +42,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize Utility Meter config entry."""
     name = config_entry.title
-
-    # Remove when frontend list selector is available
-    if not config_entry.options.get(CONF_TARIFFS):
-        tariffs = []
-    else:
-        tariffs = config_entry.options[CONF_TARIFFS].split(",")
+    tariffs = config_entry.options[CONF_TARIFFS]
 
     legacy_add_entities = None
     unique_id = config_entry.entry_id

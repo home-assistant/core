@@ -119,12 +119,7 @@ async def async_setup_entry(
     tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
 
     meters = []
-
-    # Remove when frontend list selector is available
-    if not config_entry.options.get(CONF_TARIFFS):
-        tariffs = []
-    else:
-        tariffs = config_entry.options[CONF_TARIFFS].split(",")
+    tariffs = config_entry.options[CONF_TARIFFS]
 
     if not tariffs:
         # Add single sensor, not gated by a tariff selector
