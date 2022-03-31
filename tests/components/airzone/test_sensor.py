@@ -10,6 +10,11 @@ async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
+    # WebServer
+    state = hass.states.get("sensor.webserver_rssi")
+    assert state.state == "-42"
+
+    # Zones
     state = hass.states.get("sensor.despacho_temperature")
     assert state.state == "21.2"
 

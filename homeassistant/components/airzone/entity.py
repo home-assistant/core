@@ -7,16 +7,19 @@ from aioairzone.const import (
     AZD_FIRMWARE,
     AZD_FULL_NAME,
     AZD_ID,
+    AZD_MAC,
     AZD_MODEL,
     AZD_NAME,
     AZD_SYSTEM,
     AZD_SYSTEMS,
     AZD_THERMOSTAT_FW,
     AZD_THERMOSTAT_MODEL,
+    AZD_WEBSERVER,
     AZD_ZONES,
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -27,7 +30,7 @@ from .coordinator import AirzoneUpdateCoordinator
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
     """Define an Airzone entity."""
 
-    def get_airzone_value(self, key) -> Any:
+    def get_airzone_value(self, key: str) -> Any:
         """Return Airzone entity value by key."""
         raise NotImplementedError()
 
@@ -58,12 +61,48 @@ class AirzoneSystemEntity(AirzoneEntity):
             entry.entry_id if entry.unique_id is None else entry.unique_id
         )
 
-    def get_airzone_value(self, key) -> Any:
+    def get_airzone_value(self, key: str) -> Any:
         """Return system value by key."""
         value = None
         if system := self.coordinator.data[AZD_SYSTEMS].get(self.system_id):
             if key in system:
                 value = system[key]
+        return value
+
+
+class AirzoneWebServerEntity(AirzoneEntity):
+    """Define an Airzone WebServer entity."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self._attr_device_info: DeviceInfo = {
+            "connections": {
+                (
+                    dr.CONNECTION_NETWORK_MAC,
+                    self.get_airzone_value(AZD_MAC),
+                )
+            },
+            "identifiers": {(DOMAIN, f"{entry.entry_id}_ws")},
+            "manufacturer": MANUFACTURER,
+            "model": self.get_airzone_value(AZD_MODEL),
+            "name": self.get_airzone_value(AZD_FULL_NAME),
+            "sw_version": self.get_airzone_value(AZD_FIRMWARE),
+        }
+        self._attr_unique_id = (
+            entry.entry_id if entry.unique_id is None else entry.unique_id
+        )
+
+    def get_airzone_value(self, key: str) -> Any:
+        """Return system value by key."""
+        value = None
+        if key in self.coordinator.data[AZD_WEBSERVER]:
+            value = self.coordinator.data[AZD_WEBSERVER][key]
         return value
 
 
@@ -96,7 +135,7 @@ class AirzoneZoneEntity(AirzoneEntity):
             entry.entry_id if entry.unique_id is None else entry.unique_id
         )
 
-    def get_airzone_value(self, key) -> Any:
+    def get_airzone_value(self, key: str) -> Any:
         """Return zone value by key."""
         value = None
         if zone := self.coordinator.data[AZD_ZONES].get(self.system_zone_id):
