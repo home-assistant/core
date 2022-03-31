@@ -56,21 +56,19 @@ class PubliBikeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             if (station_id := user_input.get(STATION_ID)) is not None:
                 try:
                     id_valid = await self._is_valid_station_id(station_id)
+                    if not id_valid:
+                        errors["base"] = "invalid_id"
                 except RequestException as req_err:
+                    errors["base"] = "connection_error"
                     _LOGGER.error(
                         "Unable to connect to the PubliBike API: %s", str(req_err)
                     )
-                    return self.async_show_form(
-                        step_id="user",
-                        data_schema=DATA_SCHEMA,
-                        errors={"base": "connection_error"},
-                    )
-                if not id_valid:
-                    errors["base"] = "invalid_id"
+                except Exception as exception:  # pylint: disable=broad-except
+                    errors["base"] = "unknown"
+                    _LOGGER.exception(exception)
 
             if not errors:
                 return self.async_create_entry(

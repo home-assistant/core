@@ -100,3 +100,29 @@ async def test_form_connection_error(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "connection_error"}
+
+
+async def test_form_unknown_error(hass):
+    """Test we handle unknown errors."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.publibike.PubliBike.getStations",
+        side_effect=ValueError("Some other error"),
+    ), patch(
+        "homeassistant.components.publibike.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_CONF,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
