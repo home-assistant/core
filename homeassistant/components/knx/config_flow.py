@@ -205,6 +205,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             port = self._selected_tunnel.port
             if not self._selected_tunnel.supports_tunnelling_tcp:
                 connection_methods.remove(CONF_KNX_LABEL_TUNNELING_TCP)
+                connection_methods.remove(CONF_KNX_LABEL_TUNNELING_TCP_SECURE)
 
         fields = {
             vol.Required(CONF_KNX_TUNNELING_TYPE): vol.In(connection_methods),
