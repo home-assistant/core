@@ -650,7 +650,7 @@ async def websocket_device_cluster_attributes(
         )
         if attributes is not None:
             for attr_id, attr in attributes.items():
-                cluster_attributes.append({ID: attr_id, ATTR_NAME: attr[0]})
+                cluster_attributes.append({ID: attr_id, ATTR_NAME: attr.name})
     _LOGGER.debug(
         "Requested attributes for: %s: %s, %s: '%s', %s: %s, %s: %s",
         ATTR_CLUSTER_ID,
@@ -700,7 +700,7 @@ async def websocket_device_cluster_commands(
                     {
                         TYPE: CLIENT,
                         ID: cmd_id,
-                        ATTR_NAME: cmd[0],
+                        ATTR_NAME: cmd.name,
                     }
                 )
             for cmd_id, cmd in commands[CLUSTER_COMMANDS_SERVER].items():
@@ -708,7 +708,7 @@ async def websocket_device_cluster_commands(
                     {
                         TYPE: CLUSTER_COMMAND_SERVER,
                         ID: cmd_id,
-                        ATTR_NAME: cmd[0],
+                        ATTR_NAME: cmd.name,
                     }
                 )
     _LOGGER.debug(
