@@ -65,7 +65,7 @@ class BaseSwitch(SwitchEntity):
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         result = await self._on_off_channel.on()
-        if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
             return
         self._state = True
         self.async_write_ha_state()
@@ -73,7 +73,7 @@ class BaseSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         result = await self._on_off_channel.off()
-        if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
             return
         self._state = False
         self.async_write_ha_state()
