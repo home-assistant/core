@@ -6,11 +6,12 @@
   "requirements": [
     "pydantic==1.9.0",
     "paho-mqtt==1.6.1",
-    "yolink-client==0.0.5"
+    "yolink-client==0.0.7"
   ],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
+
   "dependencies": ["http"],
   "codeowners": ["@YoSmart-Inc"],
   "iot_class": "cloud_push"
