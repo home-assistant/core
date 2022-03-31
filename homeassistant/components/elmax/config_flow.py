@@ -233,7 +233,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_pin"
 
         # We want the user to re-authenticate only for the given panel id using the same login.
-        # We pin them to the UI, so the user realizes she must log in with the appropriate credentials
+        # We pin them to the UI, so the user realizes they must log in with the appropriate credentials
         # for the that specific panel.
         schema = vol.Schema(
             {

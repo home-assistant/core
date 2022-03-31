@@ -56,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._flipr_id = flipr_ids[0]
             else:
                 # If multiple flipr found (rare case), we ask the user to choose one in a select box.
-                # The user will have to run config_flow as many times as many fliprs he has.
+                # The user will have to run config_flow as many times as many fliprs they has.
                 self._possible_flipr_ids = flipr_ids
                 return await self.async_step_flipr_id()
 

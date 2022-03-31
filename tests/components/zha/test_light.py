@@ -628,7 +628,7 @@ async def test_zha_group_light_entity(
     assert hass.states.get(device_2_entity_id).state == STATE_OFF
     assert hass.states.get(group_entity_id).state == STATE_OFF
 
-    # add a new member and test that his state is also tracked
+    # add a new member and test that their state is also tracked
     await zha_group.async_add_members([GroupMember(device_light_3.ieee, 1)])
     await send_attributes_report(hass, dev3_cluster_on_off, {0: 1})
     await async_wait_for_updates(hass)

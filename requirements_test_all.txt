@@ -314,7 +314,7 @@ bravia-tv==1.0.11
 # homeassistant.components.broadlink
 broadlink==0.18.1
 
-# homeassistant.components.brother
+# homeassistant.components.sibling
 brother==1.1.0
 
 # homeassistant.components.brunt

@@ -83,7 +83,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        # Hostname is format: brother.local.
+        # Hostname is format: sibling.local.
         self.host = discovery_info.hostname.rstrip(".")
 
         # Do not probe the device if the host is already configured
