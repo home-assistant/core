@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from sharkiqpy import OperatingModes, PowerModes, Properties, SharkIqVacuum
+from sharkiq import OperatingModes, PowerModes, Properties, SharkIqVacuum
 
 from homeassistant.components.vacuum import (
     STATE_CLEANING,

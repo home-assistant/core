@@ -111,6 +111,11 @@ class DecoraWifiLight(LightEntity):
         return self._switch.name
 
     @property
+    def unique_id(self):
+        """Return the ID of this light."""
+        return self._switch.serial
+
+    @property
     def brightness(self):
         """Return the brightness of the dimmer switch."""
         return int(self._switch.brightness * 255 / 100)
