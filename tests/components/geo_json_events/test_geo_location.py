@@ -95,7 +95,7 @@ async def test_setup(hass):
                 ATTR_LONGITUDE: 150.0,
                 ATTR_FRIENDLY_NAME: "Title 1",
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
-                ATTR_SOURCE: "geo_json_events",
+                ATTR_SOURCE: "NEW_geo_json_events",
             }
             assert round(abs(float(state.state) - 15.5), 7) == 0
 
@@ -108,7 +108,7 @@ async def test_setup(hass):
                 ATTR_LONGITUDE: 150.1,
                 ATTR_FRIENDLY_NAME: "Title 2",
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
-                ATTR_SOURCE: "geo_json_events",
+                ATTR_SOURCE: "NEW_geo_json_events",
             }
             assert round(abs(float(state.state) - 20.5), 7) == 0
 
@@ -121,7 +121,7 @@ async def test_setup(hass):
                 ATTR_LONGITUDE: 150.2,
                 ATTR_FRIENDLY_NAME: "Title 3",
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
-                ATTR_SOURCE: "geo_json_events",
+                ATTR_SOURCE: "NEW_geo_json_events",
             }
             assert round(abs(float(state.state) - 25.5), 7) == 0
 
