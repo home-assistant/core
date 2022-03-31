@@ -104,7 +104,6 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
     ),
 ]
 
-
 SUPPORTED_STATES = {description.key: description for description in SELECT_DESCRIPTIONS}
 
 
@@ -125,8 +124,6 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            print(state.qualified_name)
-
             if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizSelect(
