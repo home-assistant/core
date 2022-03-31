@@ -52,7 +52,6 @@ from . import entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
-from .frame import report
 from .typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
@@ -226,29 +225,6 @@ class EntityPlatformState(Enum):
 
     # Removed: Removed from a platform, polling updates are not written to the state machine
     REMOVED = auto()
-
-
-def convert_to_entity_category(
-    value: EntityCategory | str | None, raise_report: bool = True
-) -> EntityCategory | None:
-    """Force incoming entity_category to be an enum."""
-
-    if value is None:
-        return value
-
-    if not isinstance(value, EntityCategory):
-        if raise_report:
-            report(
-                "uses %s (%s) for entity category. This is deprecated and will "
-                "stop working in Home Assistant 2022.4, it should be updated to use "
-                "EntityCategory instead" % (type(value).__name__, value),
-                error_if_core=False,
-            )
-        try:
-            return EntityCategory(value)
-        except ValueError:
-            return None
-    return value
 
 
 @dataclass
