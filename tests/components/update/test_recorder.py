@@ -38,7 +38,7 @@ async def test_exclude_attributes(
     await hass.async_block_till_done()
     await async_wait_recording_done_without_instance(hass)
 
-    def _fetch_sun_states() -> list[State]:
+    def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:
             native_states = []
             for db_state, db_state_attributes in session.query(States, StateAttributes):
