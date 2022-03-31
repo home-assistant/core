@@ -118,10 +118,6 @@ multidict>=6.0.2
 # Required for compatibility with point integration - ensure_active_token
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
-
-# Required for compatibility with typer, used by pyunifiprotect integration
-# https://github.com/tiangolo/typer/pull/375
-click<=8.0.4
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
