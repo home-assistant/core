@@ -1233,26 +1233,17 @@ async def test_disabled_by_str_not_allowed(hass):
         )
 
 
-async def test_deprecated_entity_category_str(hass, registry, caplog):
-    """Test deprecated str use of entity_category converts to enum and logs a warning."""
-    entry = er.RegistryEntry(
-        entity_id="light.kitchen",
-        unique_id="5678",
-        platform="hue",
-        entity_category="diagnostic",
-    )
+async def test_entity_category_str_not_allowed(hass):
+    """Test we need to pass entity category type."""
+    reg = er.async_get(hass)
 
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-    assert " should be updated to use EntityCategory" in caplog.text
+    with pytest.raises(ValueError):
+        reg.async_get_or_create(
+            "light", "hue", "1234", entity_category=EntityCategory.DIAGNOSTIC.value
+        )
 
-
-async def test_invalid_entity_category_str(hass, registry, caplog):
-    """Test use of invalid entity category."""
-    entry = er.RegistryEntry(
-        entity_id="light.kitchen",
-        unique_id="5678",
-        platform="hue",
-        entity_category="invalid",
-    )
-
-    assert entry.entity_category is None
+    entity_id = reg.async_get_or_create("light", "hue", "1234").entity_id
+    with pytest.raises(ValueError):
+        reg.async_update_entity(
+            entity_id, entity_category=EntityCategory.DIAGNOSTIC.value
+        )
