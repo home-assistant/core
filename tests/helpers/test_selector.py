@@ -381,12 +381,12 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
             (0, None, ["red"]),
         ),
         (
-            {"options": [], "custom_value": True},
+            {"custom_value": True},
             ("red", "cat"),
             (0, None, ["red"]),
         ),
         (
-            {"options": [], "custom_value": True, "multiple": True},
+            {"custom_value": True, "multiple": True},
             (["red"], ["green", "blue"], []),
             (0, None, "red"),
         ),

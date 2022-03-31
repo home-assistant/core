@@ -469,25 +469,39 @@ select_option = vol.All(
 )
 
 
+def has_options_if_no_custom_value(data: Any) -> Any:
+    """Validate that options are provided if custom_value is False."""
+    if data["custom_value"]:
+        return data
+    if "options" not in data:
+        raise vol.Invalid("options are required if custom_value is False")
+    return data
+
+
 @SELECTORS.register("select")
 class SelectSelector(Selector):
     """Selector for an single or multi-choice input select."""
 
     selector_type = "select"
 
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            vol.Required("options"): vol.All(vol.Any([str], [select_option])),
-            vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("custom_value", default=False): cv.boolean,
-            vol.Optional("mode"): vol.In(("list", "dropdown")),
-        }
+    CONFIG_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional("options"): vol.All(
+                    vol.Any([str], [select_option]), vol.Length(min=1)
+                ),
+                vol.Optional("multiple", default=False): cv.boolean,
+                vol.Optional("custom_value", default=False): cv.boolean,
+                vol.Optional("mode"): vol.In(("list", "dropdown")),
+            },
+        ),
+        has_options_if_no_custom_value,
     )
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         options = []
-        if self.config["options"]:
+        if "options" in self.config:
             if isinstance(self.config["options"][0], str):
                 options = self.config["options"]
             else:

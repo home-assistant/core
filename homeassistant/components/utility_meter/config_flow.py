@@ -84,7 +84,7 @@ CONFIG_SCHEMA = vol.Schema(
             }
         ),
         vol.Required(CONF_TARIFFS, default=[]): selector.selector(
-            {"select": {"options": [], "custom_value": True, "multiple": True}}
+            {"select": {"custom_value": True, "multiple": True}}
         ),
         vol.Required(CONF_METER_NET_CONSUMPTION, default=False): selector.selector(
             {"boolean": {}}
