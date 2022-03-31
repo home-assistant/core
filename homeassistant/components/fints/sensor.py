@@ -8,6 +8,7 @@ from typing import Any
 
 from fints.client import FinTS3PinTanClient
 from fints.dialog import FinTSDialogError
+from fints.exceptions import FinTSClientError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -155,6 +156,8 @@ class FinTsClient:
             try:
                 self.client.get_holdings(account)
                 holdings_accounts.append(account)
+            except FinTSClientError:
+                pass
             except FinTSDialogError:
                 # account is not a holdings account.
                 pass
