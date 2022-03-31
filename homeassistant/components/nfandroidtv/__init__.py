@@ -3,7 +3,7 @@ from notifications_android_tv.notifications import ConnectError, Notifications
 
 from homeassistant.components.notify import DOMAIN as NOTIFY
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
-PLATFORMS = [NOTIFY]
+PLATFORMS = [Platform.NOTIFY]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -48,7 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.async_create_task(
         discovery.async_load_platform(
-            hass, NOTIFY, DOMAIN, hass.data[DOMAIN][entry.entry_id], hass.data[DOMAIN]
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            hass.data[DOMAIN][entry.entry_id],
+            hass.data[DOMAIN],
         )
     )
 

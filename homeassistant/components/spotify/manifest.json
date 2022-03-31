@@ -8,5 +8,6 @@
   "codeowners": ["@frenck"],
   "config_flow": true,
   "quality_scale": "silver",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["spotipy"]
 }

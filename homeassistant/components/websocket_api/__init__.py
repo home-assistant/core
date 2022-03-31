@@ -10,7 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import commands, connection, const, decorators, http, messages  # noqa: F401
-from .connection import ActiveConnection  # noqa: F401
+from .connection import ActiveConnection, current_connection  # noqa: F401
 from .const import (  # noqa: F401
     ERR_HOME_ASSISTANT_ERROR,
     ERR_INVALID_FORMAT,

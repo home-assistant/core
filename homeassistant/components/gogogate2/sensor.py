@@ -66,6 +66,9 @@ class DoorSensorBattery(DoorSensorEntity):
     """Battery sensor entity for gogogate2 door sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self,
@@ -76,9 +79,6 @@ class DoorSensorBattery(DoorSensorEntity):
         """Initialize the object."""
         unique_id = sensor_unique_id(config_entry, door, "battery")
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
-        self._attr_device_class = SensorDeviceClass.BATTERY
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_native_unit_of_measurement = PERCENTAGE
 
     @property
     def name(self):
@@ -94,6 +94,10 @@ class DoorSensorBattery(DoorSensorEntity):
 class DoorSensorTemperature(DoorSensorEntity):
     """Temperature sensor entity for gogogate2 door sensor."""
 
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -103,9 +107,6 @@ class DoorSensorTemperature(DoorSensorEntity):
         """Initialize the object."""
         unique_id = sensor_unique_id(config_entry, door, "temperature")
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
-        self._attr_device_class = SensorDeviceClass.TEMPERATURE
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
     def name(self):

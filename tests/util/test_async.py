@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from homeassistant import block_async_io
 from homeassistant.util import async_ as hasync
 
 
@@ -70,14 +71,18 @@ def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _):
     assert len(loop.call_soon_threadsafe.mock_calls) == 2
 
 
+def banned_function():
+    """Mock banned function."""
+
+
 async def test_check_loop_async():
     """Test check_loop detects when called from event loop without integration context."""
     with pytest.raises(RuntimeError):
-        hasync.check_loop()
+        hasync.check_loop(banned_function)
 
 
 async def test_check_loop_async_integration(caplog):
-    """Test check_loop detects when called from event loop from integration context."""
+    """Test check_loop detects and raises when called from event loop from integration context."""
     with pytest.raises(RuntimeError), patch(
         "homeassistant.util.async_.extract_stack",
         return_value=[
@@ -98,9 +103,42 @@ async def test_check_loop_async_integration(caplog):
             ),
         ],
     ):
-        hasync.check_loop()
+        hasync.check_loop(banned_function)
     assert (
-        "Detected I/O inside the event loop. This is causing stability issues. Please report issue for hue doing I/O at homeassistant/components/hue/light.py, line 23: self.light.is_on"
+        "Detected blocking call to banned_function inside the event loop. This is "
+        "causing stability issues. Please report issue for hue doing blocking calls at "
+        "homeassistant/components/hue/light.py, line 23: self.light.is_on"
+        in caplog.text
+    )
+
+
+async def test_check_loop_async_integration_non_strict(caplog):
+    """Test check_loop detects when called from event loop from integration context."""
+    with patch(
+        "homeassistant.util.async_.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/components/hue/light.py",
+                lineno="23",
+                line="self.light.is_on",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        hasync.check_loop(banned_function, strict=False)
+    assert (
+        "Detected blocking call to banned_function inside the event loop. This is "
+        "causing stability issues. Please report issue for hue doing blocking calls at "
+        "homeassistant/components/hue/light.py, line 23: self.light.is_on"
         in caplog.text
     )
 
@@ -127,26 +165,56 @@ async def test_check_loop_async_custom(caplog):
             ),
         ],
     ):
-        hasync.check_loop()
+        hasync.check_loop(banned_function)
     assert (
-        "Detected I/O inside the event loop. This is causing stability issues. Please report issue to the custom component author for hue doing I/O at custom_components/hue/light.py, line 23: self.light.is_on"
-        in caplog.text
+        "Detected blocking call to banned_function inside the event loop. This is "
+        "causing stability issues. Please report issue to the custom component author "
+        "for hue doing blocking calls at custom_components/hue/light.py, line 23: "
+        "self.light.is_on" in caplog.text
     )
 
 
 def test_check_loop_sync(caplog):
     """Test check_loop does nothing when called from thread."""
-    hasync.check_loop()
-    assert "Detected I/O inside the event loop" not in caplog.text
+    hasync.check_loop(banned_function)
+    assert "Detected blocking call inside the event loop" not in caplog.text
 
 
 def test_protect_loop_sync():
     """Test protect_loop calls check_loop."""
-    calls = []
-    with patch("homeassistant.util.async_.check_loop") as mock_loop:
-        hasync.protect_loop(calls.append)(1)
-    assert len(mock_loop.mock_calls) == 1
-    assert calls == [1]
+    func = Mock()
+    with patch("homeassistant.util.async_.check_loop") as mock_check_loop:
+        hasync.protect_loop(func)(1, test=2)
+    mock_check_loop.assert_called_once_with(func, strict=True)
+    func.assert_called_once_with(1, test=2)
+
+
+async def test_protect_loop_debugger_sleep(caplog):
+    """Test time.sleep injected by the debugger is not reported."""
+    block_async_io.enable()
+
+    with patch(
+        "homeassistant.util.async_.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/.venv/blah/pydevd.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/util/async.py",
+                lineno="123",
+                line="protected_loop_func",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/util/async.py",
+                lineno="123",
+                line="check_loop()",
+            ),
+        ],
+    ):
+        time.sleep(0)
+    assert "Detected blocking call inside the event loop" not in caplog.text
 
 
 async def test_gather_with_concurrency():

@@ -5,6 +5,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 from skybellpy import Skybell
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_PASSWORD,
@@ -61,7 +62,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DOMAIN] = skybell
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Skybell service: %s", str(ex))
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             "Error: {}<br />"
             "You will need to restart hass after fixing."
             "".format(ex),

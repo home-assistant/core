@@ -1,5 +1,6 @@
 """Common code for permissions."""
-from typing import Mapping, Union
+from collections.abc import Mapping
+from typing import Union
 
 # MyPy doesn't support recursion yet. So writing it out as far as we need.
 

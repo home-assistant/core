@@ -1,5 +1,5 @@
 {
-    "terminationCondition": {
-        "type": "MANUAL"
-    }
+  "terminationCondition": {
+    "type": "MANUAL"
+  }
 }

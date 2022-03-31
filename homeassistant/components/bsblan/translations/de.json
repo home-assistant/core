@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
@@ -16,7 +17,7 @@
                     "port": "Port",
                     "username": "Benutzername"
                 },
-                "description": "Richte dein BSB-Lan Ger\u00e4t f\u00fcr die Integration mit dem Home Assistant ein.",
+                "description": "Richte dein BSB-Lan-Ger\u00e4t f\u00fcr die Integration mit Home Assistant ein.",
                 "title": "Verbinden mit dem BSB-Lan Ger\u00e4t"
             }
         }

@@ -27,24 +27,29 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
+from . import MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
+    CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    DOMAIN,
+    CONF_STATE_VALUE_TEMPLATE,
+    PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+)
 
 CONF_AVAILABLE_MODES_LIST = "modes"
-CONF_COMMAND_TEMPLATE = "command_template"
 CONF_DEVICE_CLASS = "device_class"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
 CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
@@ -52,7 +57,6 @@ CONF_MODE_STATE_TOPIC = "mode_state_topic"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_PAYLOAD_RESET_MODE = "payload_reset_mode"
 CONF_PAYLOAD_RESET_HUMIDITY = "payload_reset_humidity"
-CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE = "target_humidity_command_template"
 CONF_TARGET_HUMIDITY_COMMAND_TOPIC = "target_humidity_command_topic"
 CONF_TARGET_HUMIDITY_MIN = "min_humidity"
@@ -156,8 +160,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT humidifier through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, humidifier.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
@@ -187,7 +192,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT humidifier."""
-        self._state = False
+        self._state = None
         self._target_humidity = None
         self._mode = None
         self._supported_features = 0
@@ -267,7 +272,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 entity=self,
             ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -283,6 +288,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -373,9 +380,13 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             }
             self._mode = None
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def assumed_state(self):
@@ -388,7 +399,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         return self._available_modes
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
@@ -411,8 +422,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_ON"])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -429,8 +439,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_OFF"])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -447,8 +456,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[ATTR_HUMIDITY](humidity)
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_TARGET_HUMIDITY_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -471,8 +479,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         mqtt_payload = self._command_templates[ATTR_MODE](mode)
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_MODE_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],

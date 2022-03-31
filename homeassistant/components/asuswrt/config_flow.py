@@ -165,10 +165,6 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data=user_input,
         )
 
-    async def async_step_import(self, user_input=None):
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):

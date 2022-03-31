@@ -315,4 +315,6 @@ class PrinterAPI:
 
         if not sensor_info:
             return
-        load_platform(self._hass, "sensor", DOMAIN, sensor_info, self.config)
+        load_platform(
+            self._hass, "sensor", DOMAIN, {"sensors": sensor_info}, self.config
+        )

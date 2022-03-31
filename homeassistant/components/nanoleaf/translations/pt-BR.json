@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar",
+            "invalid_token": "Token de acesso inv\u00e1lido",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "not_allowing_new_tokens": "Nanoleaf n\u00e3o est\u00e1 permitindo novos tokens, siga as instru\u00e7\u00f5es acima.",
+            "unknown": "Erro inesperado"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "Pressione e segure o bot\u00e3o liga/desliga em seu Nanoleaf por 5 segundos at\u00e9 que os LEDs do bot\u00e3o comecem a piscar e clique em **ENVIAR** dentro de 30 segundos.",
+                "title": "Link Nanoleaf"
+            },
+            "user": {
+                "data": {
+                    "host": "Nome do host"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "Deslize para baixo",
+            "swipe_left": "Deslize para a esquerda",
+            "swipe_right": "Desliza para a direita",
+            "swipe_up": "Deslize para cima"
+        }
+    }
+}

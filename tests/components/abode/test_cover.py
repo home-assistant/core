@@ -10,6 +10,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER,
     STATE_CLOSED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
@@ -17,7 +18,7 @@ from .common import setup_platform
 DEVICE_ID = "cover.garage_door"
 
 
-async def test_entity_registry(hass):
+async def test_entity_registry(hass: HomeAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, COVER_DOMAIN)
     entity_registry = er.async_get(hass)
@@ -26,7 +27,7 @@ async def test_entity_registry(hass):
     assert entry.unique_id == "61cbz3b542d2o33ed2fz02721bda3324"
 
 
-async def test_attributes(hass):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test the cover attributes are correct."""
     await setup_platform(hass, COVER_DOMAIN)
 
@@ -39,7 +40,7 @@ async def test_attributes(hass):
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Garage Door"
 
 
-async def test_open(hass):
+async def test_open(hass: HomeAssistant) -> None:
     """Test the cover can be opened."""
     await setup_platform(hass, COVER_DOMAIN)
 
@@ -51,7 +52,7 @@ async def test_open(hass):
         mock_open.assert_called_once()
 
 
-async def test_close(hass):
+async def test_close(hass: HomeAssistant) -> None:
     """Test the cover can be closed."""
     await setup_platform(hass, COVER_DOMAIN)
 

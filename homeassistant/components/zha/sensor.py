@@ -25,7 +25,6 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -52,6 +51,7 @@ from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
     CHANNEL_BASIC,
+    CHANNEL_DEVICE_TEMPERATURE,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
@@ -231,7 +231,7 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, channels, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int:
+    def formatter(value: int) -> int:  # pylint: disable=arguments-differ
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
@@ -391,8 +391,7 @@ class Illuminance(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _unit = LIGHT_LUX
 
-    @staticmethod
-    def formatter(value: int) -> float:
+    def formatter(self, value: int) -> float:
         """Convert illumination data."""
         return round(pow(10, ((value - 1) / 10000)), 1)
 
@@ -494,6 +493,18 @@ class Temperature(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _divisor = 100
     _unit = TEMP_CELSIUS
+
+
+@MULTI_MATCH(channel_names=CHANNEL_DEVICE_TEMPERATURE)
+class DeviceTemperature(Sensor):
+    """Device Temperature Sensor."""
+
+    SENSOR_ATTR = "current_temperature"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.TEMPERATURE
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _divisor = 100
+    _unit = TEMP_CELSIUS
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
 @MULTI_MATCH(channel_names="carbon_dioxide_concentration")
@@ -686,7 +697,7 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 
     _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     @classmethod

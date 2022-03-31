@@ -100,7 +100,7 @@ async def async_setup_entry(
     ]
 
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    entities = []
+    entities: list[ClimateEntity] = []
     for device in broker.devices.values():
         if not broker.any_assigned(device.device_id, CLIMATE_DOMAIN):
             continue

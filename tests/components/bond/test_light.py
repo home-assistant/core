@@ -372,7 +372,7 @@ async def test_fp_light_set_brightness_belief_api_error(hass: core.HomeAssistant
         await hass.async_block_till_done()
 
 
-async def test_light_set_brightness_belief_brightnes_not_supported(
+async def test_light_set_brightness_belief_brightness_not_supported(
     hass: core.HomeAssistant,
 ):
     """Tests that the set brightness belief function of a light that doesn't support setting brightness returns an error."""
@@ -527,7 +527,7 @@ async def test_fp_light_set_power_belief_api_error(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
 
-async def test_fp_light_set_brightness_belief_brightnes_not_supported(
+async def test_fp_light_set_brightness_belief_brightness_not_supported(
     hass: core.HomeAssistant,
 ):
     """Tests that the set brightness belief function of a fireplace light that doesn't support setting brightness returns an error."""

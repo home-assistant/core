@@ -201,7 +201,7 @@ class IslamicPrayerClient:
             )
 
     @staticmethod
-    async def async_options_updated(hass, entry):
+    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
         if hass.data[DOMAIN].event_unsub:
             hass.data[DOMAIN].event_unsub()

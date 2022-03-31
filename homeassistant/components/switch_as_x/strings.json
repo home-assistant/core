@@ -1,0 +1,15 @@
+{
+  "title": "Switch as X",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Change switch device type",
+        "description": "Pick a switch that you want to show up in Home Assistant as a light, cover or anything else. The original switch will be hidden.",
+        "data": {
+          "entity_id": "Switch",
+          "target_domain": "New Type"
+        }
+      }
+    }
+  }
+}

@@ -5,6 +5,7 @@ import logging
 
 from numato_gpio import NumatoGpioError
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_ID,
@@ -12,7 +13,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -64,7 +64,7 @@ def setup_platform(
     add_entities(switches, True)
 
 
-class NumatoGpioSwitch(ToggleEntity):
+class NumatoGpioSwitch(SwitchEntity):
     """Representation of a Numato USB GPIO switch port."""
 
     def __init__(self, name, device_id, port, invert_logic, api):

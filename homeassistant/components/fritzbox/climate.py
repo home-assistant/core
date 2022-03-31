@@ -1,4 +1,4 @@
-"""Support for AVM FRITZ!SmartHome thermostate devices."""
+"""Support for AVM FRITZ!SmartHome thermostat devices."""
 from __future__ import annotations
 
 from typing import Any
@@ -26,9 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import FritzBoxEntity
 from .const import (
     ATTR_STATE_BATTERY_LOW,
-    ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_HOLIDAY_MODE,
-    ATTR_STATE_LOCKED,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
     CONF_COORDINATOR,
@@ -68,7 +66,7 @@ async def async_setup_entry(
 
 
 class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
-    """The thermostat class for FRITZ!SmartHome thermostates."""
+    """The thermostat class for FRITZ!SmartHome thermostats."""
 
     @property
     def supported_features(self) -> int:
@@ -176,8 +174,6 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
         """Return the device specific state attributes."""
         attrs: ClimateExtraAttributes = {
             ATTR_STATE_BATTERY_LOW: self.device.battery_low,
-            ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
-            ATTR_STATE_LOCKED: self.device.lock,
         }
 
         # the following attributes are available since fritzos 7

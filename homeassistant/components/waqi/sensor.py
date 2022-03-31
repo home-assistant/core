@@ -80,7 +80,7 @@ async def async_setup_platform(
     """Set up the requested World Air Quality Index locations."""
 
     token = config[CONF_TOKEN]
-    station_filter = config[CONF_STATIONS]
+    station_filter = config.get(CONF_STATIONS)
     locations = config[CONF_LOCATIONS]
 
     client = WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)
@@ -91,15 +91,11 @@ async def async_setup_platform(
             _LOGGER.debug("The following stations were returned: %s", stations)
             for station in stations:
                 waqi_sensor = WaqiSensor(client, station)
-                if (
-                    not station_filter
-                    or {
-                        waqi_sensor.uid,
-                        waqi_sensor.url,
-                        waqi_sensor.station_name,
-                    }
-                    & set(station_filter)
-                ):
+                if not station_filter or {
+                    waqi_sensor.uid,
+                    waqi_sensor.url,
+                    waqi_sensor.station_name,
+                } & set(station_filter):
                     dev.append(waqi_sensor)
     except (
         aiohttp.client_exceptions.ClientConnectorError,

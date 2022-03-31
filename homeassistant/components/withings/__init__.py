@@ -9,7 +9,7 @@ import asyncio
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
-from withings_api import WithingsAuth
+from withings_api import AbstractWithingsApi, WithingsAuth
 from withings_api.common import NotifyAppli
 
 from homeassistant.components import webhook
@@ -84,7 +84,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             conf[CONF_CLIENT_ID],
             conf[CONF_CLIENT_SECRET],
             f"{WithingsAuth.URL}/oauth2_user/authorize2",
-            f"{WithingsAuth.URL}/oauth2/token",
+            f"{AbstractWithingsApi.URL}/v2/oauth2",
         ),
     )
 

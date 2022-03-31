@@ -87,39 +87,24 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         camera_id,
         name,
         doorstation_events,
-        interval=None,
+        interval,
         stream_url=None,
-    ):
+    ) -> None:
         """Initialize the camera on a DoorBird device."""
         super().__init__(doorstation, doorstation_info)
         self._url = url
         self._stream_url = stream_url
-        self._name = name
-        self._last_image = None
-        self._supported_features = SUPPORT_STREAM if self._stream_url else 0
-        self._interval = interval or datetime.timedelta
+        self._attr_name = name
+        self._last_image: bytes | None = None
+        self._attr_supported_features = SUPPORT_STREAM if self._stream_url else 0
+        self._interval = interval
         self._last_update = datetime.datetime.min
-        self._unique_id = f"{self._mac_addr}_{camera_id}"
+        self._attr_unique_id = f"{self._mac_addr}_{camera_id}"
         self._doorstation_events = doorstation_events
 
     async def stream_source(self):
         """Return the stream source."""
         return self._stream_url
-
-    @property
-    def unique_id(self):
-        """Camera Unique id."""
-        return self._unique_id
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return self._supported_features
-
-    @property
-    def name(self):
-        """Get the name of the camera."""
-        return self._name
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -139,11 +124,11 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
             self._last_update = now
             return self._last_image
         except asyncio.TimeoutError:
-            _LOGGER.error("DoorBird %s: Camera image timed out", self._name)
+            _LOGGER.error("DoorBird %s: Camera image timed out", self.name)
             return self._last_image
         except aiohttp.ClientError as error:
             _LOGGER.error(
-                "DoorBird %s: Error getting camera image: %s", self._name, error
+                "DoorBird %s: Error getting camera image: %s", self.name, error
             )
             return self._last_image
 

@@ -11,7 +11,7 @@
         "error": {
             "no_key": "No se pudo obtener una clave API"
         },
-        "flow_title": "pasarela deCONZ Zigbee ({host})",
+        "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
                 "description": "\u00bfQuieres configurar Home Assistant para que se conecte al gateway de deCONZ proporcionado por el add-on {addon} de Supervisor?",

@@ -1,7 +1,6 @@
 """Support for Lupusec Security System switches."""
 from __future__ import annotations
 
-# pylint: disable=import-error
 from datetime import timedelta
 
 import lupupy.constants as CONST

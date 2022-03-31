@@ -6,6 +6,7 @@ from pyspcwebgw.area import Area
 from pyspcwebgw.zone import Zone
 import voluptuous as vol
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, discovery
 import homeassistant.helpers.config_validation as cv
@@ -64,12 +65,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # add sensor devices for each zone (typically motion/fire/door sensors)
     hass.async_create_task(
-        discovery.async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
     )
 
     # create a separate alarm panel for each area
     hass.async_create_task(
-        discovery.async_load_platform(hass, "alarm_control_panel", DOMAIN, {}, config)
+        discovery.async_load_platform(
+            hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, {}, config
+        )
     )
 
     # start listening for incoming events over websocket

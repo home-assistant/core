@@ -19,7 +19,11 @@ from homeassistant.components.ezviz.const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_INTEGRATION_DISCOVERY,
+    SOURCE_USER,
+)
 from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
@@ -175,7 +179,7 @@ async def test_step_discovery_abort_if_cloud_account_missing(hass):
     """Test discovery and confirm step, abort if cloud account was removed."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DISCOVERY}, data=DISCOVERY_INFO
+        DOMAIN, context={"source": SOURCE_INTEGRATION_DISCOVERY}, data=DISCOVERY_INFO
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
@@ -194,7 +198,7 @@ async def test_step_discovery_abort_if_cloud_account_missing(hass):
     assert result["reason"] == "ezviz_cloud_account_missing"
 
 
-async def test_async_step_discovery(
+async def test_async_step_integration_discovery(
     hass, ezviz_config_flow, ezviz_test_rtsp_config_flow
 ):
     """Test discovery and confirm step."""
@@ -202,7 +206,7 @@ async def test_async_step_discovery(
         await init_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DISCOVERY}, data=DISCOVERY_INFO
+        DOMAIN, context={"source": SOURCE_INTEGRATION_DISCOVERY}, data=DISCOVERY_INFO
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
@@ -353,7 +357,7 @@ async def test_discover_exception_step1(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_DISCOVERY},
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
         data={ATTR_SERIAL: "C66666", CONF_IP_ADDRESS: "test-ip"},
     )
     assert result["type"] == RESULT_TYPE_FORM
@@ -428,7 +432,7 @@ async def test_discover_exception_step3(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_DISCOVERY},
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
         data={ATTR_SERIAL: "C66666", CONF_IP_ADDRESS: "test-ip"},
     )
     assert result["type"] == RESULT_TYPE_FORM

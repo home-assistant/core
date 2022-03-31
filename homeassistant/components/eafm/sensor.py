@@ -1,4 +1,4 @@
-"""Support for guages from flood monitoring API."""
+"""Support for gauges from flood monitoring API."""
 from datetime import timedelta
 import logging
 
@@ -48,7 +48,7 @@ async def async_setup_entry(
     measurements = set()
 
     async def async_update_data():
-        # DataUpdateCoordinator will handle aiohttp ClientErrors and timouts
+        # DataUpdateCoordinator will handle aiohttp ClientErrors and timeouts
         async with async_timeout.timeout(30):
             data = await get_station(session, station_key)
 

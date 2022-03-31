@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Nome host non valido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "Il nome host per il quale eseguire la query DNS",
+                    "resolver": "Risolutore per la ricerca IPv4",
+                    "resolver_ipv6": "Risolutore per la ricerca IPv6"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Indirizzo IP non valido per il risolutore"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Risolutore per ricerca IPv4",
+                    "resolver_ipv6": "Risolutore per ricerca IPv6"
+                }
+            }
+        }
+    }
+}

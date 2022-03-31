@@ -14,13 +14,14 @@ from homeassistant.util.percentage import (
 )
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_FANS
+from .const import DOMAIN, VS_DISCOVERY, VS_FANS
 
 _LOGGER = logging.getLogger(__name__)
 
 DEV_TYPE_TO_HA = {
     "LV-PUR131S": "fan",
     "Core200S": "fan",
+    "Core300S": "fan",
     "Core400S": "fan",
 }
 
@@ -30,9 +31,15 @@ FAN_MODE_SLEEP = "sleep"
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core200S": [FAN_MODE_SLEEP],
+    "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
 }
-SPEED_RANGE = (1, 3)  # off is not included
+SPEED_RANGE = {  # off is not included
+    "LV-PUR131S": (1, 3),
+    "Core200S": (1, 3),
+    "Core300S": (1, 3),
+    "Core400S": (1, 4),
+}
 
 
 async def async_setup_entry(
@@ -42,30 +49,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up the VeSync fan platform."""
 
-    async def async_discover(devices):
+    @callback
+    def discover(devices):
         """Add new devices to platform."""
-        _async_setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities)
 
-    disp = async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), async_discover)
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), discover)
+    )
 
-    _async_setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
 
 
 @callback
-def _async_setup_entities(devices, async_add_entities):
+def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
-    dev_list = []
+    entities = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) == "fan":
-            dev_list.append(VeSyncFanHA(dev))
+            entities.append(VeSyncFanHA(dev))
         else:
             _LOGGER.warning(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
             )
             continue
 
-    async_add_entities(dev_list, update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class VeSyncFanHA(VeSyncDevice, FanEntity):
@@ -88,13 +97,15 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             self.smartfan.mode == "manual"
             and (current_level := self.smartfan.fan_level) is not None
         ):
-            return ranged_value_to_percentage(SPEED_RANGE, current_level)
+            return ranged_value_to_percentage(
+                SPEED_RANGE[self.device.device_type], current_level
+            )
         return None
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(SPEED_RANGE)
+        return int_states_in_range(SPEED_RANGE[self.device.device_type])
 
     @property
     def preset_modes(self):
@@ -152,7 +163,11 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
         self.smartfan.manual_mode()
         self.smartfan.change_fan_speed(
-            math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+            math.ceil(
+                percentage_to_ranged_value(
+                    SPEED_RANGE[self.device.device_type], percentage
+                )
+            )
         )
         self.schedule_update_ha_state()
 
@@ -160,7 +175,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         """Set the preset mode of device."""
         if preset_mode not in self.preset_modes:
             raise ValueError(
-                "{preset_mode} is not one of the valid preset modes: {self.preset_modes}"
+                f"{preset_mode} is not one of the valid preset modes: "
+                f"{self.preset_modes}"
             )
 
         if not self.smartfan.is_on:
@@ -175,7 +191,6 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
     def turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,

@@ -32,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import utcnow
+from homeassistant.util.dt import utcnow
 
 from . import DOMAIN, PLATFORMS
 

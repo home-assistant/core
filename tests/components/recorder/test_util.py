@@ -570,8 +570,17 @@ async def test_write_lock_db(hass, tmp_path):
 
     instance = hass.data[DATA_INSTANCE]
 
-    with util.write_lock_db(instance):
-        # Database should be locked now, try writing SQL command
+    def _drop_table():
         with instance.engine.connect() as connection:
-            with pytest.raises(OperationalError):
-                connection.execute(text("DROP TABLE events;"))
+            connection.execute(text("DROP TABLE events;"))
+
+    with util.write_lock_db_sqlite(instance):
+        # Database should be locked now, try writing SQL command
+        with pytest.raises(OperationalError):
+            # This needs to be called in another thread since
+            # the lock method is BEGIN IMMEDIATE and since we have
+            # a connection per thread with sqlite now, we cannot do it
+            # in the same thread as the one holding the lock since it
+            # would be allowed to proceed as the goal is to prevent
+            # all the other threads from accessing the database
+            await hass.async_add_executor_job(_drop_table)

@@ -1,4 +1,7 @@
 """Support for Abode Security System covers."""
+from typing import Any
+
+from abodepy.devices.cover import AbodeCover as AbodeCV
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.cover import CoverEntity
@@ -6,17 +9,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeDevice
+from . import AbodeDevice, AbodeSystem
 from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Abode cover devices."""
-    data = hass.data[DOMAIN]
+    data: AbodeSystem = hass.data[DOMAIN]
 
     entities = []
 
@@ -29,15 +30,17 @@ async def async_setup_entry(
 class AbodeCover(AbodeDevice, CoverEntity):
     """Representation of an Abode cover."""
 
+    _device: AbodeCV
+
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
         return not self._device.is_open
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
         self._device.close_cover()
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Issue open command to cover."""
         self._device.open_cover()

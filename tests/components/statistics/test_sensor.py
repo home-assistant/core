@@ -1,9 +1,10 @@
 """The test for the statistics sensor platform."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 import statistics
-from typing import Any, Sequence
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant import config as hass_config

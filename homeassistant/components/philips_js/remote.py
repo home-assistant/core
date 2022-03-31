@@ -27,10 +27,8 @@ async def async_setup_entry(
     async_add_entities([PhilipsTVRemote(coordinator)])
 
 
-class PhilipsTVRemote(CoordinatorEntity, RemoteEntity):
+class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteEntity):
     """Device that sends commands."""
-
-    _coordinator: PhilipsTVDataUpdateCoordinator
 
     def __init__(
         self,
@@ -63,7 +61,7 @@ class PhilipsTVRemote(CoordinatorEntity, RemoteEntity):
         if self._tv.on and self._tv.powerstate:
             await self._tv.setPowerState("On")
         else:
-            await self._coordinator.turn_on.async_run(self.hass, self._context)
+            await self.coordinator.turn_on.async_run(self.hass, self._context)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):

@@ -1,4 +1,5 @@
 """Support for XBee Zigbee sensors."""
+# pylint: disable=import-error
 from __future__ import annotations
 
 from binascii import hexlify

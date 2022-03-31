@@ -3,9 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 import logging
+from typing import Any
 
 from pyunifiprotect.data import (
     Camera,
+    Doorlock,
+    Event,
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -19,7 +22,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
+from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
 from .models import ProtectRequiredKeysMixin
 from .utils import get_nested_attr
@@ -39,9 +42,8 @@ def _async_device_entities(
 
     entities: list[ProtectDeviceEntity] = []
     for device in data.get_by_types({model_type}):
-        assert isinstance(device, (Camera, Light, Sensor, Viewer))
+        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock))
         for description in descs:
-            assert isinstance(description, EntityDescription)
             if description.ufp_required_field:
                 required_field = get_nested_attr(device, description.ufp_required_field)
                 if not required_field:
@@ -72,6 +74,7 @@ def async_all_device_entities(
     light_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     sense_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     viewer_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    lock_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
@@ -80,42 +83,40 @@ def async_all_device_entities(
     light_descs = list(light_descs or []) + all_descs
     sense_descs = list(sense_descs or []) + all_descs
     viewer_descs = list(viewer_descs or []) + all_descs
+    lock_descs = list(lock_descs or []) + all_descs
 
     return (
         _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
         + _async_device_entities(data, klass, ModelType.LIGHT, light_descs)
         + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
         + _async_device_entities(data, klass, ModelType.VIEWPORT, viewer_descs)
+        + _async_device_entities(data, klass, ModelType.DOORLOCK, lock_descs)
     )
 
 
 class ProtectDeviceEntity(Entity):
     """Base class for UniFi protect entities."""
 
+    device: ProtectAdoptableDeviceModel
+
     _attr_should_poll = False
 
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel | None = None,
+        device: ProtectAdoptableDeviceModel,
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__()
         self.data: ProtectData = data
-
-        if device and not hasattr(self, "device"):
-            self.device: ProtectAdoptableDeviceModel = device
-
-        if description and not hasattr(self, "entity_description"):
-            self.entity_description = description
-        elif hasattr(self, "entity_description"):
-            description = self.entity_description
+        self.device = device
 
         if description is None:
             self._attr_unique_id = f"{self.device.id}"
             self._attr_name = f"{self.device.name}"
         else:
+            self.entity_description = description
             self._attr_unique_id = f"{self.device.id}_{description.key}"
             name = description.name or ""
             self._attr_name = f"{self.device.name} {name.title()}"
@@ -151,9 +152,19 @@ class ProtectDeviceEntity(Entity):
             devices = getattr(self.data.api.bootstrap, f"{self.device.model.value}s")
             self.device = devices[self.device.id]
 
-        self._attr_available = (
+        is_connected = (
             self.data.last_update_success and self.device.state == StateType.CONNECTED
         )
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description is not None
+            and hasattr(self.entity_description, "get_ufp_enabled")
+        ):
+            assert isinstance(self.entity_description, ProtectRequiredKeysMixin)
+            is_connected = is_connected and self.entity_description.get_ufp_enabled(
+                self.device
+            )
+        self._attr_available = is_connected
 
     @callback
     def _async_updated_event(self) -> None:
@@ -174,6 +185,9 @@ class ProtectDeviceEntity(Entity):
 class ProtectNVREntity(ProtectDeviceEntity):
     """Base class for unifi protect entities."""
 
+    # separate subclass on purpose
+    device: NVR  # type: ignore[assignment]
+
     def __init__(
         self,
         entry: ProtectData,
@@ -181,9 +195,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
-        # ProtectNVREntity is intentionally a separate base class
-        self.device: NVR = device  # type: ignore
-        super().__init__(entry, description=description)
+        super().__init__(entry, device, description)  # type: ignore[arg-type]
 
     @callback
     def _async_set_device_info(self) -> None:
@@ -203,3 +215,44 @@ class ProtectNVREntity(ProtectDeviceEntity):
             self.device = self.data.api.bootstrap.nvr
 
         self._attr_available = self.data.last_update_success
+
+
+class EventThumbnailMixin(ProtectDeviceEntity):
+    """Adds motion event attributes to sensor."""
+
+    def __init__(self, *args: Any, **kwarg: Any) -> None:
+        """Init an sensor that has event thumbnails."""
+        super().__init__(*args, **kwarg)
+        self._event: Event | None = None
+
+    @callback
+    def _async_get_event(self) -> Event | None:
+        """Get event from Protect device.
+
+        To be overridden by child classes.
+        """
+        raise NotImplementedError()
+
+    @callback
+    def _async_thumbnail_extra_attrs(self) -> dict[str, Any]:
+        # Camera motion sensors with object detection
+        attrs: dict[str, Any] = {
+            ATTR_EVENT_SCORE: 0,
+        }
+
+        if self._event is None:
+            return attrs
+
+        attrs[ATTR_EVENT_SCORE] = self._event.score
+        return attrs
+
+    @callback
+    def _async_update_device_from_protect(self) -> None:
+        super()._async_update_device_from_protect()
+        self._event = self._async_get_event()
+
+        attrs = self.extra_state_attributes or {}
+        self._attr_extra_state_attributes = {
+            **attrs,
+            **self._async_thumbnail_extra_attrs(),
+        }

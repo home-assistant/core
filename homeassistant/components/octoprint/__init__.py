@@ -1,4 +1,6 @@
 """Support for monitoring OctoPrint 3D printers."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from typing import cast
@@ -18,6 +20,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -51,7 +54,7 @@ def ensure_valid_path(value):
     return value
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
 DEFAULT_NAME = "OctoPrint"
 CONF_NUMBER_OF_TOOLS = "number_of_tools"
 CONF_BED = "bed"
@@ -154,7 +157,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    websession = async_get_clientsession(hass)
+    if CONF_VERIFY_SSL not in entry.data:
+        data = {**entry.data, CONF_VERIFY_SSL: True}
+        hass.config_entries.async_update_entry(entry, data=data)
+
+    verify_ssl = entry.data[CONF_VERIFY_SSL]
+    websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
     client = OctoprintClient(
         entry.data[CONF_HOST],
         websession,
@@ -169,7 +177,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {"coordinator": coordinator, "client": client}
+    hass.data[DOMAIN][entry.entry_id] = {
+        "coordinator": coordinator,
+        "client": client,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

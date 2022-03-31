@@ -2,11 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "description": "Default host: {host}\nDefault port: {port}\nDefault username: {username}",
+        "description": "Default host: {host}\nDefault username: {username}",
         "data": {
           "host": "[%key:common::config_flow::data::host%] (Optional)",
-          "port": "[%key:common::config_flow::data::port%] (Optional)",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
           "username": "[%key:common::config_flow::data::username%] (Optional)",
           "password": "[%key:common::config_flow::data::password%]"
         }

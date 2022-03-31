@@ -24,6 +24,7 @@ from homeassistant.const import (
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
+    POWER_VOLT_AMPERE_REACTIVE,
     POWER_WATT,
     TEMP_CELSIUS,
 )
@@ -31,7 +32,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -50,9 +51,7 @@ if TYPE_CHECKING:
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-ELECTRIC_CHARGE_AMPERE_HOURS: Final = "Ah"
 ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
-POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
@@ -68,7 +67,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import Fronius configuration from yaml."""
     _LOGGER.warning(
@@ -338,6 +337,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="power_apparent_phase_1",
         name="Power apparent phase 1",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash-outline",
         entity_registry_enabled_default=False,
@@ -346,6 +346,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="power_apparent_phase_2",
         name="Power apparent phase 2",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash-outline",
         entity_registry_enabled_default=False,
@@ -354,6 +355,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="power_apparent_phase_3",
         name="Power apparent phase 3",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash-outline",
         entity_registry_enabled_default=False,
@@ -362,6 +364,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="power_apparent",
         name="Power apparent",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash-outline",
         entity_registry_enabled_default=False,
@@ -397,6 +400,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="power_reactive_phase_1",
         name="Power reactive phase 1",
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash-outline",
         entity_registry_enabled_default=False,
@@ -405,6 +409,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="power_reactive_phase_2",
         name="Power reactive phase 2",
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash-outline",
         entity_registry_enabled_default=False,
@@ -413,6 +418,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="power_reactive_phase_3",
         name="Power reactive phase 3",
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash-outline",
         entity_registry_enabled_default=False,
@@ -421,6 +427,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="power_reactive",
         name="Power reactive",
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash-outline",
         entity_registry_enabled_default=False,
@@ -623,13 +630,13 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="capacity_maximum",
         name="Capacity maximum",
-        native_unit_of_measurement=ELECTRIC_CHARGE_AMPERE_HOURS,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="capacity_designed",
         name="Capacity designed",
-        native_unit_of_measurement=ELECTRIC_CHARGE_AMPERE_HOURS,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
@@ -683,10 +690,9 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
 ]
 
 
-class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
+class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEntity):
     """Defines a Fronius coordinator entity."""
 
-    coordinator: FroniusCoordinatorBase
     entity_descriptions: list[SensorEntityDescription]
     _entity_id_prefix: str
 

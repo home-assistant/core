@@ -6,5 +6,6 @@
   "requirements": ["pyrisco==0.3.1"],
   "codeowners": ["@OnFreund"],
   "quality_scale": "platinum",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["pyrisco"]
 }

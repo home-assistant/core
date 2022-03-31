@@ -5,7 +5,7 @@ import logging
 from satel_integra.satel_integra import AsyncSatel
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -124,13 +124,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _LOGGER.debug("Arm home config: %s, mode: %s ", conf, conf.get(CONF_ARM_HOME_MODE))
 
     hass.async_create_task(
-        async_load_platform(hass, "alarm_control_panel", DOMAIN, conf, config)
+        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, conf, config)
     )
 
     hass.async_create_task(
         async_load_platform(
             hass,
-            "binary_sensor",
+            Platform.BINARY_SENSOR,
             DOMAIN,
             {CONF_ZONES: zones, CONF_OUTPUTS: outputs},
             config,
@@ -140,7 +140,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(
         async_load_platform(
             hass,
-            "switch",
+            Platform.SWITCH,
             DOMAIN,
             {
                 CONF_SWITCHABLE_OUTPUTS: switchable_outputs,

@@ -138,7 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Attempt to confim."""
+        """Attempt to confirm."""
         title = create_title(self.info)
         if user_input is not None:
             return self.async_create_entry(title=title, data=self.info)

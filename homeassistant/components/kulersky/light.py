@@ -66,7 +66,7 @@ class KulerskyLight(LightEntity):
     def __init__(self, light: pykulersky.Light) -> None:
         """Initialize a Kuler Sky light."""
         self._light = light
-        self._available = None
+        self._available = False
         self._attr_supported_color_modes = {COLOR_MODE_RGBW}
         self._attr_color_mode = COLOR_MODE_RGBW
 

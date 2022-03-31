@@ -1,0 +1,13 @@
+{
+    "state": {
+        "overkiz__memorized_simple_volume": {
+            "highest": "En y\u00fcksek",
+            "standard": "Standart"
+        },
+        "overkiz__open_closed_pedestrian": {
+            "closed": "Kapal\u0131",
+            "open": "A\u00e7\u0131k",
+            "pedestrian": "Yaya"
+        }
+    }
+}

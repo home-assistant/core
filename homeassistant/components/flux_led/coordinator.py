@@ -17,7 +17,7 @@ from .const import FLUX_LED_EXCEPTIONS
 _LOGGER = logging.getLogger(__name__)
 
 
-REQUEST_REFRESH_DELAY: Final = 1.5
+REQUEST_REFRESH_DELAY: Final = 2.0
 
 
 class FluxLedUpdateCoordinator(DataUpdateCoordinator):
@@ -28,6 +28,7 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
         self.device = device
+        self.title = entry.title
         self.entry = entry
         super().__init__(
             hass,

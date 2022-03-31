@@ -15,11 +15,13 @@ from homeassistant.const import (
     CONF_URL,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -95,9 +97,7 @@ class QSEntity(Entity):
     async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                self.qsid, self.update_packet
-            )
+            async_dispatcher_connect(self.hass, self.qsid, self.update_packet)
         )
 
 
@@ -166,11 +166,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = qsusb
 
-    comps: dict[str, list] = {
-        "switch": [],
-        "light": [],
-        "sensor": [],
-        "binary_sensor": [],
+    comps: dict[Platform, list] = {
+        Platform.SWITCH: [],
+        Platform.LIGHT: [],
+        Platform.SENSOR: [],
+        Platform.BINARY_SENSOR: [],
     }
 
     sensor_ids = []
@@ -179,9 +179,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _, _type = SENSORS[sens["type"]]
             sensor_ids.append(sens["id"])
             if _type is bool:
-                comps["binary_sensor"].append(sens)
+                comps[Platform.BINARY_SENSOR].append(sens)
                 continue
-            comps["sensor"].append(sens)
+            comps[Platform.SENSOR].append(sens)
             for _key in ("invert", "class"):
                 if _key in sens:
                     _LOGGER.warning(
@@ -199,9 +199,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if dev.qstype != QSType.relay:
                 _LOGGER.warning("You specified a switch that is not a relay %s", qsid)
                 continue
-            comps["switch"].append(qsid)
+            comps[Platform.SWITCH].append(qsid)
         elif dev.qstype in (QSType.relay, QSType.dimmer):
-            comps["light"].append(qsid)
+            comps[Platform.LIGHT].append(qsid)
         else:
             _LOGGER.warning("Ignored unknown QSUSB device: %s", dev)
             continue

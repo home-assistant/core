@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -84,7 +85,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
     dimmers = config[CONF_DIMMERS]
-    load_platform(hass, "light", DOMAIN, {CONF_DIMMERS: dimmers}, base_config)
+    load_platform(hass, Platform.LIGHT, DOMAIN, {CONF_DIMMERS: dimmers}, base_config)
 
     for key_config in config[CONF_KEYPADS]:
         addr = key_config[CONF_ADDR]

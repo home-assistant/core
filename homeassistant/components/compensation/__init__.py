@@ -1,6 +1,5 @@
 """The Compensation integration."""
 import logging
-import warnings
 
 import numpy as np
 import voluptuous as vol
@@ -84,22 +83,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # try to get valid coefficients for a polynomial
         coefficients = None
         with np.errstate(all="raise"):
-            with warnings.catch_warnings(record=True) as all_warnings:
-                warnings.simplefilter("always")
-                try:
-                    coefficients = np.polyfit(x_values, y_values, degree)
-                except FloatingPointError as error:
-                    _LOGGER.error(
-                        "Setup of %s encountered an error, %s",
-                        compensation,
-                        error,
-                    )
-                for warning in all_warnings:
-                    _LOGGER.warning(
-                        "Setup of %s encountered a warning, %s",
-                        compensation,
-                        str(warning.message).lower(),
-                    )
+            try:
+                coefficients = np.polyfit(x_values, y_values, degree)
+            except FloatingPointError as error:
+                _LOGGER.error(
+                    "Setup of %s encountered an error, %s",
+                    compensation,
+                    error,
+                )
 
         if coefficients is not None:
             data = {

@@ -6,5 +6,6 @@
   "dependencies": ["ffmpeg"],
   "codeowners": [],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["canary"]
 }

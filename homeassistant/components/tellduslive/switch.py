@@ -1,9 +1,9 @@
 """Support for Tellstick switches using Tellstick Net."""
 from homeassistant.components import switch, tellduslive
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entry import TelldusLiveEntity
@@ -28,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-class TelldusLiveSwitch(TelldusLiveEntity, ToggleEntity):
+class TelldusLiveSwitch(TelldusLiveEntity, SwitchEntity):
     """Representation of a Tellstick switch."""
 
     @property

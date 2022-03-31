@@ -35,7 +35,7 @@ def validate_and_connect(
     """
     comport = data[CONF_PORT]
     address = data[CONF_ADDRESS]
-    _LOGGER.debug("Intitialising com port=%s", comport)
+    _LOGGER.debug("Initialising com port=%s", comport)
     ret = {}
     ret["title"] = DEFAULT_INTEGRATION_TITLE
     try:

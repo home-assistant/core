@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutter mellom skanninger",
+                    "snap_profile_type": "Kvalitetsniv\u00e5et p\u00e5 kameraets \u00f8yeblikksbilder (0:h\u00f8y 1:middels 2:lav)",
                     "timeout": "Tidsavbrudd (sekunder)"
                 }
             }

@@ -56,7 +56,7 @@ async def async_setup_entry(
                                 key=index,
                             )
                         )
-    async_add_entities(entities, False)
+    async_add_entities(entities)
 
 
 class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):

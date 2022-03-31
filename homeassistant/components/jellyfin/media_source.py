@@ -170,6 +170,9 @@ class JellyfinSource(MediaSource):
         if include_children:
             result.children_media_class = MEDIA_CLASS_ARTIST
             result.children = await self._build_artists(library_id)  # type: ignore[assignment]
+            if not result.children:
+                result.children_media_class = MEDIA_CLASS_ALBUM
+                result.children = await self._build_albums(library_id)  # type: ignore[assignment]
 
         return result
 
@@ -204,9 +207,9 @@ class JellyfinSource(MediaSource):
 
         return result
 
-    async def _build_albums(self, artist_id: str) -> list[BrowseMediaSource]:
+    async def _build_albums(self, parent_id: str) -> list[BrowseMediaSource]:
         """Return all albums of a single artist as browsable media sources."""
-        albums = await self._get_children(artist_id, ITEM_TYPE_ALBUM)
+        albums = await self._get_children(parent_id, ITEM_TYPE_ALBUM)
         albums = sorted(albums, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
         return [await self._build_album(album, False) for album in albums]
 
@@ -238,7 +241,13 @@ class JellyfinSource(MediaSource):
     async def _build_tracks(self, album_id: str) -> list[BrowseMediaSource]:
         """Return all tracks of a single album as browsable media sources."""
         tracks = await self._get_children(album_id, ITEM_TYPE_AUDIO)
-        tracks = sorted(tracks, key=lambda k: k[ITEM_KEY_INDEX_NUMBER])  # type: ignore[no-any-return]
+        tracks = sorted(
+            tracks,
+            key=lambda k: (
+                ITEM_KEY_INDEX_NUMBER not in k,
+                k.get(ITEM_KEY_INDEX_NUMBER, None),
+            ),
+        )
         return [self._build_track(track) for track in tracks]
 
     def _build_track(self, track: dict[str, Any]) -> BrowseMediaSource:
@@ -310,12 +319,14 @@ class JellyfinSource(MediaSource):
                 "MaxStreamingBitrate": MAX_STREAMING_BITRATE,
             }
         )
-
         return f"{self.url}Audio/{item_id}/universal?{params}"
 
 
 def _media_mime_type(media_item: dict[str, Any]) -> str:
     """Return the mime type of a media item."""
+    if not media_item[ITEM_KEY_MEDIA_SOURCES]:
+        raise BrowseError("Unable to determine mime type for item without media source")
+
     media_source = media_item[ITEM_KEY_MEDIA_SOURCES][0]
     path = media_source[MEDIA_SOURCE_KEY_PATH]
     mime_type, _ = mimetypes.guess_type(path)

@@ -1,10 +1,6 @@
 """Support for Roku."""
 from __future__ import annotations
 
-import logging
-
-from rokuecp import RokuConnectionError, RokuError
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -15,8 +11,13 @@ from .coordinator import RokuDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Platform.REMOTE]
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.REMOTE,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -39,19 +40,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-def roku_exception_handler(func):
-    """Decorate Roku calls to handle Roku exceptions."""
-
-    async def handler(self, *args, **kwargs):
-        try:
-            await func(self, *args, **kwargs)
-        except RokuConnectionError as error:
-            if self.available:
-                _LOGGER.error("Error communicating with API: %s", error)
-        except RokuError as error:
-            if self.available:
-                _LOGGER.error("Invalid response from API: %s", error)
-
-    return handler

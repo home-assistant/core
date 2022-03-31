@@ -10,6 +10,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.components import webhook
 from homeassistant.components.camera import PLATFORM_SCHEMA, STATE_IDLE, Camera
 from homeassistant.components.camera.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
@@ -106,15 +107,15 @@ class PushCamera(Camera):
         self._current_image = None
         self._image_field = image_field
         self.webhook_id = webhook_id
-        self.webhook_url = hass.components.webhook.async_generate_url(webhook_id)
+        self.webhook_url = webhook.async_generate_url(hass, webhook_id)
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[PUSH_CAMERA_DATA][self.webhook_id] = self
 
         try:
-            self.hass.components.webhook.async_register(
-                DOMAIN, self.name, self.webhook_id, handle_webhook
+            webhook.async_register(
+                self.hass, DOMAIN, self.name, self.webhook_id, handle_webhook
             )
         except ValueError:
             _LOGGER.error(

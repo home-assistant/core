@@ -1,8 +1,9 @@
 """Allow to set up simple automation rules via the config file."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Awaitable, Callable, Dict, TypedDict, cast
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -53,6 +54,7 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    script_stack_cv,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import (
@@ -504,6 +506,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
                 )
 
+            # Make a new empty script stack; automations are allowed
+            # to recursively trigger themselves
+            script_stack_cv.set([])
+
             try:
                 with trace_path("action"):
                     await self.action_script.async_run(
@@ -632,7 +638,7 @@ async def _async_process_config(
                 try:
                     raw_config = blueprint_inputs.async_substitute()
                     config_block = cast(
-                        Dict[str, Any],
+                        dict[str, Any],
                         await async_validate_config_item(hass, raw_config),
                     )
                 except vol.Invalid as err:
