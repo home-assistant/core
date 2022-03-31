@@ -5,6 +5,7 @@ from typing import Any
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -21,7 +22,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             FibaroScene(scene)
-            for scene in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["scene"]
+            for scene in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.SCENE
+            ]
         ],
         True,
     )

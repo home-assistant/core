@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
@@ -49,7 +50,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             FibaroLight(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["light"]
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.LIGHT
+            ]
         ],
         True,
     )

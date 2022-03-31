@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -38,7 +39,7 @@ async def async_setup_entry(
         [
             FibaroBinarySensor(device)
             for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
-                "binary_sensor"
+                Platform.BINARY_SENSOR
             ]
         ],
         True,
