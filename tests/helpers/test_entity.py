@@ -817,10 +817,9 @@ async def test_float_conversion(hass):
 
 async def test_temperature_conversion(hass, caplog):
     """Test conversion of temperatures."""
+    # Non sensor entity reporting a temperature
     with patch.object(
         entity.Entity, "state", PropertyMock(return_value=100)
-    ), patch.object(
-        entity.Entity, "device_class", PropertyMock(return_value="temperature")
     ), patch.object(
         entity.Entity, "unit_of_measurement", PropertyMock(return_value=TEMP_FAHRENHEIT)
     ):
@@ -838,10 +837,9 @@ async def test_temperature_conversion(hass, caplog):
         "Please create a bug report" in caplog.text
     )
 
+    # Sensor entity, not extending SensorEntity, reporting a temperature
     with patch.object(
         entity.Entity, "state", PropertyMock(return_value=100)
-    ), patch.object(
-        entity.Entity, "device_class", PropertyMock(return_value="temperature")
     ), patch.object(
         entity.Entity, "unit_of_measurement", PropertyMock(return_value=TEMP_FAHRENHEIT)
     ):
@@ -858,6 +856,21 @@ async def test_temperature_conversion(hass, caplog):
         "does not inherit SensorEntity, this will be unsupported in Home Assistant Core "
         "2022.7.Please create a bug report" in caplog.text
     )
+
+    # Sensor entity, not extending SensorEntity, not reporting a number
+    with patch.object(
+        entity.Entity, "state", PropertyMock(return_value="really warm")
+    ), patch.object(
+        entity.Entity, "unit_of_measurement", PropertyMock(return_value=TEMP_FAHRENHEIT)
+    ):
+        ent = entity.Entity()
+        ent.hass = hass
+        ent.entity_id = "sensor.temp"
+        ent.async_write_ha_state()
+
+    state = hass.states.get("sensor.temp")
+    assert state is not None
+    assert state.state == "really warm"
 
 
 async def test_attribution_attribute(hass):
