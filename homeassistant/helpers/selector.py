@@ -470,7 +470,7 @@ select_option = vol.All(
 
 
 def has_options_if_no_custom_value(data: Any) -> Any:
-    """Validate that options are provided if custom_value is False."""
+    """Validate that options are included if custom_value is False."""
     if data["custom_value"]:
         return data
     if "options" not in data:
