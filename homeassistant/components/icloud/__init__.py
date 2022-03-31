@@ -63,6 +63,8 @@ SERVICE_SCHEMA_LOST_DEVICE = vol.Schema(
     }
 )
 
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an iCloud account from a config entry."""
