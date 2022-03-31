@@ -9,6 +9,10 @@ from homeassistant.helpers import aiohttp_client
 # pylint: disable=unused-import
 from .const import DOMAIN
 
+FLOW_SCHEMA = vol.Schema(
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+)
+
 
 class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Meater Config Flow."""
@@ -18,9 +22,7 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-                ),
+                data_schema=FLOW_SCHEMA,
             )
 
         await self.async_set_unique_id(user_input[CONF_USERNAME])
@@ -38,25 +40,19 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except AuthenticationError:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-                ),
+                data_schema=FLOW_SCHEMA,
                 errors={"base": "invalid_auth"},
             )
         except ServiceUnavailableError:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-                ),
+                data_schema=FLOW_SCHEMA,
                 errors={"base": "service_unavailable_error"},
             )
         except Exception:  # pylint: disable=broad-except
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-                ),
+                data_schema=FLOW_SCHEMA,
                 errors={"base": "unknown_auth_error"},
             )
 

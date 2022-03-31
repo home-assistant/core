@@ -8,7 +8,6 @@ from meater import AuthenticationError, TooManyRequestsError
 
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -61,14 +60,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                         coordinator, dev.id, TemperatureMeasurement.Ambient
                     )
                 )
-                device_registry = await dr.async_get_registry(hass)
-                device_registry.async_get_or_create(
-                    config_entry_id=entry.entry_id,
-                    identifiers={(DOMAIN, dev.id)},
-                    name=f"Meater Probe {dev.id}",
-                    manufacturer="Apption Labs",
-                    model="Meater Probe",
-                )
                 hass.data[DOMAIN]["entities"][dev.id] = None
 
         async_add_entities(entities)
@@ -98,17 +89,26 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MeaterProbeTemperature(CoordinatorEntity):
     """Meater Temperature Sensor Entity."""
 
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_unit_of_measurement = TEMP_CELSIUS
+
     def __init__(self, coordinator, device_id, temperature_reading_type):
         """Initialise the sensor."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
+        self._attr_name = f"Meater Probe {temperature_reading_type.name}"
+        self._attr_device_info = {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, device_id)
+            },
+            "manufacturer": "Apption Labs",
+            "model": "Meater Probe",
+            "name": f"Meater Probe {device_id}",
+        }
+        self._attr_unique_id = f"{device_id}-{temperature_reading_type}"
+
         self.device_id = device_id
         self.temperature_reading_type = temperature_reading_type
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Meater Probe {self.temperature_reading_type.name}"
 
     @property
     def state(self):
@@ -130,42 +130,12 @@ class MeaterProbeTemperature(CoordinatorEntity):
         return device.ambient_temperature
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-
-        # Meater API always return temperature in Celsius
-        return TEMP_CELSIUS
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.device_id)
-            },
-            "name": "Meater Probe",
-            "manufacturer": "Apption Labs",
-        }
-
-    @property
     def available(self):
         """Return if entity is available."""
-        if not self.coordinator.last_update_success:
-            return False
-
         # See if the device was returned from the API. If not, it's offline
-        return any(self.device_id == device.id for device in self.coordinator.data)
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for the sensor."""
-        return f"{self.device_id}-{self.temperature_reading_type}"
+        return self.coordinator.last_update_success and any(
+            self.device_id == device.id for device in self.coordinator.data
+        )
 
 
 class TemperatureMeasurement(Enum):
