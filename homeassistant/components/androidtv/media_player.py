@@ -73,7 +73,8 @@ SERVICE_DOWNLOAD = "download"
 SERVICE_LEARN_SENDEVENT = "learn_sendevent"
 SERVICE_UPLOAD = "upload"
 
-DEFAULT_NAME = "Android TV"
+PREFIX_ANDROIDTV = "Android TV"
+PREFIX_FIRETV = "Fire TV"
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
 ANDROIDTV_STATES = {
@@ -93,7 +94,9 @@ async def async_setup_entry(
     """Set up the Android TV entity."""
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
-    device_type = "Android TV" if device_class == DEVICE_ANDROIDTV else "Fire TV"
+    device_type = (
+        PREFIX_ANDROIDTV if device_class == DEVICE_ANDROIDTV else PREFIX_FIRETV
+    )
     # CONF_NAME may be present in entry.data for configuration imported from YAML
     device_name = entry.data.get(CONF_NAME) or f"{device_type} {entry.data[CONF_HOST]}"
 
