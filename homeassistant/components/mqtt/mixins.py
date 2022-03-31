@@ -814,7 +814,7 @@ class MqttEntity(
         return self._config[CONF_ENABLED_BY_DEFAULT]
 
     @property
-    def entity_category(self) -> EntityCategory | str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the entity category if any."""
         return self._config.get(CONF_ENTITY_CATEGORY)
 
