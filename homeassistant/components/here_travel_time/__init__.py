@@ -8,7 +8,15 @@ import async_timeout
 from herepy import NoRouteFoundError, RouteMode, RoutingApi, RoutingResponse
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM_IMPERIAL, Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_MODE,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
@@ -16,6 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt
 
 from .const import (
+    ARRIVAL_TIME,
     ATTR_DESTINATION,
     ATTR_DESTINATION_NAME,
     ATTR_DISTANCE,
@@ -24,9 +33,17 @@ from .const import (
     ATTR_ORIGIN,
     ATTR_ORIGIN_NAME,
     ATTR_ROUTE,
+    CONF_DESTINATION,
+    CONF_ORIGIN,
+    CONF_ROUTE_MODE,
+    CONF_TIME,
+    CONF_TIME_TYPE,
+    CONF_TRAFFIC_MODE,
     DEFAULT_SCAN_INTERVAL,
+    DEPARTURE_TIME,
     DOMAIN,
     NO_ROUTE_ERROR_MESSAGE,
+    ROUTE_MODE_FASTEST,
     TRAFFIC_MODE_ENABLED,
     TRAVEL_MODES_VEHICLE,
 )
@@ -35,6 +52,70 @@ from .model import HERERoutingData, HERETravelTimeConfig
 PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set up HERE Travel Time from a config entry."""
+    api_key = config_entry.data[CONF_API_KEY]
+    here_client = RoutingApi(api_key)
+    setup_options(hass, config_entry)
+
+    arrival = (
+        config_entry.options[CONF_TIME]
+        if config_entry.options[CONF_TIME_TYPE] == ARRIVAL_TIME
+        else None
+    )
+    departure = (
+        config_entry.options[CONF_TIME]
+        if config_entry.options[CONF_TIME_TYPE] == DEPARTURE_TIME
+        else None
+    )
+
+    here_travel_time_config = HERETravelTimeConfig(
+        origin=config_entry.data[CONF_ORIGIN],
+        destination=config_entry.data[CONF_DESTINATION],
+        travel_mode=config_entry.data[CONF_MODE],
+        route_mode=config_entry.options[CONF_ROUTE_MODE],
+        units=config_entry.options[CONF_UNIT_SYSTEM],
+        arrival=arrival,
+        departure=departure,
+    )
+
+    coordinator = HereTravelTimeDataUpdateCoordinator(
+        hass,
+        here_client,
+        here_travel_time_config,
+    )
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+
+    return True
+
+
+def setup_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Set up options for a config entry if not set."""
+    if not config_entry.options:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options={
+                CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
+                CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+                CONF_TIME_TYPE: DEPARTURE_TIME,
+                CONF_UNIT_SYSTEM: hass.config.units.name,
+                CONF_TIME: None,
+            },
+        )
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    return unload_ok
 
 
 class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
@@ -135,32 +216,29 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> tuple[list[str], list[str], str | None, str | None]:
         """Prepare parameters for the HERE api."""
 
-        if self.config.origin_entity_id is not None:
-            origin = find_coordinates(self.hass, self.config.origin_entity_id)
-        else:
-            origin = self.config.origin
-
-        if self.config.destination_entity_id is not None:
-            destination = find_coordinates(self.hass, self.config.destination_entity_id)
-        else:
-            destination = self.config.destination
-        if destination is None:
-            raise InvalidCoordinatesException("Destination must be configured")
-        try:
-            here_formatted_destination = destination.split(",")
-            vol.Schema(cv.gps(here_formatted_destination))
-        except (vol.Invalid) as ex:
-            raise InvalidCoordinatesException(
-                f"{destination} are not valid coordinates"
-            ) from ex
+        origin = find_coordinates(self.hass, self.config.origin)
         if origin is None:
-            raise InvalidCoordinatesException("Origin must be configured")
+            raise InvalidCoordinatesException(
+                f"Could not resolve coordinates from {self.config.origin}"
+            )
         try:
             here_formatted_origin = origin.split(",")
             vol.Schema(cv.gps(here_formatted_origin))
         except (AttributeError, vol.Invalid) as ex:
             raise InvalidCoordinatesException(
                 f"{origin} are not valid coordinates"
+            ) from ex
+        destination = find_coordinates(self.hass, self.config.destination)
+        if destination is None:
+            raise InvalidCoordinatesException(
+                f"Could not resolve coordinates from {self.config.destination}"
+            )
+        try:
+            here_formatted_destination = destination.split(",")
+            vol.Schema(cv.gps(here_formatted_destination))
+        except (vol.Invalid) as ex:
+            raise InvalidCoordinatesException(
+                f"{destination} are not valid coordinates"
             ) from ex
         arrival: str | None = None
         departure: str | None = None
