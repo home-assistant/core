@@ -461,7 +461,6 @@ class Entity(ABC):
         """Return the attribution."""
         return self._attr_attribution
 
-    # Type str is deprecated as of 2021.12, use EntityCategory
     @property
     def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
