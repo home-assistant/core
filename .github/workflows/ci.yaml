@@ -728,7 +728,6 @@ jobs:
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
       && (needs.changes.outputs.test_full_suite == 'true' || needs.changes.outputs.tests_glob)
-      && (needs.pip-check.result != 'failure')
     needs:
       - changes
       - gen-requirements-all
@@ -737,7 +736,6 @@ jobs:
       - lint-other
       - lint-isort
       - mypy
-      - pip-check
       - prepare-tests
     strategy:
       fail-fast: false
