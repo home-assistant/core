@@ -76,9 +76,12 @@ class OverkizExecutor:
         ):
             args = args + (0,)
 
+        if all(arg is None for arg in args):
+            args = ()
+
         exec_id = await self.coordinator.client.execute_command(
             self.device.device_url,
-            Command(command_name, list(args)),
+            Command(command_name, list(args) if args else None),
             "Home Assistant",
         )
 
