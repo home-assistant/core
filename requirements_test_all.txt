@@ -1061,7 +1061,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.12.0
+pylitterbot==2022.3.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -1378,7 +1378,7 @@ sharkiq==0.0.1
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.03.0
+simplisafe-python==2022.03.2
 
 # homeassistant.components.slack
 slackclient==2.5.0
