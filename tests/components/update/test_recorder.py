@@ -47,7 +47,7 @@ async def test_exclude_attributes(
                 native_states.append(state)
             return native_states
 
-    states: list[State] = await hass.async_add_executor_job(_fetch_sun_states)
+    states: list[State] = await hass.async_add_executor_job(_fetch_states)
     assert len(states) > 1
     for state in states:
         assert ATTR_IN_PROGRESS not in state.attributes
