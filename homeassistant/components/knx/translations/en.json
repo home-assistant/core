@@ -34,7 +34,7 @@
                     "multicast_port": "Multicast port used for routing"
                 },
                 "data_description": {
-                    "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`.",
+                    "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
                     "local_ip": "Leave blank to use auto-discovery."
                 },
                 "description": "Please configure the routing options."
@@ -93,15 +93,15 @@
                     "local_ip": "Local IP of Home Assistant",
                     "multicast_group": "Multicast group",
                     "multicast_port": "Multicast port",
-                    "rate_limit": "Maximum outgoing telegrams per second",
+                    "rate_limit": "Rate limit",
                     "state_updater": "State updater"
                 },
                 "data_description": {
-                    "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`.",
+                    "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
                     "local_ip": "Use `0.0.0.0` for auto-discovery.",
                     "multicast_group": "Used for routing and discovery. Default: `224.0.23.12`",
                     "multicast_port": "Used for routing and discovery. Default: `3671`",
-                    "rate_limit": "Recommended: 20 to 40.",
+                    "rate_limit": "Maximum outgoing telegrams per second.\nRecommended: 20 to 40",
                     "state_updater": "Globally enable or disable reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve states from the KNX Bus, `sync_state` entity options will have no effect."
                 }
             },
