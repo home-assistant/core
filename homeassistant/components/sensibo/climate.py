@@ -3,10 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    ClimateEntity,
-)
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -18,35 +15,25 @@ from homeassistant.components.climate.const import (
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_STATE,
     ATTR_TEMPERATURE,
-    CONF_API_KEY,
-    CONF_ID,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.temperature import convert as convert_temperature
 
-from .const import ALL, DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
 SERVICE_ASSUME_STATE = "assume_state"
-
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_ID, default=ALL): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
 
 FIELD_TO_FLAG = {
     "fanLevel": SUPPORT_FAN_MODE,
@@ -72,25 +59,6 @@ AC_STATE_TO_DATA = {
     "mode": "hvac_mode",
     "swing": "swing_mode",
 }
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up Sensibo devices."""
-    LOGGER.warning(
-        "Loading Sensibo via platform setup is deprecated; Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
