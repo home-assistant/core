@@ -111,9 +111,3 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
         self.hass.config_entries.async_update_entry(self._reauth_entry, data=user_input)
         await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
         return self.async_abort(reason="reauth_successful")
-
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Import config from configuration.yaml."""
-        await self.async_set_unique_id(import_config[CONF_USERNAME].lower())
-        self._abort_if_unique_id_configured()
-        return await self.async_step_user(import_config)
