@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import selector
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
@@ -62,6 +62,10 @@ CONF_KNX_LABEL_TUNNELING_TCP: Final = "TCP"
 CONF_KNX_LABEL_TUNNELING_TCP_SECURE: Final = "TCP with IP Secure"
 CONF_KNX_LABEL_TUNNELING_UDP: Final = "UDP"
 CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK: Final = "UDP with route back / NAT mode"
+
+_IA_SELECTOR = selector.selector({"text": {}})
+_IP_SELECTOR = selector.selector({"text": {}})
+_PORT_SELECTOR = selector.selector({"number": {"min": 1, "max": 65535, "mode": "box"}})
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -164,7 +168,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 **DEFAULT_ENTRY_DATA,  # type: ignore[misc]
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
-                CONF_KNX_INDIVIDUAL_ADDRESS: user_input[CONF_KNX_INDIVIDUAL_ADDRESS],
                 CONF_KNX_ROUTE_BACK: (
                     connection_type == CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
                 ),
@@ -202,18 +205,16 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             port = self._selected_tunnel.port
             if not self._selected_tunnel.supports_tunnelling_tcp:
                 connection_methods.remove(CONF_KNX_LABEL_TUNNELING_TCP)
+                connection_methods.remove(CONF_KNX_LABEL_TUNNELING_TCP_SECURE)
 
         fields = {
             vol.Required(CONF_KNX_TUNNELING_TYPE): vol.In(connection_methods),
-            vol.Required(CONF_HOST, default=ip_address): str,
-            vol.Required(CONF_PORT, default=port): cv.port,
-            vol.Required(
-                CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
-            ): str,
+            vol.Required(CONF_HOST, default=ip_address): _IP_SELECTOR,
+            vol.Required(CONF_PORT, default=port): _PORT_SELECTOR,
         }
 
         if self.show_advanced_options:
-            fields[vol.Optional(CONF_KNX_LOCAL_IP)] = str
+            fields[vol.Optional(CONF_KNX_LOCAL_IP)] = _IP_SELECTOR
 
         return self.async_show_form(
             step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
@@ -245,9 +246,15 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         fields = {
-            vol.Required(CONF_KNX_SECURE_USER_ID): int,
-            vol.Required(CONF_KNX_SECURE_USER_PASSWORD): str,
-            vol.Required(CONF_KNX_SECURE_DEVICE_AUTHENTICATION): str,
+            vol.Required(CONF_KNX_SECURE_USER_ID, default=2): selector.selector(
+                {"number": {"min": 1, "max": 127, "mode": "box"}}
+            ),
+            vol.Required(CONF_KNX_SECURE_USER_PASSWORD): selector.selector(
+                {"text": {"type": "password"}}
+            ),
+            vol.Required(CONF_KNX_SECURE_DEVICE_AUTHENTICATION): selector.selector(
+                {"text": {"type": "password"}}
+            ),
         }
 
         return self.async_show_form(
@@ -290,8 +297,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "file_not_found"
 
         fields = {
-            vol.Required(CONF_KNX_KNXKEY_FILENAME): str,
-            vol.Required(CONF_KNX_KNXKEY_PASSWORD): str,
+            vol.Required(CONF_KNX_KNXKEY_FILENAME): selector.selector({"text": {}}),
+            vol.Required(CONF_KNX_KNXKEY_PASSWORD): selector.selector({"text": {}}),
         }
 
         return self.async_show_form(
@@ -319,13 +326,15 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         fields = {
             vol.Required(
                 CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
-            ): str,
-            vol.Required(CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): str,
-            vol.Required(CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
+            ): _IA_SELECTOR,
+            vol.Required(CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): _IP_SELECTOR,
+            vol.Required(
+                CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT
+            ): _PORT_SELECTOR,
         }
 
         if self.show_advanced_options:
-            fields[vol.Optional(CONF_KNX_LOCAL_IP)] = str
+            fields[vol.Optional(CONF_KNX_LOCAL_IP)] = _IP_SELECTOR
 
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
@@ -370,17 +379,17 @@ class KNXOptionsFlowHandler(OptionsFlow):
             vol.Required(
                 CONF_KNX_INDIVIDUAL_ADDRESS,
                 default=self.current_config[CONF_KNX_INDIVIDUAL_ADDRESS],
-            ): str,
+            ): selector.selector({"text": {}}),
             vol.Required(
                 CONF_KNX_MCAST_GRP,
                 default=self.current_config.get(CONF_KNX_MCAST_GRP, DEFAULT_MCAST_GRP),
-            ): str,
+            ): _IP_SELECTOR,
             vol.Required(
                 CONF_KNX_MCAST_PORT,
                 default=self.current_config.get(
                     CONF_KNX_MCAST_PORT, DEFAULT_MCAST_PORT
                 ),
-            ): cv.port,
+            ): _PORT_SELECTOR,
         }
 
         if self.show_advanced_options:
@@ -394,7 +403,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
                     CONF_KNX_LOCAL_IP,
                     default=local_ip,
                 )
-            ] = str
+            ] = _IP_SELECTOR
             data_schema[
                 vol.Required(
                     CONF_KNX_STATE_UPDATER,
@@ -403,7 +412,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
                         CONF_KNX_DEFAULT_STATE_UPDATER,
                     ),
                 )
-            ] = bool
+            ] = selector.selector({"boolean": {}})
             data_schema[
                 vol.Required(
                     CONF_KNX_RATE_LIMIT,
@@ -412,7 +421,15 @@ class KNXOptionsFlowHandler(OptionsFlow):
                         CONF_KNX_DEFAULT_RATE_LIMIT,
                     ),
                 )
-            ] = vol.All(vol.Coerce(int), vol.Range(min=1, max=CONF_MAX_RATE_LIMIT))
+            ] = selector.selector(
+                {
+                    "number": {
+                        "min": 1,
+                        "max": CONF_MAX_RATE_LIMIT,
+                        "mode": "box",
+                    }
+                }
+            )
 
         return self.async_show_form(
             step_id="init",
@@ -444,10 +461,10 @@ class KNXOptionsFlowHandler(OptionsFlow):
                         ): vol.In(connection_methods),
                         vol.Required(
                             CONF_HOST, default=self.current_config.get(CONF_HOST)
-                        ): str,
+                        ): _IP_SELECTOR,
                         vol.Required(
                             CONF_PORT, default=self.current_config.get(CONF_PORT, 3671)
-                        ): cv.port,
+                        ): _PORT_SELECTOR,
                     }
                 ),
                 last_step=True,
