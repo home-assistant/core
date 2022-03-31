@@ -246,7 +246,7 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections):
     ),
 )
 def test_number_selector_schema_error(schema):
-    """Test select selector."""
+    """Test number selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"number": schema})
 
@@ -349,7 +349,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
         (
             {"options": ["red", "green", "blue"]},
             ("red", "green", "blue"),
-            ("cat", 0, None),
+            ("cat", 0, None, ["red"]),
         ),
         (
             {
@@ -359,7 +359,36 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
                 ]
             },
             ("red", "green"),
-            ("cat", 0, None),
+            ("cat", 0, None, ["red"]),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "multiple": True},
+            (["red"], ["green", "blue"], []),
+            ("cat", 0, None, "red"),
+        ),
+        (
+            {
+                "options": ["red", "green", "blue"],
+                "multiple": True,
+                "custom_value": True,
+            },
+            (["red"], ["green", "blue"], ["red", "cat"], []),
+            ("cat", 0, None, "red"),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "custom_value": True},
+            ("red", "green", "blue", "cat"),
+            (0, None, ["red"]),
+        ),
+        (
+            {"options": [], "custom_value": True},
+            ("red", "cat"),
+            (0, None, ["red"]),
+        ),
+        (
+            {"options": [], "custom_value": True, "multiple": True},
+            (["red"], ["green", "blue"], []),
+            (0, None, "red"),
         ),
     ),
 )
@@ -373,7 +402,6 @@ def test_select_selector_schema(schema, valid_selections, invalid_selections):
     (
         {},  # Must have options
         {"options": {"hello": "World"}},  # Options must be a list
-        {"options": []},  # Must have at least option
         # Options must be strings or value / label pairs
         {"options": [{"hello": "World"}]},
         # Options must all be of the same type
