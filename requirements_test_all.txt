@@ -1595,7 +1595,7 @@ youless-api==0.16
 zeroconf==0.38.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.68
+zha-quirks==0.0.69
 
 # homeassistant.components.zha
 zigpy-deconz==0.14.0
