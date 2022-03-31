@@ -295,6 +295,9 @@ class Entity(ABC):
     # If we reported this entity is updated while disabled
     _disabled_reported = False
 
+    # If we reported this entity is relying on deprecated temperature conversion
+    _temperature_reported = False
+
     # Protect for multiple updates
     _update_staged = False
 
@@ -642,23 +645,57 @@ class Entity(ABC):
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
-        # Convert temperature if we detect one
-        try:
+        def _convert_temperature(state: str, attr: dict) -> str:
+            # Convert temperature if we detect one
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.sensor import SensorEntity
+
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
             units = self.hass.config.units
-            domain = split_entity_id(self.entity_id)[0]
-            if (
-                unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
-                and unit_of_measure != units.temperature_unit
-                and domain != "sensor"
+            if unit_of_measure == units.temperature_unit or unit_of_measure not in (
+                TEMP_CELSIUS,
+                TEMP_FAHRENHEIT,
             ):
+                return state
+
+            domain = split_entity_id(self.entity_id)[0]
+            if domain != "sensor":
+                if not self._temperature_reported:
+                    self._temperature_reported = True
+                    report_issue = self._suggest_report_issue()
+                    _LOGGER.warning(
+                        "Entity %s (%s) does not convert temperatures, this will "
+                        "be unsupported in Home Assistant Core 2022.7. Please %s",
+                        self.entity_id,
+                        type(self),
+                        report_issue,
+                    )
+            elif not isinstance(self, SensorEntity):
+                if not self._temperature_reported:
+                    self._temperature_reported = True
+                    report_issue = self._suggest_report_issue()
+                    _LOGGER.warning(
+                        "Temperature sensor %s (%s) does not inherit SensorEntity, "
+                        "this will be unsupported in Home Assistant Core 2022.7."
+                        "Please %s",
+                        self.entity_id,
+                        type(self),
+                        report_issue,
+                    )
+            else:
+                return state
+
+            try:
                 prec = len(state) - state.index(".") - 1 if "." in state else 0
                 temp = units.temperature(float(state), unit_of_measure)
                 state = str(round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-        except ValueError:
-            # Could not convert state to float
-            pass
+            except ValueError:
+                # Could not convert state to float
+                pass
+            return state
+
+        state = _convert_temperature(state, attr)
 
         if (
             self._context_set is not None
