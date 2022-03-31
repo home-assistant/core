@@ -186,7 +186,7 @@ async def test_services_config_entry(hass):
             "net_consumption": False,
             "offset": 0,
             "source": "sensor.energy",
-            "tariffs": "peak,offpeak",
+            "tariffs": ["peak", "offpeak"],
         },
         title="Energy bill",
     )
@@ -202,7 +202,7 @@ async def test_services_config_entry(hass):
             "net_consumption": False,
             "offset": 0,
             "source": "sensor.energy",
-            "tariffs": "peak,offpeak",
+            "tariffs": ["peak", "offpeak"],
         },
         title="Energy bill2",
     )
@@ -469,11 +469,11 @@ async def test_legacy_support(hass):
     "tariffs,expected_entities",
     (
         (
-            "",
+            [],
             ["sensor.electricity_meter"],
         ),
         (
-            "high,low",
+            ["high", "low"],
             [
                 "sensor.electricity_meter_low",
                 "sensor.electricity_meter_high",

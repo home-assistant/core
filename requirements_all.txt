@@ -110,7 +110,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.2.3
+aioairzone==0.3.1
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -156,7 +156,7 @@ aioftp==0.12.0
 aiogithubapi==22.2.4
 
 # homeassistant.components.guardian
-aioguardian==2021.11.0
+aioguardian==2022.03.2
 
 # homeassistant.components.harmony
 aioharmony==0.2.9
@@ -1599,7 +1599,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.12.0
+pylitterbot==2022.3.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -1650,7 +1650,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.9.1
+pynetgear==0.9.2
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -2138,7 +2138,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.03.0
+simplisafe-python==2022.03.3
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
@@ -2469,7 +2469,7 @@ zengge==0.2
 zeroconf==0.38.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.67
+zha-quirks==0.0.69
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -2490,7 +2490,7 @@ zigpy-zigate==0.8.0
 zigpy-znp==0.7.0
 
 # homeassistant.components.zha
-zigpy==0.43.0
+zigpy==0.44.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

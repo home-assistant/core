@@ -48,13 +48,8 @@ METER_TYPES = [
 
 def _validate_config(data: Any) -> Any:
     """Validate config."""
-    tariffs: list[str]
-    if not data[CONF_TARIFFS]:
-        tariffs = []
-    else:
-        tariffs = data[CONF_TARIFFS].split(",")
     try:
-        vol.Unique()(tariffs)
+        vol.Unique()(data[CONF_TARIFFS])
     except vol.Invalid as exc:
         raise SchemaFlowError("tariffs_not_unique") from exc
 
@@ -88,7 +83,9 @@ CONFIG_SCHEMA = vol.Schema(
                 }
             }
         ),
-        vol.Optional(CONF_TARIFFS): selector.selector({"text": {}}),
+        vol.Required(CONF_TARIFFS, default=[]): selector.selector(
+            {"select": {"options": [], "custom_value": True, "multiple": True}}
+        ),
         vol.Required(CONF_METER_NET_CONSUMPTION, default=False): selector.selector(
             {"boolean": {}}
         ),

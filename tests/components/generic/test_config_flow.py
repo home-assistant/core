@@ -111,6 +111,33 @@ async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
 
 
 @respx.mock
+async def test_form_only_stillimage_gif(hass, fakeimg_gif, user_flow):
+    """Test we complete ok if the user wants a gif."""
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["options"][CONF_CONTENT_TYPE] == "image/gif"
+
+
+@respx.mock
+async def test_form_only_svg_whitespace(hass, fakeimgbytes_svg, user_flow):
+    """Test we complete ok if svg starts with whitespace, issue #68889."""
+    fakeimgbytes_wspace_svg = bytes("  \n ", encoding="utf-8") + fakeimgbytes_svg
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_wspace_svg)
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+@respx.mock
 async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
     """Test we complete ok if the user enters a stream url."""
     with mock_av_open as mock_setup:

@@ -346,7 +346,9 @@ class ChannelPool:
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for channel, outcome in zip(channels, results):
             if isinstance(outcome, Exception):
-                channel.warning("'%s' stage failed: %s", func_name, str(outcome))
+                channel.warning(
+                    "'%s' stage failed: %s", func_name, str(outcome), exc_info=outcome
+                )
                 continue
             channel.debug("'%s' stage succeeded", func_name)
 
