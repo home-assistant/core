@@ -8,17 +8,17 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.helpers import entity_registry as er, selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowFormStep,
-    HelperFlowMenuStep,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+    SchemaFlowMenuStep,
     wrapped_entity_config_entry_title,
 )
 
 from .const import CONF_TARGET_DOMAIN, DOMAIN
 
-CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "user": HelperFlowFormStep(
+CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "user": SchemaFlowFormStep(
         vol.Schema(
             {
                 vol.Required(CONF_ENTITY_ID): selector.selector(
@@ -43,7 +43,7 @@ CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
 }
 
 
-class SwitchAsXConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class SwitchAsXConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for Switch as X."""
 
     config_flow = CONFIG_FLOW

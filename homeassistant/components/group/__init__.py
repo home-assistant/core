@@ -65,8 +65,10 @@ PLATFORMS = [
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
+    Platform.SWITCH,
 ]
 
 REG_KEY = f"{DOMAIN}_registry"

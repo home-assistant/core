@@ -1,7 +1,7 @@
 """Utility meter from sensors providing raw data."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 
@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -24,7 +25,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -49,6 +50,7 @@ from .const import (
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
+    CONF_TARIFFS,
     DAILY,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
@@ -93,6 +95,84 @@ PAUSED = "paused"
 COLLECTING = "collecting"
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Utility Meter config entry."""
+    entry_id = config_entry.entry_id
+    registry = er.async_get(hass)
+    # Validate + resolve entity registry id to entity_id
+    source_entity_id = er.async_validate_entity_id(
+        registry, config_entry.options[CONF_SOURCE_SENSOR]
+    )
+
+    cron_pattern = None
+    delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
+    meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
+    meter_type = config_entry.options[CONF_METER_TYPE]
+    if meter_type == "none":
+        meter_type = None
+    name = config_entry.title
+    net_consumption = config_entry.options[CONF_METER_NET_CONSUMPTION]
+    tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
+
+    meters = []
+
+    # Remove when frontend list selector is available
+    if not config_entry.options.get(CONF_TARIFFS):
+        tariffs = []
+    else:
+        tariffs = config_entry.options[CONF_TARIFFS].split(",")
+
+    if not tariffs:
+        # Add single sensor, not gated by a tariff selector
+        meter_sensor = UtilityMeterSensor(
+            cron_pattern=cron_pattern,
+            delta_values=delta_values,
+            meter_offset=meter_offset,
+            meter_type=meter_type,
+            name=name,
+            net_consumption=net_consumption,
+            parent_meter=entry_id,
+            source_entity=source_entity_id,
+            tariff_entity=tariff_entity,
+            tariff=None,
+            unique_id=entry_id,
+        )
+        meters.append(meter_sensor)
+        hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
+    else:
+        # Add sensors for each tariff
+        for tariff in tariffs:
+            meter_sensor = UtilityMeterSensor(
+                cron_pattern=cron_pattern,
+                delta_values=delta_values,
+                meter_offset=meter_offset,
+                meter_type=meter_type,
+                name=f"{name} {tariff}",
+                net_consumption=net_consumption,
+                parent_meter=entry_id,
+                source_entity=source_entity_id,
+                tariff_entity=tariff_entity,
+                tariff=tariff,
+                unique_id=f"{entry_id}_{tariff}",
+            )
+            meters.append(meter_sensor)
+            hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
+
+    async_add_entities(meters)
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_CALIBRATE_METER,
+        {vol.Required(ATTR_VALUE): vol.Coerce(Decimal)},
+        "async_calibrate",
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -121,16 +201,17 @@ async def async_setup_platform(
         )
         conf_cron_pattern = hass.data[DATA_UTILITY][meter].get(CONF_CRON_PATTERN)
         meter_sensor = UtilityMeterSensor(
-            meter,
-            conf_meter_source,
-            conf.get(CONF_NAME),
-            conf_meter_type,
-            conf_meter_offset,
-            conf_meter_delta_values,
-            conf_meter_net_consumption,
-            conf.get(CONF_TARIFF),
-            conf_meter_tariff_entity,
-            conf_cron_pattern,
+            cron_pattern=conf_cron_pattern,
+            delta_values=conf_meter_delta_values,
+            meter_offset=conf_meter_offset,
+            meter_type=conf_meter_type,
+            name=conf.get(CONF_NAME),
+            net_consumption=conf_meter_net_consumption,
+            parent_meter=meter,
+            source_entity=conf_meter_source,
+            tariff_entity=conf_meter_tariff_entity,
+            tariff=conf.get(CONF_TARIFF),
+            unique_id=None,
         )
         meters.append(meter_sensor)
 
@@ -152,18 +233,21 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
 
     def __init__(
         self,
+        *,
+        cron_pattern,
+        delta_values,
+        meter_offset,
+        meter_type,
+        name,
+        net_consumption,
         parent_meter,
         source_entity,
-        name,
-        meter_type,
-        meter_offset,
-        delta_values,
-        net_consumption,
-        tariff=None,
-        tariff_entity=None,
-        cron_pattern=None,
+        tariff_entity,
+        tariff,
+        unique_id,
     ):
         """Initialize the Utility Meter sensor."""
+        self._attr_unique_id = unique_id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
         self._state = None

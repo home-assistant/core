@@ -7,7 +7,7 @@ sync_clock:
       description: The velbus interface to send the command to, this will be the same value as used during configuration
       required: true
       example: "192.168.1.5:27015"
-      default: ''
+      default: ""
       selector:
         text:
 
@@ -20,7 +20,7 @@ scan:
       description: The velbus interface to send the command to, this will be the same value as used during configuration
       required: true
       example: "192.168.1.5:27015"
-      default: ''
+      default: ""
       selector:
         text:
 
@@ -35,7 +35,7 @@ set_memo_text:
       description: The velbus interface to send the command to, this will be the same value as used during configuration
       required: true
       example: "192.168.1.5:27015"
-      default: ''
+      default: ""
       selector:
         text:
     address:
@@ -54,6 +54,6 @@ set_memo_text:
         The actual text to be displayed.
         Text is limited to 64 characters.
       example: "Do not forget trash"
-      default: ''
+      default: ""
       selector:
         text:

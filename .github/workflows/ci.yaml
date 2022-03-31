@@ -11,18 +11,18 @@ on:
   workflow_dispatch:
     inputs:
       full:
-        description: 'Full run (regardless of changes)'
+        description: "Full run (regardless of changes)"
         default: false
         type: boolean
       lint-only:
-        description: 'Skip pytest'
+        description: "Skip pytest"
         default: false
         type: boolean
 
 env:
   CACHE_VERSION: 9
   PIP_CACHE_VERSION: 3
-  HA_SHORT_VERSION: 2022.4
+  HA_SHORT_VERSION: 2022.5
   DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
@@ -434,6 +434,11 @@ jobs:
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual check-json --all-files
+
+      - name: Run prettier
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual prettier --all-files
 
       - name: Register check executables problem matcher
         run: |

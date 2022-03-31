@@ -7,7 +7,7 @@ from datetime import datetime
 from itertools import groupby
 import logging
 import time
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import Column, Text, and_, bindparam, func, or_
 from sqlalchemy.ext import baked
@@ -262,7 +262,7 @@ def state_changes_during_period(
     descending: bool = False,
     limit: int | None = None,
     include_start_time_state: bool = True,
-) -> MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]]:
+) -> MutableMapping[str, Iterable[LazyState]]:
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
         baked_query, join_attributes = bake_query_and_join_attributes(
@@ -302,19 +302,22 @@ def state_changes_during_period(
 
         entity_ids = [entity_id] if entity_id is not None else None
 
-        return _sorted_states_to_dict(
-            hass,
-            session,
-            states,
-            start_time,
-            entity_ids,
-            include_start_time_state=include_start_time_state,
+        return cast(
+            MutableMapping[str, Iterable[LazyState]],
+            _sorted_states_to_dict(
+                hass,
+                session,
+                states,
+                start_time,
+                entity_ids,
+                include_start_time_state=include_start_time_state,
+            ),
         )
 
 
 def get_last_state_changes(
     hass: HomeAssistant, number_of_states: int, entity_id: str
-) -> MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]]:
+) -> MutableMapping[str, Iterable[LazyState]]:
     """Return the last number_of_states."""
     start_time = dt_util.utcnow()
 
@@ -345,13 +348,16 @@ def get_last_state_changes(
 
         entity_ids = [entity_id] if entity_id is not None else None
 
-        return _sorted_states_to_dict(
-            hass,
-            session,
-            reversed(states),
-            start_time,
-            entity_ids,
-            include_start_time_state=False,
+        return cast(
+            MutableMapping[str, Iterable[LazyState]],
+            _sorted_states_to_dict(
+                hass,
+                session,
+                reversed(states),
+                start_time,
+                entity_ids,
+                include_start_time_state=False,
+            ),
         )
 
 

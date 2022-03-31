@@ -458,6 +458,151 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_EFFECT_LIST] is None
 
 
+async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
+    """Test smart strip custom random effects."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    strip = _mocked_smart_light_strip()
+
+    with _patch_discovery(device=strip), _patch_single_discovery(device=strip):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        DOMAIN,
+        "random_effect",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            "init_states": [340, 20, 50],
+            "backgrounds": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
+        },
+        blocking=True,
+    )
+    strip.set_custom_effect.assert_called_once_with(
+        {
+            "custom": 1,
+            "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+            "brightness": 100,
+            "name": "Custom",
+            "segments": [0],
+            "expansion_strategy": 1,
+            "enable": 1,
+            "duration": 0,
+            "transition": 0,
+            "type": "random",
+            "init_states": [[340, 20, 50]],
+            "random_seed": 100,
+            "backgrounds": [(340, 20, 50), (20, 50, 50), (0, 100, 50)],
+        }
+    )
+    strip.set_custom_effect.reset_mock()
+
+    strip.effect = {
+        "custom": 1,
+        "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+        "brightness": 100,
+        "name": "Custom",
+        "enable": 1,
+    }
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    strip.is_off = True
+    strip.is_on = False
+    strip.effect = {
+        "custom": 1,
+        "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+        "brightness": 100,
+        "name": "Custom",
+        "enable": 0,
+    }
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    assert ATTR_EFFECT not in state.attributes
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    strip.set_custom_effect.assert_called_once_with(
+        {
+            "custom": 1,
+            "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+            "brightness": 100,
+            "name": "Custom",
+            "segments": [0],
+            "expansion_strategy": 1,
+            "enable": 1,
+            "duration": 0,
+            "transition": 0,
+            "type": "random",
+            "init_states": [[340, 20, 50]],
+            "random_seed": 100,
+            "backgrounds": [(340, 20, 50), (20, 50, 50), (0, 100, 50)],
+        }
+    )
+    strip.set_custom_effect.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "random_effect",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            "init_states": [340, 20, 50],
+            "backgrounds": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
+            "random_seed": 50,
+            "brightness": 80,
+            "duration": 5000,
+            "transition": 2000,
+            "fadeoff": 3000,
+            "hue_range": [0, 360],
+            "saturation_range": [0, 100],
+            "brightness_range": [0, 100],
+            "transition_range": [2000, 3000],
+        },
+    )
+    await hass.async_block_till_done()
+
+    strip.set_custom_effect.assert_called_once_with(
+        {
+            "custom": 1,
+            "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+            "brightness": 80,
+            "name": "Custom",
+            "segments": [0],
+            "expansion_strategy": 1,
+            "enable": 1,
+            "duration": 5000,
+            "transition": 0,
+            "type": "random",
+            "init_states": [[340, 20, 50]],
+            "random_seed": 50,
+            "backgrounds": [(340, 20, 50), (20, 50, 50), (0, 100, 50)],
+            "fadeoff": 3000,
+            "hue_range": [0, 360],
+            "saturation_range": [0, 100],
+            "brightness_range": [0, 100],
+            "transition_range": [2000, 3000],
+        }
+    )
+    strip.set_custom_effect.reset_mock()
+
+
 async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) -> None:
     """Test smart strip custom random effects at startup."""
     already_migrated_config_entry = MockConfigEntry(
@@ -489,3 +634,50 @@ async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) ->
     )
     strip.set_hsv.assert_called_with(0, 0, 100, transition=None)
     strip.set_hsv.reset_mock()
+
+
+async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
+    """Test smart strip custom sequence effects."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    strip = _mocked_smart_light_strip()
+
+    with _patch_discovery(device=strip), _patch_single_discovery(device=strip):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        DOMAIN,
+        "sequence_effect",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            "sequence": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
+        },
+        blocking=True,
+    )
+    strip.set_custom_effect.assert_called_once_with(
+        {
+            "custom": 1,
+            "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+            "brightness": 100,
+            "name": "Custom",
+            "segments": [0],
+            "expansion_strategy": 1,
+            "enable": 1,
+            "duration": 0,
+            "transition": 0,
+            "type": "sequence",
+            "sequence": [(340, 20, 50), (20, 50, 50), (0, 100, 50)],
+            "repeat_times": 0,
+            "spread": 1,
+            "direction": 4,
+        }
+    )
+    strip.set_custom_effect.reset_mock()

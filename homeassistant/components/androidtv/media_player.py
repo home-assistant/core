@@ -39,6 +39,7 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_SW_VERSION,
     CONF_HOST,
+    CONF_NAME,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -128,7 +129,8 @@ async def async_setup_entry(
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
     device_type = "Android TV" if device_class == DEVICE_ANDROIDTV else "Fire TV"
-    device_name = f"{device_type} {entry.data[CONF_HOST]}"
+    # CONF_NAME may be present in entry.data for configuration imported from YAML
+    device_name = entry.data.get(CONF_NAME) or f"{device_type} {entry.data[CONF_HOST]}"
 
     device_args = [
         aftv,
@@ -187,6 +189,7 @@ def adb_decorator(override_available=False):
         @functools.wraps(func)
         async def _adb_exception_catcher(self, *args, **kwargs):
             """Call an ADB-related method and catch exceptions."""
+            # pylint: disable=protected-access
             if not self.available and not override_available:
                 return None
 

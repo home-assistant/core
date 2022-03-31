@@ -15,6 +15,9 @@ MOCK_PORT = 50000
 MOCK_NAME = "WemoDeviceName"
 MOCK_SERIAL_NUMBER = "WemoSerialNumber"
 MOCK_FIRMWARE_VERSION = "WeMo_WW_2.00.XXXXX.PVT-OWRT"
+MOCK_INSIGHT_CURRENT_WATTS = 0.01
+MOCK_INSIGHT_TODAY_KWH = 3.33
+MOCK_INSIGHT_STATE_THRESHOLD_POWER = 8.0
 
 
 @pytest.fixture(name="pywemo_model")
@@ -63,6 +66,15 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
     device.firmware_version = MOCK_FIRMWARE_VERSION
     device.get_state.return_value = 0  # Default to Off
     device.supports_long_press.return_value = cls.supports_long_press()
+
+    if issubclass(cls, pywemo.Insight):
+        device.get_standby_state = pywemo.StandbyState.OFF
+        device.current_power_watts = MOCK_INSIGHT_CURRENT_WATTS
+        device.today_kwh = MOCK_INSIGHT_TODAY_KWH
+        device.threshold_power_watts = MOCK_INSIGHT_STATE_THRESHOLD_POWER
+        device.on_for = 1234
+        device.today_on_time = 5678
+        device.total_on_time = 9012
 
     url = f"http://{MOCK_HOST}:{MOCK_PORT}/setup.xml"
     with patch("pywemo.setup_url_for_address", return_value=url), patch(
