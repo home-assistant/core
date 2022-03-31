@@ -5,10 +5,14 @@ import logging
 from typing import Any
 
 from aioairzone.const import (
+    AZD_FIRMWARE,
+    AZD_FULL_NAME,
     AZD_ID,
     AZD_MAC,
+    AZD_MODEL,
     AZD_NAME,
     AZD_SYSTEM,
+    AZD_SYSTEMS,
     AZD_THERMOSTAT_FW,
     AZD_THERMOSTAT_MODEL,
     AZD_WEBSERVER,
@@ -44,6 +48,39 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
         raise NotImplementedError()
 
 
+class AirzoneSystemEntity(AirzoneEntity):
+    """Define an Airzone System entity."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        entry: ConfigEntry,
+        system_data: dict[str, Any],
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.system_id = system_data[AZD_ID]
+
+        self._attr_device_info: DeviceInfo = {
+            "identifiers": {(DOMAIN, f"{entry.entry_id}_{self.system_id}")},
+            "manufacturer": MANUFACTURER,
+            "model": self.get_airzone_value(AZD_MODEL),
+            "name": self.get_airzone_value(AZD_FULL_NAME),
+            "sw_version": self.get_airzone_value(AZD_FIRMWARE),
+            "via_device": (DOMAIN, f"{entry.entry_id}_ws"),
+        }
+
+    def get_airzone_value(self, key) -> Any:
+        """Return system value by key."""
+        value = None
+        if self.system_id in self.coordinator.data[AZD_SYSTEMS]:
+            system = self.coordinator.data[AZD_SYSTEMS][self.system_id]
+            if key in system:
+                value = system[key]
+        return value
+
+
 class AirzoneZoneEntity(AirzoneEntity):
     """Define an Airzone Zone entity."""
 
@@ -67,6 +104,7 @@ class AirzoneZoneEntity(AirzoneEntity):
             "model": self.get_airzone_value(AZD_THERMOSTAT_MODEL),
             "name": f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
             "sw_version": self.get_airzone_value(AZD_THERMOSTAT_FW),
+            "via_device": (DOMAIN, f"{entry.entry_id}_{self.system_id}"),
         }
         self._attr_unique_id = (
             entry.entry_id if entry.unique_id is None else entry.unique_id
