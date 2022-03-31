@@ -111,12 +111,6 @@ pytest_asyncio==1000000000.0.0
 python-engineio>=3.13.1,<4.0
 python-socketio>=4.6.0,<5.0
 
-# Prevent dependency conflicts between fiblary3 and aioguardian/simplisafe-python
-# https://github.com/bachya/aioguardian/pull/84
-# https://github.com/pbalogh77/fiblary/pull/3
-# https://github.com/bachya/simplisafe-python/pull/321
-docutils<0.18
-
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
@@ -124,6 +118,12 @@ multidict>=6.0.2
 # Required for compatibility with point integration - ensure_active_token
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
+
+# Prevent dependency conflicts between fiblary3 and aioguardian/simplisafe-python
+# https://github.com/bachya/aioguardian/pull/84
+# https://github.com/pbalogh77/fiblary/pull/3
+# https://github.com/bachya/simplisafe-python/pull/321
+docutils<0.18
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
