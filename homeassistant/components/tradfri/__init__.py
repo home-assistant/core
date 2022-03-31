@@ -141,7 +141,7 @@ async def async_setup_entry(
             # https://www.home-assistant.io/integrations/tradfri/
             _LOGGER.warning(
                 "Importing of Tradfri groups has been deprecated due to stability issues "
-                "and will be removed in Home Assistant core 2022.4"
+                "and will be removed in Home Assistant core 2022.5"
             )
             # No need to load groups if the user hasn't requested it
             groups_commands: Command = await api(
