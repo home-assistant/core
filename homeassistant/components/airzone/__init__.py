@@ -85,6 +85,7 @@ class AirzoneZoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
             "model": self.get_zone_value(AZD_THERMOSTAT_MODEL),
             "name": f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
             "sw_version": self.get_zone_value(AZD_THERMOSTAT_FW),
+            "via_device": (DOMAIN, f"{entry.entry_id}_{self.system_id}"),
         }
 
     def get_zone_value(self, key):
