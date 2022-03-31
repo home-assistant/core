@@ -87,7 +87,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key=_KEY_PRIVACY_MODE,
         name="Privacy Mode",
         icon="mdi:eye-settings",
-        entity_category=None,
+        entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_privacy_mask",
         ufp_value="is_privacy_on",
     ),
