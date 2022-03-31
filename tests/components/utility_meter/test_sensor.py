@@ -587,7 +587,7 @@ async def test_net_consumption(hass, yaml_config, config_entry_config):
         ),
     ),
 )
-async def test_non_net_consumption(hass, yaml_config, config_entry_config):
+async def test_non_net_consumption(hass, yaml_config, config_entry_config, caplog):
     """Test utility sensor state."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
@@ -620,6 +620,17 @@ async def test_non_net_consumption(hass, yaml_config, config_entry_config):
             force_update=True,
         )
         await hass.async_block_till_done()
+
+    now = dt_util.utcnow() + timedelta(seconds=10)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.states.async_set(
+            entity_id,
+            None,
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+    assert "Invalid state " in caplog.text
 
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
