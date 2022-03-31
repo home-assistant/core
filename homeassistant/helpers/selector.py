@@ -471,7 +471,7 @@ select_option = vol.All(
 
 @SELECTORS.register("select")
 class SelectSelector(Selector):
-    """Selector for an single-choice input select."""
+    """Selector for an single or multi-choice input select."""
 
     selector_type = "select"
 
@@ -479,7 +479,10 @@ class SelectSelector(Selector):
         {
             vol.Required("options"): vol.All(
                 vol.Any([str], [select_option]), vol.Length(min=1)
-            )
+            ),
+            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("custom_value", default=False): cv.boolean,
+            vol.Optional("mode"): vol.In(("list", "dropbox")),
         }
     )
 
@@ -489,7 +492,16 @@ class SelectSelector(Selector):
             options = self.config["options"]
         else:
             options = [option["value"] for option in self.config["options"]]
-        return vol.In(options)(vol.Schema(str)(data))
+
+        parent_schema = vol.In(options)
+        if self.config["custom_value"]:
+            parent_schema = vol.Any(parent_schema, str)
+
+        if not self.config["multiple"]:
+            return parent_schema(vol.Schema(str)(data))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
 @SELECTORS.register("text")

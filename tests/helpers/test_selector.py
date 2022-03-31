@@ -246,7 +246,7 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections):
     ),
 )
 def test_number_selector_schema_error(schema):
-    """Test select selector."""
+    """Test number selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"number": schema})
 
@@ -349,7 +349,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
         (
             {"options": ["red", "green", "blue"]},
             ("red", "green", "blue"),
-            ("cat", 0, None),
+            ("cat", 0, None, ["red"]),
         ),
         (
             {
@@ -359,7 +359,26 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
                 ]
             },
             ("red", "green"),
-            ("cat", 0, None),
+            ("cat", 0, None, ["red"]),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "multiple": True},
+            (["red"], ["green", "blue"]),
+            ("cat", 0, None, "red"),
+        ),
+        (
+            {
+                "options": ["red", "green", "blue"],
+                "multiple": True,
+                "custom_value": True,
+            },
+            (["red"], ["green", "blue"], ["red", "cat"]),
+            ("cat", 0, None, "red"),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "custom_value": True},
+            ("red", "green", "blue", "cat"),
+            (0, None, ["red"]),
         ),
     ),
 )
