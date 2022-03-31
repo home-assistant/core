@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneEntity
+from . import AirzoneZoneEntity
 from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
 
@@ -83,7 +83,7 @@ async def async_setup_entry(
     async_add_entities(binary_sensors)
 
 
-class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
+class AirzoneBinarySensor(AirzoneZoneEntity, BinarySensorEntity):
     """Define an Airzone sensor."""
 
     def __init__(

@@ -27,8 +27,8 @@ from .coordinator import AirzoneUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 
-class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
-    """Define an Airzone entity."""
+class AirzoneZoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
+    """Define an Airzone Zone entity."""
 
     def __init__(
         self,
