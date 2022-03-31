@@ -119,6 +119,7 @@ def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
 def normalize_event(event: dict[str, Any]) -> dict[str, Any]:
     """Normalize a calendar event."""
     normalized_event: dict[str, Any] = {}
+
     start = event.get("start")
     end = event.get("end")
     start = get_date(start) if start is not None else None
@@ -130,6 +131,7 @@ def normalize_event(event: dict[str, Any]) -> dict[str, Any]:
     end = end.strftime(DATE_STR_FORMAT) if end is not None else None
     normalized_event["start"] = start
     normalized_event["end"] = end
+
     # cleanup the string so we don't have a bunch of double+ spaces
     summary = event.get("summary", "")
     normalized_event["message"] = re.sub("  +", "", summary).strip()
@@ -184,6 +186,10 @@ class CalendarEventDevice(Entity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
+        _LOGGER.warning(
+            "CalendarEventDevice entity has been deprecated and will be removed in 2022.6, "
+            "and is replaced with CalendarEntitiy. Please report issue to component maintainer",
+        )
         if (event := self.event) is None:
             return None
 
