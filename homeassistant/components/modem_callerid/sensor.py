@@ -7,7 +7,7 @@ from phone_modem import PhoneModem
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP, STATE_IDLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_IDLE
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 
@@ -28,7 +28,6 @@ async def async_setup_entry(
             ModemCalleridSensor(
                 api,
                 entry.title,
-                entry.data[CONF_DEVICE],
                 entry.entry_id,
             )
         ]
@@ -50,11 +49,8 @@ class ModemCalleridSensor(SensorEntity):
     _attr_icon = ICON
     _attr_should_poll = False
 
-    def __init__(
-        self, api: PhoneModem, name: str, device: str, server_unique_id: str
-    ) -> None:
+    def __init__(self, api: PhoneModem, name: str, server_unique_id: str) -> None:
         """Initialize the sensor."""
-        self.device = device
         self.api = api
         self._attr_name = name
         self._attr_unique_id = server_unique_id
