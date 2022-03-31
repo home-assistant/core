@@ -146,37 +146,6 @@ async def test_form_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_hostname"}
 
 
-@pytest.mark.parametrize(
-    "p_input,p_output,p_options",
-    [
-        (
-            {CONF_HOSTNAME: "home-assistant.io"},
-            {
-                "hostname": "home-assistant.io",
-                "name": "home-assistant.io",
-                "ipv4": True,
-                "ipv6": True,
-            },
-            {
-                "resolver": "208.67.222.222",
-                "resolver_ipv6": "2620:0:ccc::2",
-            },
-        ),
-        (
-            {},
-            {
-                "hostname": "myip.opendns.com",
-                "name": "myip",
-                "ipv4": True,
-                "ipv6": True,
-            },
-            {
-                "resolver": "208.67.222.222",
-                "resolver_ipv6": "2620:0:ccc::2",
-            },
-        ),
-    ],
-)
 async def test_flow_already_exist(hass: HomeAssistant) -> None:
     """Test flow when unique id already exist."""
 
