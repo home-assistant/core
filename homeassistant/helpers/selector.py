@@ -482,7 +482,7 @@ class SelectSelector(Selector):
             ),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("custom_value", default=False): cv.boolean,
-            vol.Optional("mode"): vol.In(("list", "dropbox")),
+            vol.Optional("mode"): vol.In(("list", "dropdown")),
         }
     )
 
