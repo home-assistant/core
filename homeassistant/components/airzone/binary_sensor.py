@@ -7,6 +7,7 @@ from typing import Any, Final
 
 from aioairzone.const import (
     AZD_AIR_DEMAND,
+    AZD_BATTERY_LOW,
     AZD_ERRORS,
     AZD_FLOOR_DEMAND,
     AZD_NAME,
@@ -15,6 +16,7 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_RUNNING,
     BinarySensorEntity,
@@ -42,6 +44,11 @@ BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_RUNNING,
         key=AZD_AIR_DEMAND,
         name="Air Demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=DEVICE_CLASS_BATTERY,
+        key=AZD_BATTERY_LOW,
+        name="Battery Low",
     ),
     AirzoneBinarySensorEntityDescription(
         device_class=DEVICE_CLASS_RUNNING,
