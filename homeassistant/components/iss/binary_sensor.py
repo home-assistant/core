@@ -29,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ISS_NEXT_RISE = "next_rise"
 ATTR_ISS_NUMBER_PEOPLE_SPACE = "number_of_people_in_space"
+ATTR_ISS_PEOPLE_IN_SPACE = "people_in_space"
 
 DEFAULT_NAME = "ISS"
 DEFAULT_DEVICE_CLASS = "visible"
@@ -107,6 +108,7 @@ class IssBinarySensor(BinarySensorEntity):
         if self.iss_data:
             attrs = {
                 ATTR_ISS_NUMBER_PEOPLE_SPACE: self.iss_data.number_of_people_in_space,
+                ATTR_ISS_PEOPLE_IN_SPACE: self.iss_data.people_in_space.get("people"),
                 ATTR_ISS_NEXT_RISE: self.iss_data.next_rise,
             }
             if self._show_on_map:
@@ -131,6 +133,7 @@ class IssData:
         self.is_above = None
         self.next_rise = None
         self.number_of_people_in_space = None
+        self.people_in_space = None
         self.position = None
         self.latitude = latitude
         self.longitude = longitude
@@ -143,6 +146,7 @@ class IssData:
             self.is_above = iss.is_ISS_above(self.latitude, self.longitude)
             self.next_rise = iss.next_rise(self.latitude, self.longitude)
             self.number_of_people_in_space = iss.number_of_people_in_space()
+            self.people_in_space = iss.people_in_space()
             self.position = iss.current_location()
         except (HTTPError, requests.exceptions.ConnectionError):
             _LOGGER.error("Unable to retrieve data")
