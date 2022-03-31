@@ -42,4 +42,4 @@ class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_device_class = sensor[CONF_DEVICE_CLASS]
         self._attr_is_on = self.coordinator.data[sensor[CONF_ID]]
         self._attr_name = sensor[CONF_NAME]
-        self._attr_unique_id = DOMAIN
+        self._attr_unique_id = f"{sensor[CONF_NAME]}_{sensor[CONF_ID]}"
