@@ -183,9 +183,13 @@ class GoogleCalendarService:
         """Get the calendar service with valid credetnails."""
         await self._session.async_ensure_token_valid()
         creds = _async_google_creds(self._hass, self._session.token)
-        return google_discovery.build(
-            "calendar", "v3", credentials=creds, cache_discovery=False
-        )
+
+        def _build() -> google_discovery.Resource:
+            return google_discovery.build(
+                "calendar", "v3", credentials=creds, cache_discovery=False
+            )
+
+        return await self._hass.async_add_executor_job(_build)
 
     async def async_list_calendars(
         self,
