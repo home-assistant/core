@@ -150,7 +150,7 @@ async def test_form_only_svg_whitespace(hass, fakeimgbytes_svg, user_flow):
 )
 async def test_form_only_still_sample(hass, user_flow, image_file):
     """Test various sample images #69037."""
-    image_path = os.path.dirname(__file__) + "/" + image_file
+    image_path = os.path.join(os.path.dirname(__file__), image_file)
     with open(image_path, "rb") as image:
         respx.get("http://127.0.0.1/testurl/1").respond(stream=image.read())
     data = TESTDATA.copy()
