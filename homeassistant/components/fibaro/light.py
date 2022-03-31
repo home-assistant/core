@@ -193,9 +193,23 @@ class FibaroLight(FibaroDevice, LightEntity):
         self.call_turn_off()
 
     @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self.current_binary_state
+    def is_on(self) -> bool | None:
+        """Return true if device is on.
+
+        Dimmable and RGB lights can be on based on different
+        properties, so we need to check here several values.
+        """
+        props = self.fibaro_device.properties
+        if self.current_binary_state:
+            return True
+        if "brightness" in props and props.brightness != "0":
+            return True
+        if "currentProgram" in props and props.currentProgram != "0":
+            return True
+        if "currentProgramID" in props and props.currentProgramID != "0":
+            return True
+
+        return False
 
     async def async_update(self):
         """Update the state."""

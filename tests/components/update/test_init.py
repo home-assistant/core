@@ -89,6 +89,16 @@ async def test_update(hass: HomeAssistant) -> None:
     update._attr_latest_version = None
     assert update.state is None
 
+    # Test no update if new version is not an update
+    update._attr_current_version = "1.0.0"
+    update._attr_latest_version = "0.9.0"
+    assert update.state is STATE_OFF
+
+    # Test update if new version is not considered a valid version
+    update._attr_current_version = "1.0.0"
+    update._attr_latest_version = "awesome_update"
+    assert update.state is STATE_ON
+
     # Test entity category becomes config when its possible to install
     update._attr_supported_features = UpdateEntityFeature.INSTALL
     assert update.entity_category is EntityCategory.CONFIG

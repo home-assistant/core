@@ -8,11 +8,11 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.helpers import selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowError,
-    HelperFlowFormStep,
-    HelperFlowMenuStep,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowError,
+    SchemaFlowFormStep,
+    SchemaFlowMenuStep,
 )
 
 from .const import (
@@ -56,7 +56,7 @@ def _validate_config(data: Any) -> Any:
     try:
         vol.Unique()(tariffs)
     except vol.Invalid as exc:
-        raise HelperFlowError("tariffs_not_unique") from exc
+        raise SchemaFlowError("tariffs_not_unique") from exc
 
     return data
 
@@ -98,16 +98,16 @@ CONFIG_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "user": HelperFlowFormStep(CONFIG_SCHEMA, validate_user_input=_validate_config)
+CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA, validate_user_input=_validate_config)
 }
 
-OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "init": HelperFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
 }
 
 
-class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Utility Meter."""
 
     config_flow = CONFIG_FLOW
