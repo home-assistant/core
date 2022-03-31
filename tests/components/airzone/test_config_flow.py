@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from aiohttp.client_exceptions import ClientConnectorError
+from aiohttp.client_exceptions import ClientConnectorError, ClientResponseError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.airzone.const import DOMAIN
@@ -23,6 +23,12 @@ async def test_form(hass):
     ) as mock_setup_entry, patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+        side_effect=ClientResponseError(MagicMock(), MagicMock()),
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+        side_effect=ClientResponseError(MagicMock(), MagicMock()),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
