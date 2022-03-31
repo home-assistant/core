@@ -478,7 +478,7 @@ class SelectSelector(Selector):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Required("options"): vol.All(
-                vol.Any([str], [select_option]), vol.Length(min=1)
+                vol.Any([str], [select_option])
             ),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("custom_value", default=False): cv.boolean,
