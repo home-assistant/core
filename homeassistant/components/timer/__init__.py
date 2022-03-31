@@ -207,7 +207,7 @@ class Timer(RestoreEntity):
         self._remaining: timedelta | None = None
         self._end: datetime | None = None
         self._listener: Callable[[], None] | None = None
-        self._restore: bool = self._config[CONF_RESTORE]
+        self._restore: bool = self._config.get(CONF_RESTORE, DEFAULT_RESTORE)
 
         self._attr_should_poll = False
         self._attr_force_update = True
