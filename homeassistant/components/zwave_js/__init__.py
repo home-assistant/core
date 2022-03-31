@@ -448,7 +448,7 @@ async def async_setup_entry(  # noqa: C901
         elif isinstance(notification, MultilevelSwitchNotification):
             event_data.update(
                 {
-                    ATTR_COMMAND_CLASS_NAME: "Multi Level Switch",
+                    ATTR_COMMAND_CLASS_NAME: "Multilevel Switch",
                     ATTR_TYPE: notification.event_type,
                     ATTR_PARAMETERS: notification.direction,
                 }
