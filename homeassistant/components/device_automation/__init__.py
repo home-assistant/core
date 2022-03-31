@@ -20,7 +20,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, bind_hass
 from homeassistant.requirements import async_get_integration_with_requirements
@@ -88,24 +87,6 @@ TYPES = {
 }
 
 
-@bind_hass
-async def async_get_device_automations(
-    hass: HomeAssistant,
-    automation_type: DeviceAutomationType | str,
-    device_ids: Iterable[str] | None = None,
-) -> Mapping[str, Any]:
-    """Return all the device automations for a type optionally limited to specific device ids."""
-    if isinstance(automation_type, str):
-        report(
-            "uses str for async_get_device_automations automation_type. This is "
-            "deprecated and will stop working in Home Assistant 2022.4, it should be "
-            "updated to use DeviceAutomationType instead",
-            error_if_core=False,
-        )
-        automation_type = DeviceAutomationType[automation_type.upper()]
-    return await _async_get_device_automations(hass, automation_type, device_ids)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up device automation."""
     websocket_api.async_register_command(hass, websocket_device_automation_list_actions)
@@ -156,26 +137,18 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 @overload
 async def async_get_device_automation_platform(  # noqa: D103
-    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType | str
+    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
 ) -> "DeviceAutomationPlatformType":
     ...
 
 
 async def async_get_device_automation_platform(
-    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType | str
+    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
 ) -> "DeviceAutomationPlatformType":
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
     """
-    if isinstance(automation_type, str):
-        report(
-            "uses str for async_get_device_automation_platform automation_type. This "
-            "is deprecated and will stop working in Home Assistant 2022.4, it should "
-            "be updated to use DeviceAutomationType instead",
-            error_if_core=False,
-        )
-        automation_type = DeviceAutomationType[automation_type.upper()]
     platform_name = automation_type.value.section
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
@@ -215,10 +188,11 @@ async def _async_get_device_automations_from_domain(
     )
 
 
-async def _async_get_device_automations(
+@bind_hass
+async def async_get_device_automations(
     hass: HomeAssistant,
     automation_type: DeviceAutomationType,
-    device_ids: Iterable[str] | None,
+    device_ids: Iterable[str] | None = None,
 ) -> Mapping[str, list[dict[str, Any]]]:
     """List device automations."""
     device_registry = dr.async_get(hass)
@@ -336,7 +310,7 @@ async def websocket_device_automation_list_actions(hass, connection, msg):
     """Handle request for device actions."""
     device_id = msg["device_id"]
     actions = (
-        await _async_get_device_automations(
+        await async_get_device_automations(
             hass, DeviceAutomationType.ACTION, [device_id]
         )
     ).get(device_id)
@@ -355,7 +329,7 @@ async def websocket_device_automation_list_conditions(hass, connection, msg):
     """Handle request for device conditions."""
     device_id = msg["device_id"]
     conditions = (
-        await _async_get_device_automations(
+        await async_get_device_automations(
             hass, DeviceAutomationType.CONDITION, [device_id]
         )
     ).get(device_id)
@@ -374,7 +348,7 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
     """Handle request for device triggers."""
     device_id = msg["device_id"]
     triggers = (
-        await _async_get_device_automations(
+        await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, [device_id]
         )
     ).get(device_id)
