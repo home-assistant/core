@@ -13,7 +13,8 @@
                     "password": "Password",
                     "port": "Port (Optional)",
                     "ssl": "Uses an SSL certificate",
-                    "username": "Username (Optional)"
+                    "username": "Username (Optional)",
+                    "not_track": "Do not track devices"
                 },
                 "description": "Default host: {host}\nDefault username: {username}",
                 "title": "Netgear"
@@ -24,7 +25,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Consider home time (seconds)"
+                    "consider_home": "Consider home time (seconds)",
+                    "not_track": "Do not track devices"
                 },
                 "description": "Specify optional settings",
                 "title": "Netgear"

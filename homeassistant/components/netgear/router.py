@@ -29,6 +29,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_CONSIDER_HOME,
+    CONF_NOT_TRACK,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_NAME,
     DOMAIN,
@@ -83,6 +84,7 @@ class NetgearRouter:
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
         self._consider_home = timedelta(seconds=consider_home_int)
+        self._track_devices = not entry.options.get(CONF_NOT_TRACK, False)
 
         self._api: Netgear = None
         self._api_lock = asyncio.Lock()
@@ -113,7 +115,7 @@ class NetgearRouter:
             if self.model.startswith(model):
                 self.method_version = 2
 
-        if self.method_version == 2:
+        if self.method_version == 2 and self._track_devices:
             if not self._api.get_attached_devices_2():
                 _LOGGER.error(
                     "Netgear Model '%s' in MODELS_V2 list, but failed to get attached devices using V2",
@@ -130,28 +132,29 @@ class NetgearRouter:
                 return False
 
         # set already known devices to away instead of unavailable
-        device_registry = dr.async_get(self.hass)
-        devices = dr.async_entries_for_config_entry(device_registry, self.entry_id)
-        for device_entry in devices:
-            if device_entry.via_device_id is None:
-                continue  # do not add the router itself
+        if self._track_devices:
+            device_registry = dr.async_get(self.hass)
+            devices = dr.async_entries_for_config_entry(device_registry, self.entry_id)
+            for device_entry in devices:
+                if device_entry.via_device_id is None:
+                    continue  # do not add the router itself
 
-            device_mac = dict(device_entry.connections)[dr.CONNECTION_NETWORK_MAC]
-            self.devices[device_mac] = {
-                "mac": device_mac,
-                "name": device_entry.name,
-                "active": False,
-                "last_seen": dt_util.utcnow() - timedelta(days=365),
-                "device_model": None,
-                "device_type": None,
-                "type": None,
-                "link_rate": None,
-                "signal": None,
-                "ip": None,
-                "ssid": None,
-                "conn_ap_mac": None,
-                "allow_or_block": None,
-            }
+                device_mac = dict(device_entry.connections)[dr.CONNECTION_NETWORK_MAC]
+                self.devices[device_mac] = {
+                    "mac": device_mac,
+                    "name": device_entry.name,
+                    "active": False,
+                    "last_seen": dt_util.utcnow() - timedelta(days=365),
+                    "device_model": None,
+                    "device_type": None,
+                    "type": None,
+                    "link_rate": None,
+                    "signal": None,
+                    "ip": None,
+                    "ssid": None,
+                    "conn_ap_mac": None,
+                    "allow_or_block": None,
+                }
 
         return True
 
