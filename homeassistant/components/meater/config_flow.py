@@ -25,7 +25,8 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=FLOW_SCHEMA,
             )
 
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
+        username: str = user_input[CONF_USERNAME]
+        await self.async_set_unique_id(username.lower())
         self._abort_if_unique_id_configured()
 
         username = user_input[CONF_USERNAME]
