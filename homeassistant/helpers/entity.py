@@ -235,10 +235,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    # Type string is deprecated as of 2021.12, use EntityCategory
-    entity_category: EntityCategory | Literal[
-        "config", "diagnostic", "system"
-    ] | None = None
+    entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -466,7 +463,7 @@ class Entity(ABC):
 
     # Type str is deprecated as of 2021.12, use EntityCategory
     @property
-    def entity_category(self) -> EntityCategory | str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
             return self._attr_entity_category
