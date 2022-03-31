@@ -93,7 +93,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SKIP,
         {},
-        UpdateEntity.async_skip.__name__,
+        async_skip,
     )
     websocket_api.async_register_command(hass, websocket_release_notes)
 
@@ -142,6 +142,13 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         )
 
     await entity.async_install_with_progress(version, backup)
+
+
+async def async_skip(entity: UpdateEntity, service_call: ServiceCall) -> None:
+    """Service call wrapper to validate the call."""
+    if entity.supported_features & UpdateEntityFeature.AUTO_UPDATE:
+        raise HomeAssistantError(f"Skipping update is not supported for {entity.name}")
+    await entity.async_skip()
 
 
 @dataclass

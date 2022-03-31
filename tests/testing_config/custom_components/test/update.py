@@ -135,6 +135,14 @@ def init(empty=False):
                 latest_version="1.0.1",
                 supported_features=UpdateEntityFeature.RELEASE_NOTES,
             ),
+            MockUpdateEntity(
+                name="Update with auto update",
+                unique_id="with_auto_update",
+                current_version="1.0.0",
+                latest_version="1.0.1",
+                supported_features=UpdateEntityFeature.AUTO_UPDATE
+                | UpdateEntityFeature.INSTALL,
+            ),
         ]
     )
 
