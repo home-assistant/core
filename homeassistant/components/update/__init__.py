@@ -183,7 +183,7 @@ class UpdateEntity(RestoreEntity):
         return None
 
     @property
-    def entity_category(self) -> EntityCategory | str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
             return self._attr_entity_category
