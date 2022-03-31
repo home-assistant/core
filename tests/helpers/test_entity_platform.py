@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from unittest.mock import ANY, Mock, patch
 
+from aioesphomeapi import EntityCategory
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE
