@@ -708,3 +708,29 @@ async def test_async_start_setup_platforms(hass):
     assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
     assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
     assert "sensor" not in hass.data[setup.DATA_SETUP_TIME]
+
+
+async def test_creates_hass_data_namespace(hass):
+    """Test setup creates hass data namespace."""
+    mock_integration(
+        hass,
+        MockModule("test_integration1"),
+    )
+    result = await setup.async_setup_component(hass, "test_integration1", {})
+    assert result
+    assert hass.data["test_integration1"] == {}
+
+    # Ensure its not overwrite the second time
+    hass.data["test_integration1"]["test"] = True
+    result = await setup.async_setup_component(hass, "test_integration1", {})
+    assert result
+    assert hass.data["test_integration1"] == {"test": True}
+
+    # Test not creating namespace on failure
+    mock_integration(
+        hass,
+        MockModule("test_integration2", partial_manifest={"disabled": "because"}),
+    )
+    result = await setup.async_setup_component(hass, "test_integration2", {})
+    assert not result
+    assert "test_integration2" not in hass.data

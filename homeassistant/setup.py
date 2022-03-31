@@ -217,6 +217,11 @@ async def _async_setup_component(
 
         task = None
         result: Any | bool = True
+
+        # Precreate hass data for domain
+        if domain not in hass.data:
+            hass.data[domain] = {}
+
         try:
             if hasattr(component, "async_setup"):
                 task = component.async_setup(hass, processed_config)
