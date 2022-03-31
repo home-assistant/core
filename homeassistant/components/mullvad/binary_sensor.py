@@ -39,21 +39,7 @@ class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def __init__(self, coordinator, sensor):
         """Initialize the Mullvad binary sensor."""
         super().__init__(coordinator)
-        self.id = sensor[CONF_ID]
-        self._name = sensor[CONF_NAME]
-        self._device_class = sensor[CONF_DEVICE_CLASS]
-
-    @property
-    def device_class(self):
-        """Return the device class for this binary sensor."""
-        return self._device_class
-
-    @property
-    def name(self):
-        """Return the name for this binary sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the state for this binary sensor."""
-        return self.coordinator.data[self.id]
+        self._attr_device_class = sensor[CONF_DEVICE_CLASS]
+        self._attr_is_on = self.coordinator.data[sensor[CONF_ID]]
+        self._attr_name = sensor[CONF_NAME]
+        self._attr_unique_id = DOMAIN
