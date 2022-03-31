@@ -632,7 +632,7 @@ feedparser==6.0.2
 fiblary3==0.1.8
 
 # homeassistant.components.fints
-fints==1.0.1
+fints==3.1.0
 
 # homeassistant.components.fitbit
 fitbit==0.3.1
