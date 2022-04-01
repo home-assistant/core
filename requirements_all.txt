@@ -336,7 +336,7 @@ async-upnp-client==0.27.0
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.2.1
+asyncsleepiq==1.2.2
 
 # homeassistant.components.aten_pe
 atenpdu==0.3.2
