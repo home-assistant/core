@@ -210,7 +210,6 @@ class BayesianBinarySensor(BinarySensorEntity):
             template = track_template_result.template
             result = track_template_result.result
             entity = event and event.data.get("entity_id")
-            observation = None
             if isinstance(result, TemplateError):
                 _LOGGER.error(
                     "TemplateError('%s') "
