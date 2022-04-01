@@ -1,8 +1,9 @@
 """The Meater Temperature Probe integration."""
 from enum import Enum
 
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -50,11 +51,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator.async_add_listener(async_update_data)
 
 
-class MeaterProbeTemperature(CoordinatorEntity):
+class MeaterProbeTemperature(SensorEntity, CoordinatorEntity):
     """Meater Temperature Sensor Entity."""
 
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(self, coordinator, device_id, temperature_reading_type):
         """Initialise the sensor."""
@@ -75,7 +76,7 @@ class MeaterProbeTemperature(CoordinatorEntity):
         self.temperature_reading_type = temperature_reading_type
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the temperature of the probe."""
         # First find the right probe in the collection
         device = None
