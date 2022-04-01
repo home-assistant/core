@@ -11,7 +11,7 @@ from .util import CONFIG, HVAC_MOCK
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass: HomeAssistant):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unload."""
 
     config_entry = MockConfigEntry(

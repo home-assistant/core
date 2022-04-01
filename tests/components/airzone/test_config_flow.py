@@ -15,7 +15,7 @@ from .util import CONFIG, HVAC_MOCK
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant):
+async def test_form(hass: HomeAssistant) -> None:
     """Test that the form is served with valid input."""
 
     with patch(
@@ -57,7 +57,7 @@ async def test_form(hass: HomeAssistant):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_duplicated_id(hass: HomeAssistant):
+async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     """Test setting up duplicated entry."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)

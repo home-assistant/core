@@ -43,7 +43,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .util import async_init_integration
 
 
-async def test_airzone_create_climates(hass: HomeAssistant):
+async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     """Test creation of climates."""
 
     await async_init_integration(hass)
@@ -134,7 +134,7 @@ async def test_airzone_create_climates(hass: HomeAssistant):
     assert state.attributes.get(ATTR_TEMPERATURE) == 19.1
 
 
-async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant):
+async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     """Test setting the HVAC mode."""
 
     await async_init_integration(hass)
@@ -193,7 +193,7 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant):
     assert state.state == HVAC_MODE_OFF
 
 
-async def test_airzone_climate_set_hvac_slave_error(hass: HomeAssistant):
+async def test_airzone_climate_set_hvac_slave_error(hass: HomeAssistant) -> None:
     """Test setting the HVAC mode for a slave zone."""
 
     HVAC_MOCK = {
@@ -226,7 +226,7 @@ async def test_airzone_climate_set_hvac_slave_error(hass: HomeAssistant):
     assert state.state == HVAC_MODE_OFF
 
 
-async def test_airzone_climate_set_temp(hass: HomeAssistant):
+async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
     """Test setting the target temperature."""
 
     HVAC_MOCK = {
@@ -259,7 +259,7 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant):
     assert state.attributes.get(ATTR_TEMPERATURE) == 20.5
 
 
-async def test_airzone_climate_set_temp_error(hass: HomeAssistant):
+async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     """Test error when setting the target temperature."""
 
     await async_init_integration(hass)
