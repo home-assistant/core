@@ -16,9 +16,9 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_RUNNING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -46,7 +46,7 @@ BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
         name="Air Demand",
     ),
     AirzoneBinarySensorEntityDescription(
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=BinarySensorDeviceClass.BATTERY,
         key=AZD_BATTERY_LOW,
         name="Battery Low",
     ),
