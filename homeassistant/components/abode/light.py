@@ -11,9 +11,10 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
+    COLOR_MODE_ONOFF,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -102,10 +103,26 @@ class AbodeLight(AbodeDevice, LightEntity):
         return _hs
 
     @property
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
+        if self._device.is_dimmable and self._device.is_color_capable:
+            if self.hs_color is not None:
+                return COLOR_MODE_HS
+            return COLOR_MODE_COLOR_TEMP
+        if self._device.is_dimmable:
+            return COLOR_MODE_BRIGHTNESS
+        return COLOR_MODE_ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        if self._device.is_dimmable and self._device.is_color_capable:
+            return {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
+        if self._device.is_dimmable:
+            return {COLOR_MODE_BRIGHTNESS}
+        return {COLOR_MODE_ONOFF}
+
+    @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        if self._device.is_dimmable and self._device.is_color_capable:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
-        if self._device.is_dimmable:
-            return SUPPORT_BRIGHTNESS
         return 0
