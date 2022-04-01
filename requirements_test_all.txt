@@ -1419,7 +1419,6 @@ spotipy==2.19.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-# homeassistant.components.webostv
 sqlalchemy==1.4.32
 
 # homeassistant.components.srp_energy
