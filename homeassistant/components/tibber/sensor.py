@@ -327,7 +327,7 @@ class TibberSensorElPrice(TibberSensor):
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
         self._last_updated = None
-        self._spread_load_constant = randrange(5000)
+        self._spread_load_constant = randrange(3600)
 
         self._attr_available = False
         self._attr_extra_state_attributes = {
@@ -341,6 +341,11 @@ class TibberSensorElPrice(TibberSensor):
             "off_peak_1": None,
             "peak": None,
             "off_peak_2": None,
+            "today": None,
+            "raw_today": None,
+            "tomorrow_valid": False,
+            "tomorrow": None,
+            "raw_tomorrow": None,
         }
         self._attr_icon = ICON
         self._attr_name = f"Electricity price {self._home_name}"
@@ -355,7 +360,7 @@ class TibberSensorElPrice(TibberSensor):
         if (
             not self._tibber_home.last_data_timestamp
             or (self._tibber_home.last_data_timestamp - now).total_seconds()
-            < 5 * 3600 + self._spread_load_constant
+            < 8 * 3600 + self._spread_load_constant
             or not self.available
         ):
             _LOGGER.debug("Asking for new data")
@@ -372,6 +377,71 @@ class TibberSensorElPrice(TibberSensor):
         res = self._tibber_home.current_price_data()
         self._attr_native_value, price_level, self._last_updated = res
         self._attr_extra_state_attributes["price_level"] = price_level
+        
+        priceinfo = self._tibber_home.info["viewer"]["home"]["currentSubscription"]["priceInfo"]
+        # todays priceInfo is for today. Add todays and tomorrows priceInfo
+        if dt_util.parse_datetime(priceinfo["today"][1]["startsAt"]).date() == dt_util.now().date():
+            self._attr_extra_state_attributes["raw_today"] = priceinfo["today"]
+            self._attr_extra_state_attributes["raw_tomorrow"] = priceinfo["tomorrow"]
+            _LOGGER.debug("Raw priceInfo array set")
+
+            # iterate through todays prices and add list with only prices
+            if priceinfo["today"]:
+                local_today = []
+                for entry in priceinfo["today"]:
+                    local_today.append(entry["total"])
+            
+                self._attr_extra_state_attributes["today"] = local_today
+                _LOGGER.debug("Today priceInfo array set")
+            else:
+                self._attr_extra_state_attributes["today"] = []
+                _LOGGER.debug("Today priceInfo missing")
+            
+            # iterate through tomorrows prices and add list with only prices
+            if priceinfo["tomorrow"]:
+                local_tomorrow = []
+                local_tomorrow_valid = True
+                for entry in priceinfo["tomorrow"]:
+                    local_tomorrow.append(entry["total"])
+                    if not entry["total"]:
+                        local_tomorrow_valid = False
+            
+                self._attr_extra_state_attributes["tomorrow"] = local_tomorrow
+                _LOGGER.debug("Tomorrow priceInfo array set")
+                # if no empty values and 24 entries, mark tomorrow as valid
+                if len(local_tomorrow)==24 and local_tomorrow_valid:
+                    self._attr_extra_state_attributes["tomorrow_valid"] = True
+            else:
+                self._attr_extra_state_attributes["tomorrow"] = []
+                _LOGGER.debug("Tomorrow priceInfo missing")
+        
+        # tomorrows priceInfo is for today. Add tomorrows priceInfo as today
+        elif priceinfo["tomorrow"] and dt_util.parse_datetime(priceinfo["tomorrow"][1]["startsAt"]).date() == dt_util.now().date():
+            _LOGGER.debug("Cached tomorrow priceInfo from yesterday is now today")
+            self._attr_extra_state_attributes["raw_today"] = priceinfo["tomorrow"]
+            self._attr_extra_state_attributes["raw_tomorrow"] = []
+            self._attr_extra_state_attributes["tomorrow"] = []
+            self._attr_extra_state_attributes["tomorrow_valid"] = False
+
+            # iterate through todays prices and add list with only prices
+            if priceinfo["tomorrow"]:
+                local_today = []
+                for entry in priceinfo["tomorrow"]:
+                    local_today.append(entry["total"])
+            
+                self._attr_extra_state_attributes["today"] = local_today
+                _LOGGER.debug("Today priceInfo array set")
+            else:
+                self._attr_extra_state_attributes["today"] = []
+                _LOGGER.debug("Today (tomorrow) priceInfo missing")
+        
+        # no cached priceInfo valid for today
+        else:
+            self._attr_extra_state_attributes["today"] = []
+            self._attr_extra_state_attributes["tomorrow"] = []
+            self._attr_extra_state_attributes["raw_today"] = []
+            self._attr_extra_state_attributes["raw_tomorrow"] = []
+            _LOGGER.debug("priceInfo missing")
 
         attrs = self._tibber_home.current_attributes()
         self._attr_extra_state_attributes.update(attrs)
