@@ -65,7 +65,10 @@ CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK: Final = "UDP with route back / NAT mode
 
 _IA_SELECTOR = selector.selector({"text": {}})
 _IP_SELECTOR = selector.selector({"text": {}})
-_PORT_SELECTOR = selector.selector({"number": {"min": 1, "max": 65535, "mode": "box"}})
+_PORT_SELECTOR = vol.All(
+    selector.selector({"number": {"min": 1, "max": 65535, "mode": "box"}}),
+    vol.Coerce(int),
+)
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -246,8 +249,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         fields = {
-            vol.Required(CONF_KNX_SECURE_USER_ID, default=2): selector.selector(
-                {"number": {"min": 1, "max": 127, "mode": "box"}}
+            vol.Required(CONF_KNX_SECURE_USER_ID, default=2): vol.All(
+                selector.selector({"number": {"min": 1, "max": 127, "mode": "box"}}),
+                vol.Coerce(int),
             ),
             vol.Required(CONF_KNX_SECURE_USER_PASSWORD): selector.selector(
                 {"text": {"type": "password"}}
@@ -421,14 +425,17 @@ class KNXOptionsFlowHandler(OptionsFlow):
                         CONF_KNX_DEFAULT_RATE_LIMIT,
                     ),
                 )
-            ] = selector.selector(
-                {
-                    "number": {
-                        "min": 1,
-                        "max": CONF_MAX_RATE_LIMIT,
-                        "mode": "box",
+            ] = vol.All(
+                selector.selector(
+                    {
+                        "number": {
+                            "min": 1,
+                            "max": CONF_MAX_RATE_LIMIT,
+                            "mode": "box",
+                        }
                     }
-                }
+                ),
+                vol.Coerce(int),
             )
 
         return self.async_show_form(
