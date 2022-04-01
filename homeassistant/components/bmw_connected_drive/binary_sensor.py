@@ -251,6 +251,10 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
         vehicle_state = self.vehicle.status
         result = self._attrs.copy()
 
-        return self.entity_description.value_fn(
+        sensor_value = self.entity_description.value_fn(
             vehicle_state, result, self._unit_system
         )
+
+        self._attr_extra_state_attributes = result
+
+        return sensor_value
