@@ -177,6 +177,14 @@ def is_offset_reached(
 class CalendarEventDevice(Entity):
     """Legacy API for calendar event entities."""
 
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "CalendarEventDevice is deprecated, modify %s to extend CalendarEntity",
+            cls.__name__,
+        )
+
     @property
     def event(self) -> dict[str, Any] | None:
         """Return the next upcoming event."""
@@ -186,10 +194,7 @@ class CalendarEventDevice(Entity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
-        _LOGGER.warning(
-            "CalendarEventDevice entity has been deprecated and will be removed in 2022.6, "
-            "and is replaced with CalendarEntitiy. Please report issue to component maintainer",
-        )
+
         if (event := self.event) is None:
             return None
 
