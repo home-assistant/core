@@ -22,6 +22,7 @@ from homeassistant.components.alarm_control_panel.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
@@ -54,15 +55,15 @@ class OverkizAlarmDescription(
     """Class to describe an Overkiz alarm control panel."""
 
     alarm_disarm: str | None = None
-    alarm_disarm_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_disarm_args: OverkizStateType | list[OverkizStateType] = []
     alarm_arm_home: str | None = None
-    alarm_arm_home_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_arm_home_args: OverkizStateType | list[OverkizStateType] = []
     alarm_arm_night: str | None = None
-    alarm_arm_night_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_arm_night_args: OverkizStateType | list[OverkizStateType] = []
     alarm_arm_away: str | None = None
-    alarm_arm_away_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_arm_away_args: OverkizStateType | list[OverkizStateType] = []
     alarm_trigger: str | None = None
-    alarm_trigger_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_trigger_args: OverkizStateType | list[OverkizStateType] = []
 
 
 MAP_INTERNAL_STATUS_STATE: dict[str, str] = {
@@ -91,23 +92,25 @@ def _state_tsk_alarm_controller(select_state: Callable[[str], OverkizStateType])
     ]
 
 
+MAP_CORE_ACTIVE_ZONES: dict[str, str] = {
+    OverkizCommandParam.A: STATE_ALARM_ARMED_HOME,
+    f"{OverkizCommandParam.A},{OverkizCommandParam.B}": STATE_ALARM_ARMED_NIGHT,
+    f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}": STATE_ALARM_ARMED_AWAY,
+}
+
+
 def _state_stateful_alarm_controller(
     select_state: Callable[[str], OverkizStateType]
 ) -> str:
     """Return the state of the device."""
-    if state := cast(list, select_state(OverkizState.CORE_ACTIVE_ZONES)):
-        if [
-            OverkizCommandParam.A,
-            OverkizCommandParam.B,
-            OverkizCommandParam.C,
-        ] in state:
-            return STATE_ALARM_ARMED_AWAY
+    if state := cast(str, select_state(OverkizState.CORE_ACTIVE_ZONES)):
+        # The Stateful Alarm Controller has 3 zones with the following options:
+        # (A, B, C, A,B, B,C, A,C, A,B,C). Since it is not possible to map this to AlarmControlPanel entity,
+        # only the most important zones are mapped, other zones can only be disarmed.
+        if state in MAP_CORE_ACTIVE_ZONES:
+            return MAP_CORE_ACTIVE_ZONES[state]
 
-        if [OverkizCommandParam.A, OverkizCommandParam.B] in state:
-            return STATE_ALARM_ARMED_NIGHT
-
-        if OverkizCommandParam.A in state:
-            return STATE_ALARM_ARMED_HOME
+        return STATE_ALARM_ARMED_CUSTOM_BYPASS
 
     return STATE_ALARM_DISARMED
 
@@ -181,17 +184,13 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
             SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
         ),
         fn_state=_state_stateful_alarm_controller,
-        alarm_disarm=OverkizCommand.DISARM,
+        alarm_disarm=OverkizCommand.ALARM_OFF,
         alarm_arm_home=OverkizCommand.ALARM_ZONE_ON,
-        alarm_arm_home_args=[OverkizCommandParam.A],
+        alarm_arm_home_args=OverkizCommandParam.A,
         alarm_arm_night=OverkizCommand.ALARM_ZONE_ON,
-        alarm_arm_night_args=[OverkizCommandParam.A, OverkizCommandParam.B],
+        alarm_arm_night_args=f"{OverkizCommandParam.A}, {OverkizCommandParam.B}",
         alarm_arm_away=OverkizCommand.ALARM_ZONE_ON,
-        alarm_arm_away_args=[
-            OverkizCommandParam.A,
-            OverkizCommandParam.B,
-            OverkizCommandParam.C,
-        ],
+        alarm_arm_away_args=f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}",
     ),
     # MyFoxAlarmController
     OverkizAlarmDescription(
