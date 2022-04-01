@@ -74,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from the router."""
         if track_devices:
             return await router.async_update_device_trackers()
+        return False
 
     async def async_update_traffic_meter() -> dict[str, Any] | None:
         """Fetch data from the router."""
