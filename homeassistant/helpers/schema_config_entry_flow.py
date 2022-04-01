@@ -371,7 +371,7 @@ def wrapped_entity_config_entry_title(
 @callback
 def entity_selector_without_own_entities(
     handler: SchemaOptionsFlowHandler,
-    entity_selector_config: dict[str, Any],
+    entity_selector_config: selector.EntitySelectorDict,
 ) -> vol.Schema:
     """Return an entity selector which excludes own entities."""
     entity_registry = er.async_get(handler.hass)
