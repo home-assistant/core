@@ -8,6 +8,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.netgear.const import (
     CONF_CONSIDER_HOME,
+    CONF_NOT_TRACK,
     DOMAIN,
     MODELS_PORT_5555,
     PORT_80,
@@ -326,4 +327,5 @@ async def test_options_flow(hass, service):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         CONF_CONSIDER_HOME: 1800,
+        CONF_NOT_TRACK: False,
     }
