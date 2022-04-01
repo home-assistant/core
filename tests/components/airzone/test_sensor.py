@@ -1,9 +1,11 @@
 """The sensor tests for the Airzone platform."""
 
+from homeassistant.core import HomeAssistant
+
 from .util import async_init_integration
 
 
-async def test_airzone_create_sensors(hass):
+async def test_airzone_create_sensors(hass: HomeAssistant):
     """Test creation of sensors."""
 
     await async_init_integration(hass)
