@@ -334,6 +334,8 @@ class BayesianBinarySensor(BinarySensorEntity):
             if len(li_of_dicts) == 1:
                 continue
             for ord_dict in li_of_dicts:
+                if ord_dict["platform"] != "state":
+                    continue
                 ord_dict["platform"] = "multi_state"
 
         return observations_by_entity
