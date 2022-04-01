@@ -35,29 +35,25 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         api = MeaterApi(session)
+        errors = {}
+
 
         try:
             await api.authenticate(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
         except AuthenticationError:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=FLOW_SCHEMA,
-                errors={"base": "invalid_auth"},
-            )
+            errors["base"] = "invalid_auth"
         except ServiceUnavailableError:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=FLOW_SCHEMA,
-                errors={"base": "service_unavailable_error"},
-            )
+            errors["base"] = "service_unavailable_error"
         except Exception:  # pylint: disable=broad-except
-            return self.async_show_form(
-                step_id="user",
-                data_schema=FLOW_SCHEMA,
-                errors={"base": "unknown_auth_error"},
+            errors["base"] = "unknown_auth_error"
+        else:
+            return self.async_create_entry(
+                title="Meater",
+                data={"username": username, "password": password},
             )
 
-        return self.async_create_entry(
-            title="Meater Integration Entry",
-            data={"username": username, "password": password},
+        return self.async_show_form(
+            step_id="user",
+            data_schema=FLOW_SCHEMA,
+            errors=errors,
         )
