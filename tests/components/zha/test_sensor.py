@@ -247,6 +247,12 @@ async def async_test_device_temperature(hass, cluster, entity_id):
     assert_state(hass, entity_id, "29.0", TEMP_CELSIUS)
 
 
+async def async_test_analog_input(hass, cluster, entity_id):
+    """Test temperature sensor."""
+    await send_attributes_report(hass, cluster, {85: 5550, 106: 0.01})
+    assert_state(hass, entity_id, "55.5", None)
+
+
 @pytest.mark.parametrize(
     "cluster_id, entity_suffix, test_func, report_count, read_plug, unsupported_attrs",
     (
@@ -360,6 +366,14 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             general.DeviceTemperature.cluster_id,
             "device_temperature",
             async_test_device_temperature,
+            1,
+            None,
+            None,
+        ),
+        (
+            general.AnalogInput.cluster_id,
+            "analog_input",
+            async_test_analog_input,
             1,
             None,
             None,

@@ -63,8 +63,10 @@ from .core.const import (
     CHANNEL_TEMPERATURE,
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
+    ICONS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
+    UNITS,
 )
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .core.typing import ChannelType, ZhaDeviceType
@@ -199,9 +201,44 @@ class Sensor(ZhaEntity, SensorEntity):
     stop_on_match_group=CHANNEL_ANALOG_INPUT,
 )
 class AnalogInput(Sensor):
-    """Sensor that displays analog input values."""
+    """Sensor that displays configurable analog input values."""
 
     SENSOR_ATTR = "present_value"
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        raw_state = self._channel.cluster.get(self.SENSOR_ATTR)
+        if raw_state is None:
+            return None
+        resolution = self._channel.cluster.get("resolution")
+        if resolution is None:
+            return raw_state
+        return raw_state * resolution
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of this entity."""
+        unit = self._channel.cluster.get("engineering_units")
+        if unit is not None:
+            return UNITS.get(unit)
+        return self._unit
+
+    @property
+    def name(self) -> str:
+        """Return Entity's default name."""
+        description = self._channel.cluster.get("description")
+        if description is not None and len(description) > 0:
+            return f"{super().name} {description}"
+        return super().name
+
+    @property
+    def icon(self):
+        """Return the icon to be used for this entity."""
+        application_type = self._channel.cluster.get("application_type")
+        if application_type is not None:
+            return ICONS.get(application_type >> 16, super().icon)
+        return super().icon
 
 
 @MULTI_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
