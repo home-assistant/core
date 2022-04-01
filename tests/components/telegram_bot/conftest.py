@@ -1,16 +1,14 @@
-"""Tests for the telegram_bot component."""
+"""Tests for the telegram_bot integration."""
 from unittest.mock import patch
 
 import pytest
+from telegram.ext.dispatcher import Dispatcher
 
 from homeassistant.components.telegram_bot import (
     CONF_ALLOWED_CHAT_IDS,
     CONF_TRUSTED_NETWORKS,
     DOMAIN,
-    initialize_bot,
 )
-from homeassistant.components.telegram_bot.polling import PollBot
-from homeassistant.components.telegram_bot.webhooks import PushBot
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.setup import async_setup_component
 
@@ -172,19 +170,10 @@ async def polling_platform(hass, config_polling):
     await hass.async_block_till_done()
 
 
-@pytest.fixture
-def pushbot(hass, config_webhooks):
-    """Fixture for an initialized `PushBot`."""
-    platform_config = config_webhooks[DOMAIN][0]
-    bot = initialize_bot(platform_config)
-    pushbot = PushBot(hass, bot, platform_config)
-    return pushbot
-
-
-@pytest.fixture
-def pollbot(hass, config_polling):
-    """Fixture for an initialized `PollBot`."""
-    platform_config = config_polling[DOMAIN][0]
-    bot = initialize_bot(platform_config)
-    pollbot = PollBot(hass, bot, platform_config)
-    return pollbot
+@pytest.fixture(autouse=True)
+def clear_dispatcher():
+    """Clear the singleton that telegram.ext.dispatcher.Dispatcher sets on itself."""
+    yield
+    Dispatcher._set_singleton(None)
+    # This is how python-telegram-bot resets the dispatcher in their test suite
+    Dispatcher._Dispatcher__singleton_semaphore.release()

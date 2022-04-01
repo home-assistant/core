@@ -3,7 +3,7 @@ import logging
 
 from telegram import Update
 from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
-from telegram.ext import CallbackContext, Updater
+from telegram.ext import CallbackContext, TypeHandler, Updater
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
@@ -45,15 +45,16 @@ class PollBot(BaseTelegramBotEntity):
         self.bot = bot
         self.updater = Updater(bot=bot, workers=4)
         self.dispatcher = self.updater.dispatcher
+        self.dispatcher.add_handler(TypeHandler(Update, self.handle_update))
         self.dispatcher.add_error_handler(process_error)
         super().__init__(hass, config)
 
     def start_polling(self, event=None):
         """Start the polling task."""
-        _LOGGER.info("Starting polling")
+        _LOGGER.debug("Starting polling")
         self.updater.start_polling()
 
     def stop_polling(self, event=None):
         """Stop the polling task."""
-        _LOGGER.info("Stopping polling")
+        _LOGGER.debug("Stopping polling")
         self.updater.stop()

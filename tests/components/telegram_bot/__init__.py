@@ -1,1 +1,1 @@
-"""Tests for telegram_bot component."""
+"""Tests for telegram_bot integration."""

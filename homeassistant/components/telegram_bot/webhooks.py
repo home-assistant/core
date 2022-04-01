@@ -6,7 +6,7 @@ import logging
 
 from telegram import Update
 from telegram.error import TimedOut
-from telegram.ext import Dispatcher
+from telegram.ext import Dispatcher, TypeHandler
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -45,9 +45,10 @@ class PushBot(BaseTelegramBotEntity):
     def __init__(self, hass, bot, config):
         """Create Dispatcher before calling super()."""
         self.bot = bot
-        # Dumb dispatcher that just gets our updates to our handler callback (self.handle_update)
-        self.dispatcher = Dispatcher(bot, None, workers=0)
         self.trusted_networks = config[CONF_TRUSTED_NETWORKS]
+        # Dumb dispatcher that just gets our updates to our handler callback (self.handle_update)
+        self.dispatcher = Dispatcher(bot, None)
+        self.dispatcher.add_handler(TypeHandler(Update, self.handle_update))
         super().__init__(hass, config)
 
         self.base_url = config.get(CONF_URL) or get_url(
@@ -65,6 +66,8 @@ class PushBot(BaseTelegramBotEntity):
                 retry_num += 1
                 _LOGGER.warning("Timeout trying to set webhook (retry #%d)", retry_num)
 
+        return False
+
     async def register_webhook(self):
         """Query telegram and register the URL for our webhook."""
         current_status = await self.hass.async_add_executor_job(
@@ -74,7 +77,7 @@ class PushBot(BaseTelegramBotEntity):
         last_error_date = getattr(current_status, "last_error_date", None)
         if (last_error_date is not None) and (isinstance(last_error_date, int)):
             last_error_date = dt.datetime.fromtimestamp(last_error_date)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Telegram webhook last_error_date: %s. Status: %s",
                 last_error_date,
                 current_status,

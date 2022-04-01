@@ -1,4 +1,6 @@
 """Support to send and receive Telegram messages."""
+from __future__ import annotations
+
 from functools import partial
 import importlib
 import io
@@ -19,7 +21,7 @@ from telegram import (
     Update,
 )
 from telegram.error import TelegramError
-from telegram.ext import CallbackContext, Filters, TypeHandler
+from telegram.ext import CallbackContext, Filters
 from telegram.parsemode import ParseMode
 from telegram.utils.request import Request
 import voluptuous as vol
@@ -862,16 +864,12 @@ class BaseTelegramBotEntity:
         """Initialize the bot base class."""
         self.allowed_chat_ids = config[CONF_ALLOWED_CHAT_IDS]
         self.hass = hass
-        # Dispatcher is set up in platform subclass
-        self.dispatcher.add_handler(  # pylint: disable=no-member
-            TypeHandler(Update, self.handle_update)
-        )
 
-    def handle_update(self, update: Update, context: CallbackContext):
+    def handle_update(self, update: Update, context: CallbackContext) -> bool:
         """Handle updates from bot dispatcher set up by the respective platform."""
         _LOGGER.debug("Handling update %s", update)
         if not self.authorize_update(update):
-            return
+            return False
 
         # establish event type: text, command or callback_query
         if update.callback_query:
@@ -889,11 +887,11 @@ class BaseTelegramBotEntity:
             return True
 
         _LOGGER.debug("Firing event %s: %s", event_type, event_data)
-        self.hass.bus.async_fire(event_type, event_data)
+        self.hass.bus.fire(event_type, event_data)
         return True
 
     @staticmethod
-    def _get_command_event_data(command_text: str):
+    def _get_command_event_data(command_text: str) -> dict[str, str | list]:
         if not command_text.startswith("/"):
             return {}
         command_parts = command_text.split()
@@ -901,7 +899,7 @@ class BaseTelegramBotEntity:
         args = command_parts[1:]
         return {ATTR_COMMAND: command, ATTR_ARGS: args}
 
-    def _get_message_event_data(self, message: Message):
+    def _get_message_event_data(self, message: Message) -> tuple[str, dict[str, Any]]:
         event_data: dict[str, Any] = {
             ATTR_MSGID: message.message_id,
             ATTR_CHAT_ID: message.chat.id,
@@ -925,26 +923,27 @@ class BaseTelegramBotEntity:
 
         return event_type, event_data
 
-    def _get_callback_query_event_data(self, callback_query: CallbackQuery):
+    def _get_callback_query_event_data(
+        self, callback_query: CallbackQuery
+    ) -> tuple[str, dict[str, Any]]:
         event_type = EVENT_TELEGRAM_CALLBACK
         event_data: dict[str, Any] = {
             ATTR_MSGID: callback_query.id,
             ATTR_CHAT_INSTANCE: callback_query.chat_instance,
             ATTR_DATA: callback_query.data,
-            ATTR_MSG: callback_query.message.to_dict()
-            if callback_query.message
-            else None,
-            ATTR_CHAT_ID: callback_query.message.chat.id
-            if callback_query.message
-            else None,
+            ATTR_MSG: None,
+            ATTR_CHAT_ID: None,
         }
+        if callback_query.message:
+            event_data[ATTR_MSG] = callback_query.message.to_dict()
+            event_data[ATTR_CHAT_ID] = callback_query.message.chat.id
 
         # Split data into command and args if possible
         event_data.update(self._get_command_event_data(callback_query.data))
 
         return event_type, event_data
 
-    def authorize_update(self, update: Update):
+    def authorize_update(self, update: Update) -> bool:
         """Make sure either user or chat is in allowed_chat_ids."""
         from_user = update.effective_user.id if update.effective_user else None
         from_chat = update.effective_chat.id if update.effective_chat else None
