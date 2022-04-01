@@ -132,9 +132,6 @@ async def test_sensor_numeric_state(hass):
 
     hass.states.async_set("sensor.test_monitored", 6)
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_monitored", 4)
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_monitored", 6)
     hass.states.async_set("sensor.test_monitored1", 6)
     await hass.async_block_till_done()
 
@@ -268,10 +265,6 @@ async def test_sensor_value_template(hass):
 
     hass.states.async_set("sensor.test_monitored", "off")
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_monitored", "on")
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_monitored", "off")
-    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
     assert state.attributes.get("observations")[0]["prob_given_true"] == 0.8
@@ -280,8 +273,6 @@ async def test_sensor_value_template(hass):
 
     assert state.state == "on"
 
-    hass.states.async_set("sensor.test_monitored", "off")
-    await hass.async_block_till_done()
     hass.states.async_set("sensor.test_monitored", "on")
     await hass.async_block_till_done()
 
@@ -366,10 +357,6 @@ async def test_multiple_observations(hass):
 
     hass.states.async_set("sensor.test_monitored", "blue")
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_monitored", "off")
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_monitored", "blue")
-    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
 
@@ -382,8 +369,6 @@ async def test_multiple_observations(hass):
 
     assert state.state == "on"
 
-    hass.states.async_set("sensor.test_monitored", "blue")
-    await hass.async_block_till_done()
     hass.states.async_set("sensor.test_monitored", "red")
     await hass.async_block_till_done()
 
