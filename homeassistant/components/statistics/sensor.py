@@ -304,7 +304,7 @@ class StatisticsSensor(SensorEntity):
             if "recorder" in self.hass.config.components:
                 self.hass.async_create_task(self._initialize_from_database())
 
-        async_at_start(self.hass, async_stats_sensor_startup)
+        self.async_on_remove(async_at_start(self.hass, async_stats_sensor_startup))
 
     def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
