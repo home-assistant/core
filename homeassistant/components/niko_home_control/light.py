@@ -2,13 +2,19 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import json
 import logging
 
 import nikohomecontrol
 import voluptuous as vol
 
 # Import the device class from the component that you want to support
-from homeassistant.components.light import ATTR_BRIGHTNESS, PLATFORM_SCHEMA, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -21,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 
 async def async_setup_platform(
@@ -31,9 +37,11 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-    host = config[CONF_HOST]
+    host = config.get(CONF_HOST)
 
     try:
+        if host is None:
+            host = nikohomecontrol.NikoHomeControlDiscover().find()
         nhc = nikohomecontrol.NikoHomeControl(
             {"ip": host, "port": 8000, "timeout": 20000}
         )
@@ -59,6 +67,9 @@ class NikoHomeControlLight(LightEntity):
         self._name = light.name
         self._state = light.is_on
         self._brightness = None
+        self._supported_features = (
+            light._state["type"] == 2 if SUPPORT_BRIGHTNESS else None
+        )
 
     @property
     def unique_id(self):
@@ -73,7 +84,13 @@ class NikoHomeControlLight(LightEntity):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return self._brightness
+        value = self._data.get_brightness(self._light.id)
+        return None if value == 0 else value
+
+    @property
+    def supported_features(self):
+        """Return if the light is dimmable."""
+        return self._supported_features
 
     @property
     def is_on(self):
@@ -82,9 +99,8 @@ class NikoHomeControlLight(LightEntity):
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        self._light.brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         _LOGGER.debug("Turn on: %s", self.name)
-        self._light.turn_on()
+        self._data.turn_light_on(self._light.id, kwargs.get(ATTR_BRIGHTNESS, 255))
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
@@ -127,3 +143,20 @@ class NikoHomeControlData:
             if state["id"] == aid:
                 return state["value1"] != 0
         _LOGGER.error("Failed to retrieve state off unknown light")
+
+    def get_brightness(self, aid):
+        """Find and filter brightness on action id."""
+        for state in self.data:
+            if state["id"] == aid:
+                return state["value1"] * 2.55
+        _LOGGER.error("Failed to retrieve brightness unknown light")
+
+    def turn_light_on(self, aid, brightness=255):
+        """Turn light on."""
+        obj = {
+            "cmd": "executeactions",
+            "id": aid,
+            "value1": brightness / 2.55,
+            "value2": 0,
+        }
+        self._nhc.connection.send(json.dumps(obj))
