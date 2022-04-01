@@ -12,7 +12,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -64,7 +63,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             self._attr_preset_modes = list(presets)
 
         # Determine hvac modes and current hvac mode
-        self._attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        self._attr_hvac_modes = [HVAC_MODE_HEAT]
         if self.coordinator.data.gateway.get("cooling_present"):
             self._attr_hvac_modes.append(HVAC_MODE_COOL)
         if self.device.get("available_schedules") != ["None"]:
@@ -89,9 +88,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return HVAC operation ie. heat, cool mode."""
-        if (mode := self.device.get("mode")) is None or mode not in self.hvac_modes:
-            return HVAC_MODE_OFF
-        return mode
+        return self.device.get("mode")
 
     @property
     def hvac_action(self) -> str:
