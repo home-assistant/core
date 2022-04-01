@@ -34,7 +34,7 @@ async def async_setup_platform(hass, bot, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.deregister_webhook)
     hass.http.register_view(
-        PushBotView(bot, pushbot.dispatcher, config[CONF_TRUSTED_NETWORKS])
+        PushBotView(hass, bot, pushbot.dispatcher, config[CONF_TRUSTED_NETWORKS])
     )
     return True
 
@@ -108,8 +108,9 @@ class PushBotView(HomeAssistantView):
     url = TELEGRAM_WEBHOOK_URL
     name = "telegram_webhooks"
 
-    def __init__(self, bot, dispatcher, trusted_networks):
+    def __init__(self, hass, bot, dispatcher, trusted_networks):
         """Initialize by storing stuff needed for setting up our webhook endpoint."""
+        self.hass = hass
         self.bot = bot
         self.dispatcher = dispatcher
         self.trusted_networks = trusted_networks
@@ -128,6 +129,6 @@ class PushBotView(HomeAssistantView):
 
         update = Update.de_json(update_data, self.bot)
         _LOGGER.debug("Received Update on %s: %s", self.url, update)
-        self.dispatcher.process_update(update)
+        self.hass.async_add_executor_job(self.dispatcher.process_update, update)
 
         return None
