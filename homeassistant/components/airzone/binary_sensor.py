@@ -17,9 +17,9 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_POWER,
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_RUNNING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -42,7 +42,7 @@ class AirzoneBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 SYSTEM_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
     AirzoneBinarySensorEntityDescription(
-        device_class=DEVICE_CLASS_POWER,
+        device_class=BinarySensorDeviceClass.POWER,
         key=AZD_POWER,
         name="Power",
     ),
@@ -50,7 +50,7 @@ SYSTEM_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ..
         attributes={
             "errors": AZD_ERRORS,
         },
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         key=AZD_PROBLEMS,
         name="Problem",
