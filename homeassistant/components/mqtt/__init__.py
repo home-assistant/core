@@ -138,6 +138,8 @@ DEFAULT_VALUES = {
     CONF_WILL_MESSAGE: DEFAULT_WILL,
 }
 
+MANDATORY_DEFAULT_VALUES = (CONF_PORT,)
+
 ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
@@ -640,9 +642,9 @@ def _merge_basic_config(
             entry_config[key] = yaml_config[key]
             entry_updated = True
 
-    for key, default_value in DEFAULT_VALUES.items():
+    for key in MANDATORY_DEFAULT_VALUES:
         if key not in entry_config:
-            entry_config[key] = default_value
+            entry_config[key] = DEFAULT_VALUES[key]
             entry_updated = True
 
     if entry_updated:
@@ -651,6 +653,8 @@ def _merge_basic_config(
 
 def _merge_extended_config(entry, conf):
     """Merge advanced options in configuration.yaml config with config entry."""
+    # Add default values
+    conf = {**DEFAULT_VALUES, **conf}
     return {**conf, **entry.data}
 
 

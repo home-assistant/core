@@ -1642,10 +1642,6 @@ async def test_update_incomplete_entry(
     assert entry.data == {
         "port": 1234,
         "broker": "yaml_broker",
-        "birth_message": mqtt.DEFAULT_BIRTH,
-        "discovery": True,
-        "tls_version": "auto",
-        "will_message": mqtt.DEFAULT_WILL,
     }
     # Warnings about broker deprecated, but not about other keys with default values
     assert (
