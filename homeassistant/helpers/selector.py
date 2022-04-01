@@ -59,6 +59,20 @@ def _get_selector_class(config: Any) -> type[Selector]:
     return selector_class
 
 
+def validate_selector(config: Any) -> dict:
+    """Validate a selector."""
+    selector_class = _get_selector_class(config)
+    selector_type = list(config)[0]
+
+    # Selectors can be empty
+    if config[selector_type] is None:
+        return {selector_type: {}}
+
+    return {
+        selector_type: cast(dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
+    }
+
+
 @overload
 def selector(
     selector_type: Literal[SelectorType.ACTION], config: ActionSelectorDict
@@ -245,20 +259,6 @@ def selector(selector_type: SelectorType, config: Any) -> Selector:
         config = {}
 
     return selector_class({selector_type: config})
-
-
-def validate_selector(config: Any) -> dict:
-    """Validate a selector."""
-    selector_class = _get_selector_class(config)
-    selector_type = list(config)[0]
-
-    # Selectors can be empty
-    if config[selector_type] is None:
-        return {selector_type: {}}
-
-    return {
-        selector_type: cast(dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
-    }
 
 
 class Selector:
