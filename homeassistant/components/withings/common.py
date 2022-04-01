@@ -494,7 +494,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         """Perform an async request."""
         asyncio.run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self._hass.loop
-        )
+        ).result()
 
         access_token = self._config_entry.data["token"]["access_token"]
         response = requests.request(
