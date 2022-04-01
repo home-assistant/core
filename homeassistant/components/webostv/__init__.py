@@ -37,7 +37,6 @@ from .const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
-    CONF_SOURCES,
     DATA_CONFIG_ENTRY,
     DATA_HASS_CONFIG,
     DOMAIN,
@@ -46,10 +45,6 @@ from .const import (
     SERVICE_COMMAND,
     SERVICE_SELECT_SOUND_OUTPUT,
     WEBOSTV_EXCEPTIONS,
-)
-
-CUSTOMIZE_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
 )
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
