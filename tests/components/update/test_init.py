@@ -16,6 +16,7 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
 )
 from homeassistant.components.update.const import (
+    ATTR_AUTO_UPDATE,
     ATTR_CURRENT_VERSION,
     ATTR_IN_PROGRESS,
     ATTR_LATEST_VERSION,
@@ -65,6 +66,7 @@ async def test_update(hass: HomeAssistant) -> None:
     assert update.in_progress is False
     assert update.state == STATE_ON
     assert update.state_attributes == {
+        ATTR_AUTO_UPDATE: False,
         ATTR_CURRENT_VERSION: "1.0.0",
         ATTR_IN_PROGRESS: False,
         ATTR_LATEST_VERSION: "1.0.1",
@@ -238,6 +240,46 @@ async def test_entity_with_no_updates(
             DOMAIN,
             SERVICE_INSTALL,
             {ATTR_VERSION: "0.9.0", ATTR_ENTITY_ID: "update.no_update"},
+            blocking=True,
+        )
+
+
+async def test_entity_with_auto_update(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test update entity that has auto update feature."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.update_with_auto_update")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
+    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+
+    # Should be able to manually install an update even if it can auto update
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: "update.update_with_auto_update"},
+        blocking=True,
+    )
+
+    # Should not be to skip the update
+    with pytest.raises(
+        HomeAssistantError,
+        match="Skipping update is not supported for Update with auto update",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SKIP,
+            {ATTR_ENTITY_ID: "update.update_with_auto_update"},
             blocking=True,
         )
 
