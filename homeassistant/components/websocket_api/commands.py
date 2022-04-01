@@ -57,6 +57,7 @@ def async_register_commands(
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
+    async_reg(hass, handle_get_state)
     async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_integration_setup_info)
     async_reg(hass, handle_manifest_list)
@@ -236,6 +237,48 @@ def handle_get_states(
     """Handle get states command."""
     states = _async_get_allowed_states(hass, connection)
 
+    # JSON serialize here so we can recover if it blows up due to the
+    # state machine containing unserializable data. This command is required
+    # to succeed for the UI to show.
+    response = messages.result_message(msg["id"], states)
+    try:
+        connection.send_message(const.JSON_DUMP(response))
+        return
+    except (ValueError, TypeError):
+        connection.logger.error(
+            "Unable to serialize to JSON. Bad data found at %s",
+            format_unserializable_data(
+                find_paths_unserializable_data(response, dump=const.JSON_DUMP)
+            ),
+        )
+    del response
+
+    # If we can't serialize, we'll filter out unserializable states
+    serialized = []
+    for state in states:
+        try:
+            serialized.append(const.JSON_DUMP(state))
+        except (ValueError, TypeError):
+            # Error is already logged above
+            pass
+
+    # We now have partially serialized states. Craft some JSON.
+    response2 = const.JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
+    response2 = response2.replace('"TO_REPLACE"', ", ".join(serialized))
+    connection.send_message(response2)
+
+
+@callback
+@decorators.websocket_command(
+    {vol.Required("type"): "get_state", vol.Required("entity_id"): cv.entity_id}
+)
+def handle_get_state(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get state command."""
+    entity_ids = msg.get("entity_id", [])
+    states = hass.states.get(entity_ids)
+    print(states)
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
     # to succeed for the UI to show.
