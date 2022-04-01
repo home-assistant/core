@@ -204,7 +204,7 @@ class EntityCategory(StrEnum):
     SYSTEM = "system"
 
 
-ENTITY_CATEGORIES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(EntityCategory))
+ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
 
 
 class EntityPlatformState(Enum):
