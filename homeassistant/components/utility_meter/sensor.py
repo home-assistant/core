@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_NAME,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -33,6 +32,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -439,9 +439,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 self.hass, [self._sensor_source_id], self.async_reading
             )
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_source_tracking
-        )
+        self.async_on_remove(async_at_start(self.hass, async_source_tracking))
 
     @property
     def name(self):
