@@ -190,8 +190,8 @@ async def test_sensor_state(hass):
 
     hass.states.async_set("sensor.test_monitored", "on")
     await hass.async_block_till_done()
-
     state = hass.states.get("binary_sensor.test_binary")
+
     assert state.attributes.get("occurred_observation_entities") == [
         "sensor.test_monitored"
     ]
@@ -202,31 +202,35 @@ async def test_sensor_state(hass):
 
     hass.states.async_set("sensor.test_monitored", "off")
     await hass.async_block_till_done()
-
     state = hass.states.get("binary_sensor.test_binary")
+
+    assert state.attributes.get("occurred_observation_entities") == [
+        "sensor.test_monitored"
+    ]
     assert abs(0.33 - state.attributes.get("probability")) < 0.01
     assert state.state == "on"
 
-    hass.states.async_set("sensor.test_monitored", STATE_UNKNOWN)
+    hass.states.async_remove("sensor.test_monitored")
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_monitored", "on")
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_monitored", STATE_UNKNOWN)
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.test_monitored").state == STATE_UNKNOWN
-    assert state.attributes.get("occurred_observation_entities") == []  # failing
-
     state = hass.states.get("binary_sensor.test_binary")
-    assert abs(prior - state.attributes.get("probability")) < 0.011
+
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert abs(prior - state.attributes.get("probability")) < 0.01
     assert state.state == "off"
 
-    hass.states.async_set("sensor.test_monitored", "off")
-    await hass.async_block_till_done()
     hass.states.async_set("sensor.test_monitored", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
-    assert state.attributes.get("occurred_observation_entities") == []
-
     state = hass.states.get("binary_sensor.test_binary")
+
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert abs(prior - state.attributes.get("probability")) < 0.01
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_monitored", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_binary")
+
+    assert state.attributes.get("occurred_observation_entities") == []
     assert abs(prior - state.attributes.get("probability")) < 0.01
     assert state.state == "off"
 
@@ -661,7 +665,11 @@ async def test_monitored_sensor_goes_away(hass):
     hass.states.async_remove("sensor.test_monitored")
 
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.test_binary").state == "on"
+    assert hass.states.get("binary_sensor.test_binary").state == "off"
+    assert (
+        hass.states.get("binary_sensor.test_binary").attributes.get("probability")
+        == 0.2
+    )
 
 
 async def test_reload(hass):
