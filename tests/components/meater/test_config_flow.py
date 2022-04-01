@@ -5,7 +5,7 @@ from meater import AuthenticationError, ServiceUnavailableError
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.meater import DOMAIN, config_flow
+from homeassistant.components.meater import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -47,11 +47,9 @@ async def test_unknown_auth_error(hass, mock_meater):
     """Test that an invalid API/App Key throws an error."""
     conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
 
-    flow = config_flow.MeaterConfigFlow()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
-    result = await flow.async_step_user(user_input=conf)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
     assert result["errors"] == {"base": "unknown_auth_error"}
 
 
@@ -60,11 +58,9 @@ async def test_invalid_credentials(hass, mock_meater):
     """Test that an invalid API/App Key throws an error."""
     conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
 
-    flow = config_flow.MeaterConfigFlow()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
-    result = await flow.async_step_user(user_input=conf)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -75,22 +71,17 @@ async def test_service_unavailable(hass, mock_meater):
     """Test that an invalid API/App Key throws an error."""
     conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
 
-    flow = config_flow.MeaterConfigFlow()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
-    result = await flow.async_step_user(user_input=conf)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
     assert result["errors"] == {"base": "service_unavailable_error"}
 
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
-    flow = config_flow.MeaterConfigFlow()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
-    result = await flow.async_step_user(user_input=None)
-
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=None
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
@@ -99,11 +90,9 @@ async def test_step_user(hass, mock_meater):
     """Test that the user step works."""
     conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
 
-    flow = config_flow.MeaterConfigFlow()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
-    result = await flow.async_step_user(user_input=conf)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_USERNAME: "user@host.com",
