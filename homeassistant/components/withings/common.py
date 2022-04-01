@@ -648,6 +648,10 @@ class DataManager:
             try:
                 return await func()
             except Exception as exception1:  # pylint: disable=broad-except
+                _LOGGER.debug(
+                    "Failed attempt %s of %s (%s)", attempt, attempts, exception1
+                )
+                # Make each backoff pause a little bit longer
                 await asyncio.sleep(0.1 * attempt)
                 exception = exception1
                 continue
