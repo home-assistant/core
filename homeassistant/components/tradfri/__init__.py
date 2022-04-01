@@ -9,10 +9,7 @@ from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 from pytradfri.command import Command
 from pytradfri.device import Device
-from pytradfri.group import Group
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -24,82 +21,30 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_TRADFRI_GATEWAY,
     ATTR_TRADFRI_GATEWAY_MODEL,
     ATTR_TRADFRI_MANUFACTURER,
-    CONF_ALLOW_TRADFRI_GROUPS,
     CONF_GATEWAY_ID,
     CONF_IDENTITY,
-    CONF_IMPORT_GROUPS,
     CONF_KEY,
     COORDINATOR,
     COORDINATOR_LIST,
-    DEFAULT_ALLOW_TRADFRI_GROUPS,
     DOMAIN,
-    GROUPS_LIST,
     KEY_API,
     PLATFORMS,
     SIGNAL_GW,
     TIMEOUT_API,
 )
-from .coordinator import (
-    TradfriDeviceDataUpdateCoordinator,
-    TradfriGroupDataUpdateCoordinator,
-)
+from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 FACTORY = "tradfri_factory"
 LISTENERS = "tradfri_listeners"
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            vol.All(
-                cv.deprecated(CONF_HOST),
-                cv.deprecated(
-                    CONF_ALLOW_TRADFRI_GROUPS,
-                ),
-                {
-                    vol.Optional(CONF_HOST): cv.string,
-                    vol.Optional(
-                        CONF_ALLOW_TRADFRI_GROUPS, default=DEFAULT_ALLOW_TRADFRI_GROUPS
-                    ): cv.boolean,
-                },
-            ),
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Tradfri component."""
-    if (conf := config.get(DOMAIN)) is None:
-        return True
-
-    configured_hosts = [
-        entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
-    ]
-
-    host = conf.get(CONF_HOST)
-    import_groups = conf[CONF_ALLOW_TRADFRI_GROUPS]
-
-    if host is None or host in configured_hosts:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: host, CONF_IMPORT_GROUPS: import_groups},
-        )
-    )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(
@@ -127,7 +72,6 @@ async def async_setup_entry(
 
     api = factory.request
     gateway = Gateway()
-    groups: list[Group] = []
 
     try:
         gateway_info = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
@@ -135,19 +79,6 @@ async def async_setup_entry(
             gateway.get_devices(), timeout=TIMEOUT_API
         )
         devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)
-
-        if entry.data[CONF_IMPORT_GROUPS]:
-            # Note: we should update this page when deprecating:
-            # https://www.home-assistant.io/integrations/tradfri/
-            _LOGGER.warning(
-                "Importing of Tradfri groups has been deprecated due to stability issues "
-                "and will be removed in Home Assistant core 2022.5"
-            )
-            # No need to load groups if the user hasn't requested it
-            groups_commands: Command = await api(
-                gateway.get_groups(), timeout=TIMEOUT_API
-            )
-            groups = await api(groups_commands, timeout=TIMEOUT_API)
 
     except RequestError as exc:
         await factory.shutdown()
@@ -172,7 +103,6 @@ async def async_setup_entry(
         CONF_GATEWAY_ID: gateway,
         KEY_API: api,
         COORDINATOR_LIST: [],
-        GROUPS_LIST: [],
     }
 
     for device in devices:
@@ -185,18 +115,6 @@ async def async_setup_entry(
             async_dispatcher_connect(hass, SIGNAL_GW, coordinator.set_hub_available)
         )
         coordinator_data[COORDINATOR_LIST].append(coordinator)
-
-    for group in groups:
-        group_coordinator = TradfriGroupDataUpdateCoordinator(
-            hass=hass, api=api, group=group
-        )
-        await group_coordinator.async_config_entry_first_refresh()
-        entry.async_on_unload(
-            async_dispatcher_connect(
-                hass, SIGNAL_GW, group_coordinator.set_hub_available
-            )
-        )
-        coordinator_data[GROUPS_LIST].append(group_coordinator)
 
     tradfri_data[COORDINATOR] = coordinator_data
 

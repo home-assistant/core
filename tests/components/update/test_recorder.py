@@ -6,8 +6,8 @@ from datetime import timedelta
 from homeassistant.components.recorder.models import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.update.const import (
-    ATTR_CURRENT_VERSION,
     ATTR_IN_PROGRESS,
+    ATTR_INSTALLED_VERSION,
     ATTR_RELEASE_SUMMARY,
     DOMAIN,
 )
@@ -52,4 +52,4 @@ async def test_exclude_attributes(
     for state in states:
         assert ATTR_IN_PROGRESS not in state.attributes
         assert ATTR_RELEASE_SUMMARY not in state.attributes
-        assert ATTR_CURRENT_VERSION in state.attributes
+        assert ATTR_INSTALLED_VERSION in state.attributes
