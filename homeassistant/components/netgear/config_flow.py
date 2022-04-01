@@ -52,7 +52,9 @@ def _ordered_shared_schema(schema_input):
     return {
         vol.Optional(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
         vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
-        vol.Optional(CONF_NOT_TRACK, default=schema_input.get(CONF_NOT_TRACK, False)): bool,
+        vol.Optional(
+            CONF_NOT_TRACK, default=schema_input.get(CONF_NOT_TRACK, False)
+        ): bool,
     }
 
 
@@ -74,11 +76,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_CONSIDER_HOME,
                     default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
-                    )
+                    ),
                 ): int,
                 vol.Optional(
                     CONF_NOT_TRACK,
-                    default=self.config_entry.options.get(CONF_NOT_TRACK, False)
+                    default=self.config_entry.options.get(CONF_NOT_TRACK, False),
                 ): bool,
             }
         )
@@ -217,7 +219,5 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             name = info.get("ModelName", DEFAULT_NAME)
 
         return self.async_create_entry(
-            title=name,
-            data=config_data,
-            options=config_options
+            title=name, data=config_data, options=config_options
         )
