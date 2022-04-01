@@ -368,7 +368,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.5.1
+debugpy==1.6.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -923,7 +923,7 @@ pybotvac==0.0.23
 pycfdns==1.2.2
 
 # homeassistant.components.cast
-pychromecast==10.3.0
+pychromecast==11.0.0
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
@@ -1419,7 +1419,6 @@ spotipy==2.19.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-# homeassistant.components.webostv
 sqlalchemy==1.4.32
 
 # homeassistant.components.srp_energy
@@ -1546,7 +1545,7 @@ wakeonlan==2.0.1
 wallbox==0.4.4
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.6
+watchdog==2.1.7
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.15.1
