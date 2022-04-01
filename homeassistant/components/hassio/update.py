@@ -116,8 +116,8 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         return self._addon_data[ATTR_VERSION_LATEST]
 
     @property
-    def current_version(self) -> str | None:
-        """Version currently in use."""
+    def installed_version(self) -> str | None:
+        """Version installed and in use."""
         return self._addon_data[ATTR_VERSION]
 
     @property
@@ -139,9 +139,12 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         if (notes := self._addon_data[ATTR_CHANGELOG]) is None:
             return None
 
-        if f"# {self.latest_version}" in notes and f"# {self.current_version}" in notes:
+        if (
+            f"# {self.latest_version}" in notes
+            and f"# {self.installed_version}" in notes
+        ):
             # Split the release notes to only what is between the versions if we can
-            new_notes = notes.split(f"# {self.current_version}")[0]
+            new_notes = notes.split(f"# {self.installed_version}")[0]
             if f"# {self.latest_version}" in new_notes:
                 # Make sure the latest version is still there.
                 # This can be False if the order of the release notes are not correct
@@ -182,7 +185,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
         return self.coordinator.data[DATA_KEY_OS][ATTR_VERSION_LATEST]
 
     @property
-    def current_version(self) -> str:
+    def installed_version(self) -> str:
         """Return native value of entity."""
         return self.coordinator.data[DATA_KEY_OS][ATTR_VERSION]
 
@@ -226,7 +229,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
         return self.coordinator.data[DATA_KEY_SUPERVISOR][ATTR_VERSION_LATEST]
 
     @property
-    def current_version(self) -> str:
+    def installed_version(self) -> str:
         """Return native value of entity."""
         return self.coordinator.data[DATA_KEY_SUPERVISOR][ATTR_VERSION]
 
@@ -271,7 +274,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         return self.coordinator.data[DATA_KEY_CORE][ATTR_VERSION_LATEST]
 
     @property
-    def current_version(self) -> str:
+    def installed_version(self) -> str:
         """Return native value of entity."""
         return self.coordinator.data[DATA_KEY_CORE][ATTR_VERSION]
 

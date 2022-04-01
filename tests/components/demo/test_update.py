@@ -5,8 +5,8 @@ import pytest
 
 from homeassistant.components.update import DOMAIN, SERVICE_INSTALL, UpdateDeviceClass
 from homeassistant.components.update.const import (
-    ATTR_CURRENT_VERSION,
     ATTR_IN_PROGRESS,
+    ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
@@ -31,7 +31,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_TITLE] == "Awesomesoft Inc."
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert (
         state.attributes[ATTR_RELEASE_SUMMARY] == "Awesome update, fixing everything!"
@@ -42,7 +42,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_TITLE] == "AdGuard Home"
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0"
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert state.attributes[ATTR_RELEASE_URL] is None
@@ -51,7 +51,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_TITLE] == "AdGuard Home"
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert (
         state.attributes[ATTR_RELEASE_SUMMARY] == "Awesome update, fixing everything!"
@@ -62,7 +62,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_TITLE] == "Philips Lamps Firmware"
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.93.3"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.93.3"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.94.2"
     assert state.attributes[ATTR_RELEASE_SUMMARY] == "Added support for effects"
     assert (
@@ -74,7 +74,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_TITLE] == "Philips Lamps Firmware"
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.93.3"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.93.3"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.94.2"
     assert state.attributes[ATTR_RELEASE_SUMMARY] == "Added support for effects"
     assert (
