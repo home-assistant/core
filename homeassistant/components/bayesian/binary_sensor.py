@@ -161,6 +161,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.observation_handlers = {
             "numeric_state": self._process_numeric_state,
             "state": self._process_state,
+            "multi_state": self._process_multi_state,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -321,17 +322,19 @@ class BayesianBinarySensor(BinarySensorEntity):
         for all relevant observations to be looked up via their `entity_id`.
         """
 
-        observations_by_entity = {}
-        for ind, obs in enumerate(self._observations):
-            obs["id"] = ind
+        observations_by_entity: dict[str, list[OrderedDict]] = {}
+        for i, obs in enumerate(self._observations):
+            obs["id"] = i
 
             if "entity_id" not in obs:
                 continue
+            observations_by_entity.setdefault(obs["entity_id"], []).append(obs)
 
-            entity_ids = [obs["entity_id"]]
-
-            for e_id in entity_ids:
-                observations_by_entity.setdefault(e_id, []).append(obs)
+        for _, li_of_dicts in observations_by_entity.items():
+            if len(li_of_dicts) == 1:
+                continue
+            for ord_dict in li_of_dicts:
+                ord_dict["platform"] = "multi_state"
 
         return observations_by_entity
 
@@ -388,6 +391,16 @@ class BayesianBinarySensor(BinarySensorEntity):
             return condition.state(
                 self.hass, entity, entity_observation.get("to_state")
             )
+        except ConditionError:
+            return None
+
+    def _process_multi_state(self, entity_observation):
+        """Return True if state conditions are met."""
+        entity = entity_observation["entity_id"]
+
+        try:
+            if condition.state(self.hass, entity, entity_observation.get("to_state")):
+                return True
         except ConditionError:
             return None
 
