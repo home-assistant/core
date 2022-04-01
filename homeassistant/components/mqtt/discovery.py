@@ -10,7 +10,7 @@ import logging
 import re
 import time
 
-from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
+from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 import homeassistant.helpers.config_validation as cv

@@ -5,7 +5,7 @@ from abc import abstractmethod
 from collections.abc import Callable
 import json
 import logging
-from typing import Any, Protocol, final
+from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
@@ -526,7 +526,7 @@ async def cleanup_device_registry(
         and not tag.async_has_tags(hass, device_id)
     ):
         device_registry.async_update_device(
-            device_id, remove_config_entry_id=config_entry_id
+            device_id, remove_config_entry_id=cast(str, config_entry_id)
         )
 
 
