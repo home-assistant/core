@@ -37,7 +37,6 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         api = MeaterApi(session)
         errors = {}
 
-
         try:
             await api.authenticate(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
         except AuthenticationError:
