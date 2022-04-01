@@ -89,9 +89,7 @@ CONFIG_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_TARIFFS, default=[]): selector.selector(
             selector.SelectorType.SELECT,
-            selector.SelectSelectorDict(
-                options=cast(list[str], []), custom_value=True, multiple=True
-            ),
+            selector.SelectSelectorDict(options=[], custom_value=True, multiple=True),
         ),
         vol.Required(CONF_METER_NET_CONSUMPTION, default=False): selector.selector(
             selector.SelectorType.BOOLEAN, selector.BooleanSelectorDict()

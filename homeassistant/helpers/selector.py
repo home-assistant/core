@@ -1,7 +1,7 @@
 """Selectors for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any, Literal, TypedDict, cast, overload
 
 import voluptuous as vol
@@ -820,7 +820,7 @@ class SelectSelectorMode(StrEnum):
 class SelectSelectorDict(TypedDict, total=False):
     """Class to represent a select selector dict."""
 
-    options: list[SelectOptionDict] | list[str]  # required
+    options: Sequence[SelectOptionDict] | Sequence[str]  # required
     multiple: bool
     custom_value: bool
     mode: SelectSelectorMode
