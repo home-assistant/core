@@ -17,7 +17,7 @@ from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
 from .discovery import MQTTConfig, cancel_discovery
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MqttDiscoveryDeviceUpdateService,
+    MqttDiscoveryDeviceUpdate,
     update_device,
 )
 from .models import MqttTagConfig
@@ -83,7 +83,7 @@ def async_has_tags(hass, device_id):
     return hass.data[TAGS][device_id] != {}
 
 
-class MQTTTagScanner(MqttDiscoveryDeviceUpdateService):
+class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
     """MQTT Tag scanner."""
 
     def __init__(
@@ -105,7 +105,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateService):
 
         self._setup_from_config(config)
 
-        MqttDiscoveryDeviceUpdateService.__init__(
+        MqttDiscoveryDeviceUpdate.__init__(
             self, hass, discovery_info, device_id, config_entry, LOG_NAME
         )
 

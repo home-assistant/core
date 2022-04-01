@@ -1,4 +1,4 @@
-"""Modesl used by multiple MQTT modules."""
+"""Models used by multiple MQTT modules."""
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -40,20 +40,6 @@ AsyncMessageCallbackType = Callable[[ReceiveMessage], Awaitable[None]]
 MessageCallbackType = Callable[[ReceiveMessage], None]
 
 
-class MqttNotificationConfig(TypedDict, total=False):
-    """Supply service parameters for MqttNotificationService."""
-
-    command_topic: str
-    command_template: Template
-    encoding: str
-    name: str
-    qos: int
-    retain: bool
-    targets: list
-    title: str
-    device: ConfigType
-
-
 class MqttTagConfig(TypedDict, total=False):
     """Supply service parameters for MQTTTagScanner."""
 
@@ -62,4 +48,17 @@ class MqttTagConfig(TypedDict, total=False):
     device: ConfigType
 
 
-MqttTypedDictConfigType = Union[MqttNotificationConfig, MqttTagConfig]
+class MqttDeviceTriggerConfig(TypedDict, total=False):
+    """Supply service parameters for MQTT device trigger."""
+
+    automation_type: str
+    payload: str
+    qos: int
+    topic: str
+    type: str
+    subtype: str
+    value_template: Template
+    device: ConfigType
+
+
+MqttTypedDictConfigType = Union[MqttTagConfig, MqttDeviceTriggerConfig]

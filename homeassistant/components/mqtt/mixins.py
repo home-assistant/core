@@ -530,7 +530,7 @@ async def cleanup_device_registry(
         )
 
 
-class MqttDiscoveryDeviceUpdateService:
+class MqttDiscoveryDeviceUpdate:
     """Add support for auto discovery for platforms without an entity."""
 
     def __init__(
@@ -565,6 +565,12 @@ class MqttDiscoveryDeviceUpdateService:
         ) -> None:
             """Handle discovery update."""
             nonlocal rediscover, self
+            _LOGGER.info(
+                "Got update for %s with hash: %s '%s'",
+                self.log_name,
+                self.discovery_hash,
+                discovery_payload,
+            )
             if (
                 discovery_payload
                 and discovery_payload != discovery_data[ATTR_DISCOVERY_PAYLOAD]
@@ -573,10 +579,8 @@ class MqttDiscoveryDeviceUpdateService:
             if not discovery_payload or rediscover:
                 # unregister and clean up the current discovery instance
                 self.terminate_discovery()
-                async_dispatcher_send(
-                    hass, MQTT_DISCOVERY_DONE.format(self.discovery_hash), None
-                )
                 await _async_tear_down()
+                self.async_send_discovery_done()
                 _LOGGER.info(
                     "%s %s has been removed",
                     self.log_name,
@@ -584,9 +588,7 @@ class MqttDiscoveryDeviceUpdateService:
                 )
             else:
                 # Normal update without change
-                async_dispatcher_send(
-                    hass, MQTT_DISCOVERY_DONE.format(self.discovery_hash), None
-                )
+                self.async_send_discovery_done()
                 _LOGGER.info(
                     "%s %s no changes",
                     self.log_name,
@@ -651,13 +653,18 @@ class MqttDiscoveryDeviceUpdateService:
             self._remove_device_updated = hass.bus.async_listen(
                 EVENT_DEVICE_REGISTRY_UPDATED, _async_device_removed
             )
-        async_dispatcher_send(
-            hass, MQTT_DISCOVERY_DONE.format(self.discovery_hash), None
-        )
+        self.async_send_discovery_done()
         _LOGGER.info(
             "%s %s has been initialized",
             self.log_name,
             self.discovery_hash,
+        )
+
+    @callback
+    def async_send_discovery_done(self) -> None:
+        """Acknowledge a discovery message has been handled."""
+        async_dispatcher_send(
+            self.hass, MQTT_DISCOVERY_DONE.format(self.discovery_hash), None
         )
 
     def terminate_discovery(self) -> None:
