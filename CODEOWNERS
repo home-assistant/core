@@ -1185,6 +1185,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/yi/ @bachya
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
+/homeassistant/components/zengge/ @emontnemery
 /homeassistant/components/zeroconf/ @bdraco
 /tests/components/zeroconf/ @bdraco
 /homeassistant/components/zerproc/ @emlove
