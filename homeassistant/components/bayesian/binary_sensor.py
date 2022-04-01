@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -381,6 +382,9 @@ class BayesianBinarySensor(BinarySensorEntity):
         entity = entity_observation["entity_id"]
 
         try:
+            if condition.state(self.hass, entity, [STATE_UNKNOWN, STATE_UNAVAILABLE]):
+                return None
+
             return condition.state(
                 self.hass, entity, entity_observation.get("to_state")
             )
