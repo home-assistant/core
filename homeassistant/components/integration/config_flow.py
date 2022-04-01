@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
     TIME_DAYS,
     TIME_HOURS,
     TIME_MINUTES,
@@ -34,56 +33,63 @@ from .const import (
 )
 
 UNIT_PREFIXES = [
-    {"value": "none", "label": "none"},
-    {"value": "k", "label": "k (kilo)"},
-    {"value": "M", "label": "M (mega)"},
-    {"value": "G", "label": "T (tera)"},
-    {"value": "T", "label": "P (peta)"},
+    selector.SelectOptionDict(value="none", label="none"),
+    selector.SelectOptionDict(value="k", label="k (kilo)"),
+    selector.SelectOptionDict(value="M", label="M (mega)"),
+    selector.SelectOptionDict(value="T", label="T (tera)"),
+    selector.SelectOptionDict(value="P", label="P (peta)"),
 ]
 TIME_UNITS = [
-    {"value": TIME_SECONDS, "label": "s (seconds)"},
-    {"value": TIME_MINUTES, "label": "min (minutes)"},
-    {"value": TIME_HOURS, "label": "h (hours)"},
-    {"value": TIME_DAYS, "label": "d (days)"},
+    selector.SelectOptionDict(value=TIME_SECONDS, label="s (seconds)"),
+    selector.SelectOptionDict(value=TIME_MINUTES, label="min (minutes)"),
+    selector.SelectOptionDict(value=TIME_HOURS, label="h (hours)"),
+    selector.SelectOptionDict(value=TIME_DAYS, label="d (days)"),
 ]
 INTEGRATION_METHODS = [
-    {"value": METHOD_TRAPEZOIDAL, "label": "Trapezoidal rule"},
-    {"value": METHOD_LEFT, "label": "Left Riemann sum"},
-    {"value": METHOD_RIGHT, "label": "Right Riemann sum"},
+    selector.SelectOptionDict(value=METHOD_TRAPEZOIDAL, label="Trapezoidal rule"),
+    selector.SelectOptionDict(value=METHOD_LEFT, label="Left Riemann sum"),
+    selector.SelectOptionDict(value=METHOD_RIGHT, label="Right Riemann sum"),
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            {"number": {"min": 0, "max": 6, "mode": "box"}}
+            selector.SelectorType.NUMBER,
+            selector.NumberSelectorDict(
+                min=0, max=6, mode=selector.NumberSelectorMode.BOX
+            ),
         ),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector({"text": {}}),
+        vol.Required(CONF_NAME): selector.selector(
+            selector.SelectorType.TEXT, selector.TextSelectorDict()
+        ),
         vol.Required(CONF_SOURCE_SENSOR): selector.selector(
-            {"entity": {"domain": "sensor"}},
+            selector.SelectorType.ENTITY, selector.EntitySelectorDict(domain="sensor")
         ),
         vol.Required(CONF_METHOD, default=METHOD_TRAPEZOIDAL): selector.selector(
-            {"select": {"options": INTEGRATION_METHODS}}
+            selector.SelectorType.SELECT,
+            selector.SelectSelectorDict(options=INTEGRATION_METHODS),
         ),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            {
-                "number": {
-                    "min": 0,
-                    "max": 6,
-                    "mode": "box",
-                    CONF_UNIT_OF_MEASUREMENT: "decimals",
-                }
-            }
+            selector.SelectorType.NUMBER,
+            selector.NumberSelectorDict(
+                min=0,
+                max=6,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="decimals",
+            ),
         ),
         vol.Required(CONF_UNIT_PREFIX, default="none"): selector.selector(
-            {"select": {"options": UNIT_PREFIXES}}
+            selector.SelectorType.SELECT,
+            selector.SelectSelectorDict(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.selector(
-            {"select": {"options": TIME_UNITS}}
+            selector.SelectorType.SELECT,
+            selector.SelectSelectorDict(options=TIME_UNITS),
         ),
     }
 )

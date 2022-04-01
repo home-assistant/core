@@ -28,18 +28,27 @@ def _validate_mode(data: Any) -> Any:
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): selector.selector(
-            {"number": {"mode": "box"}}
+            selector.SelectorType.NUMBER,
+            selector.NumberSelectorDict(mode=selector.NumberSelectorMode.BOX),
         ),
-        vol.Optional(CONF_LOWER): selector.selector({"number": {"mode": "box"}}),
-        vol.Optional(CONF_UPPER): selector.selector({"number": {"mode": "box"}}),
+        vol.Optional(CONF_LOWER): selector.selector(
+            selector.SelectorType.NUMBER,
+            selector.NumberSelectorDict(mode=selector.NumberSelectorMode.BOX),
+        ),
+        vol.Optional(CONF_UPPER): selector.selector(
+            selector.SelectorType.NUMBER,
+            selector.NumberSelectorDict(mode=selector.NumberSelectorMode.BOX),
+        ),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector({"text": {}}),
+        vol.Required(CONF_NAME): selector.selector(
+            selector.SelectorType.TEXT, selector.TextSelectorDict()
+        ),
         vol.Required(CONF_ENTITY_ID): selector.selector(
-            {"entity": {"domain": "sensor"}}
+            selector.SelectorType.ENTITY, selector.EntitySelectorDict(domain="sensor")
         ),
     }
 ).extend(OPTIONS_SCHEMA.schema)

@@ -21,20 +21,27 @@ _STATISTIC_MEASURES = ["last", "max", "mean", "min", "median"]
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_IDS): selector.selector(
-            {"entity": {"domain": "sensor", "multiple": True}}
+            selector.SelectorType.ENTITY,
+            selector.EntitySelectorDict(domain="sensor", multiple=True),
         ),
         vol.Required(CONF_TYPE): selector.selector(
-            {"select": {"options": _STATISTIC_MEASURES}}
+            selector.SelectorType.SELECT,
+            selector.SelectSelectorDict(options=_STATISTIC_MEASURES),
         ),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            {"number": {"min": 0, "max": 6, "mode": "box"}}
+            selector.SelectorType.NUMBER,
+            selector.NumberSelectorDict(
+                min=0, max=6, mode=selector.NumberSelectorMode.BOX
+            ),
         ),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required("name"): selector.selector({"text": {}}),
+        vol.Required("name"): selector.selector(
+            selector.SelectorType.TEXT, selector.TextSelectorDict()
+        ),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 

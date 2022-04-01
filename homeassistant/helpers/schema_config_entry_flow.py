@@ -381,6 +381,9 @@ def entity_selector_without_own_entities(
     )
     entity_ids = [ent.entity_id for ent in entities]
 
-    return selector.selector(
-        {"entity": {**entity_selector_config, "exclude_entities": entity_ids}}
+    return selector.selector(  # type: ignore[call-overload]
+        selector.SelectorType.ENTITY,
+        selector.EntitySelectorDict(
+            **entity_selector_config, exclude_entities=entity_ids  # type: ignore[misc]
+        ),
     )

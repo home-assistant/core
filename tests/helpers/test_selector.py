@@ -51,7 +51,7 @@ def _test_selector(
     selector.validate_selector({selector_type: schema})
 
     # Use selector in schema and validate
-    vol_schema = vol.Schema({"selection": selector.selector({selector_type: schema})})
+    vol_schema = vol.Schema({"selection": selector.selector(selector_type, schema)})
     for selection in valid_selections:
         assert vol_schema({"selection": selection}) == {
             "selection": converter(selection)
@@ -61,7 +61,7 @@ def _test_selector(
             vol_schema({"selection": selection})
 
     # Serialize selector
-    selector_instance = selector.selector({selector_type: schema})
+    selector_instance = selector.selector(selector_type, schema)
     assert cv.custom_serializer(selector_instance) == {
         "selector": {selector_type: selector_instance.config}
     }
@@ -101,7 +101,9 @@ def _test_selector(
 )
 def test_device_selector_schema(schema, valid_selections, invalid_selections):
     """Test device selector."""
-    _test_selector("device", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.DEVICE, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -161,7 +163,9 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections):
     """Test entity selector."""
-    _test_selector("entity", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.ENTITY, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -208,7 +212,9 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_area_selector_schema(schema, valid_selections, invalid_selections):
     """Test area selector."""
-    _test_selector("area", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.AREA, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -235,7 +241,9 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections):
     """Test number selector."""
-    _test_selector("number", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.NUMBER, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -257,7 +265,9 @@ def test_number_selector_schema_error(schema):
 )
 def test_addon_selector_schema(schema, valid_selections, invalid_selections):
     """Test add-on selector."""
-    _test_selector("addon", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.ADDON, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -266,7 +276,13 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
     """Test boolean selector."""
-    _test_selector("boolean", schema, valid_selections, invalid_selections, bool)
+    _test_selector(
+        selector.SelectorType.BOOLEAN,
+        schema,
+        valid_selections,
+        invalid_selections,
+        bool,
+    )
 
 
 @pytest.mark.parametrize(
@@ -275,7 +291,9 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_time_selector_schema(schema, valid_selections, invalid_selections):
     """Test time selector."""
-    _test_selector("time", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.TIME, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -309,7 +327,9 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_target_selector_schema(schema, valid_selections, invalid_selections):
     """Test target selector."""
-    _test_selector("target", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.TARGET, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -318,7 +338,9 @@ def test_target_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_action_selector_schema(schema, valid_selections, invalid_selections):
     """Test action sequence selector."""
-    _test_selector("action", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.ACTION, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -327,7 +349,9 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_object_selector_schema(schema, valid_selections, invalid_selections):
     """Test object selector."""
-    _test_selector("object", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.OBJECT, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -340,7 +364,9 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_text_selector_schema(schema, valid_selections, invalid_selections):
     """Test text selector."""
-    _test_selector("text", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.TEXT, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -394,7 +420,9 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_select_selector_schema(schema, valid_selections, invalid_selections):
     """Test select selector."""
-    _test_selector("select", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.SELECT, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -426,7 +454,9 @@ def test_select_selector_schema_error(schema):
 )
 def test_attribute_selector_schema(schema, valid_selections, invalid_selections):
     """Test attribute selector."""
-    _test_selector("attribute", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.ATTRIBUTE, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -449,7 +479,9 @@ def test_attribute_selector_schema(schema, valid_selections, invalid_selections)
 )
 def test_duration_selector_schema(schema, valid_selections, invalid_selections):
     """Test duration selector."""
-    _test_selector("duration", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.DURATION, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -464,7 +496,9 @@ def test_duration_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_icon_selector_schema(schema, valid_selections, invalid_selections):
     """Test icon selector."""
-    _test_selector("icon", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.ICON, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -479,7 +513,9 @@ def test_icon_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_theme_selector_schema(schema, valid_selections, invalid_selections):
     """Test theme selector."""
-    _test_selector("theme", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.THEME, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -512,7 +548,13 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections):
         data.pop("metadata", None)
         return data
 
-    _test_selector("media", schema, valid_selections, invalid_selections, drop_metadata)
+    _test_selector(
+        selector.SelectorType.MEDIA,
+        schema,
+        valid_selections,
+        invalid_selections,
+        drop_metadata,
+    )
 
 
 @pytest.mark.parametrize(
@@ -545,7 +587,9 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections):
 def test_location_selector_schema(schema, valid_selections, invalid_selections):
     """Test location selector."""
 
-    _test_selector("location", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.LOCATION, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -561,7 +605,9 @@ def test_location_selector_schema(schema, valid_selections, invalid_selections):
 def test_rgb_color_selector_schema(schema, valid_selections, invalid_selections):
     """Test color_rgb selector."""
 
-    _test_selector("color_rgb", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.COLOR_RGB, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -582,7 +628,9 @@ def test_rgb_color_selector_schema(schema, valid_selections, invalid_selections)
 def test_color_tempselector_schema(schema, valid_selections, invalid_selections):
     """Test color_temp selector."""
 
-    _test_selector("color_temp", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.COLOR_TEMP, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -598,7 +646,9 @@ def test_color_tempselector_schema(schema, valid_selections, invalid_selections)
 def test_date_selector_schema(schema, valid_selections, invalid_selections):
     """Test date selector."""
 
-    _test_selector("date", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.DATE, schema, valid_selections, invalid_selections
+    )
 
 
 @pytest.mark.parametrize(
@@ -614,4 +664,6 @@ def test_date_selector_schema(schema, valid_selections, invalid_selections):
 def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
     """Test datetime selector."""
 
-    _test_selector("datetime", schema, valid_selections, invalid_selections)
+    _test_selector(
+        selector.SelectorType.DATETIME, schema, valid_selections, invalid_selections
+    )
