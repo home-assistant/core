@@ -51,6 +51,7 @@ from .auth import async_setup_auth_view
 from .const import (
     ATTR_ADDON,
     ATTR_ADDONS,
+    ATTR_AUTO_UPDATE,
     ATTR_CHANGELOG,
     ATTR_DISCOVERY,
     ATTR_FOLDERS,
@@ -98,6 +99,7 @@ DATA_INFO = "hassio_info"
 DATA_OS_INFO = "hassio_os_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
+DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
@@ -424,6 +426,16 @@ def get_supervisor_info(hass):
 
 @callback
 @bind_hass
+def get_addons_info(hass):
+    """Return Addons info.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_ADDONS_INFO)
+
+
+@callback
+@bind_hass
 def get_addons_stats(hass):
     """Return Addons stats.
 
@@ -607,6 +619,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         changelog = await hassio.get_addon_changelog(slug)
         return (slug, changelog)
 
+    async def update_addon_info(slug):
+        """Return the info for an add-on."""
+        info = await hassio.get_addon_info(slug)
+        return (slug, info)
+
     async def update_info_data(now):
         """Update last available supervisor information."""
 
@@ -639,6 +656,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             hass.data[DATA_ADDONS_CHANGELOGS] = dict(
                 await asyncio.gather(
                     *[update_addon_changelog(addon[ATTR_SLUG]) for addon in addons]
+                )
+            )
+            hass.data[DATA_ADDONS_INFO] = dict(
+                await asyncio.gather(
+                    *[update_addon_info(addon[ATTR_SLUG]) for addon in addons]
                 )
             )
 
@@ -845,6 +867,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         new_data = {}
         supervisor_info = get_supervisor_info(self.hass)
+        addons_info = get_addons_info(self.hass)
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
         store_data = get_store(self.hass)
@@ -858,6 +881,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             addon[ATTR_SLUG]: {
                 **addon,
                 **((addons_stats or {}).get(addon[ATTR_SLUG], {})),
+                ATTR_AUTO_UPDATE: addons_info.get(addon[ATTR_SLUG], {}).get(
+                    ATTR_AUTO_UPDATE, False
+                ),
                 ATTR_CHANGELOG: (addons_changelogs or {}).get(addon[ATTR_SLUG]),
                 ATTR_REPOSITORY: repositories.get(
                     addon.get(ATTR_REPOSITORY), addon.get(ATTR_REPOSITORY, "")
