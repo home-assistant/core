@@ -21,6 +21,11 @@ class MockUpdateEntity(MockEntity, UpdateEntity):
     """Mock UpdateEntity class."""
 
     @property
+    def auto_update(self) -> bool:
+        """Indicate if the device or service has auto update enabled."""
+        return self._handle("auto_update")
+
+    @property
     def current_version(self) -> str | None:
         """Version currently in use."""
         return self._handle("current_version")
@@ -134,6 +139,14 @@ def init(empty=False):
                 current_version="1.0.0",
                 latest_version="1.0.1",
                 supported_features=UpdateEntityFeature.RELEASE_NOTES,
+            ),
+            MockUpdateEntity(
+                name="Update with auto update",
+                unique_id="with_auto_update",
+                current_version="1.0.0",
+                latest_version="1.0.1",
+                auto_update=True,
+                supported_features=UpdateEntityFeature.INSTALL,
             ),
         ]
     )
