@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -118,6 +118,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
+
+    if entry.options.get(CONF_NOT_TRACK, False):
+        router_id = None
+        # Remove devices that are no longer tracked
+        device_registry = dr.async_get(hass)
+        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        for device_entry in devices:
+            if device_entry.via_device_id is None:
+                router_id = device_entry.id
+                continue  # do not remove the router itself
+            device_registry.async_update_device(device_entry.id, remove_config_entry_id=entry.entry_id)
+        # Remove entities that are no longer tracked
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        for entity_entry in entries:
+            if entity_entry.device_id is not router_id:
+                entity_registry.async_remove(entity_entry.entity_id)
 
     return unload_ok
 
