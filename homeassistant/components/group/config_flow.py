@@ -33,7 +33,7 @@ def basic_group_options_schema(
     return vol.Schema(
         {
             vol.Required(CONF_ENTITIES): entity_selector_without_own_entities(
-                handler, {"domain": domain, "multiple": True}
+                handler, selector.EntitySelectorDict(domain=domain, multiple=True)
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
                 selector.SelectorType.BOOLEAN, selector.BooleanSelectorDict()
