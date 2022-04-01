@@ -11,11 +11,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Meater Temperature Probe sensor."""
-    return True
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
