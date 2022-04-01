@@ -55,15 +55,15 @@ class OverkizAlarmDescription(
     """Class to describe an Overkiz alarm control panel."""
 
     alarm_disarm: str | None = None
-    alarm_disarm_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_disarm_args: OverkizStateType | list[OverkizStateType] = []
     alarm_arm_home: str | None = None
-    alarm_arm_home_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_arm_home_args: OverkizStateType | list[OverkizStateType] = []
     alarm_arm_night: str | None = None
-    alarm_arm_night_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_arm_night_args: OverkizStateType | list[OverkizStateType] = []
     alarm_arm_away: str | None = None
-    alarm_arm_away_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_arm_away_args: OverkizStateType | list[OverkizStateType] = []
     alarm_trigger: str | None = None
-    alarm_trigger_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_trigger_args: OverkizStateType | list[OverkizStateType] = []
 
 
 MAP_INTERNAL_STATUS_STATE: dict[str, str] = {
