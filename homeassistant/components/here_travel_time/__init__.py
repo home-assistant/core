@@ -134,6 +134,7 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
         self,
     ) -> tuple[list[str], list[str], str | None, str | None]:
         """Prepare parameters for the HERE api."""
+
         if self.config.origin_entity_id is not None:
             origin = find_coordinates(self.hass, self.config.origin_entity_id)
         else:
@@ -144,16 +145,18 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             destination = self.config.destination
         try:
-            here_formatted_destination = destination.split(  # type: ignore[union-attr]
-                ","
-            )
+            if destination is None:
+                raise vol.Invalid("Destination must not be None")
+            here_formatted_destination = destination.split(",")
             vol.Schema(cv.gps(here_formatted_destination))
-        except (AttributeError, vol.Invalid) as ex:
+        except (vol.Invalid) as ex:
             raise InvalidCoordinatesException(
                 f"{destination} are not valid coordinates"
             ) from ex
         try:
-            here_formatted_origin = origin.split(",")  # type: ignore[union-attr]
+            if origin is None:
+                raise vol.Invalid("Origin must not be None")
+            here_formatted_origin = origin.split(",")
             vol.Schema(cv.gps(here_formatted_origin))
         except (AttributeError, vol.Invalid) as ex:
             raise InvalidCoordinatesException(
