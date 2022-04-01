@@ -288,10 +288,15 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 sensor.start(source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
         if (
-            old_state is None
-            or new_state is None
-            or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            new_state is None
             or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            or (
+                not self._sensor_delta_values
+                and (
+                    old_state is None
+                    or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                )
+            )
         ):
             return
 
@@ -309,9 +314,12 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             self._state += adjustment
 
         except DecimalException as err:
-            _LOGGER.warning(
-                "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
-            )
+            if self._sensor_delta_values:
+                _LOGGER.warning("Invalid adjustment of %s: %s", new_state.state, err)
+            else:
+                _LOGGER.warning(
+                    "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
+                )
         self.async_write_ha_state()
 
     @callback
