@@ -24,24 +24,26 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if not coordinator.last_update_success:
             return
 
-        # Populate the entities
         devices = coordinator.data
-
         entities = []
+        known_probes: set = hass.data[DOMAIN]["known_probes"]
 
+        # Add entities for temperature probes which we've not yet seen
         for dev in devices:
-            if dev.id not in hass.data[DOMAIN]["entities"]:
-                entities.append(
-                    MeaterProbeTemperature(
-                        coordinator, dev.id, TemperatureMeasurement.Internal
-                    )
+            if dev.id in known_probes:
+                continue
+
+            entities.append(
+                MeaterProbeTemperature(
+                    coordinator, dev.id, TemperatureMeasurement.Internal
                 )
-                entities.append(
-                    MeaterProbeTemperature(
-                        coordinator, dev.id, TemperatureMeasurement.Ambient
-                    )
+            )
+            entities.append(
+                MeaterProbeTemperature(
+                    coordinator, dev.id, TemperatureMeasurement.Ambient
                 )
-                hass.data[DOMAIN]["entities"][dev.id] = None
+            )
+            known_probes.add(dev.id)
 
         async_add_entities(entities)
 
