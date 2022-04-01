@@ -35,6 +35,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -144,7 +145,7 @@ async def _async_migrate_unique_ids(
         if parts[0] not in bed_ids or not old_unique_id.endswith(tuple(sensor_types)):
             return None
 
-        sensor_type = next(filter(old_unique_id.endswith, sensor_types), None)
+        sensor_type = next(filter(old_unique_id.endswith, sensor_types))
         sleeper_name = "_".join(parts[1:]).removesuffix(f"_{sensor_type}")
         sleeper_id = names_to_ids.get(sleeper_name)
 
@@ -153,7 +154,7 @@ async def _async_migrate_unique_ids(
 
         new_unique_id = f"{sleeper_id}_{sensor_type}"
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Migrating unique_id from [%s] to [%s]",
             old_unique_id,
             new_unique_id,

@@ -60,9 +60,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.here_travel_time.sensor",
     "homeassistant.components.home_plus_control",
     "homeassistant.components.home_plus_control.api",
-    "homeassistant.components.homekit.aidmanager",
-    "homeassistant.components.homekit.config_flow",
-    "homeassistant.components.homekit.util",
     "homeassistant.components.honeywell.climate",
     "homeassistant.components.icloud",
     "homeassistant.components.icloud.account",
@@ -112,9 +109,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.onvif.models",
     "homeassistant.components.onvif.parsers",
     "homeassistant.components.onvif.sensor",
-    "homeassistant.components.ozw",
-    "homeassistant.components.ozw.climate",
-    "homeassistant.components.ozw.entity",
     "homeassistant.components.philips_js",
     "homeassistant.components.philips_js.config_flow",
     "homeassistant.components.philips_js.device_trigger",
@@ -131,7 +125,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.diagnostics",
     "homeassistant.components.sonos.entity",
     "homeassistant.components.sonos.favorites",
-    "homeassistant.components.sonos.helpers",
     "homeassistant.components.sonos.media_browser",
     "homeassistant.components.sonos.media_player",
     "homeassistant.components.sonos.number",
@@ -218,9 +211,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.zha.sensor",
     "homeassistant.components.zha.siren",
     "homeassistant.components.zha.switch",
-    "homeassistant.components.zwave",
-    "homeassistant.components.zwave.migration",
-    "homeassistant.components.zwave.node_entity",
 ]
 
 # Component modules which should set no_implicit_reexport = true.

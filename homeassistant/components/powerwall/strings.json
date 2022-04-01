@@ -16,7 +16,7 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
-      },      
+      },
       "confirm_discovery": {
         "title": "[%key:component::powerwall::config::step::user::title%]",
         "description": "Do you want to setup {name} ({ip_address})?"

@@ -67,7 +67,7 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class BinarySensor(CoordinatorEntity[State], BinarySensorEntity):
+class BinarySensor(CoordinatorEntity[DataUpdateCoordinator[State]], BinarySensorEntity):
     """Grease filter sensor."""
 
     entity_description: EntityDescription

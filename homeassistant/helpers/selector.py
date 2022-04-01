@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import time as time_sys, timedelta
 from typing import Any, cast
 
 import voluptuous as vol
@@ -79,74 +78,56 @@ SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Integration that provided the entity
         vol.Optional("integration"): str,
         # Domain the entity belongs to
-        vol.Optional("domain"): str,
+        vol.Optional("domain"): vol.Any(str, [str]),
         # Device class of the entity
         vol.Optional("device_class"): str,
     }
 )
 
+SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+    {
+        # Integration linked to it with a config entry
+        vol.Optional("integration"): str,
+        # Manufacturer of device
+        vol.Optional("manufacturer"): str,
+        # Model of device
+        vol.Optional("model"): str,
+        # Device has to contain entities matching this selector
+        vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
+    }
+)
 
-@SELECTORS.register("entity")
-class EntitySelector(Selector):
-    """Selector of a single or list of entities."""
 
-    selector_type = "entity"
+@SELECTORS.register("action")
+class ActionSelector(Selector):
+    """Selector of an action sequence (script syntax)."""
 
-    CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
-        {vol.Optional("multiple", default=False): cv.boolean}
-    )
+    selector_type = "action"
 
-    def __call__(self, data: Any) -> str | list[str]:
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-
-        def validate(e_or_u: str) -> str:
-            e_or_u = cv.entity_id_or_uuid(e_or_u)
-            if not valid_entity_id(e_or_u):
-                return e_or_u
-            if allowed_domain := self.config.get("domain"):
-                domain = split_entity_id(e_or_u)[0]
-                if domain != allowed_domain:
-                    raise vol.Invalid(
-                        f"Entity {e_or_u} belongs to domain {domain}, "
-                        f"expected {allowed_domain}"
-                    )
-            return e_or_u
-
-        if not self.config["multiple"]:
-            return validate(data)
-        if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return cast(list, vol.Schema([validate])(data))  # Output is a list
+        return data
 
 
-@SELECTORS.register("device")
-class DeviceSelector(Selector):
-    """Selector of a single or list of devices."""
+@SELECTORS.register("addon")
+class AddonSelector(Selector):
+    """Selector of a add-on."""
 
-    selector_type = "device"
+    selector_type = "addon"
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            # Integration linked to it with a config entry
-            vol.Optional("integration"): str,
-            # Manufacturer of device
-            vol.Optional("manufacturer"): str,
-            # Model of device
-            vol.Optional("model"): str,
-            # Device has to contain entities matching this selector
-            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
-            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("name"): str,
+            vol.Optional("slug"): str,
         }
     )
 
-    def __call__(self, data: Any) -> str | list[str]:
+    def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        if not self.config["multiple"]:
-            device_id: str = vol.Schema(str)(data)
-            return device_id
-        if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+        addon: str = vol.Schema(str)(data)
+        return addon
 
 
 @SELECTORS.register("area")
@@ -158,7 +139,7 @@ class AreaSelector(Selector):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
-            vol.Optional("device"): DeviceSelector.CONFIG_SCHEMA,
+            vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )
@@ -171,6 +152,250 @@ class AreaSelector(Selector):
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
         return [vol.Schema(str)(val) for val in data]
+
+
+@SELECTORS.register("attribute")
+class AttributeSelector(Selector):
+    """Selector for an entity attribute."""
+
+    selector_type = "attribute"
+
+    CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        attribute: str = vol.Schema(str)(data)
+        return attribute
+
+
+@SELECTORS.register("boolean")
+class BooleanSelector(Selector):
+    """Selector of a boolean value."""
+
+    selector_type = "boolean"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> bool:
+        """Validate the passed selection."""
+        value: bool = vol.Coerce(bool)(data)
+        return value
+
+
+@SELECTORS.register("color_rgb")
+class ColorRGBSelector(Selector):
+    """Selector of an RGB color value."""
+
+    selector_type = "color_rgb"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> list[int]:
+        """Validate the passed selection."""
+        value: list[int] = vol.All(list, vol.ExactSequence((cv.byte,) * 3))(data)
+        return value
+
+
+@SELECTORS.register("color_temp")
+class ColorTempSelector(Selector):
+    """Selector of an color temperature."""
+
+    selector_type = "color_temp"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("max_mireds"): vol.Coerce(int),
+            vol.Optional("min_mireds"): vol.Coerce(int),
+        }
+    )
+
+    def __call__(self, data: Any) -> int:
+        """Validate the passed selection."""
+        value: int = vol.All(
+            vol.Coerce(float),
+            vol.Range(
+                min=self.config.get("min_mireds"),
+                max=self.config.get("max_mireds"),
+            ),
+        )(data)
+        return value
+
+
+@SELECTORS.register("date")
+class DateSelector(Selector):
+    """Selector of a date."""
+
+    selector_type = "date"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        cv.date(data)
+        return data
+
+
+@SELECTORS.register("datetime")
+class DateTimeSelector(Selector):
+    """Selector of a datetime."""
+
+    selector_type = "datetime"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        cv.datetime(data)
+        return data
+
+
+@SELECTORS.register("device")
+class DeviceSelector(Selector):
+    """Selector of a single or list of devices."""
+
+    selector_type = "device"
+
+    CONFIG_SCHEMA = SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA.extend(
+        {vol.Optional("multiple", default=False): cv.boolean}
+    )
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        if not self.config["multiple"]:
+            device_id: str = vol.Schema(str)(data)
+            return device_id
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
+
+
+@SELECTORS.register("duration")
+class DurationSelector(Selector):
+    """Selector for a duration."""
+
+    selector_type = "duration"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            # Enable day field in frontend. A selection with `days` set is allowed
+            # even if `enable_day` is not set
+            vol.Optional("enable_day"): cv.boolean,
+        }
+    )
+
+    def __call__(self, data: Any) -> dict[str, float]:
+        """Validate the passed selection."""
+        cv.time_period_dict(data)
+        return cast(dict[str, float], data)
+
+
+@SELECTORS.register("entity")
+class EntitySelector(Selector):
+    """Selector of a single or list of entities."""
+
+    selector_type = "entity"
+
+    CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("exclude_entities"): [str],
+            vol.Optional("include_entities"): [str],
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+
+        include_entities = self.config.get("include_entities")
+        exclude_entities = self.config.get("exclude_entities")
+
+        def validate(e_or_u: str) -> str:
+            e_or_u = cv.entity_id_or_uuid(e_or_u)
+            if not valid_entity_id(e_or_u):
+                return e_or_u
+            if allowed_domains := cv.ensure_list(self.config.get("domain")):
+                domain = split_entity_id(e_or_u)[0]
+                if domain not in allowed_domains:
+                    raise vol.Invalid(
+                        f"Entity {e_or_u} belongs to domain {domain}, "
+                        f"expected {allowed_domains}"
+                    )
+            if include_entities:
+                vol.In(include_entities)(e_or_u)
+            if exclude_entities:
+                vol.NotIn(exclude_entities)(e_or_u)
+            return e_or_u
+
+        if not self.config["multiple"]:
+            return validate(data)
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return cast(list, vol.Schema([validate])(data))  # Output is a list
+
+
+@SELECTORS.register("icon")
+class IconSelector(Selector):
+    """Selector for an icon."""
+
+    selector_type = "icon"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {vol.Optional("placeholder"): str}
+        # Frontend also has a fallbackPath option, this is not used by core
+    )
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        icon: str = vol.Schema(str)(data)
+        return icon
+
+
+@SELECTORS.register("location")
+class LocationSelector(Selector):
+    """Selector for a location."""
+
+    selector_type = "location"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {vol.Optional("radius"): bool, vol.Optional("icon"): str}
+    )
+    DATA_SCHEMA = vol.Schema(
+        {
+            vol.Required("latitude"): float,
+            vol.Required("longitude"): float,
+            vol.Optional("radius"): float,
+        }
+    )
+
+    def __call__(self, data: Any) -> dict[str, float]:
+        """Validate the passed selection."""
+        location: dict[str, float] = self.DATA_SCHEMA(data)
+        return location
+
+
+@SELECTORS.register("media")
+class MediaSelector(Selector):
+    """Selector for media."""
+
+    selector_type = "media"
+
+    CONFIG_SCHEMA = vol.Schema({})
+    DATA_SCHEMA = vol.Schema(
+        {
+            # Although marked as optional in frontend, this field is required
+            vol.Required("entity_id"): cv.entity_id_or_uuid,
+            # Although marked as optional in frontend, this field is required
+            vol.Required("media_content_id"): str,
+            # Although marked as optional in frontend, this field is required
+            vol.Required("media_content_type"): str,
+            vol.Remove("metadata"): dict,
+        }
+    )
+
+    def __call__(self, data: Any) -> dict[str, float]:
+        """Validate the passed selection."""
+        media: dict[str, float] = self.DATA_SCHEMA(data)
+        return media
 
 
 def has_min_max_if_slider(data: Any) -> Any:
@@ -220,89 +445,6 @@ class NumberSelector(Selector):
         return value
 
 
-@SELECTORS.register("addon")
-class AddonSelector(Selector):
-    """Selector of a add-on."""
-
-    selector_type = "addon"
-
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            vol.Optional("name"): str,
-            vol.Optional("slug"): str,
-        }
-    )
-
-    def __call__(self, data: Any) -> str:
-        """Validate the passed selection."""
-        addon: str = vol.Schema(str)(data)
-        return addon
-
-
-@SELECTORS.register("boolean")
-class BooleanSelector(Selector):
-    """Selector of a boolean value."""
-
-    selector_type = "boolean"
-
-    CONFIG_SCHEMA = vol.Schema({})
-
-    def __call__(self, data: Any) -> bool:
-        """Validate the passed selection."""
-        value: bool = vol.Coerce(bool)(data)
-        return value
-
-
-@SELECTORS.register("time")
-class TimeSelector(Selector):
-    """Selector of a time value."""
-
-    selector_type = "time"
-
-    CONFIG_SCHEMA = vol.Schema({})
-
-    def __call__(self, data: Any) -> time_sys:
-        """Validate the passed selection."""
-        return cv.time(data)
-
-
-@SELECTORS.register("target")
-class TargetSelector(Selector):
-    """Selector of a target value (area ID, device ID, entity ID etc).
-
-    Value should follow cv.TARGET_SERVICE_FIELDS format.
-    """
-
-    selector_type = "target"
-
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
-            vol.Optional("device"): DeviceSelector.CONFIG_SCHEMA,
-        }
-    )
-
-    TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS)
-
-    def __call__(self, data: Any) -> dict[str, list[str]]:
-        """Validate the passed selection."""
-        target: dict[str, list[str]] = self.TARGET_SELECTION_SCHEMA(data)
-        return target
-
-
-@SELECTORS.register("action")
-class ActionSelector(Selector):
-    """Selector of an action sequence (script syntax)."""
-
-    selector_type = "action"
-
-    CONFIG_SCHEMA = vol.Schema({})
-
-    def __call__(self, data: Any) -> Any:
-        """Validate the passed selection."""
-        return data
-
-
 @SELECTORS.register("object")
 class ObjectSelector(Selector):
     """Selector for an arbitrary object."""
@@ -314,6 +456,52 @@ class ObjectSelector(Selector):
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         return data
+
+
+select_option = vol.All(
+    dict,
+    vol.Schema(
+        {
+            vol.Required("value"): str,
+            vol.Required("label"): str,
+        }
+    ),
+)
+
+
+@SELECTORS.register("select")
+class SelectSelector(Selector):
+    """Selector for an single or multi-choice input select."""
+
+    selector_type = "select"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("options"): vol.All(vol.Any([str], [select_option])),
+            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("custom_value", default=False): cv.boolean,
+            vol.Optional("mode"): vol.In(("list", "dropdown")),
+        }
+    )
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        options = []
+        if self.config["options"]:
+            if isinstance(self.config["options"][0], str):
+                options = self.config["options"]
+            else:
+                options = [option["value"] for option in self.config["options"]]
+
+        parent_schema = vol.In(options)
+        if self.config["custom_value"]:
+            parent_schema = vol.Any(parent_schema, str)
+
+        if not self.config["multiple"]:
+            return parent_schema(vol.Schema(str)(data))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
 @SELECTORS.register("text")
@@ -353,83 +541,28 @@ class StringSelector(Selector):
         return text
 
 
-select_option = vol.All(
-    dict,
-    vol.Schema(
-        {
-            vol.Required("value"): str,
-            vol.Required("label"): str,
-        }
-    ),
-)
+@SELECTORS.register("target")
+class TargetSelector(Selector):
+    """Selector of a target value (area ID, device ID, entity ID etc).
 
+    Value should follow cv.TARGET_SERVICE_FIELDS format.
+    """
 
-@SELECTORS.register("select")
-class SelectSelector(Selector):
-    """Selector for an single-choice input select."""
-
-    selector_type = "select"
+    selector_type = "target"
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Required("options"): vol.All(
-                vol.Any([str], [select_option]), vol.Length(min=1)
-            )
+            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
         }
     )
 
-    def __call__(self, data: Any) -> Any:
+    TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS)
+
+    def __call__(self, data: Any) -> dict[str, list[str]]:
         """Validate the passed selection."""
-        if isinstance(self.config["options"][0], str):
-            options = self.config["options"]
-        else:
-            options = [option["value"] for option in self.config["options"]]
-        return vol.In(options)(vol.Schema(str)(data))
-
-
-@SELECTORS.register("attribute")
-class AttributeSelector(Selector):
-    """Selector for an entity attribute."""
-
-    selector_type = "attribute"
-
-    CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
-
-    def __call__(self, data: Any) -> str:
-        """Validate the passed selection."""
-        attribute: str = vol.Schema(str)(data)
-        return attribute
-
-
-@SELECTORS.register("duration")
-class DurationSelector(Selector):
-    """Selector for a duration."""
-
-    selector_type = "duration"
-
-    CONFIG_SCHEMA = vol.Schema({})
-
-    def __call__(self, data: Any) -> timedelta:
-        """Validate the passed selection."""
-        duration: timedelta = cv.time_period_dict(data)
-        return duration
-
-
-@SELECTORS.register("icon")
-class IconSelector(Selector):
-    """Selector for an icon."""
-
-    selector_type = "icon"
-
-    CONFIG_SCHEMA = vol.Schema(
-        {vol.Optional("placeholder"): str}
-        # Frontend also has a fallbackPath option, this is not used by core
-    )
-
-    def __call__(self, data: Any) -> str:
-        """Validate the passed selection."""
-        icon: str = vol.Schema(str)(data)
-        return icon
+        target: dict[str, list[str]] = self.TARGET_SELECTION_SCHEMA(data)
+        return target
 
 
 @SELECTORS.register("theme")
@@ -446,49 +579,15 @@ class ThemeSelector(Selector):
         return theme
 
 
-@SELECTORS.register("media")
-class MediaSelector(Selector):
-    """Selector for media."""
+@SELECTORS.register("time")
+class TimeSelector(Selector):
+    """Selector of a time value."""
 
-    selector_type = "media"
+    selector_type = "time"
 
     CONFIG_SCHEMA = vol.Schema({})
-    DATA_SCHEMA = vol.Schema(
-        {
-            # Although marked as optional in frontend, this field is required
-            vol.Required("entity_id"): cv.entity_id_or_uuid,
-            # Although marked as optional in frontend, this field is required
-            vol.Required("media_content_id"): str,
-            # Although marked as optional in frontend, this field is required
-            vol.Required("media_content_type"): str,
-            vol.Remove("metadata"): dict,
-        }
-    )
 
-    def __call__(self, data: Any) -> dict[str, float]:
+    def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        media: dict[str, float] = self.DATA_SCHEMA(data)
-        return media
-
-
-@SELECTORS.register("location")
-class LocationSelector(Selector):
-    """Selector for a location."""
-
-    selector_type = "location"
-
-    CONFIG_SCHEMA = vol.Schema(
-        {vol.Optional("radius"): bool, vol.Optional("icon"): str}
-    )
-    DATA_SCHEMA = vol.Schema(
-        {
-            vol.Required("latitude"): float,
-            vol.Required("longitude"): float,
-            vol.Optional("radius"): float,
-        }
-    )
-
-    def __call__(self, data: Any) -> dict[str, float]:
-        """Validate the passed selection."""
-        location: dict[str, float] = self.DATA_SCHEMA(data)
-        return location
+        cv.time(data)
+        return cast(str, data)

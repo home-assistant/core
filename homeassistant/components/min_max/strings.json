@@ -1,0 +1,28 @@
+{
+  "title": "Min / max / mean / median sensor",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Precision controls the number of decimal digits when the statistics characteristic is mean or median.",
+        "data": {
+          "entity_ids": "Input entities",
+          "name": "Name",
+          "round_digits": "Precision",
+          "type": "Statistic characteristic"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "description": "[%key:component::min_max::config::step::user::description%]",
+        "data": {
+          "entity_ids": "[%key:component::min_max::config::step::user::data::entity_ids%]",
+          "round_digits": "[%key:component::min_max::config::step::user::data::round_digits%]",
+          "type": "[%key:component::min_max::config::step::user::data::type%]"
+        }
+      }
+    }
+  }
+}

@@ -27,10 +27,10 @@ async def async_setup_entry(
     async_add_entities([PhilipsTVScreenSwitch(coordinator)])
 
 
-class PhilipsTVScreenSwitch(CoordinatorEntity, SwitchEntity):
+class PhilipsTVScreenSwitch(
+    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], SwitchEntity
+):
     """A Philips TV screen state switch."""
-
-    coordinator: PhilipsTVDataUpdateCoordinator
 
     def __init__(
         self,

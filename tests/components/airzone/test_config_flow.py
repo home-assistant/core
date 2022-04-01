@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from aiohttp.client_exceptions import ClientConnectorError
+from aiohttp.client_exceptions import ClientConnectorError, ClientResponseError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.airzone.const import DOMAIN
@@ -21,8 +21,14 @@ async def test_form(hass):
         "homeassistant.components.airzone.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+        side_effect=ClientResponseError(MagicMock(), MagicMock()),
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+        side_effect=ClientResponseError(MagicMock(), MagicMock()),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -57,7 +63,7 @@ async def test_form_duplicated_id(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -72,7 +78,7 @@ async def test_connection_error(hass):
     """Test connection to host error."""
 
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.validate_airzone",
+        "homeassistant.components.airzone.AirzoneLocalApi.validate_airzone",
         side_effect=ClientConnectorError(MagicMock(), MagicMock()),
     ):
         result = await hass.config_entries.flow.async_init(

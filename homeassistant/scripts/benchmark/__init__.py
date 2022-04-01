@@ -22,7 +22,7 @@ from homeassistant.util import dt as dt_util
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+_CallableT = TypeVar("_CallableT", bound=Callable)
 
 BENCHMARKS: dict[str, Callable] = {}
 
@@ -54,7 +54,7 @@ async def run_benchmark(bench):
     await hass.async_stop()
 
 
-def benchmark(func: CALLABLE_T) -> CALLABLE_T:
+def benchmark(func: _CallableT) -> _CallableT:
     """Decorate to mark a benchmark."""
     BENCHMARKS[func.__name__] = func
     return func
