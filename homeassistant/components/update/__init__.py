@@ -26,6 +26,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_AUTO_UPDATE,
     ATTR_BACKUP,
     ATTR_CURRENT_VERSION,
     ATTR_IN_PROGRESS,
@@ -93,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SKIP,
         {},
-        UpdateEntity.async_skip.__name__,
+        async_skip,
     )
     websocket_api.async_register_command(hass, websocket_release_notes)
 
@@ -144,6 +145,13 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     await entity.async_install_with_progress(version, backup)
 
 
+async def async_skip(entity: UpdateEntity, service_call: ServiceCall) -> None:
+    """Service call wrapper to validate the call."""
+    if entity.auto_update:
+        raise HomeAssistantError(f"Skipping update is not supported for {entity.name}")
+    await entity.async_skip()
+
+
 @dataclass
 class UpdateEntityDescription(EntityDescription):
     """A class that describes update entities."""
@@ -156,6 +164,7 @@ class UpdateEntity(RestoreEntity):
     """Representation of an update entity."""
 
     entity_description: UpdateEntityDescription
+    _attr_auto_update: bool = False
     _attr_current_version: str | None = None
     _attr_device_class: UpdateDeviceClass | str | None
     _attr_in_progress: bool | int = False
@@ -167,6 +176,11 @@ class UpdateEntity(RestoreEntity):
     _attr_title: str | None = None
     __skipped_version: str | None = None
     __in_progress: bool = False
+
+    @property
+    def auto_update(self) -> bool:
+        """Indicate if the device or service has auto update enabled."""
+        return self._attr_auto_update
 
     @property
     def current_version(self) -> str | None:
@@ -329,6 +343,7 @@ class UpdateEntity(RestoreEntity):
             self.__skipped_version = None
 
         return {
+            ATTR_AUTO_UPDATE: self.auto_update,
             ATTR_CURRENT_VERSION: self.current_version,
             ATTR_IN_PROGRESS: in_progress,
             ATTR_LATEST_VERSION: self.latest_version,
