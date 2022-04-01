@@ -24,8 +24,6 @@ from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "calendar"
