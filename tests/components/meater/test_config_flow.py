@@ -77,24 +77,32 @@ async def test_service_unavailable(hass, mock_meater):
     assert result["errors"] == {"base": "service_unavailable_error"}
 
 
-async def test_show_form(hass):
-    """Test that the form is served with no input."""
+async def test_user_flow(hass, mock_meater):
+    """Test that the user flow works."""
+    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=None
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    with patch(
+        "homeassistant.components.meater.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], conf)
+        await hass.async_block_till_done()
 
-async def test_step_user(hass, mock_meater):
-    """Test that the user step works."""
-    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=conf
-    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
+        CONF_USERNAME: "user@host.com",
+        CONF_PASSWORD: "password123",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {
         CONF_USERNAME: "user@host.com",
         CONF_PASSWORD: "password123",
     }
