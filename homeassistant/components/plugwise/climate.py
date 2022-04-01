@@ -86,12 +86,12 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         return self.device["sensors"].get("setpoint")
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> str | None:
         """Return HVAC operation ie. heat, cool mode."""
         return self.device.get("mode")
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> str:
         """Return the current running hvac operation if supported."""
         # When control_state is present, prefer this data
         if "control_state" in self.device:
