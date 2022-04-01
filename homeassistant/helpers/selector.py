@@ -78,7 +78,6 @@ def selector(
     selector_type: Literal[SelectorType.ACTION], config: ActionSelectorDict
 ) -> ActionSelector:
     """Instantiate an action selector."""
-    ...
 
 
 @overload
@@ -86,7 +85,6 @@ def selector(
     selector_type: Literal[SelectorType.ADDON], config: AddonSelectorDict
 ) -> AddonSelector:
     """Instantiate an addon selector."""
-    ...
 
 
 @overload
@@ -94,7 +92,6 @@ def selector(
     selector_type: Literal[SelectorType.AREA], config: AreaSelectorDict
 ) -> AreaSelector:
     """Instantiate an area selector."""
-    ...
 
 
 @overload
@@ -102,7 +99,6 @@ def selector(
     selector_type: Literal[SelectorType.ATTRIBUTE], config: AttributeSelectorDict
 ) -> AttributeSelector:
     """Instantiate an attribute selector."""
-    ...
 
 
 @overload
@@ -110,7 +106,6 @@ def selector(
     selector_type: Literal[SelectorType.BOOLEAN], config: BooleanSelectorDict
 ) -> BooleanSelector:
     """Instantiate a boolean selector."""
-    ...
 
 
 @overload
@@ -118,7 +113,6 @@ def selector(
     selector_type: Literal[SelectorType.COLOR_RGB], config: ColorRGBSelectorDict
 ) -> ColorRGBSelector:
     """Instantiate a color_rgb selector."""
-    ...
 
 
 @overload
@@ -126,7 +120,6 @@ def selector(
     selector_type: Literal[SelectorType.COLOR_TEMP], config: ColorTempSelectorDict
 ) -> ColorTempSelector:
     """Instantiate a color_temp selector."""
-    ...
 
 
 @overload
@@ -134,7 +127,6 @@ def selector(
     selector_type: Literal[SelectorType.DATE], config: DateSelectorDict
 ) -> DateSelector:
     """Instantiate a date selector."""
-    ...
 
 
 @overload
@@ -142,7 +134,6 @@ def selector(
     selector_type: Literal[SelectorType.DATETIME], config: DateTimeSelectorDict
 ) -> DateTimeSelector:
     """Instantiate a datetime selector."""
-    ...
 
 
 @overload
@@ -150,7 +141,6 @@ def selector(
     selector_type: Literal[SelectorType.DEVICE], config: DeviceSelectorDict
 ) -> DeviceSelector:
     """Instantiate a device selector."""
-    ...
 
 
 @overload
@@ -158,7 +148,6 @@ def selector(
     selector_type: Literal[SelectorType.DURATION], config: DurationSelectorDict
 ) -> DurationSelector:
     """Instantiate a duration selector."""
-    ...
 
 
 @overload
@@ -166,7 +155,6 @@ def selector(
     selector_type: Literal[SelectorType.ENTITY], config: EntitySelectorDict
 ) -> EntitySelector:
     """Instantiate a entity selector."""
-    ...
 
 
 @overload
@@ -174,7 +162,6 @@ def selector(
     selector_type: Literal[SelectorType.ICON], config: IconSelectorDict
 ) -> IconSelector:
     """Instantiate a icon selector."""
-    ...
 
 
 @overload
@@ -182,7 +169,6 @@ def selector(
     selector_type: Literal[SelectorType.LOCATION], config: LocationSelectorDict
 ) -> LocationSelector:
     """Instantiate a location selector."""
-    ...
 
 
 @overload
@@ -190,7 +176,6 @@ def selector(
     selector_type: Literal[SelectorType.MEDIA], config: MediaSelectorDict
 ) -> MediaSelector:
     """Instantiate a media selector."""
-    ...
 
 
 @overload
@@ -198,7 +183,6 @@ def selector(
     selector_type: Literal[SelectorType.NUMBER], config: NumberSelectorDict
 ) -> NumberSelector:
     """Instantiate a number selector."""
-    ...
 
 
 @overload
@@ -206,7 +190,6 @@ def selector(
     selector_type: Literal[SelectorType.OBJECT], config: ObjectSelectorDict
 ) -> ObjectSelector:
     """Instantiate an object selector."""
-    ...
 
 
 @overload
@@ -214,7 +197,6 @@ def selector(
     selector_type: Literal[SelectorType.SELECT], config: SelectSelectorDict
 ) -> SelectSelector:
     """Instantiate a select selector."""
-    ...
 
 
 @overload
@@ -222,7 +204,6 @@ def selector(
     selector_type: Literal[SelectorType.TARGET], config: TargetSelectorDict
 ) -> TargetSelector:
     """Instantiate a target selector."""
-    ...
 
 
 @overload
@@ -230,7 +211,6 @@ def selector(
     selector_type: Literal[SelectorType.TEXT], config: TextSelectorDict
 ) -> TextSelector:
     """Instantiate a text selector."""
-    ...
 
 
 @overload
@@ -238,7 +218,6 @@ def selector(
     selector_type: Literal[SelectorType.THEME], config: ThemeSelectorDict
 ) -> ThemeSelector:
     """Instantiate a theme selector."""
-    ...
 
 
 @overload
@@ -246,7 +225,6 @@ def selector(
     selector_type: Literal[SelectorType.TIME], config: TimeSelectorDict
 ) -> TimeSelector:
     """Instantiate a time selector."""
-    ...
 
 
 def selector(selector_type: SelectorType, config: Any) -> Selector:
