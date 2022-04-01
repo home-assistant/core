@@ -187,10 +187,6 @@ class BayesianBinarySensor(BinarySensorEntity):
             When a state changes, we must update our list of current observations,
             then calculate the new probability.
             """
-            new_state = event.data.get("new_state")
-
-            if new_state is None or new_state.state == STATE_UNKNOWN:
-                return
 
             entity = event.data.get("entity_id")
 
@@ -257,6 +253,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
     def _initialize_current_observations(self):
         local_observations = OrderedDict({})
+
         for entity in self.observations_by_entity:
             local_observations.update(self._record_entity_observations(entity))
         return local_observations
@@ -297,12 +294,12 @@ class BayesianBinarySensor(BinarySensorEntity):
                     )
                 elif obs["observation"] is None:
                     if obs["entity_id"] is not None:
-                        _LOGGER.info(
+                        _LOGGER.debug(
                             "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
                             obs["entity_id"],
                         )
                     else:
-                        _LOGGER.info(
+                        _LOGGER.debug(
                             "Observation for template entity returned None rather than a valid boolean, it will not be used for Bayesian updating",
                         )
 
