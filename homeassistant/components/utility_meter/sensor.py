@@ -426,6 +426,10 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 )
 
                 tariff_entity_state = self.hass.states.get(self._tariff_entity)
+                if not tariff_entity_state:
+                    # The utility meter is not yet added
+                    return
+
                 self._change_status(tariff_entity_state.state)
                 return
 
@@ -439,7 +443,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 self.hass, [self._sensor_source_id], self.async_reading
             )
 
-        self.async_on_remove(async_at_start(self.hass, async_source_tracking))
+        async_at_start(self.hass, async_source_tracking)
 
     @property
     def name(self):

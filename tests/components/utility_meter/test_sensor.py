@@ -37,7 +37,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State
+from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -418,6 +418,9 @@ async def test_device_class(hass, yaml_config, config_entry_configs):
 )
 async def test_restore_state(hass, yaml_config, config_entry_config):
     """Test utility sensor restore state."""
+    # Home assistant is not runnit yet
+    hass.state = CoreState.not_running
+
     last_reset = "2020-12-21T00:00:00.013073+00:00"
     mock_restore_cache(
         hass,
@@ -668,6 +671,9 @@ async def test_non_net_consumption(hass, yaml_config, config_entry_config, caplo
 )
 async def test_delta_values(hass, yaml_config, config_entry_config, caplog):
     """Test utility meter "delta_values" mode."""
+    # Home assistant is not runnit yet
+    hass.state = CoreState.not_running
+
     now = dt_util.utcnow()
     with alter_time(now):
         if yaml_config:
