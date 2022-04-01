@@ -929,6 +929,6 @@ def test_entity_category_schema_error(value):
     schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     with pytest.raises(
         vol.Invalid,
-        match=r"expected EntityCategory or one of \['config', 'diagnostic', 'system'\]",
+        match=r"expected EntityCategory or one of 'config', 'diagnostic', 'system'",
     ):
         schema(value)
