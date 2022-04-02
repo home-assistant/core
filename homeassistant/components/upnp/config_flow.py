@@ -294,14 +294,22 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input: Mapping = None) -> FlowResult:
         """Manage the options."""
+        LOGGER.debug(
+            "UpnpOptionsFlowHandler.async_step_init: user_input: %s", user_input
+        )
         if user_input is not None:
-            coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
             update_interval_sec = user_input.get(
                 CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             )
             update_interval = timedelta(seconds=update_interval_sec)
-            LOGGER.debug("Updating coordinator, update_interval: %s", update_interval)
-            coordinator.update_interval = update_interval
+
+            if self.config_entry.entry_id in self.hass.data[DOMAIN]:
+                coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
+                LOGGER.debug(
+                    "Updating coordinator, update_interval: %s", update_interval
+                )
+                coordinator.update_interval = update_interval
+
             return self.async_create_entry(title="", data=user_input)
 
         scan_interval = self.config_entry.options.get(
