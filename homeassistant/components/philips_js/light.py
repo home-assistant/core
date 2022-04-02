@@ -34,6 +34,16 @@ EFFECT_EXPERT = "Expert"
 EFFECT_AUTO = "Auto"
 EFFECT_EXPERT_STYLES = {"FOLLOW_AUDIO", "FOLLOW_COLOR", "Lounge light"}
 
+STANDARD_FOLLOW_VIDEO_SETTINGS = {
+    "STANDARD",
+    "NATURAL",
+    "IMMERSIVE",
+    "VIVID",
+    "GAME",
+    "COMFORT",
+    "RELAX",
+}
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -56,14 +66,54 @@ def _get_settings(style: AmbilightCurrentConfiguration):
     return None
 
 
-def _parse_effect(effect: str) -> AmbilightEffect:
-    style, _, algorithm = effect.partition(EFFECT_PARTITION)
-    if style == EFFECT_MODE:
-        return AmbilightEffect(mode=EFFECT_MODE, style=algorithm, algorithm=None)
-    algorithm, _, expert = algorithm.partition(EFFECT_PARTITION)
-    if expert:
-        return AmbilightEffect(mode=EFFECT_EXPERT, style=style, algorithm=algorithm)
-    return AmbilightEffect(mode=EFFECT_AUTO, style=style, algorithm=algorithm)
+@dataclass
+class AmbilightEffect:
+    """Data class describing the ambilight effect."""
+
+    mode: str
+    style: str
+    algorithm: str | None = None
+
+    def is_on(self, powerstate) -> bool:
+        """Check whether the ambilight is considered on."""
+        if self.mode in (EFFECT_AUTO, EFFECT_EXPERT):
+            if self.style in ("FOLLOW_VIDEO", "FOLLOW_AUDIO"):
+                return powerstate in ("On", None)
+            if self.style == "OFF":
+                return False
+            return True
+
+        if self.mode == EFFECT_MODE:
+            if self.style == "internal":
+                return powerstate in ("On", None)
+            return True
+
+        return False
+
+    def is_valid(self) -> bool:
+        """Validate the effect configuration."""
+        if self.mode == EFFECT_EXPERT:
+            return self.style in EFFECT_EXPERT_STYLES
+        return True
+
+    @staticmethod
+    def from_str(effect_string: str) -> AmbilightEffect:
+        """Create AmbilightEffect object from string."""
+        style, _, algorithm = effect_string.partition(EFFECT_PARTITION)
+        if style == EFFECT_MODE:
+            return AmbilightEffect(mode=EFFECT_MODE, style=algorithm, algorithm=None)
+        algorithm, _, expert = algorithm.partition(EFFECT_PARTITION)
+        if expert:
+            return AmbilightEffect(mode=EFFECT_EXPERT, style=style, algorithm=algorithm)
+        return AmbilightEffect(mode=EFFECT_AUTO, style=style, algorithm=algorithm)
+
+    def __str__(self) -> str:
+        """Get a string representation of the effect."""
+        if self.mode == EFFECT_MODE:
+            return f"{EFFECT_MODE}{EFFECT_PARTITION}{self.style}"
+        if self.mode == EFFECT_EXPERT:
+            return f"{self.style}{EFFECT_PARTITION}{self.algorithm}{EFFECT_PARTITION}{EFFECT_EXPERT}"
+        return f"{self.style}{EFFECT_PARTITION}{self.algorithm}"
 
 
 def _get_cache_keys(device: PhilipsTV):
@@ -154,6 +204,11 @@ class PhilipsTVLightEntity(
             for style in self._tv.ambilight_modes
         )
 
+        effects.extend(
+            AmbilightEffect(mode=EFFECT_AUTO, style="FOLLOW_VIDEO", algorithm=setting)
+            for setting in STANDARD_FOLLOW_VIDEO_SETTINGS
+        )
+
         filtered_effects = [
             str(effect)
             for effect in effects
@@ -197,7 +252,7 @@ class PhilipsTVLightEntity(
     def is_on(self):
         """Return if the light is turned on."""
         if self._tv.on:
-            effect = _parse_effect(self.effect)
+            effect = AmbilightEffect.from_str(self.effect)
             return effect.is_on(self._tv.powerstate)
 
         return False
@@ -215,7 +270,7 @@ class PhilipsTVLightEntity(
             if settings := _get_settings(current):
                 color = settings["color"]
 
-        effect = _parse_effect(self._attr_effect)
+        effect = AmbilightEffect.from_str(self._attr_effect)
         LOGGER.debug("Current effect: %s, effect")
         if effect.is_on(self._tv.powerstate):
             self._last_selected_effect = effect
@@ -315,7 +370,7 @@ class PhilipsTVLightEntity(
         if not self._tv.on:
             raise Exception("TV is not available")
 
-        effect = _parse_effect(attr_effect)
+        effect = AmbilightEffect.from_str(attr_effect)
 
         if not effect.is_on(self._tv.powerstate):
             if self._last_selected_effect:
@@ -357,42 +412,3 @@ class PhilipsTVLightEntity(
 
         self._update_from_coordinator()
         self.async_write_ha_state()
-
-
-@dataclass
-class AmbilightEffect:
-    """Data class describing the ambilight effect."""
-
-    mode: str
-    style: str
-    algorithm: str | None = None
-
-    def is_on(self, powerstate) -> bool:
-        """Check whether the ambilight is considered on."""
-        if self.mode in (EFFECT_AUTO, EFFECT_EXPERT):
-            if self.style in ("FOLLOW_VIDEO", "FOLLOW_AUDIO"):
-                return powerstate in ("On", None)
-            if self.style == "OFF":
-                return False
-            return True
-
-        if self.mode == EFFECT_MODE:
-            if self.style == "internal":
-                return powerstate in ("On", None)
-            return True
-
-        return False
-
-    def is_valid(self) -> bool:
-        """Validate the effect configuration."""
-        if self.mode == EFFECT_EXPERT:
-            return self.style in EFFECT_EXPERT_STYLES
-        return True
-
-    def __str__(self) -> str:
-        """Get a string representation of the effect."""
-        if self.mode == EFFECT_MODE:
-            return f"{EFFECT_MODE}{EFFECT_PARTITION}{self.style}"
-        if self.mode == EFFECT_EXPERT:
-            return f"{self.style}{EFFECT_PARTITION}{self.algorithm}{EFFECT_PARTITION}{EFFECT_EXPERT}"
-        return f"{self.style}{EFFECT_PARTITION}{self.algorithm}"
