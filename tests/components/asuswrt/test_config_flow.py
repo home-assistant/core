@@ -28,6 +28,7 @@ from tests.common import MockConfigEntry
 
 HOST = "myrouter.asuswrt.com"
 IP_ADDRESS = "192.168.1.1"
+MAC_ADDR = "a1:b1:c1:d1:e1:f1"
 SSH_KEY = "1234"
 
 CONFIG_DATA = {
@@ -40,36 +41,54 @@ CONFIG_DATA = {
 }
 
 
+PATCH_GET_HOST = patch(
+    "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
+    return_value=IP_ADDRESS,
+)
+
+PATCH_SETUP_ENTRY = patch(
+    "homeassistant.components.asuswrt.async_setup_entry",
+    return_value=True,
+)
+
+
+@pytest.fixture(name="mock_unique_id")
+def mock_unique_id_fixture():
+    """Mock returned unique id."""
+    return {}
+
+
 @pytest.fixture(name="connect")
-def mock_controller_connect():
+def mock_controller_connect(mock_unique_id):
     """Mock a successful connection."""
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
+        service_mock.return_value.async_get_nvram = AsyncMock(
+            return_value=mock_unique_id
+        )
         yield service_mock
 
 
-async def test_user(hass, connect):
+@pytest.mark.parametrize(
+    "unique_id",
+    [{}, {"label_mac": MAC_ADDR}],
+)
+async def test_user(hass, connect, mock_unique_id, unique_id):
     """Test user config."""
-    result = await hass.config_entries.flow.async_init(
+    mock_unique_id.update(unique_id)
+    flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert flow_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert flow_result["step_id"] == "user"
 
     # test with all provided
-    with patch(
-        "homeassistant.components.asuswrt.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
-        return_value=IP_ADDRESS,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_DATA,
+    with PATCH_GET_HOST, PATCH_SETUP_ENTRY as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            flow_result["flow_id"],
+            user_input=CONFIG_DATA,
         )
         await hass.async_block_till_done()
 
@@ -146,18 +165,50 @@ async def test_abort_if_already_setup(hass):
         data=CONFIG_DATA,
     ).add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
-        return_value=IP_ADDRESS,
-    ):
-        # Should fail, same HOST (flow)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=CONFIG_DATA,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_abort_if_unique_exist(hass, connect, mock_unique_id):
+    """Test we abort if uniqueid is already configured."""
+    mock_unique_id.update({"label_mac": MAC_ADDR})
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA,
+        unique_id=MAC_ADDR,
+    ).add_to_hass(hass)
+
+    with PATCH_GET_HOST:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
             data=CONFIG_DATA,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "single_instance_allowed"
+        assert result["reason"] == "already_configured"
+
+
+async def test_abort_invalid_unique_id(hass, connect):
+    """Test we abort if uniqueid not available."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA,
+        unique_id=MAC_ADDR,
+    ).add_to_hass(hass)
+
+    with PATCH_GET_HOST:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONFIG_DATA,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "invalid_unique_id"
 
 
 async def test_on_connect_failed(hass):
@@ -167,27 +218,36 @@ async def test_on_connect_failed(hass):
         context={"source": SOURCE_USER},
     )
 
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as asus_wrt:
+    with PATCH_GET_HOST, patch(
+        "homeassistant.components.asuswrt.router.AsusWrt"
+    ) as asus_wrt:
         asus_wrt.return_value.connection.async_connect = AsyncMock()
         asus_wrt.return_value.is_connected = False
+
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=CONFIG_DATA
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as asus_wrt:
+    with PATCH_GET_HOST, patch(
+        "homeassistant.components.asuswrt.router.AsusWrt"
+    ) as asus_wrt:
         asus_wrt.return_value.connection.async_connect = AsyncMock(side_effect=OSError)
+
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=CONFIG_DATA
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as asus_wrt:
+    with PATCH_GET_HOST, patch(
+        "homeassistant.components.asuswrt.router.AsusWrt"
+    ) as asus_wrt:
         asus_wrt.return_value.connection.async_connect = AsyncMock(
             side_effect=TypeError
         )
+
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=CONFIG_DATA
         )
@@ -204,7 +264,7 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.asuswrt.async_setup_entry", return_value=True):
+    with PATCH_SETUP_ENTRY:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)

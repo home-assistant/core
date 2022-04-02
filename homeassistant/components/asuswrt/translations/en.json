@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Device is already configured",
+            "invalid_unique_id": "Impossible to determine a valid unique id for the device",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
