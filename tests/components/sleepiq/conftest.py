@@ -5,6 +5,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, create_autospec, patch
 
 from asyncsleepiq import (
+    Side,
     SleepIQActuator,
     SleepIQBed,
     SleepIQFoundation,
@@ -52,14 +53,14 @@ def mock_bed() -> MagicMock:
     sleeper_r = create_autospec(SleepIQSleeper)
     bed.sleepers = [sleeper_l, sleeper_r]
 
-    sleeper_l.side = "L"
+    sleeper_l.side = Side.LEFT
     sleeper_l.name = SLEEPER_L_NAME
     sleeper_l.in_bed = True
     sleeper_l.sleep_number = 40
     sleeper_l.pressure = 1000
     sleeper_l.sleeper_id = SLEEPER_L_ID
 
-    sleeper_r.side = "R"
+    sleeper_r.side = Side.RIGHT
     sleeper_r.name = SLEEPER_R_NAME
     sleeper_r.in_bed = False
     sleeper_r.sleep_number = 80
@@ -91,13 +92,13 @@ def mock_asyncsleepiq_single_foundation(
         actuator_f = create_autospec(SleepIQActuator)
         mock_bed.foundation.actuators = [actuator_h, actuator_f]
 
-        actuator_h.side = "R"
+        actuator_h.side = Side.NONE
         actuator_h.side_full = "Right"
         actuator_h.actuator = "H"
         actuator_h.actuator_full = "Head"
         actuator_h.position = 60
 
-        actuator_f.side = None
+        actuator_f.side = Side.NONE
         actuator_f.actuator = "F"
         actuator_f.actuator_full = "Foot"
         actuator_f.position = 10
@@ -106,8 +107,8 @@ def mock_asyncsleepiq_single_foundation(
         mock_bed.foundation.presets = [preset]
 
         preset.preset = PRESET_R_STATE
-        preset.side = None
-        preset.side_full = None
+        preset.side = Side.NONE
+        preset.side_full = "Right"
         yield client
 
 
@@ -123,13 +124,13 @@ def mock_asyncsleepiq(mock_bed: MagicMock) -> Generator[MagicMock, None, None]:
         actuator_f = create_autospec(SleepIQActuator)
         mock_bed.foundation.actuators = [actuator_h_r, actuator_h_l, actuator_f]
 
-        actuator_h_r.side = "R"
+        actuator_h_r.side = Side.RIGHT
         actuator_h_r.side_full = "Right"
         actuator_h_r.actuator = "H"
         actuator_h_r.actuator_full = "Head"
         actuator_h_r.position = 60
 
-        actuator_h_l.side = "L"
+        actuator_h_l.side = Side.LEFT
         actuator_h_l.side_full = "Left"
         actuator_h_l.actuator = "H"
         actuator_h_l.actuator_full = "Head"
@@ -145,11 +146,11 @@ def mock_asyncsleepiq(mock_bed: MagicMock) -> Generator[MagicMock, None, None]:
         mock_bed.foundation.presets = [preset_l, preset_r]
 
         preset_l.preset = PRESET_L_STATE
-        preset_l.side = "L"
+        preset_l.side = Side.LEFT
         preset_l.side_full = "Left"
 
         preset_r.preset = PRESET_R_STATE
-        preset_r.side = "R"
+        preset_r.side = Side.RIGHT
         preset_r.side_full = "Right"
 
         yield client
