@@ -529,10 +529,10 @@ class SensorExtraStoredData(ExtraStoredData):
                 "__type": str(type(native_value)),
                 "isoformat": native_value.isoformat(),
             }
-        if isinstance(native_value, (Decimal)):
+        if isinstance(native_value, Decimal):
             native_value = {
                 "__type": str(type(native_value)),
-                "value": str(native_value),
+                "decimal_str": str(native_value),
             }
         return {
             "native_value": native_value,
@@ -554,7 +554,7 @@ class SensorExtraStoredData(ExtraStoredData):
             elif type_ == "<class 'datetime.date'>":
                 native_value = dt_util.parse_date(native_value["isoformat"])
             elif type_ == "<class 'decimal.Decimal'>":
-                native_value = Decimal(native_value["value"])
+                native_value = Decimal(native_value["decimal_str"])
         except TypeError:
             # native_value is not a dict
             pass

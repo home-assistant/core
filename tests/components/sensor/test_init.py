@@ -1,5 +1,6 @@
 """The test for sensor entity."""
 from datetime import date, datetime, timezone
+from decimal import Decimal
 
 import pytest
 from pytest import approx
@@ -230,10 +231,17 @@ RESTORE_DATA = {
             "isoformat": datetime(2020, 2, 8, 15, tzinfo=timezone.utc).isoformat(),
         },
     },
+    "Decimal": {
+        "native_unit_of_measurement": "°F",
+        "native_value": {
+            "__type": "<class 'decimal.Decimal'>",
+            "decimal_str": "123.4",
+        },
+    },
 }
 
 
-# None | str | int | float | date | datetime:
+# None | str | int | float | date | datetime | Decimal:
 @pytest.mark.parametrize(
     "native_value, native_value_type, expected_extra_data, device_class",
     [
@@ -247,6 +255,7 @@ RESTORE_DATA = {
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
         ),
+        (Decimal("123.4"), dict, RESTORE_DATA["Decimal"], SensorDeviceClass.ENERGY),
     ],
 )
 async def test_restore_sensor_save_state(
@@ -295,6 +304,13 @@ async def test_restore_sensor_save_state(
             datetime,
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
+            "°F",
+        ),
+        (
+            Decimal("123.4"),
+            Decimal,
+            RESTORE_DATA["Decimal"],
+            SensorDeviceClass.ENERGY,
             "°F",
         ),
         (None, type(None), None, None, None),

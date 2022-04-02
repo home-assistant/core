@@ -462,7 +462,10 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                     },
                 ),
                 {
-                    "native_value": {"__type": "<class 'decimal.Decimal'>", "value": 3},
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "value": "3",
+                    },
                     "native_unit_of_measurement": "kWh",
                     "last_reset": last_reset,
                     "last_period": "7",
