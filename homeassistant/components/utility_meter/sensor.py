@@ -208,7 +208,7 @@ async def async_setup_platform(
             delta_values=conf_meter_delta_values,
             meter_offset=conf_meter_offset,
             meter_type=conf_meter_type,
-            name=conf[CONF_NAME],
+            name=conf.get(CONF_NAME),
             net_consumption=conf_meter_net_consumption,
             parent_meter=meter,
             source_entity=conf_meter_source,
