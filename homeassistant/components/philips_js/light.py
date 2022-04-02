@@ -197,8 +197,7 @@ class PhilipsTVLightEntity(
         filtered_effects = [
             str(effect)
             for effect in effects
-            and effect.is_valid()
-            and effect.is_on(self._tv.powerstate)
+            if effect.is_valid() and effect.is_on(self._tv.powerstate)
         ]
 
         return sorted(filtered_effects)
@@ -282,7 +281,7 @@ class PhilipsTVLightEntity(
         super()._handle_coordinator_update()
 
     async def _set_ambilight_cached(
-        self, effect: AmbilightEffect, hs_color, brightness
+        self, effect: AmbilightEffect, hs_color: tuple[float, float], brightness: int
     ):
         """Set ambilight via the manual or expert mode."""
         rgb = color_hsv_to_RGB(hs_color[0], hs_color[1], brightness * 100 / 255)
@@ -301,7 +300,7 @@ class PhilipsTVLightEntity(
                 raise Exception("Failed to set ambilight mode")
 
     async def _set_ambilight_expert_config(
-        self, effect: AmbilightEffect, hs_color, brightness
+        self, effect: AmbilightEffect, hs_color: tuple[float, float], brightness: int
     ):
         """Set ambilight via current configuration."""
         config: AmbilightCurrentConfiguration = {
@@ -371,7 +370,7 @@ class PhilipsTVLightEntity(
             brightness = 255
 
         if hs_color is None:
-            hs_color = [0, 0]
+            hs_color = (0, 0)
 
         if effect.mode == EFFECT_MODE:
             await self._set_ambilight_cached(effect, hs_color, brightness)
