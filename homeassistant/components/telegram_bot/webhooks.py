@@ -129,6 +129,6 @@ class PushBotView(HomeAssistantView):
 
         update = Update.de_json(update_data, self.bot)
         _LOGGER.debug("Received Update on %s: %s", self.url, update)
-        self.hass.async_add_executor_job(self.dispatcher.process_update, update)
+        await self.hass.async_add_executor_job(self.dispatcher.process_update, update)
 
         return None
