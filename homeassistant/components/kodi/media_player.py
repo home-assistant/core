@@ -8,7 +8,6 @@ import re
 from typing import Any
 import urllib.parse
 
-import jsonrpc_base
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
 import voluptuous as vol
@@ -278,10 +277,7 @@ def cmd(func):
         """Wrap all command methods."""
         try:
             await func(obj, *args, **kwargs)
-        except (
-            jsonrpc_base.jsonrpc.TransportError,
-            jsonrpc_base.jsonrpc.ProtocolError,
-        ) as exc:
+        except (TransportError, ProtocolError) as exc:
             # If Kodi is off, we expect calls to fail.
             if obj.state == STATE_OFF:
                 log_function = _LOGGER.debug
@@ -304,7 +300,6 @@ class KodiEntity(MediaPlayerEntity):
         """Initialize the Kodi entity."""
         self._connection = connection
         self._kodi = kodi
-        self._name = name
         self._unique_id = uid
         self._players = None
         self._properties = {}
@@ -313,6 +308,9 @@ class KodiEntity(MediaPlayerEntity):
         self._media_position_updated_at = None
         self._media_position = None
         self._connect_error = False
+
+        self._attr_name = name
+        self._attr_supported_features = SUPPORT_KODI
 
     def _reset_state(self, players=None):
         self._players = players
@@ -443,7 +441,7 @@ class KodiEntity(MediaPlayerEntity):
         try:
             await self._connection.connect()
             await self._on_ws_connected()
-        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
+        except (TransportError, CannotConnectError):
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.warning("Unable to connect to Kodi via websocket")
@@ -453,7 +451,7 @@ class KodiEntity(MediaPlayerEntity):
     async def _ping(self):
         try:
             await self._kodi.ping()
-        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
+        except (TransportError, CannotConnectError):
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.warning("Unable to ping Kodi via websocket")
@@ -528,11 +526,6 @@ class KodiEntity(MediaPlayerEntity):
             )
         else:
             self._reset_state([])
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def should_poll(self):
@@ -646,9 +639,9 @@ class KodiEntity(MediaPlayerEntity):
         return None
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_KODI
+    def available(self):
+        """Return True if entity is available."""
+        return not self._connect_error
 
     async def async_turn_on(self):
         """Turn the media player on."""
@@ -771,7 +764,7 @@ class KodiEntity(MediaPlayerEntity):
         try:
             result = await self._kodi.call_method(method, **kwargs)
             result_ok = True
-        except jsonrpc_base.jsonrpc.ProtocolError as exc:
+        except ProtocolError as exc:
             result = exc.args[2]["error"]
             _LOGGER.error(
                 "Run API method %s.%s(%s) error: %s",
@@ -780,7 +773,7 @@ class KodiEntity(MediaPlayerEntity):
                 kwargs,
                 result,
             )
-        except jsonrpc_base.jsonrpc.TransportError:
+        except TransportError:
             result = None
             _LOGGER.warning(
                 "TransportError trying to run API method %s.%s(%s)",
