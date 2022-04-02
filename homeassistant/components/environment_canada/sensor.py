@@ -275,7 +275,7 @@ def _get_aqhi_value(data):
     if (aqhi := data.current) is not None:
         return aqhi
     if data.forecasts and (hourly := data.forecasts.get("hourly")) is not None:
-        if (values := list(hourly.values())) and values:
+        if values := list(hourly.values()):
             return values[0]
     return None
 
