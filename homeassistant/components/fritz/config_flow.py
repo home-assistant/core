@@ -133,7 +133,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             if uuid.startswith("uuid:"):
                 uuid = uuid[5:]
             await self.async_set_unique_id(uuid)
-            self._abort_if_unique_id_configured({CONF_HOST: self._host})
+            self._abort_if_unique_id_configured()
 
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == self._host:
