@@ -636,7 +636,7 @@ class DataManager:
             self._cancel_subscription_update()
             self._cancel_subscription_update = None
 
-    async def _do_retry(self, func, attempts=5) -> Any:
+    async def _do_retry(self, func, attempts=3) -> Any:
         """Retry a function call.
 
         Withings' API occasionally and incorrectly throws errors. Retrying the call tends to work.
@@ -652,7 +652,7 @@ class DataManager:
                     "Failed attempt %s of %s (%s)", attempt, attempts, exception1
                 )
                 # Make each backoff pause a little bit longer
-                await asyncio.sleep(0.1 * attempt)
+                await asyncio.sleep(0.5 * attempt)
                 exception = exception1
                 continue
 
