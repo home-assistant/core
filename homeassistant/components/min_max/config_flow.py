@@ -39,9 +39,7 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required("name"): selector.selector(
-            selector.SelectorType.TEXT, selector.TextSelectorDict()
-        ),
+        vol.Required("name"): selector.selector(selector.SelectorType.TEXT),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 

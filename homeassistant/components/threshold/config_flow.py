@@ -44,9 +44,7 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector(
-            selector.SelectorType.TEXT, selector.TextSelectorDict()
-        ),
+        vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
         vol.Required(CONF_ENTITY_ID): selector.selector(
             selector.SelectorType.ENTITY, selector.EntitySelectorDict(domain="sensor")
         ),

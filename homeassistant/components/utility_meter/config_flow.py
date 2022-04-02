@@ -67,9 +67,7 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector(
-            selector.SelectorType.TEXT, selector.TextSelectorDict()
-        ),
+        vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
         vol.Required(CONF_SOURCE_SENSOR): selector.selector(
             selector.SelectorType.ENTITY,
             selector.EntitySelectorDict(domain="sensor"),
@@ -92,10 +90,10 @@ CONFIG_SCHEMA = vol.Schema(
             selector.SelectSelectorDict(options=[], custom_value=True, multiple=True),
         ),
         vol.Required(CONF_METER_NET_CONSUMPTION, default=False): selector.selector(
-            selector.SelectorType.BOOLEAN, selector.BooleanSelectorDict()
+            selector.SelectorType.BOOLEAN
         ),
         vol.Required(CONF_METER_DELTA_VALUES, default=False): selector.selector(
-            selector.SelectorType.BOOLEAN, selector.BooleanSelectorDict()
+            selector.SelectorType.BOOLEAN
         ),
     }
 )

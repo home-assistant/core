@@ -63,12 +63,8 @@ CONF_KNX_LABEL_TUNNELING_TCP_SECURE: Final = "TCP with IP Secure"
 CONF_KNX_LABEL_TUNNELING_UDP: Final = "UDP"
 CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK: Final = "UDP with route back / NAT mode"
 
-_IA_SELECTOR = selector.selector(
-    selector.SelectorType.TEXT, selector.TextSelectorDict()
-)
-_IP_SELECTOR = selector.selector(
-    selector.SelectorType.TEXT, selector.TextSelectorDict()
-)
+_IA_SELECTOR = selector.selector(selector.SelectorType.TEXT)
+_IP_SELECTOR = selector.selector(selector.SelectorType.TEXT)
 _PORT_SELECTOR = vol.All(
     selector.selector(
         selector.SelectorType.NUMBER,
@@ -318,10 +314,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         fields = {
             vol.Required(CONF_KNX_KNXKEY_FILENAME): selector.selector(
-                selector.SelectorType.TEXT, selector.TextSelectorDict()
+                selector.SelectorType.TEXT
             ),
             vol.Required(CONF_KNX_KNXKEY_PASSWORD): selector.selector(
-                selector.SelectorType.TEXT, selector.TextSelectorDict()
+                selector.SelectorType.TEXT
             ),
         }
 
@@ -403,9 +399,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
             vol.Required(
                 CONF_KNX_INDIVIDUAL_ADDRESS,
                 default=self.current_config[CONF_KNX_INDIVIDUAL_ADDRESS],
-            ): selector.selector(
-                selector.SelectorType.TEXT, selector.TextSelectorDict()
-            ),
+            ): selector.selector(selector.SelectorType.TEXT),
             vol.Required(
                 CONF_KNX_MCAST_GRP,
                 default=self.current_config.get(CONF_KNX_MCAST_GRP, DEFAULT_MCAST_GRP),
@@ -438,9 +432,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
                         CONF_KNX_DEFAULT_STATE_UPDATER,
                     ),
                 )
-            ] = selector.selector(
-                selector.SelectorType.BOOLEAN, selector.BooleanSelectorDict()
-            )
+            ] = selector.selector(selector.SelectorType.BOOLEAN)
             data_schema[
                 vol.Required(
                     CONF_KNX_RATE_LIMIT,

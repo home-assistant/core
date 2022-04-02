@@ -36,7 +36,7 @@ def basic_group_options_schema(
                 handler, selector.EntitySelectorDict(domain=domain, multiple=True)
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
-                selector.SelectorType.BOOLEAN, selector.BooleanSelectorDict()
+                selector.SelectorType.BOOLEAN
             ),
         }
     )
@@ -46,15 +46,13 @@ def basic_group_config_schema(domain: str) -> vol.Schema:
     """Generate config schema."""
     return vol.Schema(
         {
-            vol.Required("name"): selector.selector(
-                selector.SelectorType.TEXT, selector.TextSelectorDict()
-            ),
+            vol.Required("name"): selector.selector(selector.SelectorType.TEXT),
             vol.Required(CONF_ENTITIES): selector.selector(
                 selector.SelectorType.ENTITY,
                 selector.EntitySelectorDict(domain=domain, multiple=True),
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
-                selector.SelectorType.BOOLEAN, selector.BooleanSelectorDict()
+                selector.SelectorType.BOOLEAN
             ),
         }
     )
@@ -68,7 +66,7 @@ def binary_sensor_options_schema(
     return basic_group_options_schema("binary_sensor", handler, options).extend(
         {
             vol.Required(CONF_ALL, default=False): selector.selector(
-                selector.SelectorType.BOOLEAN, selector.BooleanSelectorDict()
+                selector.SelectorType.BOOLEAN
             ),
         }
     )
@@ -77,7 +75,7 @@ def binary_sensor_options_schema(
 BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
     {
         vol.Required(CONF_ALL, default=False): selector.selector(
-            selector.SelectorType.BOOLEAN, selector.BooleanSelectorDict()
+            selector.SelectorType.BOOLEAN
         ),
     }
 )
@@ -93,9 +91,7 @@ def light_switch_options_schema(
         {
             vol.Required(
                 CONF_ALL, default=False, description={"advanced": True}
-            ): selector.selector(
-                selector.SelectorType.BOOLEAN, selector.BooleanSelectorDict()
-            ),
+            ): selector.selector(selector.SelectorType.BOOLEAN),
         }
     )
 

@@ -58,7 +58,7 @@ OPTIONS_SCHEMA = vol.Schema(
             ),
         ),
         vol.Required(CONF_TIME_WINDOW): selector.selector(
-            selector.SelectorType.DURATION, selector.DurationSelectorDict()
+            selector.SelectorType.DURATION
         ),
         vol.Required(CONF_UNIT_PREFIX, default="none"): selector.selector(
             selector.SelectorType.SELECT,
@@ -73,9 +73,7 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector(
-            selector.SelectorType.TEXT, selector.TextSelectorDict()
-        ),
+        vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
         vol.Required(CONF_SOURCE): selector.selector(
             selector.SelectorType.ENTITY,
             selector.EntitySelectorDict(domain="sensor"),

@@ -20,12 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.selector import (
-    LocationSelectorDict,
-    NumberSelectorDict,
-    SelectorType,
-    selector,
-)
+from homeassistant.helpers.selector import NumberSelectorDict, SelectorType, selector
 
 from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_RADIUS, DOMAIN, FUEL_TYPES
 
@@ -158,7 +153,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                                 "longitude": self.hass.config.longitude,
                             },
                         ),
-                    ): selector(SelectorType.LOCATION, LocationSelectorDict()),
+                    ): selector(SelectorType.LOCATION),
                     vol.Required(
                         CONF_RADIUS, default=user_input.get(CONF_RADIUS, DEFAULT_RADIUS)
                     ): selector(

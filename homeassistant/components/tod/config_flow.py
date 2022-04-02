@@ -18,20 +18,14 @@ from .const import CONF_AFTER_TIME, CONF_BEFORE_TIME, DOMAIN
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_AFTER_TIME): selector.selector(
-            selector.SelectorType.TIME, selector.TimeSelectorDict()
-        ),
-        vol.Required(CONF_BEFORE_TIME): selector.selector(
-            selector.SelectorType.TIME, selector.TimeSelectorDict()
-        ),
+        vol.Required(CONF_AFTER_TIME): selector.selector(selector.SelectorType.TIME),
+        vol.Required(CONF_BEFORE_TIME): selector.selector(selector.SelectorType.TIME),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector(
-            selector.SelectorType.TEXT, selector.TextSelectorDict()
-        ),
+        vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
