@@ -184,12 +184,8 @@ async def async_setup_platform(
     for conf in discovery_info.values():
         meter = conf[CONF_METER]
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
-        conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
         conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
         conf_sensor_tariff = conf.get(CONF_TARIFF)
-        conf_sensor_name = (
-            f"{meter} {conf_sensor_tariff}" if conf_sensor_tariff else conf_meter_name
-        )
         conf_sensor_unique_id = (
             f"{conf_meter_unique_id}_{conf_sensor_tariff}"
             if conf_meter_unique_id
@@ -212,7 +208,7 @@ async def async_setup_platform(
             delta_values=conf_meter_delta_values,
             meter_offset=conf_meter_offset,
             meter_type=conf_meter_type,
-            name=conf_sensor_name,
+            name=conf[CONF_NAME],
             net_consumption=conf_meter_net_consumption,
             parent_meter=meter,
             source_entity=conf_meter_source,

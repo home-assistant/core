@@ -141,12 +141,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if not conf[CONF_TARIFFS]:
             # only one entity is required
+            name = conf.get(CONF_NAME, meter)
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
                     SENSOR_DOMAIN,
                     DOMAIN,
-                    {meter: {CONF_METER: meter}},
+                    {name: {CONF_METER: meter, CONF_NAME: name}},
                     config,
                 )
             )
@@ -172,6 +173,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 name = f"{meter} {tariff}"
                 tariff_confs[name] = {
                     CONF_METER: meter,
+                    CONF_NAME: name,
                     CONF_TARIFF: tariff,
                 }
 
