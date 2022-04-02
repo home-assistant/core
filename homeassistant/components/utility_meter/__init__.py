@@ -5,7 +5,6 @@ import logging
 from croniter import croniter
 import voluptuous as vol
 
-from homeassistant.components.input_select import _unique
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -87,7 +86,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
             vol.Optional(CONF_TARIFFS, default=[]): vol.All(
-                cv.ensure_list, _unique, [cv.string]
+                cv.ensure_list, vol.Unique, [cv.string]
             ),
             vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
         },
