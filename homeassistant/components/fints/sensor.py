@@ -176,7 +176,6 @@ class FinTsAccount(SensorEntity):
         """Initialize a FinTs balance account."""
         self._client = client
         self._account = account
-        self._attr_unique_id = account.iban
         self._attr_name = name
         self._attr_icon = ICON
         self._attr_extra_state_attributes = {
