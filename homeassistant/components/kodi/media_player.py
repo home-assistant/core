@@ -448,7 +448,8 @@ class KodiEntity(MediaPlayerEntity):
                 self._connect_error = True
                 _LOGGER.warning("Unable to connect to Kodi via websocket")
             await self._clear_connection(False)
-        self._connect_error = False
+        else:
+            self._connect_error = False
 
     async def _ping(self):
         try:
@@ -458,7 +459,8 @@ class KodiEntity(MediaPlayerEntity):
                 self._connect_error = True
                 _LOGGER.warning("Unable to ping Kodi via websocket")
             await self._clear_connection()
-        self._connect_error = False
+        else:
+            self._connect_error = False
 
     async def _async_connect_websocket_if_disconnected(self, *_):
         """Reconnect the websocket if it fails."""
