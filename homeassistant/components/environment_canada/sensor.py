@@ -209,13 +209,23 @@ SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
     ),
 )
 
+
+def _get_aqhi_value(data):
+    if (aqhi := data.current) is not None:
+        return aqhi
+    if data.forecasts and (hourly := data.forecasts.get("hourly")) is not None:
+        if values := list(hourly.values()):
+            return values[0]
+    return None
+
+
 AQHI_SENSOR = ECSensorEntityDescription(
     key="aqhi",
     name="AQHI",
     device_class=SensorDeviceClass.AQI,
     native_unit_of_measurement="AQI",
     state_class=SensorStateClass.MEASUREMENT,
-    value_fn=lambda data: _get_aqhi_value(data),  # pylint: disable=unnecessary-lambda
+    value_fn=_get_aqhi_value,
 )
 
 ALERT_TYPES: tuple[ECSensorEntityDescription, ...] = (
@@ -269,15 +279,6 @@ async def async_setup_entry(
     aqhi_coordinator = hass.data[DOMAIN][config_entry.entry_id]["aqhi_coordinator"]
     sensors.append(ECSensor(aqhi_coordinator, AQHI_SENSOR))
     async_add_entities(sensors)
-
-
-def _get_aqhi_value(data):
-    if (aqhi := data.current) is not None:
-        return aqhi
-    if data.forecasts and (hourly := data.forecasts.get("hourly")) is not None:
-        if values := list(hourly.values()):
-            return values[0]
-    return None
 
 
 class ECBaseSensor(CoordinatorEntity, SensorEntity):
