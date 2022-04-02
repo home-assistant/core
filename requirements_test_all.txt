@@ -266,7 +266,7 @@ arcam-fmj==0.12.0
 async-upnp-client==0.27.0
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.2.1
+asyncsleepiq==1.2.3
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -1563,7 +1563,7 @@ wiffi==1.1.0
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.13.1
+wled==0.13.2
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
@@ -1601,7 +1601,7 @@ zeroconf==0.38.4
 zha-quirks==0.0.69
 
 # homeassistant.components.zha
-zigpy-deconz==0.14.0
+zigpy-deconz==0.15.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.14.0

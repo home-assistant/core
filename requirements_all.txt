@@ -336,7 +336,7 @@ async-upnp-client==0.27.0
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.2.1
+asyncsleepiq==1.2.3
 
 # homeassistant.components.aten_pe
 atenpdu==0.3.2
@@ -2423,7 +2423,7 @@ wirelesstagpy==0.8.1
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.13.1
+wled==0.13.2
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
@@ -2482,7 +2482,7 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.14.0
+zigpy-deconz==0.15.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.14.0
