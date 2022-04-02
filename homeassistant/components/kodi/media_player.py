@@ -446,7 +446,7 @@ class KodiEntity(MediaPlayerEntity):
         except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
             if not self._connect_error:
                 self._connect_error = True
-                _LOGGER.error("Unable to connect to Kodi via websocket")
+                _LOGGER.warning("Unable to connect to Kodi via websocket")
             await self._clear_connection(False)
         self._connect_error = False
 
@@ -456,7 +456,7 @@ class KodiEntity(MediaPlayerEntity):
         except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
             if not self._connect_error:
                 self._connect_error = True
-                _LOGGER.error("Unable to ping Kodi via websocket")
+                _LOGGER.warning("Unable to ping Kodi via websocket")
             await self._clear_connection()
         self._connect_error = False
 
