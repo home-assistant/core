@@ -3,7 +3,6 @@
     "step": {
       "user": {
         "title": "Sabnzbd",
-        "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/sabnzbd/",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "name": "[%key:common::config_flow::data::name%]",
