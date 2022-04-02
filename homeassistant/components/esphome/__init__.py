@@ -31,6 +31,7 @@ from homeassistant import const
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_HOST,
     CONF_MODE,
     CONF_PASSWORD,
@@ -192,7 +193,13 @@ async def async_setup_entry(  # noqa: C901
                 hass.async_create_task(tag.async_scan_tag(tag_id, device_id))
                 return
 
-            hass.bus.async_fire(service.service, service_data)
+            hass.bus.async_fire(
+                service.service,
+                {
+                    ATTR_DEVICE_ID: device_id,
+                    **service_data,
+                },
+            )
         else:
             hass.async_create_task(
                 hass.services.async_call(

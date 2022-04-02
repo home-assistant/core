@@ -28,6 +28,7 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
         self.device = device
+        self.title = entry.title
         self.entry = entry
         super().__init__(
             hass,

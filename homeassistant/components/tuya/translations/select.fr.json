@@ -11,12 +11,12 @@
             "2": "Activ\u00e9"
         },
         "tuya__countdown": {
-            "1h": "1 heure",
-            "2h": "2 heures",
-            "3h": "3 heures",
-            "4h": "4 heures",
-            "5h": "5 heures",
-            "6h": "6 heures",
+            "1h": "1\u00a0heure",
+            "2h": "2\u00a0heures",
+            "3h": "3\u00a0heures",
+            "4h": "4\u00a0heures",
+            "5h": "5\u00a0heures",
+            "6h": "6\u00a0heures",
             "cancel": "Annuler"
         },
         "tuya__curtain_mode": {
@@ -24,8 +24,8 @@
             "night": "Nuit"
         },
         "tuya__curtain_motor_mode": {
-            "back": "Retour",
-            "forward": "Avance rapide"
+            "back": "En arri\u00e8re",
+            "forward": "En avant"
         },
         "tuya__decibel_sensitivity": {
             "0": "Faible sensibilit\u00e9",

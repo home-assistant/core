@@ -32,11 +32,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
@@ -239,7 +242,7 @@ async def async_setup_entry(
     entity_registry = async_get_entity_reg(hass)
     device_registry = async_get_dev_reg(hass)
 
-    coordinator: update_coordinator.DataUpdateCoordinator | None = None
+    coordinator: TibberDataCoordinator | None = None
     entities: list[TibberSensor] = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
@@ -392,13 +395,13 @@ class TibberSensorElPrice(TibberSensor):
         ]["estimatedAnnualConsumption"]
 
 
-class TibberDataSensor(TibberSensor, update_coordinator.CoordinatorEntity):
+class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"]):
     """Representation of a Tibber sensor."""
 
     def __init__(
         self,
         tibber_home,
-        coordinator: update_coordinator.DataUpdateCoordinator,
+        coordinator: TibberDataCoordinator,
         entity_description: SensorEntityDescription,
     ):
         """Initialize the sensor."""
@@ -420,7 +423,7 @@ class TibberDataSensor(TibberSensor, update_coordinator.CoordinatorEntity):
         return getattr(self._tibber_home, self.entity_description.key)
 
 
-class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
+class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"]):
     """Representation of a Tibber sensor for real time consumption."""
 
     def __init__(
@@ -450,7 +453,7 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if not (live_measurement := self.coordinator.get_live_measurement()):  # type: ignore[attr-defined]
+        if not (live_measurement := self.coordinator.get_live_measurement()):
             return
         state = live_measurement.get(self.entity_description.key)
         if state is None:
@@ -479,7 +482,7 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
         self.async_write_ha_state()
 
 
-class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
+class TibberRtDataCoordinator(DataUpdateCoordinator):
     """Handle Tibber realtime data."""
 
     def __init__(self, async_add_entities, tibber_home, hass):
@@ -538,7 +541,7 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
         return self.data.get("data", {}).get("liveMeasurement")
 
 
-class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
+class TibberDataCoordinator(DataUpdateCoordinator):
     """Handle Tibber data and insert statistics."""
 
     def __init__(self, hass, tibber_connection):

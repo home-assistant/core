@@ -5,9 +5,11 @@ from motionblinds import AsyncMotionMulticast, MotionDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import network
+from homeassistant.components import dhcp, network
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_INTERFACE,
@@ -71,6 +73,21 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle discovery via dhcp."""
+        mac_address = format_mac(discovery_info.macaddress).replace(":", "")
+        await self.async_set_unique_id(mac_address)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        short_mac = mac_address[-6:].upper()
+        self.context["title_placeholders"] = {
+            "short_mac": short_mac,
+            "ip_address": discovery_info.ip,
+        }
+
+        self._host = discovery_info.ip
+        return await self.async_step_connect()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -137,8 +154,14 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             mac_address = motion_gateway.mac
 
-            await self.async_set_unique_id(mac_address)
-            self._abort_if_unique_id_configured()
+            await self.async_set_unique_id(mac_address, raise_on_progress=False)
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: self._host,
+                    CONF_API_KEY: key,
+                    CONF_INTERFACE: multicast_interface,
+                }
+            )
 
             return self.async_create_entry(
                 title=DEFAULT_GATEWAY_NAME,

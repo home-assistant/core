@@ -103,8 +103,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if ATTR_TEMPERATURE not in kwargs:
-            return
         target_temperature = (
             float(kwargs[ATTR_TEMPERATURE]) - self._offset
         ) / self._scale
@@ -124,19 +122,22 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         ]
         registers = self._swap_registers(raw_regs)
 
-        if isinstance(registers, list):
+        if self._data_type in (
+            DataType.INT16,
+            DataType.UINT16,
+        ):
             result = await self._hub.async_pymodbus_call(
                 self._slave,
                 self._target_temperature_register,
-                [int(float(i)) for i in registers],
-                CALL_TYPE_WRITE_REGISTERS,
+                int(float(registers[0])),
+                CALL_TYPE_WRITE_REGISTER,
             )
         else:
             result = await self._hub.async_pymodbus_call(
                 self._slave,
                 self._target_temperature_register,
-                target_temperature,
-                CALL_TYPE_WRITE_REGISTER,
+                [int(float(i)) for i in registers],
+                CALL_TYPE_WRITE_REGISTERS,
             )
         self._attr_available = result is not None
         await self.async_update()

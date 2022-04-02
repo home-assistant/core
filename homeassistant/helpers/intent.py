@@ -4,12 +4,12 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 import logging
 import re
-from typing import Any
+from typing import Any, TypeVar
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
-from homeassistant.core import Context, HomeAssistant, State, T, callback
+from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 
@@ -17,6 +17,7 @@ from . import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _SlotsType = dict[str, Any]
+_T = TypeVar("_T")
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
@@ -163,7 +164,7 @@ class IntentHandler:
         return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
-def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) -> T | None:
+def _fuzzymatch(name: str, items: Iterable[_T], key: Callable[[_T], str]) -> _T | None:
     """Fuzzy matching function."""
     matches = []
     pattern = ".*?".join(name)

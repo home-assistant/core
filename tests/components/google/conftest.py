@@ -15,15 +15,14 @@ from homeassistant.components.google import CONF_TRACK_NEW, DOMAIN
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
 from homeassistant.util.dt import utcnow
 
-ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
+from tests.common import MockConfigEntry
 
 ApiResult = Callable[[dict[str, Any]], None]
 ComponentSetup = Callable[[], Awaitable[bool]]
-T = TypeVar("T")
-YieldFixture = Generator[T, None, None]
+_T = TypeVar("_T")
+YieldFixture = Generator[_T, None, None]
 
 
 CALENDAR_ID = "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com"
@@ -157,6 +156,25 @@ async def storage() -> YieldFixture[FakeStorage]:
 
 
 @pytest.fixture
+async def config_entry(token_scopes: list[str]) -> MockConfigEntry:
+    """Fixture to create a config entry for the integration."""
+    token_expiry = utcnow() + datetime.timedelta(days=7)
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "device_auth",
+            "token": {
+                "access_token": "ACCESS_TOKEN",
+                "refresh_token": "REFRESH_TOKEN",
+                "scope": " ".join(token_scopes),
+                "token_type": "Bearer",
+                "expires_at": token_expiry.timestamp(),
+            },
+        },
+    )
+
+
+@pytest.fixture
 async def mock_token_read(
     hass: HomeAssistant,
     creds: OAuth2Credentials,
@@ -231,10 +249,7 @@ def set_time_zone(hass):
     """Set the time zone for the tests."""
     # Set our timezone to CST/Regina so we can check calculations
     # This keeps UTC-6 all year round
-    hass.config.time_zone = "CST"
-    dt_util.set_default_time_zone(dt_util.get_time_zone("America/Regina"))
-    yield
-    dt_util.set_default_time_zone(ORIG_TIMEZONE)
+    hass.config.set_time_zone("America/Regina")
 
 
 @pytest.fixture

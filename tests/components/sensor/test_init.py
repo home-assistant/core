@@ -7,11 +7,16 @@ from pytest import approx
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    PRESSURE_KPA,
+    PRESSURE_MMHG,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -342,3 +347,162 @@ async def test_restore_sensor_restore_state(
     assert entity0.native_value == native_value
     assert type(entity0.native_value) == native_value_type
     assert entity0.native_unit_of_measurement == uom
+
+
+@pytest.mark.parametrize(
+    "device_class,native_unit,custom_unit,state_unit,native_value,custom_value",
+    [
+        # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
+        (
+            SensorDeviceClass.PRESSURE,
+            PRESSURE_HPA,
+            PRESSURE_INHG,
+            PRESSURE_INHG,
+            1000.0,
+            29.53,
+        ),
+        (
+            SensorDeviceClass.PRESSURE,
+            PRESSURE_KPA,
+            PRESSURE_HPA,
+            PRESSURE_HPA,
+            1.234,
+            12.34,
+        ),
+        (
+            SensorDeviceClass.PRESSURE,
+            PRESSURE_HPA,
+            PRESSURE_MMHG,
+            PRESSURE_MMHG,
+            1000,
+            750,
+        ),
+        # Not a supported pressure unit
+        (
+            SensorDeviceClass.PRESSURE,
+            PRESSURE_HPA,
+            "peer_pressure",
+            PRESSURE_HPA,
+            1000,
+            1000,
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE,
+            TEMP_CELSIUS,
+            TEMP_FAHRENHEIT,
+            TEMP_FAHRENHEIT,
+            37.5,
+            99.5,
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE,
+            TEMP_FAHRENHEIT,
+            TEMP_CELSIUS,
+            TEMP_CELSIUS,
+            100,
+            38.0,
+        ),
+    ],
+)
+async def test_custom_unit(
+    hass,
+    enable_custom_integrations,
+    device_class,
+    native_unit,
+    custom_unit,
+    state_unit,
+    native_value,
+    custom_value,
+):
+    """Test custom unit."""
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=str(native_value),
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+        unique_id="very_unique",
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(custom_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+
+
+@pytest.mark.parametrize(
+    "native_unit,custom_unit,state_unit,native_value,custom_value",
+    [
+        # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
+        (PRESSURE_HPA, PRESSURE_INHG, PRESSURE_INHG, 1000.0, 29.53),
+        (PRESSURE_KPA, PRESSURE_HPA, PRESSURE_HPA, 1.234, 12.34),
+        (PRESSURE_HPA, PRESSURE_MMHG, PRESSURE_MMHG, 1000, 750),
+        # Not a supported pressure unit
+        (PRESSURE_HPA, "peer_pressure", PRESSURE_HPA, 1000, 1000),
+    ],
+)
+async def test_custom_unit_change(
+    hass,
+    enable_custom_integrations,
+    native_unit,
+    custom_unit,
+    state_unit,
+    native_value,
+    custom_value,
+):
+    """Test custom unit changes are picked up."""
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=str(native_value),
+        native_unit_of_measurement=native_unit,
+        device_class=SensorDeviceClass.PRESSURE,
+        unique_id="very_unique",
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(native_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    entity_registry.async_update_entity_options(
+        "sensor.test", "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(custom_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+
+    entity_registry.async_update_entity_options(
+        "sensor.test", "sensor", {"unit_of_measurement": native_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(native_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    entity_registry.async_update_entity_options("sensor.test", "sensor", None)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(native_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit

@@ -77,14 +77,25 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
 
         self.data = {}
 
+        energy_keys = ["lifeTimeData", "lastYearData", "lastMonthData", "lastDayData"]
         for key, value in overview.items():
-            if key in ["lifeTimeData", "lastYearData", "lastMonthData", "lastDayData"]:
+            if key in energy_keys:
                 data = value["energy"]
             elif key in ["currentPower"]:
                 data = value["power"]
             else:
                 data = value
             self.data[key] = data
+
+        # Sanity check the energy values. SolarEdge API sometimes report "lifetimedata" of zero,
+        # while values for last Year, Month and Day energy are still OK.
+        # See https://github.com/home-assistant/core/issues/59285 .
+        if set(energy_keys).issubset(self.data.keys()):
+            for index, key in enumerate(energy_keys, start=1):
+                # All coming values in list should be larger than the current value.
+                if any(self.data[k] > self.data[key] for k in energy_keys[index:]):
+                    self.data = {}
+                    raise UpdateFailed("Invalid energy values, skipping update")
 
         LOGGER.debug("Updated SolarEdge overview: %s", self.data)
 

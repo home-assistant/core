@@ -840,8 +840,6 @@ async def test_recursive_script(hass, script_mode, warning_msg, caplog):
         service_called.set()
 
     hass.services.async_register("test", "script", async_service_handler)
-    hass.states.async_set("input_boolean.test", "on")
-    hass.states.async_set("input_boolean.test2", "off")
 
     await hass.services.async_call("script", "script1")
     await asyncio.wait_for(service_called.wait(), 1)
@@ -908,8 +906,6 @@ async def test_recursive_script_indirect(hass, script_mode, warning_msg, caplog)
         service_called.set()
 
     hass.services.async_register("test", "script", async_service_handler)
-    hass.states.async_set("input_boolean.test", "on")
-    hass.states.async_set("input_boolean.test2", "off")
 
     await hass.services.async_call("script", "script1")
     await asyncio.wait_for(service_called.wait(), 1)

@@ -29,7 +29,7 @@
                     "incl_filter": "\u6240\u9078\u64c7\u8def\u7dda\u63cf\u8ff0\u5305\u542b Substring",
                     "realtime": "\u5373\u6642\u65c5\u7a0b\u6642\u9593\uff1f",
                     "units": "\u55ae\u4f4d",
-                    "vehicle_type": "\u8eca\u8f1b\u985e\u578b"
+                    "vehicle_type": "\u8eca\u8f1b\u985e\u5225"
                 },
                 "description": "`substring` \u8f38\u5165\u53ef\u4f9b\u5f37\u5236\u6574\u5408\u3001\u65bc\u8a08\u7b97\u65c5\u7a0b\u6642\u9593\u6642\uff0c\u4f7f\u7528\u7279\u5b9a\u8def\u7dda\u6216\u907f\u958b\u4f7f\u7528\u7279\u5b9a\u8def\u7dda\u3002"
             }

@@ -11,6 +11,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
+    CONF_LOCATION,
     CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
@@ -29,7 +30,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_LOCATION,
     CONF_STATISTICS_ONLY,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
@@ -153,7 +153,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def _async_platforms(entry: ConfigEntry) -> list[Platform]:
     """Return platforms to be loaded / unloaded."""
-    platforms = [Platform.BINARY_SENSOR, Platform.SENSOR]
+    platforms = [Platform.BINARY_SENSOR, Platform.UPDATE, Platform.SENSOR]
     if not entry.data[CONF_STATISTICS_ONLY]:
         platforms.append(Platform.SWITCH)
     return platforms

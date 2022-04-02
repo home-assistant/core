@@ -19,7 +19,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -43,7 +43,7 @@ from .discovery import (
     async_populate_data_from_discovery,
     async_update_entry_from_discovery,
 )
-from .util import format_as_flux_mac
+from .util import format_as_flux_mac, mac_matches_by_one
 
 CONF_DEVICE: Final = "device"
 
@@ -57,6 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, FluxLEDDiscovery] = {}
         self._discovered_device: FluxLEDDiscovery | None = None
+        self._allow_update_mac = False
 
     @staticmethod
     @callback
@@ -85,37 +86,65 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle integration discovery."""
+        self._allow_update_mac = True
         self._discovered_device = cast(FluxLEDDiscovery, discovery_info)
         return await self._async_handle_discovery()
+
+    async def _async_set_discovered_mac(
+        self, device: FluxLEDDiscovery, allow_update_mac: bool
+    ) -> None:
+        """Set the discovered mac.
+
+        We only allow it to be updated if it comes from udp
+        discovery since the dhcp mac can be one digit off from
+        the udp discovery mac for devices with multiple network interfaces
+        """
+        mac_address = device[ATTR_ID]
+        assert mac_address is not None
+        mac = dr.format_mac(mac_address)
+        await self.async_set_unique_id(mac)
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_HOST] == device[ATTR_IPADDR] or (
+                entry.unique_id
+                and ":" in entry.unique_id
+                and mac_matches_by_one(entry.unique_id, mac)
+            ):
+                if async_update_entry_from_discovery(
+                    self.hass, entry, device, None, allow_update_mac
+                ):
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+                raise AbortFlow("already_configured")
 
     async def _async_handle_discovery(self) -> FlowResult:
         """Handle any discovery."""
         device = self._discovered_device
         assert device is not None
-        mac_address = device[ATTR_ID]
-        assert mac_address is not None
-        mac = dr.format_mac(mac_address)
+        await self._async_set_discovered_mac(device, self._allow_update_mac)
         host = device[ATTR_IPADDR]
-        await self.async_set_unique_id(mac)
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id == mac or entry.data[CONF_HOST] == host:
-                if async_update_entry_from_discovery(self.hass, entry, device, None):
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
-                return self.async_abort(reason="already_configured")
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
         if not device[ATTR_MODEL_DESCRIPTION]:
+            mac_address = device[ATTR_ID]
+            assert mac_address is not None
+            mac = dr.format_mac(mac_address)
             try:
                 device = await self._async_try_connect(host, device)
             except FLUX_LED_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
             else:
-                if device[ATTR_MODEL_DESCRIPTION]:
+                discovered_mac = device[ATTR_ID]
+                if device[ATTR_MODEL_DESCRIPTION] or (
+                    discovered_mac is not None
+                    and (formatted_discovered_mac := dr.format_mac(discovered_mac))
+                    and formatted_discovered_mac != mac
+                    and mac_matches_by_one(discovered_mac, mac)
+                ):
                     self._discovered_device = device
+                    await self._async_set_discovered_mac(device, True)
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
