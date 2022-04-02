@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_NAME,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -33,6 +32,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -288,10 +288,15 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 sensor.start(source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
         if (
-            old_state is None
-            or new_state is None
-            or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            new_state is None
             or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            or (
+                not self._sensor_delta_values
+                and (
+                    old_state is None
+                    or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                )
+            )
         ):
             return
 
@@ -309,9 +314,12 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             self._state += adjustment
 
         except DecimalException as err:
-            _LOGGER.warning(
-                "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
-            )
+            if self._sensor_delta_values:
+                _LOGGER.warning("Invalid adjustment of %s: %s", new_state.state, err)
+            else:
+                _LOGGER.warning(
+                    "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
+                )
         self.async_write_ha_state()
 
     @callback
@@ -418,6 +426,10 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 )
 
                 tariff_entity_state = self.hass.states.get(self._tariff_entity)
+                if not tariff_entity_state:
+                    # The utility meter is not yet added
+                    return
+
                 self._change_status(tariff_entity_state.state)
                 return
 
@@ -431,9 +443,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 self.hass, [self._sensor_source_id], self.async_reading
             )
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_source_tracking
-        )
+        async_at_start(self.hass, async_source_tracking)
 
     @property
     def name(self):
