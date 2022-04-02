@@ -20,12 +20,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.const import Platform
 
 from .const import (
     _LOGGER,
-    ATTR_TRADFRI_GATEWAY,
-    ATTR_TRADFRI_GATEWAY_MODEL,
-    ATTR_TRADFRI_MANUFACTURER,
     CONF_GATEWAY_ID,
     CONF_IDENTITY,
     CONF_KEY,
@@ -34,14 +32,24 @@ from .const import (
     DOMAIN,
     FACTORY,
     KEY_API,
-    LISTENERS,
-    PLATFORMS,
-    SIGNAL_GW,
-    TIMEOUT_API,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
+
+ATTR_TRADFRI_GATEWAY = "Gateway"
+ATTR_TRADFRI_GATEWAY_MODEL = "E1526"
+ATTR_TRADFRI_MANUFACTURER = "IKEA of Sweden"
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+LISTENERS = "tradfri_listeners"
+PLATFORMS = [
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+SIGNAL_GW = "tradfri.gw_status"
+TIMEOUT_API = 30
 
 
 async def async_setup_entry(

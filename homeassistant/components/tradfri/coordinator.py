@@ -12,7 +12,9 @@ from pytradfri.error import RequestError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, SCAN_INTERVAL
+from .const import _LOGGER
+
+SCAN_INTERVAL = 60  # Interval for updating the coordinator
 
 
 class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):

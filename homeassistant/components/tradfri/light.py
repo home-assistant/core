@@ -20,21 +20,23 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
+from homeassistant.components.light import SUPPORT_TRANSITION
 
 from .base_class import TradfriBaseEntity
 from .const import (
-    ATTR_DIMMER,
-    ATTR_HUE,
-    ATTR_SAT,
-    ATTR_TRANSITION_TIME,
     CONF_GATEWAY_ID,
     COORDINATOR,
     COORDINATOR_LIST,
     DOMAIN,
     KEY_API,
-    SUPPORTED_LIGHT_FEATURES,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+
+ATTR_DIMMER = "dimmer"
+ATTR_HUE = "hue"
+ATTR_SAT = "saturation"
+ATTR_TRANSITION_TIME = "transition_time"
+SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
 
 
 async def async_setup_entry(

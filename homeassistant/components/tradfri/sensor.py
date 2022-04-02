@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -28,7 +28,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .base_class import TradfriBaseEntity
 from .const import (
     _LOGGER,
-    ATTR_FILTER_LIFE_REMAINING,
     CONF_GATEWAY_ID,
     COORDINATOR,
     COORDINATOR_LIST,
@@ -36,6 +35,8 @@ from .const import (
     KEY_API,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+
+ATTR_FILTER_LIFE_REMAINING: Final = "filter_life_remaining"
 
 
 @dataclass

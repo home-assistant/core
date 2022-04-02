@@ -13,7 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
 from .const import (
-    ATTR_MODEL,
     CONF_GATEWAY_ID,
     COORDINATOR,
     COORDINATOR_LIST,
@@ -21,6 +20,8 @@ from .const import (
     KEY_API,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+
+ATTR_MODEL = "model"
 
 
 async def async_setup_entry(

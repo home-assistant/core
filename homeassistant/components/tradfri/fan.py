@@ -18,8 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
 from .const import (
-    ATTR_AUTO,
-    ATTR_MAX_FAN_STEPS,
     CONF_GATEWAY_ID,
     COORDINATOR,
     COORDINATOR_LIST,
@@ -27,6 +25,9 @@ from .const import (
     KEY_API,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+
+ATTR_AUTO = "Auto"
+ATTR_MAX_FAN_STEPS = 49
 
 
 def _from_fan_percentage(percentage: int) -> int:
