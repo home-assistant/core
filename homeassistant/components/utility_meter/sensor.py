@@ -218,7 +218,7 @@ async def async_setup_platform(
             source_entity=conf_meter_source,
             tariff_entity=conf_meter_tariff_entity,
             tariff=conf.get(CONF_TARIFF),
-            unique_id=None,
+            unique_id=conf_sensor_unique_id,
         )
         meters.append(meter_sensor)
 
@@ -278,7 +278,6 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._sensor_net_consumption = net_consumption
         self._tariff = tariff
         self._tariff_entity = tariff_entity
-        self._attr_unique_id = unique_id
 
     def start(self, unit):
         """Initialize unit and state upon source initial update."""

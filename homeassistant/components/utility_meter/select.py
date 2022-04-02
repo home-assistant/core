@@ -13,7 +13,12 @@ from homeassistant.components.select.const import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -27,6 +32,7 @@ from .const import (
     CONF_METER,
     CONF_TARIFFS,
     DATA_LEGACY_COMPONENT,
+    DATA_UTILITY,
     SERVICE_SELECT_NEXT_TARIFF,
     SERVICE_SELECT_TARIFF,
     TARIFF_ICON,
@@ -60,10 +66,9 @@ async def async_setup_platform(hass, conf, async_add_entities, discovery_info=No
         [
             TariffSelect(
                 discovery_info[CONF_METER],
-                conf_meter_unique_id,
                 discovery_info[CONF_TARIFFS],
                 legacy_component.async_add_entities,
-                None,
+                conf_meter_unique_id,
             )
         ]
     )
@@ -82,7 +87,7 @@ async def async_setup_platform(hass, conf, async_add_entities, discovery_info=No
 class TariffSelect(SelectEntity, RestoreEntity):
     """Representation of a Tariff selector."""
 
-    def __init__(self, name, unique_id, tariffs, add_legacy_entities):
+    def __init__(self, name, tariffs, add_legacy_entities, unique_id):
         """Initialize a tariff selector."""
         self._attr_name = name
         self._attr_unique_id = unique_id
@@ -90,7 +95,6 @@ class TariffSelect(SelectEntity, RestoreEntity):
         self._tariffs = tariffs
         self._attr_icon = TARIFF_ICON
         self._attr_should_poll = False
-        self._attr_unique_id = unique_id
         self._add_legacy_entities = add_legacy_entities
 
     @property
