@@ -64,7 +64,7 @@ class AuthorizationServer:
 
 
 class DeveloperCredentialsStorageCollection(collection.StorageCollection):
-    """Input boolean collection stored in storage."""
+    """Developer credential collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
 
