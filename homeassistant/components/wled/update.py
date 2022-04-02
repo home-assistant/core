@@ -51,6 +51,11 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         return str(version)
 
     @property
+    def entity_picture(self) -> str:
+        """Return the entity picture to use in the frontend, if any."""
+        return "https://brands.home-assistant.io/wled/icon.png"
+
+    @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         # If we already run a pre-release, we consider being on the beta channel.
