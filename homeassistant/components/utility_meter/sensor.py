@@ -1,8 +1,8 @@
 """Utility meter from sensors providing raw data."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 from typing import Any
@@ -34,7 +34,6 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -230,17 +229,16 @@ async def async_setup_platform(
 class UtilitySensorExtraStoredData(SensorExtraStoredData):
     """Object to hold extra stored data."""
 
-    native_value: Decimal  # type: ignore[assignment]
     last_period: Decimal
-    last_reset: datetime
+    last_reset: datetime | None
     status: str
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the utility sensor data."""
         data = super().as_dict()
-        data["native_value"] = str(self.native_value)
         data["last_period"] = str(self.last_period)
-        data["last_reset"] = self.last_reset.isoformat()
+        if self.last_reset:
+            data["last_reset"] = self.last_reset.isoformat()
         data["status"] = self.status
 
         return data
@@ -248,19 +246,24 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> UtilitySensorExtraStoredData | None:
         """Initialize a stored sensor state from a dict."""
+        extra = SensorExtraStoredData.from_dict(restored)
+        if extra is None:
+            return None
+
         try:
-            native_value = Decimal(restored["native_value"])
-        except InvalidOperation:
-            native_value = None
-        native_unit_of_measurement = restored["native_unit_of_measurement"]
-        try:
-            last_period = Decimal(restored["last_period"])
+            last_period: Decimal = Decimal(restored["last_period"])
         except InvalidOperation:
             last_period = Decimal(0)
-        last_reset = dt_util.parse_datetime(restored["last_reset"])
-        status = restored["status"]
+        last_reset: datetime | None = dt_util.parse_datetime(restored["last_reset"])
+        status: str = restored["status"]
 
-        return cls(native_value, native_unit_of_measurement, last_period, last_reset, status)  # type: ignore[arg-type]
+        return cls(
+            extra.native_value,
+            extra.native_unit_of_measurement,
+            last_period,
+            last_reset,
+            status,
+        )
 
 
 class UtilityMeterSensor(RestoreSensor):

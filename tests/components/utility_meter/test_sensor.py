@@ -41,7 +41,11 @@ from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, mock_restore_cache_with_extra_data
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 
 @contextmanager
@@ -458,7 +462,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                     },
                 ),
                 {
-                    "native_value": "3",
+                    "native_value": {"__type": "<class 'decimal.Decimal'>", "value": 3},
                     "native_unit_of_measurement": "kWh",
                     "last_reset": last_reset,
                     "last_period": "7",
@@ -471,7 +475,10 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                     "error",
                 ),
                 {
-                    "native_value": "dog",
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "value": "dog",
+                    },
                     "native_unit_of_measurement": "kWh",
                     "last_reset": last_reset,
                     "last_period": "cat",
