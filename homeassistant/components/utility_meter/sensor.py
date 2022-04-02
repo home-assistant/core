@@ -194,6 +194,10 @@ async def async_setup_platform(
             if conf_meter_unique_id
             else None
         )
+        conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
+        conf_sensor_name = (
+            f"{meter} {conf_sensor_tariff}" if conf_sensor_tariff else conf_meter_name
+        )
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
         conf_meter_delta_values = hass.data[DATA_UTILITY][meter][
@@ -211,7 +215,7 @@ async def async_setup_platform(
             delta_values=conf_meter_delta_values,
             meter_offset=conf_meter_offset,
             meter_type=conf_meter_type,
-            name=conf.get(CONF_NAME),
+            name=conf_sensor_name,
             net_consumption=conf_meter_net_consumption,
             parent_meter=meter,
             source_entity=conf_meter_source,
