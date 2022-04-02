@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, cast
 
 from pytradfri.command import Command
@@ -28,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
 from .const import (
+    _LOGGER,
     ATTR_FILTER_LIFE_REMAINING,
     CONF_GATEWAY_ID,
     COORDINATOR,
@@ -36,8 +36,6 @@ from .const import (
     KEY_API,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass

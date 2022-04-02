@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
-import logging
 from typing import Any
 
 from pytradfri.command import Command
@@ -13,9 +12,7 @@ from pytradfri.error import RequestError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import SCAN_INTERVAL
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, SCAN_INTERVAL
 
 
 class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
