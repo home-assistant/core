@@ -12,13 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
-from .const import (
-    CONF_GATEWAY_ID,
-    COORDINATOR,
-    COORDINATOR_LIST,
-    DOMAIN,
-    KEY_API,
-)
+from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 ATTR_MODEL = "model"
