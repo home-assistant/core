@@ -1,7 +1,6 @@
 """Consts used by Tradfri."""
 import logging
 
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_GATEWAY_ID = "gateway_id"

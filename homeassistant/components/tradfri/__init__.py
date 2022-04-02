@@ -10,7 +10,7 @@ from pytradfri.command import Command
 from pytradfri.device import Device
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +20,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.const import Platform
 
 from .const import (
     _LOGGER,
@@ -34,7 +33,6 @@ from .const import (
     KEY_API,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
-
 
 ATTR_TRADFRI_GATEWAY = "Gateway"
 ATTR_TRADFRI_GATEWAY_MODEL = "E1526"
