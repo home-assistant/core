@@ -176,7 +176,7 @@ class PhilipsTVLightEntity(
 
     def _calculate_effect_list(self):
         """Calculate an effect list based on current status."""
-        effects = []
+        effects: list[AmbilightEffect] = []
         effects.extend(
             AmbilightEffect(mode=EFFECT_AUTO, style=style, algorithm=setting)
             for style, data in self._tv.ambilight_styles.items()
