@@ -157,6 +157,7 @@ class FinTsClient:
                 self.client.get_holdings(account)
                 holdings_accounts.append(account)
             except FinTSClientError:
+                # account is most likely not a holdings account.
                 pass
             except FinTSDialogError:
                 # account is not a holdings account.
