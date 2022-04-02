@@ -579,11 +579,6 @@ class UtilityMeterSensor(RestoreSensor):
         return ICON
 
     @property
-    def last_reset(self):
-        """Return the last time the sensor was reset."""
-        return self._last_reset
-
-    @property
     def extra_restore_state_data(self) -> UtilitySensorExtraStoredData:
         """Return sensor specific state data to be restored."""
         return UtilitySensorExtraStoredData(
@@ -595,7 +590,7 @@ class UtilityMeterSensor(RestoreSensor):
         )
 
     async def async_get_last_sensor_data(self) -> UtilitySensorExtraStoredData | None:
-        """Restore native_value and native_unit_of_measurement."""
+        """Restore Utility Meter Sensor Extra Stored Data."""
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
 
