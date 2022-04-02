@@ -82,7 +82,7 @@ async def async_setup_devices(bridge: "HueBridge"):
     ):
         if device not in known_devices:
             # handle case where a virtual device was created for a Hue group
-            hue_dev_id = next(x[1] for x in device.identifiers)
+            hue_dev_id = next(x[1] for x in device.identifiers if x[0] == DOMAIN)
             if hue_dev_id in api.groups:
                 continue
             dev_reg.async_remove_device(device.id)
