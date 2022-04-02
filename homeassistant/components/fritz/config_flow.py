@@ -1,6 +1,7 @@
 """Config flow to configure the FRITZ!Box Tools integration."""
 from __future__ import annotations
 
+import ipaddress
 import logging
 import socket
 from typing import Any
@@ -128,6 +129,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             or discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
         )
         self.context[CONF_HOST] = self._host
+
+        if ipaddress.ip_address(self._host).is_link_local:
+            return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             if uuid.startswith("uuid:"):
