@@ -36,6 +36,7 @@ UNIT_PREFIXES = [
     selector.SelectOptionDict(value="none", label="none"),
     selector.SelectOptionDict(value="k", label="k (kilo)"),
     selector.SelectOptionDict(value="M", label="M (mega)"),
+    selector.SelectOptionDict(value="G", label="G (giga)"),
     selector.SelectOptionDict(value="T", label="T (tera)"),
     selector.SelectOptionDict(value="P", label="P (peta)"),
 ]
