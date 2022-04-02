@@ -34,16 +34,6 @@ EFFECT_EXPERT = "Expert"
 EFFECT_AUTO = "Auto"
 EFFECT_EXPERT_STYLES = {"FOLLOW_AUDIO", "FOLLOW_COLOR", "Lounge light"}
 
-STANDARD_FOLLOW_VIDEO_SETTINGS = {
-    "STANDARD",
-    "NATURAL",
-    "IMMERSIVE",
-    "VIVID",
-    "GAME",
-    "COMFORT",
-    "RELAX",
-}
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -202,11 +192,6 @@ class PhilipsTVLightEntity(
         effects.extend(
             AmbilightEffect(mode=EFFECT_MODE, style=style)
             for style in self._tv.ambilight_modes
-        )
-
-        effects.extend(
-            AmbilightEffect(mode=EFFECT_AUTO, style="FOLLOW_VIDEO", algorithm=setting)
-            for setting in STANDARD_FOLLOW_VIDEO_SETTINGS
         )
 
         filtered_effects = [
