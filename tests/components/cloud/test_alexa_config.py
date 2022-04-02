@@ -8,6 +8,7 @@ from homeassistant.components.alexa import errors
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed, mock_registry
@@ -28,21 +29,21 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
         "test",
         "light_config_id",
         suggested_object_id="config_light",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     entity_entry2 = entity_registry.async_get_or_create(
         "light",
         "test",
         "light_diagnostic_id",
         suggested_object_id="diagnostic_light",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     )
     entity_entry3 = entity_registry.async_get_or_create(
         "light",
         "test",
         "light_system_id",
         suggested_object_id="system_light",
-        entity_category="system",
+        entity_category=EntityCategory.SYSTEM,
     )
     entity_entry4 = entity_registry.async_get_or_create(
         "light",

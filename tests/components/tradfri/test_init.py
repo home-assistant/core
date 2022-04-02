@@ -17,7 +17,6 @@ async def test_entry_setup_unload(hass, mock_api_factory):
             tradfri.CONF_HOST: "mock-host",
             tradfri.CONF_IDENTITY: "mock-identity",
             tradfri.CONF_KEY: "mock-key",
-            tradfri.CONF_IMPORT_GROUPS: True,
             tradfri.CONF_GATEWAY_ID: GATEWAY_ID,
         },
     )
@@ -59,7 +58,6 @@ async def test_remove_stale_devices(hass, mock_api_factory):
             tradfri.CONF_HOST: "mock-host",
             tradfri.CONF_IDENTITY: "mock-identity",
             tradfri.CONF_KEY: "mock-key",
-            tradfri.CONF_IMPORT_GROUPS: True,
             tradfri.CONF_GATEWAY_ID: GATEWAY_ID,
         },
     )

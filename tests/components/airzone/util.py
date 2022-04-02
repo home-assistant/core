@@ -165,7 +165,7 @@ HVAC_SYSTEMS_MOCK = {
 
 async def async_init_integration(
     hass: HomeAssistant,
-):
+) -> None:
     """Set up the Airzone integration in Home Assistant."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
