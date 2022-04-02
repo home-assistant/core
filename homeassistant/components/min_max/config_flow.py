@@ -22,15 +22,15 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_IDS): selector.selector(
             selector.SelectorType.ENTITY,
-            selector.EntitySelectorDict(domain="sensor", multiple=True),
+            selector.EntitySelectorConfig(domain="sensor", multiple=True),
         ),
         vol.Required(CONF_TYPE): selector.selector(
             selector.SelectorType.SELECT,
-            selector.SelectSelectorDict(options=_STATISTIC_MEASURES),
+            selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
         ),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
             selector.SelectorType.NUMBER,
-            selector.NumberSelectorDict(
+            selector.NumberSelectorConfig(
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
         ),

@@ -19,7 +19,7 @@ from .const import DOMAIN
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): selector.selector(
-            selector.SelectorType.ENTITY, selector.EntitySelectorDict(domain="sensor")
+            selector.SelectorType.ENTITY, selector.EntitySelectorConfig(domain="sensor")
         ),
     }
 )

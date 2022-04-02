@@ -68,7 +68,7 @@ _IP_SELECTOR = selector.selector(selector.SelectorType.TEXT)
 _PORT_SELECTOR = vol.All(
     selector.selector(
         selector.SelectorType.NUMBER,
-        selector.NumberSelectorDict(
+        selector.NumberSelectorConfig(
             min=1, max=65535, mode=selector.NumberSelectorMode.BOX
         ),
     ),
@@ -257,7 +257,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_KNX_SECURE_USER_ID, default=2): vol.All(
                 selector.selector(
                     selector.SelectorType.NUMBER,
-                    selector.NumberSelectorDict(
+                    selector.NumberSelectorConfig(
                         min=1, max=127, mode=selector.NumberSelectorMode.BOX
                     ),
                 ),
@@ -265,11 +265,11 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             vol.Required(CONF_KNX_SECURE_USER_PASSWORD): selector.selector(
                 selector.SelectorType.TEXT,
-                selector.TextSelectorDict(type=selector.TextSelectorType.PASSWORD),
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
             ),
             vol.Required(CONF_KNX_SECURE_DEVICE_AUTHENTICATION): selector.selector(
                 selector.SelectorType.TEXT,
-                selector.TextSelectorDict(type=selector.TextSelectorType.PASSWORD),
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
             ),
         }
 
@@ -444,7 +444,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
             ] = vol.All(
                 selector.selector(
                     selector.SelectorType.NUMBER,
-                    selector.NumberSelectorDict(
+                    selector.NumberSelectorConfig(
                         min=0,
                         max=CONF_MAX_RATE_LIMIT,
                         mode=selector.NumberSelectorMode.BOX,

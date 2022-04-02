@@ -33,7 +33,7 @@ def basic_group_options_schema(
     return vol.Schema(
         {
             vol.Required(CONF_ENTITIES): entity_selector_without_own_entities(
-                handler, selector.EntitySelectorDict(domain=domain, multiple=True)
+                handler, selector.EntitySelectorConfig(domain=domain, multiple=True)
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
                 selector.SelectorType.BOOLEAN
@@ -49,7 +49,7 @@ def basic_group_config_schema(domain: str) -> vol.Schema:
             vol.Required("name"): selector.selector(selector.SelectorType.TEXT),
             vol.Required(CONF_ENTITIES): selector.selector(
                 selector.SelectorType.ENTITY,
-                selector.EntitySelectorDict(domain=domain, multiple=True),
+                selector.EntitySelectorConfig(domain=domain, multiple=True),
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.selector(
                 selector.SelectorType.BOOLEAN

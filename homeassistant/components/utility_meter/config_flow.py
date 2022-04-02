@@ -60,7 +60,7 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SOURCE_SENSOR): selector.selector(
             selector.SelectorType.ENTITY,
-            selector.EntitySelectorDict(domain="sensor"),
+            selector.EntitySelectorConfig(domain="sensor"),
         ),
     }
 )
@@ -70,15 +70,15 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
         vol.Required(CONF_SOURCE_SENSOR): selector.selector(
             selector.SelectorType.ENTITY,
-            selector.EntitySelectorDict(domain="sensor"),
+            selector.EntitySelectorConfig(domain="sensor"),
         ),
         vol.Required(CONF_METER_TYPE): selector.selector(
             selector.SelectorType.SELECT,
-            selector.SelectSelectorDict(options=METER_TYPES),
+            selector.SelectSelectorConfig(options=METER_TYPES),
         ),
         vol.Required(CONF_METER_OFFSET, default=0): selector.selector(
             selector.SelectorType.NUMBER,
-            selector.NumberSelectorDict(
+            selector.NumberSelectorConfig(
                 min=0,
                 max=28,
                 mode=selector.NumberSelectorMode.BOX,
@@ -87,7 +87,7 @@ CONFIG_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_TARIFFS, default=[]): selector.selector(
             selector.SelectorType.SELECT,
-            selector.SelectSelectorDict(options=[], custom_value=True, multiple=True),
+            selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
         ),
         vol.Required(CONF_METER_NET_CONSUMPTION, default=False): selector.selector(
             selector.SelectorType.BOOLEAN

@@ -31,11 +31,11 @@ CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
             {
                 vol.Required(CONF_ENTITY_ID): selector.selector(
                     selector.SelectorType.ENTITY,
-                    selector.EntitySelectorDict(domain=Platform.SWITCH),
+                    selector.EntitySelectorConfig(domain=Platform.SWITCH),
                 ),
                 vol.Required(CONF_TARGET_DOMAIN): selector.selector(
                     selector.SelectorType.SELECT,
-                    selector.SelectSelectorDict(options=TARGET_DOMAIN_OPTIONS),
+                    selector.SelectSelectorConfig(options=TARGET_DOMAIN_OPTIONS),
                 ),
             }
         )

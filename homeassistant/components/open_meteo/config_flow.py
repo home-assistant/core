@@ -9,7 +9,7 @@ from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ZONE
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.selector import EntitySelectorDict, SelectorType, selector
+from homeassistant.helpers.selector import EntitySelectorConfig, SelectorType, selector
 
 from .const import DOMAIN
 
@@ -39,7 +39,7 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ZONE): selector(
                         SelectorType.ENTITY,
-                        EntitySelectorDict(domain=ZONE_DOMAIN),
+                        EntitySelectorConfig(domain=ZONE_DOMAIN),
                     ),
                 }
             ),

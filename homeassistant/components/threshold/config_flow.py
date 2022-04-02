@@ -29,15 +29,15 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): selector.selector(
             selector.SelectorType.NUMBER,
-            selector.NumberSelectorDict(mode=selector.NumberSelectorMode.BOX),
+            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
         ),
         vol.Optional(CONF_LOWER): selector.selector(
             selector.SelectorType.NUMBER,
-            selector.NumberSelectorDict(mode=selector.NumberSelectorMode.BOX),
+            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
         ),
         vol.Optional(CONF_UPPER): selector.selector(
             selector.SelectorType.NUMBER,
-            selector.NumberSelectorDict(mode=selector.NumberSelectorMode.BOX),
+            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
         ),
     }
 )
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
         vol.Required(CONF_ENTITY_ID): selector.selector(
-            selector.SelectorType.ENTITY, selector.EntitySelectorDict(domain="sensor")
+            selector.SelectorType.ENTITY, selector.EntitySelectorConfig(domain="sensor")
         ),
     }
 ).extend(OPTIONS_SCHEMA.schema)

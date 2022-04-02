@@ -56,7 +56,7 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
             selector.SelectorType.NUMBER,
-            selector.NumberSelectorDict(
+            selector.NumberSelectorConfig(
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
         ),
@@ -67,15 +67,15 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
         vol.Required(CONF_SOURCE_SENSOR): selector.selector(
-            selector.SelectorType.ENTITY, selector.EntitySelectorDict(domain="sensor")
+            selector.SelectorType.ENTITY, selector.EntitySelectorConfig(domain="sensor")
         ),
         vol.Required(CONF_METHOD, default=METHOD_TRAPEZOIDAL): selector.selector(
             selector.SelectorType.SELECT,
-            selector.SelectSelectorDict(options=INTEGRATION_METHODS),
+            selector.SelectSelectorConfig(options=INTEGRATION_METHODS),
         ),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
             selector.SelectorType.NUMBER,
-            selector.NumberSelectorDict(
+            selector.NumberSelectorConfig(
                 min=0,
                 max=6,
                 mode=selector.NumberSelectorMode.BOX,
@@ -84,11 +84,11 @@ CONFIG_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_UNIT_PREFIX, default="none"): selector.selector(
             selector.SelectorType.SELECT,
-            selector.SelectSelectorDict(options=UNIT_PREFIXES),
+            selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.selector(
             selector.SelectorType.SELECT,
-            selector.SelectSelectorDict(options=TIME_UNITS),
+            selector.SelectSelectorConfig(options=TIME_UNITS),
         ),
     }
 )

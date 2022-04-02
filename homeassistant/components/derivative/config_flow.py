@@ -51,7 +51,7 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
             selector.SelectorType.NUMBER,
-            selector.NumberSelectorDict(
+            selector.NumberSelectorConfig(
                 min=0,
                 max=6,
                 mode=selector.NumberSelectorMode.BOX,
@@ -63,11 +63,11 @@ OPTIONS_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_UNIT_PREFIX, default="none"): selector.selector(
             selector.SelectorType.SELECT,
-            selector.SelectSelectorDict(options=UNIT_PREFIXES),
+            selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.selector(
             selector.SelectorType.SELECT,
-            selector.SelectSelectorDict(options=TIME_UNITS),
+            selector.SelectSelectorConfig(options=TIME_UNITS),
         ),
     }
 )
@@ -77,7 +77,7 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
         vol.Required(CONF_SOURCE): selector.selector(
             selector.SelectorType.ENTITY,
-            selector.EntitySelectorDict(domain="sensor"),
+            selector.EntitySelectorConfig(domain="sensor"),
         ),
     }
 ).extend(OPTIONS_SCHEMA.schema)

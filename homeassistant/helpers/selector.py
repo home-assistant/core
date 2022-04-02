@@ -76,21 +76,22 @@ def validate_selector(config: Any) -> dict:
 @overload
 def selector(
     selector_type: Literal[SelectorType.ACTION],
-    config: ActionSelectorDict | None = None,
+    config: ActionSelectorConfig | None = None,
 ) -> ActionSelector:
     """Instantiate an action selector."""
 
 
 @overload
 def selector(
-    selector_type: Literal[SelectorType.ADDON], config: AddonSelectorDict | None = None
+    selector_type: Literal[SelectorType.ADDON],
+    config: AddonSelectorConfig | None = None,
 ) -> AddonSelector:
     """Instantiate an addon selector."""
 
 
 @overload
 def selector(
-    selector_type: Literal[SelectorType.AREA], config: AreaSelectorDict | None = None
+    selector_type: Literal[SelectorType.AREA], config: AreaSelectorConfig | None = None
 ) -> AreaSelector:
     """Instantiate an area selector."""
 
@@ -98,7 +99,7 @@ def selector(
 # config is always required
 @overload
 def selector(
-    selector_type: Literal[SelectorType.ATTRIBUTE], config: AttributeSelectorDict
+    selector_type: Literal[SelectorType.ATTRIBUTE], config: AttributeSelectorConfig
 ) -> AttributeSelector:
     """Instantiate an attribute selector."""
 
@@ -106,7 +107,7 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.BOOLEAN],
-    config: BooleanSelectorDict | None = None,
+    config: BooleanSelectorConfig | None = None,
 ) -> BooleanSelector:
     """Instantiate a boolean selector."""
 
@@ -114,7 +115,7 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.COLOR_RGB],
-    config: ColorRGBSelectorDict | None = None,
+    config: ColorRGBSelectorConfig | None = None,
 ) -> ColorRGBSelector:
     """Instantiate a color_rgb selector."""
 
@@ -122,14 +123,14 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.COLOR_TEMP],
-    config: ColorTempSelectorDict | None = None,
+    config: ColorTempSelectorConfig | None = None,
 ) -> ColorTempSelector:
     """Instantiate a color_temp selector."""
 
 
 @overload
 def selector(
-    selector_type: Literal[SelectorType.DATE], config: DateSelectorDict | None = None
+    selector_type: Literal[SelectorType.DATE], config: DateSelectorConfig | None = None
 ) -> DateSelector:
     """Instantiate a date selector."""
 
@@ -137,7 +138,7 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.DATETIME],
-    config: DateTimeSelectorDict | None = None,
+    config: DateTimeSelectorConfig | None = None,
 ) -> DateTimeSelector:
     """Instantiate a datetime selector."""
 
@@ -145,7 +146,7 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.DEVICE],
-    config: DeviceSelectorDict | None = None,
+    config: DeviceSelectorConfig | None = None,
 ) -> DeviceSelector:
     """Instantiate a device selector."""
 
@@ -153,7 +154,7 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.DURATION],
-    config: DurationSelectorDict | None = None,
+    config: DurationSelectorConfig | None = None,
 ) -> DurationSelector:
     """Instantiate a duration selector."""
 
@@ -161,14 +162,14 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.ENTITY],
-    config: EntitySelectorDict | None = None,
+    config: EntitySelectorConfig | None = None,
 ) -> EntitySelector:
     """Instantiate a entity selector."""
 
 
 @overload
 def selector(
-    selector_type: Literal[SelectorType.ICON], config: IconSelectorDict | None = None
+    selector_type: Literal[SelectorType.ICON], config: IconSelectorConfig | None = None
 ) -> IconSelector:
     """Instantiate a icon selector."""
 
@@ -176,14 +177,15 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.LOCATION],
-    config: LocationSelectorDict | None = None,
+    config: LocationSelectorConfig | None = None,
 ) -> LocationSelector:
     """Instantiate a location selector."""
 
 
 @overload
 def selector(
-    selector_type: Literal[SelectorType.MEDIA], config: MediaSelectorDict | None = None
+    selector_type: Literal[SelectorType.MEDIA],
+    config: MediaSelectorConfig | None = None,
 ) -> MediaSelector:
     """Instantiate a media selector."""
 
@@ -191,7 +193,7 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.NUMBER],
-    config: NumberSelectorDict | None = None,
+    config: NumberSelectorConfig | None = None,
 ) -> NumberSelector:
     """Instantiate a number selector."""
 
@@ -199,7 +201,7 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.OBJECT],
-    config: ObjectSelectorDict | None = None,
+    config: ObjectSelectorConfig | None = None,
 ) -> ObjectSelector:
     """Instantiate an object selector."""
 
@@ -207,7 +209,7 @@ def selector(
 # config is always required
 @overload
 def selector(
-    selector_type: Literal[SelectorType.SELECT], config: SelectSelectorDict
+    selector_type: Literal[SelectorType.SELECT], config: SelectSelectorConfig
 ) -> SelectSelector:
     """Instantiate a select selector."""
 
@@ -215,28 +217,29 @@ def selector(
 @overload
 def selector(
     selector_type: Literal[SelectorType.TARGET],
-    config: TargetSelectorDict | None = None,
+    config: TargetSelectorConfig | None = None,
 ) -> TargetSelector:
     """Instantiate a target selector."""
 
 
 @overload
 def selector(
-    selector_type: Literal[SelectorType.TEXT], config: TextSelectorDict | None = None
+    selector_type: Literal[SelectorType.TEXT], config: TextSelectorConfig | None = None
 ) -> TextSelector:
     """Instantiate a text selector."""
 
 
 @overload
 def selector(
-    selector_type: Literal[SelectorType.THEME], config: ThemeSelectorDict | None = None
+    selector_type: Literal[SelectorType.THEME],
+    config: ThemeSelectorConfig | None = None,
 ) -> ThemeSelector:
     """Instantiate a theme selector."""
 
 
 @overload
 def selector(
-    selector_type: Literal[SelectorType.TIME], config: TimeSelectorDict | None = None
+    selector_type: Literal[SelectorType.TIME], config: TimeSelectorConfig | None = None
 ) -> TimeSelector:
     """Instantiate a time selector."""
 
@@ -281,8 +284,8 @@ SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class SingleEntitySelectorDict(TypedDict, total=False):
-    """Class to represent a single entity selector dict."""
+class SingleEntitySelectorConfig(TypedDict, total=False):
+    """Class to represent a single entity selector config."""
 
     integration: str
     domain: str
@@ -303,17 +306,17 @@ SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class SingleDeviceSelectorDict(TypedDict, total=False):
-    """Class to represent a single device selector dict."""
+class SingleDeviceSelectorConfig(TypedDict, total=False):
+    """Class to represent a single device selector config."""
 
     integration: str
     manufacturer: str
     model: str
-    entity: SingleEntitySelectorDict
+    entity: SingleEntitySelectorConfig
 
 
-class ActionSelectorDict(TypedDict):
-    """Class to represent an action selector dict."""
+class ActionSelectorConfig(TypedDict):
+    """Class to represent an action selector config."""
 
 
 @SELECTORS.register(SelectorType.ACTION)
@@ -329,8 +332,8 @@ class ActionSelector(Selector):
         return data
 
 
-class AddonSelectorDict(TypedDict, total=False):
-    """Class to represent an addon selector dict."""
+class AddonSelectorConfig(TypedDict, total=False):
+    """Class to represent an addon selector config."""
 
     name: str
     slug: str
@@ -355,11 +358,11 @@ class AddonSelector(Selector):
         return addon
 
 
-class AreaSelectorDict(TypedDict, total=False):
-    """Class to represent an area selector dict."""
+class AreaSelectorConfig(TypedDict, total=False):
+    """Class to represent an area selector config."""
 
-    entity: SingleEntitySelectorDict
-    device: SingleDeviceSelectorDict
+    entity: SingleEntitySelectorConfig
+    device: SingleDeviceSelectorConfig
     multiple: bool
 
 
@@ -387,8 +390,8 @@ class AreaSelector(Selector):
         return [vol.Schema(str)(val) for val in data]
 
 
-class AttributeSelectorDict(TypedDict):
-    """Class to represent an attribute selector dict."""
+class AttributeSelectorConfig(TypedDict):
+    """Class to represent an attribute selector config."""
 
     entity_id: str
 
@@ -407,8 +410,8 @@ class AttributeSelector(Selector):
         return attribute
 
 
-class BooleanSelectorDict(TypedDict):
-    """Class to represent a boolean selector dict."""
+class BooleanSelectorConfig(TypedDict):
+    """Class to represent a boolean selector config."""
 
 
 @SELECTORS.register(SelectorType.BOOLEAN)
@@ -425,8 +428,8 @@ class BooleanSelector(Selector):
         return value
 
 
-class ColorRGBSelectorDict(TypedDict):
-    """Class to represent a color RGB selector dict."""
+class ColorRGBSelectorConfig(TypedDict):
+    """Class to represent a color RGB selector config."""
 
 
 @SELECTORS.register(SelectorType.COLOR_RGB)
@@ -443,8 +446,8 @@ class ColorRGBSelector(Selector):
         return value
 
 
-class ColorTempSelectorDict(TypedDict, total=False):
-    """Class to represent a color temp selector dict."""
+class ColorTempSelectorConfig(TypedDict, total=False):
+    """Class to represent a color temp selector config."""
 
     max_mireds: int
     min_mireds: int
@@ -475,8 +478,8 @@ class ColorTempSelector(Selector):
         return value
 
 
-class DateSelectorDict(TypedDict):
-    """Class to represent a date selector dict."""
+class DateSelectorConfig(TypedDict):
+    """Class to represent a date selector config."""
 
 
 @SELECTORS.register(SelectorType.DATE)
@@ -493,8 +496,8 @@ class DateSelector(Selector):
         return data
 
 
-class DateTimeSelectorDict(TypedDict):
-    """Class to represent a date time selector dict."""
+class DateTimeSelectorConfig(TypedDict):
+    """Class to represent a date time selector config."""
 
 
 @SELECTORS.register(SelectorType.DATETIME)
@@ -511,13 +514,13 @@ class DateTimeSelector(Selector):
         return data
 
 
-class DeviceSelectorDict(TypedDict, total=False):
-    """Class to represent a device selector dict."""
+class DeviceSelectorConfig(TypedDict, total=False):
+    """Class to represent a device selector config."""
 
     integration: str
     manufacturer: str
     model: str
-    entity: SingleEntitySelectorDict
+    entity: SingleEntitySelectorConfig
     multiple: bool
 
 
@@ -541,8 +544,8 @@ class DeviceSelector(Selector):
         return [vol.Schema(str)(val) for val in data]
 
 
-class DurationSelectorDict(TypedDict, total=False):
-    """Class to represent a duration selector dict."""
+class DurationSelectorConfig(TypedDict, total=False):
+    """Class to represent a duration selector config."""
 
     enable_day: bool
 
@@ -567,8 +570,8 @@ class DurationSelector(Selector):
         return cast(dict[str, float], data)
 
 
-class EntitySelectorDict(SingleEntitySelectorDict, total=False):
-    """Class to represent an entity selector dict."""
+class EntitySelectorConfig(SingleEntitySelectorConfig, total=False):
+    """Class to represent an entity selector config."""
 
     exclude_entities: list[str]
     include_entities: list[str]
@@ -619,8 +622,8 @@ class EntitySelector(Selector):
         return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
-class IconSelectorDict(TypedDict, total=False):
-    """Class to represent an icon selector dict."""
+class IconSelectorConfig(TypedDict, total=False):
+    """Class to represent an icon selector config."""
 
     placeholder: str
 
@@ -642,8 +645,8 @@ class IconSelector(Selector):
         return icon
 
 
-class LocationSelectorDict(TypedDict, total=False):
-    """Class to represent a location selector dict."""
+class LocationSelectorConfig(TypedDict, total=False):
+    """Class to represent a location selector config."""
 
     radius: bool
     icon: str
@@ -672,8 +675,8 @@ class LocationSelector(Selector):
         return location
 
 
-class MediaSelectorDict(TypedDict):
-    """Class to represent a media selector dict."""
+class MediaSelectorConfig(TypedDict):
+    """Class to represent a media selector config."""
 
 
 @SELECTORS.register(SelectorType.MEDIA)
@@ -701,8 +704,8 @@ class MediaSelector(Selector):
         return media
 
 
-class NumberSelectorDict(TypedDict, total=False):
-    """Class to represent a number selector dict."""
+class NumberSelectorConfig(TypedDict, total=False):
+    """Class to represent a number selector config."""
 
     min: float
     max: float
@@ -767,8 +770,8 @@ class NumberSelector(Selector):
         return value
 
 
-class ObjectSelectorDict(TypedDict):
-    """Class to represent an object selector dict."""
+class ObjectSelectorConfig(TypedDict):
+    """Class to represent an object selector config."""
 
 
 @SELECTORS.register(SelectorType.OBJECT)
@@ -809,8 +812,8 @@ class SelectSelectorMode(StrEnum):
     DROPDOWN = "dropdown"
 
 
-class SelectSelectorDict(TypedDict, total=False):
-    """Class to represent a select selector dict."""
+class SelectSelectorConfig(TypedDict, total=False):
+    """Class to represent a select selector config."""
 
     options: Sequence[SelectOptionDict] | Sequence[str]  # required
     multiple: bool
@@ -853,11 +856,11 @@ class SelectSelector(Selector):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
-class TargetSelectorDict(TypedDict, total=False):
-    """Class to represent a target selector dict."""
+class TargetSelectorConfig(TypedDict, total=False):
+    """Class to represent a target selector config."""
 
-    entity: SingleEntitySelectorDict
-    device: SingleDeviceSelectorDict
+    entity: SingleEntitySelectorConfig
+    device: SingleDeviceSelectorConfig
 
 
 @SELECTORS.register(SelectorType.TARGET)
@@ -884,8 +887,8 @@ class TargetSelector(Selector):
         return target
 
 
-class TextSelectorDict(TypedDict, total=False):
-    """Class to represent a text selector dict."""
+class TextSelectorConfig(TypedDict, total=False):
+    """Class to represent a text selector config."""
 
     multiline: bool
     suffix: str
@@ -932,8 +935,8 @@ class TextSelector(Selector):
         return text
 
 
-class ThemeSelectorDict(TypedDict):
-    """Class to represent a theme selector dict."""
+class ThemeSelectorConfig(TypedDict):
+    """Class to represent a theme selector config."""
 
 
 @SELECTORS.register(SelectorType.THEME)
@@ -950,8 +953,8 @@ class ThemeSelector(Selector):
         return theme
 
 
-class TimeSelectorDict(TypedDict):
-    """Class to represent a time selector dict."""
+class TimeSelectorConfig(TypedDict):
+    """Class to represent a time selector config."""
 
 
 @SELECTORS.register(SelectorType.TIME)
