@@ -1,4 +1,6 @@
 """Test honeywell sensor."""
+from somecomfort import Device, Location
+
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -7,8 +9,8 @@ from tests.common import MockConfigEntry
 async def test_outdoor_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    location,
-    device_with_outdoor_sensor,
+    location: Location,
+    device_with_outdoor_sensor: Device,
 ):
     """Test outdoor temperature sensor."""
     location.devices_by_id[
