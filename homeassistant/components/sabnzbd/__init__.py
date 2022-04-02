@@ -11,6 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
+from ...exceptions import ConfigEntryNotReady
 from .const import (
     ATTR_SPEED,
     DEFAULT_SPEED_LIMIT,
@@ -36,6 +37,8 @@ SPEED_LIMIT_SCHEMA = vol.Schema(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the SabNzbd Component."""
     sab_api = await get_client(hass, entry.data)
+    if not sab_api:
+        raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         KEY_API: sab_api,
