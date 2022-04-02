@@ -197,7 +197,6 @@ class PhilipsTVLightEntity(
         filtered_effects = [
             str(effect)
             for effect in effects
-            if isinstance(effect, AmbilightEffect)
             and effect.is_valid()
             and effect.is_on(self._tv.powerstate)
         ]
