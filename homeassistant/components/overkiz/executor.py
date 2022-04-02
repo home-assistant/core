@@ -76,8 +76,6 @@ class OverkizExecutor:
         ):
             args = args + (0,)
 
-        print(args)
-
         exec_id = await self.coordinator.client.execute_command(
             self.device.device_url,
             Command(command_name, list(args)),
