@@ -9,8 +9,7 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     HVAC_MODE_FAN_ONLY,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
+    ClimateEntityFeature,
 )
 from homeassistant.const import TEMP_CELSIUS
 
@@ -44,7 +43,9 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     _attr_hvac_modes = [HVAC_MODE_FAN_ONLY]
     _attr_preset_modes = [PRESET_AUTO, PRESET_PROG, PRESET_MANUAL]
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_supported_features = SUPPORT_PRESET_MODE | SUPPORT_FAN_MODE
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.FAN_MODE
+    )
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -71,7 +72,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
 
     @property
     def preset_mode(self) -> str | None:
-        """Return the current preset mode, e.g., auto, smart, interval, favorite."""
+        """Return the current preset mode."""
         ventilation_configuration = self.executor.select_state(
             OverkizState.IO_VENTILATION_CONFIGURATION_MODE
         )
