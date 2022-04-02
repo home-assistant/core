@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 from haphilipsjs import PhilipsTV
 from haphilipsjs.typing import AmbilightCurrentConfiguration
@@ -33,8 +32,6 @@ EFFECT_MODE = "Mode"
 EFFECT_EXPERT = "Expert"
 EFFECT_AUTO = "Auto"
 EFFECT_EXPERT_STYLES = {"FOLLOW_AUDIO", "FOLLOW_COLOR", "Lounge light"}
-
-LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -254,7 +251,6 @@ class PhilipsTVLightEntity(
                 color = settings["color"]
 
         effect = AmbilightEffect.from_str(self._attr_effect)
-        LOGGER.debug("Current effect: %s", effect)
         if effect.is_on(self._tv.powerstate):
             self._last_selected_effect = effect
 
@@ -295,8 +291,8 @@ class PhilipsTVLightEntity(
         if not await self._tv.setAmbilightCached(data):
             raise Exception("Failed to set ambilight color")
 
-        if effect.algorithm != self._tv.ambilight_mode:
-            if not await self._tv.setAmbilightMode(effect.algorithm):
+        if effect.style != self._tv.ambilight_mode:
+            if not await self._tv.setAmbilightMode(effect.style):
                 raise Exception("Failed to set ambilight mode")
 
     async def _set_ambilight_expert_config(
@@ -355,16 +351,19 @@ class PhilipsTVLightEntity(
 
         effect = AmbilightEffect.from_str(attr_effect)
 
-        if not effect.is_on(self._tv.powerstate):
+        if effect.style == "OFF":
             if self._last_selected_effect:
                 effect = self._last_selected_effect
             else:
-                effect.mode = EFFECT_MODE
-                effect.algorithm = None
-                if self._tv.powerstate in ("On", None):
-                    effect.style = "internal"
-                else:
-                    effect.style = "manual"
+                effect = AmbilightEffect(EFFECT_AUTO, "FOLLOW_VIDEO", "STANDARD")
+
+        if not effect.is_on(self._tv.powerstate):
+            effect.mode = EFFECT_MODE
+            effect.algorithm = None
+            if self._tv.powerstate in ("On", None):
+                effect.style = "internal"
+            else:
+                effect.style = "manual"
 
         if brightness is None:
             brightness = 255
