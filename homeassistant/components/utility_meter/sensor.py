@@ -253,7 +253,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         try:
             last_period: Decimal = Decimal(restored["last_period"])
         except InvalidOperation:
-            last_period = Decimal(0)
+            return None
         last_reset: datetime | None = dt_util.parse_datetime(restored["last_reset"])
         status: str = restored["status"]
 
