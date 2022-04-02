@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
 from typing import Any
 
 from pytradfri import Gateway, RequestError
@@ -23,6 +22,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    _LOGGER,
     ATTR_TRADFRI_GATEWAY,
     ATTR_TRADFRI_GATEWAY_MODEL,
     ATTR_TRADFRI_MANUFACTURER,
@@ -32,17 +32,14 @@ from .const import (
     COORDINATOR,
     COORDINATOR_LIST,
     DOMAIN,
+    FACTORY,
     KEY_API,
+    LISTENERS,
     PLATFORMS,
     SIGNAL_GW,
     TIMEOUT_API,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-FACTORY = "tradfri_factory"
-LISTENERS = "tradfri_listeners"
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
