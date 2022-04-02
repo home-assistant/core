@@ -237,7 +237,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         """Return a dict representation of the utility sensor data."""
         data = super().as_dict()
         data["last_period"] = str(self.last_period)
-        if self.last_reset:
+        if isinstance(self.last_reset, (datetime)):
             data["last_reset"] = self.last_reset.isoformat()
         data["status"] = self.status
 
