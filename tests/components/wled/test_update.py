@@ -49,7 +49,7 @@ async def test_update_available(
     assert state.state == STATE_ON
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
-        == "https://brands.home-assistant.io/wled/icon.png"
+        == "https://brands.home-assistant.io/_/wled/icon.png"
     )
     assert state.attributes[ATTR_INSTALLED_VERSION] == "0.8.5"
     assert state.attributes[ATTR_LATEST_VERSION] == "0.12.0"
