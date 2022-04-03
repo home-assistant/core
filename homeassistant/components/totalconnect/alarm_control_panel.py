@@ -168,13 +168,8 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        await self.hass.async_add_executor_job(self._disarm)
-        await self.coordinator.async_request_refresh()
-
-    def _disarm(self, code=None):
-        """Disarm synchronous."""
         try:
-            ArmingHelper(self._partition).disarm()
+            await self.hass.async_add_executor_job(self._disarm)
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
@@ -184,16 +179,16 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             raise HomeAssistantError(
                 f"TotalConnect failed to disarm {self._name}."
             ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _disarm(self, code=None):
+        """Disarm synchronous."""
+        ArmingHelper(self._partition).disarm()
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        await self.hass.async_add_executor_job(self._arm_home)
-        await self.coordinator.async_request_refresh()
-
-    def _arm_home(self):
-        """Arm home synchronous."""
         try:
-            ArmingHelper(self._partition).arm_stay()
+            await self.hass.async_add_executor_job(self._arm_home)
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
@@ -203,16 +198,16 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             raise HomeAssistantError(
                 f"TotalConnect failed to arm home {self._name}."
             ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _arm_home(self):
+        """Arm home synchronous."""
+        ArmingHelper(self._partition).arm_stay()
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        await self.hass.async_add_executor_job(self._arm_away)
-        await self.coordinator.async_request_refresh()
-
-    def _arm_away(self, code=None):
-        """Arm away synchronous."""
         try:
-            ArmingHelper(self._partition).arm_away()
+            await self.hass.async_add_executor_job(self._arm_away)
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
@@ -222,16 +217,16 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             raise HomeAssistantError(
                 f"TotalConnect failed to arm away {self._name}."
             ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _arm_away(self, code=None):
+        """Arm away synchronous."""
+        ArmingHelper(self._partition).arm_away()
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
-        await self.hass.async_add_executor_job(self._arm_night)
-        await self.coordinator.async_request_refresh()
-
-    def _arm_night(self, code=None):
-        """Arm night synchronous."""
         try:
-            ArmingHelper(self._partition).arm_stay_night()
+            await self.hass.async_add_executor_job(self._arm_night)
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
@@ -241,16 +236,16 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             raise HomeAssistantError(
                 f"TotalConnect failed to arm night {self._name}."
             ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _arm_night(self, code=None):
+        """Arm night synchronous."""
+        ArmingHelper(self._partition).arm_stay_night()
 
     async def async_alarm_arm_home_instant(self, code=None):
         """Send arm home instant command."""
-        await self.hass.async_add_executor_job(self._arm_home_instant)
-        await self.coordinator.async_request_refresh()
-
-    def _arm_home_instant(self):
-        """Arm home instant synchronous."""
         try:
-            ArmingHelper(self._partition).arm_stay_instant()
+            await self.hass.async_add_executor_job(self._arm_home_instant)
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
@@ -260,16 +255,16 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             raise HomeAssistantError(
                 f"TotalConnect failed to arm home instant {self._name}."
             ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _arm_home_instant(self):
+        """Arm home instant synchronous."""
+        ArmingHelper(self._partition).arm_stay_instant()
 
     async def async_alarm_arm_away_instant(self, code=None):
         """Send arm away instant command."""
-        await self.hass.async_add_executor_job(self._arm_away_instant)
-        await self.coordinator.async_request_refresh()
-
-    def _arm_away_instant(self, code=None):
-        """Arm away instant synchronous."""
         try:
-            ArmingHelper(self._partition).arm_away_instant()
+            await self.hass.async_add_executor_job(self._arm_away_instant)
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
@@ -279,3 +274,8 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             raise HomeAssistantError(
                 f"TotalConnect failed to arm away instant {self._name}."
             ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _arm_away_instant(self, code=None):
+        """Arm away instant synchronous."""
+        ArmingHelper(self._partition).arm_away_instant()
