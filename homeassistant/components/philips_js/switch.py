@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -123,4 +123,3 @@ class PhilipsTVAmbilightHueSwitch(
         """Turn the entity off."""
         await self.coordinator.api.setHueLampPower(HUE_POWER_OFF)
         self.async_write_ha_state()
-
