@@ -217,18 +217,6 @@ async def _async_get_authorization_server(
     return authorization_server
 
 
-async def _async_get_developer_credential(
-    hass: HomeAssistant, domain: str
-) -> DeveloperCredential | None:
-    """Return the DeveloperCredential for the integration domain."""
-    if domain not in hass.data[DOMAIN]:
-        return None
-    get_developer_credential = hass.data[DOMAIN][domain][
-        DeveloperCredentialsType.CONFIG_CREDENTIAL.value
-    ]
-    return await get_developer_credential(hass)
-
-
 class DeveloperCredentialsProtocol(Protocol):
     """Define the format that developer_credentials platforms can have."""
 
@@ -262,9 +250,7 @@ async def _register_developer_credentials_platform(
     # Register an authentication implementation for every credential provided
     if get_config_developer_credential is None:
         return
-    developer_credential = await _async_get_developer_credential(
-        hass, integration_domain
-    )
+    developer_credential = await get_config_developer_credential(hass)
     if not developer_credential:
         return
     await _async_register_auth_implementation(
