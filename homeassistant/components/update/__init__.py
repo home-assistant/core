@@ -209,6 +209,20 @@ class UpdateEntity(RestoreEntity):
         return EntityCategory.DIAGNOSTIC
 
     @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend.
+
+        Update entities return the brand icon based on the integration
+        domain by default.
+        """
+        if self.platform is None:
+            return None
+
+        return (
+            f"https://brands.home-assistant.io/_/{self.platform.platform_name}/icon.png"
+        )
+
+    @property
     def in_progress(self) -> bool | int | None:
         """Update installation progress.
 
