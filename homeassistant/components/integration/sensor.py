@@ -36,7 +36,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import (
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
     INTEGRATION_METHODS,
@@ -66,22 +65,18 @@ ICON = "mdi:chart-histogram"
 
 DEFAULT_ROUND = 3
 
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_UNIT_OF_MEASUREMENT),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-            vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
-            vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-            vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
-                INTEGRATION_METHODS
-            ),
-        }
-    ),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
+        vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
+        vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
+        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
+        vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
+            INTEGRATION_METHODS
+        ),
+    }
 )
 
 
@@ -107,7 +102,6 @@ async def async_setup_entry(
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
         source_entity=source_entity_id,
         unique_id=config_entry.entry_id,
-        unit_of_measurement=None,
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
     )
@@ -128,7 +122,6 @@ async def async_setup_platform(
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE_SENSOR],
         unique_id=config.get(CONF_UNIQUE_ID),
-        unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT),
         unit_prefix=config[CONF_UNIT_PREFIX],
         unit_time=config[CONF_UNIT_TIME],
     )
@@ -147,7 +140,6 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         round_digits: int,
         source_entity: str,
         unique_id: str | None,
-        unit_of_measurement: str | None,
         unit_prefix: str | None,
         unit_time: str,
     ) -> None:
@@ -162,7 +154,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._unit_template = (
             f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
         )
-        self._unit_of_measurement = unit_of_measurement
+        self._unit_of_measurement = None
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
         self._attr_state_class = SensorStateClass.TOTAL
