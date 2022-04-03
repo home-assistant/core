@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if working_interface != multicast_interface:
         data = {**entry.data, CONF_INTERFACE: working_interface}
         hass.config_entries.async_update_entry(entry, data=data)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Motion Blinds interface updated from %s to %s, "
             "this should only occur after a network change",
             multicast_interface,
