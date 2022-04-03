@@ -85,12 +85,12 @@ class FibaroLight(FibaroDevice, LightEntity):
         )
         supports_dimming = "levelChange" in fibaro_device.interfaces
 
-        if supports_color:
-            self._attr_supported_color_modes = {COLOR_MODE_RGB}
-            self._attr_color_mode = COLOR_MODE_RGB
         if supports_color and supports_white_v:
             self._attr_supported_color_modes = {COLOR_MODE_RGBW}
             self._attr_color_mode = COLOR_MODE_RGBW
+        elif supports_color:
+            self._attr_supported_color_modes = {COLOR_MODE_RGB}
+            self._attr_color_mode = COLOR_MODE_RGB
         elif supports_dimming:
             self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
