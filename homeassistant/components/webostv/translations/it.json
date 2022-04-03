@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "error_pairing": "Collegato a TV webOS LG, ma non accoppiato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi, accendi la TV o controlla l'indirizzo IP"
+        },
+        "flow_title": "Smart TV webOS LG",
+        "step": {
+            "pairing": {
+                "description": "Fai clic su Invia e accetta la richiesta di associazione sulla TV. \n\n ![Immagine](/static/images/config_webos.png)",
+                "title": "Accoppiamento webOS TV"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nome"
+                },
+                "description": "Accendi la TV, compila i seguenti campi e fai clic su Invia",
+                "title": "Collegati a TV webOS"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "webostv.turn_on": "Richiesta l'accensione del dispositivo"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_retrieve": "Impossibile recuperare l'elenco delle sorgenti. Assicurati che il dispositivo sia acceso",
+            "script_not_found": "Script non trovato"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "sources": "Elenco delle sorgenti"
+                },
+                "description": "Seleziona le sorgenti abilitate",
+                "title": "Opzioni per Smart TV webOS"
+            }
+        }
+    }
+}

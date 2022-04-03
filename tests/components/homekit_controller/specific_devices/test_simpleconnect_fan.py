@@ -7,6 +7,7 @@ https://github.com/home-assistant/core/issues/26180
 from homeassistant.components.fan import SUPPORT_DIRECTION, SUPPORT_SET_SPEED
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -23,7 +24,7 @@ async def test_simpleconnect_fan_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="SIMPLEconnect Fan-06F674",
             model="SIMPLEconnect",
             manufacturer="Hunter Fan",
@@ -39,7 +40,6 @@ async def test_simpleconnect_fan_setup(hass):
                     supported_features=SUPPORT_DIRECTION | SUPPORT_SET_SPEED,
                     capabilities={
                         "preset_modes": None,
-                        "speed_list": ["off", "low", "medium", "high"],
                     },
                     state="off",
                 ),

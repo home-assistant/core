@@ -663,10 +663,10 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
         entry = mock_config_entry
         entry.data = mock_config_entry_data
         entry.add_to_hass(hass)
-        utcnow = dt_util.utcnow()
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+        utcnow = dt_util.utcnow()  # Time after the integration is setup
 
         assert (
             hass.states.get(
@@ -717,7 +717,7 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        utcnow = dt_util.utcnow()
+        utcnow = dt_util.utcnow()  # Time after the integration is setup
 
         assert (
             hass.states.get(

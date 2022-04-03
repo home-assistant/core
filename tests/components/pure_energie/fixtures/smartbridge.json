@@ -1,0 +1,15 @@
+{
+  "status": "ok",
+  "elec": {
+    "power": {
+      "now": { "value": 338, "unit": "W", "time": 1634749148 },
+      "min": { "value": -7345, "unit": "W", "time": 1631360893 },
+      "max": { "value": 13725, "unit": "W", "time": 1633749513 }
+    },
+    "import": {
+      "now": { "value": 17762055, "unit": "Wh", "time": 1634749148 }
+    },
+    "export": { "now": { "value": 21214589, "unit": "Wh", "time": 1634749148 } }
+  },
+  "gas": {}
+}

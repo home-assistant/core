@@ -1,0 +1,11 @@
+{
+    "state": {
+        "uptimerobot__monitor_status": {
+            "down": "\u00dchenduseta",
+            "not_checked_yet": "Pole veel kontrollitud",
+            "pause": "Paus",
+            "seems_down": "Tundub kadunud olevat",
+            "up": "\u00dchendatud"
+        }
+    }
+}

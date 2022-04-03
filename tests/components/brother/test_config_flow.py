@@ -146,6 +146,7 @@ async def test_zeroconf_snmp_error(hass):
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="mock_host",
+                addresses=["mock_host"],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -166,6 +167,7 @@ async def test_zeroconf_unsupported_model(hass):
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="mock_host",
+                addresses=["mock_host"],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -194,6 +196,7 @@ async def test_zeroconf_device_exists_abort(hass):
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="mock_host",
+                addresses=["mock_host"],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -216,6 +219,7 @@ async def test_zeroconf_no_probe_existing_device(hass):
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="mock_host",
+                addresses=["mock_host"],
                 hostname="localhost",
                 name="Brother Printer",
                 port=None,
@@ -242,6 +246,7 @@ async def test_zeroconf_confirm_create_entry(hass):
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="mock_host",
+                addresses=["mock_host"],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,

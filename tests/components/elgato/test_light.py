@@ -68,6 +68,7 @@ async def test_light_state_temperature(
     assert device_entry.model == "Elgato Key Light"
     assert device_entry.name == "Frenck"
     assert device_entry.sw_version == "1.0.3 (192)"
+    assert device_entry.hw_version == "53"
 
 
 @pytest.mark.parametrize(

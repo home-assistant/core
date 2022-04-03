@@ -27,13 +27,14 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
     SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
+    AlarmControlPanelEntityFeature,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for sensors."""
     component = hass.data[DOMAIN] = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)
@@ -70,37 +71,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_ALARM_ARM_HOME,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_home",
-        [SUPPORT_ALARM_ARM_HOME],
+        [AlarmControlPanelEntityFeature.ARM_HOME],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_AWAY,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_away",
-        [SUPPORT_ALARM_ARM_AWAY],
+        [AlarmControlPanelEntityFeature.ARM_AWAY],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_NIGHT,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_night",
-        [SUPPORT_ALARM_ARM_NIGHT],
+        [AlarmControlPanelEntityFeature.ARM_NIGHT],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_VACATION,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_vacation",
-        [SUPPORT_ALARM_ARM_VACATION],
+        [AlarmControlPanelEntityFeature.ARM_VACATION],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_custom_bypass",
-        [SUPPORT_ALARM_ARM_CUSTOM_BYPASS],
+        [AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_TRIGGER,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_trigger",
-        [SUPPORT_ALARM_TRIGGER],
+        [AlarmControlPanelEntityFeature.TRIGGER],
     )
 
     return True

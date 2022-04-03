@@ -13,7 +13,7 @@ from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     CalendarEventDevice,
-    calculate_offset,
+    extract_offset,
     get_date,
     is_offset_reached,
 )
@@ -147,9 +147,12 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         if event is None:
             self._event = event
             return
-        event = calculate_offset(event, OFFSET)
+        (summary, offset) = extract_offset(event["summary"], OFFSET)
+        event["summary"] = summary
         self._event = event
-        self._attr_extra_state_attributes = {"offset_reached": is_offset_reached(event)}
+        self._attr_extra_state_attributes = {
+            "offset_reached": is_offset_reached(get_date(event["start"]), offset)
+        }
 
 
 class WebDavCalendarData:
@@ -232,7 +235,11 @@ class WebDavCalendarData:
                     new_events.append(new_event)
                 elif _start_of_tomorrow <= start_dt:
                     break
-        vevents = [event.instance.vevent for event in results + new_events]
+        vevents = [
+            event.instance.vevent
+            for event in results + new_events
+            if hasattr(event.instance, "vevent")
+        ]
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it

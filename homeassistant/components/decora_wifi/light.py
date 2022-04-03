@@ -96,6 +96,7 @@ class DecoraWifiLight(LightEntity):
     def __init__(self, switch):
         """Initialize the switch."""
         self._switch = switch
+        self._attr_unique_id = switch.serial
 
     @property
     def supported_features(self):
@@ -108,6 +109,11 @@ class DecoraWifiLight(LightEntity):
     def name(self):
         """Return the display name of this switch."""
         return self._switch.name
+
+    @property
+    def unique_id(self):
+        """Return the ID of this light."""
+        return self._switch.serial
 
     @property
     def brightness(self):

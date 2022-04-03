@@ -41,7 +41,7 @@ DEFAULT_OPTIMISTIC = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
@@ -77,29 +77,20 @@ class TemplateLock(TemplateEntity, LockEntity):
         unique_id,
     ):
         """Initialize the lock."""
-        super().__init__(config=config)
+        super().__init__(
+            hass, config=config, fallback_name=DEFAULT_NAME, unique_id=unique_id
+        )
         self._state = None
-        self._name = name = config.get(CONF_NAME)
+        name = self._attr_name
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
         self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
         self._optimistic = config.get(CONF_OPTIMISTIC)
-        self._unique_id = unique_id
 
     @property
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._optimistic
-
-    @property
-    def name(self):
-        """Return the name of the lock."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this lock."""
-        return self._unique_id
 
     @property
     def is_locked(self):

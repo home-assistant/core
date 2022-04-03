@@ -2,50 +2,64 @@
 
 from __future__ import annotations
 
-from typing import Any
-
+from google_nest_sdm import diagnostics
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import InfoTrait
 from google_nest_sdm.exceptions import ApiException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DATA_SUBSCRIBER, DOMAIN
+from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN
 
 REDACT_DEVICE_TRAITS = {InfoTrait.NAME}
+
+
+async def _get_nest_devices(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> dict[str, Device]:
+    """Return dict of available devices."""
+    if DATA_SDM not in config_entry.data:
+        return {}
+
+    if DATA_SUBSCRIBER not in hass.data[DOMAIN]:
+        return {}
+
+    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
+    device_manager = await subscriber.async_get_device_manager()
+    devices: dict[str, Device] = device_manager.devices
+    return devices
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict:
     """Return diagnostics for a config entry."""
-    if DATA_SUBSCRIBER not in hass.data[DOMAIN]:
-        return {"error": "No subscriber configured"}
-
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     try:
-        device_manager = await subscriber.async_get_device_manager()
+        nest_devices = await _get_nest_devices(hass, config_entry)
     except ApiException as err:
         return {"error": str(err)}
-
+    if not nest_devices:
+        return {}
     return {
+        **diagnostics.get_diagnostics(),
         "devices": [
-            get_device_data(device) for device in device_manager.devices.values()
-        ]
+            nest_device.get_diagnostics() for nest_device in nest_devices.values()
+        ],
     }
 
 
-def get_device_data(device: Device) -> dict[str, Any]:
-    """Return diagnostic information about a device."""
-    # Return a simplified view of the API object, but skipping any id fields or
-    # traits that include unique identifiers or personally identifiable information.
-    # See https://developers.google.com/nest/device-access/traits for API details
-    return {
-        "type": device.type,
-        "traits": {
-            trait: data
-            for trait, data in device.raw_data.get("traits", {}).items()
-            if trait not in REDACT_DEVICE_TRAITS
-        },
-    }
+async def async_get_device_diagnostics(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device: DeviceEntry,
+) -> dict:
+    """Return diagnostics for a device."""
+    try:
+        nest_devices = await _get_nest_devices(hass, config_entry)
+    except ApiException as err:
+        return {"error": str(err)}
+    nest_device_id = next(iter(device.identifiers))[1]
+    nest_device = nest_devices.get(nest_device_id)
+    return nest_device.get_diagnostics() if nest_device else {}

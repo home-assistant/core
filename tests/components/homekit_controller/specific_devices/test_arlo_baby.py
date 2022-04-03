@@ -5,6 +5,7 @@ from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -21,7 +22,7 @@ async def test_arlo_baby_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="ArloBabyA0",
             model="ABC1000",
             manufacturer="Netgear, Inc",
@@ -67,7 +68,7 @@ async def test_arlo_baby_setup(hass):
                     entity_id="sensor.arlobabya0_air_quality",
                     unique_id="homekit-00A0000000000-aid:1-sid:800-cid:802",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    friendly_name="ArloBabyA0 - Air Quality",
+                    friendly_name="ArloBabyA0 Air Quality",
                     state="1",
                 ),
                 EntityTestInfo(

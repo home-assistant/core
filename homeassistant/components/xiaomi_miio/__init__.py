@@ -8,11 +8,12 @@ import logging
 import async_timeout
 from miio import (
     AirFresh,
+    AirFreshA1,
+    AirFreshT2017,
     AirHumidifier,
     AirHumidifierMiot,
     AirHumidifierMjjsq,
     AirPurifier,
-    AirPurifierMB4,
     AirPurifierMiot,
     CleaningDetails,
     CleaningSummary,
@@ -21,10 +22,8 @@ from miio import (
     DNDStatus,
     Fan,
     Fan1C,
+    FanMiot,
     FanP5,
-    FanP9,
-    FanP10,
-    FanP11,
     FanZA5,
     RoborockVacuum,
     Timer,
@@ -33,7 +32,7 @@ from miio import (
 from miio.gateway.gateway import GatewayException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -44,11 +43,11 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    MODEL_AIRPURIFIER_3C,
+    MODEL_AIRFRESH_A1,
+    MODEL_AIRFRESH_T2017,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -87,6 +86,7 @@ GATEWAY_PLATFORMS = [
 SWITCH_PLATFORMS = [Platform.SWITCH]
 FAN_PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.FAN,
     Platform.NUMBER,
     Platform.SELECT,
@@ -107,10 +107,10 @@ AIR_MONITOR_PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR]
 
 MODEL_TO_CLASS_MAP = {
     MODEL_FAN_1C: Fan1C,
-    MODEL_FAN_P10: FanP10,
-    MODEL_FAN_P11: FanP11,
+    MODEL_FAN_P9: FanMiot,
+    MODEL_FAN_P10: FanMiot,
+    MODEL_FAN_P11: FanMiot,
     MODEL_FAN_P5: FanP5,
-    MODEL_FAN_P9: FanP9,
     MODEL_FAN_ZA5: FanZA5,
 }
 
@@ -310,14 +310,16 @@ async def async_create_miio_device_and_coordinator(
         device = AirHumidifier(host, token, model=model)
         migrate = True
     # Airpurifiers and Airfresh
-    elif model in MODEL_AIRPURIFIER_3C:
-        device = AirPurifierMB4(host, token)
     elif model in MODELS_PURIFIER_MIOT:
         device = AirPurifierMiot(host, token)
     elif model.startswith("zhimi.airpurifier."):
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
+    elif model == MODEL_AIRFRESH_A1:
+        device = AirFreshA1(host, token)
+    elif model == MODEL_AIRFRESH_T2017:
+        device = AirFreshT2017(host, token)
     elif (
         model in MODELS_VACUUM
         or model.startswith(ROBOROCK_GENERIC)

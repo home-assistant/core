@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52a1\u5df2\u88ab\u914d\u7f6e",
+            "could_not_register": "\u65e0\u6cd5\u4f7f\u96c6\u6210\u4e0e Github \u6ce8\u518c"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "\u9009\u62e9\u60a8\u60f3\u8981\u8ddf\u8e2a\u7684\u4ed3\u5e93(Repo)"
+                },
+                "title": "\u914d\u7f6e\u4ed3\u5e93(Repo)"
+            }
+        }
+    }
+}

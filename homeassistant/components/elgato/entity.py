@@ -21,6 +21,7 @@ class ElgatoEntity(Entity):
             model=info.product_name,
             name=info.display_name,
             sw_version=f"{info.firmware_version} ({info.firmware_build_number})",
+            hw_version=str(info.hardware_board_type),
         )
         if mac is not None:
             self._attr_device_info["connections"] = {

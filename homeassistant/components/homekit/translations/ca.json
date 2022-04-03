@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Dominis a incloure"
                 },
-                "description": "Selecciona els dominis a incloure. S'inclouran totes les entitats del domini compatibles. Es crear\u00e0 una inst\u00e0ncia HomeKit en mode accessori per a cada repoductor multim\u00e8dia/TV, control remot basat per activitat i c\u00e0mera.",
+                "description": "Selecciona els dominis a incloure. S'inclouran totes les entitats del domini que siguin compatibles excepte les entitats categoritzades. Es crear\u00e0 una inst\u00e0ncia HomeKit en mode accessori per a cada reproductor multim\u00e8dia/TV, control remot basat en activitat, pany i c\u00e0mera.",
                 "title": "Selecciona els dominis a incloure"
             }
         }
@@ -45,12 +45,14 @@
                 "data": {
                     "entities": "Entitats"
                 },
+                "description": "S'inclouran totes les entitats de \u201c{domains}\u201d, excepte les entitats excloses i les entitats categoritzades.",
                 "title": "Selecciona les entitats a excloure"
             },
             "include": {
                 "data": {
                     "entities": "Entitats"
                 },
+                "description": "S'inclouran totes les entitats de \u201c{domains}\u201d tret que se'n seleccionin d'espec\u00edfiques.",
                 "title": "Selecciona les entitats a incloure"
             },
             "include_exclude": {

@@ -212,13 +212,18 @@ class SongpalEntity(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo.macAddr
+        return self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        connections = set()
+        if self._sysinfo.macAddr:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr))
+        if self._sysinfo.wirelessMacAddr:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.wirelessMacAddr))
         return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr)},
+            connections=connections,
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Sony Corporation",
             model=self._model,

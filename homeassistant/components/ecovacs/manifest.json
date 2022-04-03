@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ecovacs",
   "requirements": ["sucks==0.9.4"],
   "codeowners": ["@OverloadUT"],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["sleekxmppfs", "sucks"]
 }

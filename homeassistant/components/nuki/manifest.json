@@ -10,5 +10,6 @@
       "hostname": "nuki_bridge_*"
     }
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pynuki"]
 }

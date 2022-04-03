@@ -7,9 +7,10 @@ from functools import partial
 import logging
 from urllib.parse import quote_plus, unquote
 
-from homeassistant.components import media_source
+from homeassistant.components import media_source, plex, spotify
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_APP,
     MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_ALBUM,
 )
@@ -18,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
+    DOMAIN,
     EXPANDABLE_MEDIA_TYPES,
     LIBRARY_TITLES_MAPPING,
     MEDIA_TYPES_TO_SONOS,
@@ -90,6 +92,19 @@ async def async_browse_media(
             hass, media_content_id, content_filter=media_source_filter
         )
 
+    if plex.is_plex_media_id(media_content_id):
+        return await plex.async_browse_media(
+            hass, media_content_type, media_content_id, platform=DOMAIN
+        )
+
+    if media_content_type == "plex":
+        return await plex.async_browse_media(hass, None, None, platform=DOMAIN)
+
+    if spotify.is_spotify_media_type(media_content_type):
+        return await spotify.async_browse_media(
+            hass, media_content_type, media_content_id, can_play_artist=False
+        )
+
     if media_content_type == "library":
         return await hass.async_add_executor_job(
             library_payload,
@@ -144,8 +159,17 @@ def build_item_response(media_library, payload, get_thumbnail_url=None):
             payload["idstring"].split("/")[2:]
         )
 
+    try:
+        search_type = MEDIA_TYPES_TO_SONOS[payload["search_type"]]
+    except KeyError:
+        _LOGGER.debug(
+            "Unknown media type received when building item response: %s",
+            payload["search_type"],
+        )
+        return
+
     media = media_library.browse_by_idstring(
-        MEDIA_TYPES_TO_SONOS[payload["search_type"]],
+        search_type,
         payload["idstring"],
         full_album_art_uri=True,
         max_items=0,
@@ -243,6 +267,7 @@ async def root_payload(
                 media_class=MEDIA_CLASS_DIRECTORY,
                 media_content_id="",
                 media_content_type="favorites",
+                thumbnail="https://brands.home-assistant.io/_/sonos/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -257,10 +282,28 @@ async def root_payload(
                 media_class=MEDIA_CLASS_DIRECTORY,
                 media_content_id="",
                 media_content_type="library",
+                thumbnail="https://brands.home-assistant.io/_/sonos/logo.png",
                 can_play=False,
                 can_expand=True,
             )
         )
+
+    if "plex" in hass.config.components:
+        children.append(
+            BrowseMedia(
+                title="Plex",
+                media_class=MEDIA_CLASS_APP,
+                media_content_id="",
+                media_content_type="plex",
+                thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
+                can_play=False,
+                can_expand=True,
+            )
+        )
+
+    if "spotify" in hass.config.components:
+        result = await spotify.async_browse_media(hass, None, None)
+        children.extend(result.children)
 
     try:
         item = await media_source.async_browse_media(
@@ -327,11 +370,16 @@ def favorites_payload(favorites):
 
     group_types = {fav.reference.item_class for fav in favorites}
     for group_type in sorted(group_types):
-        media_content_type = SONOS_TYPES_MAPPING[group_type]
+        try:
+            media_content_type = SONOS_TYPES_MAPPING[group_type]
+            media_class = SONOS_TO_MEDIA_CLASSES[group_type]
+        except KeyError:
+            _LOGGER.debug("Unknown media type or class received %s", group_type)
+            continue
         children.append(
             BrowseMedia(
                 title=media_content_type.title(),
-                media_class=SONOS_TO_MEDIA_CLASSES[group_type],
+                media_class=media_class,
                 media_content_id=group_type,
                 media_content_type="favorites_folder",
                 can_play=False,

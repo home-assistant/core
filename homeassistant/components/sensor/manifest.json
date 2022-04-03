@@ -2,7 +2,7 @@
   "domain": "sensor",
   "name": "Sensor",
   "documentation": "https://www.home-assistant.io/integrations/sensor",
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal",
   "after_dependencies": ["recorder"]
 }

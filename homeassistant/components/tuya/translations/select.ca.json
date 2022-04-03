@@ -10,13 +10,61 @@
             "1": "OFF",
             "2": "ON"
         },
+        "tuya__countdown": {
+            "1h": "1 hora",
+            "2h": "2 hores",
+            "3h": "3 hores",
+            "4h": "4 hores",
+            "5h": "5 hores",
+            "6h": "6 hores",
+            "cancel": "Cancel\u00b7la"
+        },
+        "tuya__curtain_mode": {
+            "morning": "Mat\u00ed",
+            "night": "Nit"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Enrere",
+            "forward": "Endavant"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Sensibilitat baixa",
             "1": "Sensibilitat alta"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
         "tuya__fingerbot_mode": {
             "click": "Polsador",
             "switch": "Interruptor"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "Nivell 1",
+            "level_10": "Nivell 10",
+            "level_2": "Nivell 2",
+            "level_3": "Nivell 3",
+            "level_4": "Nivell 4",
+            "level_5": "Nivell 5",
+            "level_6": "Nivell 6",
+            "level_7": "Nivell 7",
+            "level_8": "Nivell 8",
+            "level_9": "Nivell 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "Estat 1",
+            "2": "Estat 2",
+            "3": "Estat 3",
+            "4": "Estat 4",
+            "5": "Estat 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "Autom\u00e0tic",
+            "health": "Salut",
+            "humidity": "Humitat",
+            "sleep": "Dormir",
+            "work": "Feina"
         },
         "tuya__ipc_work_mode": {
             "0": "Mode de baix consum",

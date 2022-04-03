@@ -37,6 +37,11 @@ ZEROCONF = {
             }
         }
     ],
+    "_airport._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -76,6 +81,11 @@ ZEROCONF = {
     "_bond._tcp.local.": [
         {
             "domain": "bond"
+        }
+    ],
+    "_companion-link._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_daap._tcp.local.": [
@@ -134,6 +144,10 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         {
             "domain": "homekit_controller"
+        },
+        {
+            "domain": "zwave_me",
+            "name": "*z.wave-me*"
         }
     ],
     "_homekit._tcp.local.": [
@@ -160,6 +174,10 @@ ZEROCONF = {
             "properties": {
                 "manufacturer": "nettigo"
             }
+        },
+        {
+            "domain": "pure_energie",
+            "name": "smartbridge*"
         },
         {
             "domain": "rachio",
@@ -195,6 +213,10 @@ ZEROCONF = {
         }
     ],
     "_kizbox._tcp.local.": [
+        {
+            "domain": "overkiz",
+            "name": "gateway*"
+        },
         {
             "domain": "somfy",
             "name": "gateway*"
@@ -302,6 +324,11 @@ ZEROCONF = {
             }
         }
     ],
+    "_sleep-proxy._udp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos"
@@ -368,7 +395,12 @@ HOMEKIT = {
     "Iota": "abode",
     "LIFX": "lifx",
     "MYQ": "myq",
-    "NL*": "nanoleaf",
+    "NL29": "nanoleaf",
+    "NL42": "nanoleaf",
+    "NL47": "nanoleaf",
+    "NL48": "nanoleaf",
+    "NL52": "nanoleaf",
+    "NL59": "nanoleaf",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",

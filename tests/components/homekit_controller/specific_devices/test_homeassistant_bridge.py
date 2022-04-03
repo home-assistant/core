@@ -7,6 +7,7 @@ from homeassistant.components.fan import (
 )
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -25,7 +26,7 @@ async def test_homeassistant_bridge_fan_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="Home Assistant Bridge",
             model="Bridge",
             manufacturer="Home Assistant",
@@ -40,6 +41,7 @@ async def test_homeassistant_bridge_fan_setup(hass):
                     sw_version="0.104.0.dev0",
                     hw_version="",
                     serial_number="fan.living_room_fan",
+                    unique_id="00:00:00:00:00:00:aid:1256851357",
                     devices=[],
                     entities=[
                         EntityTestInfo(
@@ -53,7 +55,6 @@ async def test_homeassistant_bridge_fan_setup(hass):
                             ),
                             capabilities={
                                 "preset_modes": None,
-                                "speed_list": ["off", "low", "medium", "high"],
                             },
                             state="off",
                         )

@@ -14,5 +14,6 @@
       "type": "_http._tcp.local.",
       "name": "rainmachine*"
     }
-  ]
+  ],
+  "loggers": ["regenmaschine"]
 }

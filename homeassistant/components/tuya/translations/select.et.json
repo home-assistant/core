@@ -10,13 +10,61 @@
             "1": "V\u00e4ljas",
             "2": "Sees"
         },
+        "tuya__countdown": {
+            "1h": "1 tund",
+            "2h": "2 tundi",
+            "3h": "3 tundi",
+            "4h": "4 tundi",
+            "5h": "5 tundi",
+            "6h": "6 tundi",
+            "cancel": "Loobu"
+        },
+        "tuya__curtain_mode": {
+            "morning": "Hommik",
+            "night": "\u00d6\u00f6"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Tagasi",
+            "forward": "Edasi"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Madal tundlikkus",
             "1": "K\u00f5rge tundlikkus"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
         "tuya__fingerbot_mode": {
             "click": "Vajutus",
             "switch": "L\u00fcliti"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "Tase 1",
+            "level_10": "Tase 10",
+            "level_2": "Tase 2",
+            "level_3": "Tase 3",
+            "level_4": "Tase 4",
+            "level_5": "Tase 5",
+            "level_6": "Tase 6",
+            "level_7": "Tase 7",
+            "level_8": "Tase 8",
+            "level_9": "Tase 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "Meeleolu 1",
+            "2": "Meeleolu 2",
+            "3": "Meeleolu 3",
+            "4": "Meeleolu 4",
+            "5": "Meeleolu 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "Automaatne",
+            "health": "Tervis",
+            "humidity": "Niiskus",
+            "sleep": "Uneaeg",
+            "work": "T\u00f6\u00f6aeg"
         },
         "tuya__ipc_work_mode": {
             "0": "Madala energiatarbega re\u017eiim",

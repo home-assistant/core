@@ -22,7 +22,7 @@
                     "port": "Numero porta",
                     "ssl": "Utilizza SSL",
                     "username": "Nome utente",
-                    "verify_ssl": "Verifica certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 }
             }
         }

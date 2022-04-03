@@ -68,39 +68,39 @@ async def async_setup_platform(
     code = discovery_info[CONF_CODE]
     panic_type = discovery_info[CONF_PANIC]
 
-    devices = []
+    entities = []
     for part_num in configured_partitions:
-        device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
-        device = EnvisalinkAlarm(
+        entity_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
+        entity = EnvisalinkAlarm(
             hass,
             part_num,
-            device_config_data[CONF_PARTITIONNAME],
+            entity_config_data[CONF_PARTITIONNAME],
             code,
             panic_type,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
         )
-        devices.append(device)
+        entities.append(entity)
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
     @callback
-    def alarm_keypress_handler(service: ServiceCall) -> None:
+    def async_alarm_keypress_handler(service: ServiceCall) -> None:
         """Map services to methods on Alarm."""
         entity_ids = service.data[ATTR_ENTITY_ID]
         keypress = service.data[ATTR_KEYPRESS]
 
-        target_devices = [
-            device for device in devices if device.entity_id in entity_ids
+        target_entities = [
+            entity for entity in entities if entity.entity_id in entity_ids
         ]
 
-        for device in target_devices:
-            device.async_alarm_keypress(keypress)
+        for entity in target_entities:
+            entity.async_alarm_keypress(keypress)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_ALARM_KEYPRESS,
-        alarm_keypress_handler,
+        async_alarm_keypress_handler,
         schema=ALARM_KEYPRESS_SCHEMA,
     )
 
@@ -123,17 +123,17 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback
+                self.hass, SIGNAL_KEYPAD_UPDATE, self.async_update_callback
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_PARTITION_UPDATE, self._update_callback
+                self.hass, SIGNAL_PARTITION_UPDATE, self.async_update_callback
             )
         )
 
     @callback
-    def _update_callback(self, partition):
+    def async_update_callback(self, partition):
         """Update Home Assistant state, if needed."""
         if partition is None or int(partition) == self._partition_number:
             self.async_write_ha_state()

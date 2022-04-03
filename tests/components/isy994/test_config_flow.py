@@ -16,7 +16,12 @@ from homeassistant.components.isy994.const import (
     ISY_URL_POSTFIX,
     UDN_UUID_PREFIX,
 )
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_IMPORT, SOURCE_SSDP
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_IGNORE,
+    SOURCE_IMPORT,
+    SOURCE_SSDP,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -595,3 +600,27 @@ async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == f"http://1.2.3.4:1443{ISY_URL_POSTFIX}"
     assert entry.data[CONF_USERNAME] == "bob"
+
+
+async def test_form_dhcp_existing_ignored_entry(hass: HomeAssistant):
+    """Test we handled an ignored entry from dhcp."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MOCK_UUID, source=SOURCE_IGNORE
+    )
+    entry.add_to_hass(hass)
+
+    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.2.3.4",
+                hostname="isy994-ems",
+                macaddress=MOCK_MAC,
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"

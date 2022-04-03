@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
+            "cannot_connect": "\u00c9chec de connexion",
+            "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau",
+            "not_steamist_device": "Pas un appareil \u00e0 vapeur"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "{name} ({ipaddress})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Voulez-vous configurer {name} ({ipaddress})\u00a0?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Appareil"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "description": "Si vous laissez l'h\u00f4te vide, la d\u00e9couverte sera utilis\u00e9e pour trouver des appareils."
+            }
+        }
+    }
+}

@@ -134,8 +134,7 @@ class NestEventMediaStore(EventMediaStore):
         """Load data."""
         if self._data is None:
             self._devices = await self._get_devices()
-            data = await self._store.async_load()
-            if data is None:
+            if (data := await self._store.async_load()) is None:
                 _LOGGER.debug("Loaded empty event store")
                 self._data = {}
             elif isinstance(data, dict):
@@ -340,15 +339,21 @@ class NestMediaSource(MediaSource):
         media_id: MediaId | None = parse_media_id(item.identifier)
         if not media_id:
             raise Unresolvable("No identifier specified for MediaSourceItem")
-        if not media_id.event_token:
-            raise Unresolvable(
-                "Identifier missing an event_token: %s" % item.identifier
-            )
         devices = await self.devices()
         if not (device := devices.get(media_id.device_id)):
             raise Unresolvable(
                 "Unable to find device with identifier: %s" % item.identifier
             )
+        if not media_id.event_token:
+            # The device resolves to the most recent event if available
+            if not (
+                last_event_id := await _async_get_recent_event_id(media_id, device)
+            ):
+                raise Unresolvable(
+                    "Unable to resolve recent event for device: %s" % item.identifier
+                )
+            media_id = last_event_id
+
         # Infer content type from the device, since it only supports one
         # snapshot type (either jpg or mp4 clip)
         content_type = EventImageType.IMAGE.content_type
@@ -377,9 +382,16 @@ class NestMediaSource(MediaSource):
             browse_root = _browse_root()
             browse_root.children = []
             for device_id, child_device in devices.items():
-                browse_root.children.append(
-                    _browse_device(MediaId(device_id), child_device)
-                )
+                browse_device = _browse_device(MediaId(device_id), child_device)
+                if last_event_id := await _async_get_recent_event_id(
+                    MediaId(device_id), child_device
+                ):
+                    browse_device.thumbnail = EVENT_THUMBNAIL_URL_FORMAT.format(
+                        device_id=last_event_id.device_id,
+                        event_token=last_event_id.event_token,
+                    )
+                    browse_device.can_play = True
+                browse_root.children.append(browse_device)
             return browse_root
 
         # Browse either a device or events within a device
@@ -399,11 +411,9 @@ class NestMediaSource(MediaSource):
                 browse_device.children = []
                 for clip in clips.values():
                     event_id = MediaId(media_id.device_id, clip.event_token)
-                    browse_event = _browse_clip_preview(event_id, device, clip)
-                    browse_device.children.append(browse_event)
-                    # Use thumbnail for first event in the list as the device thumbnail
-                    if browse_device.thumbnail is None:
-                        browse_device.thumbnail = browse_event.thumbnail
+                    browse_device.children.append(
+                        _browse_clip_preview(event_id, device, clip)
+                    )
                 return browse_device
 
             # Browse a specific event
@@ -421,11 +431,9 @@ class NestMediaSource(MediaSource):
             browse_device.children = []
             for image in images.values():
                 event_id = MediaId(media_id.device_id, image.event_token)
-                browse_event = _browse_image_event(event_id, device, image)
-                browse_device.children.append(browse_event)
-                # Use thumbnail for first event in the list as the device thumbnail
-                if browse_device.thumbnail is None:
-                    browse_device.thumbnail = browse_event.thumbnail
+                browse_device.children.append(
+                    _browse_image_event(event_id, device, image)
+                )
             return browse_device
 
         # Browse a specific event
@@ -468,6 +476,21 @@ def _browse_root() -> BrowseMediaSource:
         thumbnail=None,
         children=[],
     )
+
+
+async def _async_get_recent_event_id(
+    device_id: MediaId, device: Device
+) -> MediaId | None:
+    """Return thumbnail for most recent device event."""
+    if CameraClipPreviewTrait.NAME in device.traits:
+        clips = await device.event_media_manager.async_clip_preview_sessions()
+        if not clips:
+            return None
+        return MediaId(device_id.device_id, next(iter(clips)).event_token)
+    images = await device.event_media_manager.async_image_sessions()
+    if not images:
+        return None
+    return MediaId(device_id.device_id, next(iter(images)).event_token)
 
 
 def _browse_device(device_id: MediaId, device: Device) -> BrowseMediaSource:

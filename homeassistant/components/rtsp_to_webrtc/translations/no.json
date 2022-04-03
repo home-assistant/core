@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "server_failure": "RTSPtoWebRTC-serveren returnerte en feil. Sjekk loggene for mer informasjon.",
+            "server_unreachable": "Kan ikke kommunisere med RTSPtoWebRTC-serveren. Sjekk loggene for mer informasjon.",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {

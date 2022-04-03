@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.ambient_station import CONF_APP_KEY, DOMAIN
+from homeassistant.components.ambient_station.const import CONF_APP_KEY, DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.setup import async_setup_component
 

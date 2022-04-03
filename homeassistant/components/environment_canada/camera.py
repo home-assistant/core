@@ -42,6 +42,8 @@ class ECCamera(CoordinatorEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
+        if not hasattr(self.radar_object, "timestamp"):
+            return None
         self.observation_time = self.radar_object.timestamp
         return self.radar_object.image
 

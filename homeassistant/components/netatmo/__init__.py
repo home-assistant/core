@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_WEBHOOK_ID,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall
@@ -31,10 +31,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
@@ -54,7 +51,6 @@ from .const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
     PLATFORMS,
-    WEBHOOK_ACTIVATION,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
 )
@@ -150,8 +146,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    _webhook_retries = 0
-
     async def unregister_webhook(
         call_or_event_or_dt: ServiceCall | Event | datetime | None,
     ) -> None:
@@ -171,11 +165,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
             )
 
-        nonlocal _webhook_retries
-        if _webhook_retries < MAX_WEBHOOK_RETRIES:
-            _webhook_retries += 1
-            async_call_later(hass, 30, register_webhook)
-
     async def register_webhook(
         call_or_event_or_dt: ServiceCall | Event | datetime | None,
     ) -> None:
@@ -184,14 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.config_entries.async_update_entry(entry, data=data)
 
         if cloud.async_active_subscription(hass):
-            if CONF_CLOUDHOOK_URL not in entry.data:
-                webhook_url = await cloud.async_create_cloudhook(
-                    hass, entry.data[CONF_WEBHOOK_ID]
-                )
-                data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
-                hass.config_entries.async_update_entry(entry, data=data)
-            else:
-                webhook_url = entry.data[CONF_CLOUDHOOK_URL]
+            webhook_url = await async_cloudhook_generate_url(hass, entry)
         else:
             webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 
@@ -204,32 +186,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             return
 
+        webhook_register(
+            hass,
+            DOMAIN,
+            "Netatmo",
+            entry.data[CONF_WEBHOOK_ID],
+            async_handle_webhook,
+        )
+
         try:
-            webhook_register(
-                hass,
-                DOMAIN,
-                "Netatmo",
-                entry.data[CONF_WEBHOOK_ID],
-                async_handle_webhook,
-            )
-
-            async def handle_event(event: dict) -> None:
-                """Handle webhook events."""
-                if event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_ACTIVATION:
-                    if activation_listener is not None:
-                        activation_listener()
-
-                    if activation_timeout is not None:
-                        activation_timeout()
-
-            activation_listener = async_dispatcher_connect(
-                hass,
-                f"signal-{DOMAIN}-webhook-None",
-                handle_event,
-            )
-
-            activation_timeout = async_call_later(hass, 30, unregister_webhook)
-
             await hass.data[DOMAIN][entry.entry_id][AUTH].async_addwebhook(webhook_url)
             _LOGGER.info("Register Netatmo webhook: %s", webhook_url)
         except pyatmo.ApiError as err:
@@ -239,10 +204,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
         )
 
-    if hass.state == CoreState.running:
-        await register_webhook(None)
+    async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
+        if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
+            await register_webhook(None)
+
+        if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
+            await unregister_webhook(None)
+            async_call_later(hass, 30, register_webhook)
+
+    if cloud.async_active_subscription(hass):
+        if cloud.async_is_connected(hass):
+            await register_webhook(None)
+        cloud.async_listen_connection_change(hass, manage_cloudhook)
+
     else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, register_webhook)
+        if hass.state == CoreState.running:
+            await register_webhook(None)
+        else:
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_webhook)
 
     hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
     hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
@@ -250,6 +229,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.add_update_listener(async_config_entry_updated)
 
     return True
+
+
+async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
+    """Generate the full URL for a webhook_id."""
+    if CONF_CLOUDHOOK_URL not in entry.data:
+        webhook_url = await cloud.async_create_cloudhook(
+            hass, entry.data[CONF_WEBHOOK_ID]
+        )
+        data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
+        hass.config_entries.async_update_entry(entry, data=data)
+        return webhook_url
+    return str(entry.data[CONF_CLOUDHOOK_URL])
 
 
 async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:

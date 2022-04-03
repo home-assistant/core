@@ -6,5 +6,6 @@
   "dependencies": ["media_player"],
   "codeowners": [],
   "quality_scale": "internal",
-  "iot_class": "calculated"
+  "iot_class": "calculated",
+  "loggers": ["youtube_dl"]
 }

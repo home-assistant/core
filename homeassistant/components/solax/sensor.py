@@ -4,47 +4,38 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 
-from solax import real_time_api
 from solax.inverter import InverterError
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN, MANUFACTURER
 
 DEFAULT_PORT = 80
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    }
-)
-
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Platform setup."""
-    api = await real_time_api(config[CONF_IP_ADDRESS], config[CONF_PORT])
-    endpoint = RealTimeDataEndpoint(hass, api)
+    """Entry setup."""
+    api = hass.data[DOMAIN][entry.entry_id]
     resp = await api.get_data()
     serial = resp.serial_number
+    version = resp.version
+    endpoint = RealTimeDataEndpoint(hass, api)
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
@@ -70,7 +61,9 @@ async def async_setup_platform(
             device_class = SensorDeviceClass.BATTERY
             state_class = SensorStateClass.MEASUREMENT
         uid = f"{serial}-{idx}"
-        devices.append(Inverter(uid, serial, sensor, unit, state_class, device_class))
+        devices.append(
+            Inverter(uid, serial, version, sensor, unit, state_class, device_class)
+        )
     endpoint.sensors = devices
     async_add_entities(devices)
 
@@ -114,6 +107,7 @@ class Inverter(SensorEntity):
         self,
         uid,
         serial,
+        version,
         key,
         unit,
         state_class=None,
@@ -125,6 +119,12 @@ class Inverter(SensorEntity):
         self._attr_native_unit_of_measurement = unit
         self._attr_state_class = state_class
         self._attr_device_class = device_class
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            manufacturer=MANUFACTURER,
+            name=f"Solax {serial}",
+            sw_version=version,
+        )
         self.key = key
         self.value = None
 

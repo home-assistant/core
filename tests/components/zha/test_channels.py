@@ -101,6 +101,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
     [
         (0x0000, 0, {}),
         (0x0001, 1, {"battery_voltage", "battery_percentage_remaining"}),
+        (0x0002, 1, {"current_temperature"}),
         (0x0003, 0, {}),
         (0x0004, 0, {}),
         (0x0005, 1, {}),
@@ -129,7 +130,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
             0x0201,
             1,
             {
-                "local_temp",
+                "local_temperature",
                 "occupied_cooling_setpoint",
                 "occupied_heating_setpoint",
                 "unoccupied_cooling_setpoint",
@@ -203,6 +204,7 @@ async def test_in_channel_config(
     [
         (0x0000, 0),
         (0x0001, 1),
+        (0x0002, 1),
         (0x0003, 0),
         (0x0004, 0),
         (0x0005, 1),
@@ -584,13 +586,23 @@ async def test_zll_device_groups(
     cluster = zigpy_zll_device.endpoints[1].lightlink
     channel = zha_channels.lightlink.LightLink(cluster, channel_pool)
 
+    get_group_identifiers_rsp = zigpy.zcl.clusters.lightlink.LightLink.commands_by_name[
+        "get_group_identifiers_rsp"
+    ].schema
+
     with patch.object(
-        cluster, "command", AsyncMock(return_value=[1, 0, []])
+        cluster,
+        "command",
+        AsyncMock(
+            return_value=get_group_identifiers_rsp(
+                total=0, start_index=0, group_info_records=[]
+            )
+        ),
     ) as cmd_mock:
         await channel.async_configure()
         assert cmd_mock.await_count == 1
         assert (
-            cluster.server_commands[cmd_mock.await_args[0][0]][0]
+            cluster.server_commands[cmd_mock.await_args[0][0]].name
             == "get_group_identifiers"
         )
         assert cluster.bind.call_count == 0
@@ -601,12 +613,18 @@ async def test_zll_device_groups(
     group_1 = zigpy.zcl.clusters.lightlink.GroupInfoRecord(0xABCD, 0x00)
     group_2 = zigpy.zcl.clusters.lightlink.GroupInfoRecord(0xAABB, 0x00)
     with patch.object(
-        cluster, "command", AsyncMock(return_value=[1, 0, [group_1, group_2]])
+        cluster,
+        "command",
+        AsyncMock(
+            return_value=get_group_identifiers_rsp(
+                total=2, start_index=0, group_info_records=[group_1, group_2]
+            )
+        ),
     ) as cmd_mock:
         await channel.async_configure()
         assert cmd_mock.await_count == 1
         assert (
-            cluster.server_commands[cmd_mock.await_args[0][0]][0]
+            cluster.server_commands[cmd_mock.await_args[0][0]].name
             == "get_group_identifiers"
         )
         assert cluster.bind.call_count == 0

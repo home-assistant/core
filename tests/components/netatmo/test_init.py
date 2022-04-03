@@ -112,7 +112,7 @@ async def test_setup_component_with_config(hass, config_entry):
 
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 3
+        assert fake_post_hits == 9
         mock_impl.assert_called_once()
         mock_webhook.assert_called_once()
 
@@ -183,6 +183,8 @@ async def test_setup_with_cloud(hass, config_entry):
     with patch(
         "homeassistant.components.cloud.async_is_logged_in", return_value=True
     ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=True
+    ), patch(
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
         "homeassistant.components.cloud.async_create_cloudhook",
@@ -203,6 +205,7 @@ async def test_setup_with_cloud(hass, config_entry):
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
         assert hass.components.cloud.async_active_subscription() is True
+        assert hass.components.cloud.async_is_connected() is True
         fake_create_cloudhook.assert_called_once()
 
         assert (
@@ -245,6 +248,8 @@ async def test_setup_with_cloudhook(hass):
 
     with patch(
         "homeassistant.components.cloud.async_is_logged_in", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=True
     ), patch(
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
@@ -354,7 +359,7 @@ async def test_setup_component_with_delay(hass, config_entry):
 
         await hass.async_block_till_done()
 
-        assert mock_post_request.call_count == 5
+        assert mock_post_request.call_count == 8
 
         mock_impl.assert_called_once()
         mock_webhook.assert_not_called()

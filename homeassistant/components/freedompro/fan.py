@@ -1,4 +1,6 @@
 """Support for Freedompro fan."""
+from __future__ import annotations
+
 import json
 
 from pyfreedompro import put_state
@@ -51,7 +53,7 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
         self._attr_percentage = 0
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._attr_is_on
 
@@ -90,9 +92,7 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_turn_on(
-        self, speed=None, percentage=None, preset_mode=None, **kwargs
-    ):
+    async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs):
         """Async function to turn on the fan."""
         payload = {"on": True}
         payload = json.dumps(payload)

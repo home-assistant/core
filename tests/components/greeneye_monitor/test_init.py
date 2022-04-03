@@ -18,6 +18,7 @@ from .common import (
     SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS,
     SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS,
     SINGLE_MONITOR_SERIAL_NUMBER,
+    connect_monitor,
     setup_greeneye_monitor_component_with_config,
 )
 from .conftest import (
@@ -53,7 +54,7 @@ async def test_setup_creates_temperature_entities(
     assert await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS
     )
-
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_temperature_sensor_registered(
         hass, SINGLE_MONITOR_SERIAL_NUMBER, 1, "temp_a"
     )
@@ -87,7 +88,7 @@ async def test_setup_creates_pulse_counter_entities(
     assert await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_PULSE_COUNTERS
     )
-
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_pulse_counter_registered(
         hass,
         SINGLE_MONITOR_SERIAL_NUMBER,
@@ -124,7 +125,7 @@ async def test_setup_creates_power_sensor_entities(
     assert await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_POWER_SENSORS
     )
-
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_power_sensor_registered(hass, SINGLE_MONITOR_SERIAL_NUMBER, 1, "channel 1")
     assert_power_sensor_registered(hass, SINGLE_MONITOR_SERIAL_NUMBER, 2, "channel two")
 
@@ -136,7 +137,7 @@ async def test_setup_creates_voltage_sensor_entities(
     assert await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
-
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_voltage_sensor_registered(hass, SINGLE_MONITOR_SERIAL_NUMBER, 1, "voltage 1")
 
 
@@ -146,6 +147,10 @@ async def test_multi_monitor_config(hass: HomeAssistant, monitors: AsyncMock) ->
         hass,
         MULTI_MONITOR_CONFIG,
     )
+
+    await connect_monitor(hass, monitors, 1)
+    await connect_monitor(hass, monitors, 2)
+    await connect_monitor(hass, monitors, 3)
 
     assert_temperature_sensor_registered(hass, 1, 1, "unit_1_temp_1")
     assert_temperature_sensor_registered(hass, 2, 1, "unit_2_temp_1")

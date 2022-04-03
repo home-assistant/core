@@ -21,6 +21,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ph_offset": "\u039c\u03b5\u03c4\u03b1\u03c4\u03cc\u03c0\u03b9\u03c3\u03b7 pH (\u03b8\u03b5\u03c4\u03b9\u03ba\u03cc \u03ae \u03b1\u03c1\u03bd\u03b7\u03c4\u03b9\u03ba\u03cc)",
                     "polling_interval": "\u0394\u03b9\u03ac\u03c3\u03c4\u03b7\u03bc\u03b1 \u03bb\u03ae\u03c8\u03b7\u03c2 (\u03c3\u03b5 \u03b4\u03b5\u03c5\u03c4\u03b5\u03c1\u03cc\u03bb\u03b5\u03c0\u03c4\u03b1)"
                 }
             }
