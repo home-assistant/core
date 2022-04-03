@@ -81,9 +81,18 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
 
     unit_imperial: str | None = None
     unit_metric: str | None = None
-    metric_conversion: Callable[[float], float] | float = 1.0
-    is_metric_check: bool | None = None
+    multiplication_factor: float | None = None
+    metric_conversion: Callable[[float], float] | float | None = None
     value_map: Any | None = None
+
+    def __post_init__(self) -> None:
+        """Handle post init."""
+        if self.unit_imperial != self.unit_metric and (
+            self.unit_imperial is None or self.unit_metric is None
+        ):
+            raise ValueError(
+                "Entity descriptions must specify both or neither imperial and metric units"
+            )
 
 
 SENSOR_TYPES = (
@@ -93,7 +102,6 @@ SENSOR_TYPES = (
         unit_imperial=TEMP_FAHRENHEIT,
         unit_metric=TEMP_CELSIUS,
         metric_conversion=lambda val: temp_convert(val, TEMP_FAHRENHEIT, TEMP_CELSIUS),
-        is_metric_check=True,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
@@ -102,17 +110,16 @@ SENSOR_TYPES = (
         unit_imperial=TEMP_FAHRENHEIT,
         unit_metric=TEMP_CELSIUS,
         metric_conversion=lambda val: temp_convert(val, TEMP_FAHRENHEIT, TEMP_CELSIUS),
-        is_metric_check=True,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
         name="Pressure (Surface Level)",
+        unit_imperial=PRESSURE_INHG,
         unit_metric=PRESSURE_HPA,
         metric_conversion=lambda val: pressure_convert(
             val, PRESSURE_INHG, PRESSURE_HPA
         ),
-        is_metric_check=True,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     TomorrowioSensorEntityDescription(
@@ -121,7 +128,6 @@ SENSOR_TYPES = (
         unit_imperial=IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
         unit_metric=IRRADIATION_WATTS_PER_SQUARE_METER,
         metric_conversion=3.15459,
-        is_metric_check=True,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_BASE,
@@ -131,7 +137,6 @@ SENSOR_TYPES = (
         metric_conversion=lambda val: distance_convert(
             val, LENGTH_MILES, LENGTH_KILOMETERS
         ),
-        is_metric_check=True,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_CEILING,
@@ -141,7 +146,6 @@ SENSOR_TYPES = (
         metric_conversion=lambda val: distance_convert(
             val, LENGTH_MILES, LENGTH_KILOMETERS
         ),
-        is_metric_check=True,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_COVER,
@@ -156,7 +160,6 @@ SENSOR_TYPES = (
         unit_metric=SPEED_METERS_PER_SECOND,
         metric_conversion=lambda val: distance_convert(val, LENGTH_MILES, LENGTH_METERS)
         / 3600,
-        is_metric_check=True,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRECIPITATION_TYPE,
@@ -168,33 +171,33 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_OZONE,
         name="Ozone",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=2.03,
-        is_metric_check=True,
+        multiplication_factor=2.03,
         device_class=SensorDeviceClass.OZONE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PARTICULATE_MATTER_25,
         name="Particulate Matter < 2.5 μm",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=3.2808399**3,
-        is_metric_check=True,
+        multiplication_factor=3.2808399**3,
         device_class=SensorDeviceClass.PM25,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PARTICULATE_MATTER_10,
         name="Particulate Matter < 10 μm",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=3.2808399**3,
-        is_metric_check=True,
+        multiplication_factor=3.2808399**3,
         device_class=SensorDeviceClass.PM10,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_NITROGEN_DIOXIDE,
         name="Nitrogen Dioxide",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=1.95,
-        is_metric_check=True,
+        multiplication_factor=1.95,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
     ),
     TomorrowioSensorEntityDescription(
@@ -202,14 +205,15 @@ SENSOR_TYPES = (
         name="Carbon Monoxide",
         unit_imperial=CONCENTRATION_PARTS_PER_MILLION,
         unit_metric=CONCENTRATION_PARTS_PER_MILLION,
+        multiplication_factor=1 / 1000,
         device_class=SensorDeviceClass.CO,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_SULPHUR_DIOXIDE,
         name="Sulphur Dioxide",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=2.71,
-        is_metric_check=True,
+        multiplication_factor=2.71,
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
     ),
     TomorrowioSensorEntityDescription(
@@ -289,6 +293,21 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
+def smart_round(value: float) -> float:
+    """Round a float to have at least two digits."""
+    if float(value) == 0.0:
+        return float(value)
+
+    num_digits = 2
+    if (new_val := round(value, num_digits)) != 0.0:
+        return new_val
+
+    while num_digits < 5 and (new_val := round(value, num_digits)) == 0.0:
+        num_digits += 1
+
+    return new_val
+
+
 class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
     """Base Tomorrow.io sensor entity."""
 
@@ -328,30 +347,31 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         state = self._state
+        desc = self.entity_description
+
+        if state is None:
+            return state
+
+        if desc.value_map is not None:
+            return desc.value_map(state).name.lower()
+
+        if desc.multiplication_factor is not None:
+            return smart_round(float(state) * desc.multiplication_factor)
 
         # If an imperial unit isn't provided, we always want to convert to metric since
         # that is what the UI expects
-        if state is not None and (
-            (
-                self.entity_description.metric_conversion != 1.0
-                and self.entity_description.is_metric_check is not None
-                and self.hass.config.units.is_metric
-                == self.entity_description.is_metric_check
-            )
-            or (
-                self.entity_description.unit_imperial is None
-                and self.entity_description.unit_metric is not None
-            )
+        if (
+            desc.metric_conversion
+            and desc.unit_imperial is not None
+            and desc.unit_imperial != desc.unit_metric
+            and self.hass.config.units.is_metric
         ):
-            conversion = self.entity_description.metric_conversion
+            conversion = desc.metric_conversion
             # When conversion is a callable, we assume it's a single input function
             if callable(conversion):
-                return round(conversion(float(state)), 2)
+                return smart_round(conversion(float(state)))
 
-            return round(float(state) * conversion, 2)
-
-        if self.entity_description.value_map is not None and state is not None:
-            return self.entity_description.value_map(state).name.lower()
+            return smart_round(float(state) * conversion)
 
         return state
 
