@@ -7,11 +7,7 @@ from typing import Any, cast
 
 from pytradfri.command import Command
 
-from homeassistant.components.fan import (
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -81,7 +77,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_PRESET_MODE + SUPPORT_SET_SPEED
+        return FanEntityFeature.PRESET_MODE + FanEntityFeature.SET_SPEED
 
     @property
     def speed_count(self) -> int:

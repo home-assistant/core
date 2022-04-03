@@ -11,11 +11,11 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -30,7 +30,6 @@ ATTR_DIMMER = "dimmer"
 ATTR_HUE = "hue"
 ATTR_SAT = "saturation"
 ATTR_TRANSITION_TIME = "transition_time"
-SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
 
 
 async def async_setup_entry(
@@ -77,14 +76,17 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         self._hs_color = None
 
         # Calculate supported features
-        _features = SUPPORTED_LIGHT_FEATURES
-        if self._device.light_control.can_set_dimmer:
-            _features |= SUPPORT_BRIGHTNESS
-        if self._device.light_control.can_set_color:
-            _features |= SUPPORT_COLOR | SUPPORT_COLOR_TEMP
-        if self._device.light_control.can_set_temp:
-            _features |= SUPPORT_COLOR_TEMP
+        _features = LightEntityFeature.TRANSITION
         self._attr_supported_features = _features
+
+        # Calculate supported color modes
+        self._attr_supported_color_modes = set()
+        if self._device.light_control.can_set_color:
+            self._attr_supported_color_modes.add(COLOR_MODE_HS)
+        if self._device.light_control.can_set_temp:
+            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+        if not self.supported_color_modes and self._device.light_control.can_set_dimmer:
+            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
         if self._device_control:
             self._attr_min_mireds = self._device_control.min_mireds
