@@ -57,7 +57,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.hassio.sensor",
     "homeassistant.components.hassio.system_health",
     "homeassistant.components.hassio.websocket_api",
-    "homeassistant.components.here_travel_time.sensor",
     "homeassistant.components.home_plus_control",
     "homeassistant.components.home_plus_control.api",
     "homeassistant.components.honeywell.climate",
