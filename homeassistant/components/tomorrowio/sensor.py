@@ -87,9 +87,8 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
 
     def __post_init__(self) -> None:
         """Handle post init."""
-        if self.unit_imperial != self.unit_metric and (
-            self.unit_imperial is None or self.unit_metric is None
-        ):
+        units = (self.unit_imperial, self.unit_metric)
+        if any(u is not None for u in units) and any(u is None for u in units):
             raise ValueError(
                 "Entity descriptions must specify both or neither imperial and metric units"
             )
