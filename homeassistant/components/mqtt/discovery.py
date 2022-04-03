@@ -3,14 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Awaitable
 import functools
 import json
 import logging
 import re
 import time
 
-from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, Platform
+from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 import homeassistant.helpers.config_validation as cv
@@ -80,15 +79,6 @@ class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
     discovery_data: dict
-
-
-def cancel_discovery(hass: HomeAssistant, discovery_info: MQTTConfig) -> None:
-    """Cancel the discovery process."""
-    if not discovery_info:
-        return
-    discovery_hash = discovery_info.discovery_data[ATTR_DISCOVERY_HASH]
-    clear_discovery_hash(hass, discovery_hash)
-    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
 
 
 def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple) -> None:
@@ -324,11 +314,7 @@ async def async_process_discovery_payload(
                     # pylint: disable-next=import-outside-toplevel
                     from . import tag
 
-                    tag_setup = functools.partial(
-                        tag.async_setup_tag,
-                        hass,
-                    )
-                    await async_load_platform_helper(hass, "tag", tag_setup)
+                    await tag.async_setup_entry(hass, config_entry)
                 else:
                     await hass.config_entries.async_forward_entry_setup(
                         config_entry, component
@@ -353,17 +339,3 @@ async def async_stop(hass: HomeAssistant) -> None:
         for key, unsub in list(hass.data[INTEGRATION_UNSUBSCRIBE].items()):
             unsub()
             hass.data[INTEGRATION_UNSUBSCRIBE].pop(key)
-
-
-async def async_load_platform_helper(
-    hass: HomeAssistant, platform: Platform, async_setup: Awaitable
-) -> None:
-    """Set up platform for notify service and tag creation dynamically through MQTT discovery."""
-
-    async def async_discover(discovery_payload):
-        """Discover and add an MQTT notify service or tag."""
-        await async_setup(discovery_payload)
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(platform, DOMAIN), async_discover
-    )

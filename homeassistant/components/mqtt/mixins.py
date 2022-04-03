@@ -78,12 +78,11 @@ from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
     MQTT_DISCOVERY_UPDATED,
-    MQTTConfig,
     async_process_discovery_payload,
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import MqttTypedDictConfigType, PublishPayloadType, ReceiveMessage
+from .models import PublishPayloadType, ReceiveMessage
 from .subscription import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
@@ -500,13 +499,6 @@ class MqttAvailability(Entity):
         return self._available_latest
 
 
-def cancel_discovery(hass: HomeAssistant, discovery_info: MQTTConfig) -> None:
-    """Cancel the discovery process."""
-    discovery_hash = discovery_info.discovery_data[ATTR_DISCOVERY_HASH]
-    clear_discovery_hash(hass, discovery_hash)
-    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
-
-
 async def cleanup_device_registry(
     hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
 ) -> None:
@@ -536,24 +528,24 @@ class MqttDiscoveryDeviceUpdate:
     def __init__(
         self,
         hass: HomeAssistant,
-        discovery_info: MQTTConfig | None,
+        discovery_data: dict | None,
         device_id: str | None,
         config_entry: ConfigEntry,
         log_name: str,
     ) -> None:
         """Initialize the update service."""
 
-        # Only activate update service id the parent class has a discover hash
+        # Only activate if the parent class has a discovery hash
         self.hass = hass
         self.log_name = log_name
         self._remove_discovery = None
-        self.discovery_info = None
 
-        if discovery_info is None:
+        if discovery_data is None:
             return
 
-        discovery_data = discovery_info.discovery_data
-        self.discovery_hash: tuple = discovery_data[ATTR_DISCOVERY_HASH]
+        discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+        self.discovery_data = discovery_data
+        self.discovery_hash: tuple = discovery_hash
 
         config_entry_id = config_entry.entry_id
         discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
@@ -573,7 +565,7 @@ class MqttDiscoveryDeviceUpdate:
             )
             if (
                 discovery_payload
-                and discovery_payload != discovery_data[ATTR_DISCOVERY_PAYLOAD]
+                and discovery_payload != self.discovery_data[ATTR_DISCOVERY_PAYLOAD]
             ):
                 rediscover = True
             if not discovery_payload or rediscover:
@@ -1003,7 +995,7 @@ class MqttEntity(
 def update_device(
     hass: HomeAssistant,
     config_entry: ConfigEntry | None,
-    config: MqttTypedDictConfigType,
+    config: ConfigType,
 ) -> str | None:
     """Update device registry."""
     if config_entry is None or CONF_DEVICE not in config:

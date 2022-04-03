@@ -1,7 +1,7 @@
 """Provides tag scanning for MQTT."""
 from __future__ import annotations
 
-import logging
+import functools
 from typing import cast
 
 import voluptuous as vol
@@ -10,20 +10,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from . import MqttValueTemplate, subscription
 from .. import mqtt
 from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
-from .discovery import MQTTConfig, cancel_discovery
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
+    async_setup_entry_helper,
     update_device,
 )
-from .models import MqttTagConfig
 from .util import valid_subscribe_topic
-
-_LOGGER = logging.getLogger(__name__)
 
 LOG_NAME = "Tag"
 
@@ -41,32 +39,33 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_tag(
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Set up MQTT device automation dynamically through MQTT discovery."""
+
+    setup = functools.partial(_async_setup_tag, hass, config_entry=config_entry)
+    await async_setup_entry_helper(hass, TAG, setup, PLATFORM_SCHEMA)
+
+
+async def _async_setup_tag(
     hass: HomeAssistant,
-    discovery_info: MQTTConfig,
+    config: ConfigType,
+    config_entry: ConfigEntry,
+    discovery_data: dict,
 ) -> None:
     """Set up the MQTT tag scanner."""
-    config_entry: ConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    tag_config: MqttTagConfig
-    try:
-        tag_config = PLATFORM_SCHEMA(discovery_info)
-    except Exception:
-        cancel_discovery(hass, discovery_info)
-        raise
-
-    discovery_hash = discovery_info.discovery_data[ATTR_DISCOVERY_HASH]
+    discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
     discovery_id = discovery_hash[1]
 
-    device_id = update_device(hass, config_entry, tag_config)
+    device_id = update_device(hass, config_entry, config)
     hass.data.setdefault(TAGS, {})
     if device_id not in hass.data[TAGS]:
         hass.data[TAGS][device_id] = {}
 
     tag_scanner = MQTTTagScanner(
         hass,
-        tag_config,
+        config,
         cast(str, device_id),
-        discovery_info,
+        discovery_data,
         config_entry,
     )
 
@@ -89,31 +88,26 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
     def __init__(
         self,
         hass: HomeAssistant,
-        config: MqttTagConfig,
+        config: ConfigType,
         device_id: str,
-        discovery_info: MQTTConfig,
+        discovery_data: dict,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
         self._config = config
         self._config_entry = config_entry
         self.device_id = device_id
-        self.discovery_data = discovery_info.discovery_data
+        self.discovery_data = discovery_data
         self.hass = hass
         self._sub_state = None
-        self._value_template = None
-
-        self._setup_from_config(config)
-
-        MqttDiscoveryDeviceUpdate.__init__(
-            self, hass, discovery_info, device_id, config_entry, LOG_NAME
-        )
-
-    def _setup_from_config(self, config):
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE),
             hass=self.hass,
         ).async_render_with_possible_json_value
+
+        MqttDiscoveryDeviceUpdate.__init__(
+            self, hass, discovery_data, device_id, config_entry, LOG_NAME
+        )
 
     async def subscribe_topics(self):
         """Subscribe to MQTT topics."""

@@ -3,12 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import datetime as dt
-from typing import TypedDict, Union
+from typing import Union
 
 import attr
-
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
 
 PublishPayloadType = Union[str, bytes, int, float, None]
 ReceivePayloadType = Union[str, bytes]
@@ -38,27 +35,3 @@ class ReceiveMessage:
 
 AsyncMessageCallbackType = Callable[[ReceiveMessage], Awaitable[None]]
 MessageCallbackType = Callable[[ReceiveMessage], None]
-
-
-class MqttTagConfig(TypedDict, total=False):
-    """Supply service parameters for MQTTTagScanner."""
-
-    topic: str
-    value_template: Template
-    device: ConfigType
-
-
-class MqttDeviceTriggerConfig(TypedDict, total=False):
-    """Supply service parameters for MQTT device trigger."""
-
-    automation_type: str
-    payload: str
-    qos: int
-    topic: str
-    type: str
-    subtype: str
-    value_template: Template
-    device: ConfigType
-
-
-MqttTypedDictConfigType = Union[MqttTagConfig, MqttDeviceTriggerConfig]
