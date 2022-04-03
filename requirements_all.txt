@@ -776,7 +776,7 @@ ha-philipsjs==2.7.6
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.17
+hangups==0.4.18
 
 # homeassistant.components.cloud
 hass-nabucasa==0.54.0
@@ -2198,7 +2198,7 @@ spotipy==2.19.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.4.32
+sqlalchemy==1.4.34
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2306,7 +2306,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2022.2.1
+total_connect_client==2022.3
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
