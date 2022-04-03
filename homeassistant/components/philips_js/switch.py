@@ -124,8 +124,3 @@ class PhilipsTVAmbilightHueSwitch(
         await self.coordinator.api.setHueLampPower(HUE_POWER_OFF)
         self.async_write_ha_state()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_is_on = self.coordinator.api.huelamp_power == HUE_POWER_ON
-        super()._handle_coordinator_update()
