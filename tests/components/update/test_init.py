@@ -81,7 +81,7 @@ async def test_update(hass: HomeAssistant) -> None:
     update.platform = MockEntityPlatform(hass)
     assert (
         update.entity_picture
-        == "https://brands.home-assistant.io/test_platform/icon.png"
+        == "https://brands.home-assistant.io/_/test_platform/icon.png"
     )
 
     # Test no update available

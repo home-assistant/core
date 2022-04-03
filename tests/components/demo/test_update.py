@@ -45,7 +45,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_RELEASE_URL] == "https://www.example.com/release/1.0.1"
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
-        == "https://brands.home-assistant.io/demo/icon.png"
+        == "https://brands.home-assistant.io/_/demo/icon.png"
     )
 
     state = hass.states.get("update.demo_no_update")
@@ -58,7 +58,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_RELEASE_URL] is None
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
-        == "https://brands.home-assistant.io/demo/icon.png"
+        == "https://brands.home-assistant.io/_/demo/icon.png"
     )
 
     state = hass.states.get("update.demo_add_on")
@@ -73,7 +73,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_RELEASE_URL] == "https://www.example.com/release/1.0.1"
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
-        == "https://brands.home-assistant.io/demo/icon.png"
+        == "https://brands.home-assistant.io/_/demo/icon.png"
     )
 
     state = hass.states.get("update.demo_living_room_bulb_update")
@@ -89,7 +89,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] == UpdateDeviceClass.FIRMWARE
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
-        == "https://brands.home-assistant.io/demo/icon.png"
+        == "https://brands.home-assistant.io/_/demo/icon.png"
     )
 
     state = hass.states.get("update.demo_update_with_progress")
@@ -105,7 +105,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] == UpdateDeviceClass.FIRMWARE
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
-        == "https://brands.home-assistant.io/demo/icon.png"
+        == "https://brands.home-assistant.io/_/demo/icon.png"
     )
 
 
