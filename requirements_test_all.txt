@@ -26,6 +26,9 @@ PyQRCode==1.2.1
 # homeassistant.components.rmvtransport
 PyRMVtransport==0.3.3
 
+# homeassistant.components.telegram_bot
+PySocks==1.7.1
+
 # homeassistant.components.switchbot
 # PySwitchbot==0.13.3
 
@@ -1255,6 +1258,9 @@ python-songpal==0.14.1
 
 # homeassistant.components.tado
 python-tado==0.12.0
+
+# homeassistant.components.telegram_bot
+python-telegram-bot==13.1
 
 # homeassistant.components.awair
 python_awair==0.2.3
