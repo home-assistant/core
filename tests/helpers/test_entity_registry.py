@@ -1291,6 +1291,7 @@ def test_migrate_entity_to_new_platform(hass, registry):
     assert new_entry.unique_id == new_unique_id
     assert new_entry.name == "new_name"
     assert new_entry.icon == "new_icon"
+    assert new_entry.platform == "hue2"
 
     assert (
         registry.async_migrate_entity_to_new_platform(
