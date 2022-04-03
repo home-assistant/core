@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -30,6 +30,9 @@ async def async_setup_entry(
 class ElkLight(ElkEntity, LightEntity):
     """Representation of an Elk lighting device."""
 
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+
     def __init__(self, element, elk, elk_data):
         """Initialize the Elk light."""
         super().__init__(element, elk, elk_data)
@@ -39,11 +42,6 @@ class ElkLight(ElkEntity, LightEntity):
     def brightness(self):
         """Get the brightness."""
         return self._brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
 
     @property
     def is_on(self) -> bool:
