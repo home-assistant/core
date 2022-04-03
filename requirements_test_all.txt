@@ -421,7 +421,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.20
+env_canada==0.5.21
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -823,7 +823,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.17.2
+plugwise==0.17.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
