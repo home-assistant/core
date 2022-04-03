@@ -167,7 +167,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xiaomi_miio.light",
     "homeassistant.components.xiaomi_miio.sensor",
     "homeassistant.components.xiaomi_miio.switch",
-    "homeassistant.components.yeelight.light",
     "homeassistant.components.zha.alarm_control_panel",
     "homeassistant.components.zha.api",
     "homeassistant.components.zha.binary_sensor",
