@@ -148,9 +148,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
             return self.async_abort(reason="already_configured")
 
-        self.context["title_placeholders"] = {
-            "name": self._name.replace("FRITZ!Box ", "")
-        }
+        self.context.update(
+            {
+                "title_placeholders": {"name": self._name.replace("FRITZ!Box ", "")},
+                "configuration_url": f"http://{self._host}",
+            }
+        )
+
         return await self.async_step_confirm()
 
     async def async_step_confirm(
