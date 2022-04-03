@@ -6,6 +6,12 @@ from datetime import timedelta
 from homeassistant.components import camera
 from homeassistant.components.recorder.models import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    ATTR_SUPPORTED_FEATURES,
+)
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -38,5 +44,7 @@ async def test_exclude_attributes(hass):
     assert len(states) > 1
     for state in states:
         assert "access_token" not in state.attributes
-        assert "entity_picture" not in state.attributes
-        assert "friendly_name" in state.attributes
+        assert ATTR_ENTITY_PICTURE not in state.attributes
+        assert ATTR_ATTRIBUTION not in state.attributes
+        assert ATTR_SUPPORTED_FEATURES not in state.attributes
+        assert ATTR_FRIENDLY_NAME in state.attributes
