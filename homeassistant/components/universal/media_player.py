@@ -111,8 +111,8 @@ STATES_ORDER = [
     STATE_UNKNOWN,
     STATE_UNAVAILABLE,
     STATE_OFF,
-    STATE_ON,
     STATE_IDLE,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
 ]
@@ -638,7 +638,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         for child_name in self._children:
             if (child_state := self.hass.states.get(child_name)) and STATES_ORDER.index(
                 child_state.state
-            ) >= STATES_ORDER.index(STATE_ON):
+            ) >= STATES_ORDER.index(STATE_IDLE):
                 if self._child_state:
                     if STATES_ORDER.index(child_state.state) > STATES_ORDER.index(
                         self._child_state.state
