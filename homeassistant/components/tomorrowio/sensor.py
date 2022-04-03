@@ -21,8 +21,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
+    CONCENTRATION_PARTS_PER_BILLION,
     CONF_NAME,
     IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
     IRRADIATION_WATTS_PER_SQUARE_METER,
@@ -108,6 +109,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
         name="Pressure (Surface Level)",
+        unit_imperial=PRESSURE_INHG,
         unit_metric=PRESSURE_HPA,
         metric_conversion=lambda val: pressure_convert(
             val, PRESSURE_INHG, PRESSURE_HPA
@@ -168,14 +170,14 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_OZONE,
         name="Ozone",
-        unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=2.03,
-        is_metric_check=True,
+        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
         device_class=SensorDeviceClass.OZONE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PARTICULATE_MATTER_25,
         name="Particulate Matter < 2.5 μm",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=3.2808399**3,
         is_metric_check=True,
@@ -184,6 +186,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PARTICULATE_MATTER_10,
         name="Particulate Matter < 10 μm",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=3.2808399**3,
         is_metric_check=True,
@@ -192,24 +195,22 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_NITROGEN_DIOXIDE,
         name="Nitrogen Dioxide",
-        unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=1.95,
-        is_metric_check=True,
+        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CARBON_MONOXIDE,
         name="Carbon Monoxide",
-        unit_imperial=CONCENTRATION_PARTS_PER_MILLION,
-        unit_metric=CONCENTRATION_PARTS_PER_MILLION,
+        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
         device_class=SensorDeviceClass.CO,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_SULPHUR_DIOXIDE,
         name="Sulphur Dioxide",
-        unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=2.71,
-        is_metric_check=True,
+        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
     ),
     TomorrowioSensorEntityDescription(
