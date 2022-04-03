@@ -335,6 +335,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
         self._moving = State.Not_Moving
+        self.async_write_ha_state()
 
 
 class MotionTiltDevice(MotionPositionDevice):
@@ -372,6 +373,7 @@ class MotionTiltDevice(MotionPositionDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
         self._moving = State.Not_Moving
+        self.async_write_ha_state()
 
 
 class MotionTDBUDevice(MotionPositionDevice):
@@ -464,3 +466,4 @@ class MotionTDBUDevice(MotionPositionDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop, self._motor_key)
         self._moving = State.Not_Moving
+        self.async_write_ha_state()
