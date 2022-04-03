@@ -4,7 +4,12 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components import light
-from homeassistant.components.light import ATTR_EFFECT, ATTR_SUPPORTED_COLOR_MODES
+from homeassistant.components.light import (
+    ATTR_EFFECT,
+    ATTR_MAX_MIREDS,
+    ATTR_MIN_MIREDS,
+    ATTR_SUPPORTED_COLOR_MODES,
+)
 from homeassistant.components.recorder.models import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_FRIENDLY_NAME
@@ -39,6 +44,8 @@ async def test_exclude_attributes(hass):
     states: list[State] = await hass.async_add_executor_job(_fetch_states)
     assert len(states) > 1
     for state in states:
+        assert ATTR_MIN_MIREDS not in state.attributes
+        assert ATTR_MAX_MIREDS not in state.attributes
         assert ATTR_SUPPORTED_COLOR_MODES not in state.attributes
         assert ATTR_EFFECT not in state.attributes
         assert ATTR_FRIENDLY_NAME in state.attributes
