@@ -5,7 +5,10 @@ from datetime import timedelta
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player.const import (
+    ATTR_ENTITY_PICTURE_LOCAL,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_SOUND_MODE_LIST,
 )
 from homeassistant.components.recorder.models import StateAttributes, States
@@ -42,7 +45,10 @@ async def test_exclude_attributes(hass):
     states: list[State] = await hass.async_add_executor_job(_fetch_states)
     assert len(states) > 1
     for state in states:
-        assert ATTR_SOUND_MODE_LIST not in state.attributes
         assert ATTR_ENTITY_PICTURE not in state.attributes
-        assert ATTR_INPUT_SOURCE_LIST not in state.attributes
+        assert ATTR_ENTITY_PICTURE_LOCAL not in state.attributes
         assert ATTR_FRIENDLY_NAME in state.attributes
+        assert ATTR_INPUT_SOURCE_LIST not in state.attributes
+        assert ATTR_MEDIA_POSITION not in state.attributes
+        assert ATTR_MEDIA_POSITION_UPDATED_AT not in state.attributes
+        assert ATTR_SOUND_MODE_LIST not in state.attributes
