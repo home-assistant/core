@@ -110,17 +110,20 @@ class PhilipsTVAmbilightHueSwitch(
             return False
         return self.coordinator.api.powerstate == "On"
 
+    @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        return self.coordinator.api.huelamp_power == HUE_POWER_ON
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.api.setHueLampPower(HUE_POWER_ON)
-        self._attr_is_on = True
-        await self.coordinator.async_request_refresh()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.api.setHueLampPower(HUE_POWER_OFF)
-        self._attr_is_on = False
-        await self.coordinator.async_request_refresh()
+        self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
