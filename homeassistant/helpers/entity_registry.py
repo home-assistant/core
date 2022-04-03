@@ -29,6 +29,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_DOMAIN,
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     Event,
@@ -615,6 +616,50 @@ class EntityRegistry:
         self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, data)
 
         return new
+
+    @callback
+    def async_migrate_entity_to_new_platform(
+        self,
+        entity_id: str,
+        new_platform: str,
+        *,
+        new_unique_id: str | None = None,
+        new_config_entry: ConfigEntry | None = None,
+    ) -> RegistryEntry | None:
+        """
+        Migrate entity to new platform.
+
+        This should only be used when an entity needs to be migrated between
+        integrations.
+        """
+        if not (entry := self.async_get(entity_id)):
+            return None
+        if (
+            state := self.hass.states.get(entity_id)
+        ) is not None and state.state != STATE_UNKNOWN:
+            raise ValueError("Only entities that haven't been loaded can be migrated")
+        self.async_remove(entity_id)
+        # Precreate the entity so that any customizations can be preserved
+        new_entry = self.async_get_or_create(
+            entry.domain,
+            new_platform,
+            new_unique_id or entry.unique_id,
+            suggested_object_id=entity_id.split(".")[1],
+            disabled_by=entry.disabled_by,
+            config_entry=new_config_entry,
+            original_name=entry.original_name,
+            original_icon=entry.original_icon,
+        )
+
+        # Apply any customizations from the old entity to the new one
+        if entry.name or entry.icon:
+            self.async_update_entity(
+                entity_id,
+                name=entry.name,
+                icon=entry.icon,
+            )
+
+        return new_entry
 
     async def async_load(self) -> None:
         """Load the entity registry."""
