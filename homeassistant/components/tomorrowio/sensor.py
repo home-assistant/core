@@ -81,7 +81,7 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
 
     unit_imperial: str | None = None
     unit_metric: str | None = None
-    multiplication_factor: float | None = None
+    multiplication_factor: Callable[[float], float] | float | None = None
     metric_conversion: Callable[[float], float] | float | None = None
     value_map: Any | None = None
 
@@ -115,9 +115,9 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
         name="Pressure (Surface Level)",
-        unit_imperial=PRESSURE_INHG,
+        unit_imperial=PRESSURE_HPA,
         unit_metric=PRESSURE_HPA,
-        metric_conversion=lambda val: pressure_convert(
+        multiplication_factor=lambda val: pressure_convert(
             val, PRESSURE_INHG, PRESSURE_HPA
         ),
         device_class=SensorDeviceClass.PRESSURE,
@@ -308,6 +308,17 @@ def smart_round(value: float) -> float:
     return new_val
 
 
+def handle_conversion(
+    value: float | int, conversion: Callable[[float], float] | float
+) -> float:
+    """Handle conversion of a value based on conversion type."""
+    # When conversion is a callable, we assume it's a single input function
+    if callable(conversion):
+        return smart_round(conversion(float(value)))
+
+    return smart_round(float(value) * conversion)
+
+
 class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
     """Base Tomorrow.io sensor entity."""
 
@@ -355,8 +366,10 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         if desc.value_map is not None:
             return desc.value_map(state).name.lower()
 
+        assert not isinstance(state, str)
+
         if desc.multiplication_factor is not None:
-            state = smart_round(float(state) * desc.multiplication_factor)
+            state = handle_conversion(state, desc.multiplication_factor)
 
         # If an imperial unit isn't provided, we always want to convert to metric since
         # that is what the UI expects
@@ -366,12 +379,7 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
             and desc.unit_imperial != desc.unit_metric
             and self.hass.config.units.is_metric
         ):
-            conversion = desc.metric_conversion
-            # When conversion is a callable, we assume it's a single input function
-            if callable(conversion):
-                return smart_round(conversion(float(state)))
-
-            return smart_round(float(state) * conversion)
+            return handle_conversion(state, desc.metric_conversion)
 
         return state
 
