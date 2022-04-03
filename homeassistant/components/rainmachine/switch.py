@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Coroutine
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from regenmaschine.controller import Controller
@@ -20,6 +20,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.dt import utcnow
 
 from . import RainMachineEntity, async_update_programs_and_zones
 from .const import (
@@ -49,9 +50,9 @@ ATTR_SOIL_TYPE = "soil_type"
 ATTR_SPRINKLER_TYPE = "sprinkler_head_type"
 ATTR_STATUS = "status"
 ATTR_SUN_EXPOSURE = "sun_exposure"
-ATTR_TIME_REMAINING = "time_remaining"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
+ATTR_ZONE_FINISHED_AT = "zone_finished_at"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -381,6 +382,9 @@ class RainMachineZone(RainMachineActivitySwitch):
             self._controller.zones.stop(self.entity_description.uid)
         )
 
+        self._attr_extra_state_attributes[ATTR_ZONE_FINISHED_AT] = None
+        self.async_write_ha_state()
+
     async def async_turn_on_when_active(self, **kwargs: Any) -> None:
         """Turn the switch on when its associated activity is active."""
         await self._async_run_api_coroutine(
@@ -389,6 +393,14 @@ class RainMachineZone(RainMachineActivitySwitch):
                 kwargs.get("duration", self._entry.options[CONF_ZONE_RUN_TIME]),
             )
         )
+
+        # When the zone starts, calculate when it is expected to be done and set the
+        # appropriate attribute once:
+        data = self.coordinator.data[self.entity_description.uid]
+        self._attr_extra_state_attributes[ATTR_ZONE_FINISHED_AT] = utcnow() + timedelta(
+            seconds=data["remaining"]
+        )
+        self.async_write_ha_state()
 
     @callback
     def update_from_latest_data(self) -> None:
@@ -411,7 +423,6 @@ class RainMachineZone(RainMachineActivitySwitch):
                 ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data.get("group_id")),
                 ATTR_STATUS: RUN_STATUS_MAP[data["state"]],
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(data.get("sun")),
-                ATTR_TIME_REMAINING: data.get("remaining"),
                 ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(data.get("type")),
             }
         )
