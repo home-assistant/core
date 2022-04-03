@@ -11,11 +11,11 @@ from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.developer_credentials import (
+from homeassistant.components.application_credentials import (
     AuthorizationServer,
-    DeveloperCredential,
+    ClientCredential,
 )
-from homeassistant.components.developer_credentials.const import DOMAIN
+from homeassistant.components.application_credentials.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -25,7 +25,7 @@ from tests.common import mock_platform
 
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
-DEVELOPER_CREDENTIAL = DeveloperCredential(CLIENT_ID, CLIENT_SECRET)
+DEVELOPER_CREDENTIAL = ClientCredential(CLIENT_ID, CLIENT_SECRET)
 ID = "fake_integration_some_client_id"
 AUTHORIZE_URL = "https://example.com/auth"
 TOKEN_URL = "https://example.com/oauth2/v4/token"
@@ -37,31 +37,31 @@ TEST_DOMAIN = "fake_integration"
 
 @pytest.fixture
 async def authorization_server() -> AuthorizationServer:
-    """Fixture AuthorizationServer for mock developer_credentials integration."""
+    """Fixture AuthorizationServer for mock application_credentials integration."""
     return AuthorizationServer(AUTHORIZE_URL, TOKEN_URL)
 
 
 @pytest.fixture
-async def config_credential() -> DeveloperCredential | None:
-    """Fixture DeveloperCredential for mock developer_credentials integration."""
+async def config_credential() -> ClientCredential | None:
+    """Fixture ClientCredential for mock application_credentials integration."""
     return None
 
 
 @pytest.fixture(autouse=True)
-async def mock_developer_credentials_integration(
-    hass, authorization_server, config_credential: DeveloperCredential | None
+async def mock_application_credentials_integration(
+    hass, authorization_server, config_credential: ClientCredential | None
 ):
-    """Mock a developer_credentials integration."""
+    """Mock a application_credentials integration."""
     hass.config.components.add(TEST_DOMAIN)
     mock_platform(
         hass,
-        f"{TEST_DOMAIN}.developer_credentials",
+        f"{TEST_DOMAIN}.application_credentials",
         Mock(
             async_get_authorization_server=AsyncMock(return_value=authorization_server),
-            async_get_developer_credential=AsyncMock(return_value=config_credential),
+            async_get_client_credential=AsyncMock(return_value=config_credential),
         ),
     )
-    assert await async_setup_component(hass, "developer_credentials", {})
+    assert await async_setup_component(hass, "application_credentials", {})
 
 
 class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -143,7 +143,7 @@ async def oauth_fixture(
 
 
 class Client:
-    """Test client with helper methods for developer credentials websocket."""
+    """Test client with helper methods for application credentials websocket."""
 
     def __init__(self, client):
         """Initialize Client."""
@@ -261,7 +261,7 @@ async def test_websocket_update_not_supported(ws_client: ClientFixture):
         "id": ID,
     }
 
-    resp = await client.cmd("update", {"developer_credentials_id": ID})
+    resp = await client.cmd("update", {"application_credentials_id": ID})
     assert not resp.get("success")
     assert "error" in resp
     assert resp["error"].get("code") == "invalid_format"
@@ -289,7 +289,7 @@ async def test_websocket_delete(ws_client: ClientFixture):
         }
     ]
 
-    await client.cmd_result("delete", {"developer_credentials_id": ID})
+    await client.cmd_result("delete", {"application_credentials_id": ID})
     assert await client.cmd_result("list") == []
 
 
@@ -302,7 +302,7 @@ async def test_websocket_yaml_config(ws_client: ClientFixture):
     assert await client.cmd_result("list") == []
 
     # Configuration based cannot be deleted
-    resp = await client.cmd("delete", {"developer_credentials_id": ID})
+    resp = await client.cmd("delete", {"application_credentials_id": ID})
     assert not resp.get("success")
     assert "error" in resp
     assert resp["error"].get("code") == "not_found"
@@ -322,7 +322,7 @@ async def test_config_flow(
     ws_client: ClientFixture,
     oauth_fixture: OAuthFixture,
 ):
-    """Test config flow with developer credential registered."""
+    """Test config flow with application credential registered."""
     client = await ws_client()
 
     await client.cmd_result(
@@ -343,7 +343,7 @@ async def test_config_flow(
     )
 
     # Verify it is not possible to delete an in-use config entry
-    resp = await client.cmd("delete", {"developer_credentials_id": ID})
+    resp = await client.cmd("delete", {"application_credentials_id": ID})
     assert not resp.get("success")
     assert "error" in resp
     assert resp["error"].get("code") == "unknown_error"
@@ -354,7 +354,7 @@ async def test_config_flow_multiple_entries(
     ws_client: ClientFixture,
     oauth_fixture: OAuthFixture,
 ):
-    """Test config flow with multiple developer credentials registered."""
+    """Test config flow with multiple application credentials registered."""
     client = await ws_client()
 
     await client.cmd_result(
@@ -407,7 +407,7 @@ async def test_config_flow_create_delete_credential(
             CONF_CLIENT_SECRET: CLIENT_SECRET,
         },
     )
-    await client.cmd("delete", {"developer_credentials_id": ID})
+    await client.cmd("delete", {"application_credentials_id": ID})
 
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -420,7 +420,7 @@ async def test_config_flow_create_delete_credential(
 async def test_config_flow_with_config_credential(
     hass, hass_client_no_auth, aioclient_mock, oauth_fixture: OAuthFixture
 ):
-    """Test config flow with developer credential registered."""
+    """Test config flow with application credential registered."""
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

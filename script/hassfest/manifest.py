@@ -36,6 +36,7 @@ SUPPORTED_IOT_CLASSES = [
 NO_IOT_CLASS = [
     *{platform.value for platform in Platform},
     "api",
+    "application_credentials",
     "auth",
     "automation",
     "blueprint",
@@ -44,7 +45,6 @@ NO_IOT_CLASS = [
     "configurator",
     "counter",
     "default_config",
-    "developer_credentials",
     "device_automation",
     "device_tracker",
     "diagnostics",

@@ -1,4 +1,4 @@
-"""The Developer Credentials integration.
+"""The Application Credentials integration.
 
 This integration provides APIs for managing local OAuth credentials on behalf of other
 integrations. The preferred approach for all OAuth integrations is to use the cloud
@@ -6,7 +6,7 @@ account linking service, and this is the alternative for integrations that can't
 it.
 
 Integrations register an authorization server, and then the APIs are used to add
-add one or more developer credentials. Integrations may also provide credentials
+add one or more client credentials. Integrations may also provide credentials
 from yaml for backwards compatibility.
 """
 from __future__ import annotations
@@ -30,9 +30,9 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
-from .const import DOMAIN, DeveloperCredentialsType
+from .const import DOMAIN, ApplicationCredentialsType
 
-__all__ = ["DeveloperCredential", "AuthorizationServer"]
+__all__ = ["ClientCredential", "AuthorizationServer"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +48,8 @@ UPDATE_FIELDS: dict = {}  # Not supported
 
 
 @dataclass
-class DeveloperCredential:
-    """Represent a developer credential."""
+class ClientCredential:
+    """Represent an OAuth client credential."""
 
     client_id: str
     client_secret: str
@@ -63,8 +63,8 @@ class AuthorizationServer:
     token_url: str
 
 
-class DeveloperCredentialsStorageCollection(collection.StorageCollection):
-    """Developer credential collection stored in storage."""
+class ApplicationCredentialsStorageCollection(collection.StorageCollection):
+    """Application credential collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
 
@@ -101,11 +101,11 @@ class DeveloperCredentialsStorageCollection(collection.StorageCollection):
         await super().async_delete_item(item_id)
 
 
-class DeveloperCredentialsStorageListener:
+class ApplicationCredentialsStorageListener:
     """Listener that handles registering and unregistering OAuth implementations for credentials."""
 
     def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize DeveloperCredentialsStorageListener."""
+        """Initialize ApplicationCredentialsStorageListener."""
         self.hass = hass
 
     async def updated(self, change_type: str, item_id: str, config: dict):
@@ -114,35 +114,35 @@ class DeveloperCredentialsStorageListener:
             # not expected
             return
         integration_domain = config[CONF_DOMAIN]
-        developer_credential = DeveloperCredential(
+        credential = ClientCredential(
             config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET]
         )
         if change_type == collection.CHANGE_REMOVED:
             _async_unregister_auth_implementation(
-                self.hass, integration_domain, developer_credential
+                self.hass, integration_domain, credential
             )
         else:
             await _async_register_auth_implementation(
-                self.hass, integration_domain, developer_credential
+                self.hass, integration_domain, credential
             )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Developer Credentials."""
+    """Set up Application Credentials."""
     hass.data[DOMAIN] = {}
 
     await integration_platform.async_process_integration_platforms(
-        hass, DOMAIN, _register_developer_credentials_platform
+        hass, DOMAIN, _register_application_credentials_platform
     )
 
-    # Developer Credentials from storage
+    # Credentials from storage
     id_manager = collection.IDManager()
-    storage_collection = DeveloperCredentialsStorageCollection(
+    storage_collection = ApplicationCredentialsStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    storage_listener = DeveloperCredentialsStorageListener(hass)
+    storage_listener = ApplicationCredentialsStorageListener(hass)
     storage_collection.async_add_listener(storage_listener.updated)
     await storage_collection.async_load()
 
@@ -156,24 +156,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-# Creates AbstractOAuth2Implementation given a DeveloperCredential for a specific domain
+# Creates AbstractOAuth2Implementation given a ClientCredential for a specific domain
 AuthImplFactory = Callable[
-    [str, DeveloperCredential], config_entry_oauth2_flow.AbstractOAuth2Implementation
+    [str, ClientCredential], config_entry_oauth2_flow.AbstractOAuth2Implementation
 ]
 
 
-def _get_auth_domain(domain: str, developer_credential: DeveloperCredential) -> str:
+def _get_auth_domain(domain: str, credential: ClientCredential) -> str:
     """Return the OAuth2 flow implementation domain."""
-    return slugify(f"{domain}.{developer_credential.client_id}")
+    return slugify(f"{domain}.{credential.client_id}")
 
 
 async def _async_register_auth_implementation(
     hass: HomeAssistant,
     domain: str,
-    developer_credential: DeveloperCredential,
+    credential: ClientCredential,
 ) -> None:
     """Register an OAuth2 flow implementation for an integration."""
-    auth_domain = _get_auth_domain(domain, developer_credential)
+    auth_domain = _get_auth_domain(domain, credential)
     if auth_domain in hass.data[DOMAIN][domain]:
         raise ValueError(f"Domain {auth_domain} already registered")
     authorization_server = await _async_get_authorization_server(hass, domain)
@@ -182,8 +182,8 @@ async def _async_register_auth_implementation(
     auth_impl = config_entry_oauth2_flow.LocalOAuth2Implementation(
         hass,
         auth_domain,
-        developer_credential.client_id,
-        developer_credential.client_secret,
+        credential.client_id,
+        credential.client_secret,
         authorization_server.authorize_url,
         authorization_server.token_url,
     )
@@ -194,10 +194,10 @@ async def _async_register_auth_implementation(
 
 
 def _async_unregister_auth_implementation(
-    hass: HomeAssistant, domain: str, developer_credential: DeveloperCredential
+    hass: HomeAssistant, domain: str, credential: ClientCredential
 ) -> None:
     """Register an OAuth2 flow implementation for an integration."""
-    auth_domain = _get_auth_domain(domain, developer_credential)
+    auth_domain = _get_auth_domain(domain, credential)
     unsub = hass.data[DOMAIN][domain].pop(auth_domain)
     unsub()
 
@@ -209,7 +209,7 @@ async def _async_get_authorization_server(
     if domain not in hass.data[DOMAIN]:
         return None
     get_authorization_server = hass.data[DOMAIN][domain][
-        DeveloperCredentialsType.AUTHORIZATION_SERVER.value
+        ApplicationCredentialsType.AUTHORIZATION_SERVER.value
     ]
     authorization_server = await get_authorization_server(hass)
     if not authorization_server:
@@ -217,42 +217,40 @@ async def _async_get_authorization_server(
     return authorization_server
 
 
-class DeveloperCredentialsProtocol(Protocol):
-    """Define the format that developer_credentials platforms can have."""
+class ApplicationCredentialsProtocol(Protocol):
+    """Define the format that application_credentials platforms can have."""
 
     async def async_get_authorization_server(
         self, hass: HomeAssistant
     ) -> AuthorizationServer:
         """Return authorization server."""
 
-    async def async_get_developer_credential(
+    async def async_get_client_credential(
         self, hass: HomeAssistant
-    ) -> DeveloperCredential:
-        """Return a developer credential from configuration.yaml."""
+    ) -> ClientCredential:
+        """Return a client credential from configuration.yaml."""
 
 
-async def _register_developer_credentials_platform(
+async def _register_application_credentials_platform(
     hass: HomeAssistant,
     integration_domain: str,
-    platform: DeveloperCredentialsProtocol,
+    platform: ApplicationCredentialsProtocol,
 ):
-    """Register a developer_credentials platform."""
+    """Register an application_credentials platform."""
     get_authorization_server = getattr(platform, "async_get_authorization_server", None)
     if get_authorization_server is None:
         return
-    get_config_developer_credential = getattr(
-        platform, "async_get_developer_credential", None
+    get_config_client_credential = getattr(
+        platform, "async_get_client_credential", None
     )
     hass.data[DOMAIN][integration_domain] = {
-        DeveloperCredentialsType.AUTHORIZATION_SERVER.value: get_authorization_server,
-        DeveloperCredentialsType.CONFIG_CREDENTIAL.value: get_config_developer_credential,
+        ApplicationCredentialsType.AUTHORIZATION_SERVER.value: get_authorization_server,
+        ApplicationCredentialsType.CONFIG_CREDENTIAL.value: get_config_client_credential,
     }
     # Register an authentication implementation for every credential provided
-    if get_config_developer_credential is None:
+    if get_config_client_credential is None:
         return
-    developer_credential = await get_config_developer_credential(hass)
-    if not developer_credential:
+    credential = await get_config_client_credential(hass)
+    if not credential:
         return
-    await _async_register_auth_implementation(
-        hass, integration_domain, developer_credential
-    )
+    await _async_register_auth_implementation(hass, integration_domain, credential)
