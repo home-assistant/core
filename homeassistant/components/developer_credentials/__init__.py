@@ -196,7 +196,7 @@ def _async_unregister_auth_implementation(
 ) -> None:
     """Register an OAuth2 flow implementation for an integration."""
     auth_domain = _get_auth_domain(domain, developer_credential)
-    unsub = hass.data[DOMAIN][domain][auth_domain]
+    unsub = hass.data[DOMAIN][domain].pop(auth_domain)
     unsub()
 
 
