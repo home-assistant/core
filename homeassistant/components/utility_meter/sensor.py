@@ -352,10 +352,12 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     async def _async_reset_meter(self, event):
         """Determine cycle - Helper function for larger than daily cycles."""
         if self._cron_pattern is not None:
-            async_track_point_in_time(
-                self.hass,
-                self._async_reset_meter,
-                croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+            self.async_on_remove(
+                async_track_point_in_time(
+                    self.hass,
+                    self._async_reset_meter,
+                    croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+                )
             )
         await self.async_reset_meter(self._tariff_entity)
 
@@ -380,13 +382,19 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         await super().async_added_to_hass()
 
         if self._cron_pattern is not None:
-            async_track_point_in_time(
-                self.hass,
-                self._async_reset_meter,
-                croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+            self.async_on_remove(
+                async_track_point_in_time(
+                    self.hass,
+                    self._async_reset_meter,
+                    croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+                )
             )
 
-        async_dispatcher_connect(self.hass, SIGNAL_RESET_METER, self.async_reset_meter)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RESET_METER, self.async_reset_meter
+            )
+        )
 
         if state := await self.async_get_last_state():
             try:
@@ -421,8 +429,10 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 _LOGGER.debug(
                     "<%s> tracks utility meter %s", self.name, self._tariff_entity
                 )
-                async_track_state_change_event(
-                    self.hass, [self._tariff_entity], self.async_tariff_change
+                self.async_on_remove(
+                    async_track_state_change_event(
+                        self.hass, [self._tariff_entity], self.async_tariff_change
+                    )
                 )
 
                 tariff_entity_state = self.hass.states.get(self._tariff_entity)
@@ -443,7 +453,13 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 self.hass, [self._sensor_source_id], self.async_reading
             )
 
-        async_at_start(self.hass, async_source_tracking)
+        self.async_on_remove(async_at_start(self.hass, async_source_tracking))
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._collecting:
+            self._collecting()
+        self._collecting = None
 
     @property
     def name(self):
