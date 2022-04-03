@@ -51,7 +51,7 @@ class LightEntityFeature(IntEnum):
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the CoverEntityFeature enum instead.
+# Please use the LightEntityFeature enum instead.
 SUPPORT_BRIGHTNESS = 1  # Deprecated, replaced by color modes
 SUPPORT_COLOR_TEMP = 2  # Deprecated, replaced by color modes
 SUPPORT_EFFECT = 4
