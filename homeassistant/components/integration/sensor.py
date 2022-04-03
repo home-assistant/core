@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import (
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
     INTEGRATION_METHODS,
@@ -65,18 +66,22 @@ ICON = "mdi:chart-histogram"
 
 DEFAULT_ROUND = 3
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-        vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
-        vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
-        vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
-            INTEGRATION_METHODS
-        ),
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.removed(CONF_UNIT_OF_MEASUREMENT),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
+            vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
+            vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
+            vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
+            vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
+                INTEGRATION_METHODS
+            ),
+        }
+    ),
 )
 
 
