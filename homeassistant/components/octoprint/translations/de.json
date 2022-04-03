@@ -21,7 +21,8 @@
                     "path": "Anwendungspfad",
                     "port": "Port-Nummer",
                     "ssl": "SSL verwenden",
-                    "username": "Benutzername"
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 }
             }
         }

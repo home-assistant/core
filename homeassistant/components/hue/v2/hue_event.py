@@ -35,14 +35,19 @@ async def async_setup_hue_events(bridge: "HueBridge"):
     def handle_button_event(evt_type: EventType, hue_resource: Button) -> None:
         """Handle event from Hue devices controller."""
         LOGGER.debug("Received button event: %s", hue_resource)
+
+        # guard for missing button object on the resource
+        if hue_resource.button is None:
+            return
+
         hue_device = btn_controller.get_device(hue_resource.id)
         device = dev_reg.async_get_device({(DOMAIN, hue_device.id)})
 
         # Fire event
         data = {
             # send slugified entity name as id = backwards compatibility with previous version
-            CONF_ID: slugify(f"{hue_device.metadata.name}: Button"),
-            CONF_DEVICE_ID: device.id,  # type: ignore
+            CONF_ID: slugify(f"{hue_device.metadata.name} Button"),
+            CONF_DEVICE_ID: device.id,  # type: ignore[union-attr]
             CONF_UNIQUE_ID: hue_resource.id,
             CONF_TYPE: hue_resource.button.last_event.value,
             CONF_SUBTYPE: hue_resource.metadata.control_id,

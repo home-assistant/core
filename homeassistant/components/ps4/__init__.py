@@ -6,11 +6,13 @@ from pyps4_2ndscreen.ddp import async_create_ddp_endpoint
 from pyps4_2ndscreen.media_art import COUNTRIES
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
     MEDIA_TYPE_GAME,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
@@ -19,9 +21,11 @@ from homeassistant.const import (
     CONF_TOKEN,
     Platform,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
@@ -58,7 +62,7 @@ class PS4Data:
         self.protocol = None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the PS4 Component."""
     hass.data[PS4_DATA] = PS4Data()
 
@@ -69,18 +73,18 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PS4 from a config entry."""
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a PS4 config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass, entry):
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     config_entries = hass.config_entries
     data = entry.data
@@ -95,9 +99,7 @@ async def async_migrate_entry(hass, entry):
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        loc = await location.async_detect_location_info(
-            hass.helpers.aiohttp_client.async_get_clientsession()
-        )
+        loc = await location.async_detect_location_info(async_get_clientsession(hass))
         if loc:
             country = COUNTRYCODE_NAMES.get(loc.country_code)
             if country in COUNTRIES:
@@ -149,7 +151,8 @@ async def async_migrate_entry(hass, entry):
             Please remove the PS4 Integration and re-configure
             [here](/config/integrations)."""
 
-    hass.components.persistent_notification.async_create(
+    persistent_notification.async_create(
+        hass,
         title="PlayStation 4 Integration Configuration Requires Update",
         message=msg,
         notification_id="config_entry_migration",
@@ -217,7 +220,7 @@ def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
 def service_handle(hass: HomeAssistant):
     """Handle for services."""
 
-    async def async_service_command(call):
+    async def async_service_command(call: ServiceCall) -> None:
         """Service for sending commands."""
         entity_ids = call.data[ATTR_ENTITY_ID]
         command = call.data[ATTR_COMMAND]

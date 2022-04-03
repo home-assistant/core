@@ -1,4 +1,5 @@
 """Config flow for Yeelight integration."""
+import asyncio
 import logging
 from urllib.parse import urlparse
 
@@ -10,7 +11,7 @@ from yeelight.main import get_known_models
 from homeassistant import config_entries, exceptions
 from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
@@ -18,7 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
-    CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
@@ -86,11 +86,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_discovery_with_unique_id(self):
         """Handle any discovery with a unique id."""
-        for entry in self._async_current_entries():
-            if entry.unique_id != self.unique_id:
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.unique_id != self.unique_id and self.unique_id != entry.data.get(
+                CONF_ID
+            ):
                 continue
             reload = entry.state == ConfigEntryState.SETUP_RETRY
-            if entry.data[CONF_HOST] != self._discovered_ip:
+            if entry.data.get(CONF_HOST) != self._discovered_ip:
                 self.hass.config_entries.async_update_entry(
                     entry, data={**entry.data, CONF_HOST: self._discovered_ip}
                 )
@@ -261,7 +263,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await bulb.async_listen(lambda _: True)
             await bulb.async_get_properties()
             await bulb.async_stop_listening()
-        except yeelight.BulbException as err:
+        except (asyncio.TimeoutError, yeelight.BulbException) as err:
             _LOGGER.error("Failed to get properties from %s: %s", host, err)
             raise CannotConnect from err
         _LOGGER.debug("Get properties: %s", bulb.last_properties)

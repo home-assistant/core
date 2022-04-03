@@ -18,6 +18,16 @@
             "cameras": {
                 "title": "\u05ea\u05e6\u05d5\u05e8\u05ea \u05de\u05e6\u05dc\u05de\u05d4"
             },
+            "exclude": {
+                "data": {
+                    "entities": "\u05d9\u05e9\u05d5\u05d9\u05d5\u05ea"
+                }
+            },
+            "include": {
+                "data": {
+                    "entities": "\u05d9\u05e9\u05d5\u05d9\u05d5\u05ea"
+                }
+            },
             "include_exclude": {
                 "data": {
                     "mode": "\u05de\u05e6\u05d1"
@@ -26,6 +36,7 @@
             },
             "init": {
                 "data": {
+                    "domains": "\u05ea\u05d7\u05d5\u05de\u05d9\u05dd \u05e9\u05d9\u05e9 \u05dc\u05db\u05dc\u05d5\u05dc",
                     "include_domains": "\u05ea\u05d7\u05d5\u05de\u05d9\u05dd \u05e9\u05d9\u05e9 \u05dc\u05db\u05dc\u05d5\u05dc",
                     "mode": "\u05de\u05e6\u05d1"
                 }

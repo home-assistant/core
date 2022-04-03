@@ -1,19 +1,28 @@
 """Support for ZoneMinder binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZoneMinder binary sensor platform."""
     sensors = []
     for host_name, zm_client in hass.data[ZONEMINDER_DOMAIN].items():
         sensors.append(ZMAvailabilitySensor(host_name, zm_client))
     add_entities(sensors)
-    return True
 
 
 class ZMAvailabilitySensor(BinarySensorEntity):

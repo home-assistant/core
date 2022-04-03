@@ -13,7 +13,7 @@ from collections.abc import Awaitable, Callable
 import logging
 import secrets
 import time
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from aiohttp import client, web
 import async_timeout
@@ -25,9 +25,9 @@ from homeassistant import config_entries
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.network import NoURLAvailableError
 
 from .aiohttp_client import async_get_clientsession
+from .network import NoURLAvailableError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -217,7 +217,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             )
 
         self.external_data: Any = None
-        self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore
+        self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore[assignment]
 
     @property
     @abstractmethod
@@ -346,7 +346,7 @@ async def async_get_implementations(
 ) -> dict[str, AbstractOAuth2Implementation]:
     """Return OAuth2 implementations for specified domain."""
     registered = cast(
-        Dict[str, AbstractOAuth2Implementation],
+        dict[str, AbstractOAuth2Implementation],
         hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {}),
     )
 

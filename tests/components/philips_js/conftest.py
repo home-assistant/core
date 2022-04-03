@@ -41,7 +41,9 @@ def mock_tv():
 @fixture
 async def mock_config_entry(hass):
     """Get standard player."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_NAME)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_NAME, unique_id="ABCDEFGHIJKLF"
+    )
     config_entry.add_to_hass(hass)
     return config_entry
 

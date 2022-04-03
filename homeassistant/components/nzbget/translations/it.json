@@ -17,7 +17,7 @@
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 },
                 "title": "Connettiti a NZBGet"
             }

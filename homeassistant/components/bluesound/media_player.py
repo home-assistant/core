@@ -1,4 +1,6 @@
 """Support for Bluesound devices."""
+from __future__ import annotations
+
 import asyncio
 from asyncio import CancelledError
 from datetime import timedelta
@@ -13,10 +15,15 @@ import async_timeout
 import voluptuous as vol
 import xmltodict
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -44,10 +51,12 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -148,7 +157,12 @@ def _add_player(hass, async_add_entities, host, port=None, name=None):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _init_player)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Bluesound platforms."""
     if DATA_BLUESOUND not in hass.data:
         hass.data[DATA_BLUESOUND] = []
@@ -172,7 +186,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 host.get(CONF_NAME),
             )
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Map services to method of Bluesound devices."""
         if not (method := SERVICE_TO_METHOD.get(service.service)):
             return
@@ -791,7 +805,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self.is_grouped and not self.is_master:
             return SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
 
-        supported = SUPPORT_CLEAR_PLAYLIST
+        supported = SUPPORT_CLEAR_PLAYLIST | SUPPORT_BROWSE_MEDIA
 
         if self._status.get("indexing", "0") == "0":
             supported = (
@@ -1020,6 +1034,12 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self.is_grouped and not self.is_master:
             return
 
+        if media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
+        media_id = async_process_play_media_url(self.hass, media_id)
+
         url = f"Play?url={media_id}"
 
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
@@ -1054,3 +1074,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         if mute:
             return await self.send_bluesound_command("Volume?mute=1")
         return await self.send_bluesound_command("Volume?mute=0")
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )

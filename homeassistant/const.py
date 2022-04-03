@@ -3,17 +3,17 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.backports.enum import StrEnum
+from .backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 2
+MINOR_VERSION: Final = 5
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 8, 0)
-# Truthy date string triggers showing related deprecation warning messages.
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2022.1"
+# Truthy date string triggers showing related deprecation warning messages.
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -50,6 +50,7 @@ class Platform(StrEnum):
     SWITCH = "switch"
     TTS = "tts"
     VACUUM = "vacuum"
+    UPDATE = "update"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
 
@@ -168,6 +169,7 @@ CONF_IP_ADDRESS: Final = "ip_address"
 CONF_LATITUDE: Final = "latitude"
 CONF_LEGACY_TEMPLATES: Final = "legacy_templates"
 CONF_LIGHTS: Final = "lights"
+CONF_LOCATION: Final = "location"
 CONF_LONGITUDE: Final = "longitude"
 CONF_MAC: Final = "mac"
 CONF_MAXIMUM: Final = "maximum"
@@ -175,6 +177,7 @@ CONF_MEDIA_DIRS: Final = "media_dirs"
 CONF_METHOD: Final = "method"
 CONF_MINIMUM: Final = "minimum"
 CONF_MODE: Final = "mode"
+CONF_MODEL: Final = "model"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
@@ -458,11 +461,16 @@ ATTR_TEMPERATURE: Final = "temperature"
 
 
 # #### UNITS OF MEASUREMENT ####
+# Apparent power units
+POWER_VOLT_AMPERE: Final = "VA"
+
 # Power units
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
-POWER_VOLT_AMPERE: Final = "VA"
 POWER_BTU_PER_HOUR: Final = "BTU/h"
+
+# Reactive power units
+POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
@@ -694,7 +702,6 @@ URL_ROOT: Final = "/"
 URL_API: Final = "/api/"
 URL_API_STREAM: Final = "/api/stream"
 URL_API_CONFIG: Final = "/api/config"
-URL_API_DISCOVERY_INFO: Final = "/api/discovery_info"
 URL_API_STATES: Final = "/api/states"
 URL_API_STATES_ENTITY: Final = "/api/states/{}"
 URL_API_EVENTS: Final = "/api/events"
@@ -760,3 +767,5 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
+
+SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"

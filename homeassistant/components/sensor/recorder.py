@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, MutableMapping
 import datetime
 import itertools
 import logging
 import math
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy.orm.session import Session
 
@@ -19,6 +19,7 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.models import (
+    LazyState,
     StatisticData,
     StatisticMetaData,
     StatisticResult,
@@ -26,7 +27,6 @@ from homeassistant.components.recorder.models import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -56,30 +56,16 @@ import homeassistant.util.volume as volume_util
 from . import (
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASSES,
+    SensorDeviceClass,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_CLASS_STATISTICS: dict[str, dict[str, set[str]]] = {
-    STATE_CLASS_MEASUREMENT: {
-        # Deprecated, support will be removed in Home Assistant 2021.11
-        DEVICE_CLASS_ENERGY: {"sum"},
-        DEVICE_CLASS_GAS: {"sum"},
-        DEVICE_CLASS_MONETARY: {"sum"},
-    },
-    STATE_CLASS_TOTAL: {},
-    STATE_CLASS_TOTAL_INCREASING: {},
-}
 DEFAULT_STATISTICS = {
     STATE_CLASS_MEASUREMENT: {"mean", "min", "max"},
     STATE_CLASS_TOTAL: {"sum"},
@@ -87,29 +73,29 @@ DEFAULT_STATISTICS = {
 }
 
 # Normalized units which will be stored in the statistics table
-DEVICE_CLASS_UNITS = {
-    DEVICE_CLASS_ENERGY: ENERGY_KILO_WATT_HOUR,
-    DEVICE_CLASS_POWER: POWER_WATT,
-    DEVICE_CLASS_PRESSURE: PRESSURE_PA,
-    DEVICE_CLASS_TEMPERATURE: TEMP_CELSIUS,
-    DEVICE_CLASS_GAS: VOLUME_CUBIC_METERS,
+DEVICE_CLASS_UNITS: dict[str, str] = {
+    SensorDeviceClass.ENERGY: ENERGY_KILO_WATT_HOUR,
+    SensorDeviceClass.POWER: POWER_WATT,
+    SensorDeviceClass.PRESSURE: PRESSURE_PA,
+    SensorDeviceClass.TEMPERATURE: TEMP_CELSIUS,
+    SensorDeviceClass.GAS: VOLUME_CUBIC_METERS,
 }
 
 UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     # Convert energy to kWh
-    DEVICE_CLASS_ENERGY: {
+    SensorDeviceClass.ENERGY: {
         ENERGY_KILO_WATT_HOUR: lambda x: x,
         ENERGY_MEGA_WATT_HOUR: lambda x: x * 1000,
         ENERGY_WATT_HOUR: lambda x: x / 1000,
     },
     # Convert power W
-    DEVICE_CLASS_POWER: {
+    SensorDeviceClass.POWER: {
         POWER_WATT: lambda x: x,
         POWER_KILO_WATT: lambda x: x * 1000,
     },
     # Convert pressure to Pa
     # Note: pressure_util.convert is bypassed to avoid redundant error checking
-    DEVICE_CLASS_PRESSURE: {
+    SensorDeviceClass.PRESSURE: {
         PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
         PRESSURE_HPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_HPA],
         PRESSURE_INHG: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_INHG],
@@ -120,13 +106,13 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     },
     # Convert temperature to °C
     # Note: temperature_util.convert is bypassed to avoid redundant error checking
-    DEVICE_CLASS_TEMPERATURE: {
+    SensorDeviceClass.TEMPERATURE: {
         TEMP_CELSIUS: lambda x: x,
         TEMP_FAHRENHEIT: temperature_util.fahrenheit_to_celsius,
         TEMP_KELVIN: temperature_util.kelvin_to_celsius,
     },
     # Convert volume to cubic meter
-    DEVICE_CLASS_GAS: {
+    SensorDeviceClass.GAS: {
         VOLUME_CUBIC_METERS: lambda x: x,
         VOLUME_CUBIC_FEET: volume_util.cubic_feet_to_cubic_meter,
     },
@@ -140,6 +126,8 @@ WARN_NEGATIVE = "sensor_warn_total_increasing_negative"
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
 WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
+# Link to dev statistics where issues around LTS can be fixed
+LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistics"
 
 
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
@@ -244,10 +232,12 @@ def _normalize_states(
                         )
                     _LOGGER.warning(
                         "The unit of %s is changing, got multiple %s, generation of long term "
-                        "statistics will be suppressed unless the unit is stable%s",
+                        "statistics will be suppressed unless the unit is stable%s. "
+                        "Go to %s to fix this",
                         entity_id,
                         all_units,
                         extra,
+                        LINK_DEV_STATISTICS,
                     )
                 return None, []
             unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -376,13 +366,7 @@ def _wanted_statistics(sensor_states: list[State]) -> dict[str, set[str]]:
     wanted_statistics = {}
     for state in sensor_states:
         state_class = state.attributes[ATTR_STATE_CLASS]
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
-            wanted_statistics[state.entity_id] = DEVICE_CLASS_STATISTICS[state_class][
-                device_class
-            ]
-        else:
-            wanted_statistics[state.entity_id] = DEFAULT_STATISTICS[state_class]
+        wanted_statistics[state.entity_id] = DEFAULT_STATISTICS[state_class]
     return wanted_statistics
 
 
@@ -433,9 +417,9 @@ def _compile_statistics(  # noqa: C901
     entities_full_history = [
         i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
     ]
-    history_list = {}
+    history_list: MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]] = {}
     if entities_full_history:
-        history_list = history.get_significant_states_with_session(  # type: ignore
+        history_list = history.get_significant_states_with_session(
             hass,
             session,
             start - datetime.timedelta.resolution,
@@ -449,7 +433,7 @@ def _compile_statistics(  # noqa: C901
         if "sum" not in wanted_statistics[i.entity_id]
     ]
     if entities_significant_history:
-        _history_list = history.get_significant_states_with_session(  # type: ignore
+        _history_list = history.get_significant_states_with_session(
             hass,
             session,
             start - datetime.timedelta.resolution,
@@ -472,7 +456,14 @@ def _compile_statistics(  # noqa: C901
         device_class = _state.attributes.get(ATTR_DEVICE_CLASS)
         entity_history = history_list[entity_id]
         unit, fstates = _normalize_states(
-            hass, session, old_metadatas, entity_history, device_class, entity_id
+            hass,
+            session,
+            old_metadatas,
+            # entity_history does not contain minimal responses
+            # so we must cast here
+            cast(list[State], entity_history),
+            device_class,
+            entity_id,
         )
 
         if not fstates:
@@ -488,12 +479,14 @@ def _compile_statistics(  # noqa: C901
                     _LOGGER.warning(
                         "The %sunit of %s (%s) does not match the unit of already "
                         "compiled statistics (%s). Generation of long term statistics "
-                        "will be suppressed unless the unit changes back to %s",
+                        "will be suppressed unless the unit changes back to %s. "
+                        "Go to %s to fix this",
                         "normalized " if device_class in DEVICE_CLASS_UNITS else "",
                         entity_id,
                         unit,
                         old_metadata[1]["unit_of_measurement"],
                         old_metadata[1]["unit_of_measurement"],
+                        LINK_DEV_STATISTICS,
                     )
                 continue
 
@@ -531,14 +524,6 @@ def _compile_statistics(  # noqa: C901
                 _sum = last_stats[entity_id][0]["sum"] or 0.0
 
             for fstate, state in fstates:
-
-                # Deprecated, will be removed in Home Assistant 2021.11
-                if (
-                    "last_reset" not in state.attributes
-                    and state_class == STATE_CLASS_MEASUREMENT
-                ):
-                    continue
-
                 reset = False
                 if (
                     state_class != STATE_CLASS_TOTAL_INCREASING
@@ -603,11 +588,6 @@ def _compile_statistics(  # noqa: C901
                 else:
                     new_state = fstate
 
-            # Deprecated, will be removed in Home Assistant 2021.11
-            if last_reset is None and state_class == STATE_CLASS_MEASUREMENT:
-                # No valid updates
-                continue
-
             if new_state is None or old_state is None:
                 # No valid updates
                 continue
@@ -624,23 +604,26 @@ def _compile_statistics(  # noqa: C901
     return result
 
 
-def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -> dict:
-    """Return statistic_ids and meta data."""
+def list_statistic_ids(
+    hass: HomeAssistant,
+    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_type: str | None = None,
+) -> dict:
+    """Return all or filtered statistic_ids and meta data."""
     entities = _get_sensor_states(hass)
 
-    statistic_ids = {}
+    result = {}
 
     for state in entities:
         state_class = state.attributes[ATTR_STATE_CLASS]
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
-            provided_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
-        else:
-            provided_statistics = DEFAULT_STATISTICS[state_class]
-
+        provided_statistics = DEFAULT_STATISTICS[state_class]
         if statistic_type is not None and statistic_type not in provided_statistics:
+            continue
+
+        if statistic_ids is not None and state.entity_id not in statistic_ids:
             continue
 
         if (
@@ -651,7 +634,9 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
             continue
 
         if device_class not in UNIT_CONVERSIONS:
-            statistic_ids[state.entity_id] = {
+            result[state.entity_id] = {
+                "has_mean": "mean" in provided_statistics,
+                "has_sum": "sum" in provided_statistics,
                 "source": RECORDER_DOMAIN,
                 "unit_of_measurement": native_unit,
             }
@@ -661,12 +646,14 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
             continue
 
         statistics_unit = DEVICE_CLASS_UNITS[device_class]
-        statistic_ids[state.entity_id] = {
+        result[state.entity_id] = {
+            "has_mean": "mean" in provided_statistics,
+            "has_sum": "sum" in provided_statistics,
             "source": RECORDER_DOMAIN,
             "unit_of_measurement": statistics_unit,
         }
 
-    return statistic_ids
+    return result
 
 
 def validate_statistics(

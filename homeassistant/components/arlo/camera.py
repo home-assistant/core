@@ -7,11 +7,14 @@ from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
 
@@ -39,7 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an Arlo IP Camera."""
     arlo = hass.data[DATA_ARLO]
 
@@ -59,7 +67,7 @@ class ArloCam(Camera):
         self._camera = camera
         self._attr_name = camera.name
         self._motion_status = False
-        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._ffmpeg = get_ffmpeg_manager(hass)
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
         self._last_refresh = None
         self.attrs = {}

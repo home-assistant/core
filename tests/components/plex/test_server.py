@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from requests.exceptions import ConnectionError, RequestException
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex.const import (
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
@@ -13,6 +12,7 @@ from homeassistant.components.plex.const import (
     DOMAIN,
     SERVERS,
 )
+from homeassistant.const import Platform
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update, wait_for_debouncer
@@ -22,7 +22,7 @@ async def test_new_users_available(hass, entry, setup_plex_server):
     """Test setting up when new users available on Plex server."""
     MONITORED_USERS = {"User 1": {"enabled": True}}
     OPTIONS_WITH_USERS = copy.deepcopy(DEFAULT_OPTIONS)
-    OPTIONS_WITH_USERS[MP_DOMAIN][CONF_MONITORED_USERS] = MONITORED_USERS
+    OPTIONS_WITH_USERS[Platform.MEDIA_PLAYER][CONF_MONITORED_USERS] = MONITORED_USERS
     entry.options = OPTIONS_WITH_USERS
 
     mock_plex_server = await setup_plex_server(config_entry=entry)
@@ -48,8 +48,8 @@ async def test_new_ignored_users_available(
     """Test setting up when new users available on Plex server but are ignored."""
     MONITORED_USERS = {"User 1": {"enabled": True}}
     OPTIONS_WITH_USERS = copy.deepcopy(DEFAULT_OPTIONS)
-    OPTIONS_WITH_USERS[MP_DOMAIN][CONF_MONITORED_USERS] = MONITORED_USERS
-    OPTIONS_WITH_USERS[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS] = True
+    OPTIONS_WITH_USERS[Platform.MEDIA_PLAYER][CONF_MONITORED_USERS] = MONITORED_USERS
+    OPTIONS_WITH_USERS[Platform.MEDIA_PLAYER][CONF_IGNORE_NEW_SHARED_USERS] = True
     entry.options = OPTIONS_WITH_USERS
 
     mock_plex_server = await setup_plex_server(config_entry=entry)
@@ -151,7 +151,7 @@ async def test_mark_sessions_idle(
 async def test_ignore_plex_web_client(hass, entry, setup_plex_server):
     """Test option to ignore Plex Web clients."""
     OPTIONS = copy.deepcopy(DEFAULT_OPTIONS)
-    OPTIONS[MP_DOMAIN][CONF_IGNORE_PLEX_WEB_CLIENTS] = True
+    OPTIONS[Platform.MEDIA_PLAYER][CONF_IGNORE_PLEX_WEB_CLIENTS] = True
     entry.options = OPTIONS
 
     mock_plex_server = await setup_plex_server(

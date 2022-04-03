@@ -8,7 +8,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "\u30a2\u30c9\u30aa\u30f3 {addon} \u304c\u3001\u63d0\u4f9b\u3059\u308b\u3001Almond\u306b\u63a5\u7d9a\u3059\u308b\u3088\u3046\u306bHome Assistant\u3092\u8a2d\u5b9a\u3057\u307e\u3059\u304b\uff1f",
+                "description": "\u30a2\u30c9\u30aa\u30f3: {addon} \u306b\u3088\u3063\u3066\u63d0\u4f9b\u3055\u308c\u308b\u3001Almond\u306b\u63a5\u7d9a\u3059\u308b\u3088\u3046\u306bHome Assistant\u306e\u8a2d\u5b9a\u3092\u3057\u307e\u3059\u304b\uff1f",
                 "title": "Home Assistant\u30a2\u30c9\u30aa\u30f3\u7d4c\u7531\u306eAlmond"
             },
             "pick_implementation": {

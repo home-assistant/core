@@ -158,7 +158,7 @@ async def test_availability(hass, aioclient_mock):
 
 
 async def test_manual_update_entity(hass, aioclient_mock):
-    """Test manual update entity via service homeasasistant/update_entity."""
+    """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass, aioclient_mock)
 
     call_count = aioclient_mock.call_count

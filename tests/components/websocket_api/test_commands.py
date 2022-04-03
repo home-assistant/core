@@ -1,4 +1,5 @@
 """Tests for WebSocket API commands."""
+from copy import deepcopy
 import datetime
 from unittest.mock import ANY, patch
 
@@ -6,7 +7,6 @@ from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
-from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -14,7 +14,8 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import URL
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
+from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -22,6 +23,95 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
 from tests.common import MockEntity, MockEntityPlatform, async_mock_service
+
+STATE_KEY_SHORT_NAMES = {
+    "entity_id": "e",
+    "state": "s",
+    "last_changed": "lc",
+    "last_updated": "lu",
+    "context": "c",
+    "attributes": "a",
+}
+STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
+
+
+def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
+    """Apply a diff set to a dict.
+
+    Port of the client side merging
+    """
+    additions = change_dict.get("+", {})
+    if "lc" in additions:
+        additions["lu"] = additions["lc"]
+    if attributes := additions.pop("a", None):
+        state_dict["attributes"].update(attributes)
+    if context := additions.pop("c", None):
+        if isinstance(context, str):
+            state_dict["context"]["id"] = context
+        else:
+            state_dict["context"].update(context)
+    for k, v in additions.items():
+        state_dict[STATE_KEY_LONG_NAMES[k]] = v
+    for key, items in change_dict.get("-", {}).items():
+        for item in items:
+            del state_dict[STATE_KEY_LONG_NAMES[key]][item]
+
+
+async def test_fire_event(hass, websocket_client):
+    """Test fire event command."""
+    runs = []
+
+    async def event_handler(event):
+        runs.append(event)
+
+    hass.bus.async_listen_once("event_type_test", event_handler)
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "fire_event",
+            "event_type": "event_type_test",
+            "event_data": {"hello": "world"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert len(runs) == 1
+
+    assert runs[0].event_type == "event_type_test"
+    assert runs[0].data == {"hello": "world"}
+
+
+async def test_fire_event_without_data(hass, websocket_client):
+    """Test fire event command."""
+    runs = []
+
+    async def event_handler(event):
+        runs.append(event)
+
+    hass.bus.async_listen_once("event_type_test", event_handler)
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "fire_event",
+            "event_type": "event_type_test",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert len(runs) == 1
+
+    assert runs[0].event_type == "event_type_test"
+    assert runs[0].data == {}
 
 
 async def test_call_service(hass, websocket_client):
@@ -530,13 +620,20 @@ async def test_states_filters_visible(hass, hass_admin_user, websocket_client):
 
 async def test_get_states_not_allows_nan(hass, websocket_client):
     """Test get_states command not allows NaN floats."""
-    hass.states.async_set("greeting.hello", "world", {"hello": float("NaN")})
+    hass.states.async_set("greeting.hello", "world")
+    hass.states.async_set("greeting.bad", "data", {"hello": float("NaN")})
+    hass.states.async_set("greeting.bye", "universe")
 
     await websocket_client.send_json({"id": 5, "type": "get_states"})
 
     msg = await websocket_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_UNKNOWN_ERROR
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == [
+        hass.states.get("greeting.hello").as_dict(),
+        hass.states.get("greeting.bye").as_dict(),
+    ]
 
 
 async def test_subscribe_unsubscribe_events_whitelist(
@@ -602,6 +699,349 @@ async def test_subscribe_unsubscribe_events_state_changed(
     assert msg["event"]["data"]["entity_id"] == "light.permitted"
 
 
+async def test_subscribe_entities_with_unserializable_state(
+    hass, websocket_client, hass_admin_user
+):
+    """Test subscribe entities with an unserializeable state."""
+
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+        def __init__(self):
+            """Init cannot serialize this."""
+
+    hass.states.async_set("light.permitted", "off", {"color": "red"})
+    hass.states.async_set(
+        "light.cannot_serialize",
+        "off",
+        {"color": "red", "cannot_serialize": CannotSerializeMe()},
+    )
+    original_state = hass.states.get("light.cannot_serialize")
+    assert isinstance(original_state, State)
+    state_dict = {
+        "attributes": dict(original_state.attributes),
+        "context": dict(original_state.context.as_dict()),
+        "entity_id": original_state.entity_id,
+        "last_changed": original_state.last_changed.isoformat(),
+        "last_updated": original_state.last_updated.isoformat(),
+        "state": original_state.state,
+    }
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy(
+        {
+            "entities": {
+                "entity_ids": {"light.permitted": True, "light.cannot_serialize": True}
+            }
+        }
+    )
+
+    await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {
+            "light.permitted": {
+                "a": {"color": "red"},
+                "c": ANY,
+                "lc": ANY,
+                "s": "off",
+            }
+        }
+    }
+    hass.states.async_set("light.permitted", "on", {"effect": "help"})
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {
+            "light.permitted": {
+                "+": {
+                    "a": {"effect": "help"},
+                    "c": ANY,
+                    "lc": ANY,
+                    "s": "on",
+                },
+                "-": {"a": ["color"]},
+            }
+        }
+    }
+    hass.states.async_set("light.cannot_serialize", "on", {"effect": "help"})
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    # Order does not matter
+    msg["event"]["c"]["light.cannot_serialize"]["-"]["a"] = set(
+        msg["event"]["c"]["light.cannot_serialize"]["-"]["a"]
+    )
+    assert msg["event"] == {
+        "c": {
+            "light.cannot_serialize": {
+                "+": {"a": {"effect": "help"}, "c": ANY, "lc": ANY, "s": "on"},
+                "-": {"a": {"color", "cannot_serialize"}},
+            }
+        }
+    }
+    change_set = msg["event"]["c"]["light.cannot_serialize"]
+    _apply_entities_changes(state_dict, change_set)
+    assert state_dict == {
+        "attributes": {"effect": "help"},
+        "context": {
+            "id": ANY,
+            "parent_id": None,
+            "user_id": None,
+        },
+        "entity_id": "light.cannot_serialize",
+        "last_changed": ANY,
+        "last_updated": ANY,
+        "state": "on",
+    }
+    hass.states.async_set(
+        "light.cannot_serialize",
+        "off",
+        {"color": "red", "cannot_serialize": CannotSerializeMe()},
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "result"
+    assert msg["error"] == {
+        "code": "unknown_error",
+        "message": "Invalid JSON in response",
+    }
+
+
+async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin_user):
+    """Test subscribe/unsubscribe entities."""
+
+    hass.states.async_set("light.permitted", "off", {"color": "red"})
+    original_state = hass.states.get("light.permitted")
+    assert isinstance(original_state, State)
+    state_dict = {
+        "attributes": dict(original_state.attributes),
+        "context": dict(original_state.context.as_dict()),
+        "entity_id": original_state.entity_id,
+        "last_changed": original_state.last_changed.isoformat(),
+        "last_updated": original_state.last_updated.isoformat(),
+        "state": original_state.state,
+    }
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
+
+    await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert isinstance(msg["event"]["a"]["light.permitted"]["c"], str)
+    assert msg["event"] == {
+        "a": {
+            "light.permitted": {
+                "a": {"color": "red"},
+                "c": ANY,
+                "lc": ANY,
+                "s": "off",
+            }
+        }
+    }
+    hass.states.async_set("light.not_permitted", "on")
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+    hass.states.async_set("light.permitted", "on", {"effect": "help"})
+    hass.states.async_set(
+        "light.permitted", "on", {"effect": "help", "color": ["blue", "green"]}
+    )
+    hass.states.async_remove("light.permitted")
+    hass.states.async_set("light.permitted", "on", {"effect": "help", "color": "blue"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {
+            "light.permitted": {
+                "+": {
+                    "a": {"color": "blue"},
+                    "c": ANY,
+                    "lc": ANY,
+                    "s": "on",
+                }
+            }
+        }
+    }
+
+    change_set = msg["event"]["c"]["light.permitted"]
+    additions = deepcopy(change_set["+"])
+    _apply_entities_changes(state_dict, change_set)
+    assert state_dict == {
+        "attributes": {"color": "blue"},
+        "context": {
+            "id": additions["c"],
+            "parent_id": None,
+            "user_id": None,
+        },
+        "entity_id": "light.permitted",
+        "last_changed": additions["lc"],
+        "last_updated": additions["lc"],
+        "state": "on",
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {
+            "light.permitted": {
+                "+": {
+                    "a": {"effect": "help"},
+                    "c": ANY,
+                    "lu": ANY,
+                },
+                "-": {"a": ["color"]},
+            }
+        }
+    }
+
+    change_set = msg["event"]["c"]["light.permitted"]
+    additions = deepcopy(change_set["+"])
+    _apply_entities_changes(state_dict, change_set)
+
+    assert state_dict == {
+        "attributes": {"effect": "help"},
+        "context": {
+            "id": additions["c"],
+            "parent_id": None,
+            "user_id": None,
+        },
+        "entity_id": "light.permitted",
+        "last_changed": ANY,
+        "last_updated": additions["lu"],
+        "state": "on",
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {
+            "light.permitted": {
+                "+": {
+                    "a": {"color": ["blue", "green"]},
+                    "c": ANY,
+                    "lu": ANY,
+                }
+            }
+        }
+    }
+
+    change_set = msg["event"]["c"]["light.permitted"]
+    additions = deepcopy(change_set["+"])
+    _apply_entities_changes(state_dict, change_set)
+
+    assert state_dict == {
+        "attributes": {"effect": "help", "color": ["blue", "green"]},
+        "context": {
+            "id": additions["c"],
+            "parent_id": None,
+            "user_id": None,
+        },
+        "entity_id": "light.permitted",
+        "last_changed": ANY,
+        "last_updated": additions["lu"],
+        "state": "on",
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {"r": ["light.permitted"]}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {
+            "light.permitted": {
+                "a": {"color": "blue", "effect": "help"},
+                "c": ANY,
+                "lc": ANY,
+                "s": "on",
+            }
+        }
+    }
+
+
+async def test_subscribe_unsubscribe_entities_specific_entities(
+    hass, websocket_client, hass_admin_user
+):
+    """Test subscribe/unsubscribe entities with a list of entity ids."""
+
+    hass.states.async_set("light.permitted", "off", {"color": "red"})
+    hass.states.async_set("light.not_intrested", "off", {"color": "blue"})
+    original_state = hass.states.get("light.permitted")
+    assert isinstance(original_state, State)
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy(
+        {
+            "entities": {
+                "entity_ids": {"light.permitted": True, "light.not_intrested": True}
+            }
+        }
+    )
+
+    await websocket_client.send_json(
+        {"id": 7, "type": "subscribe_entities", "entity_ids": ["light.permitted"]}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert isinstance(msg["event"]["a"]["light.permitted"]["c"], str)
+    assert msg["event"] == {
+        "a": {
+            "light.permitted": {
+                "a": {"color": "red"},
+                "c": ANY,
+                "lc": ANY,
+                "s": "off",
+            }
+        }
+    }
+    hass.states.async_set("light.not_intrested", "on", {"effect": "help"})
+    hass.states.async_set("light.not_permitted", "on")
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {
+            "light.permitted": {
+                "+": {
+                    "a": {"color": "blue"},
+                    "c": ANY,
+                    "lc": ANY,
+                    "s": "on",
+                }
+            }
+        }
+    }
+
+
 async def test_render_template_renders_template(hass, websocket_client):
     """Test simple template is rendered and updated."""
     hass.states.async_set("light.test", "on")
@@ -644,6 +1084,38 @@ async def test_render_template_renders_template(hass, websocket_client):
             "all": False,
             "domains": [],
             "entities": ["light.test"],
+            "time": False,
+        },
+    }
+
+
+async def test_render_template_with_timeout_and_variables(hass, websocket_client):
+    """Test a template with a timeout and variables renders without error."""
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "timeout": 10,
+            "variables": {"test": {"value": "hello"}},
+            "template": "{{ test.value }}",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {
+        "result": "hello",
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": [],
             "time": False,
         },
     }
@@ -1197,3 +1669,60 @@ async def test_integration_setup_info(hass, websocket_client, hass_admin_user):
         {"domain": "august", "seconds": 12.5},
         {"domain": "isy994", "seconds": 12.8},
     ]
+
+
+@pytest.mark.parametrize(
+    "key,config",
+    (
+        ("trigger", {"platform": "event", "event_type": "hello"}),
+        (
+            "condition",
+            {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
+        ),
+        ("action", {"service": "domain_test.test_service"}),
+    ),
+)
+async def test_validate_config_works(websocket_client, key, config):
+    """Test config validation."""
+    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {key: {"valid": True, "error": None}}
+
+
+@pytest.mark.parametrize(
+    "key,config,error",
+    (
+        (
+            "trigger",
+            {"platform": "non_existing", "event_type": "hello"},
+            "Invalid platform 'non_existing' specified",
+        ),
+        (
+            "condition",
+            {
+                "condition": "non_existing",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+            "Unexpected value for condition: 'non_existing'. Expected and, device, not, numeric_state, or, state, sun, template, time, trigger, zone",
+        ),
+        (
+            "action",
+            {"non_existing": "domain_test.test_service"},
+            "Unable to determine action @ data[0]",
+        ),
+    ),
+)
+async def test_validate_config_invalid(websocket_client, key, config, error):
+    """Test config validation."""
+    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {key: {"valid": False, "error": error}}

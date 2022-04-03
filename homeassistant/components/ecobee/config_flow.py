@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import load_json
 
 from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN

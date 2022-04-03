@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import valid_publish_topic
 from homeassistant.const import MATCH_ALL
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -13,6 +14,7 @@ from homeassistant.helpers.entityfilter import (
 )
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.typing import ConfigType
 
 CONF_BASE_TOPIC = "base_topic"
 CONF_PUBLISH_ATTRIBUTES = "publish_attributes"
@@ -34,9 +36,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MQTT state feed."""
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
     publish_filter = convert_include_exclude_filter(conf)
     base_topic = conf.get(CONF_BASE_TOPIC)
     publish_attributes = conf.get(CONF_PUBLISH_ATTRIBUTES)

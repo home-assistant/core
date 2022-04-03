@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "api_not_enabled": "API tidak diaktifkan. Aktifkan API di Aplikasi Energi HomeWizard di bawah pengaturan",
+            "device_not_supported": "Perangkat ini tidak didukung",
+            "invalid_discovery_parameters": "Terdeteksi versi API yang tidak didukung",
+            "unknown_error": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan {product_type} ({serial}) di {ip_address}?",
+                "title": "Konfirmasikan"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "Alamat IP"
+                },
+                "description": "Masukkan alamat IP perangkat HomeWizard Energy Anda untuk diintegrasikan dengan Home Assistant.",
+                "title": "Konfigurasikan perangkat"
+            }
+        }
+    }
+}

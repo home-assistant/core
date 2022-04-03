@@ -43,7 +43,7 @@ async def async_setup_entry(
 
 
 class DeviceCover(GoGoGate2Entity, CoverEntity):
-    """Cover entity for goggate2."""
+    """Cover entity for gogogate2."""
 
     def __init__(
         self,

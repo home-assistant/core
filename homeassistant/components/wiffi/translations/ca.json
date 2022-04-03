@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "addr_in_use": "El port del servidor que ja est\u00e0 en us.",
+            "already_configured": "El port del servidor ja est\u00e0 configurat.",
             "start_server_failed": "Ha fallat l'inici del servidor."
         },
         "step": {

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Tuple, cast
+from typing import Any, cast
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -154,7 +154,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the color value."""
         return cast(
-            Tuple[int, int, int, int],
+            tuple[int, int, int, int],
             self.coordinator.data.state.segments[self._segment].color_primary,
         )
 

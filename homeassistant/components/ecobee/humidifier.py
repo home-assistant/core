@@ -10,7 +10,10 @@ from homeassistant.components.humidifier.const import (
     MODE_AUTO,
     SUPPORT_MODES,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
@@ -20,7 +23,11 @@ MODE_MANUAL = "manual"
 MODE_OFF = "off"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the ecobee thermostat humidifier entity."""
     data = hass.data[DOMAIN]
     entities = []
@@ -33,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class EcobeeHumidifier(HumidifierEntity):
-    """A humidifier class for an ecobee thermostat with humidifer attached."""
+    """A humidifier class for an ecobee thermostat with humidifier attached."""
 
     def __init__(self, data, thermostat_index):
         """Initialize ecobee humidifier platform."""

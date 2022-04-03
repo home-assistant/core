@@ -3,7 +3,10 @@
 CONF_CURRENCIES = "account_balance_currencies"
 CONF_EXCHANGE_BASE = "exchange_base"
 CONF_EXCHANGE_RATES = "exchange_rate_currencies"
+CONF_EXCHANGE_PRECISION = "exchange_rate_precision"
+CONF_EXCHANGE_PRECISION_DEFAULT = 2
 CONF_OPTIONS = "options"
+CONF_TITLE = "title"
 DOMAIN = "coinbase"
 
 # These are constants used by the previous YAML configuration
@@ -18,6 +21,7 @@ API_ACCOUNT_NATIVE_BALANCE = "native_balance"
 API_ACCOUNT_NAME = "name"
 API_ACCOUNTS_DATA = "data"
 API_RATES = "rates"
+API_RESOURCE_PATH = "resource_path"
 API_RESOURCE_TYPE = "type"
 API_TYPE_VAULT = "vault"
 

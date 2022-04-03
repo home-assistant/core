@@ -1,12 +1,15 @@
 """Platform to control a Salda Smarty XP/XV ventilation unit."""
+from __future__ import annotations
 
 import logging
 import math
 
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -21,7 +24,12 @@ DEFAULT_ON_PERCENTAGE = 66
 SPEED_RANGE = (1, 3)  # off is not included
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Smarty Fan Platform."""
     smarty = hass.data[DOMAIN]["api"]
     name = hass.data[DOMAIN]["name"]
@@ -91,9 +99,9 @@ class SmartyFan(FanEntity):
         self._smarty_fan_speed = fan_speed
         self.schedule_update_ha_state()
 
-    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
+    def turn_on(self, percentage=None, preset_mode=None, **kwargs):
         """Turn on the fan."""
-        _LOGGER.debug("Turning on fan. Speed is %s", speed)
+        _LOGGER.debug("Turning on fan. percentage is %s", percentage)
         self.set_percentage(percentage or DEFAULT_ON_PERCENTAGE)
 
     def turn_off(self, **kwargs):

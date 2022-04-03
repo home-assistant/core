@@ -4,6 +4,8 @@ Support for Dublin RTPI information from data.dublinked.ie.
 For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61
 """
+from __future__ import annotations
+
 from contextlib import suppress
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -13,7 +15,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _RESOURCE = "https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation"
@@ -56,7 +61,12 @@ def due_in_minutes(timestamp):
     return str(int(diff.total_seconds() / 60))
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Dublin public transport sensor."""
     name = config[CONF_NAME]
     stop = config[CONF_STOP_ID]

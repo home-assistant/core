@@ -24,10 +24,9 @@ from motioneye_client.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.mjpeg.camera import (
+from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
-    CONF_VERIFY_SSL,
     MjpegCamera,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -38,6 +37,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -65,7 +65,7 @@ from .const import (
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
 
-PLATFORMS = ["camera"]
+PLATFORMS = [Platform.CAMERA]
 
 SCHEMA_TEXT_OVERLAY = vol.In(
     [
@@ -143,6 +143,8 @@ async def async_setup_entry(
 class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     """motionEye mjpeg camera."""
 
+    _name: str
+
     def __init__(
         self,
         config_entry_id: str,
@@ -172,10 +174,8 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         )
         MjpegCamera.__init__(
             self,
-            {
-                CONF_VERIFY_SSL: False,
-                **self._get_mjpeg_camera_properties_for_camera(camera),
-            },
+            verify_ssl=False,
+            **self._get_mjpeg_camera_properties_for_camera(camera),
         )
 
     @callback
@@ -206,7 +206,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         return {
             CONF_NAME: camera[KEY_NAME],
             CONF_USERNAME: self._surveillance_username if auth is not None else None,
-            CONF_PASSWORD: self._surveillance_password if auth is not None else None,
+            CONF_PASSWORD: self._surveillance_password if auth is not None else "",
             CONF_MJPEG_URL: streaming_url or "",
             CONF_STILL_IMAGE_URL: self._client.get_camera_snapshot_url(camera),
             CONF_AUTHENTICATION: auth,
@@ -226,7 +226,10 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         self._still_image_url = properties[CONF_STILL_IMAGE_URL]
         self._authentication = properties[CONF_AUTHENTICATION]
 
-        if self._authentication == HTTP_BASIC_AUTHENTICATION:
+        if (
+            self._authentication == HTTP_BASIC_AUTHENTICATION
+            and self._username is not None
+        ):
             self._auth = aiohttp.BasicAuth(self._username, password=self._password)
 
     def _is_acceptable_streaming_camera(self) -> bool:

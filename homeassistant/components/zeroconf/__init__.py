@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from contextlib import suppress
 from dataclasses import dataclass
 import fnmatch
@@ -32,7 +33,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
+from homeassistant.loader import (
+    Integration,
+    async_get_homekit,
+    async_get_integration,
+    async_get_zeroconf,
+    bind_hass,
+)
 
 from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
@@ -72,7 +79,6 @@ ATTR_PROPERTIES: Final = "properties"
 # Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
 ATTR_PROPERTIES_ID: Final = "id"
 
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -95,6 +101,7 @@ class ZeroconfServiceInfo(BaseServiceInfo):
     """Prepared info from mDNS entries."""
 
     host: str
+    addresses: list[str]
     port: int | None
     hostname: str
     type: str
@@ -340,6 +347,17 @@ def _match_against_props(matcher: dict[str, str], props: dict[str, str]) -> bool
     )
 
 
+def is_homekit_paired(props: dict[str, Any]) -> bool:
+    """Check properties to see if a device is homekit paired."""
+    if HOMEKIT_PAIRED_STATUS_FLAG not in props:
+        return False
+    with contextlib.suppress(ValueError):
+        # 0 means paired and not discoverable by iOS clients)
+        return int(props[HOMEKIT_PAIRED_STATUS_FLAG]) == 0
+    # If we cannot tell, we assume its not paired
+    return False
+
+
 class ZeroconfDiscovery:
     """Discovery via zeroconf."""
 
@@ -417,11 +435,12 @@ class ZeroconfDiscovery:
         props: dict[str, str] = info.properties
 
         # If we can handle it as a HomeKit discovery, we do that here.
-        if service_type in HOMEKIT_TYPES:
-            if domain := async_get_homekit_discovery_domain(self.homekit_models, props):
-                discovery_flow.async_create_flow(
-                    self.hass, domain, {"source": config_entries.SOURCE_HOMEKIT}, info
-                )
+        if service_type in HOMEKIT_TYPES and (
+            domain := async_get_homekit_discovery_domain(self.homekit_models, props)
+        ):
+            discovery_flow.async_create_flow(
+                self.hass, domain, {"source": config_entries.SOURCE_HOMEKIT}, info
+            )
             # Continue on here as homekit_controller
             # still needs to get updates on devices
             # so it can see when the 'c#' field is updated.
@@ -429,14 +448,19 @@ class ZeroconfDiscovery:
             # We only send updates to homekit_controller
             # if the device is already paired in order to avoid
             # offering a second discovery for the same device
-            if domain and HOMEKIT_PAIRED_STATUS_FLAG in props:
-                try:
-                    # 0 means paired and not discoverable by iOS clients)
-                    if int(props[HOMEKIT_PAIRED_STATUS_FLAG]):
-                        return
-                except ValueError:
-                    # HomeKit pairing status unknown
-                    # likely bad homekit data
+            if not is_homekit_paired(props):
+                integration: Integration = await async_get_integration(
+                    self.hass, domain
+                )
+                # Since we prefer local control, if the integration that is being discovered
+                # is cloud AND the homekit device is UNPAIRED we still want to discovery it.
+                #
+                # As soon as the device becomes paired, the config flow will be dismissed
+                # in the event the user does not want to pair with Home Assistant.
+                #
+                if not integration.iot_class or not integration.iot_class.startswith(
+                    "cloud"
+                ):
                     return
 
         match_data: dict[str, str] = {}
@@ -517,13 +541,14 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
 
-    if not (addresses := service.addresses):
+    if not (addresses := service.addresses or service.parsed_addresses()):
         return None
-    if (host := _first_non_link_local_or_v6_address(addresses)) is None:
+    if (host := _first_non_link_local_address(addresses)) is None:
         return None
 
     return ZeroconfServiceInfo(
         host=str(host),
+        addresses=service.parsed_addresses(),
         port=service.port,
         hostname=service.server,
         type=service.type,
@@ -532,11 +557,18 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     )
 
 
-def _first_non_link_local_or_v6_address(addresses: list[bytes]) -> str | None:
-    """Return the first ipv6 or non-link local ipv4 address."""
+def _first_non_link_local_address(
+    addresses: list[bytes] | list[str],
+) -> str | None:
+    """Return the first ipv6 or non-link local ipv4 address, preferring IPv4."""
     for address in addresses:
         ip_addr = ip_address(address)
-        if not ip_addr.is_link_local or ip_addr.version == 6:
+        if not ip_addr.is_link_local and ip_addr.version == 4:
+            return str(ip_addr)
+    # If we didn't find a good IPv4 address, check for IPv6 addresses.
+    for address in addresses:
+        ip_addr = ip_address(address)
+        if not ip_addr.is_link_local and ip_addr.version == 6:
             return str(ip_addr)
     return None
 

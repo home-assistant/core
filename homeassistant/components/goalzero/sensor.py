@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import cast
 
+from goalzero import Yeti
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -28,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import Yeti, YetiEntity
+from . import YetiEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (

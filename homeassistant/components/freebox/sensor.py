@@ -14,6 +14,7 @@ from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import CALL_SENSORS, CONNECTION_SENSORS, DISK_PARTITION_SENSORS, DOMAIN
@@ -23,10 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
-    router = hass.data[DOMAIN][entry.unique_id]
+    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
     entities = []
 
     _LOGGER.debug(
@@ -119,7 +120,7 @@ class FreeboxCallSensor(FreeboxSensor):
     ) -> None:
         """Initialize a Freebox call sensor."""
         super().__init__(router, description)
-        self._call_list_for_type = []
+        self._call_list_for_type: list[dict[str, Any]] = []
 
     @callback
     def async_update_state(self) -> None:

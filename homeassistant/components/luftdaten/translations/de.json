@@ -9,7 +9,7 @@
             "user": {
                 "data": {
                     "show_on_map": "Auf Karte anzeigen",
-                    "station_id": "Luftdaten-Sensor-ID"
+                    "station_id": "Sensor-ID"
                 },
                 "title": "Luftdaten einrichten"
             }

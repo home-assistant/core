@@ -2,9 +2,11 @@
     "config": {
         "error": {
             "bad_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "invalid_pin": "Poskytnut\u00fd k\u00f3d PIN je neplatn\u00fd",
             "network_error": "Do\u0161lo k chyb\u011b s\u00edt\u011b",
             "no_panel_online": "Nebyl nalezen \u017e\u00e1dn\u00fd online ovl\u00e1dac\u00ed panel Elmax.",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba",
             "unknown_error": "Vyskytla se neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {

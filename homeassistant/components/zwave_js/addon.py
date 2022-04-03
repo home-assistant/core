@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, TypeVar
+
+from typing_extensions import ParamSpec
 
 from homeassistant.components.hassio import (
     async_create_backup,
@@ -35,7 +38,8 @@ from .const import (
     LOGGER,
 )
 
-F = TypeVar("F", bound=Callable[..., Any])  # pylint: disable=invalid-name
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 DATA_ADDON_MANAGER = f"{DOMAIN}_addon_manager"
 
@@ -47,13 +51,17 @@ def get_addon_manager(hass: HomeAssistant) -> AddonManager:
     return AddonManager(hass)
 
 
-def api_error(error_message: str) -> Callable[[F], F]:
+def api_error(
+    error_message: str,
+) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Coroutine[Any, Any, _R]]]:
     """Handle HassioAPIError and raise a specific AddonError."""
 
-    def handle_hassio_api_error(func: F) -> F:
+    def handle_hassio_api_error(
+        func: Callable[_P, Awaitable[_R]]
+    ) -> Callable[_P, Coroutine[Any, Any, _R]]:
         """Handle a HassioAPIError."""
 
-        async def wrapper(*args, **kwargs):  # type: ignore
+        async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap an add-on manager method."""
             try:
                 return_value = await func(*args, **kwargs)
@@ -62,7 +70,7 @@ def api_error(error_message: str) -> Callable[[F], F]:
 
             return return_value
 
-        return cast(F, wrapper)
+        return wrapper
 
     return handle_hassio_api_error
 

@@ -23,11 +23,11 @@
                 "description": "Configura l'autorizzazione per il tuo server Hyperion Ambilight"
             },
             "confirm": {
-                "description": "Vuoi aggiungere questo Hyperion Ambilight a Home Assistant? \n\n ** Host:** {host}\n ** Porta:** {port}\n ** ID:** {id}",
+                "description": "Vuoi aggiungere questo Hyperion Ambilight a Home Assistant? \n\n **Host:** {host}\n **Porta:** {port}\n **ID:** {id}",
                 "title": "Conferma l'aggiunta del servizio Hyperion Ambilight"
             },
             "create_token": {
-                "description": "Scegli **Invia** di seguito per richiedere un nuovo token di autenticazione. Verrai reindirizzato all'interfaccia utente di Hyperion per approvare la richiesta. Verifica che l'ID visualizzato sia \"{auth_id}\"",
+                "description": "Scegli **Invia** di seguito per richiedere un nuovo token di autenticazione. Sarai reindirizzato all'interfaccia utente di Hyperion per approvare la richiesta. Verifica che l'ID visualizzato sia \"{auth_id}\"",
                 "title": "Crea automaticamente un nuovo token di autenticazione"
             },
             "create_token_external": {

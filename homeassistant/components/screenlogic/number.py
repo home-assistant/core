@@ -4,6 +4,9 @@ import logging
 from screenlogicpy.const import BODY_TYPE, DATA as SL_DATA, EQUIPMENT, SCG
 
 from homeassistant.components.number import NumberEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
@@ -18,7 +21,11 @@ SUPPORTED_SCG_NUMBERS = (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     equipment_flags = coordinator.data[SL_DATA.KEY_CONFIG]["equipment_flags"]

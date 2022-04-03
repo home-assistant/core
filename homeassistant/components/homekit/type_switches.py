@@ -12,7 +12,7 @@ from pyhap.const import (
     CATEGORY_SWITCH,
 )
 
-from homeassistant.components import button
+from homeassistant.components import button, input_button
 from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.vacuum import (
@@ -42,7 +42,6 @@ from .const import (
     CHAR_ON,
     CHAR_OUTLET_IN_USE,
     CHAR_VALVE_TYPE,
-    MAX_NAME_LENGTH,
     SERV_OUTLET,
     SERV_SWITCH,
     SERV_VALVE,
@@ -51,6 +50,7 @@ from .const import (
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
+from .util import cleanup_name_for_homekit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ VALVE_TYPE: dict[str, ValveInfo] = {
 }
 
 
-ACTIVATE_ONLY_SWITCH_DOMAINS = {"button", "scene", "script"}
+ACTIVATE_ONLY_SWITCH_DOMAINS = {"button", "input_button", "scene", "script"}
 
 ACTIVATE_ONLY_RESET_SECONDS = 10
 
@@ -152,6 +152,8 @@ class Switch(HomeAccessory):
             params = {}
         elif self._domain == button.DOMAIN:
             service = button.SERVICE_PRESS
+        elif self._domain == input_button.DOMAIN:
+            service = input_button.SERVICE_PRESS
         else:
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
 
@@ -261,8 +263,7 @@ class SelectSwitch(HomeAccessory):
                 SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE]
             )
             serv_option.configure_char(
-                CHAR_NAME,
-                value=f"{option}"[:MAX_NAME_LENGTH],
+                CHAR_NAME, value=cleanup_name_for_homekit(option)
             )
             serv_option.configure_char(CHAR_IN_USE, value=False)
             self.select_chars[option] = serv_option.configure_char(
@@ -284,6 +285,6 @@ class SelectSwitch(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
-        current_option = new_state.state
+        current_option = cleanup_name_for_homekit(new_state.state)
         for option, char in self.select_chars.items():
             char.set_value(option == current_option)

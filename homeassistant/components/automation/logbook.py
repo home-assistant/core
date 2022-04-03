@@ -3,15 +3,16 @@ from homeassistant.components.logbook import LazyEventPartialState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 
-from . import ATTR_SOURCE, DOMAIN, EVENT_AUTOMATION_TRIGGERED
+from . import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
+from .const import DOMAIN
 
 
 @callback
-def async_describe_events(hass: HomeAssistant, async_describe_event):  # type: ignore
+def async_describe_events(hass: HomeAssistant, async_describe_event):  # type: ignore[no-untyped-def]
     """Describe logbook events."""
 
     @callback
-    def async_describe_logbook_event(event: LazyEventPartialState):  # type: ignore
+    def async_describe_logbook_event(event: LazyEventPartialState):  # type: ignore[no-untyped-def]
         """Describe a logbook event."""
         data = event.data
         message = "has been triggered"

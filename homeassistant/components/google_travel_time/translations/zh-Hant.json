@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API \u5bc6\u9470",
+                    "api_key": "API \u91d1\u9470",
                     "destination": "\u76ee\u7684\u5730",
                     "name": "\u540d\u7a31",
                     "origin": "\u51fa\u767c\u5730"
@@ -26,7 +26,7 @@
                     "language": "\u8a9e\u8a00",
                     "mode": "\u65c5\u884c\u6a21\u5f0f",
                     "time": "\u6642\u9593",
-                    "time_type": "\u6642\u9593\u985e\u578b",
+                    "time_type": "\u6642\u9593\u985e\u5225",
                     "transit_mode": "\u79fb\u52d5\u6a21\u5f0f",
                     "transit_routing_preference": "\u504f\u597d\u79fb\u52d5\u8def\u7dda",
                     "units": "\u55ae\u4f4d"

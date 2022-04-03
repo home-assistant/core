@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dispositivo j\u00e1 configurado",
-            "reauth_successful": "A reautentica\u00e7\u00e3o foi feita com sucesso"
+            "already_configured": "A conta j\u00e1 foi configurada",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
         },
         "error": {
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
@@ -14,12 +14,12 @@
                     "password": "Senha"
                 },
                 "description": "Por favor, digite novamente a senha para {username}:",
-                "title": "Reautenticar integra\u00e7\u00e3o"
+                "title": "Reautenticar Integra\u00e7\u00e3o"
             },
             "user": {
                 "data": {
                     "password": "Senha",
-                    "username": "Nome de usu\u00e1rio"
+                    "username": "Usu\u00e1rio"
                 },
                 "description": "Digite seu nome de usu\u00e1rio e senha:"
             }

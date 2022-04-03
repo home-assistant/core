@@ -1,5 +1,6 @@
 """Initialization of ATAG One sensor platform."""
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_BAR,
@@ -7,6 +8,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_HOURS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, AtagEntity
 
@@ -22,7 +25,11 @@ SENSORS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Initialize sensor platform from config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([AtagSensor(coordinator, sensor) for sensor in SENSORS])

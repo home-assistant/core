@@ -19,9 +19,11 @@ from homeassistant.util.decorator import Registry
 from .const import ATTR_STREAMS, DOMAIN
 
 if TYPE_CHECKING:
+    from av import CodecContext, Packet
+
     from . import Stream
 
-PROVIDERS = Registry()
+PROVIDERS: Registry[str, type[StreamOutput]] = Registry()
 
 
 @attr.s(slots=True)
@@ -356,3 +358,86 @@ class StreamView(HomeAssistantView):
     ) -> web.StreamResponse:
         """Handle the stream request."""
         raise NotImplementedError()
+
+
+class KeyFrameConverter:
+    """
+    Enables generating and getting an image from the last keyframe seen in the stream.
+
+    An overview of the thread and state interaction:
+        the worker thread sets a packet
+        get_image is called from the main asyncio loop
+        get_image schedules _generate_image in an executor thread
+        _generate_image will try to create an image from the packet
+        _generate_image will clear the packet, so there will only be one attempt per packet
+    If successful, self._image will be updated and returned by get_image
+    If unsuccessful, get_image will return the previous image
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize."""
+
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components.camera.img_util import TurboJPEGSingleton
+
+        self.packet: Packet = None
+        self._hass = hass
+        self._image: bytes | None = None
+        self._turbojpeg = TurboJPEGSingleton.instance()
+        self._lock = asyncio.Lock()
+        self._codec_context: CodecContext | None = None
+
+    def create_codec_context(self, codec_context: CodecContext) -> None:
+        """
+        Create a codec context to be used for decoding the keyframes.
+
+        This is run by the worker thread and will only be called once per worker.
+        """
+
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from av import CodecContext
+
+        self._codec_context = CodecContext.create(codec_context.name, "r")
+        self._codec_context.extradata = codec_context.extradata
+        self._codec_context.skip_frame = "NONKEY"
+        self._codec_context.thread_type = "NONE"
+
+    def _generate_image(self, width: int | None, height: int | None) -> None:
+        """
+        Generate the keyframe image.
+
+        This is run in an executor thread, but since it is called within an
+        the asyncio lock from the main thread, there will only be one entry
+        at a time per instance.
+        """
+
+        if not (self._turbojpeg and self.packet and self._codec_context):
+            return
+        packet = self.packet
+        self.packet = None
+        # decode packet (flush afterwards)
+        frames = self._codec_context.decode(packet)
+        for _i in range(2):
+            if frames:
+                break
+            frames = self._codec_context.decode(None)
+        if frames:
+            frame = frames[0]
+            if width and height:
+                frame = frame.reformat(width=width, height=height)
+            bgr_array = frame.to_ndarray(format="bgr24")
+            self._image = bytes(self._turbojpeg.encode(bgr_array))
+
+    async def async_get_image(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes | None:
+        """Fetch an image from the Stream and return it as a jpeg in bytes."""
+
+        # Use a lock to ensure only one thread is working on the keyframe at a time
+        async with self._lock:
+            await self._hass.async_add_executor_job(self._generate_image, width, height)
+        return self._image

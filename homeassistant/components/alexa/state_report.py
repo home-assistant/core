@@ -11,11 +11,13 @@ import async_timeout
 
 from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
 
 from .const import API_CHANGE, DATE_FORMAT, DOMAIN, Cause
 from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
+from .errors import NoTokenAvailable, RequireRelink
 from .messages import AlexaResponse
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,7 +114,14 @@ async def async_send_changereport_message(
 
     https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#report-state-with-changereport-events
     """
-    token = await config.async_get_access_token()
+    try:
+        token = await config.async_get_access_token()
+    except (RequireRelink, NoTokenAvailable):
+        await config.set_authorized(False)
+        _LOGGER.error(
+            "Error when sending ChangeReport to Alexa, could not get access token"
+        )
+        return
 
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -129,7 +138,7 @@ async def async_send_changereport_message(
     message.set_endpoint_full(token, endpoint)
 
     message_serialized = message.serialize()
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     try:
         async with async_timeout.timeout(DEFAULT_TIMEOUT):
@@ -141,7 +150,7 @@ async def async_send_changereport_message(
             )
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Timeout sending report to Alexa")
+        _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 
     response_text = await response.text()
@@ -154,17 +163,22 @@ async def async_send_changereport_message(
 
     response_json = json.loads(response_text)
 
-    if (
-        response_json["payload"]["code"] == "INVALID_ACCESS_TOKEN_EXCEPTION"
-        and not invalidate_access_token
-    ):
-        config.async_invalidate_access_token()
-        return await async_send_changereport_message(
-            hass, config, alexa_entity, alexa_properties, invalidate_access_token=False
-        )
+    if response_json["payload"]["code"] == "INVALID_ACCESS_TOKEN_EXCEPTION":
+        if invalidate_access_token:
+            # Invalidate the access token and try again
+            config.async_invalidate_access_token()
+            return await async_send_changereport_message(
+                hass,
+                config,
+                alexa_entity,
+                alexa_properties,
+                invalidate_access_token=False,
+            )
+        await config.set_authorized(False)
 
     _LOGGER.error(
-        "Error when sending ChangeReport to Alexa: %s: %s",
+        "Error when sending ChangeReport for %s to Alexa: %s: %s",
+        alexa_entity.entity_id,
         response_json["payload"]["code"],
         response_json["payload"]["description"],
     )
@@ -198,7 +212,7 @@ async def async_send_add_or_update_message(hass, config, entity_ids):
     )
 
     message_serialized = message.serialize()
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     return await session.post(
         config.endpoint, headers=headers, json=message_serialized, allow_redirects=True
@@ -231,7 +245,7 @@ async def async_send_delete_message(hass, config, entity_ids):
     )
 
     message_serialized = message.serialize()
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     return await session.post(
         config.endpoint, headers=headers, json=message_serialized, allow_redirects=True
@@ -261,7 +275,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     message.set_endpoint_full(token, endpoint)
 
     message_serialized = message.serialize()
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     try:
         async with async_timeout.timeout(DEFAULT_TIMEOUT):
@@ -273,7 +287,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
             )
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Timeout sending report to Alexa")
+        _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 
     response_text = await response.text()
@@ -287,7 +301,8 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     response_json = json.loads(response_text)
 
     _LOGGER.error(
-        "Error when sending DoorbellPress event to Alexa: %s: %s",
+        "Error when sending DoorbellPress event for %s to Alexa: %s: %s",
+        alexa_entity.entity_id,
         response_json["payload"]["code"],
         response_json["payload"]["description"],
     )

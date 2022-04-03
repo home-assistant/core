@@ -52,7 +52,8 @@ class TailscaleEntity(CoordinatorEntity):
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self.device_id = device.device_id
-        self._attr_name = f"{device.hostname} {description.name}"
+        self.friendly_name = device.name.split(".")[0]
+        self._attr_name = f"{self.friendly_name} {description.name}"
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
     @property
@@ -70,6 +71,6 @@ class TailscaleEntity(CoordinatorEntity):
             identifiers={(DOMAIN, device.device_id)},
             manufacturer="Tailscale Inc.",
             model=device.os,
-            name=device.hostname,
+            name=self.friendly_name,
             sw_version=device.client_version,
         )

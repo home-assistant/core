@@ -5,6 +5,7 @@ Call init before using it in your tests to ensure clean test data.
 """
 from homeassistant.components.sensor import (
     DEVICE_CLASSES,
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -13,6 +14,8 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     FREQUENCY_GIGAHERTZ,
     PERCENTAGE,
+    POWER_VOLT_AMPERE,
+    POWER_VOLT_AMPERE_REACTIVE,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS,
     VOLUME_CUBIC_METERS,
@@ -23,6 +26,7 @@ from tests.common import MockEntity
 DEVICE_CLASSES.append("none")
 
 UNITS_OF_MEASUREMENT = {
+    SensorDeviceClass.APPARENT_POWER: POWER_VOLT_AMPERE,  # apparent power (VA)
     SensorDeviceClass.BATTERY: PERCENTAGE,  # % of battery that is left
     SensorDeviceClass.CO: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO concentration
     SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
@@ -41,9 +45,10 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.PRESSURE: PRESSURE_HPA,  # pressure (hPa/mbar)
     SensorDeviceClass.POWER: "kW",  # power (W/kW)
     SensorDeviceClass.CURRENT: "A",  # current (A)
-    SensorDeviceClass.ENERGY: "kWh",  # energy (Wh/kWh)
+    SensorDeviceClass.ENERGY: "kWh",  # energy (Wh/kWh/MWh)
     SensorDeviceClass.FREQUENCY: FREQUENCY_GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
     SensorDeviceClass.POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
+    SensorDeviceClass.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,  # reactive power (var)
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of vocs
     SensorDeviceClass.VOLTAGE: "V",  # voltage (V)
     SensorDeviceClass.GAS: VOLUME_CUBIC_METERS,  # gas (m³)
@@ -105,3 +110,17 @@ class MockSensor(MockEntity, SensorEntity):
     def state_class(self):
         """Return the state class of this sensor."""
         return self._handle("state_class")
+
+
+class MockRestoreSensor(MockSensor, RestoreSensor):
+    """Mock RestoreSensor class."""
+
+    async def async_added_to_hass(self) -> None:
+        """Restore native_value and native_unit_of_measurement."""
+        await super().async_added_to_hass()
+        if (last_sensor_data := await self.async_get_last_sensor_data()) is None:
+            return
+        self._values["native_value"] = last_sensor_data.native_value
+        self._values[
+            "native_unit_of_measurement"
+        ] = last_sensor_data.native_unit_of_measurement

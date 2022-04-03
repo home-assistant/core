@@ -53,6 +53,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
@@ -60,6 +61,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry
@@ -82,6 +84,14 @@ CONFIG_ANDROIDTV_PYTHON_ADB = {
         CONF_PORT: DEFAULT_PORT,
         CONF_DEVICE_CLASS: "androidtv",
         CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
+    }
+}
+
+# Android TV device with Python ADB implementation imported from YAML
+CONFIG_ANDROIDTV_PYTHON_ADB_YAML = {
+    DOMAIN: {
+        CONF_NAME: "ADB yaml import",
+        **CONFIG_ANDROIDTV_PYTHON_ADB[DOMAIN],
     }
 }
 
@@ -126,7 +136,10 @@ def _setup(config):
         patch_key = "server"
 
     host = config[DOMAIN][CONF_HOST]
-    if config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
+    # CONF_NAME available for configuration imported from YAML
+    if conf_name := config[DOMAIN].get(CONF_NAME):
+        entity_id = slugify(conf_name)
+    elif config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
         entity_id = slugify(f"Android TV {host}")
     else:
         entity_id = slugify(f"Fire TV {host}")
@@ -142,28 +155,17 @@ def _setup(config):
     return patch_key, entity_id, config_entry
 
 
-async def test_setup_with_properties(hass):
-    """Test that setup succeeds with device properties.
-
-    the response must be a string with the following info separated with line break:
-    "manufacturer, model, serialno, version, mac_wlan0_output, mac_eth0_output"
-
-    """
-
-    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
-    config_entry.add_to_hass(hass)
-    response = "fake\nfake\n0123456\nfake\nether a1:b1:c1:d1:e1:f1 brd\nnone"
-
-    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
-        patch_key
-    ], patchers.patch_shell(response)[patch_key]:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert state is not None
-
-
-async def _test_reconnect(hass, caplog, config):
+@pytest.mark.parametrize(
+    "config",
+    [
+        CONFIG_ANDROIDTV_PYTHON_ADB,
+        CONFIG_ANDROIDTV_PYTHON_ADB_YAML,
+        CONFIG_FIRETV_PYTHON_ADB,
+        CONFIG_ANDROIDTV_ADB_SERVER,
+        CONFIG_FIRETV_ADB_SERVER,
+    ],
+)
+async def test_reconnect(hass, caplog, config):
     """Test that the error and reconnection attempts are logged correctly.
 
     "Handles device/service unavailable. Log a warning once when
@@ -180,10 +182,9 @@ async def _test_reconnect(hass, caplog, config):
         patch_key
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        # assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -195,7 +196,7 @@ async def _test_reconnect(hass, caplog, config):
         patch_key
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         for _ in range(5):
-            await hass.helpers.entity_component.async_update_entity(entity_id)
+            await async_update_entity(hass, entity_id)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.state == STATE_UNAVAILABLE
@@ -208,7 +209,7 @@ async def _test_reconnect(hass, caplog, config):
     with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
         SHELL_RESPONSE_STANDBY
     )[patch_key], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
 
         state = hass.states.get(entity_id)
         assert state is not None
@@ -225,10 +226,17 @@ async def _test_reconnect(hass, caplog, config):
             in caplog.record_tuples[2]
         )
 
-    return True
 
-
-async def _test_adb_shell_returns_none(hass, config):
+@pytest.mark.parametrize(
+    "config",
+    [
+        CONFIG_ANDROIDTV_PYTHON_ADB,
+        CONFIG_FIRETV_PYTHON_ADB,
+        CONFIG_ANDROIDTV_ADB_SERVER,
+        CONFIG_FIRETV_ADB_SERVER,
+    ],
+)
+async def test_adb_shell_returns_none(hass, config):
     """Test the case that the ADB shell command returns `None`.
 
     The state should be `None` and the device should be unavailable.
@@ -243,7 +251,8 @@ async def _test_adb_shell_returns_none(hass, config):
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state != STATE_UNAVAILABLE
@@ -251,92 +260,10 @@ async def _test_adb_shell_returns_none(hass, config):
     with patchers.patch_shell(None)[patch_key], patchers.patch_shell(error=True)[
         patch_key
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_UNAVAILABLE
-
-    return True
-
-
-async def test_reconnect_androidtv_python_adb(hass, caplog):
-    """Test that the error and reconnection attempts are logged correctly.
-
-    * Device type: Android TV
-    * ADB connection method: Python ADB implementation
-
-    """
-    assert await _test_reconnect(hass, caplog, CONFIG_ANDROIDTV_PYTHON_ADB)
-
-
-async def test_adb_shell_returns_none_androidtv_python_adb(hass):
-    """Test the case that the ADB shell command returns `None`.
-
-    * Device type: Android TV
-    * ADB connection method: Python ADB implementation
-
-    """
-    assert await _test_adb_shell_returns_none(hass, CONFIG_ANDROIDTV_PYTHON_ADB)
-
-
-async def test_reconnect_firetv_python_adb(hass, caplog):
-    """Test that the error and reconnection attempts are logged correctly.
-
-    * Device type: Fire TV
-    * ADB connection method: Python ADB implementation
-
-    """
-    assert await _test_reconnect(hass, caplog, CONFIG_FIRETV_PYTHON_ADB)
-
-
-async def test_adb_shell_returns_none_firetv_python_adb(hass):
-    """Test the case that the ADB shell command returns `None`.
-
-    * Device type: Fire TV
-    * ADB connection method: Python ADB implementation
-
-    """
-    assert await _test_adb_shell_returns_none(hass, CONFIG_FIRETV_PYTHON_ADB)
-
-
-async def test_reconnect_androidtv_adb_server(hass, caplog):
-    """Test that the error and reconnection attempts are logged correctly.
-
-    * Device type: Android TV
-    * ADB connection method: ADB server
-
-    """
-    assert await _test_reconnect(hass, caplog, CONFIG_ANDROIDTV_ADB_SERVER)
-
-
-async def test_adb_shell_returns_none_androidtv_adb_server(hass):
-    """Test the case that the ADB shell command returns `None`.
-
-    * Device type: Android TV
-    * ADB connection method: ADB server
-
-    """
-    assert await _test_adb_shell_returns_none(hass, CONFIG_ANDROIDTV_ADB_SERVER)
-
-
-async def test_reconnect_firetv_adb_server(hass, caplog):
-    """Test that the error and reconnection attempts are logged correctly.
-
-    * Device type: Fire TV
-    * ADB connection method: ADB server
-
-    """
-    assert await _test_reconnect(hass, caplog, CONFIG_FIRETV_ADB_SERVER)
-
-
-async def test_adb_shell_returns_none_firetv_adb_server(hass):
-    """Test the case that the ADB shell command returns `None`.
-
-    * Device type: Fire TV
-    * ADB connection method: ADB server
-
-    """
-    assert await _test_adb_shell_returns_none(hass, CONFIG_FIRETV_ADB_SERVER)
 
 
 async def test_setup_with_adbkey(hass):
@@ -353,13 +280,21 @@ async def test_setup_with_adbkey(hass):
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER, PATCH_ISFILE, PATCH_ACCESS:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
 
 
-async def _test_sources(hass, config0):
+@pytest.mark.parametrize(
+    "config0",
+    [
+        CONFIG_ANDROIDTV_ADB_SERVER,
+        CONFIG_FIRETV_ADB_SERVER,
+    ],
+)
+async def test_sources(hass, config0):
     """Test that sources (i.e., apps) are handled correctly for Android TV and Fire TV devices."""
     config = copy.deepcopy(config0)
     config[DOMAIN].setdefault(CONF_OPTIONS, {}).update(
@@ -379,7 +314,8 @@ async def _test_sources(hass, config0):
     ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -403,7 +339,7 @@ async def _test_sources(hass, config0):
         )
 
     with patch_update:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_PLAYING
@@ -429,24 +365,12 @@ async def _test_sources(hass, config0):
         )
 
     with patch_update:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_PLAYING
         assert state.attributes["source"] == "com.app.test2"
         assert sorted(state.attributes["source_list"]) == ["TEST 1", "com.app.test2"]
-
-    return True
-
-
-async def test_androidtv_sources(hass):
-    """Test that sources (i.e., apps) are handled correctly for Android TV devices."""
-    assert await _test_sources(hass, CONFIG_ANDROIDTV_ADB_SERVER)
-
-
-async def test_firetv_sources(hass):
-    """Test that sources (i.e., apps) are handled correctly for Fire TV devices."""
-    assert await _test_sources(hass, CONFIG_FIRETV_ADB_SERVER)
 
 
 async def _test_exclude_sources(hass, config0, expected_sources):
@@ -469,7 +393,8 @@ async def _test_exclude_sources(hass, config0, expected_sources):
     ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -505,7 +430,7 @@ async def _test_exclude_sources(hass, config0, expected_sources):
         )
 
     with patch_update:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_PLAYING
@@ -549,7 +474,8 @@ async def _test_select_source(hass, config0, source, expected_arg, method_patch)
     ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -756,7 +682,14 @@ async def test_firetv_select_source_stop_hidden(hass):
     )
 
 
-async def _test_setup_fail(hass, config):
+@pytest.mark.parametrize(
+    "config",
+    [
+        CONFIG_ANDROIDTV_PYTHON_ADB,
+        CONFIG_FIRETV_PYTHON_ADB,
+    ],
+)
+async def test_setup_fail(hass, config):
     """Test that the entity is not created when the ADB connection is not established."""
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
@@ -768,21 +701,10 @@ async def _test_setup_fail(hass, config):
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is None
-
-    return True
-
-
-async def test_setup_fail_androidtv(hass):
-    """Test that the Android TV entity is not created when the ADB connection is not established."""
-    assert await _test_setup_fail(hass, CONFIG_ANDROIDTV_PYTHON_ADB)
-
-
-async def test_setup_fail_firetv(hass):
-    """Test that the Fire TV entity is not created when the ADB connection is not established."""
-    assert await _test_setup_fail(hass, CONFIG_FIRETV_PYTHON_ADB)
 
 
 async def test_adb_command(hass):
@@ -838,7 +760,6 @@ async def test_adb_command_unicode_decode_error(hass):
                 blocking=True,
             )
 
-            # patch_shell.assert_called_with(command)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] is None
@@ -944,7 +865,7 @@ async def test_update_lock_not_acquired(hass):
         await hass.async_block_till_done()
 
     with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -953,13 +874,13 @@ async def test_update_lock_not_acquired(hass):
         "androidtv.androidtv.androidtv_async.AndroidTVAsync.update",
         side_effect=LockNotAcquiredException,
     ), patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
 
     with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_STANDBY
@@ -1096,7 +1017,7 @@ async def test_get_image(hass, hass_ws_client):
         await hass.async_block_till_done()
 
     with patchers.patch_shell("11")[patch_key]:
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
 
     client = await hass_ws_client(hass)
 
@@ -1192,13 +1113,6 @@ async def test_services_androidtv(hass):
             await _test_service(
                 hass,
                 entity_id,
-                SERVICE_VOLUME_MUTE,
-                "mute_volume",
-                {ATTR_MEDIA_VOLUME_MUTED: False},
-            )
-            await _test_service(
-                hass,
-                entity_id,
                 SERVICE_VOLUME_SET,
                 "set_volume_level",
                 {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
@@ -1228,6 +1142,49 @@ async def test_services_firetv(hass):
             await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "back")
             await _test_service(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
             await _test_service(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
+
+
+async def test_volume_mute(hass):
+    """Test the volume mute service."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
+    config_entry.add_to_hass(hass)
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+            service_data = {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_MUTED: True}
+            with patch(
+                "androidtv.androidtv.androidtv_async.AndroidTVAsync.mute_volume",
+                return_value=None,
+            ) as mute_volume:
+                # Don't send the mute key if the volume is already muted
+                with patch(
+                    "androidtv.androidtv.androidtv_async.AndroidTVAsync.is_volume_muted",
+                    return_value=True,
+                ):
+                    await hass.services.async_call(
+                        MP_DOMAIN,
+                        SERVICE_VOLUME_MUTE,
+                        service_data=service_data,
+                        blocking=True,
+                    )
+                    assert not mute_volume.called
+
+                # Send the mute key because the volume is not already muted
+                with patch(
+                    "androidtv.androidtv.androidtv_async.AndroidTVAsync.is_volume_muted",
+                    return_value=False,
+                ):
+                    await hass.services.async_call(
+                        MP_DOMAIN,
+                        SERVICE_VOLUME_MUTE,
+                        service_data=service_data,
+                        blocking=True,
+                    )
+                    assert mute_volume.called
 
 
 async def test_connection_closed_on_ha_stop(hass):
@@ -1265,20 +1222,20 @@ async def test_exception(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
 
-        # When an unforessen exception occurs, we close the ADB connection and raise the exception
+        # When an unforeseen exception occurs, we close the ADB connection and raise the exception
         with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION, pytest.raises(Exception):
-            await hass.helpers.entity_component.async_update_entity(entity_id)
+            await async_update_entity(hass, entity_id)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.state == STATE_UNAVAILABLE
 
         # On the next update, HA will reconnect to the device
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF

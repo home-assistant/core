@@ -11,7 +11,8 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Passord"
-                }
+                },
+                "title": "Autentiser Tile p\u00e5 nytt"
             },
             "user": {
                 "data": {

@@ -4,11 +4,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
-from . import ATTR_ENTITY_ID, ATTR_LANGUAGE, ATTR_MESSAGE, DOMAIN
+from . import ATTR_LANGUAGE, ATTR_MESSAGE, DOMAIN
 
 CONF_MEDIA_PLAYER = "media_player"
 CONF_TTS_SERVICE = "tts_service"

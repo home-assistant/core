@@ -1,16 +1,22 @@
 """Support for HomeKit Controller humidifier."""
 from __future__ import annotations
 
+from typing import Any
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
 from homeassistant.components.humidifier.const import (
+    DEFAULT_MAX_HUMIDITY,
+    DEFAULT_MIN_HUMIDITY,
     MODE_AUTO,
     MODE_NORMAL,
     SUPPORT_MODES,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -35,7 +41,7 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
 
     _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
             CharacteristicsTypes.ACTIVE,
@@ -45,20 +51,20 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
         ]
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_FLAGS | SUPPORT_MODES
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ACTIVE)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified valve on."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
 
@@ -119,16 +125,22 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
     @property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
-        return self.service[
-            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-        ].minValue
+        return int(
+            self.service[
+                CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
+            ].minValue
+            or DEFAULT_MIN_HUMIDITY
+        )
 
     @property
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
-        return self.service[
-            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-        ].maxValue
+        return int(
+            self.service[
+                CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
+            ].maxValue
+            or DEFAULT_MAX_HUMIDITY
+        )
 
 
 class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
@@ -136,7 +148,7 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
 
     _attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
             CharacteristicsTypes.ACTIVE,
@@ -147,20 +159,20 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
         ]
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_FLAGS | SUPPORT_MODES
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ACTIVE)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified valve on."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
 
@@ -221,16 +233,22 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
     @property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
-        return self.service[
-            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-        ].minValue
+        return int(
+            self.service[
+                CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+            ].minValue
+            or DEFAULT_MIN_HUMIDITY
+        )
 
     @property
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
-        return self.service[
-            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-        ].maxValue
+        return int(
+            self.service[
+                CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+            ].maxValue
+            or DEFAULT_MAX_HUMIDITY
+        )
 
     @property
     def unique_id(self) -> str:
@@ -239,19 +257,23 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
         return f"homekit-{serial}-{self._iid}-{self.device_class}"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit humidifer."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(service):
-        if service.short_type != ServicesTypes.HUMIDIFIER_DEHUMIDIFIER:
+    def async_add_service(service: Service) -> bool:
+        if service.type != ServicesTypes.HUMIDIFIER_DEHUMIDIFIER:
             return False
 
         info = {"aid": service.accessory.aid, "iid": service.iid}
 
-        entities = []
+        entities: list[HumidifierEntity] = []
 
         if service.has(CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD):
             entities.append(HomeKitHumidifier(conn, info))

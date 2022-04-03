@@ -8,7 +8,7 @@
         "error": {
             "invalid_auth": "Autenticazione non valida",
             "send_verification_code": "Impossibile inviare il codice di verifica",
-            "validate_verification_code": "Impossibile verificare il codice di verifica, riprovare"
+            "validate_verification_code": "Impossibile verificare il codice di verifica, riprova"
         },
         "step": {
             "reauth": {
@@ -22,7 +22,7 @@
                 "data": {
                     "trusted_device": "Dispositivo attendibile"
                 },
-                "description": "Selezionare il dispositivo attendibile",
+                "description": "Seleziona il dispositivo attendibile",
                 "title": "Dispositivo attendibile iCloud"
             },
             "user": {

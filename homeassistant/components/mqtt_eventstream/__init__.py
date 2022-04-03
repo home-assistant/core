@@ -17,9 +17,10 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import EventOrigin, State, callback
+from homeassistant.core import EventOrigin, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "mqtt_eventstream"
 CONF_PUBLISH_TOPIC = "publish_topic"
@@ -52,7 +53,7 @@ BLOCKED_EVENTS = [
 ]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MQTT eventstream component."""
     conf = config.get(DOMAIN, {})
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)

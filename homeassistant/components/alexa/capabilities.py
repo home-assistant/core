@@ -12,16 +12,16 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
+from homeassistant.components.alarm_control_panel import FORMAT_NUMBER
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
 import homeassistant.components.climate.const as climate
-from homeassistant.components.lock import STATE_LOCKING, STATE_UNLOCKING
 import homeassistant.components.media_player.const as media_player
 from homeassistant.const import (
+    ATTR_CODE_FORMAT,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -31,6 +31,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_IDLE,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
@@ -38,6 +39,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import State
 import homeassistant.util.color as color_util
@@ -73,6 +75,8 @@ class AlexaCapability:
     https://developer.amazon.com/docs/device-apis/message-guide.html
     """
 
+    # pylint: disable=no-self-use
+
     supported_locales = {"en-US"}
 
     def __init__(self, entity: State, instance: str | None = None) -> None:
@@ -84,28 +88,23 @@ class AlexaCapability:
         """Return the Alexa API name of this interface."""
         raise NotImplementedError
 
-    @staticmethod
-    def properties_supported() -> list[dict]:
+    def properties_supported(self) -> list[dict]:
         """Return what properties this entity supports."""
         return []
 
-    @staticmethod
-    def properties_proactively_reported() -> bool:
+    def properties_proactively_reported(self) -> bool:
         """Return True if properties asynchronously reported."""
         return False
 
-    @staticmethod
-    def properties_retrievable() -> bool:
+    def properties_retrievable(self) -> bool:
         """Return True if properties can be retrieved."""
         return False
 
-    @staticmethod
-    def properties_non_controllable() -> bool | None:
+    def properties_non_controllable(self) -> bool | None:
         """Return True if non controllable."""
         return None
 
-    @staticmethod
-    def get_property(name):
+    def get_property(self, name):
         """Read and return a property.
 
         Return value should be a dict, or raise UnsupportedProperty.
@@ -115,13 +114,11 @@ class AlexaCapability:
         """
         raise UnsupportedProperty(name)
 
-    @staticmethod
-    def supports_deactivation():
+    def supports_deactivation(self):
         """Applicable only to scenes."""
         return None
 
-    @staticmethod
-    def capability_proactively_reported():
+    def capability_proactively_reported(self):
         """Return True if the capability is proactively reported.
 
         Set properties_proactively_reported() for proactively reported properties.
@@ -129,16 +126,14 @@ class AlexaCapability:
         """
         return None
 
-    @staticmethod
-    def capability_resources():
+    def capability_resources(self):
         """Return the capability object.
 
         Applicable to ToggleController, RangeController, and ModeController interfaces.
         """
         return []
 
-    @staticmethod
-    def configuration():
+    def configuration(self):
         """Return the configuration object.
 
         Applicable to the ThermostatController, SecurityControlPanel, ModeController, RangeController,
@@ -146,8 +141,7 @@ class AlexaCapability:
         """
         return []
 
-    @staticmethod
-    def configurations():
+    def configurations(self):
         """Return the configurations object.
 
         The plural configurations object is different that the singular configuration object.
@@ -155,31 +149,29 @@ class AlexaCapability:
         """
         return []
 
-    @staticmethod
-    def inputs():
+    def inputs(self):
         """Applicable only to media players."""
         return []
 
-    @staticmethod
-    def semantics():
+    def semantics(self):
         """Return the semantics object.
 
         Applicable to ToggleController, RangeController, and ModeController interfaces.
         """
         return []
 
-    @staticmethod
-    def supported_operations():
+    def supported_operations(self):
         """Return the supportedOperations object."""
         return []
 
-    @staticmethod
-    def camera_stream_configurations():
+    def camera_stream_configurations(self):
         """Applicable only to CameraStreamController."""
         return None
 
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
+        # pylint: disable=assignment-from-none
+        # Methods may be overridden and return a value.
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
 
         if (instance := self.instance) is not None:
@@ -820,6 +812,8 @@ class AlexaInputController(AlexaCapability):
         """Return list of supported inputs."""
         input_list = []
         for source in source_list:
+            if not isinstance(source, str):
+                continue
             formatted_source = (
                 source.lower().replace("-", "").replace("_", "").replace(" ", "")
             )

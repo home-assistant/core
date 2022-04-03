@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 import pytest
 
-from homeassistant.components.sensor import DEVICE_CLASS_DATE, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import PERCENTAGE, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -284,24 +284,24 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
 @pytest.mark.parametrize(
     "device_class,native_value,state_value",
     [
-        (DEVICE_CLASS_DATE, "2021-11-18", "2021-11-18"),
+        (SensorDeviceClass.DATE, "2021-11-18", "2021-11-18"),
         (
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.TIMESTAMP,
             "2021-11-18T20:25:00+00:00",
             "2021-11-18T20:25:00+00:00",
         ),
         (
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.TIMESTAMP,
             "2021-11-18 20:25:00+01:00",
             "2021-11-18T19:25:00+00:00",
         ),
         (
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.TIMESTAMP,
             "unavailable",
             STATE_UNAVAILABLE,
         ),
         (
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.TIMESTAMP,
             "unknown",
             STATE_UNKNOWN,
         ),

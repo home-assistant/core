@@ -8,6 +8,7 @@
           "path": "Application Path",
           "port": "Port Number",
           "ssl": "Use SSL",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]"
         }
       }

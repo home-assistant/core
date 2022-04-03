@@ -7,10 +7,13 @@ from tellduslive import DIM, TURNON, UP, Session
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
@@ -49,7 +52,7 @@ NEW_CLIENT_TASK = "telldus_new_client_task"
 INTERVAL_TRACKER = f"{DOMAIN}_INTERVAL"
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Create a tellduslive session."""
     conf = entry.data[KEY_SESSION]
 
@@ -95,7 +98,7 @@ async def async_new_client(hass, session, entry):
     await client.update()
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telldus Live component."""
     if DOMAIN not in config:
         return True
@@ -113,7 +116,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if not hass.data[NEW_CLIENT_TASK].done():
         hass.data[NEW_CLIENT_TASK].cancel()

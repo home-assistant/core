@@ -17,3 +17,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    # convert title and unique_id to string
+    if config_entry.version == 1:
+        if isinstance(config_entry.unique_id, int):
+
+            hass.config_entries.async_update_entry(
+                config_entry,
+                unique_id=str(config_entry.unique_id),
+                title=str(config_entry.title),
+            )
+
+    return True

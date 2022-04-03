@@ -1,18 +1,21 @@
 """Support for monitoring a Sense energy sensor."""
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -82,7 +85,11 @@ def sense_to_mdi(sense_icon):
     return "mdi:{}".format(MDI_ICONS.get(sense_icon, "power-plug"))
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Sense sensor."""
     base_data = hass.data[DOMAIN][config_entry.entry_id]
     data = base_data[SENSE_DATA]
@@ -98,7 +105,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SENSE_DISCOVERED_DEVICES_DATA
     ]
 
-    devices = [
+    entities: list[SensorEntity] = [
         SenseEnergyDevice(sense_devices_data, device, sense_monitor_id)
         for device in sense_devices
         if device["tags"]["DeviceListAllowed"] == "true"
@@ -109,7 +116,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor_type = ACTIVE_SENSOR_TYPE.sensor_type
 
         unique_id = f"{sense_monitor_id}-active-{variant_id}"
-        devices.append(
+        entities.append(
             SenseActiveSensor(
                 data,
                 name,
@@ -122,7 +129,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     for i in range(len(data.active_voltage)):
-        devices.append(SenseVoltageSensor(data, i, sense_monitor_id))
+        entities.append(SenseVoltageSensor(data, i, sense_monitor_id))
 
     for type_id, typ in TRENDS_SENSOR_TYPES.items():
         for variant_id, variant_name in TREND_SENSOR_VARIANTS:
@@ -130,7 +137,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             sensor_type = typ.sensor_type
 
             unique_id = f"{sense_monitor_id}-{type_id}-{variant_id}"
-            devices.append(
+            entities.append(
                 SenseTrendsSensor(
                     data,
                     name,
@@ -143,7 +150,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class SenseActiveSensor(SensorEntity):
@@ -290,6 +297,11 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return round(self._data.get_trend(self._sensor_type, self._variant_id), 1)
+
+    @property
+    def last_reset(self):
+        """Return the time when the sensor was last reset, if any."""
+        return self._data.trend_start(self._sensor_type)
 
 
 class SenseEnergyDevice(SensorEntity):

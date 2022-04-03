@@ -78,7 +78,9 @@ async def async_setup_entry(
     )
 
 
-class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
+class SwitcherBaseSwitchEntity(
+    CoordinatorEntity[SwitcherDataUpdateCoordinator], SwitchEntity
+):
     """Representation of a Switcher switch entity."""
 
     def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:

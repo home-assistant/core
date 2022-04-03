@@ -17,6 +17,7 @@ def get_update_manager(device):
         "A1": BroadlinkA1UpdateManager,
         "BG1": BroadlinkBG1UpdateManager,
         "LB1": BroadlinkLB1UpdateManager,
+        "LB2": BroadlinkLB1UpdateManager,
         "MP1": BroadlinkMP1UpdateManager,
         "RM4MINI": BroadlinkRMUpdateManager,
         "RM4PRO": BroadlinkRMUpdateManager,

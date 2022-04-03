@@ -1,4 +1,6 @@
 """OpenEnergyMonitor Thermostat Support."""
+from __future__ import annotations
+
 from oemthermostat import Thermostat
 import requests
 import voluptuous as vol
@@ -22,7 +24,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -38,7 +43,12 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the oemthermostat platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -49,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         therm = Thermostat(host, port=port, username=username, password=password)
     except (ValueError, AssertionError, requests.RequestException):
-        return False
+        return
 
     add_entities((ThermostatDevice(therm, name),), True)
 

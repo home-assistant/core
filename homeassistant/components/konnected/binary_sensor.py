@@ -1,5 +1,6 @@
 """Support for wired binary sensors attached to a Konnected device."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
@@ -8,14 +9,19 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TYPE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as KONNECTED_DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up binary sensors attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
     device_id = config_entry.data["id"]

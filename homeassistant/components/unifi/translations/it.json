@@ -19,7 +19,7 @@
                     "port": "Porta",
                     "site": "ID del sito",
                     "username": "Nome utente",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 },
                 "title": "Configura la rete UniFi"
             }
@@ -33,19 +33,19 @@
                     "dpi_restrictions": "Consenti il controllo dei gruppi di restrizione DPI",
                     "poe_clients": "Consentire il controllo POE dei client"
                 },
-                "description": "Configurare i controlli client \n\nCreare interruttori per i numeri di serie dei quali si desidera controllare l'accesso alla rete.",
+                "description": "Configura i controlli client \n\nCrear interruttori per i numeri di serie dei quali si desidera controllare l'accesso alla rete.",
                 "title": "Opzioni di rete UniFi 2/3"
             },
             "device_tracker": {
                 "data": {
                     "detection_time": "Tempo in secondi dall'ultima volta che viene visto fino a quando non \u00e8 considerato lontano",
                     "ignore_wired_bug": "Disabilita la logica dei bug cablati di rete UniFi",
-                    "ssid_filter": "Selezionare gli SSID su cui tracciare i client wireless",
+                    "ssid_filter": "Seleziona gli SSID su cui tracciare i client wireless",
                     "track_clients": "Traccia i client di rete",
-                    "track_devices": "Tracciare i dispositivi di rete (dispositivi Ubiquiti)",
+                    "track_devices": "Traccia i dispositivi di rete (dispositivi Ubiquiti)",
                     "track_wired_clients": "Includi i client di rete cablata"
                 },
-                "description": "Configurare il tracciamento del dispositivo",
+                "description": "Configura il tracciamento del dispositivo",
                 "title": "Opzioni di rete UniFi 1/3"
             },
             "init": {
@@ -58,7 +58,7 @@
                 "data": {
                     "block_client": "Client controllati per l'accesso alla rete",
                     "track_clients": "Traccia i client di rete",
-                    "track_devices": "Tracciare i dispositivi di rete (dispositivi Ubiquiti)"
+                    "track_devices": "Traccia i dispositivi di rete (dispositivi Ubiquiti)"
                 },
                 "description": "Configura l'integrazione della rete UniFi"
             },

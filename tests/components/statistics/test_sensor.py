@@ -1,6 +1,10 @@
 """The test for the statistics sensor platform."""
+from __future__ import annotations
+
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 import statistics
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
@@ -542,7 +546,7 @@ async def test_state_characteristics(hass: HomeAssistant):
     def mock_now():
         return mock_data["return_time"]
 
-    characteristics = (
+    characteristics: Sequence[dict[str, Any]] = (
         {
             "source_sensor_domain": "sensor",
             "name": "average_linear",
@@ -615,16 +619,16 @@ async def test_state_characteristics(hass: HomeAssistant):
             "source_sensor_domain": "sensor",
             "name": "datetime_newest",
             "value_0": STATE_UNKNOWN,
-            "value_1": start_datetime + timedelta(minutes=9),
-            "value_9": start_datetime + timedelta(minutes=9),
+            "value_1": (start_datetime + timedelta(minutes=9)).isoformat(),
+            "value_9": (start_datetime + timedelta(minutes=9)).isoformat(),
             "unit": None,
         },
         {
             "source_sensor_domain": "sensor",
             "name": "datetime_oldest",
             "value_0": STATE_UNKNOWN,
-            "value_1": start_datetime + timedelta(minutes=9),
-            "value_9": start_datetime + timedelta(minutes=1),
+            "value_1": (start_datetime + timedelta(minutes=9)).isoformat(),
+            "value_9": (start_datetime + timedelta(minutes=1)).isoformat(),
             "unit": None,
         },
         {
@@ -805,7 +809,11 @@ async def test_state_characteristics(hass: HomeAssistant):
             state = hass.states.get(
                 f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
             )
-            assert state is not None
+            assert state is not None, (
+                f"no state object for characteristic "
+                f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
+                f"(buffer filled)"
+            )
             assert state.state == str(characteristic["value_9"]), (
                 f"value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
@@ -826,7 +834,11 @@ async def test_state_characteristics(hass: HomeAssistant):
             state = hass.states.get(
                 f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
             )
-            assert state is not None
+            assert state is not None, (
+                f"no state object for characteristic "
+                f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
+                f"(one stored value)"
+            )
             assert state.state == str(characteristic["value_1"]), (
                 f"value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
@@ -844,7 +856,11 @@ async def test_state_characteristics(hass: HomeAssistant):
             state = hass.states.get(
                 f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
             )
-            assert state is not None
+            assert state is not None, (
+                f"no state object for characteristic "
+                f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
+                f"(buffer empty)"
+            )
             assert state.state == str(characteristic["value_0"]), (
                 f"value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
@@ -987,7 +1003,7 @@ async def test_initialize_from_database_with_maxage(hass: HomeAssistant):
     # The max_age timestamp should be 1 hour before what we have right
     # now in mock_data['return_time'].
     assert mock_data["return_time"] == datetime.strptime(
-        state.state, "%Y-%m-%d %H:%M:%S%z"
+        state.state, "%Y-%m-%dT%H:%M:%S%z"
     ) + timedelta(hours=1)
 
 

@@ -6,5 +6,6 @@
   "requirements": ["aiolookin==0.1.0"],
   "zeroconf": ["_lookin._tcp.local."],
   "config_flow": true,
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["aiolookin"]
 }

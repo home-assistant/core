@@ -13,7 +13,7 @@ from pycfdns.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except CloudflareException as error:
             _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
-    async def update_records_service(call):
+    async def update_records_service(call: ServiceCall) -> None:
         """Set up service for manual trigger."""
         try:
             await _async_update_cloudflare(cfupdate, zone_id)

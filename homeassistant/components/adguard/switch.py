@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
 
@@ -76,7 +77,7 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
         """Return the state of the switch."""
         return self._state
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
             await self._adguard_turn_off()
@@ -88,7 +89,7 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
         """Turn off the switch."""
         raise NotImplementedError()
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
             await self._adguard_turn_on()

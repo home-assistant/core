@@ -11,7 +11,8 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi"
-                }
+                },
+                "title": "Autentikasi Ulang Tile"
             },
             "user": {
                 "data": {

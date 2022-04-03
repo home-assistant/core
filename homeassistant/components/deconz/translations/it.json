@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il Bridge \u00e8 gi\u00e0 configurato",
+            "already_configured": "Il bridge \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "no_bridges": "Nessun bridge deCONZ rilevato",
             "no_hardware_available": "Nessun hardware radio collegato a deCONZ",
@@ -9,7 +9,7 @@
             "updated_instance": "Istanza deCONZ aggiornata con nuovo indirizzo host"
         },
         "error": {
-            "no_key": "Impossibile ottenere una API key"
+            "no_key": "Impossibile ottenere una chiave API"
         },
         "flow_title": "{host}",
         "step": {
@@ -18,7 +18,7 @@
                 "title": "Gateway deCONZ Zigbee tramite il componente aggiuntivo di Home Assistant"
             },
             "link": {
-                "description": "Sblocca il tuo gateway deCONZ per registrarti con Home Assistant.\n\n1. Vai a Impostazioni deCONZ -> Gateway -> Avanzate\n2. Premere il pulsante \"Autentica app\"",
+                "description": "Sblocca il tuo gateway deCONZ per registrarti con Home Assistant.\n\n1. Vai a Impostazioni deCONZ -> Gateway -> Avanzate\n2. Premi il pulsante \"Autentica app\"",
                 "title": "Collega con deCONZ"
             },
             "manual_input": {
@@ -48,7 +48,7 @@
             "button_8": "Ottavo pulsante",
             "close": "Chiudere",
             "dim_down": "Diminuire luminosit\u00e0",
-            "dim_up": "Aumentare luminosit\u00e0",
+            "dim_up": "Aumenta luminosit\u00e0",
             "left": "Sinistra",
             "open": "Aperto",
             "right": "Destra",
@@ -101,7 +101,7 @@
                     "allow_deconz_groups": "Consentire gruppi luce deCONZ",
                     "allow_new_devices": "Consentire l'aggiunta automatica di nuovi dispositivi"
                 },
-                "description": "Configurare la visibilit\u00e0 dei tipi di dispositivi deCONZ",
+                "description": "Configura la visibilit\u00e0 dei tipi di dispositivi deCONZ",
                 "title": "Opzioni deCONZ"
             }
         }

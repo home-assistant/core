@@ -22,7 +22,7 @@
             "account_options": {
                 "data": {
                     "read_only": "Sola lettura (solo sensori e notifica, nessuna esecuzione di servizi, nessun blocco)",
-                    "use_location": "Usa la posizione di Home Assistant per richieste sulla posizione dell'auto (richiesto per veicoli non i3/i8 prodotti prima del 7/2014)"
+                    "use_location": "Usa la posizione di Home Assistant per le richieste di posizione dell'auto (richiesto per veicoli non i3/i8 prodotti prima del 7/2014)"
                 }
             }
         }

@@ -1,4 +1,5 @@
 """Tests for the numato binary_sensor platform."""
+from homeassistant.const import Platform
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
@@ -54,7 +55,9 @@ async def test_hass_binary_sensor_notification(hass, numato_fixture):
 async def test_binary_sensor_setup_without_discovery_info(hass, config, numato_fixture):
     """Test handling of empty discovery_info."""
     numato_fixture.discover()
-    await discovery.async_load_platform(hass, "binary_sensor", "numato", None, config)
+    await discovery.async_load_platform(
+        hass, Platform.BINARY_SENSOR, "numato", None, config
+    )
     for entity_id in MOCKUP_ENTITY_IDS:
         assert entity_id not in hass.states.async_entity_ids()
     await hass.async_block_till_done()  # wait for numato platform to be loaded

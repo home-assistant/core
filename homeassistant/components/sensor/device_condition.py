@@ -6,9 +6,15 @@ import voluptuous as vol
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import CONF_ABOVE, CONF_BELOW, CONF_ENTITY_ID, CONF_TYPE
-from homeassistant.core import HomeAssistant, HomeAssistantError, callback
+from homeassistant.const import (
+    CONF_ABOVE,
+    CONF_BELOW,
+    CONF_CONDITION,
+    CONF_ENTITY_ID,
+    CONF_TYPE,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
 from homeassistant.helpers.entity_registry import (
@@ -17,12 +23,13 @@ from homeassistant.helpers.entity_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from . import DOMAIN, SensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 DEVICE_CLASS_NONE = "none"
 
+CONF_IS_APPARENT_POWER = "is_apparent_power"
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
@@ -42,6 +49,7 @@ CONF_IS_PM25 = "is_pm25"
 CONF_IS_POWER = "is_power"
 CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRESSURE = "is_pressure"
+CONF_IS_REACTIVE_POWER = "is_reactive_power"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
 CONF_IS_TEMPERATURE = "is_temperature"
@@ -50,6 +58,7 @@ CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VALUE = "is_value"
 
 ENTITY_CONDITIONS = {
+    SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_IS_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_IS_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_IS_CO2}],
@@ -69,6 +78,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_IS_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_IS_PM25}],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
+    SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_IS_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
@@ -85,6 +95,7 @@ CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_TYPE): vol.In(
                 [
+                    CONF_IS_APPARENT_POWER,
                     CONF_IS_BATTERY_LEVEL,
                     CONF_IS_CO,
                     CONF_IS_CO2,
@@ -104,6 +115,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PM10,
                     CONF_IS_PM25,
                     CONF_IS_PRESSURE,
+                    CONF_IS_REACTIVE_POWER,
                     CONF_IS_SIGNAL_STRENGTH,
                     CONF_IS_SULPHUR_DIOXIDE,
                     CONF_IS_TEMPERATURE,
@@ -163,13 +175,13 @@ def async_condition_from_config(
 ) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
     numeric_state_config = {
-        condition.CONF_CONDITION: "numeric_state",
-        condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_CONDITION: "numeric_state",
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
     }
     if CONF_ABOVE in config:
-        numeric_state_config[condition.CONF_ABOVE] = config[CONF_ABOVE]
+        numeric_state_config[CONF_ABOVE] = config[CONF_ABOVE]
     if CONF_BELOW in config:
-        numeric_state_config[condition.CONF_BELOW] = config[CONF_BELOW]
+        numeric_state_config[CONF_BELOW] = config[CONF_BELOW]
 
     numeric_state_config = cv.NUMERIC_STATE_CONDITION_SCHEMA(numeric_state_config)
     numeric_state_config = condition.numeric_state_validate_config(

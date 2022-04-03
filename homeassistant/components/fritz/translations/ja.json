@@ -10,7 +10,8 @@
             "already_in_progress": "\u69cb\u6210\u30d5\u30ed\u30fc\u306f\u3059\u3067\u306b\u9032\u884c\u4e2d\u3067\u3059",
             "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "connection_error": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c"
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "upnp_not_configured": "\u30c7\u30d0\u30a4\u30b9\u306bUPnP\u306e\u8a2d\u5b9a\u304c\u3042\u308a\u307e\u305b\u3093\u3002"
         },
         "flow_title": "{name}",
         "step": {
@@ -28,7 +29,7 @@
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
                 "description": "FRITZ!Box Tools\u306e\u8a8d\u8a3c\u3092\u66f4\u65b0\u3057\u307e\u3059: {host}\n\nFRITZ!Box Tools\u304c\u3001FRITZ!Box\u306b\u30ed\u30b0\u30a4\u30f3\u3067\u304d\u307e\u305b\u3093\u3002",
-                "title": "FRITZ!Box Tools\u306e\u30a2\u30c3\u30d7\u30c7\u30fc\u30c8 - \u8cc7\u683c\u60c5\u5831"
+                "title": "FRITZ!Box Tools\u306e\u30a2\u30c3\u30d7\u30c7\u30fc\u30c8 - \u8a8d\u8a3c\u60c5\u5831"
             },
             "start_config": {
                 "data": {
@@ -56,7 +57,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "'\u30db\u30fc\u30e0' \u3067\u30c7\u30d0\u30a4\u30b9\u3092\u691c\u8a0e\u3059\u308b\u79d2\u6570"
+                    "consider_home": "'\u30db\u30fc\u30e0' \u3067\u30c7\u30d0\u30a4\u30b9\u3092\u691c\u8a0e\u3059\u308b\u79d2\u6570",
+                    "old_discovery": "\u53e4\u3044\u691c\u51fa\u65b9\u6cd5\u3092\u6709\u52b9\u306b\u3059\u308b"
                 }
             }
         }

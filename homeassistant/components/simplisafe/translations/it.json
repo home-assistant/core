@@ -20,7 +20,7 @@
                 "title": "Completa l'autorizzazione"
             },
             "mfa": {
-                "description": "Controlla la tua email per trovare un link da SimpliSafe. Dopo aver verificato il link, torna qui per completare l'installazione dell'integrazione.",
+                "description": "Controlla la tua email per trovare un collegamento da SimpliSafe. Dopo aver verificato il collegamento, torna qui per completare l'installazione dell'integrazione.",
                 "title": "Autenticazione a pi\u00f9 fattori (MFA) SimpliSafe "
             },
             "reauth_confirm": {
@@ -48,7 +48,7 @@
                 "data": {
                     "code": "Codice (utilizzato nell'Interfaccia Utente di Home Assistant)"
                 },
-                "title": "Configurare SimpliSafe"
+                "title": "Configura SimpliSafe"
             }
         }
     }

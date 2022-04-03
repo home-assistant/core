@@ -1,4 +1,6 @@
 """Support for control of ElkM1 sensors."""
+from __future__ import annotations
+
 from elkm1_lib.const import (
     SettingFormat,
     ZoneLogicalStatus,
@@ -9,10 +11,13 @@ from elkm1_lib.util import pretty_const, username
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ELECTRIC_POTENTIAL_VOLT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkAttachedEntity, create_elk_entities
 from .const import ATTR_VALUE, DOMAIN, ELK_USER_CODE_SERVICE_SCHEMA
@@ -21,17 +26,21 @@ SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
 SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
 SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
 SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
-UNDEFINED_TEMPATURE = -40
+UNDEFINED_TEMPERATURE = -40
 
 ELK_SET_COUNTER_SERVICE_SCHEMA = {
     vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Create the Elk-M1 sensor platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
+    entities: list[ElkSensor] = []
     elk = elk_data["elk"]
     create_elk_entities(elk_data, elk.counters, "counter", ElkCounter, entities)
     create_elk_entities(elk_data, elk.keypads, "keypad", ElkKeypad, entities)
@@ -152,7 +161,7 @@ class ElkKeypad(ElkSensor):
 
     def _element_changed(self, element, changeset):
         self._state = temperature_to_state(
-            self._element.temperature, UNDEFINED_TEMPATURE
+            self._element.temperature, UNDEFINED_TEMPERATURE
         )
 
 
@@ -264,7 +273,7 @@ class ElkZone(ElkSensor):
     def _element_changed(self, element, changeset):
         if self._element.definition == ZoneType.TEMPERATURE.value:
             self._state = temperature_to_state(
-                self._element.temperature, UNDEFINED_TEMPATURE
+                self._element.temperature, UNDEFINED_TEMPERATURE
             )
         elif self._element.definition == ZoneType.ANALOG_ZONE.value:
             self._state = self._element.voltage

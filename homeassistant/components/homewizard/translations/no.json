@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "api_not_enabled": "API-en er ikke aktivert. Aktiver API i HomeWizard Energy-appen under innstillinger",
+            "device_not_supported": "Denne enheten st\u00f8ttes ikke",
+            "invalid_discovery_parameters": "Oppdaget API-versjon som ikke st\u00f8ttes",
+            "unknown_error": "Uventet feil"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Vil du konfigurere {product_type} ( {serial} ) p\u00e5 {ip_address} ?",
+                "title": "Bekrefte"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP adresse"
+                },
+                "description": "Skriv inn IP-adressen til HomeWizard Energy-enheten for \u00e5 integrere med Home Assistant.",
+                "title": "Konfigurer enheten"
+            }
+        }
+    }
+}

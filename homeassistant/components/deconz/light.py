@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import ValuesView
 from typing import Any
 
-from pydeconz.group import DeconzGroup as Group
+from pydeconz.group import Group
 from pydeconz.light import (
     ALERT_LONG,
     ALERT_SHORT,
@@ -199,7 +199,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         """Turn on light."""
         data: dict[str, bool | float | int | str | tuple[float, float]] = {"on": True}
 
-        if attr_brightness := kwargs.get(ATTR_BRIGHTNESS):
+        if (attr_brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             data["brightness"] = attr_brightness
 
         if attr_color_temp := kwargs.get(ATTR_COLOR_TEMP):
@@ -215,7 +215,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         if ATTR_XY_COLOR in kwargs:
             data["xy"] = kwargs[ATTR_XY_COLOR]
 
-        if attr_transition := kwargs.get(ATTR_TRANSITION):
+        if (attr_transition := kwargs.get(ATTR_TRANSITION)) is not None:
             data["transition_time"] = int(attr_transition * 10)
         elif "IKEA" in self._device.manufacturer:
             data["transition_time"] = 0
@@ -236,9 +236,9 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
 
         data: dict[str, bool | int | str] = {"on": False}
 
-        if ATTR_TRANSITION in kwargs:
+        if (attr_transition := kwargs.get(ATTR_TRANSITION)) is not None:
             data["brightness"] = 0
-            data["transition_time"] = int(kwargs[ATTR_TRANSITION] * 10)
+            data["transition_time"] = int(attr_transition * 10)
 
         if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH, ""))) is not None:
             data["alert"] = alert

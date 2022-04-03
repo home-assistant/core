@@ -1,5 +1,10 @@
 """Support for Tellstick switches."""
-from homeassistant.helpers.entity import ToggleEntity
+from __future__ import annotations
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ATTR_DISCOVER_CONFIG,
@@ -10,7 +15,12 @@ from . import (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Tellstick switches."""
     if discovery_info is None or discovery_info[ATTR_DISCOVER_DEVICES] is None:
         return
@@ -29,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class TellstickSwitch(TellstickDevice, ToggleEntity):
+class TellstickSwitch(TellstickDevice, SwitchEntity):
     """Representation of a Tellstick switch."""
 
     def _parse_ha_data(self, kwargs):

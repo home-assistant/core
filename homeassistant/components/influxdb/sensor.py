@@ -14,13 +14,17 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady, TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 from . import create_influx_url, get_influx_connection, validate_version_specific_config
@@ -106,6 +110,7 @@ def validate_query_format_for_version(conf: dict) -> dict:
 _QUERY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
@@ -148,7 +153,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the InfluxDB component."""
     try:
         influx = get_influx_connection(config, test_read=True)
@@ -190,6 +200,7 @@ class InfluxSensor(SensorEntity):
             self._value_template = None
         self._state = None
         self._hass = hass
+        self._attr_unique_id = query.get(CONF_UNIQUE_ID)
 
         if query[CONF_LANGUAGE] == LANGUAGE_FLUX:
             query_clause = query.get(CONF_QUERY)

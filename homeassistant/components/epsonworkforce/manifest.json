@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/epsonworkforce",
   "codeowners": ["@ThaStealth"],
   "requirements": ["epsonprinter==0.0.9"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["epsonprinter_pkg"]
 }

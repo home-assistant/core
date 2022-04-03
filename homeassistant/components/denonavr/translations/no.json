@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "cannot_connect": "[%key:component::denonavr::config::abort::connection_error%]",
-            "not_denonavr_manufacturer": "Ikke en Denon AVR Network Receiver, oppdaget manafucturer stemte ikke overens",
+            "not_denonavr_manufacturer": "Ikke en Denon AVR nettverksmottaker, oppdaget produsent samsvarte ikke",
             "not_denonavr_missing": "Ikke en Denon AVR Network Receiver, oppdagelsesinformasjon ikke fullf\u00f8rt"
         },
         "error": {

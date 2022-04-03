@@ -17,6 +17,8 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -49,8 +51,6 @@ from .const import (
     RELAY_PORTS,
     S0_INPUTS,
     SETPOINTS,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     THRESHOLDS,
     VAR_UNITS,
     VARIABLES,

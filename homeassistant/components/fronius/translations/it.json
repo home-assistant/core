@@ -17,7 +17,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Configurare l'indirizzo IP o il nome host locale del proprio dispositivo Fronius.",
+                "description": "Configura l'indirizzo IP o il nome host locale del proprio dispositivo Fronius.",
                 "title": "Fronius SolarNet"
             }
         }

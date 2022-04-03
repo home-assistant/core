@@ -1,4 +1,6 @@
 """Support for Openhome Devices."""
+from __future__ import annotations
+
 import asyncio
 import functools
 import logging
@@ -8,9 +10,14 @@ from async_upnp_client.client import UpnpError
 from openhomedevice.device import Device
 import voluptuous as vol
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -25,7 +32,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_PIN_INDEX, DATA_OPENHOME, SERVICE_INVOKE_PIN
 
@@ -34,7 +44,12 @@ SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Openhome platform."""
 
     if not discovery_info:
@@ -51,7 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # if device has already been discovered
     if device.uuid() in openhome_data:
-        return True
+        return
 
     entity = OpenhomeDevice(hass, device)
 
@@ -139,7 +154,10 @@ class OpenhomeDevice(MediaPlayerEntity):
 
             if self._source["type"] == "Radio":
                 self._supported_features |= (
-                    SUPPORT_STOP | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA
+                    SUPPORT_STOP
+                    | SUPPORT_PLAY
+                    | SUPPORT_PLAY_MEDIA
+                    | SUPPORT_BROWSE_MEDIA
                 )
             if self._source["type"] in ("Playlist", "Spotify"):
                 self._supported_features |= (
@@ -148,6 +166,7 @@ class OpenhomeDevice(MediaPlayerEntity):
                     | SUPPORT_PAUSE
                     | SUPPORT_PLAY
                     | SUPPORT_PLAY_MEDIA
+                    | SUPPORT_BROWSE_MEDIA
                 )
 
             if self._in_standby:
@@ -179,6 +198,11 @@ class OpenhomeDevice(MediaPlayerEntity):
     @catch_request_errors()
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_MUSIC
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
         if media_type != MEDIA_TYPE_MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
@@ -186,6 +210,9 @@ class OpenhomeDevice(MediaPlayerEntity):
                 MEDIA_TYPE_MUSIC,
             )
             return
+
+        media_id = async_process_play_media_url(self.hass, media_id)
+
         track_details = {"title": "Home Assistant", "uri": media_id}
         await self._device.play_media(track_details)
 
@@ -310,3 +337,11 @@ class OpenhomeDevice(MediaPlayerEntity):
     async def async_mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         await self._device.set_mute(mute)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )

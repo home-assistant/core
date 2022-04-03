@@ -17,7 +17,7 @@
                     "host": "Host",
                     "password": "Password"
                 },
-                "description": "Inserisci l'Indirizzo IP del tuo condizionatore d'aria Daikin.\n\nNota che solo la Chiave API e la Password sono rispettivamente usati dai dispositivi BRP072Cxx e SKYFi.",
+                "description": "Inserisci l'indirizzo IP del tuo condizionatore d'aria Daikin.\n\nNota che solo la chiave API e la password sono rispettivamente usati dai dispositivi BRP072Cxx e SKYFi.",
                 "title": "Configura Daikin AC"
             }
         }

@@ -91,6 +91,7 @@ class Plenticore:
         prod2 = device_local["Branding:ProductName2"]
 
         self.device_info = DeviceInfo(
+            configuration_url=f"http://{self.host}",
             identifiers={(DOMAIN, device_local["Properties:SerialNo"])},
             manufacturer="Kostal",
             model=f"{prod1} {prod2}",
@@ -122,9 +123,7 @@ class DataUpdateCoordinatorMixin:
 
     async def async_read_data(self, module_id: str, data_id: str) -> list[str, bool]:
         """Write settings back to Plenticore."""
-        client = self._plenticore.client
-
-        if client is None:
+        if (client := self._plenticore.client) is None:
             return False
 
         try:
@@ -136,9 +135,7 @@ class DataUpdateCoordinatorMixin:
 
     async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
         """Write settings back to Plenticore."""
-        client = self._plenticore.client
-
-        if client is None:
+        if (client := self._plenticore.client) is None:
             return False
 
         try:
@@ -271,9 +268,7 @@ class SelectDataUpdateCoordinator(
     """Implementation of PlenticoreUpdateCoordinator for select data."""
 
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
-        client = self._plenticore.client
-
-        if client is None:
+        if self._plenticore.client is None:
             return {}
 
         _LOGGER.debug("Fetching select %s for %s", self.name, self._fetch)
