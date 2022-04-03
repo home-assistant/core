@@ -281,6 +281,7 @@ class DPCode(StrEnum):
     SITUATION_SET = "situation_set"
     SLEEP = "sleep"  # Sleep function
     SLOW_FEED = "slow_feed"
+    SMART_WEATHER = "smart_weather"
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
     SMOKE_SENSOR_VALUE = "smoke_sensor_value"
@@ -338,6 +339,7 @@ class DPCode(StrEnum):
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
+    TIME_USE = "time_use"  # Total seconds of irrigation
     TOTAL_CLEAN_AREA = "total_clean_area"
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"

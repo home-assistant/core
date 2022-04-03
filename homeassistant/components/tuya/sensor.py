@@ -521,8 +521,24 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.WORK_STATE,
             name="Mode",
+            device_class=TuyaDeviceClass.WORK_STATE,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
+        # Total seconds of irrigation. Read-write value; the device appears to ignore the write action (maybe firmware bug)
+        TuyaSensorEntityDescription(
+            key=DPCode.TIME_USE,
+            name="Total Watering Time",
+            icon="mdi:history",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        # Unknown status set. Read-only value
+        # TuyaSensorEntityDescription(
+        #     key="use_time_one",
+        #     name="use_time_one",
+        #     entity_category=EntityCategory.SYSTEM,
+        #     icon="mdi:timer-play-outline",
+        # ),
         *BATTERY_SENSORS,
     ),
     # Water Detector
