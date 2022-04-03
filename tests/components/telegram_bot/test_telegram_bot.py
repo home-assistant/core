@@ -91,3 +91,20 @@ async def test_polling_platform_message_text_update(
 
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
+
+
+async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_text_event(
+    hass, webhook_platform, hass_client, unauthorized_update_message_text
+):
+    """Update with unauthorized user/chat should not trigger event."""
+    client = await hass_client()
+    events = async_capture_events(hass, "telegram_text")
+
+    response = await client.post(TELEGRAM_WEBHOOK_URL, json=unauthorized_update_message_text)
+    assert response.status == 200
+    assert (await response.read()).decode("utf-8") == ""
+
+    # Make sure any events would have fired
+    await hass.async_block_till_done()
+
+    assert len(events) == 0

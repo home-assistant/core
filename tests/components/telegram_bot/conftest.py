@@ -127,6 +127,14 @@ def update_message_text():
 
 
 @pytest.fixture
+def unauthorized_update_message_text(update_message_text):
+    """Fixture for mocking an incoming update of type message/text that is not in our `allowed_chat_ids`."""
+    update_message_text["message"]["from"]["id"] = 1234
+    update_message_text["message"]["chat"]["id"] = 1234
+    return update_message_text
+
+
+@pytest.fixture
 def update_callback_query():
     """Fixture for mocking an incoming update of type callback_query."""
     return {
