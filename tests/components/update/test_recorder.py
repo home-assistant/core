@@ -33,7 +33,7 @@ async def test_exclude_attributes(
     assert state.attributes[ATTR_IN_PROGRESS] == 50
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
-        == "https://brands.home-assistant.io/test/icon.png"
+        == "https://brands.home-assistant.io/_/test/icon.png"
     )
     await async_setup_component(hass, DOMAIN, {})
 
