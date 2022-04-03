@@ -59,7 +59,7 @@ async def async_setup_entry(
 async def async_setup_platform(hass, conf, async_add_entities, discovery_info=None):
     """Set up the utility meter select."""
     legacy_component = hass.data[DATA_LEGACY_COMPONENT]
-    meter = discovery_info[CONF_METER]
+    meter: str = discovery_info[CONF_METER]
     conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
 
     async_add_entities(
