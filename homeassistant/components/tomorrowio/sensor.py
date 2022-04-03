@@ -351,7 +351,7 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
 
     @property
     @abstractmethod
-    def _state(self) -> str | int | float | None:
+    def _state(self) -> int | float | None:
         """Return the raw state."""
 
     @property
@@ -365,8 +365,6 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
 
         if desc.value_map is not None:
             return desc.value_map(state).name.lower()
-
-        assert not isinstance(state, str)
 
         if desc.multiplication_factor is not None:
             state = handle_conversion(state, desc.multiplication_factor)
@@ -388,6 +386,8 @@ class TomorrowioSensorEntity(BaseTomorrowioSensorEntity):
     """Sensor entity that talks to Tomorrow.io v4 API to retrieve non-weather data."""
 
     @property
-    def _state(self) -> str | int | float | None:
+    def _state(self) -> int | float | None:
         """Return the raw state."""
-        return self._get_current_property(self.entity_description.key)
+        val = self._get_current_property(self.entity_description.key)
+        assert not isinstance(val, str)
+        return val
