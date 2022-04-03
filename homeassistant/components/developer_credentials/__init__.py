@@ -174,6 +174,8 @@ async def _async_register_auth_implementation(
 ) -> None:
     """Register an OAuth2 flow implementation for an integration."""
     auth_domain = _get_auth_domain(domain, developer_credential)
+    if auth_domain in hass.data[DOMAIN][domain]:
+        raise ValueError(f"Domain {auth_domain} already registered")
     authorization_server = await _async_get_authorization_server(hass, domain)
     if not authorization_server:
         raise ValueError("No authorization server registered for %s" % domain)
