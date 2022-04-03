@@ -356,7 +356,7 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
             return desc.value_map(state).name.lower()
 
         if desc.multiplication_factor is not None:
-            return smart_round(float(state) * desc.multiplication_factor)
+            state = smart_round(float(state) * desc.multiplication_factor)
 
         # If an imperial unit isn't provided, we always want to convert to metric since
         # that is what the UI expects
