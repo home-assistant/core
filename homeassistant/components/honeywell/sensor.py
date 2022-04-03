@@ -24,6 +24,11 @@ from homeassistant.helpers.typing import StateType
 from .const import DOMAIN, HUMIDITY_STATUS_KEY, TEMPERATURE_STATUS_KEY
 
 
+def _get_temperature_sensor_unit(device: Device) -> str:
+    """Get the correct temperature unit for the device."""
+    return TEMP_CELSIUS if device.temperature_unit == "C" else TEMP_FAHRENHEIT
+
+
 @dataclass
 class HoneywellSensorEntityDescriptionMixin:
     """Mixin for required keys."""
@@ -36,7 +41,7 @@ class HoneywellSensorEntityDescriptionMixin:
 class HoneywellSensorEntityDescription(
     SensorEntityDescription, HoneywellSensorEntityDescriptionMixin
 ):
-    """Describes a Whois sensor entity."""
+    """Describes a Honeywell sensor entity."""
 
 
 SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
@@ -46,9 +51,7 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.outdoor_temperature,
-        unit_fn=lambda device: TEMP_CELSIUS
-        if device.temperature_unit == "C"
-        else TEMP_FAHRENHEIT,
+        unit_fn=_get_temperature_sensor_unit,
     ),
     HoneywellSensorEntityDescription(
         key=HUMIDITY_STATUS_KEY,
