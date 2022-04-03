@@ -1,7 +1,22 @@
 """Provides the constants needed for component."""
 
+from enum import IntEnum
 from typing import Final
 
+
+class AlarmControlPanelEntityFeature(IntEnum):
+    """Supported features of the alarm control panel entity."""
+
+    ARM_HOME = 1
+    ARM_AWAY = 2
+    ARM_NIGHT = 4
+    TRIGGER = 8
+    ARM_CUSTOM_BYPASS = 16
+    ARM_VACATION = 32
+
+
+# These constants are deprecated as of Home Assistant 2022.5
+# Pleease use the AlarmControlPanelEntityFeature enum instead.
 SUPPORT_ALARM_ARM_HOME: Final = 1
 SUPPORT_ALARM_ARM_AWAY: Final = 2
 SUPPORT_ALARM_ARM_NIGHT: Final = 4

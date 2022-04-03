@@ -4,13 +4,14 @@ from unittest.mock import patch
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from .util import CONFIG, HVAC_MOCK
 
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unload."""
 
     config_entry = MockConfigEntry(

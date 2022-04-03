@@ -44,11 +44,16 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         self._attr_unique_id = coordinator.data.info.mac_address
 
     @property
-    def current_version(self) -> str | None:
-        """Version currently in use."""
+    def installed_version(self) -> str | None:
+        """Version currently installed and in use."""
         if (version := self.coordinator.data.info.version) is None:
             return None
         return str(version)
+
+    @property
+    def entity_picture(self) -> str:
+        """Return the entity picture to use in the frontend, if any."""
+        return "https://brands.home-assistant.io/wled/icon.png"
 
     @property
     def latest_version(self) -> str | None:
