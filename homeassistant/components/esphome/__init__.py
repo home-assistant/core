@@ -520,6 +520,7 @@ async def _cleanup_instance(
     data = domain_data.pop_entry_data(entry)
     for disconnect_cb in data.disconnect_callbacks:
         disconnect_cb()
+    data.disconnect_callbacks = []
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     await data.client.disconnect()
