@@ -219,7 +219,7 @@ class UpdateEntity(RestoreEntity):
             return None
 
         return (
-            f"https://brands.home-assistant.io/{self.platform.platform_name}/icon.png"
+            f"https://brands.home-assistant.io/_/{self.platform.platform_name}/icon.png"
         )
 
     @property
