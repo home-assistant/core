@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import DOMAIN
 
@@ -2455,6 +2456,51 @@ async def test_import_addon_installed(
         "s2_authenticated_key": "",
         "s2_unauthenticated_key": "",
         "use_addon": True,
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf(hass):
+    """Test zeroconf discovery."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            host="localhost",
+            addresses=["127.0.0.1"],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "1234"},
+        ),
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "zeroconf_confirm"
+
+    with patch(
+        "homeassistant.components.zwave_js.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.zwave_js.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "url": "ws://localhost:3000",
+        "usb_path": None,
+        "s0_legacy_key": None,
+        "s2_access_control_key": None,
+        "s2_authenticated_key": None,
+        "s2_unauthenticated_key": None,
+        "use_addon": False,
         "integration_created_addon": False,
     }
     assert len(mock_setup.mock_calls) == 1
