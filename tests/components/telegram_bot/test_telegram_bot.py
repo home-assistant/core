@@ -100,7 +100,9 @@ async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_tex
     client = await hass_client()
     events = async_capture_events(hass, "telegram_text")
 
-    response = await client.post(TELEGRAM_WEBHOOK_URL, json=unauthorized_update_message_text)
+    response = await client.post(
+        TELEGRAM_WEBHOOK_URL, json=unauthorized_update_message_text
+    )
     assert response.status == 200
     assert (await response.read()).decode("utf-8") == ""
 
