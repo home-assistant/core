@@ -94,7 +94,6 @@ class PhilipsTVAmbilightHueSwitch(
         self._attr_name = f"{coordinator.system['name']} Ambilight+Hue"
         self._attr_icon = "mdi:television-ambient-light"
         self._attr_unique_id = f"{coordinator.unique_id}_ambi_hue"
-        self._attr_is_on = self.coordinator.api.huelamp_power == HUE_POWER_ON
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, coordinator.unique_id),
