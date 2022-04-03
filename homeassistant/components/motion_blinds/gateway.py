@@ -21,7 +21,6 @@ class ConnectMotionGateway:
         self._multicast = multicast
         self._gateway_device = None
         self._interface = interface
-        self._interfaces = []
 
     @property
     def gateway_device(self):
@@ -91,8 +90,8 @@ class ConnectMotionGateway:
 
     async def async_check_interface(self, host, key):
         """Connect to the Motion Gateway."""
-        self._interfaces = await self.async_get_interfaces()
-        for interface in self._interfaces:
+        interfaces = await self.async_get_interfaces()
+        for interface in interfaces:
             _LOGGER.debug(
                 "Checking Motion Blinds interface '%s' with host %s", interface, host
             )
