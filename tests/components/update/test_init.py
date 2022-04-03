@@ -39,7 +39,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_restore_cache
+from tests.common import MockEntityPlatform, mock_restore_cache
 
 
 class MockUpdateEntity(UpdateEntity):
@@ -58,6 +58,7 @@ async def test_update(hass: HomeAssistant) -> None:
     update._attr_title = "Title"
 
     assert update.entity_category is EntityCategory.DIAGNOSTIC
+    assert update.entity_picture is None
     assert update.installed_version == "1.0.0"
     assert update.latest_version == "1.0.1"
     assert update.release_summary == "Summary"
@@ -75,6 +76,13 @@ async def test_update(hass: HomeAssistant) -> None:
         ATTR_SKIPPED_VERSION: None,
         ATTR_TITLE: "Title",
     }
+
+    # Test with platform
+    update.platform = MockEntityPlatform(hass)
+    assert (
+        update.entity_picture
+        == "https://brands.home-assistant.io/_/test_platform/icon.png"
+    )
 
     # Test no update available
     update._attr_installed_version = "1.0.0"
