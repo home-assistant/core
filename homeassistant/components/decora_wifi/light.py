@@ -14,8 +14,9 @@ from homeassistant.components import persistent_notification
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
     SUPPORT_TRANSITION,
     LightEntity,
 )
@@ -99,10 +100,22 @@ class DecoraWifiLight(LightEntity):
         self._attr_unique_id = switch.serial
 
     @property
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
+        if self._switch.canSetLevel:
+            return COLOR_MODE_BRIGHTNESS
+        return COLOR_MODE_ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        return {self.color_mode}
+
+    @property
     def supported_features(self):
         """Return supported features."""
         if self._switch.canSetLevel:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            return SUPPORT_TRANSITION
         return 0
 
     @property
