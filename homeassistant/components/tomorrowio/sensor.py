@@ -83,7 +83,6 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
     unit_imperial: str | None = None
     unit_metric: str | None = None
     metric_conversion: Callable[[float], float] | float = 1.0
-    is_metric_check: bool | None = None
     value_map: Any | None = None
 
 
@@ -94,7 +93,6 @@ SENSOR_TYPES = (
         unit_imperial=TEMP_FAHRENHEIT,
         unit_metric=TEMP_CELSIUS,
         metric_conversion=lambda val: temp_convert(val, TEMP_FAHRENHEIT, TEMP_CELSIUS),
-        is_metric_check=True,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
@@ -103,7 +101,6 @@ SENSOR_TYPES = (
         unit_imperial=TEMP_FAHRENHEIT,
         unit_metric=TEMP_CELSIUS,
         metric_conversion=lambda val: temp_convert(val, TEMP_FAHRENHEIT, TEMP_CELSIUS),
-        is_metric_check=True,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
@@ -114,7 +111,6 @@ SENSOR_TYPES = (
         metric_conversion=lambda val: pressure_convert(
             val, PRESSURE_INHG, PRESSURE_HPA
         ),
-        is_metric_check=True,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     TomorrowioSensorEntityDescription(
@@ -123,7 +119,6 @@ SENSOR_TYPES = (
         unit_imperial=IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
         unit_metric=IRRADIATION_WATTS_PER_SQUARE_METER,
         metric_conversion=3.15459,
-        is_metric_check=True,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_BASE,
@@ -133,7 +128,6 @@ SENSOR_TYPES = (
         metric_conversion=lambda val: distance_convert(
             val, LENGTH_MILES, LENGTH_KILOMETERS
         ),
-        is_metric_check=True,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_CEILING,
@@ -143,7 +137,6 @@ SENSOR_TYPES = (
         metric_conversion=lambda val: distance_convert(
             val, LENGTH_MILES, LENGTH_KILOMETERS
         ),
-        is_metric_check=True,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_COVER,
@@ -158,7 +151,6 @@ SENSOR_TYPES = (
         unit_metric=SPEED_METERS_PER_SECOND,
         metric_conversion=lambda val: distance_convert(val, LENGTH_MILES, LENGTH_METERS)
         / 3600,
-        is_metric_check=True,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRECIPITATION_TYPE,
@@ -180,7 +172,6 @@ SENSOR_TYPES = (
         unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=3.2808399**3,
-        is_metric_check=True,
         device_class=SensorDeviceClass.PM25,
     ),
     TomorrowioSensorEntityDescription(
@@ -189,7 +180,6 @@ SENSOR_TYPES = (
         unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=3.2808399**3,
-        is_metric_check=True,
         device_class=SensorDeviceClass.PM10,
     ),
     TomorrowioSensorEntityDescription(
@@ -312,8 +302,6 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
             f"{self._config_entry.unique_id}_{slugify(description.name)}"
         )
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: self.attribution}
-        # Fallback to metric always in case imperial isn't defined (for metric only
-        # sensors)
         self._attr_native_unit_of_measurement = (
             description.unit_metric
             if hass.config.units.is_metric
@@ -330,19 +318,17 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         """Return the state."""
         state = self._state
 
+        if state is None:
+            return None
+
+        if self.entity_description.value_map is not None:
+            return self.entity_description.value_map(state).name.lower()
+
         # If an imperial unit isn't provided, we always want to convert to metric since
         # that is what the UI expects
-        if state is not None and (
-            (
-                self.entity_description.metric_conversion != 1.0
-                and self.entity_description.is_metric_check is not None
-                and self.hass.config.units.is_metric
-                == self.entity_description.is_metric_check
-            )
-            or (
-                self.entity_description.unit_imperial is None
-                and self.entity_description.unit_metric is not None
-            )
+        if (
+            self.entity_description.unit_imperial != self.entity_description.unit_metric
+            and self.hass.config.units.is_metric
         ):
             conversion = self.entity_description.metric_conversion
             # When conversion is a callable, we assume it's a single input function
@@ -350,9 +336,6 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
                 return round(conversion(float(state)), 2)
 
             return round(float(state) * conversion, 2)
-
-        if self.entity_description.value_map is not None and state is not None:
-            return self.entity_description.value_map(state).name.lower()
 
         return state
 
