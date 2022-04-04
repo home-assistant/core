@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError, StatementError
 from sqlalchemy.ext import baked
-from sqlalchemy.orm.scoping import scoped_session
+from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal_column, true
 import voluptuous as vol
 
@@ -230,7 +230,7 @@ def get_start_time() -> datetime:
 
 def _update_or_add_metadata(
     hass: HomeAssistant,
-    session: scoped_session,
+    session: Session,
     new_metadata: StatisticMetaData,
 ) -> int:
     """Get metadata_id for a statistic_id.
@@ -280,7 +280,7 @@ def _update_or_add_metadata(
 
 
 def _find_duplicates(
-    session: scoped_session, table: type[Statistics | StatisticsShortTerm]
+    session: Session, table: type[Statistics | StatisticsShortTerm]
 ) -> tuple[list[int], list[dict]]:
     """Find duplicated statistics."""
     subquery = (
@@ -345,7 +345,7 @@ def _find_duplicates(
 
 
 def _delete_duplicates_from_table(
-    session: scoped_session, table: type[Statistics | StatisticsShortTerm]
+    session: Session, table: type[Statistics | StatisticsShortTerm]
 ) -> tuple[int, list[dict]]:
     """Identify and delete duplicated statistics from a specified table."""
     all_non_identical_duplicates: list[dict] = []
@@ -365,7 +365,7 @@ def _delete_duplicates_from_table(
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
-def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
+def delete_duplicates(instance: Recorder, session: Session) -> None:
     """Identify and delete duplicated statistics.
 
     A backup will be made of duplicated statistics before it is deleted.
@@ -409,7 +409,7 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
 
 
 def compile_hourly_statistics(
-    instance: Recorder, session: scoped_session, start: datetime
+    instance: Recorder, session: Session, start: datetime
 ) -> None:
     """Compile hourly statistics.
 
@@ -580,7 +580,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
 
 def _adjust_sum_statistics(
-    session: scoped_session,
+    session: Session,
     table: type[Statistics | StatisticsShortTerm],
     metadata_id: int,
     start_time: datetime,
@@ -604,7 +604,7 @@ def _adjust_sum_statistics(
 
 
 def _insert_statistics(
-    session: scoped_session,
+    session: Session,
     table: type[Statistics | StatisticsShortTerm],
     metadata_id: int,
     statistic: StatisticData,
@@ -621,7 +621,7 @@ def _insert_statistics(
 
 
 def _update_statistics(
-    session: scoped_session,
+    session: Session,
     table: type[Statistics | StatisticsShortTerm],
     stat_id: int,
     statistic: StatisticData,
@@ -649,7 +649,7 @@ def _update_statistics(
 
 def get_metadata_with_session(
     hass: HomeAssistant,
-    session: scoped_session,
+    session: Session,
     *,
     statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
@@ -1085,7 +1085,7 @@ def get_last_short_term_statistics(
 
 
 def _statistics_at_time(
-    session: scoped_session,
+    session: Session,
     metadata_ids: set[int],
     table: type[Statistics | StatisticsShortTerm],
     start_time: datetime,
@@ -1118,7 +1118,7 @@ def _statistics_at_time(
 
 def _sorted_statistics_to_dict(
     hass: HomeAssistant,
-    session: scoped_session,
+    session: Session,
     stats: list,
     statistic_ids: list[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
@@ -1201,7 +1201,7 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
 
 
 def _statistics_exists(
-    session: scoped_session,
+    session: Session,
     table: type[Statistics | StatisticsShortTerm],
     metadata_id: int,
     start: datetime,
