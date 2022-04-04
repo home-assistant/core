@@ -31,5 +31,5 @@ class HERETravelTimeConfig:
     travel_mode: str
     route_mode: str
     units: str
-    arrival: time
-    departure: time
+    arrival: time | None
+    departure: time | None
