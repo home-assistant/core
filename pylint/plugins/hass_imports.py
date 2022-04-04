@@ -39,6 +39,18 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^SUPPORT_(BRIGHTNESS|COLOR_TEMP|COLOR|WHITE_VALUE)$"),
         ),
     ],
+    "homeassistant.components.media_player": [
+        ObsoleteImportMatch(
+            reason="replaced by MediaPlayerEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.media_player.const": [
+        ObsoleteImportMatch(
+            reason="replaced by MediaPlayerEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
 }
 
 
