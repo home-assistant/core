@@ -46,7 +46,7 @@ from .mixins import (
     CONF_IDENTIFIERS,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     cleanup_device_registry,
-    device_info_from_config,
+    update_device,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -190,17 +190,6 @@ class Trigger:
                 trig.remove = None
 
 
-def _update_device(hass, config_entry, config):
-    """Update device registry."""
-    device_registry = dr.async_get(hass)
-    config_entry_id = config_entry.entry_id
-    device_info = device_info_from_config(config[CONF_DEVICE])
-
-    if config_entry_id is not None and device_info is not None:
-        device_info["config_entry_id"] = config_entry_id
-        device_registry.async_get_or_create(**device_info)
-
-
 async def async_setup_trigger(hass, config, config_entry, discovery_data):
     """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
@@ -228,7 +217,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
             _LOGGER.info("Updating trigger: %s", discovery_hash)
             debug_info.update_trigger_discovery_data(hass, discovery_hash, payload)
             config = TRIGGER_DISCOVERY_SCHEMA(payload)
-            _update_device(hass, config_entry, config)
+            update_device(hass, config_entry, config)
             device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
             await device_trigger.update_trigger(config, discovery_hash, remove_signal)
         async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
@@ -237,7 +226,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
         hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), discovery_update
     )
 
-    _update_device(hass, config_entry, config)
+    update_device(hass, config_entry, config)
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
