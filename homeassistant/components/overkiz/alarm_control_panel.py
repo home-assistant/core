@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIWidget
@@ -55,15 +55,15 @@ class OverkizAlarmDescription(
     """Class to describe an Overkiz alarm control panel."""
 
     alarm_disarm: str | None = None
-    alarm_disarm_args: OverkizStateType | list[OverkizStateType] = []
+    alarm_disarm_args: OverkizStateType | list[OverkizStateType] = None
     alarm_arm_home: str | None = None
-    alarm_arm_home_args: OverkizStateType | list[OverkizStateType] = []
+    alarm_arm_home_args: OverkizStateType | list[OverkizStateType] = None
     alarm_arm_night: str | None = None
-    alarm_arm_night_args: OverkizStateType | list[OverkizStateType] = []
+    alarm_arm_night_args: OverkizStateType | list[OverkizStateType] = None
     alarm_arm_away: str | None = None
-    alarm_arm_away_args: OverkizStateType | list[OverkizStateType] = []
+    alarm_arm_away_args: OverkizStateType | list[OverkizStateType] = None
     alarm_trigger: str | None = None
-    alarm_trigger_args: OverkizStateType | list[OverkizStateType] = []
+    alarm_trigger_args: OverkizStateType | list[OverkizStateType] = None
 
 
 MAP_INTERNAL_STATUS_STATE: dict[str, str] = {
@@ -266,7 +266,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         assert self.entity_description.alarm_disarm
-        await self.executor.async_execute_command(
+        await self.async_execute_command(
             self.entity_description.alarm_disarm,
             self.entity_description.alarm_disarm_args,
         )
@@ -274,7 +274,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         assert self.entity_description.alarm_arm_home
-        await self.executor.async_execute_command(
+        await self.async_execute_command(
             self.entity_description.alarm_arm_home,
             self.entity_description.alarm_arm_home_args,
         )
@@ -282,7 +282,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         assert self.entity_description.alarm_arm_night
-        await self.executor.async_execute_command(
+        await self.async_execute_command(
             self.entity_description.alarm_arm_night,
             self.entity_description.alarm_arm_night_args,
         )
@@ -290,7 +290,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         assert self.entity_description.alarm_arm_away
-        await self.executor.async_execute_command(
+        await self.async_execute_command(
             self.entity_description.alarm_arm_away,
             self.entity_description.alarm_arm_away_args,
         )
@@ -298,7 +298,14 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         assert self.entity_description.alarm_trigger
-        await self.executor.async_execute_command(
+        await self.async_execute_command(
             self.entity_description.alarm_trigger,
             self.entity_description.alarm_trigger_args,
         )
+
+    async def async_execute_command(self, command_name: str, args: Any) -> None:
+        """Execute device command in async context."""
+        if args:
+            await self.executor.async_execute_command(command_name, args)
+        else:
+            await self.executor.async_execute_command(command_name)

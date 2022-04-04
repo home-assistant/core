@@ -12,6 +12,9 @@
     },
     {
       "hostname": "brel_*"
+    },
+    {
+      "hostname": "connector_*"
     }
   ],
   "codeowners": ["@starkillerOG"],
