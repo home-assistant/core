@@ -19,5 +19,5 @@ def valid_response_fixture():
     with patch(
         "herepy.RoutingApi.public_transport_timetable",
         return_value=RESPONSE,
-    ):
-        yield
+    ) as mock:
+        yield mock

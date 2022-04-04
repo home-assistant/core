@@ -4,6 +4,7 @@ CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
 
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
+ATTR_ENTITY_PICTURE_LOCAL = "entity_picture_local"
 ATTR_GROUP_MEMBERS = "group_members"
 ATTR_INPUT_SOURCE = "source"
 ATTR_INPUT_SOURCE_LIST = "source_list"

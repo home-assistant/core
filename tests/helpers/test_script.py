@@ -3203,6 +3203,37 @@ async def test_script_mode_queued_cancel(hass):
         raise
 
 
+async def test_script_mode_queued_stop(hass):
+    """Test stopping with a queued run."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA({"wait_template": "{{ false }}"}),
+        "Test Name",
+        "test_domain",
+        script_mode="queued",
+        max_runs=3,
+    )
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.wait_for(wait_started_flag.wait(), 1)
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.sleep(0)
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.sleep(0)
+
+    assert script_obj.is_running
+    assert script_obj.runs == 3
+
+    await script_obj.async_stop()
+
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+
+
 async def test_script_logging(hass, caplog):
     """Test script logging."""
     script_obj = script.Script(hass, [], "Script with % Name", "test_domain")
@@ -3274,6 +3305,26 @@ async def test_shutdown_after(hass, caplog):
         "0": [{"result": {"delay": 120.0, "done": False}}],
     }
     assert_action_trace(expected_trace)
+
+
+async def test_start_script_after_shutdown(hass, caplog):
+    """Test starting scripts after shutdown is blocked."""
+    delay_alias = "delay step"
+    sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 120}, "alias": delay_alias})
+    script_obj = script.Script(hass, sequence, "test script", "test_domain")
+
+    # Trigger 1st stage script shutdown
+    hass.state = CoreState.stopping
+    hass.bus.async_fire("homeassistant_stop")
+    await hass.async_block_till_done()
+    # Trigger 2nd stage script shutdown
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    # Attempt to spawn additional script run
+    await script_obj.async_run(context=Context())
+    assert not script_obj.is_running
+    assert "Home Assistant is shutting down, starting script blocked" in caplog.text
 
 
 async def test_update_logger(hass, caplog):

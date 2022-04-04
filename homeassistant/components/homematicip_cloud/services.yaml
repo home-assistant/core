@@ -59,7 +59,7 @@ activate_vacation:
           min: 0
           max: 55
           step: 0.5
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     accesspoint_id:
       name: Accesspoint ID
       description: The ID of the Homematic IP Access Point

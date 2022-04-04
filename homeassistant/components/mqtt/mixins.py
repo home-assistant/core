@@ -5,7 +5,7 @@ from abc import abstractmethod
 from collections.abc import Callable
 import json
 import logging
-from typing import Any, Protocol
+from typing import Any, Protocol, final
 
 import voluptuous as vol
 
@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
+    CONF_MODEL,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -106,7 +107,6 @@ CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
@@ -572,9 +572,7 @@ class MqttDiscoveryUpdate(Entity):
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+            self.async_send_discovery_done()
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(
@@ -587,9 +585,18 @@ class MqttDiscoveryUpdate(Entity):
                 MQTT_DISCOVERY_UPDATED.format(discovery_hash),
                 discovery_callback,
             )
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+
+    @callback
+    def async_send_discovery_done(self) -> None:
+        """Acknowledge a discovery message has been handled."""
+        discovery_hash = (
+            self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
+        )
+        if not discovery_hash:
+            return
+        async_dispatcher_send(
+            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+        )
 
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
@@ -723,11 +730,20 @@ class MqttEntity(
             self.hass, self, self._config, self._entity_id_format
         )
 
+    @final
     async def async_added_to_hass(self):
-        """Subscribe mqtt events."""
+        """Subscribe to MQTT events."""
         await super().async_added_to_hass()
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
+        await self.mqtt_async_added_to_hass()
+        self.async_send_discovery_done()
+
+    async def mqtt_async_added_to_hass(self):
+        """Call before the discovery message is acknowledged.
+
+        To be extended by subclasses.
+        """
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
@@ -798,7 +814,7 @@ class MqttEntity(
         return self._config[CONF_ENABLED_BY_DEFAULT]
 
     @property
-    def entity_category(self) -> EntityCategory | str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the entity category if any."""
         return self._config.get(CONF_ENTITY_CATEGORY)
 

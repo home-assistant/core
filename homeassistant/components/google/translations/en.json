@@ -1,22 +1,31 @@
-{   "title": "Google Calendars",
+{
     "config": {
-        "step": {
-            "confirm": {
-                  "description": "###### ![AIS logo](/static/icons/ais_google_calendar.png)\n\nThis integration allows you to sync events between your scheduler and your Google Calendars.\n\n Do you want to set up Google Calendars integration?",
-                  "title": "Google Calendars"
-             },
-            "oauth": {
-                "description": "Access to calendars requires authorization in Google. Click the **SUBMIT** below to start the authorization process\n\n ###### ![AIS logo](/static/icons/ais_google_calendar.png)",
-                "title": "Authentication the access in Google"
-            }
-        },
-        "error": {
-          "oauth_error": "Invalid oAuth data",
-          "token_error": "Invalid code"
-        },
         "abort": {
-            "abort_by_error": "Discontinued due to an error:\n\n {error_info}",
-            "single_instance_allowed": "You already have the integration to Google Calendars set up.\n\n If you want to reconfigure, remove the current integration first."
+            "already_configured": "Account is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "code_expired": "Authentication code expired, please try again.",
+            "invalid_access_token": "Invalid access token",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "oauth_error": "Received invalid token data.",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "progress": {
+            "exchange": "To link your Google account, visit the [{url}]({url}) and enter code:\n\n{user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Link Google Account"
+            },
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            },
+            "reauth_confirm": {
+                "description": "The Nest integration needs to re-authenticate your account",
+                "title": "Reauthenticate Integration"
+            }
         }
     }
 }

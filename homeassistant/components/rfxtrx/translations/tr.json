@@ -66,6 +66,7 @@
                     "debug": "Hata ay\u0131klamay\u0131 etkinle\u015ftir",
                     "device": "Yap\u0131land\u0131rmak i\u00e7in cihaz\u0131 se\u00e7in",
                     "event_code": "Eklemek i\u00e7in etkinlik kodunu girin",
+                    "protocols": "Protokoller",
                     "remove_device": "Silinecek cihaz\u0131 se\u00e7in"
                 },
                 "title": "Rfxtrx Se\u00e7enekleri"

@@ -1,75 +1,81 @@
-"""Config flow to configure the AIS Drive Service component."""
+"""Config flow for Fibaro integration."""
+from __future__ import annotations
 
 import logging
+from typing import Any
 
-from fiblary3.client.v4.client import Client as FibaroClient
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import ConfigType
+
+from . import FibaroAuthFailed, FibaroConnectFailed, FibaroController
+from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-DRIVE_NAME_INPUT = None
-DRIVE_TYPE_INPUT = None
-DOMAIN = "fibaro"
-CONF_OAUTH_JSON = ""
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_URL): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_IMPORT_PLUGINS, default=False): bool,
+    }
+)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class DriveFlowHandler(config_entries.ConfigFlow):
-    """Drive config flow."""
+def _connect_to_fibaro(data: dict[str, Any]) -> FibaroController:
+    """Validate the user input allows us to connect to fibaro."""
+    controller = FibaroController(data)
+    controller.connect_with_error_handling()
+    return controller
+
+
+async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+    """Validate the user input allows us to connect.
+
+    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    """
+    controller = await hass.async_add_executor_job(_connect_to_fibaro, data)
+
+    _LOGGER.debug(
+        "Successfully connected to fibaro home center %s with name %s",
+        controller.hub_serial,
+        controller.name,
+    )
+    return {"serial_number": controller.hub_serial, "name": controller.name}
+
+
+class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Fibaro."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize zone configuration flow."""
-        pass
-
-    async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        return await self.async_step_confirm(user_input)
-
-    async def async_step_confirm(self, user_input=None):
-        """Handle a flow start."""
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
         errors = {}
+
         if user_input is not None:
-            return await self.async_step_auth(user_input=None)
-        return self.async_show_form(step_id="confirm", errors=errors)
-
-    async def async_step_auth(self, user_input=None):
-        """Handle a flow start."""
-        errors = {}
-        description_placeholders = {"error_info": ""}
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_URL): str,
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-            }
-        )
-        if user_input is not None and CONF_URL in user_input:
-            # test the connection
             try:
-                fibaro_client = FibaroClient(
-                    user_input[CONF_URL],
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                )
-                login = fibaro_client.login.get()
-                info = fibaro_client.info.get()
-                return self.async_create_entry(title="Fibaro Hub", data=user_input)
-            except Exception as e:
-                errors = {CONF_URL: "auth_error"}
-                description_placeholders = {
-                    "error_info": "Can not connect to Fibaro HC. Fibaro info: " + str(e)
-                }
+                info = await _validate_input(self.hass, user_input)
+            except FibaroConnectFailed:
+                errors["base"] = "cannot_connect"
+            except FibaroAuthFailed:
+                errors["base"] = "invalid_auth"
+            else:
+                await self.async_set_unique_id(info["serial_number"])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info["name"], data=user_input)
 
         return self.async_show_form(
-            step_id="auth",
-            errors=errors,
-            description_placeholders=description_placeholders,
-            data_schema=data_schema,
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_import(self, import_config: ConfigType | None) -> FlowResult:
+        """Import a config entry."""
+        return await self.async_step_user(import_config)

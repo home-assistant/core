@@ -36,7 +36,14 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    Event,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
@@ -45,7 +52,6 @@ from . import entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
-from .frame import report
 from .typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
@@ -221,29 +227,6 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-def convert_to_entity_category(
-    value: EntityCategory | str | None, raise_report: bool = True
-) -> EntityCategory | None:
-    """Force incoming entity_category to be an enum."""
-
-    if value is None:
-        return value
-
-    if not isinstance(value, EntityCategory):
-        if raise_report:
-            report(
-                "uses %s (%s) for entity category. This is deprecated and will "
-                "stop working in Home Assistant 2022.4, it should be updated to use "
-                "EntityCategory instead" % (type(value).__name__, value),
-                error_if_core=False,
-            )
-        try:
-            return EntityCategory(value)
-        except ValueError:
-            return None
-    return value
-
-
 @dataclass
 class EntityDescription:
     """A class that describes Home Assistant entities."""
@@ -252,10 +235,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    # Type string is deprecated as of 2021.12, use EntityCategory
-    entity_category: EntityCategory | Literal[
-        "config", "diagnostic", "system"
-    ] | None = None
+    entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -288,8 +268,8 @@ class Entity(ABC):
     # If we reported this entity is updated while disabled
     _disabled_reported = False
 
-    # If we reported this entity is using deprecated device_state_attributes
-    _deprecated_device_state_attributes_reported = False
+    # If we reported this entity is relying on deprecated temperature conversion
+    _temperature_reported = False
 
     # Protect for multiple updates
     _update_staged = False
@@ -484,9 +464,8 @@ class Entity(ABC):
         """Return the attribution."""
         return self._attr_attribution
 
-    # Type str is deprecated as of 2021.12, use EntityCategory
     @property
-    def entity_category(self) -> EntityCategory | str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
             return self._attr_entity_category
@@ -552,9 +531,9 @@ class Entity(ABC):
 
         self._async_write_ha_state()
 
-    def _stringify_state(self) -> str:
+    def _stringify_state(self, available: bool) -> str:
         """Convert state to string."""
-        if not self.available:
+        if not available:
             return STATE_UNAVAILABLE
         if (state := self.state) is None:
             return STATE_UNKNOWN
@@ -587,30 +566,13 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
-        state = self._stringify_state()
-        if self.available:
+        available = self.available  # only call self.available once per update cycle
+        state = self._stringify_state(available)
+        if available:
             attr.update(self.state_attributes or {})
-            extra_state_attributes = self.extra_state_attributes
-            # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
-            # Warning added in 2021.12, will be removed in 2022.4
-            if (
-                self.device_state_attributes is not None
-                and not self._deprecated_device_state_attributes_reported
-            ):
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    "Entity %s (%s) implements device_state_attributes. Please %s",
-                    self.entity_id,
-                    type(self),
-                    report_issue,
-                )
-                self._deprecated_device_state_attributes_reported = True
-            if extra_state_attributes is None:
-                extra_state_attributes = self.device_state_attributes
-            attr.update(extra_state_attributes or {})
+            attr.update(self.extra_state_attributes or {})
 
-        unit_of_measurement = self.unit_of_measurement
-        if unit_of_measurement is not None:
+        if (unit_of_measurement := self.unit_of_measurement) is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         entry = self.registry_entry
@@ -655,21 +617,57 @@ class Entity(ABC):
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
-        # Convert temperature if we detect one
-        try:
+        def _convert_temperature(state: str, attr: dict) -> str:
+            # Convert temperature if we detect one
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.sensor import SensorEntity
+
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
             units = self.hass.config.units
-            if (
-                unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
-                and unit_of_measure != units.temperature_unit
+            if unit_of_measure == units.temperature_unit or unit_of_measure not in (
+                TEMP_CELSIUS,
+                TEMP_FAHRENHEIT,
             ):
+                return state
+
+            domain = split_entity_id(self.entity_id)[0]
+            if domain != "sensor":
+                if not self._temperature_reported:
+                    self._temperature_reported = True
+                    report_issue = self._suggest_report_issue()
+                    _LOGGER.warning(
+                        "Entity %s (%s) relies on automatic temperature conversion, this will "
+                        "be unsupported in Home Assistant Core 2022.7. Please %s",
+                        self.entity_id,
+                        type(self),
+                        report_issue,
+                    )
+            elif not isinstance(self, SensorEntity):
+                if not self._temperature_reported:
+                    self._temperature_reported = True
+                    report_issue = self._suggest_report_issue()
+                    _LOGGER.warning(
+                        "Temperature sensor %s (%s) does not inherit SensorEntity, "
+                        "this will be unsupported in Home Assistant Core 2022.7."
+                        "Please %s",
+                        self.entity_id,
+                        type(self),
+                        report_issue,
+                    )
+            else:
+                return state
+
+            try:
                 prec = len(state) - state.index(".") - 1 if "." in state else 0
                 temp = units.temperature(float(state), unit_of_measure)
                 state = str(round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-        except ValueError:
-            # Could not convert state to float
-            pass
+            except ValueError:
+                # Could not convert state to float
+                pass
+            return state
+
+        state = _convert_temperature(state, attr)
 
         if (
             self._context_set is not None
@@ -847,6 +845,13 @@ class Entity(ABC):
         To be extended by integrations.
         """
 
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated.
+
+        To be extended by integrations.
+        """
+
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
 
@@ -908,6 +913,7 @@ class Entity(ABC):
 
         assert old is not None
         if self.registry_entry.entity_id == old.entity_id:
+            self.async_registry_entry_updated()
             self.async_write_ha_state()
             return
 

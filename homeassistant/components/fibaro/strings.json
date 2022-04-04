@@ -1,26 +1,22 @@
 {
-    "title": "AIS Fibaro",
-    "config": {
-        "step": {
-            "confirm": {
-                  "description": "![AIS logo](/static/icons/ais_fibaro.png)\n\nTa integracja pozwala na połączenie Fibaro Hub do Asystenta domowego.\n\n Czy chcesz skonfigurować integrację AIS Fibaro?",
-                  "title": "AIS Fibaro"
-             },
-            "auth": {
-                "description": "Konfiguracja komunikacji z Fibaro Hub wymaga podania danych dostępu.\n\n ![AIS logo](/static/icons/ais_fibaro.png)\n\n Aby użyć urządzeń Fibaro w Asystencie domowym, podaj następujące dane dotyczące kontrolera Fibaro:\n\n {error_info}",
-                "title": "Połączenie z Fibaro Hub",
-                "data": {
-                    "url": "URL: http://fibaro-gate-ip/api/",
-                    "username": "Login: twój_login",
-                    "password": "Hasło: twoje_hasło"
-                }
-            }
-        },
-        "error": {
-            "auth_error": "Niepoprawne dane logowania"
-        },
-        "abort": {
-            "single_instance_allowed": "Masz już skonfigurowany Hub Fibaro.\n\n Jeśli chcesz skonfigurować ponownie to najpierw usuń bieżącą integrację."
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "URL in the format http://HOST/api/",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "import_plugins": "Import entities from fibaro plugins?"
         }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  }
 }

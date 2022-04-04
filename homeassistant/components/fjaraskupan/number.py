@@ -34,7 +34,9 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class PeriodicVentingTime(CoordinatorEntity[State], NumberEntity):
+class PeriodicVentingTime(
+    CoordinatorEntity[DataUpdateCoordinator[State]], NumberEntity
+):
     """Periodic Venting."""
 
     _attr_max_value: float = 59

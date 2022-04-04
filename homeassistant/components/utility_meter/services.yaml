@@ -2,10 +2,11 @@
 
 reset:
   name: Reset
-  description: Resets the counter of a utility meter.
+  description: Resets all counters of an utility meter.
   target:
     entity:
-      domain: utility_meter
+      domain: select
+      integration: utility_meter
 
 next_tariff:
   name: Next Tariff
@@ -35,6 +36,7 @@ calibrate:
   target:
     entity:
       domain: sensor
+      integration: utility_meter
   fields:
     value:
       name: Value
