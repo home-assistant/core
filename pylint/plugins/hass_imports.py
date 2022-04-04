@@ -32,7 +32,11 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ),
         ObsoleteImportMatch(
             reason="replaced by LightEntityFeature enum",
-            constant=re.compile(r"^SUPPORT_(\w*)$"),
+            constant=re.compile(r"^SUPPORT_(EFFECT|FLASH|TRANSITION)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by color modes",
+            constant=re.compile(r"^SUPPORT_(BRIGHTNESS|COLOR_TEMP|COLOR|WHITE_VALUE)$"),
         ),
     ],
 }
