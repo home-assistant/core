@@ -428,7 +428,7 @@ class SensorEntity(Entity):
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
 
             # Scale the precision when converting to a larger unit
-            # For example 1.1 kWh should be rendered as 0.0011 kWh, not 0.0 kWh
+            # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
             ratio_log = max(
                 0,
                 log10(
