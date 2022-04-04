@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Add min / max / mean / median sensor",
-        "description": "Create a sensor that calculates a min, max, mean or median value from a list of input sensor.",
+        "description": "Create a sensor that calculates a min, max, mean or median value from a list of input sensors.",
         "data": {
           "entity_ids": "Input entities",
           "name": "Name",
