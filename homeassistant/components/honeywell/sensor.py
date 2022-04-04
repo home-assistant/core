@@ -8,17 +8,12 @@ from typing import Any
 from somecomfort import Device
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, HUMIDITY_STATUS_KEY, TEMPERATURE_STATUS_KEY
@@ -48,7 +43,7 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
     HoneywellSensorEntityDescription(
         key=TEMPERATURE_STATUS_KEY,
         name="Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.outdoor_temperature,
         unit_fn=_get_temperature_sensor_unit,
@@ -56,7 +51,7 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
     HoneywellSensorEntityDescription(
         key=HUMIDITY_STATUS_KEY,
         name="Humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.outdoor_humidity,
         unit_fn=lambda device: PERCENTAGE,
