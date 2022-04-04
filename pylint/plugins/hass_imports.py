@@ -61,6 +61,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^SOURCE_(\w*)$"),
         ),
     ],
+    "homeassistant.helpers.device_registry": [
+        ObsoleteImportMatch(
+            reason="replaced by DeviceEntryDisabler enum",
+            constant=re.compile(r"^DISABLED_(\w*)$"),
+        ),
+    ],
 }
 
 
