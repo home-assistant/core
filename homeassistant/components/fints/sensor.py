@@ -139,16 +139,16 @@ class FinTsClient:
     def detect_accounts(self):
         """Identify the accounts of the bank."""
 
-        client = self.client
-        accounts = client.get_sepa_accounts()
+        bank = self.client
+        accounts = bank.get_sepa_accounts()
         account_types = {
             x["iban"]: x["type"]
-            for x in client.get_information()["accounts"]
+            for x in bank.get_information()["accounts"]
             if x["iban"] is not None
         }
+
         balance_accounts = []
         holdings_accounts = []
-
         for account in accounts:
             account_type = account_types[account.iban]
             if 1 <= account_type <= 9:  # 1-9 is balance account
