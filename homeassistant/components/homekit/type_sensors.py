@@ -75,7 +75,6 @@ BINARY_SENSOR_SERVICE_MAP: dict[str, SI] = {
     BinarySensorDeviceClass.CO: SI(
         SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
     ),
-    "carbon_dioxide": SI(SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
     BinarySensorDeviceClass.DOOR: SI(
         SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
     ),
