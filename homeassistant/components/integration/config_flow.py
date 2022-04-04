@@ -39,7 +39,6 @@ UNIT_PREFIXES = [
     {"value": "M", "label": "M (mega)"},
     {"value": "G", "label": "G (giga)"},
     {"value": "T", "label": "T (tera)"},
-    {"value": "P", "label": "P (peta)"},
 ]
 TIME_UNITS = [
     {"value": TIME_SECONDS, "label": "s (seconds)"},
