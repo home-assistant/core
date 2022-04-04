@@ -512,6 +512,9 @@ class DeviceRegistry:
         new = attr.evolve(old, **new_values)
         self._update_device(old, new)
 
+        # If its only run time attributes (suggested_area)
+        # that do not get saved we do not want to write
+        # to disk or fire an event
         if RUNTIME_ONLY_ATTRS.issuperset(new_values):
             return new
 
