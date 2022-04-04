@@ -43,6 +43,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
         ),
     ],
+    "homeassistant.components.light": [
+        ObsoleteImportMatch(
+            reason="replaced by ColorMode enum",
+            constant=re.compile(r"^COLOR_MODE_(\w*)$"),
+        ),
+    ],
     "homeassistant.components.media_player": [
         ObsoleteImportMatch(
             reason="replaced by MediaPlayerDeviceClass enum",
