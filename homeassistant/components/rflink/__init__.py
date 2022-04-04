@@ -334,6 +334,7 @@ class RflinkDevice(Entity):
         # Rflink specific attributes for every component type
         self._initial_event = initial_event
         self._device_id = device_id
+        self._unique_id = device_id
         if name:
             self._name = name
         else:
@@ -390,6 +391,11 @@ class RflinkDevice(Entity):
     def assumed_state(self):
         """Assume device state until first device event sets state."""
         return self._state is None
+
+    @property
+    def unique_id(self):
+        """Return unique identifier of remote device."""
+        return self._unique_id
 
     @property
     def available(self):
