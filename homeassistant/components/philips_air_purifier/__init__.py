@@ -5,17 +5,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .client import ReliableClient
+from .const import COAP_PORT, DOMAIN
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[str] = [Platform.FAN]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Philips Air Purifier from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+
+    client = ReliableClient(entry.data["host"], port=COAP_PORT)
+    client.start()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
