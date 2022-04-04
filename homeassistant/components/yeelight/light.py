@@ -720,7 +720,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Activate flash."""
         if not flash:
             return
-        if int(self._get_property("color_mode")) != 1:
+        if int(self._get_property("color_mode")) != 1 or not self.hs_color:
             _LOGGER.error("Flash supported currently only in RGB mode")
             return
 
@@ -732,7 +732,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             count = 1
             duration = transition * 2
 
-        assert self.hs_color
         red, green, blue = color_util.color_hs_to_RGB(*self.hs_color)
 
         transitions = []
