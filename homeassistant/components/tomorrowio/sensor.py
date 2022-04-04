@@ -311,7 +311,6 @@ def handle_conversion(
     value: float | int, conversion: Callable[[float], float] | float
 ) -> float:
     """Handle conversion of a value based on conversion type."""
-    # When conversion is a callable, we assume it's a single input function
     if callable(conversion):
         return smart_round(conversion(float(value)))
 
