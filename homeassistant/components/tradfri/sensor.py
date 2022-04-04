@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
 from .const import (
-    _LOGGER,
+    LOGGER,
     CONF_GATEWAY_ID,
     COORDINATOR,
     COORDINATOR_LIST,
@@ -35,8 +35,6 @@ from .const import (
     KEY_API,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
-
-ATTR_FILTER_LIFE_REMAINING: Final = "filter_life_remaining"
 
 
 @dataclass
@@ -90,7 +88,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         value=_get_air_quality,
     ),
     TradfriSensorEntityDescription(
-        key=ATTR_FILTER_LIFE_REMAINING,
+        key="filter_life_remaining",
         name="filter time left",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TIME_HOURS,
