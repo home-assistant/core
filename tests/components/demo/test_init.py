@@ -65,7 +65,7 @@ async def test_demo_statistics(hass, recorder_mock):
         "unit_of_measurement": "°C",
     } in statistic_ids
     assert {
-        "has_mean": False,
+        "has_mean": True,
         "has_sum": True,
         "name": None,
         "source": "demo",
