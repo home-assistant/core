@@ -113,14 +113,14 @@ def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -
     try:
         ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
     except ValueError:
-        _LOGGER.warning(
+        LOGGER.warning(
             "Skip migration of id [%s] to [%s] because it already exists",
             old_unique_id,
             new_unique_id,
         )
         return
 
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migrating unique_id from [%s] to [%s]",
         old_unique_id,
         new_unique_id,

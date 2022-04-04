@@ -22,7 +22,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
-    _LOGGER,
+    LOGGER,
     CONF_GATEWAY_ID,
     CONF_IDENTITY,
     CONF_KEY,
@@ -126,7 +126,7 @@ async def async_setup_entry(
         try:
             await api(gateway.get_gateway_info())
         except RequestError:
-            _LOGGER.error("Keep-alive failed")
+            LOGGER.error("Keep-alive failed")
             gw_status = False
 
         async_dispatcher_send(hass, SIGNAL_GW, gw_status)

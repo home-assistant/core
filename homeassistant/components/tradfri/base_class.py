@@ -14,7 +14,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN
+from .const import LOGGER, DOMAIN
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
@@ -29,7 +29,7 @@ def handle_error(
         try:
             await func(command)
         except RequestError as err:
-            _LOGGER.error("Unable to execute command %s: %s", command, err)
+            LOGGER.error("Unable to execute command %s: %s", command, err)
 
     return wrapper
 
