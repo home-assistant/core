@@ -253,25 +253,25 @@ def _async_cmd(func):
             except asyncio.TimeoutError as ex:
                 # The wifi likely dropped, so we want to retry once since
                 # python-yeelight will auto reconnect
-                exc_message = str(ex) or type(ex)
                 if attempts == 0:
                     continue
                 raise HomeAssistantError(
-                    f"Timed out when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
+                    f"Timed out when calling {func.__name__} for bulb "
+                    f"{self.device.name} at {self.device.host}: {str(ex) or type(ex)}"
                 ) from ex
             except OSError as ex:
                 # A network error happened, the bulb is likely offline now
                 self.device.async_mark_unavailable()
                 self.async_state_changed()
-                exc_message = str(ex) or type(ex)
                 raise HomeAssistantError(
-                    f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
+                    f"Error when calling {func.__name__} for bulb "
+                    f"{self.device.name} at {self.device.host}: {str(ex) or type(ex)}"
                 ) from ex
             except BulbException as ex:
                 # The bulb likely responded but had an error
-                exc_message = str(ex) or type(ex)
                 raise HomeAssistantError(
-                    f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
+                    f"Error when calling {func.__name__} for bulb "
+                    f"{self.device.name} at {self.device.host}: {str(ex) or type(ex)}"
                 ) from ex
 
     return _async_wrap
