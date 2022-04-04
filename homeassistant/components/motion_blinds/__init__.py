@@ -113,9 +113,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    # check multicast interface
+    check_multicast_class = ConnectMotionGateway(hass, interface=multicast_interface)
+    working_interface = await check_multicast_class.async_check_interface(host, key)
+    if working_interface != multicast_interface:
+        data = {**entry.data, CONF_INTERFACE: working_interface}
+        hass.config_entries.async_update_entry(entry, data=data)
+        _LOGGER.debug(
+            "Motion Blinds interface updated from %s to %s, "
+            "this should only occur after a network change",
+            multicast_interface,
+            working_interface,
+        )
+
     # Create multicast Listener
     if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-        multicast = AsyncMotionMulticast(interface=multicast_interface)
+        multicast = AsyncMotionMulticast(interface=working_interface)
         hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
         # start listening for local pushes (only once)
         await multicast.Start_listen()
