@@ -8,15 +8,22 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers import selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowFormStep,
-    HelperFlowMenuStep,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+    SchemaFlowMenuStep,
 )
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
-_STATISTIC_MEASURES = ["last", "max", "mean", "min", "median"]
+_STATISTIC_MEASURES = [
+    {"value": "min", "label": "Minimum"},
+    {"value": "max", "label": "Maximum"},
+    {"value": "mean", "label": "Arithmetic mean"},
+    {"value": "median", "label": "Median"},
+    {"value": "last", "label": "Most recently updated"},
+]
+
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -38,16 +45,16 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "user": HelperFlowFormStep(CONFIG_SCHEMA)
+CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA)
 }
 
-OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "init": HelperFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
 }
 
 
-class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Min/Max."""
 
     config_flow = CONFIG_FLOW

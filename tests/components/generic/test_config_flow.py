@@ -1,6 +1,7 @@
 """Test The generic (IP Camera) config flow."""
 
 import errno
+import os.path
 from unittest.mock import patch
 
 import av
@@ -108,6 +109,57 @@ async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
 
     await hass.async_block_till_done()
     assert respx.calls.call_count == 1
+
+
+@respx.mock
+async def test_form_only_stillimage_gif(hass, fakeimg_gif, user_flow):
+    """Test we complete ok if the user wants a gif."""
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["options"][CONF_CONTENT_TYPE] == "image/gif"
+
+
+@respx.mock
+async def test_form_only_svg_whitespace(hass, fakeimgbytes_svg, user_flow):
+    """Test we complete ok if svg starts with whitespace, issue #68889."""
+    fakeimgbytes_wspace_svg = bytes("  \n ", encoding="utf-8") + fakeimgbytes_svg
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_wspace_svg)
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    "image_file",
+    [
+        ("sample1_animate.png"),
+        ("sample2_jpeg_odd_header.jpg"),
+        ("sample3_jpeg_odd_header.jpg"),
+        ("sample4_K5-60mileAnim-320x240.gif"),
+    ],
+)
+async def test_form_only_still_sample(hass, user_flow, image_file):
+    """Test various sample images #69037."""
+    image_path = os.path.join(os.path.dirname(__file__), image_file)
+    with open(image_path, "rb") as image:
+        respx.get("http://127.0.0.1/testurl/1").respond(stream=image.read())
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 @respx.mock

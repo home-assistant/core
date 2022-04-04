@@ -15,8 +15,8 @@
     "error": { "name_exists": "Name already exists" }
   },
   "system_health": {
-     "info": {
-       "api_endpoint_reachable": "IPMA API endpoint reachable"
-     }
+    "info": {
+      "api_endpoint_reachable": "IPMA API endpoint reachable"
+    }
   }
 }

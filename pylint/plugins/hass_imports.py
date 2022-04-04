@@ -1,10 +1,31 @@
 """Plugin for checking imports."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+import re
+
 from astroid import Import, ImportFrom, Module
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
+
+
+@dataclass
+class ObsoleteImportMatch:
+    """Class for pattern matching."""
+
+    constant: re.Pattern
+    reason: str
+
+
+_OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
+    "homeassistant.components.sensor": [
+        ObsoleteImportMatch(
+            reason="replaced by SensorStateClass enum",
+            constant=re.compile(r"^STATE_CLASS_(\w*)$"),
+        ),
+    ],
+}
 
 
 class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
@@ -19,6 +40,11 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             "Relative import should be used",
             "hass-relative-import",
             "Used when absolute import should be replaced with relative import",
+        ),
+        "W0012": (
+            "%s is deprecated, %s",
+            "hass-deprecated-import",
+            "Used when import is deprecated",
         ),
     }
     options = ()
@@ -49,6 +75,15 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             f"{self.current_package}."
         ):
             self.add_message("hass-relative-import", node=node)
+        elif obsolete_imports := _OBSOLETE_IMPORT.get(node.modname):
+            for name_tuple in node.names:
+                for obsolete_import in obsolete_imports:
+                    if import_match := obsolete_import.constant.match(name_tuple[0]):
+                        self.add_message(
+                            "hass-deprecated-import",
+                            node=node,
+                            args=(import_match.string, obsolete_import.reason),
+                        )
 
 
 def register(linter: PyLinter) -> None:

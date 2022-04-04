@@ -6,9 +6,15 @@
   "requirements": ["motionblinds==0.6.2"],
   "dependencies": ["network"],
   "dhcp": [
-    {"registered_devices": true},
+    { "registered_devices": true },
     {
       "hostname": "motion_*"
+    },
+    {
+      "hostname": "brel_*"
+    },
+    {
+      "hostname": "connector_*"
     }
   ],
   "codeowners": ["@starkillerOG"],

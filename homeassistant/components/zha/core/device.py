@@ -8,7 +8,7 @@ from enum import Enum
 import logging
 import random
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from zigpy import types
 import zigpy.exceptions
@@ -74,6 +74,9 @@ from .const import (
     ZHA_OPTIONS,
 )
 from .helpers import LogMixin, async_get_zha_config_value
+
+if TYPE_CHECKING:
+    from ..api import ClusterBinding
 
 _LOGGER = logging.getLogger(__name__)
 _UPDATE_ALIVE_INTERVAL = (60, 90)
@@ -655,7 +658,7 @@ class ZHADevice(LogMixin):
         )
         return response
 
-    async def async_add_to_group(self, group_id):
+    async def async_add_to_group(self, group_id: int) -> None:
         """Add this device to the provided zigbee group."""
         try:
             await self._zigpy_device.add_to_group(group_id)
@@ -667,7 +670,7 @@ class ZHADevice(LogMixin):
                 str(ex),
             )
 
-    async def async_remove_from_group(self, group_id):
+    async def async_remove_from_group(self, group_id: int) -> None:
         """Remove this device from the provided zigbee group."""
         try:
             await self._zigpy_device.remove_from_group(group_id)
@@ -679,10 +682,12 @@ class ZHADevice(LogMixin):
                 str(ex),
             )
 
-    async def async_add_endpoint_to_group(self, endpoint_id, group_id):
+    async def async_add_endpoint_to_group(
+        self, endpoint_id: int, group_id: int
+    ) -> None:
         """Add the device endpoint to the provided zigbee group."""
         try:
-            await self._zigpy_device.endpoints[int(endpoint_id)].add_to_group(group_id)
+            await self._zigpy_device.endpoints[endpoint_id].add_to_group(group_id)
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to add endpoint: %s for device: '%s' to group: 0x%04x ex: %s",
@@ -692,12 +697,12 @@ class ZHADevice(LogMixin):
                 str(ex),
             )
 
-    async def async_remove_endpoint_from_group(self, endpoint_id, group_id):
+    async def async_remove_endpoint_from_group(
+        self, endpoint_id: int, group_id: int
+    ) -> None:
         """Remove the device endpoint from the provided zigbee group."""
         try:
-            await self._zigpy_device.endpoints[int(endpoint_id)].remove_from_group(
-                group_id
-            )
+            await self._zigpy_device.endpoints[endpoint_id].remove_from_group(group_id)
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to remove endpoint: %s for device '%s' from group: 0x%04x ex: %s",
@@ -707,21 +712,28 @@ class ZHADevice(LogMixin):
                 str(ex),
             )
 
-    async def async_bind_to_group(self, group_id, cluster_bindings):
+    async def async_bind_to_group(
+        self, group_id: int, cluster_bindings: list[ClusterBinding]
+    ) -> None:
         """Directly bind this device to a group for the given clusters."""
         await self._async_group_binding_operation(
             group_id, zdo_types.ZDOCmd.Bind_req, cluster_bindings
         )
 
-    async def async_unbind_from_group(self, group_id, cluster_bindings):
+    async def async_unbind_from_group(
+        self, group_id: int, cluster_bindings: list[ClusterBinding]
+    ) -> None:
         """Unbind this device from a group for the given clusters."""
         await self._async_group_binding_operation(
             group_id, zdo_types.ZDOCmd.Unbind_req, cluster_bindings
         )
 
     async def _async_group_binding_operation(
-        self, group_id, operation, cluster_bindings
-    ):
+        self,
+        group_id: int,
+        operation: zdo_types.ZDOCmd,
+        cluster_bindings: list[ClusterBinding],
+    ) -> None:
         """Create or remove a direct zigbee binding between a device and a group."""
 
         zdo = self._zigpy_device.zdo
@@ -771,8 +783,8 @@ class ZHADevice(LogMixin):
                 fmt = f"{log_msg[1]} completed: %s"
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
-    def log(self, level: int, msg: str, *args: Any) -> None:
+    def log(self, level: int, msg: str, *args: Any, **kwargs: dict) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.nwk, self.model) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)

@@ -4,12 +4,13 @@ from __future__ import annotations
 import contextlib
 from errno import EHOSTUNREACH, EIO
 from functools import partial
-import imghdr
+import io
 import logging
 from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
+import PIL
 from async_timeout import timeout
 import av
 from httpx import HTTPStatusError, RequestError, TimeoutException
@@ -57,7 +58,7 @@ DEFAULT_DATA = {
     CONF_VERIFY_SSL: True,
 }
 
-SUPPORTED_IMAGE_TYPES = ["png", "jpeg", "svg+xml"]
+SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml"}
 
 
 def build_schema(
@@ -110,11 +111,16 @@ def build_schema(
 
 def get_image_type(image):
     """Get the format of downloaded bytes that could be an image."""
-    fmt = imghdr.what(None, h=image)
+    fmt = None
+    imagefile = io.BytesIO(image)
+    with contextlib.suppress(PIL.UnidentifiedImageError):
+        img = PIL.Image.open(imagefile)
+        fmt = img.format.lower()
+
     if fmt is None:
-        # if imghdr can't figure it out, could be svg.
+        # if PIL can't figure it out, could be svg.
         with contextlib.suppress(UnicodeDecodeError):
-            if image.decode("utf-8").startswith("<svg"):
+            if image.decode("utf-8").lstrip().startswith("<svg"):
                 return "svg+xml"
     return fmt
 

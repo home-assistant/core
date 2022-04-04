@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -196,7 +197,6 @@ async def async_setup_platform(
         here_client,
         here_travel_time_config,
     )
-    await coordinator.async_config_entry_first_refresh()
 
     sensor = HERETravelTimeSensor(name, traffic_mode, coordinator)
 
@@ -240,6 +240,15 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         self._attr_native_unit_of_measurement = TIME_MINUTES
         self._attr_name = name
 
+    async def async_added_to_hass(self) -> None:
+        """Wait for start so origin and destination entities can be resolved."""
+        await super().async_added_to_hass()
+
+        async def _update_at_start(_):
+            await self.async_update()
+
+        self.async_on_remove(async_at_start(self.hass, _update_at_start))
+
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
@@ -274,7 +283,9 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
     @property
     def attribution(self) -> str | None:
         """Return the attribution."""
-        return self.coordinator.data.get(ATTR_ATTRIBUTION)
+        if self.coordinator.data is not None:
+            return self.coordinator.data.get(ATTR_ATTRIBUTION)
+        return None
 
     @property
     def icon(self) -> str:

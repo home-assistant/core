@@ -139,11 +139,11 @@ class BaseZhaEntity(LogMixin, entity.Entity):
             )
         self._unsubs.append(unsub)
 
-    def log(self, level: int, msg: str, *args):
+    def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
         msg = f"%s: {msg}"
         args = (self.entity_id,) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
 
 
 class ZhaEntity(BaseZhaEntity, RestoreEntity):

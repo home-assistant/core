@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please choose your county below.",
         "data": {
           "county": "County"
         }
