@@ -15,8 +15,6 @@ from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
-ATTR_MODEL = "model"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -65,7 +63,7 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
-        return {ATTR_MODEL: self._device.device_info.model_number}
+        return {"model": self._device.device_info.model_number}
 
     @property
     def current_cover_position(self) -> int | None:
