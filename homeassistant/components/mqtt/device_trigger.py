@@ -13,6 +13,7 @@ from homeassistant.components.automation import (
     AutomationTriggerInfo,
 )
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
@@ -32,9 +33,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import debug_info, trigger as mqtt_trigger
 from .. import mqtt
-from .const import (
+from .const import (  # ATTR_DISCOVERY_TOPIC,
     ATTR_DISCOVERY_HASH,
-    ATTR_DISCOVERY_TOPIC,
     CONF_PAYLOAD,
     CONF_QOS,
     CONF_TOPIC,
@@ -45,6 +45,7 @@ from .mixins import (
     CONF_CONNECTIONS,
     CONF_IDENTIFIERS,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MqttDiscoveryDeviceUpdate,
     cleanup_device_registry,
     update_device,
 )
@@ -88,6 +89,8 @@ TRIGGER_DISCOVERY_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 DEVICE_TRIGGERS = "mqtt_device_triggers"
+
+LOG_NAME = "Device trigger"
 
 
 @attr.s(slots=True)
@@ -190,6 +193,87 @@ class Trigger:
                 trig.remove = None
 
 
+class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
+    """Setup a MQTT device trigger with auto discovery."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        device_id: str,
+        discovery_data: dict,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize."""
+        self._config = config
+        self._config_entry = config_entry
+        self._remove_discovery = None
+        self.device_id = device_id
+        self.discovery_data = discovery_data
+        self.hass = hass
+        # self._sub_state = None
+
+        MqttDiscoveryDeviceUpdate.__init__(
+            self,
+            hass,
+            discovery_data,
+            device_id,
+            config_entry,
+            LOG_NAME,
+        )
+
+    async def async_setup(self):
+        """Initialize the device trigger."""
+        discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
+        discovery_id = discovery_hash[1]
+        self.hass.data.setdefault(DEVICE_TRIGGERS, {})
+        if discovery_id not in self.hass.data[DEVICE_TRIGGERS]:
+            self.hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
+                hass=self.hass,
+                device_id=self.device_id,
+                discovery_data=self.discovery_data,
+                type=self._config[CONF_TYPE],
+                subtype=self._config[CONF_SUBTYPE],
+                topic=self._config[CONF_TOPIC],
+                payload=self._config[CONF_PAYLOAD],
+                qos=self._config[CONF_QOS],
+                remove_signal=self._remove_discovery,
+                value_template=self._config[CONF_VALUE_TEMPLATE],
+            )
+        else:
+            await self.hass.data[DEVICE_TRIGGERS][discovery_id].update_trigger(
+                self._config, discovery_hash, self._remove_discovery
+            )
+        debug_info.add_trigger_discovery_data(
+            self.hass, discovery_hash, self.discovery_data, self.device_id
+        )
+
+    async def async_tear_down(self):
+        """Cleanup device trigger."""
+        discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
+        discovery_id = discovery_hash[1]
+        _LOGGER.info("Removing trigger: %s", discovery_hash)
+        debug_info.remove_trigger_discovery_data(self.hass, discovery_hash)
+        if discovery_id in self.hass.data[DEVICE_TRIGGERS]:
+            device_trigger: Trigger = self.hass.data[DEVICE_TRIGGERS].pop(discovery_id)
+            device_trigger.detach_trigger()
+
+
+async def async_setup_trigger_poc(hass, config, config_entry, discovery_data):
+    """Set up the MQTT device trigger."""
+    config = TRIGGER_DISCOVERY_SCHEMA(config)
+    discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+
+    if (device_id := update_device(hass, config_entry, config)) is None:
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        return
+
+    mqtt_device_trigger = MqttDeviceTrigger(
+        hass, config, device_id, discovery_data, config_entry
+    )
+    await mqtt_device_trigger.async_setup()
+
+
 async def async_setup_trigger(hass, config, config_entry, discovery_data):
     """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
@@ -271,18 +355,18 @@ async def async_removed_from_device(hass: HomeAssistant, device_id: str):
         device_trigger = hass.data[DEVICE_TRIGGERS].pop(trig[CONF_DISCOVERY_ID])
         if device_trigger:
             discovery_hash = device_trigger.discovery_data[ATTR_DISCOVERY_HASH]
-            discovery_topic = device_trigger.discovery_data[ATTR_DISCOVERY_TOPIC]
+            # discovery_topic = device_trigger.discovery_data[ATTR_DISCOVERY_TOPIC]
 
             debug_info.remove_trigger_discovery_data(hass, discovery_hash)
             device_trigger.detach_trigger()
-            clear_discovery_hash(hass, discovery_hash)
+            # clear_discovery_hash(hass, discovery_hash)
             device_trigger.remove_signal()
-            mqtt.publish(
-                hass,
-                discovery_topic,
-                "",
-                retain=True,
-            )
+            # mqtt.publish(
+            #    hass,
+            #    discovery_topic,
+            #    "",
+            #    retain=True,
+            # )
 
 
 async def async_get_triggers(

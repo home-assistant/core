@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry):
 async def _async_setup_automation(hass, config, config_entry, discovery_data):
     """Set up an MQTT device automation."""
     if config[CONF_AUTOMATION_TYPE] == AUTOMATION_TYPE_TRIGGER:
-        await device_trigger.async_setup_trigger(
+        await device_trigger.async_setup_trigger_poc(
             hass, config, config_entry, discovery_data
         )
 
