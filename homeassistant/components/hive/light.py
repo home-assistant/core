@@ -1,13 +1,16 @@
 """Support for Hive light devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
+    COLOR_MODE_ONOFF,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -138,17 +141,28 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         await self.hive.light.turnOff(self.device)
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        supported_features = None
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
         if self.device["hiveType"] == "warmwhitelight":
-            supported_features = SUPPORT_BRIGHTNESS
-        elif self.device["hiveType"] == "tuneablelight":
-            supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
-        elif self.device["hiveType"] == "colourtuneablelight":
-            supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
+            return COLOR_MODE_BRIGHTNESS
+        if self.device["hiveType"] == "tuneablelight":
+            return COLOR_MODE_COLOR_TEMP
+        if self.device["hiveType"] == "colourtuneablelight":
+            if self.device["status"]["mode"] == "COLOUR":
+                return COLOR_MODE_HS
+            return COLOR_MODE_COLOR_TEMP
+        return COLOR_MODE_ONOFF
 
-        return supported_features
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        if self.device["hiveType"] == "warmwhitelight":
+            return {COLOR_MODE_BRIGHTNESS}
+        if self.device["hiveType"] == "tuneablelight":
+            return {COLOR_MODE_COLOR_TEMP}
+        if self.device["hiveType"] == "colourtuneablelight":
+            return {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
+        return {COLOR_MODE_ONOFF}
 
     async def async_update(self):
         """Update all Node data from Hive."""
