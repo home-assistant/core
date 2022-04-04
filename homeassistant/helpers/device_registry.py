@@ -43,6 +43,8 @@ CONNECTION_ZIGBEE = "zigbee"
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
+RUNTIME_ONLY_ATTRS = {"suggested_area"}
+
 
 class _DeviceIndex(NamedTuple):
     identifiers: dict[tuple[str, str], str]
@@ -509,6 +511,10 @@ class DeviceRegistry:
 
         new = attr.evolve(old, **new_values)
         self._update_device(old, new)
+
+        if RUNTIME_ONLY_ATTRS.issuperset(new_values):
+            return new
+
         self.async_schedule_save()
 
         data: dict[str, Any] = {
