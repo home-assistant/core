@@ -35,7 +35,6 @@ from .const import (
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
-LISTENERS = "tradfri_listeners"
 PLATFORMS = [
     Platform.COVER,
     Platform.FAN,
@@ -54,7 +53,6 @@ async def async_setup_entry(
     """Create a gateway."""
     tradfri_data: dict[str, Any] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data
-    listeners = tradfri_data[LISTENERS] = []
 
     factory = await APIFactory.init(
         entry.data[CONF_HOST],
@@ -68,7 +66,9 @@ async def async_setup_entry(
         await factory.shutdown()
 
     # Setup listeners
-    listeners.append(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop))
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    )
 
     api = factory.request
     gateway = Gateway()
@@ -147,9 +147,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         tradfri_data = hass.data[DOMAIN].pop(entry.entry_id)
         factory = tradfri_data[FACTORY]
         await factory.shutdown()
-        # unsubscribe listeners
-        for listener in tradfri_data[LISTENERS]:
-            listener()
 
     return unload_ok
 
