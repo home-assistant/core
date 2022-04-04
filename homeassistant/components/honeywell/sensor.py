@@ -88,7 +88,7 @@ class HoneywellSensor(SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device.deviceid}_outdoor_{description.device_class}"
         self._attr_name = f"{device.name} outdoor {description.device_class}"
-        self._attr_native_unit_of_measurement = self.entity_description.unit_fn(device)
+        self._attr_native_unit_of_measurement = description.unit_fn(device)
 
     @property
     def native_value(self) -> StateType:
