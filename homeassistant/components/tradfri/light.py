@@ -134,8 +134,11 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:
             transition_time = int(kwargs[ATTR_TRANSITION]) * 10
 
-            dimmer_data = {"dimmer": 0, "transition_time": transition_time}
-            await self._api(self._device_control.set_dimmer(**dimmer_data))
+            await self._api(
+                self._device_control.set_dimmer(
+                    dimmer=0, transition_time=transition_time
+                )
+            )
         else:
             await self._api(self._device_control.set_state(False))
 
