@@ -52,6 +52,7 @@ class EntityTestInfo:
     friendly_name: str
     state: str
     supported_features: int = 0
+    supported_color_modes: list[str] | None = None
     capabilities: dict[str, Any] | None = None
     entity_category: EntityCategory | None = None
     unit_of_measurement: str | None = None
@@ -346,6 +347,8 @@ async def assert_devices_and_entities_created(
             assert state is not None
             assert state.state == entity_info.state
             assert state.attributes["friendly_name"] == entity_info.friendly_name
+            if color_modes := entity_info.supported_color_modes:
+                assert state.attributes["supported_color_modes"] == color_modes
 
         all_triggers = await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, device.id
