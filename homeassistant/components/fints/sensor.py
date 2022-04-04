@@ -127,6 +127,9 @@ class FinTsClient:
         As the fints library is stateless, there is not benefit in caching
         the client objects. If that ever changes, consider caching the client
         object and also think about potential concurrency problems.
+
+        Note: As of version 2, the fints library is not stateless anymore.
+        This should be considered when reworking this integration.
         """
 
         return FinTS3PinTanClient(
