@@ -213,7 +213,7 @@ async def async_setup_platform(
             parent_meter=meter,
             source_entity=conf_meter_source,
             tariff_entity=conf_meter_tariff_entity,
-            conf_sensor_tariff,
+            tariff=conf_sensor_tariff,
             unique_id=conf_sensor_unique_id,
         )
         meters.append(meter_sensor)
