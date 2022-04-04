@@ -514,7 +514,9 @@ class DeviceRegistry:
 
         # If its only run time attributes (suggested_area)
         # that do not get saved we do not want to write
-        # to disk or fire an event
+        # to disk or fire an event as we would end up
+        # firing events for data we have nothing to compare
+        # against since its never saved on disk
         if RUNTIME_ONLY_ATTRS.issuperset(new_values):
             return new
 
