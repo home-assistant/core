@@ -43,6 +43,8 @@ CONNECTION_ZIGBEE = "zigbee"
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
+RUNTIME_ONLY_ATTRS = {"suggested_area"}
+
 
 class _DeviceIndex(NamedTuple):
     identifiers: dict[tuple[str, str], str]
@@ -85,6 +87,7 @@ class DeviceEntry:
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
+    suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     hw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
@@ -491,6 +494,7 @@ class DeviceRegistry:
             ("name", name),
             ("name_by_user", name_by_user),
             ("area_id", area_id),
+            ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("hw_version", hw_version),
             ("via_device_id", via_device_id),
@@ -507,6 +511,15 @@ class DeviceRegistry:
 
         new = attr.evolve(old, **new_values)
         self._update_device(old, new)
+
+        # If its only run time attributes (suggested_area)
+        # that do not get saved we do not want to write
+        # to disk or fire an event as we would end up
+        # firing events for data we have nothing to compare
+        # against since its never saved on disk
+        if RUNTIME_ONLY_ATTRS.issuperset(new_values):
+            return new
+
         self.async_schedule_save()
 
         data: dict[str, Any] = {
