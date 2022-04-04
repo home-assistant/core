@@ -11,7 +11,8 @@ from pyControl4.light import C4Light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     SUPPORT_TRANSITION,
     LightEntity,
 )
@@ -164,6 +165,12 @@ class Control4Light(Control4Entity, LightEntity):
             device_id,
         )
         self._is_dimmer = is_dimmer
+        if is_dimmer:
+            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+        else:
+            self._attr_color_mode = COLOR_MODE_ONOFF
+            self._attr_supported_color_modes = {COLOR_MODE_ONOFF}
 
     def create_api_object(self):
         """Create a pyControl4 device object.
@@ -188,7 +195,7 @@ class Control4Light(Control4Entity, LightEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         if self._is_dimmer:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            return SUPPORT_TRANSITION
         return 0
 
     async def async_turn_on(self, **kwargs) -> None:

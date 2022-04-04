@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util import dt as dt_util
 
 from .const import DATA_INSTANCE, MAX_QUEUE_BACKLOG
 from .statistics import list_statistic_ids, validate_statistics
@@ -29,6 +30,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_backup_start)
     websocket_api.async_register_command(hass, ws_backup_end)
+    websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
 
 
 @websocket_api.websocket_command(
@@ -80,7 +82,8 @@ async def ws_get_statistics_metadata(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get metadata for a list of statistic_ids."""
-    statistic_ids = await hass.async_add_executor_job(
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    statistic_ids = await instance.async_add_executor_job(
         list_statistic_ids, hass, msg.get("statistic_ids")
     )
     connection.send_result(msg["id"], statistic_ids)
@@ -101,6 +104,34 @@ def ws_update_statistics_metadata(
     """Update statistics metadata for a statistic_id."""
     hass.data[DATA_INSTANCE].async_update_statistics_metadata(
         msg["statistic_id"], msg["unit_of_measurement"]
+    )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/adjust_sum_statistics",
+        vol.Required("statistic_id"): str,
+        vol.Required("start_time"): str,
+        vol.Required("adjustment"): vol.Any(float, int),
+    }
+)
+@callback
+def ws_adjust_sum_statistics(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Adjust sum statistics."""
+    start_time_str = msg["start_time"]
+
+    if start_time := dt_util.parse_datetime(start_time_str):
+        start_time = dt_util.as_utc(start_time)
+    else:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start time")
+        return
+
+    hass.data[DATA_INSTANCE].async_adjust_statistics(
+        msg["statistic_id"], start_time, msg["adjustment"]
     )
     connection.send_result(msg["id"])
 

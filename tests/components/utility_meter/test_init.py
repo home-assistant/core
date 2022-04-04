@@ -1,6 +1,10 @@
 """The tests for the utility_meter component."""
+from __future__ import annotations
+
 from datetime import timedelta
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.select.const import (
     DOMAIN as SELECT_DOMAIN,
@@ -22,12 +26,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     Platform,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceNotFound
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import mock_restore_cache
+from tests.common import MockConfigEntry, mock_restore_cache
 
 
 async def test_restore_state(hass):
@@ -168,8 +174,138 @@ async def test_services(hass):
     assert state.state == "4"
 
 
+async def test_services_config_entry(hass):
+    """Test energy sensor reset service."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "Energy bill",
+            "net_consumption": False,
+            "offset": 0,
+            "source": "sensor.energy",
+            "tariffs": ["peak", "offpeak"],
+        },
+        title="Energy bill",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "Energy bill2",
+            "net_consumption": False,
+            "offset": 0,
+            "source": "sensor.energy",
+            "tariffs": ["peak", "offpeak"],
+        },
+        title="Energy bill2",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    entity_id = "sensor.energy"
+    hass.states.async_set(
+        entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+    )
+    await hass.async_block_till_done()
+
+    now = dt_util.utcnow() + timedelta(seconds=10)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.states.async_set(
+            entity_id,
+            3,
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill_peak")
+    assert state.state == "2"
+
+    state = hass.states.get("sensor.energy_bill_offpeak")
+    assert state.state == "0"
+
+    # Next tariff - only supported on legacy entity
+    with pytest.raises(ServiceNotFound):
+        data = {ATTR_ENTITY_ID: "utility_meter.energy_bill"}
+        await hass.services.async_call(DOMAIN, SERVICE_SELECT_NEXT_TARIFF, data)
+        await hass.async_block_till_done()
+
+    # Change tariff
+    data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "offpeak"}
+    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.async_block_till_done()
+
+    now += timedelta(seconds=10)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.states.async_set(
+            entity_id,
+            4,
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill_peak")
+    assert state.state == "2"
+
+    state = hass.states.get("sensor.energy_bill_offpeak")
+    assert state.state == "1"
+
+    # Change tariff
+    data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "wrong_tariff"}
+    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.async_block_till_done()
+
+    # Inexisting tariff, ignoring
+    assert hass.states.get("select.energy_bill").state != "wrong_tariff"
+
+    data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "peak"}
+    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.async_block_till_done()
+
+    now += timedelta(seconds=10)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.states.async_set(
+            entity_id,
+            5,
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill_peak")
+    assert state.state == "3"
+
+    state = hass.states.get("sensor.energy_bill_offpeak")
+    assert state.state == "1"
+
+    # Reset meters
+    data = {ATTR_ENTITY_ID: "select.energy_bill"}
+    await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill_peak")
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.energy_bill_offpeak")
+    assert state.state == "0"
+
+    # meanwhile energy_bill2_peak accumulated all kWh
+    state = hass.states.get("sensor.energy_bill2_peak")
+    assert state.state == "4"
+
+
 async def test_cron(hass, legacy_patchable_time):
-    """Test cron pattern and offset fails."""
+    """Test cron pattern."""
 
     config = {
         "utility_meter": {
@@ -327,3 +463,61 @@ async def test_legacy_support(hass):
     await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
     await hass.async_block_till_done()
     assert reset_calls == ["select.energy_bill"]
+
+
+@pytest.mark.parametrize(
+    "tariffs,expected_entities",
+    (
+        (
+            [],
+            ["sensor.electricity_meter"],
+        ),
+        (
+            ["high", "low"],
+            [
+                "sensor.electricity_meter_low",
+                "sensor.electricity_meter_high",
+                "select.electricity_meter",
+            ],
+        ),
+    ),
+)
+async def test_setup_and_remove_config_entry(
+    hass: HomeAssistant, tariffs: str, expected_entities: list[str]
+) -> None:
+    """Test setting up and removing a config entry."""
+    input_sensor_entity_id = "sensor.input"
+    registry = er.async_get(hass)
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "Electricity meter",
+            "net_consumption": False,
+            "offset": 0,
+            "source": input_sensor_entity_id,
+            "tariffs": tariffs,
+        },
+        title="Electricity meter",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == len(expected_entities)
+    assert len(registry.entities) == len(expected_entities)
+    for entity in expected_entities:
+        assert hass.states.get(entity)
+        assert entity in registry.entities
+
+    # Remove the config entry
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the state and entity registry entry are removed
+    assert len(hass.states.async_all()) == 0
+    assert len(registry.entities) == 0
