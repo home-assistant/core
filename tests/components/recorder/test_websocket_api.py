@@ -230,6 +230,8 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "W",
@@ -254,6 +256,8 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": new_unit,
@@ -525,6 +529,8 @@ async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, 
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": unit,
@@ -549,6 +555,8 @@ async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, 
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": unit,

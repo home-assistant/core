@@ -6,8 +6,7 @@ import avea  # pylint: disable=import-error
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    COLOR_MODE_HS,
     LightEntity,
 )
 from homeassistant.core import HomeAssistant
@@ -15,8 +14,6 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
-
-SUPPORT_AVEA = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 
 def setup_platform(
@@ -40,7 +37,8 @@ def setup_platform(
 class AveaLight(LightEntity):
     """Representation of an Avea."""
 
-    _attr_supported_features = SUPPORT_AVEA
+    _attr_color_mode = COLOR_MODE_HS
+    _attr_supported_color_modes = {COLOR_MODE_HS}
 
     def __init__(self, light):
         """Initialize an AveaLight."""

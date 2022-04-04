@@ -8,19 +8,19 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
-    DOMAIN,
+    ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
-from homeassistant.const import CONF_WHITE_VALUE
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
-from . import CONF_COLOR, CONF_DIMMING, CONF_RESET_COLOR, FIBARO_DEVICES, FibaroDevice
+from . import FIBARO_DEVICES, FibaroDevice
+from .const import DOMAIN
 
 
 def scaleto255(value):
@@ -40,18 +40,18 @@ def scaleto100(value):
     return max(0, min(100, ((value * 100.0) / 255.0)))
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
-    if discovery_info is None:
-        return
-
     async_add_entities(
-        [FibaroLight(device) for device in hass.data[FIBARO_DEVICES]["light"]], True
+        [
+            FibaroLight(device)
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["light"]
+        ],
+        True,
     )
 
 
@@ -67,8 +67,7 @@ class FibaroLight(FibaroDevice, LightEntity):
         self._update_lock = asyncio.Lock()
         self._white = 0
 
-        devconf = fibaro_device.device_config
-        self._reset_color = devconf.get(CONF_RESET_COLOR, False)
+        self._reset_color = False
         supports_color = (
             "color" in fibaro_device.properties
             or "colorComponents" in fibaro_device.properties
@@ -91,15 +90,15 @@ class FibaroLight(FibaroDevice, LightEntity):
         )
 
         # Configuration can override default capability detection
-        if devconf.get(CONF_DIMMING, supports_dimming):
+        if supports_dimming:
             self._supported_flags |= SUPPORT_BRIGHTNESS
-        if devconf.get(CONF_COLOR, supports_color):
+        if supports_color:
             self._supported_flags |= SUPPORT_COLOR
-        if devconf.get(CONF_WHITE_VALUE, supports_white_v):
+        if supports_white_v:
             self._supported_flags |= SUPPORT_WHITE_VALUE
 
         super().__init__(fibaro_device)
-        self.entity_id = f"{DOMAIN}.{self.ha_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @property
     def brightness(self):
@@ -194,9 +193,23 @@ class FibaroLight(FibaroDevice, LightEntity):
         self.call_turn_off()
 
     @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self.current_binary_state
+    def is_on(self) -> bool | None:
+        """Return true if device is on.
+
+        Dimmable and RGB lights can be on based on different
+        properties, so we need to check here several values.
+        """
+        props = self.fibaro_device.properties
+        if self.current_binary_state:
+            return True
+        if "brightness" in props and props.brightness != "0":
+            return True
+        if "currentProgram" in props and props.currentProgram != "0":
+            return True
+        if "currentProgramID" in props and props.currentProgramID != "0":
+            return True
+
+        return False
 
     async def async_update(self):
         """Update the state."""

@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, MutableMapping
 import datetime
 import itertools
 import logging
 import math
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy.orm.session import Session
 
@@ -19,6 +19,7 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.models import (
+    LazyState,
     StatisticData,
     StatisticMetaData,
     StatisticResult,
@@ -416,9 +417,9 @@ def _compile_statistics(  # noqa: C901
     entities_full_history = [
         i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
     ]
-    history_list = {}
+    history_list: MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]] = {}
     if entities_full_history:
-        history_list = history.get_significant_states_with_session(  # type: ignore[no-untyped-call]
+        history_list = history.get_significant_states_with_session(
             hass,
             session,
             start - datetime.timedelta.resolution,
@@ -432,7 +433,7 @@ def _compile_statistics(  # noqa: C901
         if "sum" not in wanted_statistics[i.entity_id]
     ]
     if entities_significant_history:
-        _history_list = history.get_significant_states_with_session(  # type: ignore[no-untyped-call]
+        _history_list = history.get_significant_states_with_session(
             hass,
             session,
             start - datetime.timedelta.resolution,
@@ -455,7 +456,14 @@ def _compile_statistics(  # noqa: C901
         device_class = _state.attributes.get(ATTR_DEVICE_CLASS)
         entity_history = history_list[entity_id]
         unit, fstates = _normalize_states(
-            hass, session, old_metadatas, entity_history, device_class, entity_id
+            hass,
+            session,
+            old_metadatas,
+            # entity_history does not contain minimal responses
+            # so we must cast here
+            cast(list[State], entity_history),
+            device_class,
+            entity_id,
         )
 
         if not fstates:
@@ -627,6 +635,8 @@ def list_statistic_ids(
 
         if device_class not in UNIT_CONVERSIONS:
             result[state.entity_id] = {
+                "has_mean": "mean" in provided_statistics,
+                "has_sum": "sum" in provided_statistics,
                 "source": RECORDER_DOMAIN,
                 "unit_of_measurement": native_unit,
             }
@@ -637,6 +647,8 @@ def list_statistic_ids(
 
         statistics_unit = DEVICE_CLASS_UNITS[device_class]
         result[state.entity_id] = {
+            "has_mean": "mean" in provided_statistics,
+            "has_sum": "sum" in provided_statistics,
             "source": RECORDER_DOMAIN,
             "unit_of_measurement": statistics_unit,
         }

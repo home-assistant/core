@@ -66,7 +66,7 @@ def browse_media(  # noqa: C901
     if media_content_type in ("plex_root", None):
         return root_payload(hass, is_internal, platform=platform)
 
-    def item_payload(item, short_name=False):
+    def item_payload(item, short_name=False, extra_params=None):
         """Create response payload for a single media item."""
         try:
             media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
@@ -75,7 +75,9 @@ def browse_media(  # noqa: C901
         payload = {
             "title": pretty_title(item, short_name),
             "media_class": media_class,
-            "media_content_id": generate_plex_uri(server_id, item.ratingKey),
+            "media_content_id": generate_plex_uri(
+                server_id, item.ratingKey, params=extra_params
+            ),
             "media_content_type": item.type,
             "can_play": True,
             "can_expand": item.type in EXPANDABLES,
@@ -209,7 +211,13 @@ def browse_media(  # noqa: C901
                     continue
                 payload["children"].append(station_payload(item))
             else:
-                payload["children"].append(item_payload(item))
+                extra_params = None
+                hub_context = hub.context.split(".")[-1]
+                if hub_context in ("continue", "inprogress", "ondeck"):
+                    extra_params = {"resume": 1}
+                payload["children"].append(
+                    item_payload(item, extra_params=extra_params)
+                )
         return BrowseMedia(**payload)
 
     if special_folder:
@@ -279,7 +287,7 @@ def browse_media(  # noqa: C901
     return response
 
 
-def generate_plex_uri(server_id, media_id):
+def generate_plex_uri(server_id, media_id, params=None):
     """Create a media_content_id URL for playable Plex media."""
     if isinstance(media_id, int):
         media_id = str(media_id)
@@ -290,6 +298,7 @@ def generate_plex_uri(server_id, media_id):
             scheme=DOMAIN,
             host=server_id,
             path=media_id,
+            query=params,
         )
     )
 

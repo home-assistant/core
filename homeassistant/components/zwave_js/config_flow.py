@@ -51,7 +51,7 @@ DEFAULT_URL = "ws://localhost:3000"
 TITLE = "Z-Wave JS"
 
 ADDON_SETUP_TIMEOUT = 5
-ADDON_SETUP_TIMEOUT_ROUNDS = 4
+ADDON_SETUP_TIMEOUT_ROUNDS = 40
 CONF_EMULATE_HARDWARE = "emulate_hardware"
 CONF_LOG_LEVEL = "log_level"
 SERVER_VERSION_TIMEOUT = 10
@@ -411,7 +411,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(
-                version_info.home_id, raise_on_progress=False
+                str(version_info.home_id), raise_on_progress=False
             )
             # Make sure we disable any add-on handling
             # if the controller is reconfigured in a manual step.
@@ -445,7 +445,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
 
-        await self.async_set_unique_id(version_info.home_id)
+        await self.async_set_unique_id(str(version_info.home_id))
         self._abort_if_unique_id_configured(updates={CONF_URL: self.ws_address})
 
         return await self.async_step_hassio_confirm()
@@ -579,7 +579,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
                     raise AbortFlow("cannot_connect") from err
 
             await self.async_set_unique_id(
-                self.version_info.home_id, raise_on_progress=False
+                str(self.version_info.home_id), raise_on_progress=False
             )
 
         self._abort_if_unique_id_configured(

@@ -5,7 +5,7 @@ from abc import abstractmethod
 from collections.abc import Callable
 import json
 import logging
-from typing import Any, Protocol, cast
+from typing import Any, Protocol, final
 
 import voluptuous as vol
 
@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
+    CONF_MODEL,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -36,11 +37,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import (
+    ENTITY_CATEGORIES_SCHEMA,
     DeviceInfo,
     Entity,
     EntityCategory,
     async_generate_entity_id,
-    validate_entity_category,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -106,7 +107,6 @@ CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
@@ -212,7 +212,7 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
-        vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+        vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
@@ -237,10 +237,10 @@ class SetupEntity(Protocol):
 
 
 async def async_setup_entry_helper(hass, domain, async_setup, schema):
-    """Set up entity, automation, notify service or tag creation dynamically through MQTT discovery."""
+    """Set up entity, automation or tag creation dynamically through MQTT discovery."""
 
     async def async_discover(discovery_payload):
-        """Discover and add an MQTT entity, automation, notify service or tag."""
+        """Discover and add an MQTT entity, automation or tag."""
         discovery_data = discovery_payload.discovery_data
         try:
             config = schema(discovery_payload)
@@ -496,13 +496,11 @@ class MqttAvailability(Entity):
         return self._available_latest
 
 
-async def cleanup_device_registry(
-    hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
-) -> None:
-    """Remove device registry entry if there are no remaining entities, triggers or notify services."""
+async def cleanup_device_registry(hass, device_id, config_entry_id):
+    """Remove device registry entry if there are no remaining entities or triggers."""
     # Local import to avoid circular dependencies
-    # pylint: disable=import-outside-toplevel
-    from . import device_trigger, notify, tag
+    # pylint: disable-next=import-outside-toplevel
+    from . import device_trigger, tag
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -513,10 +511,9 @@ async def cleanup_device_registry(
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
-        and not notify.device_has_notify_services(hass, device_id)
     ):
         device_registry.async_update_device(
-            device_id, remove_config_entry_id=cast(str, config_entry_id)
+            device_id, remove_config_entry_id=config_entry_id
         )
 
 
@@ -575,9 +572,7 @@ class MqttDiscoveryUpdate(Entity):
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+            self.async_send_discovery_done()
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(
@@ -590,9 +585,18 @@ class MqttDiscoveryUpdate(Entity):
                 MQTT_DISCOVERY_UPDATED.format(discovery_hash),
                 discovery_callback,
             )
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+
+    @callback
+    def async_send_discovery_done(self) -> None:
+        """Acknowledge a discovery message has been handled."""
+        discovery_hash = (
+            self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
+        )
+        if not discovery_hash:
+            return
+        async_dispatcher_send(
+            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+        )
 
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
@@ -726,11 +730,20 @@ class MqttEntity(
             self.hass, self, self._config, self._entity_id_format
         )
 
+    @final
     async def async_added_to_hass(self):
-        """Subscribe mqtt events."""
+        """Subscribe to MQTT events."""
         await super().async_added_to_hass()
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
+        await self.mqtt_async_added_to_hass()
+        self.async_send_discovery_done()
+
+    async def mqtt_async_added_to_hass(self):
+        """Call before the discovery message is acknowledged.
+
+        To be extended by subclasses.
+        """
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
@@ -801,7 +814,7 @@ class MqttEntity(
         return self._config[CONF_ENABLED_BY_DEFAULT]
 
     @property
-    def entity_category(self) -> EntityCategory | str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the entity category if any."""
         return self._config.get(CONF_ENTITY_CATEGORY)
 
