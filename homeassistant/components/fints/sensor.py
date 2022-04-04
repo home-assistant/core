@@ -7,8 +7,6 @@ import logging
 from typing import Any
 
 from fints.client import FinTS3PinTanClient
-from fints.dialog import FinTSDialogError
-from fints.exceptions import FinTSClientError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -141,27 +139,22 @@ class FinTsClient:
     def detect_accounts(self):
         """Identify the accounts of the bank."""
 
+        client = self.client
+        accounts = client.get_sepa_accounts()
+        account_types = {
+            x["iban"]: x["type"]
+            for x in client.get_information()["accounts"]
+            if x["iban"] is not None
+        }
         balance_accounts = []
         holdings_accounts = []
-        for account in self.client.get_sepa_accounts():
-            try:
-                self.client.get_balance(account)
+
+        for account in accounts:
+            account_type = account_types[account.iban]
+            if 1 <= account_type <= 9:  # 1-9 is balance account
                 balance_accounts.append(account)
-            except IndexError:
-                # account is not a balance account.
-                pass
-            except FinTSDialogError:
-                # account is not a balance account.
-                pass
-            try:
-                self.client.get_holdings(account)
+            elif 30 <= account_type <= 39:  # 30-39 is holdings account
                 holdings_accounts.append(account)
-            except FinTSClientError:
-                # account is most likely not a holdings account.
-                pass
-            except FinTSDialogError:
-                # account is not a holdings account.
-                pass
 
         return balance_accounts, holdings_accounts
 
