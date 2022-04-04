@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import NamedTuple
+from typing import Final, NamedTuple
 
 from pyhap.const import CATEGORY_SENSOR
 
@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_CO2,
     STATE_HOME,
     STATE_ON,
     TEMP_CELSIUS,
@@ -72,6 +71,7 @@ class SI(NamedTuple):
     format: Callable[[bool], int | bool]
 
 
+DEVICE_CLASS_CO2: Final = "carbon_dioxide"
 BINARY_SENSOR_SERVICE_MAP: dict[str, SI] = {
     BinarySensorDeviceClass.CO: SI(
         SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
