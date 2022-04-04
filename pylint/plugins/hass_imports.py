@@ -31,6 +31,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^(ENTITY_CATEGORY_(\w*))|(ENTITY_CATEGORIES)$"),
         ),
     ],
+    "homeassistant.core": [
+        ObsoleteImportMatch(
+            reason="replaced by ConfigSource enum",
+            constant=re.compile(r"^SOURCE_(\w*)$"),
+        ),
+    ],
 }
 
 
