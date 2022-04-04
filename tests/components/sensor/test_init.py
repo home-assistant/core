@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 import pytest
 from pytest import approx
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PRESSURE_HPA,
@@ -114,15 +114,6 @@ async def test_deprecated_last_reset(
 
     state = hass.states.get("sensor.test")
     assert "last_reset" not in state.attributes
-
-
-async def test_deprecated_unit_of_measurement(hass, caplog, enable_custom_integrations):
-    """Test warning on deprecated unit_of_measurement."""
-    SensorEntityDescription("catsensor", unit_of_measurement="cats")
-    assert (
-        "tests.components.sensor.test_init is setting 'unit_of_measurement' on an "
-        "instance of SensorEntityDescription"
-    ) in caplog.text
 
 
 async def test_datetime_conversion(hass, caplog, enable_custom_integrations):

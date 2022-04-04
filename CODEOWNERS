@@ -590,6 +590,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/matrix/ @tinloaf
 /homeassistant/components/mazda/ @bdr99
 /tests/components/mazda/ @bdr99
+/homeassistant/components/meater/ @Sotolotl
+/tests/components/meater/ @Sotolotl
 /homeassistant/components/media_player/ @home-assistant/core
 /tests/components/media_player/ @home-assistant/core
 /homeassistant/components/media_source/ @hunterjm
@@ -1078,8 +1080,6 @@ build.json @home-assistant/supervisor
 /tests/components/upcloud/ @scop
 /homeassistant/components/update/ @home-assistant/core
 /tests/components/update/ @home-assistant/core
-/homeassistant/components/updater/ @home-assistant/core
-/tests/components/updater/ @home-assistant/core
 /homeassistant/components/upnp/ @StevenLooman @ehendrix23
 /tests/components/upnp/ @StevenLooman @ehendrix23
 /homeassistant/components/uptime/ @frenck
@@ -1189,6 +1189,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/yi/ @bachya
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
+/homeassistant/components/zengge/ @emontnemery
 /homeassistant/components/zeroconf/ @bdraco
 /tests/components/zeroconf/ @bdraco
 /homeassistant/components/zerproc/ @emlove

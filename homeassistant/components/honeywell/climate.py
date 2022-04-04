@@ -14,6 +14,8 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_ON,
@@ -144,7 +146,7 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
-        data = {}
+        data: dict[str, Any] = {}
         data[ATTR_FAN_ACTION] = "running" if self._device.fan_running else "idle"
         data[ATTR_PERMANENT_HOLD] = self._is_permanent_hold()
         if self._device.raw_dr_data:
@@ -158,7 +160,7 @@ class HoneywellUSThermostat(ClimateEntity):
             return self._device.raw_ui_data["CoolLowerSetptLimit"]
         if self.hvac_mode == HVAC_MODE_HEAT:
             return self._device.raw_ui_data["HeatLowerSetptLimit"]
-        return None
+        return DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self) -> float:
@@ -167,7 +169,7 @@ class HoneywellUSThermostat(ClimateEntity):
             return self._device.raw_ui_data["CoolUpperSetptLimit"]
         if self.hvac_mode in [HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL]:
             return self._device.raw_ui_data["HeatUpperSetptLimit"]
-        return None
+        return DEFAULT_MAX_TEMP
 
     @property
     def current_humidity(self) -> int | None:

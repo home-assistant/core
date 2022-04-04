@@ -5,7 +5,6 @@ from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
-import inspect
 import logging
 from math import floor, log10
 from typing import Any, Final, cast, final
@@ -253,27 +252,6 @@ class SensorEntityDescription(EntityDescription):
     state_class: SensorStateClass | str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
-    def __post_init__(self) -> None:
-        """Post initialisation processing."""
-        if self.unit_of_measurement:
-            caller = inspect.stack()[2]  # type: ignore[unreachable]
-            module = inspect.getmodule(caller[0])
-            if "custom_components" in module.__file__:
-                report_issue = "report it to the custom component author."
-            else:
-                report_issue = (
-                    "create a bug report at "
-                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-                )
-            _LOGGER.warning(
-                "%s is setting 'unit_of_measurement' on an instance of "
-                "SensorEntityDescription, this is not valid and will be unsupported "
-                "from Home Assistant 2021.11. Please %s",
-                module.__name__,
-                report_issue,
-            )
-            self.native_unit_of_measurement = self.unit_of_measurement
-
 
 class SensorEntity(Entity):
     """Base class for sensor entities."""
@@ -387,13 +365,6 @@ class SensorEntity(Entity):
         if self._sensor_option_unit_of_measurement:
             return self._sensor_option_unit_of_measurement
 
-        # Support for _attr_unit_of_measurement will be removed in Home Assistant 2021.11
-        if (
-            hasattr(self, "_attr_unit_of_measurement")
-            and self._attr_unit_of_measurement is not None
-        ):
-            return self._attr_unit_of_measurement  # type: ignore[unreachable]
-
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
@@ -457,7 +428,7 @@ class SensorEntity(Entity):
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
 
             # Scale the precision when converting to a larger unit
-            # For example 1.1 kWh should be rendered as 0.0011 kWh, not 0.0 kWh
+            # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
             ratio_log = max(
                 0,
                 log10(

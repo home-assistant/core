@@ -37,7 +37,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State
+from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -77,7 +77,7 @@ def alter_time(retval):
                 "net_consumption": False,
                 "offset": 0,
                 "source": "sensor.energy",
-                "tariffs": "onpeak,midpeak,offpeak",
+                "tariffs": ["onpeak", "midpeak", "offpeak"],
             },
         ),
     ),
@@ -227,6 +227,27 @@ async def test_state(hass, yaml_config, config_entry_config):
 
 
 @pytest.mark.parametrize(
+    "yaml_config",
+    (
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "source": "sensor.energy",
+                        "tariffs": ["onpeak", "onpeak"],
+                    }
+                }
+            },
+            None,
+        ),
+    ),
+)
+async def test_not_unique_tariffs(hass, yaml_config):
+    """Test utility sensor state initializtion."""
+    assert not await async_setup_component(hass, DOMAIN, yaml_config)
+
+
+@pytest.mark.parametrize(
     "yaml_config,config_entry_config",
     (
         (
@@ -249,7 +270,7 @@ async def test_state(hass, yaml_config, config_entry_config):
                 "net_consumption": False,
                 "offset": 0,
                 "source": "sensor.energy",
-                "tariffs": "onpeak,midpeak,offpeak",
+                "tariffs": ["onpeak", "midpeak", "offpeak"],
             },
         ),
     ),
@@ -327,7 +348,7 @@ async def test_init(hass, yaml_config, config_entry_config):
                     "net_consumption": True,
                     "offset": 0,
                     "source": "sensor.energy",
-                    "tariffs": "",
+                    "tariffs": [],
                 },
                 {
                     "cycle": "none",
@@ -336,7 +357,7 @@ async def test_init(hass, yaml_config, config_entry_config):
                     "net_consumption": False,
                     "offset": 0,
                     "source": "sensor.gas",
-                    "tariffs": "",
+                    "tariffs": [],
                 },
             ],
         ),
@@ -411,13 +432,16 @@ async def test_device_class(hass, yaml_config, config_entry_configs):
                 "net_consumption": False,
                 "offset": 0,
                 "source": "sensor.energy",
-                "tariffs": "onpeak,midpeak,offpeak",
+                "tariffs": ["onpeak", "midpeak", "offpeak"],
             },
         ),
     ),
 )
 async def test_restore_state(hass, yaml_config, config_entry_config):
     """Test utility sensor restore state."""
+    # Home assistant is not runnit yet
+    hass.state = CoreState.not_running
+
     last_reset = "2020-12-21T00:00:00.013073+00:00"
     mock_restore_cache(
         hass,
@@ -514,7 +538,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                 "net_consumption": True,
                 "offset": 0,
                 "source": "sensor.energy",
-                "tariffs": "",
+                "tariffs": [],
             },
         ),
     ),
@@ -582,12 +606,12 @@ async def test_net_consumption(hass, yaml_config, config_entry_config):
                 "net_consumption": False,
                 "offset": 0,
                 "source": "sensor.energy",
-                "tariffs": "",
+                "tariffs": [],
             },
         ),
     ),
 )
-async def test_non_net_consumption(hass, yaml_config, config_entry_config):
+async def test_non_net_consumption(hass, yaml_config, config_entry_config, caplog):
     """Test utility sensor state."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
@@ -621,6 +645,17 @@ async def test_non_net_consumption(hass, yaml_config, config_entry_config):
         )
         await hass.async_block_till_done()
 
+    now = dt_util.utcnow() + timedelta(seconds=10)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.states.async_set(
+            entity_id,
+            None,
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+    assert "Invalid state " in caplog.text
+
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
 
@@ -650,13 +685,16 @@ async def test_non_net_consumption(hass, yaml_config, config_entry_config):
                 "net_consumption": False,
                 "offset": 0,
                 "source": "sensor.energy",
-                "tariffs": "",
+                "tariffs": [],
             },
         ),
     ),
 )
-async def test_delta_values(hass, yaml_config, config_entry_config):
+async def test_delta_values(hass, yaml_config, config_entry_config, caplog):
     """Test utility meter "delta_values" mode."""
+    # Home assistant is not runnit yet
+    hass.state = CoreState.not_running
+
     now = dt_util.utcnow()
     with alter_time(now):
         if yaml_config:
@@ -685,6 +723,18 @@ async def test_delta_values(hass, yaml_config, config_entry_config):
 
     state = hass.states.get("sensor.energy_bill")
     assert state.attributes.get("status") == PAUSED
+
+    now += timedelta(seconds=30)
+    with alter_time(now):
+        async_fire_time_changed(hass, now)
+        hass.states.async_set(
+            entity_id,
+            None,
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+    assert "Invalid adjustment of None" in caplog.text
 
     now += timedelta(seconds=30)
     with alter_time(now):

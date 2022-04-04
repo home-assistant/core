@@ -31,9 +31,7 @@ async def async_setup_entry(
 class EvilGeniusLight(EvilGeniusEntity, light.LightEntity):
     """Evil Genius Labs light."""
 
-    _attr_supported_features = (
-        light.SUPPORT_BRIGHTNESS | light.SUPPORT_EFFECT | light.SUPPORT_COLOR
-    )
+    _attr_supported_features = light.SUPPORT_EFFECT
     _attr_supported_color_modes = {light.COLOR_MODE_RGB}
     _attr_color_mode = light.COLOR_MODE_RGB
 

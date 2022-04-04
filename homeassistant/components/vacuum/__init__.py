@@ -1,6 +1,7 @@
 """Support for vacuum cleaner robots (botvacs)."""
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 from functools import partial
 import logging
 from typing import final
@@ -71,6 +72,28 @@ STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
 
 DEFAULT_NAME = "Vacuum cleaner robot"
 
+
+class VacuumEntityFeature(IntEnum):
+    """Supported features of the vacuum entity."""
+
+    TURN_ON = 1
+    TURN_OFF = 2
+    PAUSE = 4
+    STOP = 8
+    RETURN_HOME = 16
+    FAN_SPEED = 32
+    BATTERY = 64
+    STATUS = 128
+    SEND_COMMAND = 256
+    LOCATE = 512
+    CLEAN_SPOT = 1024
+    MAP = 2048
+    STATE = 4096
+    START = 8192
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the VacuumEntityFeature enum instead.
 SUPPORT_TURN_ON = 1
 SUPPORT_TURN_OFF = 2
 SUPPORT_PAUSE = 4
@@ -178,7 +201,7 @@ class _BaseVacuum(Entity):
     @property
     def capability_attributes(self):
         """Return capability attributes."""
-        if self.supported_features & SUPPORT_FAN_SPEED:
+        if self.supported_features & VacuumEntityFeature.FAN_SPEED:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
     @property
@@ -186,11 +209,11 @@ class _BaseVacuum(Entity):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
 
-        if self.supported_features & SUPPORT_BATTERY:
+        if self.supported_features & VacuumEntityFeature.BATTERY:
             data[ATTR_BATTERY_LEVEL] = self.battery_level
             data[ATTR_BATTERY_ICON] = self.battery_icon
 
-        if self.supported_features & SUPPORT_FAN_SPEED:
+        if self.supported_features & VacuumEntityFeature.FAN_SPEED:
             data[ATTR_FAN_SPEED] = self.fan_speed
 
         return data
@@ -297,7 +320,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """Return the state attributes of the vacuum cleaner."""
         data = super().state_attributes
 
-        if self.supported_features & SUPPORT_STATUS:
+        if self.supported_features & VacuumEntityFeature.STATUS:
             data[ATTR_STATUS] = self.status
 
         return data
