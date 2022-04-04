@@ -61,7 +61,7 @@ NUMERIC_STATE_SCHEMA = vol.Schema(
         vol.Optional(CONF_ABOVE): vol.Coerce(float),
         vol.Optional(CONF_BELOW): vol.Coerce(float),
         vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        vol.Required(CONF_P_GIVEN_F): vol.Coerce(float),
     },
     required=True,
 )
@@ -72,7 +72,7 @@ STATE_SCHEMA = vol.Schema(
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TO_STATE): cv.string,
         vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        vol.Required(CONF_P_GIVEN_F): vol.Coerce(float),
     },
     required=True,
 )
@@ -82,7 +82,7 @@ TEMPLATE_SCHEMA = vol.Schema(
         CONF_PLATFORM: CONF_TEMPLATE,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        vol.Required(CONF_P_GIVEN_F): vol.Coerce(float),
     },
     required=True,
 )
@@ -284,13 +284,13 @@ class BayesianBinarySensor(BinarySensorEntity):
                     prior = update_probability(
                         prior,
                         obs["prob_given_true"],
-                        obs.get("prob_given_false", 1 - obs["prob_given_true"]),
+                        obs["prob_given_false"],
                     )
                 elif obs["observation"] is False:
                     prior = update_probability(
                         prior,
                         1 - obs["prob_given_true"],
-                        1 - obs.get("prob_given_false", 1 - obs["prob_given_true"]),
+                        1 - obs["prob_given_false"],
                     )
                 elif obs["observation"] is None:
                     if obs["entity_id"] is not None:
