@@ -34,7 +34,7 @@ def _mock_cond_socket(sockname):
             self._addr = addr[0]
 
         def getsockname(self):
-            """Return addr iif it matches the mock sockname."""
+            """Return addr if it matches the mock sockname."""
             if self._addr == sockname:
                 return [sockname]
             raise AttributeError()
