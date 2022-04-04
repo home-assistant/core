@@ -19,6 +19,12 @@ class ObsoleteImportMatch:
 
 
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
+    "homeassistant.components.binarysensor": [
+        ObsoleteImportMatch(
+            reason="replaced by BinarySensorDeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
     "homeassistant.components.sensor": [
         ObsoleteImportMatch(
             reason="replaced by SensorStateClass enum",
