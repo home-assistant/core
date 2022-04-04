@@ -51,7 +51,7 @@ class SABnzbdConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_API_KEY][:12], data=user_input
                 )
 
         return self.async_show_form(

@@ -4,14 +4,15 @@ import logging
 from pysabnzbd import SabnzbdApiException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
-from ...exceptions import ConfigEntryNotReady
 from .const import (
     ATTR_SPEED,
     DEFAULT_SPEED_LIMIT,
@@ -34,6 +35,25 @@ SPEED_LIMIT_SCHEMA = vol.Schema(
 )
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the SABnzbd component."""
+    hass.data.setdefault(DOMAIN, {})
+
+    if hass.config_entries.async_entries(DOMAIN):
+        return True
+
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[DOMAIN],
+            )
+        )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the SabNzbd Component."""
     sab_api = await get_client(hass, entry.data)
@@ -47,47 +67,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    def async_setup_sabnzbd(hass, sab_api):
+        """Set up SABnzbd sensors and services."""
+        sab_api_data = SabnzbdApiData(sab_api)
+
+        async def async_service_handler(service: ServiceCall) -> None:
+            """Handle service calls."""
+            if service.service == SERVICE_PAUSE:
+                await sab_api_data.async_pause_queue()
+            elif service.service == SERVICE_RESUME:
+                await sab_api_data.async_resume_queue()
+            elif service.service == SERVICE_SET_SPEED:
+                speed = service.data.get(ATTR_SPEED)
+                await sab_api_data.async_set_queue_speed(speed)
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_PAUSE, async_service_handler, schema=vol.Schema({})
+        )
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_RESUME, async_service_handler, schema=vol.Schema({})
+        )
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_SET_SPEED, async_service_handler, schema=SPEED_LIMIT_SCHEMA
+        )
+
+        async def async_update_sabnzbd(now):
+            """Refresh SABnzbd queue data."""
+            try:
+                await sab_api.refresh_data()
+                async_dispatcher_send(hass, SIGNAL_SABNZBD_UPDATED, None)
+            except SabnzbdApiException as err:
+                _LOGGER.error(err)
+
+        async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
+
     async_setup_sabnzbd(hass, sab_api)
 
     return True
-
-
-@callback
-def async_setup_sabnzbd(hass, sab_api):
-    """Set up SABnzbd sensors and services."""
-    sab_api_data = SabnzbdApiData(sab_api)
-
-    async def async_service_handler(service: ServiceCall) -> None:
-        """Handle service calls."""
-        if service.service == SERVICE_PAUSE:
-            await sab_api_data.async_pause_queue()
-        elif service.service == SERVICE_RESUME:
-            await sab_api_data.async_resume_queue()
-        elif service.service == SERVICE_SET_SPEED:
-            speed = service.data.get(ATTR_SPEED)
-            await sab_api_data.async_set_queue_speed(speed)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_PAUSE, async_service_handler, schema=vol.Schema({})
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_RESUME, async_service_handler, schema=vol.Schema({})
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_SPEED, async_service_handler, schema=SPEED_LIMIT_SCHEMA
-    )
-
-    async def async_update_sabnzbd(now):
-        """Refresh SABnzbd queue data."""
-        try:
-            await sab_api.refresh_data()
-            async_dispatcher_send(hass, SIGNAL_SABNZBD_UPDATED, None)
-        except SabnzbdApiException as err:
-            _LOGGER.error(err)
-
-    async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
 
 
 class SabnzbdApiData:
