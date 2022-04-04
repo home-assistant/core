@@ -85,6 +85,7 @@ class DeviceEntry:
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
+    suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     hw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
@@ -491,6 +492,7 @@ class DeviceRegistry:
             ("name", name),
             ("name_by_user", name_by_user),
             ("area_id", area_id),
+            ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("hw_version", hw_version),
             ("via_device_id", via_device_id),
