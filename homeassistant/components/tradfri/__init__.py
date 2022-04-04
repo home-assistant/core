@@ -34,9 +34,6 @@ from .const import (
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
-ATTR_TRADFRI_GATEWAY = "Gateway"
-ATTR_TRADFRI_GATEWAY_MODEL = "E1526"
-ATTR_TRADFRI_MANUFACTURER = "IKEA of Sweden"
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 LISTENERS = "tradfri_listeners"
 PLATFORMS = [
@@ -92,10 +89,10 @@ async def async_setup_entry(
         config_entry_id=entry.entry_id,
         connections=set(),
         identifiers={(DOMAIN, entry.data[CONF_GATEWAY_ID])},
-        manufacturer=ATTR_TRADFRI_MANUFACTURER,
-        name=ATTR_TRADFRI_GATEWAY,
+        manufacturer="IKEA of Sweden",
+        name="Gateway",
         # They just have 1 gateway model. Type is not exposed yet.
-        model=ATTR_TRADFRI_GATEWAY_MODEL,
+        model="E1526",
         sw_version=gateway_info.firmware_version,
     )
 
