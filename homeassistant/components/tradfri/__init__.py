@@ -131,7 +131,7 @@ async def async_setup_entry(
 
         async_dispatcher_send(hass, SIGNAL_GW, gw_status)
 
-    listeners.append(
+    entry.async_on_unload(
         async_track_time_interval(hass, async_keep_alive, timedelta(seconds=60))
     )
 
