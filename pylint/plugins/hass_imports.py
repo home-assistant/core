@@ -25,6 +25,16 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^STATE_CLASS_(\w*)$"),
         ),
     ],
+    "homeassistant.components.light": [
+        ObsoleteImportMatch(
+            reason="replaced by ColorMode enum",
+            constant=re.compile(r"^COLOR_MODE_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by LightEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
 }
 
 
