@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_ID,
+    CONF_MODEL,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -31,7 +32,6 @@ from .const import (
     CONF_DETECTED_MODEL,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
-    CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,

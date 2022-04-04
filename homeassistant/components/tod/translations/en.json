@@ -1,0 +1,30 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after": "On after",
+                    "after_time": "On time",
+                    "before": "Off after",
+                    "before_time": "Off time",
+                    "name": "Name"
+                },
+                "description": "Configure when the sensor should turn on and off.",
+                "title": "New Times of the Day Sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after": "On after",
+                    "after_time": "On time",
+                    "before": "Off after",
+                    "before_time": "Off time"
+                },
+                "description": "Configure when the sensor should turn on and off."
+            }
+        }
+    }
+}

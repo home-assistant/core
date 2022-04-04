@@ -8,6 +8,7 @@ from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVers
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.zwave_js import async_migrate_entry
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
@@ -811,7 +812,7 @@ async def test_removed_device(
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 28
+    assert len(entity_entries) == 29
 
     # Remove a node and reload the entry
     old_node = client.driver.controller.nodes.pop(13)
@@ -1327,3 +1328,12 @@ async def test_disabled_entity_on_value_removed(hass, zp3111, client, integratio
         | {battery_level_entity, binary_cover_entity, sensor_cover_entity}
         == new_unavailable_entities
     )
+
+
+async def test_async_migrate_entry(hass):
+    """Test async_migrate_entry."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=123456789)
+    assert isinstance(entry.unique_id, int)
+    await async_migrate_entry(hass, entry)
+    assert isinstance(entry.unique_id, str)
+    assert entry.unique_id == "123456789"

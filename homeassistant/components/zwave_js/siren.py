@@ -68,8 +68,10 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
             self._attr_supported_features |= SUPPORT_TONES
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return whether device is on."""
+        if self.info.primary_value.value is None:
+            return None
         return bool(self.info.primary_value.value)
 
     async def async_set_value(

@@ -8,12 +8,9 @@ from pvo import (
 )
 import pytest
 
-from homeassistant.components.pvoutput.const import CONF_SYSTEM_ID, DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.pvoutput.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -82,29 +79,3 @@ async def test_config_entry_authentication_failed(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
-
-
-async def test_import_config(
-    hass: HomeAssistant,
-    mock_pvoutput_config_flow: MagicMock,
-    mock_pvoutput: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test PVOutput being set up from config via import."""
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
-                CONF_SYSTEM_ID: 12345,
-                CONF_API_KEY: "abcdefghijklmnopqrstuvwxyz",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_pvoutput.status.mock_calls) == 1
-    assert len(mock_pvoutput.system.mock_calls) == 1
-    assert "the PVOutput platform in YAML is deprecated" in caplog.text

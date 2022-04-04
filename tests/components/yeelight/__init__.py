@@ -1,7 +1,6 @@
 """Tests for the Yeelight integration."""
 import asyncio
 from datetime import timedelta
-from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SsdpSearchListener
@@ -162,7 +161,7 @@ def _patched_ssdp_listener(info: ssdp.SsdpHeaders, *args, **kwargs):
     listener = SsdpSearchListener(*args, **kwargs)
 
     async def _async_callback(*_):
-        if kwargs["source_ip"] == IPv4Address(FAIL_TO_BIND_IP):
+        if kwargs["source"][0] == FAIL_TO_BIND_IP:
             raise OSError
         await listener.async_connect_callback()
 

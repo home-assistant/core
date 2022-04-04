@@ -24,5 +24,13 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "\u03a3\u03cd\u03c1\u03b5\u03c4\u03b5 \u03c0\u03c1\u03bf\u03c2 \u03c4\u03b1 \u03ba\u03ac\u03c4\u03c9",
+            "swipe_left": "\u03a3\u03cd\u03c1\u03b5\u03c4\u03b5 \u03c0\u03c1\u03bf\u03c2 \u03c4\u03b1 \u03b1\u03c1\u03b9\u03c3\u03c4\u03b5\u03c1\u03ac",
+            "swipe_right": "\u03a3\u03cd\u03c1\u03b5\u03c4\u03b5 \u03c0\u03c1\u03bf\u03c2 \u03c4\u03b1 \u03b4\u03b5\u03be\u03b9\u03ac",
+            "swipe_up": "\u03a3\u03cd\u03c1\u03b5\u03c4\u03b5 \u03c0\u03c1\u03bf\u03c2 \u03c4\u03b1 \u03b5\u03c0\u03ac\u03bd\u03c9"
+        }
     }
 }

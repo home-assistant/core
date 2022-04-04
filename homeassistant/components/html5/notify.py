@@ -533,7 +533,9 @@ class HTML5NotificationService(BaseNotificationService):
             if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
-                if not save_json(self.registrations_json_path, self.registrations):
+                try:
+                    save_json(self.registrations_json_path, self.registrations)
+                except HomeAssistantError:
                     self.registrations[target] = reg
                     _LOGGER.error("Error saving registration")
                 else:

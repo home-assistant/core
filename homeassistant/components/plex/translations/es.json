@@ -9,7 +9,7 @@
             "unknown": "Fall\u00f3 por razones desconocidas"
         },
         "error": {
-            "faulty_credentials": "La autorizaci\u00f3n fall\u00f3, verifica el token",
+            "faulty_credentials": "La autorizaci\u00f3n ha fallado, verifica el token",
             "host_or_token": "Debes proporcionar al menos uno de Host o Token",
             "no_servers": "No hay servidores vinculados a la cuenta Plex",
             "not_found": "No se ha encontrado el servidor Plex",

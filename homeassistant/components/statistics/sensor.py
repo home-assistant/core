@@ -12,8 +12,7 @@ from typing import Any, Literal, cast
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.recorder.models import States
-from homeassistant.components.recorder.util import execute, session_scope
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
@@ -303,7 +302,7 @@ class StatisticsSensor(SensorEntity):
             if "recorder" in self.hass.config.components:
                 self.hass.async_create_task(self._initialize_from_database())
 
-        async_at_start(self.hass, async_stats_sensor_startup)
+        self.async_on_remove(async_at_start(self.hass, async_stats_sensor_startup))
 
     def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
@@ -470,6 +469,33 @@ class StatisticsSensor(SensorEntity):
                 self.hass, _scheduled_update, next_to_purge_timestamp
             )
 
+    def _fetch_states_from_database(self) -> list[State]:
+        """Fetch the states from the database."""
+        _LOGGER.debug("%s: initializing values from the database", self.entity_id)
+        lower_entity_id = self._source_entity_id.lower()
+        if self._samples_max_age is not None:
+            start_date = (
+                dt_util.utcnow() - self._samples_max_age - timedelta(microseconds=1)
+            )
+            _LOGGER.debug(
+                "%s: retrieve records not older then %s",
+                self.entity_id,
+                start_date,
+            )
+        else:
+            start_date = datetime.fromtimestamp(0, tz=dt_util.UTC)
+            _LOGGER.debug("%s: retrieving all records", self.entity_id)
+        entity_states = history.state_changes_during_period(
+            self.hass,
+            start_date,
+            entity_id=lower_entity_id,
+            descending=True,
+            limit=self._samples_max_buffer_size,
+            include_start_time_state=False,
+        )
+        # Need to cast since minimal responses is not passed in
+        return cast(list[State], entity_states.get(lower_entity_id, []))
+
     async def _initialize_from_database(self) -> None:
         """Initialize the list of states from the database.
 
@@ -480,31 +506,9 @@ class StatisticsSensor(SensorEntity):
         If MaxAge is provided then query will restrict to entries younger then
         current datetime - MaxAge.
         """
-
-        _LOGGER.debug("%s: initializing values from the database", self.entity_id)
-
-        with session_scope(hass=self.hass) as session:
-            query = session.query(States).filter(
-                States.entity_id == self._source_entity_id.lower()
-            )
-
-            if self._samples_max_age is not None:
-                records_older_then = dt_util.utcnow() - self._samples_max_age
-                _LOGGER.debug(
-                    "%s: retrieve records not older then %s",
-                    self.entity_id,
-                    records_older_then,
-                )
-                query = query.filter(States.last_updated >= records_older_then)
-            else:
-                _LOGGER.debug("%s: retrieving all records", self.entity_id)
-
-            query = query.order_by(States.last_updated.desc()).limit(
-                self._samples_max_buffer_size
-            )
-            states = execute(query, to_native=True, validate_entity_ids=False)
-
-        if states:
+        if states := await get_instance(self.hass).async_add_executor_job(
+            self._fetch_states_from_database
+        ):
             for state in reversed(states):
                 self._add_state_to_queue(state)
 

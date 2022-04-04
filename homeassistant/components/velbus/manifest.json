@@ -9,20 +9,20 @@
   "iot_class": "local_push",
   "usb": [
     {
-    "vid": "10CF",
-    "pid": "0B1B"
+      "vid": "10CF",
+      "pid": "0B1B"
     },
     {
-    "vid": "10CF",
-    "pid": "0516"
+      "vid": "10CF",
+      "pid": "0516"
     },
     {
-    "vid": "10CF",
-    "pid": "0517"
+      "vid": "10CF",
+      "pid": "0517"
     },
     {
-    "vid": "10CF",
-    "pid": "0518"
+      "vid": "10CF",
+      "pid": "0518"
     }
   ],
   "loggers": ["velbusaio"]

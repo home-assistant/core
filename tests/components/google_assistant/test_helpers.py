@@ -47,30 +47,29 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
     )
     entity = helpers.GoogleEntity(hass, config, hass.states.get("light.ceiling_lights"))
 
-    serialized = await entity.sync_serialize(None)
+    serialized = entity.sync_serialize(None, "mock-uuid")
     assert "otherDeviceIds" not in serialized
     assert "customData" not in serialized
 
     config.async_enable_local_sdk()
 
-    with patch("homeassistant.helpers.instance_id.async_get", return_value="abcdef"):
-        serialized = await entity.sync_serialize("mock-user-id")
-        assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
-        assert serialized["customData"] == {
-            "httpPort": 1234,
-            "httpSSL": False,
-            "proxyDeviceId": "mock-user-id",
-            "webhookId": "mock-webhook-id",
-            "baseUrl": "https://hostname:1234",
-            "uuid": "abcdef",
-        }
+    serialized = entity.sync_serialize("mock-user-id", "abcdef")
+    assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
+    assert serialized["customData"] == {
+        "httpPort": 1234,
+        "httpSSL": False,
+        "proxyDeviceId": "mock-user-id",
+        "webhookId": "mock-webhook-id",
+        "baseUrl": "https://hostname:1234",
+        "uuid": "abcdef",
+    }
 
     for device_type in NOT_EXPOSE_LOCAL:
         with patch(
             "homeassistant.components.google_assistant.helpers.get_google_type",
             return_value=device_type,
         ):
-            serialized = await entity.sync_serialize(None)
+            serialized = entity.sync_serialize(None, "mock-uuid")
             assert "otherDeviceIds" not in serialized
             assert "customData" not in serialized
 

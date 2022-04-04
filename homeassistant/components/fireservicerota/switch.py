@@ -136,16 +136,15 @@ class ResponseSwitch(SwitchEntity):
         """Handle updated incident data from the client."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self) -> bool:
+    async def async_update(self) -> None:
         """Update FireServiceRota response data."""
         data = await self._client.async_response_update()
 
         if not data or "status" not in data:
-            return False
+            return
 
         self._state = data["status"] == "acknowledged"
         self._state_attributes = data
         self._state_icon = data["status"]
 
         _LOGGER.debug("Set state of entity 'Response Switch' to '%s'", self._state)
-        return True
