@@ -15,7 +15,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     Platform,
@@ -90,7 +89,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             return PERCENTAGE
         if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
-            return POWER_WATT
+            return "watts"
         return None
 
     def update(self) -> None:
