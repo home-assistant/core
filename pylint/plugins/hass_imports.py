@@ -115,6 +115,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
+    "homeassistant.components.light": [
+        ObsoleteImportMatch(
+            reason="replaced by LightEntityFeature enum",
+            constant=re.compile("^SUPPORT_(EFFECT|FLASH|TRANSITION)$"),
+        ),
+    ],
     "homeassistant.components.media_player": [
         ObsoleteImportMatch(
             reason="replaced by MediaPlayerDeviceClass enum",
