@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Final, NamedTuple
+from typing import NamedTuple
 
 from pyhap.const import CATEGORY_SENSOR
 
@@ -71,12 +71,11 @@ class SI(NamedTuple):
     format: Callable[[bool], int | bool]
 
 
-DEVICE_CLASS_CO2: Final = "carbon_dioxide"
 BINARY_SENSOR_SERVICE_MAP: dict[str, SI] = {
     BinarySensorDeviceClass.CO: SI(
         SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
     ),
-    DEVICE_CLASS_CO2: SI(SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
+    "carbon_dioxide": SI(SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
     BinarySensorDeviceClass.DOOR: SI(
         SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
     ),
