@@ -51,6 +51,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
     "homeassistant.components.sensor": [
         ObsoleteImportMatch(
+            reason="replaced by SensorDeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
             reason="replaced by SensorStateClass enum",
             constant=re.compile(r"^STATE_CLASS_(\w*)$"),
         ),
@@ -68,6 +72,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ),
     ],
     "homeassistant.const": [
+        ObsoleteImportMatch(
+            reason="replaced by **DeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
         ObsoleteImportMatch(
             reason="replaced by EntityCategory enum",
             constant=re.compile(r"^(ENTITY_CATEGORY_(\w*))|(ENTITY_CATEGORIES)$"),
