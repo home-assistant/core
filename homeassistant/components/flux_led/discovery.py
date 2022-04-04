@@ -25,14 +25,13 @@ from flux_led.scanner import FluxLEDDiscovery
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_MINOR_VERSION,
-    CONF_MODEL,
     CONF_MODEL_DESCRIPTION,
     CONF_MODEL_INFO,
     CONF_MODEL_NUM,

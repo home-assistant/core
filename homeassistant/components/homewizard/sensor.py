@@ -5,10 +5,9 @@ import logging
 from typing import Final
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -55,7 +54,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         name="Wifi Strength",
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -64,63 +63,63 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         name="Total Power Import T1",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="total_power_import_t2_kwh",
         name="Total Power Import T2",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="total_power_export_t1_kwh",
         name="Total Power Export T1",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="total_power_export_t2_kwh",
         name="Total Power Export T2",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="active_power_w",
         name="Active Power",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="active_power_l1_w",
         name="Active Power L1",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="active_power_l2_w",
         name="Active Power L2",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="active_power_l3_w",
         name="Active Power L3",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="total_gas_m3",
         name="Total Gas",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         device_class=DEVICE_CLASS_GAS,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 

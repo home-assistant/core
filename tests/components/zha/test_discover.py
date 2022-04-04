@@ -120,7 +120,7 @@ async def test_devices(
             assert cluster_identify.request.call_args == mock.call(
                 False,
                 64,
-                (zigpy.types.uint8_t, zigpy.types.uint8_t),
+                cluster_identify.commands_by_name["trigger_effect"].schema,
                 2,
                 0,
                 expect_reply=True,

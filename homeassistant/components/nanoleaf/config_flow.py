@@ -184,17 +184,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_setup_finish()
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle Nanoleaf configuration import."""
-        self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
-        _LOGGER.debug(
-            "Importing Nanoleaf on %s from your configuration.yaml", config[CONF_HOST]
-        )
-        self.nanoleaf = Nanoleaf(
-            async_get_clientsession(self.hass), config[CONF_HOST], config[CONF_TOKEN]
-        )
-        return await self.async_setup_finish()
-
     async def async_setup_finish(
         self, discovery_integration_import: bool = False
     ) -> FlowResult:

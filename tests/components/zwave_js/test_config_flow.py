@@ -169,7 +169,7 @@ async def test_manual(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result2["result"].unique_id == 1234
+    assert result2["result"].unique_id == "1234"
 
 
 async def slow_server_version(*args):
@@ -243,7 +243,7 @@ async def test_manual_already_configured(hass):
             "integration_created_addon": True,
         },
         title=TITLE,
-        unique_id=1234,
+        unique_id="1234",
     )
     entry.add_to_hass(hass)
 
@@ -401,7 +401,10 @@ async def test_abort_discovery_with_existing_entry(
     """Test discovery flow is aborted if an entry already exists."""
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"url": "ws://localhost:3000"}, title=TITLE, unique_id=1234
+        domain=DOMAIN,
+        data={"url": "ws://localhost:3000"},
+        title=TITLE,
+        unique_id="1234",
     )
     entry.add_to_hass(hass)
 
@@ -1039,7 +1042,7 @@ async def test_addon_running_already_configured(
             "s2_unauthenticated_key": "old987",
         },
         title=TITLE,
-        unique_id=1234,
+        unique_id="1234",
     )
     entry.add_to_hass(hass)
 
@@ -1370,7 +1373,7 @@ async def test_addon_installed_already_configured(
             "s2_unauthenticated_key": "old987",
         },
         title=TITLE,
-        unique_id=1234,
+        unique_id="1234",
     )
     entry.add_to_hass(hass)
 

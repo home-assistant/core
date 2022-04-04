@@ -3,7 +3,7 @@ import statistics
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
-from homeassistant.components.min_max import DOMAIN
+from homeassistant.components.min_max.const import DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,

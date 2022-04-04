@@ -19,6 +19,7 @@ UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
 
 PLATFORMS: list[Platform] = [
+    Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
@@ -27,6 +28,7 @@ PLATFORMS: list[Platform] = [
     Platform.LOCK,
     Platform.NUMBER,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
@@ -58,15 +60,19 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIClass.SWINGING_SHUTTER: Platform.COVER,
     UIClass.VENETIAN_BLIND: Platform.COVER,
     UIClass.WINDOW: Platform.COVER,
+    UIWidget.ALARM_PANEL_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.ATLANTIC_ELECTRICAL_HEATER: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.DOMESTIC_HOT_WATER_TANK: Platform.SWITCH,  # widgetName, uiClass is WaterHeatingSystem (not supported)
+    UIWidget.MY_FOX_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.MY_FOX_SECURITY_CAMERA: Platform.SWITCH,  # widgetName, uiClass is Camera (not supported)
     UIWidget.RTD_INDOOR_SIREN: Platform.SWITCH,  # widgetName, uiClass is Siren (not supported)
     UIWidget.RTD_OUTDOOR_SIREN: Platform.SWITCH,  # widgetName, uiClass is Siren (not supported)
     UIWidget.RTS_GENERIC: Platform.COVER,  # widgetName, uiClass is Generic (not supported)
     UIWidget.SIREN_STATUS: None,  # widgetName, uiClass is Siren (siren)
     UIWidget.STATELESS_ALARM_CONTROLLER: Platform.SWITCH,  # widgetName, uiClass is Alarm (not supported)
+    UIWidget.STATEFUL_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.STATELESS_EXTERIOR_HEATING: Platform.SWITCH,  # widgetName, uiClass is ExteriorHeatingSystem (not supported)
+    UIWidget.TSKALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
 }
 
 # Map Overkiz camelCase to Home Assistant snake_case for translation

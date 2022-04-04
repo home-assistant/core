@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, State
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -753,14 +754,10 @@ async def test_no_update_template_match_all(hass, caplog):
     assert hass.states.get("binary_sensor.all_entity_picture").state == OFF
     assert hass.states.get("binary_sensor.all_attribute").state == OFF
 
-    await hass.helpers.entity_component.async_update_entity("binary_sensor.all_state")
-    await hass.helpers.entity_component.async_update_entity("binary_sensor.all_icon")
-    await hass.helpers.entity_component.async_update_entity(
-        "binary_sensor.all_entity_picture"
-    )
-    await hass.helpers.entity_component.async_update_entity(
-        "binary_sensor.all_attribute"
-    )
+    await async_update_entity(hass, "binary_sensor.all_state")
+    await async_update_entity(hass, "binary_sensor.all_icon")
+    await async_update_entity(hass, "binary_sensor.all_entity_picture")
+    await async_update_entity(hass, "binary_sensor.all_attribute")
 
     assert hass.states.get("binary_sensor.all_state").state == ON
     assert hass.states.get("binary_sensor.all_icon").state == OFF

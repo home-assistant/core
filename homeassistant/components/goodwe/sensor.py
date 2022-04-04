@@ -8,10 +8,9 @@ from typing import Any
 from goodwe import Inverter, Sensor, SensorKind
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -75,49 +74,49 @@ _DESCRIPTIONS = {
     "A": GoodweSensorEntityDescription(
         key="A",
         device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     "V": GoodweSensorEntityDescription(
         key="V",
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
     ),
     "W": GoodweSensorEntityDescription(
         key="W",
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     "kWh": GoodweSensorEntityDescription(
         key="kWh",
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value=lambda sensor, prev, val: prev if "total" in sensor and not val else val,
     ),
     "C": GoodweSensorEntityDescription(
         key="C",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     "Hz": GoodweSensorEntityDescription(
         key="Hz",
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_HERTZ,
     ),
     "%": GoodweSensorEntityDescription(
         key="%",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
 }
 DIAG_SENSOR = GoodweSensorEntityDescription(
     key="_",
-    state_class=STATE_CLASS_MEASUREMENT,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 
