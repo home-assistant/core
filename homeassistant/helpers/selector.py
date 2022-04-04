@@ -244,7 +244,7 @@ def selector(
     """Instantiate a time selector."""
 
 
-def selector(selector_type: SelectorType, config: Any = None) -> Selector:
+def selector(selector_type: SelectorType | str, config: dict[str, Any] | None = None) -> Selector:
     """Instantiate a selector."""
     if (selector_class := SELECTORS.get(selector_type)) is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
