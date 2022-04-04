@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .client import CannotConnect, ReliableClient
-from .const import COAP_PORT, DOMAIN
+from .const import COAP_PORT, CONF_MODEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    return await ReliableClient.test_connection(data["host"], COAP_PORT)
+    return await ReliableClient.test_connection(data[CONF_HOST], COAP_PORT)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -60,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=info["name"],
-                data={"host": user_input["host"], "model": info["model"]},
+                data={CONF_HOST: user_input[CONF_HOST], CONF_MODEL: info["model"]},
             )
 
         return self.async_show_form(

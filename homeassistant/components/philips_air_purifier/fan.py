@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import percentage_to_ordered_list_item
 
 from .client import FanSpeed, Mode, ReliableClient, Status
-from .const import DOMAIN
+from .const import CONF_MODEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ async def async_setup_entry(
     initial_data = {
         "unique_id": config_entry.unique_id,
         "name": config_entry.title,
-        "model": config_entry.data["model"],
+        "model": config_entry.data[CONF_MODEL],
     }
 
     entity = PurifierEntity(client, initial_data)
