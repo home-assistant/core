@@ -14,7 +14,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 

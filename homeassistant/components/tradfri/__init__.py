@@ -22,7 +22,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
-    LOGGER,
     CONF_GATEWAY_ID,
     CONF_IDENTITY,
     CONF_KEY,
@@ -31,6 +30,7 @@ from .const import (
     DOMAIN,
     FACTORY,
     KEY_API,
+    LOGGER,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 

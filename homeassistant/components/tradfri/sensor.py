@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -27,12 +27,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
 from .const import (
-    LOGGER,
     CONF_GATEWAY_ID,
     COORDINATOR,
     COORDINATOR_LIST,
     DOMAIN,
     KEY_API,
+    LOGGER,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
