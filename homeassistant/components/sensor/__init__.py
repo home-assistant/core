@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (  # noqa: F401, pylint: disable=[hass-deprecated-import]
     CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
