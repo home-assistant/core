@@ -7,7 +7,15 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PATH, CONF_URL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PATH,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_URL,
+)
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
@@ -62,4 +70,10 @@ class SABnzbdConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data):
         """Import sabnzbd config from configuration.yaml."""
+        import_data[CONF_URL] = (
+            ("https://" if import_data[CONF_SSL] else "http://")
+            + import_data[CONF_HOST]
+            + ":"
+            + str(import_data[CONF_PORT])
+        )
         return await self.async_step_user(import_data)
