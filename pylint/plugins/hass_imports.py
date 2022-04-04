@@ -43,6 +43,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
         ),
     ],
+    "homeassistant.config_entries": [
+        ObsoleteImportMatch(
+            reason="replaced by ConfigEntryDisabler enum",
+            constant=re.compile(r"^DISABLED_(\w*)$"),
+        ),
+    ],
     "homeassistant.const": [
         ObsoleteImportMatch(
             reason="replaced by EntityCategory enum",
