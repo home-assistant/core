@@ -16,7 +16,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.philips_air_purifier.config_flow.ReliableClient.test_connection",
