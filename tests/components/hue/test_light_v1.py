@@ -262,8 +262,11 @@ async def test_lights_color_mode(hass, mock_bridge_v1):
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["color_temp"] == 467
     assert "hs_color" in lamp_1.attributes
-    assert lamp_1.attributes["color_mode"] == COLOR_MODE_HS
-    assert lamp_1.attributes["supported_color_modes"] == {}
+    assert lamp_1.attributes["color_mode"] == COLOR_MODE_COLOR_TEMP
+    assert lamp_1.attributes["supported_color_modes"] == [
+        COLOR_MODE_COLOR_TEMP,
+        COLOR_MODE_HS,
+    ]
 
 
 async def test_groups(hass, mock_bridge_v1):
