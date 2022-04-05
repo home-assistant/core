@@ -8,18 +8,13 @@ from typing import Any
 from goodwe import Inverter, Sensor, SensorKind
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -73,38 +68,38 @@ class GoodweSensorEntityDescription(SensorEntityDescription):
 _DESCRIPTIONS = {
     "A": GoodweSensorEntityDescription(
         key="A",
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     "V": GoodweSensorEntityDescription(
         key="V",
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
     ),
     "W": GoodweSensorEntityDescription(
         key="W",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     "kWh": GoodweSensorEntityDescription(
         key="kWh",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value=lambda sensor, prev, val: prev if "total" in sensor and not val else val,
     ),
     "C": GoodweSensorEntityDescription(
         key="C",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     "Hz": GoodweSensorEntityDescription(
         key="Hz",
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_HERTZ,
     ),
@@ -165,7 +160,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         self._attr_icon = _ICONS.get(sensor.kind)
         # Set the inverter SoC as main device battery sensor
         if sensor.id_ == BATTERY_SOC:
-            self._attr_device_class = DEVICE_CLASS_BATTERY
+            self._attr_device_class = SensorDeviceClass.BATTERY
         self._sensor = sensor
         self._previous_value = None
 

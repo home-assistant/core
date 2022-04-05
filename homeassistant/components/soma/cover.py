@@ -4,8 +4,6 @@ from __future__ import annotations
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_SHADE,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -14,6 +12,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -49,7 +48,7 @@ async def async_setup_entry(
 class SomaTilt(SomaEntity, CoverEntity):
     """Representation of a Soma Tilt device."""
 
-    _attr_device_class = DEVICE_CLASS_BLIND
+    _attr_device_class = CoverDeviceClass.BLIND
     _attr_supported_features = (
         SUPPORT_OPEN_TILT
         | SUPPORT_CLOSE_TILT
@@ -123,7 +122,7 @@ class SomaTilt(SomaEntity, CoverEntity):
 class SomaShade(SomaEntity, CoverEntity):
     """Representation of a Soma Shade device."""
 
-    _attr_device_class = DEVICE_CLASS_SHADE
+    _attr_device_class = CoverDeviceClass.SHADE
     _attr_supported_features = (
         SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
     )

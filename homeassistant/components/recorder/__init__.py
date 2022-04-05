@@ -84,6 +84,7 @@ from .pool import POOL_SIZE, RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
+    is_second_sunday,
     move_away_broken_database,
     perodic_db_cleanups,
     session_scope,
@@ -156,6 +157,7 @@ DB_LOCK_TIMEOUT = 30
 DB_LOCK_QUEUE_CHECK_TIMEOUT = 1
 
 CONF_AUTO_PURGE = "auto_purge"
+CONF_AUTO_REPACK = "auto_repack"
 CONF_DB_URL = "db_url"
 CONF_DB_MAX_RETRIES = "db_max_retries"
 CONF_DB_RETRY_WAIT = "db_retry_wait"
@@ -183,6 +185,7 @@ CONFIG_SCHEMA = vol.Schema(
             FILTER_SCHEMA.extend(
                 {
                     vol.Optional(CONF_AUTO_PURGE, default=True): cv.boolean,
+                    vol.Optional(CONF_AUTO_REPACK, default=True): cv.boolean,
                     vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
                         vol.Coerce(int), vol.Range(min=1)
                     ),
@@ -283,6 +286,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
+    auto_repack = conf[CONF_AUTO_REPACK]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
     commit_interval = conf[CONF_COMMIT_INTERVAL]
     db_max_retries = conf[CONF_DB_MAX_RETRIES]
@@ -300,6 +304,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
+        auto_repack=auto_repack,
         keep_days=keep_days,
         commit_interval=commit_interval,
         uri=db_url,
@@ -570,6 +575,7 @@ class Recorder(threading.Thread):
         self,
         hass: HomeAssistant,
         auto_purge: bool,
+        auto_repack: bool,
         keep_days: int,
         commit_interval: int,
         uri: str,
@@ -584,6 +590,7 @@ class Recorder(threading.Thread):
 
         self.hass = hass
         self.auto_purge = auto_purge
+        self.auto_repack = auto_repack
         self.keep_days = keep_days
         self._hass_started: asyncio.Future[object] = asyncio.Future()
         self.commit_interval = commit_interval
@@ -808,8 +815,9 @@ class Recorder(threading.Thread):
             # Purge will schedule the perodic cleanups
             # after it completes to ensure it does not happen
             # until after the database is vacuumed
+            repack = self.auto_repack and is_second_sunday(now)
             purge_before = dt_util.utcnow() - timedelta(days=self.keep_days)
-            self.queue.put(PurgeTask(purge_before, repack=False, apply_filter=False))
+            self.queue.put(PurgeTask(purge_before, repack=repack, apply_filter=False))
         else:
             self.queue.put(PerodicCleanupTask())
 
