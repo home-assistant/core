@@ -31,6 +31,8 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -248,7 +250,9 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
         """Restore last state."""
         await super().async_added_to_hass()
         if (
-            (extra_data := await self.async_get_last_sensor_data()) is not None
+            (last_state := await self.async_get_last_state()) is not None
+            and (extra_data := await self.async_get_last_sensor_data()) is not None
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             # The trigger might have fired already while we waited for stored data,
             # then we should not restore state
             and CONF_STATE not in self._rendered
