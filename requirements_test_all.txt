@@ -540,7 +540,7 @@ guppy3==3.1.2
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.7.6
+ha-philipsjs==2.9.0
 
 # homeassistant.components.habitica
 habitipy==0.2.0
