@@ -37,10 +37,6 @@ def selector(config: Any) -> Selector:
     selector_class = _get_selector_class(config)
     selector_type = list(config)[0]
 
-    # Selectors can be empty
-    if config[selector_type] is None:
-        return selector_class({})
-
     return selector_class(config[selector_type])
 
 
