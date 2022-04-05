@@ -32,6 +32,8 @@ async def async_setup_entry(
 class AxisCamera(AxisEntityBase, MjpegCamera):
     """Representation of a Axis camera."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
+
     def __init__(self, device):
         """Initialize Axis Communications camera component."""
         AxisEntityBase.__init__(self, device)
@@ -57,11 +59,6 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         )
 
         await super().async_added_to_hass()
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return CameraEntityFeature.STREAM
 
     def _new_address(self) -> None:
         """Set new device address for video stream."""
