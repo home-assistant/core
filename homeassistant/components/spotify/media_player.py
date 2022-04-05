@@ -47,7 +47,7 @@ from .util import fetch_image_url
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 SUPPORT_SPOTIFY = (
     SUPPORT_BROWSE_MEDIA
@@ -117,6 +117,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     _attr_icon = "mdi:spotify"
     _attr_media_content_type = MEDIA_TYPE_MUSIC
     _attr_media_image_remotely_accessible = False
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,
