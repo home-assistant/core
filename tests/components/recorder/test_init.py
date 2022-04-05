@@ -185,7 +185,9 @@ async def test_saving_many_states(
     hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test we expire after many commits."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance(
+        hass, {recorder.CONF_COMMIT_INTERVAL: 1}
+    )
 
     entity_id = "test.recorder"
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
