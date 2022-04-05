@@ -318,15 +318,6 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
 
     device: SmartLightStrip
 
-    def __init__(
-        self,
-        device: SmartLightStrip,
-        coordinator: TPLinkDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the smart light strip."""
-        super().__init__(device, coordinator)
-        self._last_custom_effect: dict[str, Any] = {}
-
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
@@ -403,7 +394,6 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         if transition_range:
             effect["transition_range"] = transition_range
             effect["transition"] = 0
-        self._last_custom_effect = effect
         await self.device.set_custom_effect(effect)
 
     async def async_set_sequence_effect(
@@ -425,5 +415,4 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             "spread": spread,
             "direction": direction,
         }
-        self._last_custom_effect = effect
         await self.device.set_custom_effect(effect)
