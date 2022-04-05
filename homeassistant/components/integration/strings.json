@@ -11,11 +11,12 @@
           "round": "Precision",
           "source": "Input sensor",
           "unit_prefix": "Metric prefix",
-          "unit_time": "Integration time"
+          "unit_time": "Time unit"
         },
         "data_description": {
           "round": "Controls the number of decimal digits in the output.",
-          "unit_prefix": "The output will be scaled according to the selected metric prefix and time unit of the integral."
+          "unit_prefix": "The output will be scaled according to the selected metric prefix.",
+          "unit_time": "The output will be scaled according to the selected time unit."
         }
       }
     }
