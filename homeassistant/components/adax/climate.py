@@ -6,8 +6,12 @@ from typing import Any
 from adax import Adax
 from adax_local import Adax as AdaxLocal
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
-from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODE_OFF
+from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate.const import (
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    ClimateEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
