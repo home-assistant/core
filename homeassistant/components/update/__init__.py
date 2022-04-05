@@ -327,13 +327,15 @@ class UpdateEntity(RestoreEntity):
 
         if latest_version == self.__skipped_version:
             return STATE_OFF
+        if latest_version == installed_version:
+            return STATE_OFF
 
         try:
             newer = AwesomeVersion(latest_version) > installed_version
             return STATE_ON if newer else STATE_OFF
         except AwesomeVersionCompareException:
-            # Can't compare versions, fallback to exact match
-            return STATE_OFF if latest_version == installed_version else STATE_ON
+            # Can't compare versions, already tried exact match
+            return STATE_ON
 
     @final
     @property
