@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -237,11 +238,22 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         )
 
 
-class TriggerSensorEntity(TriggerEntity, SensorEntity):
+class TriggerSensorEntity(TriggerEntity, RestoreSensor):
     """Sensor entity based on trigger data."""
 
     domain = SENSOR_DOMAIN
     extra_template_keys = (CONF_STATE,)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        await super().async_added_to_hass()
+        if (
+            (extra_data := await self.async_get_last_sensor_data()) is not None
+            # The trigger might have fired already while we waited for stored data,
+            # then we should not restore state
+            and CONF_STATE not in self._rendered
+        ):
+            self._rendered[CONF_STATE] = extra_data.native_value
 
     @property
     def native_value(self) -> str | datetime | date | None:
