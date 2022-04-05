@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any, cast
 
 from pydeconz.light import Cover
@@ -47,11 +46,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_cover(
-        lights: list[Cover] | ValuesView[Cover] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_cover(lights: list[Cover] | None = None) -> None:
         """Add cover from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.covers.values())
 
         for light in lights:
             if (

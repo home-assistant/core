@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
 from pydeconz.light import Light, Siren
@@ -34,7 +33,7 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
 
     # Siren platform replacing sirens in switch platform added in 2021.10
-    for light in gateway.api.lights.values():
+    for light in gateway.api.lights.sirens.values():
         if isinstance(light, Siren) and (
             entity_id := entity_registry.async_get_entity_id(
                 DOMAIN, DECONZ_DOMAIN, light.unique_id
@@ -43,11 +42,12 @@ async def async_setup_entry(
             entity_registry.async_remove(entity_id)
 
     @callback
-    def async_add_switch(
-        lights: list[Light] | ValuesView[Light] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_switch(lights: list[Light] | None = None) -> None:
         """Add switch from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.lights.values())
 
         for light in lights:
 

@@ -1,7 +1,7 @@
 """Support for deCONZ sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable, ValuesView
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -9,12 +9,12 @@ from pydeconz.sensor import (
     AirQuality,
     Consumption,
     Daylight,
-    DeconzSensor as PydeconzSensor,
     GenericStatus,
     Humidity,
     LightLevel,
     Power,
     Pressure,
+    SensorBase as PydeconzSensor,
     Switch,
     Temperature,
     Time,
@@ -174,7 +174,7 @@ ENTITY_DESCRIPTIONS = {
     Temperature: [
         DeconzSensorDescription(
             key="temperature",
-            value_fn=lambda device: device.temperature,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.scaled_temperature,  # type: ignore[no-any-return]
             update_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -227,16 +227,16 @@ async def async_setup_entry(
     battery_handler = DeconzBatteryHandler(gateway)
 
     @callback
-    def async_add_sensor(
-        sensors: list[PydeconzSensor]
-        | ValuesView[PydeconzSensor] = gateway.api.sensors.values(),
-    ) -> None:
+    def async_add_sensor(sensors: list[PydeconzSensor] | None = None) -> None:
         """Add sensors from deCONZ.
 
         Create DeconzBattery if sensor has a battery attribute.
         Create DeconzSensor if not a battery, switch or thermostat and not a binary sensor.
         """
         entities: list[DeconzSensor] = []
+
+        if sensors is None:
+            sensors = gateway.api.sensors.values()
 
         for sensor in sensors:
 
