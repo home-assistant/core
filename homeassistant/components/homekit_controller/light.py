@@ -82,10 +82,11 @@ class HomeKitLight(HomeKitEntity, LightEntity):
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        if self.service.has(CharacteristicsTypes.HUE):
-            return COLOR_MODE_HS
-
-        if self.service.has(CharacteristicsTypes.SATURATION):
+        # aiohomekit does not keep track of the light's color mode, report
+        # hs for light supporting both hs and ct
+        if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
+            CharacteristicsTypes.SATURATION
+        ):
             return COLOR_MODE_HS
 
         if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
@@ -101,14 +102,13 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         """Flag supported color modes."""
         color_modes = set()
 
+        if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
+            CharacteristicsTypes.SATURATION
+        ):
+            color_modes.add(COLOR_MODE_HS)
+
         if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
             color_modes.add(COLOR_MODE_COLOR_TEMP)
-
-        if self.service.has(CharacteristicsTypes.HUE):
-            color_modes.add(COLOR_MODE_HS)
-
-        if self.service.has(CharacteristicsTypes.SATURATION):
-            color_modes.add(COLOR_MODE_HS)
 
         if not color_modes and self.service.has(CharacteristicsTypes.BRIGHTNESS):
             color_modes.add(COLOR_MODE_BRIGHTNESS)
