@@ -1,4 +1,5 @@
 """Config flow for Broadlink devices."""
+import ast
 import errno
 from functools import partial
 import logging
@@ -86,11 +87,18 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+            mac = user_input.get(CONF_MAC, "").replace(":", "").lower()
+            dev_type = ast.literal_eval(user_input.get(CONF_TYPE, "0x0"))
 
             try:
-                hello = partial(blk.hello, host, timeout=timeout)
-                device = await self.hass.async_add_executor_job(hello)
-
+                if not mac and not dev_type:
+                    hello = partial(blk.hello, host, timeout=timeout)
+                    device = await self.hass.async_add_executor_job(hello)
+                else:
+                    # Authentication will occur at a later step via `async_step_auth`
+                    device = blk.gendevice(
+                        dev_type=dev_type, host=(host, DEFAULT_PORT), mac=mac
+                    )
             except NetworkTimeoutError:
                 errors["base"] = "cannot_connect"
                 err_msg = "Device not found"
@@ -133,6 +141,8 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = {
             vol.Required(CONF_HOST): str,
+            vol.Optional(CONF_MAC): str,
+            vol.Optional(CONF_TYPE): str,
             vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         }
         return self.async_show_form(
@@ -210,11 +220,18 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "name": device.name,
                     "model": device.model,
                     "host": device.host[0],
+                    "mac": format_mac(device.mac),
+                    "type": hex(device.devtype),
                 },
             )
 
         return await self.async_step_user(
-            {CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
+            {
+                CONF_HOST: device.host[0],
+                CONF_MAC: format_mac(device.mac),
+                CONF_TYPE: hex(device.devtype),
+                CONF_TIMEOUT: device.timeout,
+            }
         )
 
     async def async_step_unlock(self, user_input=None):
@@ -270,6 +287,8 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "name": device.name,
                 "model": device.model,
                 "host": device.host[0],
+                "mac": format_mac(device.mac),
+                "type": hex(device.devtype),
             },
         )
 
