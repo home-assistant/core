@@ -17,11 +17,11 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
 _STATISTIC_MEASURES = [
-    {"value": "min", "label": "Minimum"},
-    {"value": "max", "label": "Maximum"},
-    {"value": "mean", "label": "Arithmetic mean"},
-    {"value": "median", "label": "Median"},
-    {"value": "last", "label": "Most recently updated"},
+    selector.SelectOptionDict(value="min", label="Minimum"),
+    selector.SelectOptionDict(value="max", label="Maximum"),
+    selector.SelectOptionDict(value="mean", label="Arithmetic mean"),
+    selector.SelectOptionDict(value="median", label="Median"),
+    selector.SelectOptionDict(value="last", label="Most recently updated"),
 ]
 
 
