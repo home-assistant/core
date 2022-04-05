@@ -32,6 +32,18 @@ def _get_selector_class(config: Any) -> type[Selector]:
     return selector_class
 
 
+def selector(config: Any) -> Selector:
+    """Instantiate a selector."""
+    selector_class = _get_selector_class(config)
+    selector_type = list(config)[0]
+
+    # Selectors can be empty
+    if config[selector_type] is None:
+        return selector_class({selector_type: {}})
+
+    return selector_class(config)
+
+
 def validate_selector(config: Any) -> dict:
     """Validate a selector."""
     selector_class = _get_selector_class(config)
@@ -44,18 +56,6 @@ def validate_selector(config: Any) -> dict:
     return {
         selector_type: cast(dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
     }
-
-
-def selector(selector_type: str, config: dict[str, Any] | None = None) -> Selector:
-    """Instantiate a selector."""
-    if (selector_class := SELECTORS.get(selector_type)) is None:
-        raise vol.Invalid(f"Unknown selector type {selector_type} found")
-
-    # selector config can be empty
-    if config is None:
-        config = {}
-
-    return selector_class({selector_type: config})
 
 
 class Selector:
