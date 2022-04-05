@@ -377,7 +377,7 @@ class TibberSensorElPrice(TibberSensor):
         res = self._tibber_home.current_price_data()
         self._attr_native_value, price_level, self._last_updated = res
         self._attr_extra_state_attributes["price_level"] = price_level
-        
+
         priceinfo = self._tibber_home.info["viewer"]["home"]["currentSubscription"]["priceInfo"]
         # todays priceInfo is for today. Add todays and tomorrows priceInfo
         if dt_util.parse_datetime(priceinfo["today"][1]["startsAt"]).date() == dt_util.now().date():
@@ -390,13 +390,13 @@ class TibberSensorElPrice(TibberSensor):
                 local_today = []
                 for entry in priceinfo["today"]:
                     local_today.append(entry["total"])
-            
+
                 self._attr_extra_state_attributes["today"] = local_today
                 _LOGGER.debug("Today priceInfo array set")
             else:
                 self._attr_extra_state_attributes["today"] = None
                 _LOGGER.debug("Today priceInfo missing")
-            
+
             # iterate through tomorrows prices and add list with only prices
             if priceinfo["tomorrow"]:
                 local_tomorrow = []
@@ -405,7 +405,7 @@ class TibberSensorElPrice(TibberSensor):
                     local_tomorrow.append(entry["total"])
                     if not entry["total"]:
                         local_tomorrow_valid = False
-                        
+
                 self._attr_extra_state_attributes["tomorrow"] = local_tomorrow
                 _LOGGER.debug("Tomorrow priceInfo array set")
                 # if no empty values and 24 entries, mark tomorrow as valid
@@ -414,7 +414,7 @@ class TibberSensorElPrice(TibberSensor):
             else:
                 self._attr_extra_state_attributes["tomorrow"] = None
                 _LOGGER.debug("Tomorrow priceInfo missing")
-                
+
         # tomorrows priceInfo is for today. Add tomorrows priceInfo as today
         elif priceinfo["tomorrow"] and dt_util.parse_datetime(priceinfo["tomorrow"][1]["startsAt"]).date() == dt_util.now().date():
             _LOGGER.debug("Cached tomorrow priceInfo from yesterday is now today")
@@ -433,7 +433,7 @@ class TibberSensorElPrice(TibberSensor):
             else:
                 self._attr_extra_state_attributes["today"] = None
                 _LOGGER.debug("Today (tomorrow) priceInfo missing")
-        
+
         # no cached priceInfo valid for today
         else:
             self._attr_extra_state_attributes["today"] = None
