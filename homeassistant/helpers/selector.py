@@ -39,9 +39,9 @@ def selector(config: Any) -> Selector:
 
     # Selectors can be empty
     if config[selector_type] is None:
-        return selector_class({selector_type: {}})
+        return selector_class({})
 
-    return selector_class(config)
+    return selector_class(config[selector_type])
 
 
 def validate_selector(config: Any) -> dict:
@@ -67,7 +67,11 @@ class Selector:
 
     def __init__(self, config: Any = None) -> None:
         """Instantiate a selector."""
-        self.config = self.CONFIG_SCHEMA(config[self.selector_type])
+        # Selectors can be empty
+        if config is None:
+            config = {}
+
+        self.config = self.CONFIG_SCHEMA(config)
 
     def serialize(self) -> Any:
         """Serialize Selector for voluptuous_serialize."""
