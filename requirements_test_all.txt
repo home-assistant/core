@@ -570,7 +570,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-ais-dom-frontend==20220301.3
+ais-dom-frontend==20220401.0
 
 
 # homeassistant.components.home_connect
