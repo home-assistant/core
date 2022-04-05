@@ -2010,7 +2010,7 @@ pywilight==0.0.70
 pywizlight==0.5.13
 
 # homeassistant.components.ws66i
-pyws66i==0.1
+pyws66i==1.1
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1

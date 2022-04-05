@@ -390,30 +390,19 @@ async def test_failed_update(hass):
 
     # Failed update, close called
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        with patch.object(MockWs66i, "close") as method_call:
-            await coordinator.async_refresh()
-            await hass.async_block_till_done()
-
-            assert method_call.called
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
 
     assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
 
     # A connection re-attempt fails
-    with patch.object(MockWs66i, "open", side_effect=ConnectionError) as method_call:
-        with patch.object(MockWs66i, "zone_status") as method_call_2:
-            await coordinator.async_refresh()
-            await hass.async_block_till_done()
-
-            assert not method_call_2.called
-
-        assert method_call.called
-
-    # A connection re-attempt succeeds
-    with patch.object(MockWs66i, "open") as method_call:
+    with patch.object(MockWs66i, "zone_status", return_value=None):
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
-        assert method_call.called
+    # A connection re-attempt succeeds
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
     # confirm entity is back on
     state = hass.states.get(ZONE_1_ID)
@@ -667,22 +656,16 @@ async def test_restore_snapshot_on_reconnect(hass):
     ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = ws66i_data.coordinator
 
-    # Failed update, close called
+    # Failed update,
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        with patch.object(MockWs66i, "close") as method_call:
-            await coordinator.async_refresh()
-            await hass.async_block_till_done()
-
-            assert method_call.called
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
 
     assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
 
     # A connection re-attempt succeeds
-    with patch.object(MockWs66i, "open") as method_call:
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
-
-        assert method_call.called
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
     # confirm entity is back on
     state = hass.states.get(ZONE_1_ID)
