@@ -15,8 +15,6 @@ from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
-ATTR_MODEL = "model"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
