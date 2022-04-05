@@ -80,7 +80,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         if self._device.light_control.can_set_temp:
             self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
         if not self.supported_color_modes and self._device.light_control.can_set_dimmer:
-            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
 
         if self._device_control:
             self._attr_min_mireds = self._device_control.min_mireds
