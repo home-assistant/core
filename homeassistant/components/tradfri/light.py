@@ -71,8 +71,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         self._hs_color = None
 
         # Calculate supported features
-        _features = LightEntityFeature.TRANSITION
-        self._attr_supported_features = _features
+        self._attr_supported_features = LightEntityFeature.TRANSITION
 
         # Calculate supported color modes
         self._attr_supported_color_modes = set()
