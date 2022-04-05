@@ -217,6 +217,7 @@ async def test_service_refresh_devices(hass, aioclient_mock):
     aioclient_mock.clear_requests()
 
     data = {
+        "config": {},
         "groups": {
             "1": {
                 "id": "Group 1 id",
@@ -280,6 +281,7 @@ async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_m
     aioclient_mock.clear_requests()
 
     data = {
+        "config": {},
         "groups": {
             "1": {
                 "id": "Group 1 id",

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
 from pydeconz.group import Group
@@ -62,11 +61,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_light(
-        lights: list[Light] | ValuesView[Light] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_light(lights: list[Light] | None = None) -> None:
         """Add light from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = gateway.api.lights.values()
 
         for light in lights:
             if (
@@ -88,14 +88,15 @@ async def async_setup_entry(
     )
 
     @callback
-    def async_add_group(
-        groups: list[Group] | ValuesView[Group] = gateway.api.groups.values(),
-    ) -> None:
+    def async_add_group(groups: list[Group] | None = None) -> None:
         """Add group from deCONZ."""
         if not gateway.option_allow_deconz_groups:
             return
 
         entities = []
+
+        if groups is None:
+            groups = list(gateway.api.groups.values())
 
         for group in groups:
             if not group.lights:

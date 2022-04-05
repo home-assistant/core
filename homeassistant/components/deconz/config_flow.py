@@ -30,7 +30,6 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
     CONF_ALLOW_NEW_DEVICES,
-    CONF_BRIDGE_ID,
     DEFAULT_PORT,
     DOMAIN,
     HASSIO_CONFIGURATION_URL,
@@ -86,7 +85,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
             for bridge in self.bridges:
                 if bridge[CONF_HOST] == user_input[CONF_HOST]:
-                    self.bridge_id = cast(str, bridge[CONF_BRIDGE_ID])
+                    self.bridge_id = cast(str, bridge["id"])
                     self.deconz_config = {
                         CONF_HOST: bridge[CONF_HOST],
                         CONF_PORT: bridge[CONF_PORT],
