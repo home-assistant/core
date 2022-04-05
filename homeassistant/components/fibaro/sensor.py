@@ -39,7 +39,13 @@ SENSOR_TYPES = {
         "mdi:fire",
         None,
     ],
-    "CO2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, None, None, SensorDeviceClass.CO2],
+    "CO2": [
+        "CO2",
+        CONCENTRATION_PARTS_PER_MILLION,
+        None,
+        None,
+        SensorDeviceClass.CO2,
+    ],
     "com.fibaro.humiditySensor": [
         "Humidity",
         PERCENTAGE,

@@ -1,7 +1,6 @@
 {
   "domain": "fibaro",
   "name": "Fibaro",
-  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fibaro",
   "requirements": ["fiblary3==0.1.8"],
   "codeowners": ["@rappenze"],

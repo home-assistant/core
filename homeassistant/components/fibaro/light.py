@@ -154,7 +154,10 @@ class FibaroLight(FibaroDevice, LightEntity):
             self._color = kwargs.get(ATTR_HS_COLOR, self._color)
             rgb = color_util.color_hs_to_RGB(*self._color)
             self.call_set_color(
-                round(rgb[0]), round(rgb[1]), round(rgb[2]), round(self._white)
+                round(rgb[0]),
+                round(rgb[1]),
+                round(rgb[2]),
+                round(self._white),
             )
 
             if self.state == "off":

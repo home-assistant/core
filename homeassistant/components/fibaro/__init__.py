@@ -466,25 +466,6 @@ class FibaroDevice(Entity):
         self.schedule_update_ha_state(True)
 
     @property
-    def device_info(self):
-        sw_version = 1
-        manufacturer = "Fibaro"
-        if "properties" in self.fibaro_device:
-            if "zwaveVersion" in self.fibaro_device.properties:
-                sw_version = self.fibaro_device.properties.zwaveVersion
-            if "zwaveCompany" in self.fibaro_device.properties:
-                manufacturer = self.fibaro_device.properties.zwaveCompany
-
-        return {
-            "identifiers": {(DOMAIN, self.ha_id)},
-            "name": self._name,
-            "manufacturer": manufacturer,
-            "model": self.fibaro_device.type,
-            "sw_version": sw_version,
-            "via_device": None,
-        }
-
-    @property
     def level(self):
         """Get the level of Fibaro device."""
         if "value" in self.fibaro_device.properties:
