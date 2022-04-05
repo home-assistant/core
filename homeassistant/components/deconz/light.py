@@ -1,5 +1,4 @@
 """Support for deCONZ lights."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -30,10 +29,8 @@ from homeassistant.components.light import (
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -149,11 +146,11 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             self._attr_supported_color_modes.add(COLOR_MODE_ONOFF)
 
         if device.brightness is not None:
-            self._attr_supported_features |= SUPPORT_FLASH
-            self._attr_supported_features |= SUPPORT_TRANSITION
+            self._attr_supported_features |= LightEntityFeature.FLASH
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
 
         if device.effect is not None:
-            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_supported_features |= LightEntityFeature.EFFECT
             self._attr_effect_list = [EFFECT_COLORLOOP]
 
     @property
