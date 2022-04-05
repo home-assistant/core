@@ -737,6 +737,45 @@ def test_auto_purge_auto_repack_on_second_sunday(hass_recorder):
 
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
+def test_auto_purge_auto_repack_on_second_sunday_except_not_sqlite(hass_recorder):
+    """Test periodic purge scheduling does a repack on the 2nd sunday except if we are not using sqlite."""
+    hass = hass_recorder()
+
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
+    tz = dt_util.get_time_zone("Europe/Copenhagen")
+    dt_util.set_default_time_zone(tz)
+
+    # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
+    # firing time changed events and advancing the clock around this time. Pick an
+    # arbitrary year in the future to avoid boundary conditions relative to the current
+    # date.
+    #
+    # The clock is started at 4:15am then advanced forward below
+    now = dt_util.utcnow()
+    test_time = datetime(now.year + 2, 1, 1, 4, 15, 0, tzinfo=tz)
+    run_tasks_at_time(hass, test_time)
+    instance = get_instance(hass)
+
+    with patch.object(instance.engine.dialect, "name", "not_sqlite"), patch(
+        "homeassistant.components.recorder.is_second_sunday", return_value=True
+    ), patch(
+        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
+    ) as purge_old_data, patch(
+        "homeassistant.components.recorder.perodic_db_cleanups"
+    ) as perodic_db_cleanups:
+        # Advance one day, and the purge task should run
+        test_time = test_time + timedelta(days=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(purge_old_data.mock_calls) == 1
+        args, _ = purge_old_data.call_args_list[0]
+        assert args[2] is False  # repack
+        assert len(perodic_db_cleanups.mock_calls) == 1
+
+    dt_util.set_default_time_zone(original_tz)
+
+
+@pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_auto_repack_disabled_on_second_sunday(hass_recorder):
     """Test periodic purge scheduling does not auto repack on the 2nd sunday if disabled."""
     hass = hass_recorder({CONF_AUTO_REPACK: False})

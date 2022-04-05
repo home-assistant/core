@@ -815,7 +815,12 @@ class Recorder(threading.Thread):
             # Purge will schedule the perodic cleanups
             # after it completes to ensure it does not happen
             # until after the database is vacuumed
-            repack = self.auto_repack and is_second_sunday(now)
+            assert self.engine is not None
+            repack = (
+                self.auto_repack
+                and is_second_sunday(now)
+                and self.engine.dialect.name == "sqlite"
+            )
             purge_before = dt_util.utcnow() - timedelta(days=self.keep_days)
             self.queue.put(PurgeTask(purge_before, repack=repack, apply_filter=False))
         else:
