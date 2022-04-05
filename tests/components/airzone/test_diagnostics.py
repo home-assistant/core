@@ -2,6 +2,8 @@
 
 import json
 
+from aiohttp import ClientSession
+
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -11,7 +13,9 @@ from tests.common import load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-async def test_config_entry_diagnostics(hass: HomeAssistant, hass_client):
+async def test_config_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSession
+) -> None:
     """Test config entry diagnostics."""
     await async_init_integration(hass)
     assert hass.data[DOMAIN]
