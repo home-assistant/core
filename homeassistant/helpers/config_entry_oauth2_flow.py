@@ -353,9 +353,9 @@ async def async_get_implementations(
 
     registered = dict(registered)
 
-    for provider_domain, get_impl in hass.data[DATA_PROVIDERS].items():
-        if (implementation := await get_impl(hass, domain)) is not None:
-            registered[provider_domain] = implementation
+    for get_impl in hass.data[DATA_PROVIDERS].values():
+        for impl in await get_impl(hass, domain):
+            registered[impl.domain] = impl
 
     return registered
 
@@ -378,7 +378,7 @@ def async_add_implementation_provider(
     hass: HomeAssistant,
     provider_domain: str,
     async_provide_implementation: Callable[
-        [HomeAssistant, str], Awaitable[AbstractOAuth2Implementation | None]
+        [HomeAssistant, str], Awaitable[list[AbstractOAuth2Implementation]]
     ],
 ) -> None:
     """Add an implementation provider.
