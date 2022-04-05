@@ -1280,7 +1280,7 @@ def test_migrate_entity_to_new_platform(hass, registry):
         "light.light",
         "hue2",
         new_unique_id=new_unique_id,
-        new_config_entry=new_config_entry,
+        new_config_entry_id=new_config_entry.entry_id,
     )
 
     assert not registry.async_get_entity_id("light", "hue", orig_unique_id)
@@ -1293,15 +1293,13 @@ def test_migrate_entity_to_new_platform(hass, registry):
     assert new_entry.icon == "new_icon"
     assert new_entry.platform == "hue2"
 
-    assert (
+    with pytest.raises(ValueError):
         registry.async_migrate_entity_to_new_platform(
             "light.not_a_real_light",
             "hue2",
             new_unique_id=new_unique_id,
-            new_config_entry=new_config_entry,
+            new_config_entry_id=new_config_entry.entry_id,
         )
-        is None
-    )
 
     hass.states.async_set("light.light", "on")
     with pytest.raises(ValueError):
@@ -1309,5 +1307,5 @@ def test_migrate_entity_to_new_platform(hass, registry):
             "light.light",
             "hue2",
             new_unique_id=new_unique_id,
-            new_config_entry=new_config_entry,
+            new_config_entry_id=new_config_entry.entry_id,
         )

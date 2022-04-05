@@ -623,55 +623,31 @@ class EntityRegistry:
         entity_id: str,
         new_platform: str,
         *,
-        new_unique_id: str | None = None,
-        new_config_entry: ConfigEntry | None = None,
-        new_device_id: str | None = None,
-    ) -> RegistryEntry | None:
+        new_unique_id: str | UndefinedType = UNDEFINED,
+        new_config_entry_id: str | None | UndefinedType = UNDEFINED,
+        new_device_id: str | None | UndefinedType = UNDEFINED,
+    ) -> RegistryEntry:
         """
         Migrate entity to new platform.
 
         This should only be used when an entity needs to be migrated between
         integrations.
         """
-        if not (entry := self.async_get(entity_id)):
-            raise ValueError(f"Entity {entity_id} if not in the entity registry")
+        if not self.async_get(entity_id):
+            raise ValueError(f"Entity {entity_id} is not in the entity registry")
         if (
             state := self.hass.states.get(entity_id)
         ) is not None and state.state != STATE_UNKNOWN:
             raise ValueError("Only entities that haven't been loaded can be migrated")
-        self.async_remove(entity_id)
-        # Precreate the entity so that any customizations can be preserved
-        new_entry = self.async_get_or_create(
-            entry.domain,
-            new_platform,
-            new_unique_id or entry.unique_id,
-            area_id=entry.area_id,
-            device_id=new_device_id or entry.device_id,
-            suggested_object_id=entity_id.split(".")[1],
-            disabled_by=entry.disabled_by,
-            hidden_by=entry.hidden_by,
-            config_entry=new_config_entry,
-            original_name=entry.original_name,
-            original_icon=entry.original_icon,
-            capabilities=entry.capabilities,
-            entity_category=entry.entity_category,
-            supported_features=entry.supported_features,
-            unit_of_measurement=entry.unit_of_measurement,
+
+        old = self.entities[entity_id]
+        new = self.entities[entity_id] = attr.evolve(old, platform=new_platform)
+        return self.async_update_entity(
+            new.entity_id,
+            new_unique_id=new_unique_id,
+            config_entry_id=new_config_entry_id,
+            device_id=new_device_id,
         )
-
-        # Apply any customizations from the old entity to the new one
-        if entry.name or entry.icon or entry.device_class:
-            self.async_update_entity(
-                entity_id,
-                name=entry.name,
-                icon=entry.icon,
-                device_class=entry.device_class,
-            )
-        if entry.options:
-            for domain, options in entry.options.items():
-                self.async_update_entity_options(entity_id, domain, dict(options))
-
-        return new_entry
 
     async def async_load(self) -> None:
         """Load the entity registry."""
