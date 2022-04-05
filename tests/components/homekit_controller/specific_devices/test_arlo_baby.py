@@ -1,6 +1,5 @@
 """Make sure that an Arlo Baby can be setup."""
 
-from homeassistant.components.light import COLOR_MODE_HS
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 
@@ -75,7 +74,6 @@ async def test_arlo_baby_setup(hass):
                     entity_id="light.arlobabya0",
                     unique_id="homekit-00A0000000000-1100",
                     friendly_name="ArloBabyA0",
-                    supported_color_modes=[COLOR_MODE_HS],
                     supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="off",

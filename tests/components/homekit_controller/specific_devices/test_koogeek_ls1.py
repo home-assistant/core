@@ -8,7 +8,6 @@ from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakePairing
 import pytest
 
-from homeassistant.components.light import COLOR_MODE_HS
 from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
 
@@ -47,7 +46,6 @@ async def test_koogeek_ls1_setup(hass):
                     entity_id="light.koogeek_ls1_20833f",
                     friendly_name="Koogeek-LS1-20833F",
                     unique_id="homekit-AAAA011111111111-7",
-                    supported_color_modes=[COLOR_MODE_HS],
                     supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="off",
