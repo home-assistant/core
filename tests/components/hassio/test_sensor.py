@@ -120,6 +120,7 @@ def mock_all(aioclient_mock, request):
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
+    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
 
 
 @pytest.mark.parametrize(
