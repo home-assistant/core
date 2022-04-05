@@ -214,6 +214,104 @@ async def test_entity_ids(hass, valid_response: MagicMock):
         )
 
 
+async def test_destination_entity_not_found(hass, caplog, valid_response: MagicMock):
+    """Test that a not existing destination_entity_id is caught."""
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_latitude": CAR_ORIGIN_LATITUDE,
+            "origin_longitude": CAR_ORIGIN_LONGITUDE,
+            "destination_entity_id": "device_tracker.test",
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert "device_tracker.test are not valid coordinates" in caplog.text
+
+
+async def test_origin_entity_not_found(hass, caplog, valid_response: MagicMock):
+    """Test that a not existing origin_entity_id is caught."""
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "device_tracker.test",
+            "destination_latitude": CAR_ORIGIN_LATITUDE,
+            "destination_longitude": CAR_ORIGIN_LONGITUDE,
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert "device_tracker.test are not valid coordinates" in caplog.text
+
+
+async def test_invalid_destination_entity_state(
+    hass, caplog, valid_response: MagicMock
+):
+    """Test that an invalid state of the destination_entity_id is caught."""
+    hass.states.async_set(
+        "device_tracker.test",
+        "test_state",
+    )
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_latitude": CAR_ORIGIN_LATITUDE,
+            "origin_longitude": CAR_ORIGIN_LONGITUDE,
+            "destination_entity_id": "device_tracker.test",
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert "test_state are not valid coordinates" in caplog.text
+
+
+async def test_invalid_origin_entity_state(hass, caplog, valid_response: MagicMock):
+    """Test that an invalid state of the origin_entity_id is caught."""
+    hass.states.async_set(
+        "device_tracker.test",
+        "test_state",
+    )
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "device_tracker.test",
+            "destination_latitude": CAR_ORIGIN_LATITUDE,
+            "destination_longitude": CAR_ORIGIN_LONGITUDE,
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert "test_state are not valid coordinates" in caplog.text
+
+
 async def test_route_not_found(hass, caplog):
     """Test that route not found error is correctly handled."""
     config = {

@@ -26,11 +26,6 @@ from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
-ATTR_DIMMER = "dimmer"
-ATTR_HUE = "hue"
-ATTR_SAT = "saturation"
-ATTR_TRANSITION_TIME = "transition_time"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -140,8 +135,11 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:
             transition_time = int(kwargs[ATTR_TRANSITION]) * 10
 
-            dimmer_data = {ATTR_DIMMER: 0, ATTR_TRANSITION_TIME: transition_time}
-            await self._api(self._device_control.set_dimmer(**dimmer_data))
+            await self._api(
+                self._device_control.set_dimmer(
+                    dimmer=0, transition_time=transition_time
+                )
+            )
         else:
             await self._api(self._device_control.set_state(False))
 
@@ -158,8 +156,8 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             brightness = kwargs[ATTR_BRIGHTNESS]
             brightness = min(brightness, 254)
             dimmer_data = {
-                ATTR_DIMMER: brightness,
-                ATTR_TRANSITION_TIME: transition_time,
+                "dimmer": brightness,
+                "transition_time": transition_time,
             }
             dimmer_command = self._device_control.set_dimmer(**dimmer_data)
             transition_time = None
@@ -173,9 +171,9 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
                 kwargs[ATTR_HS_COLOR][1] * (self._device_control.max_saturation / 100)
             )
             color_data = {
-                ATTR_HUE: hue,
-                ATTR_SAT: sat,
-                ATTR_TRANSITION_TIME: transition_time,
+                "hue": hue,
+                "saturation": sat,
+                "transition_time": transition_time,
             }
             color_command = self._device_control.set_hsb(**color_data)
             transition_time = None
@@ -193,7 +191,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
                     temp = self.min_mireds
                 temp_data = {
                     ATTR_COLOR_TEMP: temp,
-                    ATTR_TRANSITION_TIME: transition_time,
+                    "transition_time": transition_time,
                 }
                 temp_command = self._device_control.set_color_temp(**temp_data)
                 transition_time = None
@@ -205,9 +203,9 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
                 hue = int(hs_color[0] * (self._device_control.max_hue / 360))
                 sat = int(hs_color[1] * (self._device_control.max_saturation / 100))
                 color_data = {
-                    ATTR_HUE: hue,
-                    ATTR_SAT: sat,
-                    ATTR_TRANSITION_TIME: transition_time,
+                    "hue": hue,
+                    "saturation": sat,
+                    "transition_time": transition_time,
                 }
                 color_command = self._device_control.set_hsb(**color_data)
                 transition_time = None

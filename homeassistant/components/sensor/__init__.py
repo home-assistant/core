@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (  # noqa: F401, pylint: disable=[hass-deprecated-import]
     CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
@@ -367,7 +367,10 @@ class SensorEntity(Entity):
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
-        if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+        if (
+            self.device_class == DEVICE_CLASS_TEMPERATURE
+            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+        ):
             return self.hass.config.units.temperature_unit
 
         return native_unit_of_measurement
@@ -428,7 +431,7 @@ class SensorEntity(Entity):
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
 
             # Scale the precision when converting to a larger unit
-            # For example 1.1 kWh should be rendered as 0.0011 kWh, not 0.0 kWh
+            # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
             ratio_log = max(
                 0,
                 log10(
@@ -449,37 +452,6 @@ class SensorEntity(Entity):
 
                 # Round to the wanted precision
                 value = round(value_f_new) if prec == 0 else round(value_f_new, prec)
-
-        elif (
-            value is not None
-            and self.device_class != DEVICE_CLASS_TEMPERATURE
-            and native_unit_of_measurement != self.hass.config.units.temperature_unit
-            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
-        ):
-            units = self.hass.config.units
-            if not self._temperature_conversion_reported:
-                self._temperature_conversion_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    "Entity %s (%s) with device_class %s reports a temperature in "
-                    "%s which will be converted to %s. Temperature conversion for "
-                    "entities without correct device_class is deprecated and will"
-                    " be removed from Home Assistant Core 2022.3. Please update "
-                    "your configuration if device_class is manually configured, "
-                    "otherwise %s",
-                    self.entity_id,
-                    type(self),
-                    self.device_class,
-                    native_unit_of_measurement,
-                    units.temperature_unit,
-                    report_issue,
-                )
-            value_s = str(value)
-            prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
-            # Suppress ValueError (Could not convert sensor_value to float)
-            with suppress(ValueError):
-                temp = units.temperature(float(value), native_unit_of_measurement)  # type: ignore[arg-type]
-                value = round(temp) if prec == 0 else round(temp, prec)
 
         return value
 

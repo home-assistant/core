@@ -65,7 +65,7 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
-        return {ATTR_MODEL: self._device.device_info.model_number}
+        return {"model": self._device.device_info.model_number}
 
     @property
     def current_cover_position(self) -> int | None:

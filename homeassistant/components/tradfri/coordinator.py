@@ -12,7 +12,7 @@ from pytradfri.error import RequestError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER
+from .const import LOGGER
 
 SCAN_INTERVAL = 60  # Interval for updating the coordinator
 
@@ -34,7 +34,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
 
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=f"Update coordinator for {device}",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
@@ -61,7 +61,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         # Store exception so that it gets raised in _async_update_data
         self._exception = exc
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "Observation failed for %s, trying again", self.device, exc_info=exc
         )
         # Change interval so we get a swift refresh
