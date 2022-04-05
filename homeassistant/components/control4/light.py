@@ -13,8 +13,8 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_ONOFF,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -195,7 +195,7 @@ class Control4Light(Control4Entity, LightEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         if self._is_dimmer:
-            return SUPPORT_TRANSITION
+            return LightEntityFeature.TRANSITION
         return 0
 
     async def async_turn_on(self, **kwargs) -> None:
