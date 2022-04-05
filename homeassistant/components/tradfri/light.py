@@ -79,7 +79,12 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             self._attr_supported_color_modes.add(COLOR_MODE_HS)
         if self._device.light_control.can_set_temp:
             self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
-        if not self.supported_color_modes and self._device.light_control.can_set_dimmer:
+        if (
+            not self._attr_supported_color_modes
+            and self._device.light_control.can_set_dimmer
+        ):
+            # Must be the only supported mode according to docs for
+            # COLOR_MODE_BRIGHTNESS
             self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
 
         if self._device_control:
