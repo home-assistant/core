@@ -63,6 +63,8 @@ async def async_setup_entry(
 class AgentCamera(MjpegCamera):
     """Representation of an Agent Device Stream."""
 
+    _attr_supported_features = CameraEntityFeature.ON_OFF
+
     def __init__(self, device):
         """Initialize as a subclass of MjpegCamera."""
         self.device = device
@@ -133,11 +135,6 @@ class AgentCamera(MjpegCamera):
     def connected(self) -> bool:
         """Return True if entity is connected."""
         return self.device.connected
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return CameraEntityFeature.ON_OFF
 
     @property
     def is_on(self) -> bool:
