@@ -253,6 +253,11 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
         """Sensor state class."""
         return self._config.get(CONF_STATE_CLASS)
 
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
+
     @callback
     def _process_data(self) -> None:
         """Process new data."""

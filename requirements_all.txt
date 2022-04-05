@@ -770,7 +770,7 @@ guppy3==3.1.2
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.7.6
+ha-philipsjs==2.9.0
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -1318,7 +1318,7 @@ pyRFXtrx==0.28.0
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.22.1
+pyTibber==0.22.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1514,7 +1514,7 @@ pygtfs==0.1.6
 pygti==0.9.2
 
 # homeassistant.components.version
-pyhaversion==22.02.0
+pyhaversion==22.04.0
 
 # homeassistant.components.heos
 pyheos==0.7.2
@@ -1559,7 +1559,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.5
+pyisy==3.0.6
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -1655,7 +1655,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.9.3
+pynetgear==0.9.4
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -2435,7 +2435,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.20.0
+xknx==0.20.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
