@@ -19,10 +19,8 @@ from pydeconz.sensor import (
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     FORMAT_NUMBER,
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
     AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -124,7 +122,9 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
 
     _attr_code_format = FORMAT_NUMBER
     _attr_supported_features = (
-        SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+        AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
 
     def __init__(
