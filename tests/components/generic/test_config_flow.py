@@ -10,6 +10,7 @@ import pytest
 import respx
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.camera import async_get_image
 from homeassistant.components.generic.const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
@@ -191,7 +192,7 @@ async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_form_only_stream(hass, mock_av_open):
+async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
     """Test we complete ok if the user wants stream only."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -213,12 +214,19 @@ async def test_form_only_stream(hass, mock_av_open):
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-        CONF_CONTENT_TYPE: None,
+        CONF_CONTENT_TYPE: "image/jpeg",
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
     }
 
     await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
+        return_value=fakeimgbytes_jpg,
+    ):
+        image_obj = await async_get_image(hass, "camera.127_0_0_1_testurl_2")
+        assert image_obj.content == fakeimgbytes_jpg
     assert len(mock_setup.mock_calls) == 1
 
 
