@@ -83,7 +83,7 @@ CONFIG_SCHEMA = vol.Schema(
             {"select": {"options": UNIT_PREFIXES}}
         ),
         vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.selector(
-            {"select": {"options": TIME_UNITS}}
+            {"select": {"options": TIME_UNITS, "mode": "dropdown"}}
         ),
     }
 )
