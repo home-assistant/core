@@ -61,7 +61,7 @@ async def async_setup_platform(
     if discovery_info is None:
         _LOGGER.error(
             "This platform is not available to configure "
-            "from 'sensor:' in configuration.yaml"
+            "from 'select:' in configuration.yaml"
         )
         return
 
