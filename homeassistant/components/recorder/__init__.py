@@ -829,7 +829,7 @@ class Recorder(threading.Thread):
             await self.hass.async_add_executor_job(self.join)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
-        self.hass.bus.async_listen("ais_stop_recorder_event", shutdown)
+        self.hass.bus.async_listen("ais_stop_recorder_event", _async_shutdown)
 
         if self.hass.state == CoreState.running:
             self._hass_started.set_result(None)
