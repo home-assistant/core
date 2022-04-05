@@ -133,6 +133,10 @@ class ActionSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: ActionSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         return data
@@ -157,6 +161,10 @@ class AddonSelector(Selector):
             vol.Optional("slug"): str,
         }
     )
+
+    def __init__(self, config: AddonSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
@@ -186,6 +194,10 @@ class AreaSelector(Selector):
         }
     )
 
+    def __init__(self, config: AreaSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
@@ -210,6 +222,10 @@ class AttributeSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
 
+    def __init__(self, config: AttributeSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         attribute: str = vol.Schema(str)(data)
@@ -228,6 +244,10 @@ class BooleanSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: BooleanSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> bool:
         """Validate the passed selection."""
         value: bool = vol.Coerce(bool)(data)
@@ -245,6 +265,10 @@ class ColorRGBSelector(Selector):
     selector_type = "color_rgb"
 
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: ColorRGBSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> list[int]:
         """Validate the passed selection."""
@@ -272,6 +296,10 @@ class ColorTempSelector(Selector):
         }
     )
 
+    def __init__(self, config: ColorTempSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> int:
         """Validate the passed selection."""
         value: int = vol.All(
@@ -296,6 +324,10 @@ class DateSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: DateSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         cv.date(data)
@@ -313,6 +345,10 @@ class DateTimeSelector(Selector):
     selector_type = "datetime"
 
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: DateTimeSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
@@ -339,6 +375,10 @@ class DeviceSelector(Selector):
     CONFIG_SCHEMA = SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA.extend(
         {vol.Optional("multiple", default=False): cv.boolean}
     )
+
+    def __init__(self, config: DeviceSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
@@ -370,6 +410,10 @@ class DurationSelector(Selector):
         }
     )
 
+    def __init__(self, config: DurationSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
         cv.time_period_dict(data)
@@ -397,6 +441,10 @@ class EntitySelector(Selector):
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )
+
+    def __init__(self, config: EntitySelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
@@ -445,6 +493,10 @@ class IconSelector(Selector):
         # Frontend also has a fallbackPath option, this is not used by core
     )
 
+    def __init__(self, config: IconSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         icon: str = vol.Schema(str)(data)
@@ -475,6 +527,10 @@ class LocationSelector(Selector):
         }
     )
 
+    def __init__(self, config: LocationSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
         location: dict[str, float] = self.DATA_SCHEMA(data)
@@ -503,6 +559,10 @@ class MediaSelector(Selector):
             vol.Remove("metadata"): dict,
         }
     )
+
+    def __init__(self, config: MediaSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
@@ -563,6 +623,10 @@ class NumberSelector(Selector):
         has_min_max_if_slider,
     )
 
+    def __init__(self, config: NumberSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
         value: float = vol.Coerce(float)(data)
@@ -587,6 +651,10 @@ class ObjectSelector(Selector):
     selector_type = "object"
 
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: ObjectSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
@@ -642,6 +710,10 @@ class SelectSelector(Selector):
         }
     )
 
+    def __init__(self, config: SelectSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         options = []
@@ -686,6 +758,10 @@ class TargetSelector(Selector):
     )
 
     TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS)
+
+    def __init__(self, config: TargetSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> dict[str, list[str]]:
         """Validate the passed selection."""
@@ -735,6 +811,10 @@ class TextSelector(Selector):
         }
     )
 
+    def __init__(self, config: TextSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         text: str = vol.Schema(str)(data)
@@ -753,6 +833,10 @@ class ThemeSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: ThemeSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         theme: str = vol.Schema(str)(data)
@@ -770,6 +854,10 @@ class TimeSelector(Selector):
     selector_type = "time"
 
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: TimeSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
