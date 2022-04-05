@@ -187,7 +187,7 @@ async def _async_setup_component(
     # Some integrations fail on import because they call functions incorrectly.
     # So we do it before validating config to catch these errors.
     try:
-        component = await integration.async_get_component()
+        component = integration.get_component()
     except ImportError as err:
         log_error(f"Unable to import component: {err}")
         return False
@@ -326,7 +326,7 @@ async def async_prepare_setup_platform(
     # If the integration is not set up yet, and can be set up, set it up.
     if integration.domain not in hass.config.components:
         try:
-            component = await integration.async_get_component()
+            component = integration.get_component()
         except ImportError as exc:
             log_error(f"Unable to import the component ({exc}).")
             return None

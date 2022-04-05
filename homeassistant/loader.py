@@ -11,7 +11,6 @@ from collections.abc import Callable
 from contextlib import suppress
 import functools as ft
 import importlib
-from importlib.machinery import ModuleSpec
 import json
 import logging
 import pathlib
@@ -337,19 +336,6 @@ async def async_get_mqtt(hass: HomeAssistant) -> dict[str, list[str]]:
     return mqtt
 
 
-async def async_import(hass: HomeAssistant, name: str) -> ModuleType:
-    """Import a module with the find_spec happening in the executor."""
-    spec: ModuleSpec | None = await hass.async_add_executor_job(
-        importlib.util.find_spec, name
-    )
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not import {name}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
 class Integration:
     """An integration in Home Assistant."""
 
@@ -596,24 +582,6 @@ class Integration:
 
         try:
             cache[self.domain] = importlib.import_module(self.pkg_path)
-        except ImportError:
-            raise
-        except Exception as err:
-            _LOGGER.exception(
-                "Unexpected exception importing component %s", self.pkg_path
-            )
-            raise ImportError(f"Exception importing {self.pkg_path}") from err
-
-        return cache[self.domain]
-
-    async def async_get_component(self) -> ModuleType:
-        """Return the component."""
-        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
-        if self.domain in cache:
-            return cache[self.domain]
-
-        try:
-            cache[self.domain] = await async_import(self.hass, self.pkg_path)
         except ImportError:
             raise
         except Exception as err:

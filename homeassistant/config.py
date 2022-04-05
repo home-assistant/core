@@ -723,7 +723,7 @@ async def merge_packages_config(
                 integration = await async_get_integration_with_requirements(
                     hass, domain
                 )
-                component = await integration.async_get_component()
+                component = integration.get_component()
             except INTEGRATION_LOAD_EXCEPTIONS as ex:
                 _log_pkg_error(pack_name, comp_name, config, str(ex))
                 continue
@@ -795,7 +795,7 @@ async def async_process_component_config(  # noqa: C901
     """
     domain = integration.domain
     try:
-        component = await integration.async_get_component()
+        component = integration.get_component()
     except LOAD_EXCEPTIONS as ex:
         _LOGGER.error("Unable to import %s: %s", domain, ex)
         return None
