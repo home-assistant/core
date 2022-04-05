@@ -1,7 +1,6 @@
 """Support for deCONZ fans."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
 from pydeconz.light import (
@@ -44,11 +43,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_fan(
-        lights: list[Fan] | ValuesView[Fan] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_fan(lights: list[Fan] | None = None) -> None:
         """Add fan from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.fans.values())
 
         for light in lights:
 

@@ -1,7 +1,6 @@
 """Support for deCONZ climate devices."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
 from pydeconz.sensor import (
@@ -107,12 +106,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_climate(
-        sensors: list[Thermostat]
-        | ValuesView[Thermostat] = gateway.api.sensors.values(),
-    ) -> None:
+    def async_add_climate(sensors: list[Thermostat] | None = None) -> None:
         """Add climate devices from deCONZ."""
         entities: list[DeconzThermostat] = []
+
+        if sensors is None:
+            sensors = list(gateway.api.sensors.thermostat.values())
 
         for sensor in sensors:
 
@@ -245,7 +244,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        return self._device.temperature  # type: ignore[no-any-return]
+        return self._device.scaled_temperature  # type: ignore[no-any-return]
 
     @property
     def target_temperature(self) -> float | None:
