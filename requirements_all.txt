@@ -770,7 +770,7 @@ guppy3==3.1.2
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.7.6
+ha-philipsjs==2.9.0
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -1318,7 +1318,7 @@ pyRFXtrx==0.28.0
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.22.1
+pyTibber==0.22.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
