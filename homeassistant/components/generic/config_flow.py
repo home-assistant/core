@@ -91,6 +91,12 @@ def build_schema(
             CONF_PASSWORD,
             description={"suggested_value": user_input.get(CONF_PASSWORD, "")},
         ): str,
+        vol.Optional(
+            CONF_CONTENT_TYPE,
+            description={
+                "suggested_value": user_input.get(CONF_CONTENT_TYPE, "image/jpeg")
+            },
+        ): str,
         vol.Required(
             CONF_FRAMERATE,
             description={"suggested_value": user_input.get(CONF_FRAMERATE, 2)},
@@ -129,7 +135,7 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     """Verify that the still image is valid before we create an entity."""
     fmt = None
     if not (url := info.get(CONF_STILL_IMAGE_URL)):
-        return {}, None
+        return {}, info.get(CONF_CONTENT_TYPE, "image/jpeg")
     if not isinstance(url, template_helper.Template) and url:
         url = cv.template(url)
         url.hass = hass
